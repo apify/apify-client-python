@@ -11,7 +11,7 @@ setuptools.setup(
     description="Work in progress: Apify API client for Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/apifytech/apify-client-python",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

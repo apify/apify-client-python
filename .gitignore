@@ -1,4 +1,9 @@
-build
-dist
-apify_client.egg-info
-.idea
+.envrc
+.direnv
+.vscode
+
+.mypy_cache
+.pytest_cache
+
+*.egg-info/
+*.egg

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from ..base.resource_collection_client import ResourceCollectionClient
 
@@ -10,7 +10,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         """Initialize the RequestQueueCollectionClient with the passed arguments."""
         super().__init__(*args, resource_path='request-queues', **kwargs)
 
-    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Any:
+    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -26,7 +26,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str = '') -> Any:
+    def get_or_create(self, *, name: str = '') -> Dict:
         """Retrieve a named request queue, or creates a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from ..base.resource_collection_client import ResourceCollectionClient
 
@@ -10,7 +10,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
         super().__init__(*args, resource_path='key-value-stores', **kwargs)
 
-    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Any:
+    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -26,7 +26,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str = '') -> Any:
+    def get_or_create(self, *, name: str = '') -> Dict:
         """Retrieve a named key-value store, or creates a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store

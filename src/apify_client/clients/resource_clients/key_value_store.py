@@ -43,7 +43,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         return self._delete()
 
-    def list_keys(self, *, limit: Optional[int] = None, exclusive_start_key: Optional[str] = None) -> Any:
+    def list_keys(self, *, limit: Optional[int] = None, exclusive_start_key: Optional[str] = None) -> Dict:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys

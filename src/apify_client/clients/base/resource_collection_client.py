@@ -7,7 +7,7 @@ from .base_client import BaseClient
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
-    def _list(self, **kwargs: Any) -> Any:
+    def _list(self, **kwargs: Any) -> Dict:
         response = self.http_client.call(
             url=self._url(),
             method='GET',
@@ -16,7 +16,7 @@ class ResourceCollectionClient(BaseClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    def _create(self, resource: Dict) -> Any:
+    def _create(self, resource: Dict) -> Dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',
@@ -26,7 +26,7 @@ class ResourceCollectionClient(BaseClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    def _get_or_create(self, name: str = '') -> Any:
+    def _get_or_create(self, name: str = '') -> Dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',

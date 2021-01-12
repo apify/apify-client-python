@@ -1,4 +1,5 @@
-from typing import Any, Dict, Generator, List, Optional
+import io
+from typing import Any, Dict, Generator, List, Optional, cast
 
 from ..._types import JSONSerializable
 from ..base.resource_client import ResourceClient
@@ -195,7 +196,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
-    ) -> Any:
+    ) -> bytes:
         """Download the items in the dataset as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -280,7 +281,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
-    ) -> Any:
+    ) -> io.IOBase:
         """Retrieve the items in the dataset as a file-like object.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -347,7 +348,8 @@ class DatasetClient(ResourceClient):
         )
 
         response.raw.decode_content = True
-        return response.raw
+        # response.raw is the raw urllib3 response, which subclasses IOBase
+        return cast(io.IOBase, response.raw)
 
     def push_items(self, items: JSONSerializable) -> None:
         """Push items to the dataset.

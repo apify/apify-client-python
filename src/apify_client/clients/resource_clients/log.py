@@ -1,4 +1,5 @@
-from typing import Any, Optional
+import io
+from typing import Any, Optional, cast
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw
@@ -34,7 +35,7 @@ class LogClient(ResourceClient):
 
         return None
 
-    def stream(self) -> Any:
+    def stream(self) -> Optional[io.IOBase]:
         """Retrieve the log as a file-like object.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -53,7 +54,8 @@ class LogClient(ResourceClient):
 
             response.raw.decode_content = True
             # TODO explain response.raw.close()
-            return response.raw
+            # response.raw is the raw urllib3 response, which subclasses IOBase
+            return cast(io.IOBase, response.raw)
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from ..base.resource_collection_client import ResourceCollectionClient
 
@@ -10,7 +10,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """Initialize the DatasetCollectionClient with the passed arguments."""
         super().__init__(*args, resource_path='datasets', **kwargs)
 
-    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Any:
+    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -26,7 +26,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str = '') -> Any:
+    def get_or_create(self, *, name: str = '') -> Dict:
         """Retrieve a named dataset, or creates a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset

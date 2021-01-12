@@ -35,17 +35,18 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     python_requires='>=3.7',
-    install_requires=['requests ~=2.25.0'],
+    install_requires=['requests ~=2.25.1'],
     extras_require={
         'dev': [
+            'autopep8 ~= 1.5.4',
             'flake8 ~= 3.8.4',
             'flake8-commas ~= 2.0.0',
             'flake8-docstrings ~= 1.5.0',
             'flake8-isort ~= 4.0.0',
-            'isort ~= 5.6.4',
+            'isort ~= 5.7.0',
             'mypy ~= 0.790',
             'pep8-naming ~= 0.11.1',
-            'pytest ~= 6.1.2',
+            'pytest ~= 6.2.1',
         ],
     },
 )

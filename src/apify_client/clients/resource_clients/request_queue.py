@@ -7,8 +7,9 @@ from ..base.resource_client import ResourceClient
 
 class RequestQueueClient(ResourceClient):
     """Sub-client for manipulating a single request queue."""
-    def __init__(self, *args: Any, client_key: str = None, **kwargs: Any) -> None:
-        """Initializes the RequestQueueClient.
+
+    def __init__(self, *args: Any, client_key: Optional[str] = None, **kwargs: Any) -> None:
+        """Initialize the RequestQueueClient.
 
         Args:
             client_key (str): A unique identifier of the client accessing the request queue
@@ -17,7 +18,7 @@ class RequestQueueClient(ResourceClient):
         self.client_key = client_key
 
     def get(self) -> Optional[Dict]:
-        """Retrieves the request queue.
+        """Retrieve the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
 
@@ -27,7 +28,7 @@ class RequestQueueClient(ResourceClient):
         return self._get()
 
     def update(self, new_fields: Dict) -> Optional[Dict]:
-        """Updates the request queue with specified fields.
+        """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
 
@@ -40,14 +41,14 @@ class RequestQueueClient(ResourceClient):
         return self._update(new_fields)
 
     def delete(self) -> None:
-        """Deletes the request queue.
+        """Delete the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
         return self._delete()
 
-    def list_head(self, *, limit: int = None) -> Dict:
-        """Retrieves a given number of requests from the beginning of the queue.
+    def list_head(self, *, limit: Optional[int] = None) -> Dict:
+        """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
 
@@ -64,8 +65,8 @@ class RequestQueueClient(ResourceClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    def add_request(self, request: Dict, *, forefront: bool = None) -> Dict:
-        """Adds a request to the queue.
+    def add_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
+        """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
@@ -88,7 +89,7 @@ class RequestQueueClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def get_request(self, request_id: str) -> Optional[Dict]:
-        """Retrieves a request from the queue.
+        """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
@@ -108,8 +109,8 @@ class RequestQueueClient(ResourceClient):
 
         return None
 
-    def update_request(self, request: Dict, *, forefront: bool = None) -> Optional[Dict]:
-        """Updates a request in the queue.
+    def update_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Optional[Dict]:
+        """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
@@ -134,7 +135,7 @@ class RequestQueueClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def delete_request(self, request_id: str) -> None:
-        """Deletes a request from the queue.
+        """Delete a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/delete-request
 

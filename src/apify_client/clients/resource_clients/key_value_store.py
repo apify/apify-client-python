@@ -1,20 +1,20 @@
-import io
 import json
 from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data
+from ..._utils import _catch_not_found_or_throw, _is_file_or_bytes, _parse_date_fields, _pluck_data
 from ..base.resource_client import ResourceClient
 
 
 class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initializes the KeyValueStoreClient."""
+        """Initialize the KeyValueStoreClient."""
         super().__init__(*args, resource_path='key-value-stores', **kwargs)
 
     def get(self) -> Optional[Dict]:
-        """Retrieves the key-value store.
+        """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
 
@@ -24,7 +24,7 @@ class KeyValueStoreClient(ResourceClient):
         return self._get()
 
     def update(self, new_fields: Dict) -> Optional[Dict]:
-        """Updates the key-value store with specified fields.
+        """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
 
@@ -37,14 +37,14 @@ class KeyValueStoreClient(ResourceClient):
         return self._update(new_fields)
 
     def delete(self) -> None:
-        """Deletes the key-value store.
+        """Delete the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
         return self._delete()
 
-    def list_keys(self, *, limit: int = None, exclusive_start_key: str = None) -> Any:
-        """Lists the keys in the key-value store.
+    def list_keys(self, *, limit: Optional[int] = None, exclusive_start_key: Optional[str] = None) -> Any:
+        """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
@@ -66,7 +66,7 @@ class KeyValueStoreClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def get_record(self, key: str, *, as_bytes: bool = False, as_file: bool = False) -> Optional[Dict]:
-        """Retrieves the given record from the key-value store.
+        """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
@@ -98,8 +98,8 @@ class KeyValueStoreClient(ResourceClient):
 
         return None
 
-    def set_record(self, key: str, value: Any, content_type: str = None) -> None:
-        """Sets a value to the given record in the key-value store.
+    def set_record(self, key: str, value: Any, content_type: Optional[str] = None) -> None:
+        """Set a value to the given record in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/put-record
 
@@ -120,6 +120,8 @@ class KeyValueStoreClient(ResourceClient):
             else:
                 content_type = 'application/json; charset=utf-8'
 
+        # TODO encode to utf-8
+
         if 'application/json' in content_type and not _is_file_or_bytes(value) and not isinstance(value, str):
             value = json.dumps(value, indent=2)
 
@@ -134,7 +136,7 @@ class KeyValueStoreClient(ResourceClient):
         )
 
     def delete_record(self, key: str) -> None:
-        """Deletes the specified record from the key-value store.
+        """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
 
@@ -146,7 +148,3 @@ class KeyValueStoreClient(ResourceClient):
             method='DELETE',
             params=self._params(),
         )
-
-
-def _is_file_or_bytes(value: Any) -> bool:
-    return isinstance(value, (bytes, bytearray, io.IOBase))

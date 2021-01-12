@@ -6,6 +6,7 @@ from .base_client import BaseClient
 
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
+
     def _list(self, **kwargs: Any) -> Any:
         response = self.http_client.call(
             url=self._url(),

@@ -1,8 +1,20 @@
 [flake8]
 max_line_length = 150
-docstring-convention=google
-per-file-ignores =
-    tests/*: D
+# Google docstring convention + D204 & D401
+# TODO enable D100 & D401
+docstring-convention=all
 ignore=
     D100
     D104
+    D203
+    D213
+    D215
+    D400
+    D404
+    D406
+    D407
+    D408
+    D409
+    D413
+per-file-ignores =
+    tests/*: D

@@ -1,8 +1,11 @@
+from typing import Optional
+
 import requests
 
 
 class ApifyClientError(Exception):
     """Base class for errors specific to the Apify API Client."""
+
     pass
 
 
@@ -16,14 +19,14 @@ class ApifyApiError(ApifyClientError):
     """
 
     def __init__(self, response: requests.models.Response, attempt: int) -> None:
-        """Creates the ApifyApiError instance.
+        """Create the ApifyApiError instance.
 
         Args:
             response: The response to the failed API call
             attempt: Which retry was the request that failed
         """
-        self.message = None
-        self.type = None
+        self.message: Optional[str] = None
+        self.type: Optional[str] = None
 
         response_data = response.json()
         if 'error' in response_data:
@@ -54,7 +57,7 @@ class InvalidResponseBodyError(ApifyClientError):
     """
 
     def __init__(self, response: requests.models.Response) -> None:
-        """Creates the InvalidResponseBodyError instance.
+        """Create the InvalidResponseBodyError instance.
 
         Args:
             response: The response which failed to be parsed

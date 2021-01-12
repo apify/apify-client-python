@@ -7,6 +7,7 @@ from .base_client import BaseClient
 
 class ResourceClient(BaseClient):
     """Base class for sub-clients manipulating a single resource."""
+
     def _get(self) -> Optional[Dict]:
         try:
             response = self.http_client.call(

@@ -1,14 +1,17 @@
-import re
-from typing import Any, Callable, Dict, List, Optional, Union
+import os
+import sys
+from http import HTTPStatus
+from typing import Any, Callable, Dict, Optional
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
 
 from ._errors import ApifyApiError, InvalidResponseBodyError
-from ._utils import _retry_with_exp_backoff
+from ._types import JSONSerializable
+from ._utils import _is_content_type_json, _is_content_type_text, _is_content_type_xml, _retry_with_exp_backoff
 
-NO_CONTENT_STATUS_CODE = 204
-RATE_LIMIT_EXCEEDED_STATUS_CODE = 429
+DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
+DEFAULT_BACKOFF_RANDOM_FACTOR = 1
 
 
 class _HTTPClient:
@@ -17,23 +20,30 @@ class _HTTPClient:
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.requests_session = requests.Session()
 
+        # TODO add client version
+        is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
+        python_version = '.'.join([str(x) for x in sys.version_info[:3]])
+
+        user_agent = f'ApifyClient ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
+        self.requests_session.headers.update({'User-Agent': user_agent})
+
     def call(
         self,
         *,
         method: str,
         url: str,
-        headers: Dict = None,
-        params: Dict = None,
-        data: str = None,
-        json: Union[str, Dict, List[str], List[Dict]] = None,
-        stream: bool = None,
-        parse_response: bool = True,
+        headers: Optional[Dict] = None,
+        params: Optional[Dict] = None,
+        data: Optional[str] = None,
+        json: Optional[JSONSerializable] = None,
+        stream: Optional[bool] = None,
+        parse_response: Optional[bool] = True,
     ) -> requests.models.Response:
         request_params = self._parse_params(params)
         requests_session = self.requests_session
 
         def _make_request(bail: Callable, attempt: int) -> requests.models.Response:  # type: ignore[return]
-            nonlocal requests_session, method, url, headers, request_params, data, json, stream, parse_response
+            # nonlocal requests_session, method, url, headers, request_params, data, json, stream, parse_response
             try:
                 response = requests_session.request(
                     method,
@@ -61,7 +71,7 @@ class _HTTPClient:
                 bail(e)
 
             api_error = ApifyApiError(response, attempt)
-            if response.status_code == RATE_LIMIT_EXCEEDED_STATUS_CODE or response.status_code >= 500:
+            if response.status_code == HTTPStatus.TOO_MANY_REQUESTS or response.status_code >= 500:
                 raise api_error
             else:
                 bail(api_error)
@@ -70,13 +80,13 @@ class _HTTPClient:
             _make_request,
             max_retries=self.max_retries,
             backoff_base_millis=self.min_delay_between_retries_millis,
-            backoff_factor=2,
-            random_factor=1,
+            backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
+            random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )
 
     @staticmethod
     def _maybe_parse_response(response: requests.models.Response) -> Any:
-        if response.status_code == NO_CONTENT_STATUS_CODE:
+        if response.status_code == HTTPStatus.NO_CONTENT:
             return None
 
         content_type = ''
@@ -84,9 +94,9 @@ class _HTTPClient:
             content_type = response.headers['content-type'].split(';')[0].strip()
 
         try:
-            if re.search(r'^application/json', content_type, flags=re.IGNORECASE):
+            if _is_content_type_json(content_type):
                 return response.json()
-            elif re.search(r'^application/.*xml$', content_type, flags=re.IGNORECASE) or re.search(r'^text/', content_type, flags=re.IGNORECASE):
+            elif _is_content_type_xml(content_type) or _is_content_type_text(content_type):
                 return response.text
             else:
                 return response.content
@@ -100,6 +110,7 @@ class _HTTPClient:
 
         parsed_params = {}
         for key, value in params.items():
+            # Our API needs to have boolean parameters passed as 0 or 1, therefore we have to replace them
             if isinstance(value, bool):
                 parsed_params[key] = int(value)
             else:

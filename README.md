@@ -34,3 +34,11 @@ and [direnv](https://github.com/direnv/direnv) to automatically activate/deactiv
 ### Dependencies
 
 To install this package and its development dependencies, run `pip install -e '.[dev]'`
+
+### Formatting
+
+We use `autopep8` and `isort` to automatically format the code to a common format. To run the formatting, just run `./format.sh`.
+
+### Linting and Testing
+
+We use `flake8` for linting, `mypy` for type checking and `pytest` for unit testing. To run these tools, just run `./lint_and_test.sh`.

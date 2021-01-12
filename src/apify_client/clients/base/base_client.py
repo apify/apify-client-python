@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from ..._http_client import _HTTPClient
 from ..._utils import _to_safe_id
@@ -6,8 +6,17 @@ from ..._utils import _to_safe_id
 
 class BaseClient:
     """Base class for sub-clients."""
-    def __init__(self, *, base_url: str, http_client: _HTTPClient, resource_id: str = None, resource_path: str, params: Dict = None) -> None:
-        """Initializes the sub-client.
+
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        http_client: _HTTPClient,
+        resource_id: Optional[str] = None,
+        resource_path: str,
+        params: Optional[Dict] = None,
+    ) -> None:
+        """Initialize the sub-client.
 
         Args:
             base_url (str): Base URL of the API server
@@ -26,7 +35,7 @@ class BaseClient:
             self.safe_id = _to_safe_id(self.resource_id)
             self.url = f'{self.url}/{self.safe_id}'
 
-    def _url(self, path: str = None) -> str:
+    def _url(self, path: Optional[str] = None) -> str:
         if path is not None:
             return f'{self.url}/{path}'
         return self.url

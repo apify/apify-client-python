@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from ._http_client import _HTTPClient
 from .clients.resource_clients.dataset import DatasetClient
@@ -14,6 +14,7 @@ DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 
 class ApifyClient:
     """The Apify API client."""
+
     def __init__(
         self,
         token: str,
@@ -22,7 +23,7 @@ class ApifyClient:
         max_retries: int = 8,
         min_delay_between_retries_millis: int = 500,
     ):
-        """Initializes the Apify API Client.
+        """Initialize the Apify API Client.
 
         Args:
             token: The Apify API token
@@ -49,7 +50,7 @@ class ApifyClient:
         }
 
     def dataset(self, dataset_id: str) -> DatasetClient:
-        """Retrieves the sub-client for manipulating a single dataset.
+        """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
             dataset_id (str): ID of the dataset to be manipulated
@@ -57,11 +58,11 @@ class ApifyClient:
         return DatasetClient(resource_id=dataset_id, **self._options())
 
     def datasets(self) -> DatasetCollectionClient:
-        """Retrieves the sub-client for manipulating datasets."""
+        """Retrieve the sub-client for manipulating datasets."""
         return DatasetCollectionClient(**self._options())
 
     def key_value_store(self, key_value_store_id: str) -> KeyValueStoreClient:
-        """Retrieves the sub-client for manipulating a single key-value store.
+        """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
             key_value_store_id (str): ID of the key-value store to be manipulated
@@ -69,11 +70,11 @@ class ApifyClient:
         return KeyValueStoreClient(resource_id=key_value_store_id, **self._options())
 
     def key_value_stores(self) -> KeyValueStoreCollectionClient:
-        """Retrieves the sub-client for manipulating key-value stores."""
+        """Retrieve the sub-client for manipulating key-value stores."""
         return KeyValueStoreCollectionClient(**self._options())
 
-    def request_queue(self, request_queue_id: str, *, client_key: str = None) -> RequestQueueClient:
-        """Retrieves the sub-client for manipulating a single request queue.
+    def request_queue(self, request_queue_id: str, *, client_key: Optional[str] = None) -> RequestQueueClient:
+        """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
             request_queue_id (str) : ID of the request queue to be manipulated
@@ -82,9 +83,9 @@ class ApifyClient:
         return RequestQueueClient(resource_id=request_queue_id, client_key=client_key, **self._options())
 
     def request_queues(self) -> RequestQueueCollectionClient:
-        """Retrieves the sub-client for manipulating request queues."""
+        """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClient(**self._options())
 
     def log(self, build_or_run_id: str) -> LogClient:
-        """Retrieves the sub-client for retrieving logs."""
+        """Retrieve the sub-client for retrieving logs."""
         return LogClient(resource_id=build_or_run_id, **self._options())

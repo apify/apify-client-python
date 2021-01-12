@@ -43,7 +43,6 @@ class _HTTPClient:
         requests_session = self.requests_session
 
         def _make_request(bail: Callable, attempt: int) -> requests.models.Response:  # type: ignore[return]
-            # nonlocal requests_session, method, url, headers, request_params, data, json, stream, parse_response
             try:
                 response = requests_session.request(
                     method,

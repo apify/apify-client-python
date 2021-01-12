@@ -25,6 +25,9 @@ class BaseClient:
             resource_path (str): Path to the resource's endpoint on the API server
             params (dict): Parameters to include in all requests from this client
         """
+        if resource_path.endswith('/'):
+            raise ValueError('resource_path must not end with "/"')
+
         self.base_url = base_url
         self.http_client = http_client
         self.params = params or {}

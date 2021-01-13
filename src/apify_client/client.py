@@ -17,7 +17,7 @@ class ApifyClient:
 
     def __init__(
         self,
-        token: str,
+        token: Optional[str] = None,
         *,
         base_url: str = DEFAULT_BASE_API_URL,
         max_retries: int = 8,

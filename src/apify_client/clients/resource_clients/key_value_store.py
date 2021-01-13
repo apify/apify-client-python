@@ -76,6 +76,7 @@ class KeyValueStoreClient(ResourceClient):
             as_file (bool, optional): Whether to retrieve the record as a file-like object, default False
         """
         try:
+            # TODO revisit the as_bytes and as_file parameters when we decide how to rewrite the record-getting functions
             if as_bytes and as_file:
                 raise ValueError('You cannot have both as_bytes and as_file set.')
 
@@ -123,6 +124,8 @@ class KeyValueStoreClient(ResourceClient):
         # TODO encode to utf-8
 
         if 'application/json' in content_type and not _is_file_or_bytes(value) and not isinstance(value, str):
+            # TODO decide if we should keep indenting the JSON or not, it could increase the record size considerably,
+            # but if we gzip the requests it should not matter too much with transfer size
             value = json.dumps(value, indent=2)
 
         headers = {'content-type': content_type}

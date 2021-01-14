@@ -3,13 +3,12 @@
 This will be an official client for [Apify API](https://www.apify.com/docs/api/v2).
 It's still work in progress, so please don't use it yet!
 
-TODO: write a proper README
-
 ## Installation
 
 Requires Python 3.7+
 
-TODO: describe `pip install apify_client`, link to PyPI
+Right now the client is not available on PyPI yet, so you can install it only from the git repo.
+To do that, run `pip install git+https://github.com/apify/apify-client-python.git`
 
 ## Development
 

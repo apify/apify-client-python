@@ -115,7 +115,7 @@ class DatasetClient(ResourceClient):
     def iterate_items(
         self,
         offset: int = 0,
-        limit: int = 99999999999,
+        limit: Optional[int] = None,
         clean: Optional[bool] = None,
         desc: Optional[bool] = None,
         fields: Optional[List[str]] = None,
@@ -155,11 +155,20 @@ class DatasetClient(ResourceClient):
         """
         cache_size = 1000
         first_item = offset
-        last_item = offset + limit
+
+        # If there is no limit, set last_item to None until we get the total from the first API response
+        if limit is None:
+            last_item = None
+        else:
+            last_item = offset + limit
 
         current_offset = first_item
-        while current_offset < last_item:
-            current_limit = min(cache_size, last_item - current_offset)
+        while last_item is None or current_offset < last_item:
+            if last_item is None:
+                current_limit = cache_size
+            else:
+                current_limit = min(cache_size, last_item - current_offset)
+
             current_items_pagination = self.list_items(
                 offset=current_offset,
                 limit=current_limit,
@@ -173,7 +182,7 @@ class DatasetClient(ResourceClient):
             )
 
             current_offset += current_items_pagination['count']
-            if current_items_pagination['total'] < last_item:
+            if last_item is None or current_items_pagination['total'] < last_item:
                 last_item = current_items_pagination['total']
 
             yield from current_items_pagination['items']

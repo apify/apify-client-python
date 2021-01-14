@@ -1,22 +1,52 @@
-import setuptools
+import pathlib
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+from setuptools import find_packages, setup
 
-setuptools.setup(
-    name="apify_client",
-    version="0.0.1",
+here = pathlib.Path(__file__).parent.resolve()
+
+long_description = (here / 'README.md').read_text(encoding='utf-8')
+
+setup(
+    name='apify_client',
+    version='0.0.1',
+
     author="Apify Technologies s.r.o.",
     author_email="support@apify.com",
-    description="Work in progress: Apify API client for Python",
+    url="https://github.com/apify/apify-client-python",
+    project_urls={
+        'Apify Homepage': 'https://apify.com',
+    },
+    license='Apache Software License',
+    license_file='LICENSE',
+
+    description='Apify API client for Python',
     long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/apifytech/apify-client-python",
-    packages=setuptools.find_packages(),
+    long_description_content_type='text/markdown',
+
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries',
     ],
-)
+    keywords='apify, api, client, scraping, automation',
 
+    package_dir={'': 'src'},
+    packages=find_packages(where='src'),
+    python_requires='>=3.7',
+    install_requires=['requests ~=2.25.1'],
+    extras_require={
+        'dev': [
+            'autopep8 ~= 1.5.4',
+            'flake8 ~= 3.8.4',
+            'flake8-commas ~= 2.0.0',
+            'flake8-docstrings ~= 1.5.0',
+            'flake8-isort ~= 4.0.0',
+            'isort ~= 5.7.0',
+            'mypy ~= 0.790',
+            'pep8-naming ~= 0.11.1',
+            'pytest ~= 6.2.1',
+        ],
+    },
+)

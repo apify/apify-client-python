@@ -8,6 +8,7 @@ from .clients.resource_clients.key_value_store_collection import KeyValueStoreCo
 from .clients.resource_clients.log import LogClient
 from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
+from .clients.resource_clients.user import UserClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 

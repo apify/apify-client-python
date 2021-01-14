@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -u
+set -ue
 
 checks_to_run=${1:-"everything"}
 shift || true

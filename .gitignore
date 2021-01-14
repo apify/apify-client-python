@@ -1,7 +1,10 @@
+__pycache__
+build/
+
 .venv
 .direnv
 .envrc
-
+.python-version
 .mypy_cache
 .pytest_cache
 

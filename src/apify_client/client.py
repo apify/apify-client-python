@@ -2,6 +2,7 @@ from typing import Dict, Optional
 
 from ._http_client import _HTTPClient
 from .clients.resource_clients.build import BuildClient
+from .clients.resource_clients.build_collection import BuildCollectionClient
 from .clients.resource_clients.dataset import DatasetClient
 from .clients.resource_clients.dataset_collection import DatasetCollectionClient
 from .clients.resource_clients.key_value_store import KeyValueStoreClient
@@ -58,6 +59,10 @@ class ApifyClient:
             build_id (str): ID of the actor build to be manipulated
         """
         return BuildClient(resource_id=build_id, **self._options())
+
+    def builds(self) -> BuildCollectionClient:
+        """Retrieve the sub-client for querying multiple builds of a user."""
+        return BuildCollectionClient(**self._options())
 
     def dataset(self, dataset_id: str) -> DatasetClient:
         """Retrieve the sub-client for manipulating a single dataset.

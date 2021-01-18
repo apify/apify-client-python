@@ -20,7 +20,7 @@ class ActorJobBaseClient(ResourceClient):
         job: Optional[Dict] = None
         seconds_elapsed = 0
 
-        while(should_repeat):
+        while should_repeat:
             wait_for_finish = DEFAULT_WAIT_FOR_FINISH
             if wait_secs is not None:
                 wait_for_finish = wait_secs - seconds_elapsed
@@ -43,11 +43,11 @@ class ActorJobBaseClient(ResourceClient):
                     # Early return here so that we avoid the sleep below if not needed
                     return job
 
-                # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
-                time.sleep(250)
-
             except ApifyApiError as exc:
                 _catch_not_found_or_throw(exc)
+
+            # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
+            time.sleep(250)
 
         return job
 

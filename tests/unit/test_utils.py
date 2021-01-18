@@ -140,7 +140,7 @@ class UtilsTest(unittest.TestCase):
         # Stops retrying when failed for max_retries times
         attempt_counter = 0
         with self.assertRaises(RetryableException):
-            _retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=4, backoff_base_millis=1)
+            _retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
         self.assertEqual(attempt_counter, 4)
 
         # Bails when the bail function is called

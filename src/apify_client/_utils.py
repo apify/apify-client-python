@@ -98,7 +98,7 @@ def _retry_with_exp_backoff(
         swallow = False
         raise exception
 
-    for attempt in range(1, max_retries):
+    for attempt in range(1, max_retries + 1):
         try:
             return func(bail, attempt)
         except Exception as e:
@@ -112,7 +112,7 @@ def _retry_with_exp_backoff(
         sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
         time.sleep(sleep_time_secs)
 
-    return func(bail, max_retries)
+    return func(bail, max_retries + 1)
 
 
 def _catch_not_found_or_throw(exc: ApifyApiError) -> None:

@@ -23,17 +23,19 @@ class ApifyApiError(ApifyClientError):
 
         Args:
             response: The response to the failed API call
-            attempt: Which retry was the request that failed
+            attempt: Which attempt was the request that failed
         """
         self.message: Optional[str] = None
         self.type: Optional[str] = None
 
-        response_data = response.json()
-        if 'error' in response_data:
-            self.message = response_data['error']['message']
-            self.type = response_data['error']['type']
-        else:
-            self.message = f'Unexpected error: {response.text}'
+        self.message = f'Unexpected error: {response.text}'
+        try:
+            response_data = response.json()
+            if 'error' in response_data:
+                self.message = response_data['error']['message']
+                self.type = response_data['error']['type']
+        except ValueError:
+            pass
 
         super().__init__(self.message)
 

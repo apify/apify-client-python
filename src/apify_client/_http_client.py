@@ -20,6 +20,8 @@ class _HTTPClient:
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.requests_session = requests.Session()
 
+        self.requests_session.headers.update({'Accept': 'application/json, */*'})
+
         # TODO add client version
         is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])

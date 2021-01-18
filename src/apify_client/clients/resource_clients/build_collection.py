@@ -17,6 +17,10 @@ class BuildCollectionClient(ResourceCollectionClient):
         """List all builds of a user.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
+        Args:
+            limit: How many builds to retrieve
+            offset: What build store to include as first when retrieving the list
+            desc: Whether to sort the builds in descending order based on their modification date
 
         Returns:
             The retrieved builds of a user

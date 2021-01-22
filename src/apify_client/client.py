@@ -38,7 +38,7 @@ class ApifyClient:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
 
-        self.http_client = _HTTPClient()
+        self.http_client = _HTTPClient(max_retries=max_retries, min_delay_between_retries_millis=min_delay_between_retries_millis)
         # TODO statistics
         # TODO logger
 

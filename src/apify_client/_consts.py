@@ -14,6 +14,16 @@ class ActorJobStatus(Enum):
     ABORTED = 'ABORTED'  # aborted by user
 
 
+class WebhookEventType(Enum):
+    """Events that can trigger a webhook"""
+
+    ACTOR_RUN_CREATED = 'ACTOR.RUN.CREATED'
+    ACTOR_RUN_SUCCEEDED = 'ACTOR.RUN.SUCCEEDED'
+    ACTOR_RUN_FAILED = 'ACTOR.RUN.FAILED'
+    ACTOR_RUN_TIMED_OUT = 'ACTOR.RUN.TIMED_OUT'
+    ACTOR_RUN_ABORTED = 'ACTOR.RUN.ABORTED'
+
+
 # Actor job statuses that are considered terminal
 TERMINAL_ACTOR_JOB_STATUSES = [
     ActorJobStatus.SUCCEEDED,

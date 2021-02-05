@@ -11,6 +11,7 @@ from .clients.resource_clients.log import LogClient
 from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
 from .clients.resource_clients.schedule import ScheduleClient
+from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
 from .clients.resource_clients.user import UserClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
@@ -103,8 +104,15 @@ class ApifyClient:
         return RequestQueueCollectionClient(**self._options())
 
     def schedule(self, schedule_id: str) -> ScheduleClient:
-        """Retrieve the sub-client for manipulating single schedule."""
+        """Retrieve the sub-client for manipulating single schedule.
+        Args:
+            schedule_id (str) : ID of the schedule to be manipulated
+        """
         return ScheduleClient(resource_id=schedule_id, **self._options())
+
+    def schedules(self) -> ScheduleCollectionClient:
+        """Retrieve the sub-client for manipulating schedules."""
+        return ScheduleCollectionClient(**self._options())
 
     def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs."""

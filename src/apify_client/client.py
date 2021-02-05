@@ -10,6 +10,10 @@ from .clients.resource_clients.key_value_store_collection import KeyValueStoreCo
 from .clients.resource_clients.log import LogClient
 from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
+from .clients.resource_clients.webhook import WebhookClient
+from .clients.resource_clients.webhook_collection import WebhookCollectionClient
+from .clients.resource_clients.webhook_dispatch import WebhookDispatchClient
+from .clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient
 from .clients.resource_clients.user import UserClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
@@ -100,6 +104,30 @@ class ApifyClient:
     def request_queues(self) -> RequestQueueCollectionClient:
         """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClient(**self._options())
+
+    def webhook(self, webhook_id: str) -> WebhookClient:
+        """Retrieve the sub-client for manipulating a single webhook.
+
+        Args:
+            webhook_id (str): ID of the webhook to be manipulated
+        """
+        return WebhookClient(resource_id=webhook_id, **self._options())
+
+    def webhooks(self) -> WebhookCollectionClient:
+        """Retrieve the sub-client for querying multiple webhooks of a user."""
+        return WebhookCollectionClient(**self._options())
+
+    def webhook_dispatch(self, webhook_dispatch_id: str) -> BuildClient:
+        """Retrieve the sub-client for accessing a single webhook dispatch.
+
+        Args:
+            webhook_dispatch_id (str): ID of the webhook dispatch to access
+        """
+        return BuildClient(resource_id=webhook_dispatch_id, **self._options())
+
+    def webhook_dispatches(self) -> BuildCollectionClient:
+        """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
+        return BuildCollectionClient(**self._options())
 
     def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs."""

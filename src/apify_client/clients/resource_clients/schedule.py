@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data
+from ..._utils import _catch_not_found_or_throw, _pluck_data_as_list
 from ..base.resource_client import ResourceClient
 
 
@@ -56,7 +56,7 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return _parse_date_fields(_pluck_data(response.json()))
+            return _pluck_data_as_list(response.json())
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
 

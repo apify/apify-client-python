@@ -4,7 +4,7 @@ import re
 import time
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Callable, Dict, List, TypeVar, cast
 
 from ._errors import ApifyApiError
 
@@ -53,6 +53,13 @@ def _parse_date_fields_internal(data: object, max_depth: int = PARSE_DATE_FIELDS
 def _pluck_data(parsed_response: Any) -> Dict:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
         return cast(Dict, parsed_response['data'])
+
+    raise ValueError('The "data" property is missing in the response.')
+
+
+def _pluck_data_as_list(parsed_response: Any) -> List:
+    if isinstance(parsed_response, dict) and 'data' in parsed_response:
+        return cast(List, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 

@@ -105,6 +105,7 @@ class ApifyClient:
 
     def schedule(self, schedule_id: str) -> ScheduleClient:
         """Retrieve the sub-client for manipulating single schedule.
+
         Args:
             schedule_id (str) : ID of the schedule to be manipulated
         """

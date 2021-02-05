@@ -44,6 +44,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             is_exclusive: True if the schedule is exclusive
             name: The name of the schedule to create.
             actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+
         Returns:
             The created schedule.
         """

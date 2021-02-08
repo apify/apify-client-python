@@ -9,7 +9,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClient."""
-        super().__init__(*args, **{'resource_path': 'webhooks', **kwargs})
+        super().__init__(*args, resource_path='webhooks', **kwargs)
 
     def list(self, *, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available webhooks.

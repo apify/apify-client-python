@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..base.resource_collection_client import ResourceCollectionClient
-from webhook import prepare_webhook_representation
+from .webhook import prepare_webhook_representation
 
 
 class WebhookCollectionClient(ResourceCollectionClient):

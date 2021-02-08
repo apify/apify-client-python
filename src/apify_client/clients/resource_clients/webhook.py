@@ -5,6 +5,7 @@ from .webhook_dispatch_collection import WebhookDispatchCollectionClient
 
 
 def prepare_webhook_representation(
+    self,
     event_types: Optional[List] = None,
     request_url: Optional[str] = None,
     payload_template: Optional[str] = None,
@@ -104,7 +105,9 @@ class WebhookClient(ResourceClient):
         Returns:
             The updated webhook
         """
-        webhook = prepare_webhook_representation(**locals())
+        parameters = locals()
+        parameters.pop("self")
+        webhook = prepare_webhook_representation(**parameters)
         return self._update(new_fields=webhook)
 
     def delete(self) -> None:

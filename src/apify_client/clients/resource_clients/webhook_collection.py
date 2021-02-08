@@ -64,5 +64,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             The created webhook
         """
-        webhook = prepare_webhook_representation(**locals())
+        parameters = locals()
+        parameters.pop("self")
+        webhook = prepare_webhook_representation(**parameters)
         return self._create(resource=webhook)

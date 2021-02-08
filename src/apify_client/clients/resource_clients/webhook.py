@@ -5,7 +5,6 @@ from .webhook_dispatch_collection import WebhookDispatchCollectionClient
 
 
 def prepare_webhook_representation(
-    self,
     event_types: Optional[List] = None,
     request_url: Optional[str] = None,
     payload_template: Optional[str] = None,

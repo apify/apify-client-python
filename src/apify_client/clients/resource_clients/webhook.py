@@ -55,7 +55,7 @@ def prepare_webhook_representation(
 
 
 class WebhookClient(ResourceClient):
-    """Sub-client for querying information about a webhook."""
+    """Sub-client for manipulating a single webhook."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClient"""
@@ -124,4 +124,6 @@ class WebhookClient(ResourceClient):
         Returns:
             A client allowing access to dispatches of this webhook using its list method
         """
-        return WebhookDispatchCollectionClient(resource_path="dispatches", resource_id=self.resource_id, params=self._params())
+        return WebhookDispatchCollectionClient(
+            self._init_options(resource_path="dispatches", resource_id=self.resource_id)
+        )

@@ -11,11 +11,11 @@ class WebhookDispatchClient(ResourceClient):
         super().__init__(*args, resource_path='webhook-dispatches', **kwargs)
 
     def get(self) -> Optional[Dict]:
-        """Retrieve information about the webhook dispatch.
+        """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches
 
         Returns:
-            The retrieved webhook dispatch information
+            The retrieved webhook dispatch
         """
         return self._get()

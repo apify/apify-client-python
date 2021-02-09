@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ..base.resource_client import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient

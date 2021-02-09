@@ -1,7 +1,6 @@
-from typing import Any, List, Dict, Optional
-
 from ..base.resource_client import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
+from typing import Any, List, Dict, Optional
 
 
 def prepare_webhook_representation(
@@ -14,8 +13,9 @@ def prepare_webhook_representation(
     ignore_ssl_errors: Optional[bool] = None,
     do_not_retry: Optional[bool] = None,
     idempotency_key: Optional[str] = None,
-    is_ad_hoc: Optional[bool] = None
+    is_ad_hoc: Optional[bool] = None,
 ) -> Dict:
+    """Internal function preparing webhook dictionary representation for clients."""
     webhook = {}
 
     if event_types is not None:
@@ -58,7 +58,7 @@ class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookClient"""
+        """Initialize the WebhookClient."""
         super().__init__(*args, resource_path='webhooks', **kwargs)
 
     def get(self) -> Optional[Dict]:
@@ -81,7 +81,7 @@ class WebhookClient(ResourceClient):
         actor_run_id: Optional[str] = None,
         ignore_ssl_errors: Optional[bool] = None,
         do_not_retry: Optional[bool] = None,
-        is_ad_hoc: Optional[bool] = None
+        is_ad_hoc: Optional[bool] = None,
     ) -> Dict:
         """Update the webhook.
 
@@ -125,5 +125,5 @@ class WebhookClient(ResourceClient):
             A client allowing access to dispatches of this webhook using its list method
         """
         return WebhookDispatchCollectionClient(
-            **self._sub_resource_init_options(resource_path="dispatches")
+            **self._sub_resource_init_options(resource_path="dispatches"),
         )

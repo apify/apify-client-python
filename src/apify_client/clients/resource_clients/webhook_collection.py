@@ -37,7 +37,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         ignore_ssl_errors: Optional[bool] = None,
         do_not_retry: Optional[bool] = None,
         idempotency_key: Optional[str] = None,
-        is_ad_hoc: Optional[bool] = None
+        is_ad_hoc: Optional[bool] = None,
     ) -> Dict:
         """Create a new webhook.
 

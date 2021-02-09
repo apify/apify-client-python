@@ -1,6 +1,7 @@
+from typing import Any, List, Dict, Optional
+
 from ..base.resource_client import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
-from typing import Any, List, Dict, Optional
 
 
 def prepare_webhook_representation(
@@ -15,7 +16,7 @@ def prepare_webhook_representation(
     idempotency_key: Optional[str] = None,
     is_ad_hoc: Optional[bool] = None,
 ) -> Dict:
-    """Internal function preparing webhook dictionary representation for clients."""
+    """Prepare webhook dictionary representation for clients."""
     webhook = {}
 
     if event_types is not None:

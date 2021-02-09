@@ -52,8 +52,6 @@ class BaseClient:
         options = {
             "base_url": self.url,
             "http_client": self.http_client,
-            "resource_id": self.resource_id,
-            "resource_path": self.resource_path,
             "params": self.params,
         }
 

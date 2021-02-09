@@ -125,5 +125,5 @@ class WebhookClient(ResourceClient):
             A client allowing access to dispatches of this webhook using its list method
         """
         return WebhookDispatchCollectionClient(
-            self._init_options(resource_path="dispatches", resource_id=self.resource_id)
+            **self._init_options(resource_path="dispatches", resource_id=self.resource_id)
         )

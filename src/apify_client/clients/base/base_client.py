@@ -48,9 +48,9 @@ class BaseClient:
         merged_params.update(kwargs)
         return merged_params
 
-    def _init_options(self, **kwargs: Any) -> Dict:
+    def _sub_resource_init_options(self, **kwargs: Any) -> Dict:
         options = {
-            "base_url": self.base_url,
+            "base_url": self.url,
             "http_client": self.http_client,
             "resource_id": self.resource_id,
             "resource_path": self.resource_path,

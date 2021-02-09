@@ -123,11 +123,11 @@ class ApifyClient:
         Args:
             webhook_dispatch_id (str): ID of the webhook dispatch to access
         """
-        return BuildClient(resource_id=webhook_dispatch_id, **self._options())
+        return WebhookDispatchClient(resource_id=webhook_dispatch_id, **self._options())
 
     def webhook_dispatches(self) -> BuildCollectionClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
-        return BuildCollectionClient(**self._options())
+        return WebhookDispatchCollectionClient(**self._options())
 
     def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs."""

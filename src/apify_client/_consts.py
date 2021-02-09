@@ -15,7 +15,7 @@ class ActorJobStatus(Enum):
 
 
 class WebhookEventType(Enum):
-    """Events that can trigger a webhook"""
+    """Events that can trigger a webhook."""
 
     ACTOR_RUN_CREATED = 'ACTOR.RUN.CREATED'
     ACTOR_RUN_SUCCEEDED = 'ACTOR.RUN.SUCCEEDED'

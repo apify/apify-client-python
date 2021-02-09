@@ -17,7 +17,7 @@ def prepare_webhook_representation(
     is_ad_hoc: Optional[bool] = None,
 ) -> Dict:
     """Prepare webhook dictionary representation for clients."""
-    webhook = {}
+    webhook: Dict[str, Any] = {}
 
     if event_types is not None:
         webhook["eventTypes"] = event_types

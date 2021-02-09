@@ -117,7 +117,7 @@ class ApifyClient:
         """Retrieve the sub-client for querying multiple webhooks of a user."""
         return WebhookCollectionClient(**self._options())
 
-    def webhook_dispatch(self, webhook_dispatch_id: str) -> BuildClient:
+    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClient:
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
@@ -125,7 +125,7 @@ class ApifyClient:
         """
         return WebhookDispatchClient(resource_id=webhook_dispatch_id, **self._options())
 
-    def webhook_dispatches(self) -> BuildCollectionClient:
+    def webhook_dispatches(self) -> WebhookDispatchCollectionClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClient(**self._options())
 

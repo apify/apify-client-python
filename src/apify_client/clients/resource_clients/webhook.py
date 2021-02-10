@@ -20,37 +20,37 @@ def prepare_webhook_representation(
     webhook: Dict[str, Any] = {}
 
     if event_types is not None:
-        webhook["eventTypes"] = event_types
+        webhook['eventTypes'] = event_types
 
     if request_url is not None:
-        webhook["requestUrl"] = request_url
+        webhook['requestUrl'] = request_url
 
     if payload_template is not None:
-        webhook["payloadTemplate"] = payload_template
+        webhook['payloadTemplate'] = payload_template
 
     condition = {}
     if actor_run_id is not None:
-        condition["actorRunId"] = actor_run_id
-        webhook["isAdHoc"] = True
+        condition['actorRunId'] = actor_run_id
+        webhook['isAdHoc'] = True
     elif actor_task_id is not None:
-        condition["actorTaskId"] = actor_task_id
+        condition['actorTaskId'] = actor_task_id
     elif actor_id is not None:
-        condition["actorId"] = actor_id
+        condition['actorId'] = actor_id
 
     if condition != {}:
-        webhook["condition"] = condition
+        webhook['condition'] = condition
 
     if ignore_ssl_errors is not None:
-        webhook["ignoreSslErrors"] = ignore_ssl_errors
+        webhook['ignoreSslErrors'] = ignore_ssl_errors
 
     if do_not_retry is not None:
-        webhook["doNotRetry"] = do_not_retry
+        webhook['doNotRetry'] = do_not_retry
 
     if idempotency_key is not None:
-        webhook["idempotencyKey"] = idempotency_key
+        webhook['idempotencyKey'] = idempotency_key
 
     if is_ad_hoc is not None:
-        webhook["isAdHoc"] = is_ad_hoc
+        webhook['isAdHoc'] = is_ad_hoc
 
     return webhook
 
@@ -106,7 +106,7 @@ class WebhookClient(ResourceClient):
             The updated webhook
         """
         parameters = locals()
-        parameters.pop("self")
+        parameters.pop('self')
         webhook = prepare_webhook_representation(**parameters)
         return self._update(new_fields=webhook)
 

@@ -33,6 +33,8 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         is_exclusive: bool,
         name: Optional[str] = None,
         actions: List[Dict] = [],
+        description: Optional[str] = None,
+        timezone: Optional[str] = None,
     ) -> Dict:
         """Create a new schedule.
 
@@ -41,9 +43,11 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Args:
             cron_expression: The cron expression used by this schedule
             is_enabled: True if the schedule should be enabled
-            is_exclusive: True if the schedule is exclusive
+            is_exclusive: When set to true, don't start actor or actor task if it's still running from the previous schedule.
             name: The name of the schedule to create.
             actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+            description: Description of this scheedule
+            timezone: Timezone in which your cron expression runs (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 
         Returns:
             The created schedule.
@@ -54,4 +58,6 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             "isExclusive": is_exclusive,
             "cronExpression": cron_expression,
             "actions": actions,
+            "description": description,
+            "timezone": timezone,
         })

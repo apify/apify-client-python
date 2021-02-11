@@ -43,7 +43,7 @@ class ScheduleClient(ResourceClient):
             is_exclusive: When set to true, don't start actor or actor task if it's still running from the previous schedule.
             name: The name of the schedule to create.
             actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-            description: Description of this scheedule
+            description: Description of this schedule
             timezone: Timezone in which your cron expression runs (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 
         Returns:

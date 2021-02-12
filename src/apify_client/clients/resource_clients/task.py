@@ -142,16 +142,17 @@ class TaskClient(ResourceClient):
         Returns:
             The run object
         """
-        run = self.start(
-            task_input=task_input,
-            build=build,
-            memory_mb=memory_mb,
-            timeout_secs=timeout_secs,
-            wait_for_finish=wait_for_finish,
-            webhooks=webhooks,
-        )
-        print(run)
-        print(run["id"])
 
-        # TODO
-        pass
+        raise ValueError('Method not yet finished. Blocked by Run subclient')
+
+        # run = self.start(
+        #     task_input=task_input,
+        #     build=build,
+        #     memory_mb=memory_mb,
+        #     timeout_secs=timeout_secs,
+        #     wait_for_finish=wait_for_finish,
+        #     webhooks=webhooks,
+        # )
+
+        # TODO - retrieve the run using Run client and wait on it
+

@@ -53,6 +53,7 @@ class ApifyClient:
     def _options(self) -> Dict:
         return {
             'base_url': self.base_url,
+            "apify_client": self,
             'http_client': self.http_client,
             'params': {
                 'token': self.token,

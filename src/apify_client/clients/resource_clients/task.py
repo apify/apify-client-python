@@ -110,3 +110,48 @@ class TaskClient(ResourceClient):
         )
 
         return _parse_date_fields(_pluck_data(response.json()))
+
+    def call(
+        self,
+        *,
+        task_input: Optional[Dict[str, Any]] = None,
+        build: Optional[str] = None,
+        memory_mb: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+        wait_for_finish: Optional[int] = None,
+        webhooks: Optional[List[Dict]] = None,
+    ) -> Dict:
+        """Start a task and wait for it to finish before returning the Run object.
+
+        It waits indefinitely, unless the wait_secs argument is provided.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
+
+        Args:
+            task_input (dict, optional): Task input dictionary
+            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+                                   By default, the run uses the build specified in the task settings (typically latest).
+            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+            wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
+                                               By default, it is 0, the maximum value is 300.
+            webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
+                                       e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
+                                       you do not have to add it again here.
+
+        Returns:
+            The run object
+        """
+        run = self.start(
+            task_input=task_input,
+            build=build,
+            memory_mb=memory_mb,
+            timeout_secs=timeout_secs,
+            wait_for_finish=wait_for_finish,
+            webhooks=webhooks,
+        )
+        print(run)
+        print(run["id"])
+
+        # TODO
+        pass

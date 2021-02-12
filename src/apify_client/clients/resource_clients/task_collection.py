@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional
 
+from ..._utils import _filter_out_none_values_recursively
 from ..base.resource_collection_client import ResourceCollectionClient
 
 
@@ -30,7 +31,9 @@ class TaskCollectionClient(ResourceCollectionClient):
         *,
         actor_id: str,
         name: str,
-        task_options: Optional[Dict] = {},
+        build: Optional[str] = None,
+        timeout_secs: Optional[int] = None,
+        memory_mb: Optional[int] = None,
         task_input: Optional[Dict] = {},
     ) -> Dict:
         """Create a new task.
@@ -40,15 +43,24 @@ class TaskCollectionClient(ResourceCollectionClient):
         Args:
             actor_id (string): Id of the actor that should be run
             name (string): Name of the task
-            task_options (dict, optional): Task options, can contain the following keys: build, timeoutSecs and memoryMbytes keys
+            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+                                   By default, the run uses the build specified in the task settings (typically latest).
+            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input object.
 
         Returns:
             The created task.
         """
-        return self._create({
+        new_fields = {
             "actId": actor_id,
             "name": name,
-            "options": task_options,
+            "options": {
+                "build": build,
+                "memoryMbytes": memory_mb,
+                "timeoutSecs": timeout_secs,
+            },
             "input": task_input,
-        })
+        }
+
+        return self._create(_filter_out_none_values_recursively(new_fields))

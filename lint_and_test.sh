@@ -18,7 +18,7 @@ type_check() {
 
 unit_tests() {
     echo "👮‍♀️ running unit tests"
-    python3 -m pytest -rA tests
+    python3 -m pytest -rA --doctest-modules src tests
 }
 
 

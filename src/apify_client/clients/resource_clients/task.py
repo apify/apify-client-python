@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from ..._consts import ActorJobStatus
 from ..._errors import ApifyApiError, ApifyClientError
@@ -158,7 +158,7 @@ class TaskClient(ResourceClient):
 
         # TODO - retrieve the run using Run client and wait on it
 
-    def get_input(self) -> Dict:
+    def get_input(self) -> Optional[Dict]:
         """Retrieve the input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -172,9 +172,10 @@ class TaskClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return response.json()
+            return cast(Dict, response.json())
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
+        return None
 
     def update_input(self, *, task_input: Dict) -> Dict:
         """Update the input for this task.
@@ -190,7 +191,7 @@ class TaskClient(ResourceClient):
             params=self._params(),
             json=task_input,
         )
-        return response.json()
+        return cast(Dict, response.json())
 
     def last_run(self, *, status: Optional[ActorJobStatus] = None) -> Any:
         """Retrieve RunClient for last run of this task.

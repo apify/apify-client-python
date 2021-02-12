@@ -192,7 +192,7 @@ class TaskClient(ResourceClient):
         )
         return response.json()
 
-    def last_run(self, *, status: Optional[ActorJobStatus]) -> Any:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> Any:
         """Retrieve RunClient for last run of this task.
 
         Args:

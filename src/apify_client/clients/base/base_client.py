@@ -46,7 +46,7 @@ class BaseClient:
     def _params(self, **kwargs: Any) -> Dict:
         return {
             **self.params,
-            **kwargs
+            **kwargs,
         }
 
     def _sub_resource_init_options(self, **kwargs: Any) -> Dict:
@@ -58,5 +58,5 @@ class BaseClient:
 
         return {
             **options,
-            **kwargs
+            **kwargs,
         }

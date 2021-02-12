@@ -133,6 +133,7 @@ def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
 
 def _snake_case_to_camel_case(str_snake_case: str) -> str:
     """Convert string in snake case to camel case.
+
     >>> _snake_case_to_camel_case("")
     ''
     >>> _snake_case_to_camel_case("making")

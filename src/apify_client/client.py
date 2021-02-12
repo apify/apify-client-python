@@ -11,6 +11,7 @@ from .clients.resource_clients.log import LogClient
 from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
 from .clients.resource_clients.user import UserClient
+from .clients.resource_clients.task_collection import TaskCollectionClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 
@@ -104,6 +105,10 @@ class ApifyClient:
     def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs."""
         return LogClient(resource_id=build_or_run_id, **self._options())
+
+    def tasks(self) -> TaskCollectionClient:
+        """Retrieve the sub-client for retrieving tasks."""
+        return TaskCollectionClient(**self._options())
 
     def user(self, user_id: str) -> UserClient:
         """Retrieve the sub-client for querying users."""

@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from ..._consts import ActorJobStatus
 from ..._errors import ApifyApiError, ApifyClientError
 from ..._utils import _catch_not_found_or_throw, _encode_json_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
 from ..base.resource_client import ResourceClient
@@ -143,8 +144,7 @@ class TaskClient(ResourceClient):
         Returns:
             The run object
         """
-
-        raise ApifyClientError('Method not yet finished. Blocked by Run subclient')
+        raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
 
         # run = self.start(
         #     task_input=task_input,
@@ -165,7 +165,6 @@ class TaskClient(ResourceClient):
         Returns:
             Retrieved task input
         """
-
         try:
             response = self.http_client.call(
                 url=self._url('input'),
@@ -176,7 +175,7 @@ class TaskClient(ResourceClient):
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
 
-    def update_input(self, task_input: Dict) -> Dict:
+    def update_input(self, *, task_input: Dict) -> Dict:
         """Update the input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
@@ -184,7 +183,6 @@ class TaskClient(ResourceClient):
         Returns:
             Retrieved task input
         """
-
         response = self.http_client.call(
             url=self._url('input'),
             method='PUT',
@@ -192,3 +190,19 @@ class TaskClient(ResourceClient):
             json=task_input,
         )
         return response.json()
+
+    def last_run(self, *, status: Optional[ActorJobStatus]) -> Dict:
+        """Retrieve RunClient for last run of this task.
+
+        Args:
+            status (optional, dict): Consider only runs with this status.
+        """
+        raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
+
+        # TODO - return run subclient for the last run
+
+    def runs(self) -> Dict:
+        """Retrieve RunCollectionClient for runs of this task."""
+        raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
+
+        # TODO - return run collection subclient

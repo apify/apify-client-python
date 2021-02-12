@@ -12,12 +12,12 @@ from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
 from .clients.resource_clients.schedule import ScheduleClient
 from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
+from .clients.resource_clients.task import TaskClient
 from .clients.resource_clients.user import UserClient
 from .clients.resource_clients.webhook import WebhookClient
 from .clients.resource_clients.webhook_collection import WebhookCollectionClient
 from .clients.resource_clients.webhook_dispatch import WebhookDispatchClient
 from .clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient
-from .clients.resource_clients.task import TaskClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 

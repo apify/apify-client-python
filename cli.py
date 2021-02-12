@@ -24,4 +24,23 @@ client = ApifyClient(token="pt8ZArh3NoqbPKPrsAYQ3f7FL")
 
 # print(client.tasks().list(limit=1))
 # print(client.tasks().create(actor_id="4ektHDJJ92P6TZ8wV", name="task-from-python-2", task_options={'timeoutSecs': 10}, task_input={"linkSelector": 'abc'}))
-print(client.task(task_id="6JXgSWMu4mfBHvvan").get())
+# print(client.task(task_id="6JXgSWMu4mfBHvvan").get())
+print(client.task(task_id="6JXgSWMu4mfBHvvan").update(timeout_secs=321, task_input={'a': 'b'}))
+# print(client.task(task_id="6JXgSWMu4mfBHvvan").get())
+# print(client.task(task_id="6JXgSWMu4mfBHvvan").start(
+#     task_input={'foo': 'bla'},
+#     memory=256,
+#     timeout=50,
+#     wait_for_finish=10,
+#     webhooks=[
+#         {
+#             "eventTypes": ['ACTOR.RUN.CREATED'],
+#             "requestUrl": 'https://example.com/run-created',
+#         },
+#         {
+#             "eventTypes": ['ACTOR.RUN.SUCCEEDED'],
+#             "requestUrl": 'https://example.com/run-succeeded',
+#             "payloadTemplate": '{"hello": "world", "resource":{{resource}}}',
+#         },
+#     ]
+# ))

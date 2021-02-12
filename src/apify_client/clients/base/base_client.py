@@ -1,6 +1,5 @@
 from typing import Any, Dict, Optional
 
-from ....apify_client import ApifyClient
 from ..._http_client import _HTTPClient
 from ..._utils import _to_safe_id
 
@@ -12,7 +11,7 @@ class BaseClient:
         self,
         *,
         base_url: str,
-        apify_client: ApifyClient,
+        apify_client: Any,  # TODO - somehow import ApifyClient type
         http_client: _HTTPClient,
         resource_id: Optional[str] = None,
         resource_path: str,

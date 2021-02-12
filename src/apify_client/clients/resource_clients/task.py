@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _encode_json_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
+from ..._errors import ApifyApiError, ApifyClientError
+from ..._utils import _catch_not_found_or_throw, _encode_json_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
 from ..base.resource_client import ResourceClient
 
 
@@ -143,7 +144,7 @@ class TaskClient(ResourceClient):
             The run object
         """
 
-        raise ValueError('Method not yet finished. Blocked by Run subclient')
+        raise ApifyClientError('Method not yet finished. Blocked by Run subclient')
 
         # run = self.start(
         #     task_input=task_input,
@@ -156,3 +157,38 @@ class TaskClient(ResourceClient):
 
         # TODO - retrieve the run using Run client and wait on it
 
+    def get_input(self) -> Dict:
+        """Retrieve the input for this task.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
+
+        Returns:
+            Retrieved task input
+        """
+
+        try:
+            response = self.http_client.call(
+                url=self._url('input'),
+                method='GET',
+                params=self._params(),
+            )
+            return response.json()
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+    def update_input(self, task_input: Dict) -> Dict:
+        """Update the input for this task.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
+
+        Returns:
+            Retrieved task input
+        """
+
+        response = self.http_client.call(
+            url=self._url('input'),
+            method='PUT',
+            params=self._params(),
+            json=task_input,
+        )
+        return response.json()

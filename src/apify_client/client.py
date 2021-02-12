@@ -10,11 +10,14 @@ from .clients.resource_clients.key_value_store_collection import KeyValueStoreCo
 from .clients.resource_clients.log import LogClient
 from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
+from .clients.resource_clients.schedule import ScheduleClient
+from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
 from .clients.resource_clients.user import UserClient
 from .clients.resource_clients.webhook import WebhookClient
 from .clients.resource_clients.webhook_collection import WebhookCollectionClient
 from .clients.resource_clients.webhook_dispatch import WebhookDispatchClient
 from .clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient
+from .clients.resource_clients.task import TaskClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 
@@ -129,9 +132,25 @@ class ApifyClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClient(**self._options())
 
+    def schedule(self, schedule_id: str) -> ScheduleClient:
+        """Retrieve the sub-client for manipulating single schedule.
+
+        Args:
+            schedule_id (str) : ID of the schedule to be manipulated
+        """
+        return ScheduleClient(resource_id=schedule_id, **self._options())
+
+    def schedules(self) -> ScheduleCollectionClient:
+        """Retrieve the sub-client for manipulating schedules."""
+        return ScheduleCollectionClient(**self._options())
+
     def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs."""
         return LogClient(resource_id=build_or_run_id, **self._options())
+
+    def task(self, task_id: str) -> TaskClient:
+        """Retrieve the sub-client for manipulating a single task."""
+        return TaskClient(resource_id=task_id, **self._options())
 
     def user(self, user_id: str) -> UserClient:
         """Retrieve the sub-client for querying users."""

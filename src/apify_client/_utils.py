@@ -4,7 +4,7 @@ import re
 import time
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Callable, Dict, List, TypeVar, cast
 
 from ._errors import ApifyApiError
 
@@ -53,6 +53,13 @@ def _parse_date_fields_internal(data: object, max_depth: int = PARSE_DATE_FIELDS
 def _pluck_data(parsed_response: Any) -> Dict:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
         return cast(Dict, parsed_response['data'])
+
+    raise ValueError('The "data" property is missing in the response.')
+
+
+def _pluck_data_as_list(parsed_response: Any) -> List:
+    if isinstance(parsed_response, dict) and 'data' in parsed_response:
+        return cast(List, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 
@@ -122,3 +129,21 @@ def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
         raise exc
 
     return None
+
+
+def _snake_case_to_camel_case(str_snake_case: str) -> str:
+    """Convert string in snake case to camel case.
+
+    >>> _snake_case_to_camel_case("")
+    ''
+    >>> _snake_case_to_camel_case("making")
+    'making'
+    >>> _snake_case_to_camel_case("making_the_web_programmable")
+    'makingTheWebProgrammable'
+    >>> _snake_case_to_camel_case("making_the_WEB_programmable")
+    'makingTheWebProgrammable'
+    """
+    return "".join([
+        part.capitalize() if i > 0 else part
+        for i, part in enumerate(str_snake_case.split("_"))
+    ])

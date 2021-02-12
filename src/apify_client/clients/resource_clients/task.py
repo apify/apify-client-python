@@ -4,6 +4,7 @@ from ..._consts import ActorJobStatus
 from ..._errors import ApifyApiError, ApifyClientError
 from ..._utils import _catch_not_found_or_throw, _encode_json_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
 from ..base.resource_client import ResourceClient
+from .webhook_collection import WebhookCollectionClient
 
 
 class TaskClient(ResourceClient):
@@ -191,7 +192,7 @@ class TaskClient(ResourceClient):
         )
         return response.json()
 
-    def last_run(self, *, status: Optional[ActorJobStatus]) -> Dict:
+    def last_run(self, *, status: Optional[ActorJobStatus]) -> Any:
         """Retrieve RunClient for last run of this task.
 
         Args:
@@ -201,8 +202,12 @@ class TaskClient(ResourceClient):
 
         # TODO - return run subclient for the last run
 
-    def runs(self) -> Dict:
+    def runs(self) -> Any:
         """Retrieve RunCollectionClient for runs of this task."""
         raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
 
         # TODO - return run collection subclient
+
+    def webhooks(self) -> WebhookCollectionClient:
+        """Retrieve WebhookCollectionClient for webhooks associated with this task."""
+        return WebhookCollectionClient(**self._sub_resource_init_options())

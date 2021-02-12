@@ -11,7 +11,6 @@ class BaseClient:
         self,
         *,
         base_url: str,
-        apify_client: Any,  # TODO - somehow import ApifyClient type
         http_client: _HTTPClient,
         resource_id: Optional[str] = None,
         resource_path: str,
@@ -21,7 +20,6 @@ class BaseClient:
 
         Args:
             base_url (str): Base URL of the API server
-            apify_client: Instance of the Apify client
             http_client (_HTTPClient): The _HTTPClient instance to be used in this client
             resource_id (str): ID of the manipulated resource, in case of a single-resource client
             resource_path (str): Path to the resource's endpoint on the API server
@@ -31,7 +29,6 @@ class BaseClient:
             raise ValueError('resource_path must not end with "/"')
 
         self.base_url = base_url
-        self.apify_client = apify_client
         self.http_client = http_client
         self.params = params or {}
         self.resource_path = resource_path
@@ -54,7 +51,6 @@ class BaseClient:
     def _sub_resource_init_options(self, **kwargs: Any) -> Dict:
         options = {
             "base_url": self.url,
-            "apify_client": self.apify_client,
             "http_client": self.http_client,
             "params": self.params,
         }

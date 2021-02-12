@@ -1,10 +1,12 @@
 from typing import Any, Dict, List, Optional
 
+from ..._utils import _snake_case_to_camel_case
 from ..base.resource_client import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
 
 
-def prepare_webhook_representation(
+def _prepare_webhook_representation(
+    *,
     event_types: Optional[List] = None,
     request_url: Optional[str] = None,
     payload_template: Optional[str] = None,
@@ -17,18 +19,13 @@ def prepare_webhook_representation(
     is_ad_hoc: Optional[bool] = None,
 ) -> Dict:
     """Prepare webhook dictionary representation for clients."""
-    webhook: Dict[str, Any] = {}
-
-    if event_types is not None:
-        webhook['eventTypes'] = event_types
-
-    if request_url is not None:
-        webhook['requestUrl'] = request_url
-
-    if payload_template is not None:
-        webhook['payloadTemplate'] = payload_template
+    webhook: Dict[str, Any] = {
+        _snake_case_to_camel_case(key): value
+        for key, value in locals().items() if value is not None and key not in ["actor_run_id", "actor_task_id", "actor_id"]
+    }
 
     condition = {}
+
     if actor_run_id is not None:
         condition['actorRunId'] = actor_run_id
         webhook['isAdHoc'] = True
@@ -38,19 +35,7 @@ def prepare_webhook_representation(
         condition['actorId'] = actor_id
 
     if condition != {}:
-        webhook['condition'] = condition
-
-    if ignore_ssl_errors is not None:
-        webhook['ignoreSslErrors'] = ignore_ssl_errors
-
-    if do_not_retry is not None:
-        webhook['doNotRetry'] = do_not_retry
-
-    if idempotency_key is not None:
-        webhook['idempotencyKey'] = idempotency_key
-
-    if is_ad_hoc is not None:
-        webhook['isAdHoc'] = is_ad_hoc
+        webhook["condition"] = condition
 
     return webhook
 
@@ -74,6 +59,7 @@ class WebhookClient(ResourceClient):
 
     def update(
         self,
+        *,
         event_types: Optional[List] = None,
         request_url: Optional[str] = None,
         payload_template: Optional[str] = None,
@@ -107,7 +93,7 @@ class WebhookClient(ResourceClient):
         """
         parameters = locals()
         parameters.pop('self')
-        webhook = prepare_webhook_representation(**parameters)
+        webhook = _prepare_webhook_representation(**parameters)
         return self._update(new_fields=webhook)
 
     def delete(self) -> None:
@@ -120,7 +106,7 @@ class WebhookClient(ResourceClient):
     def dispatches(self) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.
 
-        https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection
+        https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
 
         Returns:
             A client allowing access to dispatches of this webhook using its list method

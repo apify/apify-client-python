@@ -30,7 +30,7 @@ class TaskClient(ResourceClient):
         name: Optional[str] = None,
         task_input: Optional[Dict] = None,
         build: Optional[str] = None,
-        memory_mb: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
     ) -> Dict:
         """Update the task with specified fields.
@@ -41,7 +41,7 @@ class TaskClient(ResourceClient):
             name (str, optional): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
 
@@ -52,7 +52,7 @@ class TaskClient(ResourceClient):
             "name": name,
             "options": {
                 "build": build,
-                "memoryMbytes": memory_mb,
+                "memoryMbytes": memory_mbytes,
                 "timeoutSecs": timeout_secs,
             },
             "input": task_input,
@@ -72,7 +72,7 @@ class TaskClient(ResourceClient):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
-        memory_mb: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -85,7 +85,7 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
@@ -98,7 +98,7 @@ class TaskClient(ResourceClient):
         """
         request_params = self._params(
             build=build,
-            memory=memory_mb,
+            memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
             webhooks=_encode_json_to_base64(webhooks) if webhooks is not None else [],
@@ -119,7 +119,7 @@ class TaskClient(ResourceClient):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
-        memory_mb: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -134,7 +134,7 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
@@ -150,7 +150,7 @@ class TaskClient(ResourceClient):
         # run = self.start(
         #     task_input=task_input,
         #     build=build,
-        #     memory_mb=memory_mb,
+        #     memory_mbytes=memory_mbytes,
         #     timeout_secs=timeout_secs,
         #     wait_for_finish=wait_for_finish,
         #     webhooks=webhooks,

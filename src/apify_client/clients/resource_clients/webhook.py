@@ -76,7 +76,7 @@ class WebhookClient(ResourceClient):
 
         Args:
             event_types (list, optional): List of event types that should trigger the webhook.
-                                Present in the client constants as WebhookEventType. At least one is required.
+                                          Present in the client constants as WebhookEventType. At least one is required.
             request_url (str, optional): URL that will be invoked once the webhook is triggered.
             payload_template (str, optional): Specification of the payload that will be sent to request_url
             actor_id (str, optional): Id of the actor whose runs should trigger the webhook.

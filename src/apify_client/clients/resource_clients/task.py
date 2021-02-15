@@ -41,7 +41,8 @@ class TaskClient(ResourceClient):
             name (str, optional): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
 
@@ -85,7 +86,8 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
@@ -134,7 +136,8 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.

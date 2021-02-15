@@ -13,7 +13,7 @@ class WebhookDispatchClient(ResourceClient):
     def get(self) -> Optional[Dict]:
         """Retrieve the webhook dispatch.
 
-        https://docs.apify.com/api/v2#/reference/webhook-dispatches
+        https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
 
         Returns:
             The retrieved webhook dispatch

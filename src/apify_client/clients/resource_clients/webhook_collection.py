@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..base.resource_collection_client import ResourceCollectionClient
-from .webhook import prepare_webhook_representation
+from .webhook import _prepare_webhook_representation
 
 
 class WebhookCollectionClient(ResourceCollectionClient):
@@ -28,6 +28,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
 
     def create(
         self,
+        *,
         event_types: List,
         request_url: str,
         payload_template: Optional[str] = None,
@@ -66,5 +67,5 @@ class WebhookCollectionClient(ResourceCollectionClient):
         """
         parameters = locals()
         parameters.pop('self')
-        webhook = prepare_webhook_representation(**parameters)
+        webhook = _prepare_webhook_representation(**parameters)
         return self._create(resource=webhook)

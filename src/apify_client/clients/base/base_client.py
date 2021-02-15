@@ -44,9 +44,10 @@ class BaseClient:
         return self.url
 
     def _params(self, **kwargs: Any) -> Dict:
-        merged_params = self.params.copy()
-        merged_params.update(kwargs)
-        return merged_params
+        return {
+            **self.params,
+            **kwargs,
+        }
 
     def _sub_resource_init_options(self, **kwargs: Any) -> Dict:
         options = {
@@ -55,5 +56,7 @@ class BaseClient:
             "params": self.params,
         }
 
-        options.update(kwargs)
-        return options
+        return {
+            **options,
+            **kwargs,
+        }

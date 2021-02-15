@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from ..._utils import _snake_case_to_camel_case
 from ..base.resource_collection_client import ResourceCollectionClient
 
 
@@ -52,12 +53,8 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             The created schedule.
         """
-        return self._create({
-            "name": name,
-            "isEnabled": is_enabled,
-            "isExclusive": is_exclusive,
-            "cronExpression": cron_expression,
-            "actions": actions,
-            "description": description,
-            "timezone": timezone,
-        })
+        kwargs = {
+            _snake_case_to_camel_case(key): value
+            for key, value in locals().items() if key != 'self' and value is not None
+        }
+        return self._create(kwargs)

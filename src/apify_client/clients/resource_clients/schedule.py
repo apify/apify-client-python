@@ -6,14 +6,14 @@ from ..base.resource_client import ResourceClient
 
 
 class ScheduleClient(ResourceClient):
-    """Sub-client for manipulating schedules."""
+    """Sub-client for manipulating a single schedule."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClient."""
         super().__init__(*args, resource_path='schedules', **kwargs)
 
     def get(self) -> Optional[Dict]:
-        """Return information about schedule.
+        """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
 
@@ -32,7 +32,7 @@ class ScheduleClient(ResourceClient):
         actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
-    ) -> Optional[Dict]:
+    ) -> Dict:
         """Update the schedule with specified fields.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule

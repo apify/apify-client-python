@@ -104,7 +104,7 @@ class ApifyClient:
         return RequestQueueCollectionClient(**self._options())
 
     def schedule(self, schedule_id: str) -> ScheduleClient:
-        """Retrieve the sub-client for manipulating single schedule.
+        """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
             schedule_id (str) : ID of the schedule to be manipulated

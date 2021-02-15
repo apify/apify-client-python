@@ -1,5 +1,6 @@
 __pycache__
 build/
+cli_test_client.py
 
 .venv
 .direnv

@@ -8,7 +8,7 @@ class TaskCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating tasks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the TaskCollectionClient with the passed arguments."""
+        """Initialize the TaskCollectionClient."""
         super().__init__(*args, resource_path='actor-tasks', **kwargs)
 
     def list(self, *, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
@@ -17,8 +17,8 @@ class TaskCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
         Args:
-            limit: How many tasks to retrieve
-            offset: What tasks to include as first when retrieving the list
+            limit: How many tasks to list
+            offset: What task to include as first when retrieving the list
             desc: Whether to sort the tasks in descending order based on their modification date
 
         Returns:
@@ -41,9 +41,9 @@ class TaskCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
         Args:
-            actor_id (string): Id of the actor that should be run
-            name (string): Name of the task
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+            actor_id (str): Id of the actor that should be run
+            name (str): Name of the task
+            build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.

@@ -199,6 +199,8 @@ class TaskClient(ResourceClient):
     def last_run(self, *, status: Optional[ActorJobStatus] = None) -> Any:
         """Retrieve RunClient for last run of this task.
 
+        Last run is retrieved based on the start time of the runs.
+
         Args:
             status (optional, dict): Consider only runs with this status.
         """

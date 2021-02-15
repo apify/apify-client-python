@@ -132,22 +132,22 @@ def _encode_json_to_base64(data: JSONSerializable) -> bytes:
     return base64.b64encode(json.dumps(data).encode("utf-8"))
 
 
-def _decode_base64_json(encoded_data: bytes) -> JSONSerializable:
+def _decode_base64_to_json(encoded_data: bytes) -> JSONSerializable:
     """Decode base64 string into JSONSerializable data.
 
-    >>> _decode_base64_json(_encode_json_to_base64(1))
+    >>> _decode_base64_to_json(_encode_json_to_base64(1))
     1
-    >>> _decode_base64_json(_encode_json_to_base64(1.1))
+    >>> _decode_base64_to_json(_encode_json_to_base64(1.1))
     1.1
-    >>> _decode_base64_json(_encode_json_to_base64("apify"))
+    >>> _decode_base64_to_json(_encode_json_to_base64("apify"))
     'apify'
-    >>> _decode_base64_json(_encode_json_to_base64(True))
+    >>> _decode_base64_to_json(_encode_json_to_base64(True))
     True
-    >>> _decode_base64_json(_encode_json_to_base64(None)) is None
+    >>> _decode_base64_to_json(_encode_json_to_base64(None)) is None
     True
-    >>> _decode_base64_json(_encode_json_to_base64([1, 2, 3]))
+    >>> _decode_base64_to_json(_encode_json_to_base64([1, 2, 3]))
     [1, 2, 3]
-    >>> _decode_base64_json(_encode_json_to_base64({"apify": "rocks"}))
+    >>> _decode_base64_to_json(_encode_json_to_base64({"apify": "rocks"}))
     {'apify': 'rocks'}
     """
     return cast(JSONSerializable, json.loads(base64.b64decode(encoded_data).decode("utf-8")))

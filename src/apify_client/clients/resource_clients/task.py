@@ -30,7 +30,7 @@ class TaskClient(ResourceClient):
         name: Optional[str] = None,
         task_input: Optional[Dict] = None,
         build: Optional[str] = None,
-        memory_mb: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
     ) -> Dict:
         """Update the task with specified fields.
@@ -38,10 +38,11 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
 
         Args:
-            name (string, optional): Name of the task
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+            name (str, optional): Name of the task
+            build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
 
@@ -52,7 +53,7 @@ class TaskClient(ResourceClient):
             "name": name,
             "options": {
                 "build": build,
-                "memoryMbytes": memory_mb,
+                "memoryMbytes": memory_mbytes,
                 "timeoutSecs": timeout_secs,
             },
             "input": task_input,
@@ -72,12 +73,12 @@ class TaskClient(ResourceClient):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
-        memory_mb: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
     ) -> Dict:
-        """Start a task and immediately return the Run object.
+        """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
@@ -85,20 +86,21 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
-            webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
-                                       e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
-                                       you do not have to add it again here.
+            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
+                                       which can be used to receive a notification, e.g. when the actor finished or failed.
+                                       If you already have a webhook set up for the actor or task, you do not have to add it again here.
 
         Returns:
             The run object
         """
         request_params = self._params(
             build=build,
-            memory=memory_mb,
+            memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
             webhooks=_encode_json_to_base64(webhooks) if webhooks is not None else [],
@@ -119,7 +121,7 @@ class TaskClient(ResourceClient):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
-        memory_mb: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -134,9 +136,10 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mb (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
-            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
+            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+            wait_for_finish (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
             webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
                                        e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
@@ -150,7 +153,7 @@ class TaskClient(ResourceClient):
         # run = self.start(
         #     task_input=task_input,
         #     build=build,
-        #     memory_mb=memory_mb,
+        #     memory_mbytes=memory_mbytes,
         #     timeout_secs=timeout_secs,
         #     wait_for_finish=wait_for_finish,
         #     webhooks=webhooks,
@@ -159,7 +162,7 @@ class TaskClient(ResourceClient):
         # TODO - retrieve the run using Run client and wait on it
 
     def get_input(self) -> Optional[Dict]:
-        """Retrieve the input for this task.
+        """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
 
@@ -178,7 +181,7 @@ class TaskClient(ResourceClient):
         return None
 
     def update_input(self, *, task_input: Dict) -> Dict:
-        """Update the input for this task.
+        """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
@@ -195,6 +198,8 @@ class TaskClient(ResourceClient):
 
     def last_run(self, *, status: Optional[ActorJobStatus] = None) -> Any:
         """Retrieve RunClient for last run of this task.
+
+        Last run is retrieved based on the start time of the runs.
 
         Args:
             status (optional, dict): Consider only runs with this status.

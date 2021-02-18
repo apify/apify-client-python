@@ -6,7 +6,7 @@ import re
 import time
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Callable, Dict, List, TypeVar, cast
 
 from ._errors import ApifyApiError
 from ._types import JSONSerializable
@@ -56,6 +56,13 @@ def _parse_date_fields_internal(data: object, max_depth: int = PARSE_DATE_FIELDS
 def _pluck_data(parsed_response: Any) -> Dict:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
         return cast(Dict, parsed_response['data'])
+
+    raise ValueError('The "data" property is missing in the response.')
+
+
+def _pluck_data_as_list(parsed_response: Any) -> List:
+    if isinstance(parsed_response, dict) and 'data' in parsed_response:
+        return cast(List, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 
@@ -132,22 +139,22 @@ def _encode_json_to_base64(data: JSONSerializable) -> bytes:
     return base64.b64encode(json.dumps(data).encode("utf-8"))
 
 
-def _decode_base64_json(encoded_data: bytes) -> JSONSerializable:
+def _decode_base64_to_json(encoded_data: bytes) -> JSONSerializable:
     """Decode base64 string into JSONSerializable data.
 
-    >>> _decode_base64_json(_encode_json_to_base64(1))
+    >>> _decode_base64_to_json(_encode_json_to_base64(1))
     1
-    >>> _decode_base64_json(_encode_json_to_base64(1.1))
+    >>> _decode_base64_to_json(_encode_json_to_base64(1.1))
     1.1
-    >>> _decode_base64_json(_encode_json_to_base64("apify"))
+    >>> _decode_base64_to_json(_encode_json_to_base64("apify"))
     'apify'
-    >>> _decode_base64_json(_encode_json_to_base64(True))
+    >>> _decode_base64_to_json(_encode_json_to_base64(True))
     True
-    >>> _decode_base64_json(_encode_json_to_base64(None)) is None
+    >>> _decode_base64_to_json(_encode_json_to_base64(None)) is None
     True
-    >>> _decode_base64_json(_encode_json_to_base64([1, 2, 3]))
+    >>> _decode_base64_to_json(_encode_json_to_base64([1, 2, 3]))
     [1, 2, 3]
-    >>> _decode_base64_json(_encode_json_to_base64({"apify": "rocks"}))
+    >>> _decode_base64_to_json(_encode_json_to_base64({"apify": "rocks"}))
     {'apify': 'rocks'}
     """
     return cast(JSONSerializable, json.loads(base64.b64decode(encoded_data).decode("utf-8")))
@@ -173,3 +180,21 @@ def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
         for k, v in dictionary.items()
         if v is not None
     }
+
+
+def _snake_case_to_camel_case(str_snake_case: str) -> str:
+    """Convert string in snake case to camel case.
+
+    >>> _snake_case_to_camel_case("")
+    ''
+    >>> _snake_case_to_camel_case("making")
+    'making'
+    >>> _snake_case_to_camel_case("making_the_web_programmable")
+    'makingTheWebProgrammable'
+    >>> _snake_case_to_camel_case("making_the_WEB_programmable")
+    'makingTheWebProgrammable'
+    """
+    return "".join([
+        part.capitalize() if i > 0 else part
+        for i, part in enumerate(str_snake_case.split("_"))
+    ])

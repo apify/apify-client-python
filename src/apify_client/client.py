@@ -11,6 +11,8 @@ from .clients.resource_clients.log import LogClient
 from .clients.resource_clients.request_queue import RequestQueueClient
 from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
 from .clients.resource_clients.task import TaskClient
+from .clients.resource_clients.schedule import ScheduleClient
+from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
 from .clients.resource_clients.user import UserClient
 from .clients.resource_clients.webhook import WebhookClient
 from .clients.resource_clients.webhook_collection import WebhookCollectionClient
@@ -129,6 +131,18 @@ class ApifyClient:
     def webhook_dispatches(self) -> WebhookDispatchCollectionClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClient(**self._options())
+
+    def schedule(self, schedule_id: str) -> ScheduleClient:
+        """Retrieve the sub-client for manipulating a single schedule.
+
+        Args:
+            schedule_id (str) : ID of the schedule to be manipulated
+        """
+        return ScheduleClient(resource_id=schedule_id, **self._options())
+
+    def schedules(self) -> ScheduleCollectionClient:
+        """Retrieve the sub-client for manipulating schedules."""
+        return ScheduleCollectionClient(**self._options())
 
     def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs."""

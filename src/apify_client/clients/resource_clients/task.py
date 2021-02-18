@@ -138,8 +138,8 @@ class TaskClient(ResourceClient):
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
-            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
+            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+            wait_for_finish (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
             webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
                                        e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,

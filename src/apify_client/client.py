@@ -13,6 +13,7 @@ from .clients.resource_clients.request_queue_collection import RequestQueueColle
 from .clients.resource_clients.schedule import ScheduleClient
 from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
 from .clients.resource_clients.task import TaskClient
+from .clients.resource_clients.task_collection import TaskCollectionClient
 from .clients.resource_clients.user import UserClient
 from .clients.resource_clients.webhook import WebhookClient
 from .clients.resource_clients.webhook_collection import WebhookCollectionClient
@@ -151,6 +152,10 @@ class ApifyClient:
     def task(self, task_id: str) -> TaskClient:
         """Retrieve the sub-client for manipulating a single task."""
         return TaskClient(resource_id=task_id, **self._options())
+
+    def tasks(self) -> TaskCollectionClient:
+        """Retrieve the sub-client for retrieving tasks."""
+        return TaskCollectionClient(**self._options())
 
     def user(self, user_id: str) -> UserClient:
         """Retrieve the sub-client for querying users."""

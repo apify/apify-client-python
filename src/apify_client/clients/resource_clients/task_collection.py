@@ -34,7 +34,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         build: Optional[str] = None,
         timeout_secs: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
-        task_input: Optional[Dict] = {},
+        task_input: Optional[Dict] = None,
     ) -> Dict:
         """Create a new task.
 
@@ -45,7 +45,8 @@ class TaskCollectionClient(ResourceCollectionClient):
             name (str): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes. By default, the run uses a memory limit specified in the task settings.
+            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
+                                           By default, the run uses a memory limit specified in the task settings.
             timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input object.
 

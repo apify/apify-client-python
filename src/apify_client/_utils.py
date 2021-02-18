@@ -1,4 +1,6 @@
+import base64
 import io
+import json
 import random
 import re
 import time
@@ -7,6 +9,7 @@ from http import HTTPStatus
 from typing import Any, Callable, Dict, List, TypeVar, cast
 
 from ._errors import ApifyApiError
+from ._types import JSONSerializable
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
@@ -129,6 +132,54 @@ def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
         raise exc
 
     return None
+
+
+def _encode_json_to_base64(data: JSONSerializable) -> bytes:
+    """Encode JSON serializable data to base64 string."""
+    return base64.b64encode(json.dumps(data).encode("utf-8"))
+
+
+def _decode_base64_to_json(encoded_data: bytes) -> JSONSerializable:
+    """Decode base64 string into JSONSerializable data.
+
+    >>> _decode_base64_to_json(_encode_json_to_base64(1))
+    1
+    >>> _decode_base64_to_json(_encode_json_to_base64(1.1))
+    1.1
+    >>> _decode_base64_to_json(_encode_json_to_base64("apify"))
+    'apify'
+    >>> _decode_base64_to_json(_encode_json_to_base64(True))
+    True
+    >>> _decode_base64_to_json(_encode_json_to_base64(None)) is None
+    True
+    >>> _decode_base64_to_json(_encode_json_to_base64([1, 2, 3]))
+    [1, 2, 3]
+    >>> _decode_base64_to_json(_encode_json_to_base64({"apify": "rocks"}))
+    {'apify': 'rocks'}
+    """
+    return cast(JSONSerializable, json.loads(base64.b64decode(encoded_data).decode("utf-8")))
+
+
+def _filter_out_none_values(dictionary: Dict) -> Dict:
+    """Return copy of the dictionary, omitting all keys for which values are None.
+
+    >>> _filter_out_none_values({"k1": "v1", "k2": None})
+    {'k1': 'v1'}
+    """
+    return {k: v for k, v in dictionary.items() if v is not None}
+
+
+def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
+    """Return copy of the dictionary, recursivelhy omitting all keys for which values are None.
+
+    >>> _filter_out_none_values_recursively({"k1": "v1", "k2": None, "k3": {"k4": "v4", "k5": None}})
+    {'k1': 'v1', 'k3': {'k4': 'v4'}}
+    """
+    return {
+        k: v if not isinstance(v, Dict) else _filter_out_none_values_recursively(v)
+        for k, v in dictionary.items()
+        if v is not None
+    }
 
 
 def _snake_case_to_camel_case(str_snake_case: str) -> str:

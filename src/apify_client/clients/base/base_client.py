@@ -44,6 +44,19 @@ class BaseClient:
         return self.url
 
     def _params(self, **kwargs: Any) -> Dict:
-        merged_params = self.params.copy()
-        merged_params.update(kwargs)
-        return merged_params
+        return {
+            **self.params,
+            **kwargs,
+        }
+
+    def _sub_resource_init_options(self, **kwargs: Any) -> Dict:
+        options = {
+            "base_url": self.url,
+            "http_client": self.http_client,
+            "params": self.params,
+        }
+
+        return {
+            **options,
+            **kwargs,
+        }

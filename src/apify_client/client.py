@@ -13,6 +13,10 @@ from .clients.resource_clients.request_queue_collection import RequestQueueColle
 from .clients.resource_clients.schedule import ScheduleClient
 from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
 from .clients.resource_clients.user import UserClient
+from .clients.resource_clients.webhook import WebhookClient
+from .clients.resource_clients.webhook_collection import WebhookCollectionClient
+from .clients.resource_clients.webhook_dispatch import WebhookDispatchClient
+from .clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 
@@ -102,6 +106,30 @@ class ApifyClient:
     def request_queues(self) -> RequestQueueCollectionClient:
         """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClient(**self._options())
+
+    def webhook(self, webhook_id: str) -> WebhookClient:
+        """Retrieve the sub-client for manipulating a single webhook.
+
+        Args:
+            webhook_id (str): ID of the webhook to be manipulated
+        """
+        return WebhookClient(resource_id=webhook_id, **self._options())
+
+    def webhooks(self) -> WebhookCollectionClient:
+        """Retrieve the sub-client for querying multiple webhooks of a user."""
+        return WebhookCollectionClient(**self._options())
+
+    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClient:
+        """Retrieve the sub-client for accessing a single webhook dispatch.
+
+        Args:
+            webhook_dispatch_id (str): ID of the webhook dispatch to access
+        """
+        return WebhookDispatchClient(resource_id=webhook_dispatch_id, **self._options())
+
+    def webhook_dispatches(self) -> WebhookDispatchCollectionClient:
+        """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
+        return WebhookDispatchCollectionClient(**self._options())
 
     def schedule(self, schedule_id: str) -> ScheduleClient:
         """Retrieve the sub-client for manipulating a single schedule.

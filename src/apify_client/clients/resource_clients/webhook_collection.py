@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 from .webhook import _prepare_webhook_representation
 
 
@@ -22,7 +22,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the webhooks in descending order based on their date of creation
 
         Returns:
-            The list of available webhooks matching the specified filters.
+            dict: The list of available webhooks matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -63,7 +63,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
                                         condition is fulfilled. Only applicable when actor_run_id is filled.
 
         Returns:
-            The created webhook
+            dict: The created webhook
         """
         parameters = locals()
         parameters.pop('self')

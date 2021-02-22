@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
 from ..._utils import _filter_out_none_values_recursively
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class TaskCollectionClient(ResourceCollectionClient):
@@ -17,12 +17,12 @@ class TaskCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
         Args:
-            limit: How many tasks to list
-            offset: What task to include as first when retrieving the list
-            desc: Whether to sort the tasks in descending order based on their modification date
+            limit (int, optional): How many tasks to list
+            offset (int, optional): What task to include as first when retrieving the list
+            desc (bool, optional): Whether to sort the tasks in descending order based on their modification date
 
         Returns:
-            The list of available tasks matching the specified filters.
+            dict: The list of available tasks matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -47,11 +47,11 @@ class TaskCollectionClient(ResourceCollectionClient):
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
-            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input object.
 
         Returns:
-            The created task.
+            dict: The created task.
         """
         new_fields = {
             "actId": actor_id,

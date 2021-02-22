@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 
 
 class RequestQueueClient(ResourceClient):
@@ -12,7 +12,7 @@ class RequestQueueClient(ResourceClient):
         """Initialize the RequestQueueClient.
 
         Args:
-            client_key (str): A unique identifier of the client accessing the request queue
+            client_key (str, optional): A unique identifier of the client accessing the request queue
         """
         super().__init__(*args, resource_path='request-queues', **kwargs)
         self.client_key = client_key
@@ -23,11 +23,11 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
 
         Returns:
-            The retrieved request queue
+            dict, optional: The retrieved request queue, or None, if it does not exist
         """
         return self._get()
 
-    def update(self, new_fields: Dict) -> Optional[Dict]:
+    def update(self, new_fields: Dict) -> Dict:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -36,7 +36,7 @@ class RequestQueueClient(ResourceClient):
             new_fields (dict): The fields of the request queue to update
 
         Returns:
-            The updated request queue
+            dict: The updated request queue
         """
         return self._update(new_fields)
 
@@ -53,7 +53,10 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
 
         Args:
-            limit (int): How many requests to retrieve
+            limit (int, optional): How many requests to retrieve
+
+        Returns:
+            dict: The desired number of requests from the beginning of the queue.
         """
         request_params = self._params(limit=limit, clientKey=self.client_key)
 
@@ -72,7 +75,10 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             request (dict): The request to add to the queue
-            forefront (bool): Whether to add the request to the head or the end of the queue
+            forefront (bool, optional): Whether to add the request to the head or the end of the queue
+
+        Returns:
+            dict: The added request.
         """
         request_params = self._params(
             forefront=forefront,
@@ -95,6 +101,9 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             request_id (str): ID of the request to retrieve
+
+        Returns:
+            dict, optional: The retrieved request, or None, if it did not exist.
         """
         try:
             response = self.http_client.call(
@@ -109,14 +118,17 @@ class RequestQueueClient(ResourceClient):
 
         return None
 
-    def update_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Optional[Dict]:
+    def update_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
             request (dict): The updated request
-            forefront (bool): Whether to put the updated request in the beginning or the end of the queue
+            forefront (bool, optional): Whether to put the updated request in the beginning or the end of the queue
+
+        Returns:
+            dict: The updated request
         """
         request_id = request['id']
 

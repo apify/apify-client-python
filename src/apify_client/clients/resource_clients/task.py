@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, cast
 from ..._consts import ActorJobStatus
 from ..._errors import ApifyApiError, ApifyClientError
 from ..._utils import _catch_not_found_or_throw, _encode_json_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 from .webhook_collection import WebhookCollectionClient
 
 
@@ -20,7 +20,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
 
         Returns:
-            The retrieved task
+            dict, optional: The retrieved task
         """
         return self._get()
 
@@ -43,11 +43,11 @@ class TaskClient(ResourceClient):
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
-            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
 
         Returns:
-            The updated task
+            dict: The updated task
         """
         new_fields = {
             "name": name,
@@ -88,15 +88,15 @@ class TaskClient(ResourceClient):
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
-            timeout_secs: (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish: (bool, optional): The maximum number of seconds the server waits for the run to finish.
+            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+            wait_for_finish (bool, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
             webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
                                        which can be used to receive a notification, e.g. when the actor finished or failed.
                                        If you already have a webhook set up for the actor or task, you do not have to add it again here.
 
         Returns:
-            The run object
+            dict: The run object
         """
         request_params = self._params(
             build=build,
@@ -146,7 +146,7 @@ class TaskClient(ResourceClient):
                                        you do not have to add it again here.
 
         Returns:
-            The run object
+            dict: The run object
         """
         raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
 
@@ -167,7 +167,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
 
         Returns:
-            Retrieved task input
+            dict, optional: Retrieved task input
         """
         try:
             response = self.http_client.call(
@@ -186,7 +186,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Returns:
-            Retrieved task input
+            dict, Retrieved task input
         """
         response = self.http_client.call(
             url=self._url('input'),
@@ -196,7 +196,7 @@ class TaskClient(ResourceClient):
         )
         return cast(Dict, response.json())
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> Any:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> None:
         """Retrieve RunClient for last run of this task.
 
         Last run is retrieved based on the start time of the runs.
@@ -208,7 +208,7 @@ class TaskClient(ResourceClient):
 
         # TODO - return run subclient for the last run
 
-    def runs(self) -> Any:
+    def runs(self) -> None:
         """Retrieve RunCollectionClient for runs of this task."""
         raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
 

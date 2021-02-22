@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 
 
 class UserClient(ResourceClient):
@@ -8,7 +8,8 @@ class UserClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the UserClient."""
-        super().__init__(*args, resource_path='users', **kwargs)
+        resource_id = kwargs.pop('resource_id', 'me')
+        super().__init__(*args, resource_id=resource_id, resource_path='users', **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Return information about user account.
@@ -18,6 +19,6 @@ class UserClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/users
 
         Returns:
-            The retrieved user data
+            dict, optional: The retrieved user data, or None if the user does not exist.
         """
         return self._get()

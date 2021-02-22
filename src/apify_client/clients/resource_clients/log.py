@@ -3,7 +3,7 @@ from typing import Any, Optional, cast
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 
 
 class LogClient(ResourceClient):
@@ -19,7 +19,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            The retrieved log
+            str, optional: The retrieved log, or None, if it does not exist.
         """
         try:
             response = self.http_client.call(
@@ -41,7 +41,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            The retrieved log
+            io.IOBase, optional: The retrieved log as a file-like object, or None, if it does not exist.
         """
         try:
             response = self.http_client.call(

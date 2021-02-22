@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.actor_job_base_client import ActorJobBaseClient
+from ..base import ActorJobBaseClient
 
 
 class BuildClient(ActorJobBaseClient):
@@ -16,7 +16,7 @@ class BuildClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Returns:
-            The retrieved actor build data
+            dict: The retrieved actor build data
         """
         return self._get()
 
@@ -26,7 +26,7 @@ class BuildClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
 
         Returns:
-            The data of the aborted actor build
+            dict: The data of the aborted actor build
         """
         return self._abort()
 
@@ -34,10 +34,10 @@ class BuildClient(ActorJobBaseClient):
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
-            wait_secs (Optional[int]): how long does the client wait for build to finish. None for indefinite.
+            wait_secs (int, optional): how long does the client wait for build to finish. None for indefinite.
 
         Returns:
-            The actor build data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED, TIMED_OUT, ABORTED)
-            then the build has not yet finished.
+            dict, optional: The actor build data. If the status on the object is not one of the terminal statuses
+                (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return self._wait_for_finish(wait_secs=wait_secs)

@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw, _is_file_or_bytes, _parse_date_fields, _pluck_data
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 
 
 class KeyValueStoreClient(ResourceClient):
@@ -19,11 +19,11 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
 
         Returns:
-            The retrieved key-value store
+            dict, optional: The retrieved key-value store, or None if it does not exist
         """
         return self._get()
 
-    def update(self, new_fields: Dict) -> Optional[Dict]:
+    def update(self, new_fields: Dict) -> Dict:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -32,7 +32,7 @@ class KeyValueStoreClient(ResourceClient):
             new_fields (dict): The fields of the key-value store to update
 
         Returns:
-            The updated key-value store
+            dict: The updated key-value store
         """
         return self._update(new_fields)
 
@@ -51,6 +51,9 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             limit (int, optional): Number of keys to be returned. Maximum value is 1000
             exclusive_start_key (str, optional): All keys up to this one (including) are skipped from the result
+
+        Returns:
+            dict: The list of keys in the key-value store matching the given arguments
         """
         request_params = self._params(
             limit=limit,
@@ -74,6 +77,9 @@ class KeyValueStoreClient(ResourceClient):
             key (str): Key of the record to retrieve
             as_bytes (bool, optional): Whether to retrieve the record as unparsed bytes, default False
             as_file (bool, optional): Whether to retrieve the record as a file-like object, default False
+
+        Returns:
+            dict, optional: The requested record, or None, if the record does not exist
         """
         try:
             # TODO revisit the as_bytes and as_file parameters when we decide how to rewrite the record-getting functions
@@ -109,8 +115,6 @@ class KeyValueStoreClient(ResourceClient):
             value (Any): The value to save into the record
             content_type (str, optional): The content type of the saved value
         """
-        # TODO revisit this when it's decided whether we keep using the signed URL route or not
-
         headers = None
 
         if not content_type:

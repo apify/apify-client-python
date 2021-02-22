@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class BuildCollectionClient(ResourceCollectionClient):
@@ -17,12 +17,13 @@ class BuildCollectionClient(ResourceCollectionClient):
         """List all builds of a user.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
+
         Args:
-            limit: How many builds to retrieve
-            offset: What build store to include as first when retrieving the list
-            desc: Whether to sort the builds in descending order based on their modification date
+            limit (int, optional): How many builds to retrieve
+            offset (int, optional): What build store to include as first when retrieving the list
+            desc (bool, optional): Whether to sort the builds in descending order based on their modification date
 
         Returns:
-            The retrieved builds of a user
+            dict: The retrieved builds of a user
         """
         return self._list(limit=limit, offset=offset, desc=desc)

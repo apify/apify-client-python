@@ -2,7 +2,7 @@ import io
 from typing import Any, Dict, Generator, List, Optional, cast
 
 from ..._types import JSONSerializable
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 
 
 class DatasetClient(ResourceClient):
@@ -18,7 +18,7 @@ class DatasetClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
 
         Returns:
-            The retrieved dataset
+            dict, optional: The retrieved dataset, or None, if it does not exist
         """
         return self._get()
 
@@ -31,7 +31,7 @@ class DatasetClient(ResourceClient):
             new_fields (dict): The fields of the dataset to update
 
         Returns:
-            The updated dataset
+            dict: The updated dataset
         """
         return self._update(new_fields)
 
@@ -60,19 +60,19 @@ class DatasetClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
         Args:
-            offset: (int, optional): Number of items that should be skipped at the start. The default value is 0
-            limit: (int, optional): Maximum number of items to return. By default there is no limit.
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
             desc (bool, optional): By default, results are returned in the same order as they were stored.
                 To reverse the order, set this parameter to True.
             clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
                 The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
                 Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
-            fields (list[str], optional): A list of fields which should be picked from the items,
+            fields (list of str, optional): A list of fields which should be picked from the items,
                 only these fields will remain in the resulting record objects.
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
-            omit: (list[str], optional): A list of fields which should be omitted from the items.
-            unwind: (str, optional): Name of a field which should be unwound.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -82,7 +82,7 @@ class DatasetClient(ResourceClient):
             skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
 
         Returns:
-            The dataset items
+            dict: The dataset items
         """
         request_params = self._params(
             offset=offset,
@@ -129,19 +129,19 @@ class DatasetClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
         Args:
-            offset: (int, optional): Number of items that should be skipped at the start. The default value is 0
-            limit: (int, optional): Maximum number of items to return. By default there is no limit.
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
             desc (bool, optional): By default, results are returned in the same order as they were stored.
                 To reverse the order, set this parameter to True.
             clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
                 The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
                 Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
-            fields (list[str], optional): A list of fields which should be picked from the items,
+            fields (list of str, optional): A list of fields which should be picked from the items,
                 only these fields will remain in the resulting record objects.
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
-            omit: (list[str], optional): A list of fields which should be omitted from the items.
-            unwind: (str, optional): Name of a field which should be unwound.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -150,8 +150,8 @@ class DatasetClient(ResourceClient):
                 Note that if used, the results might contain less items than the limit value.
             skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
 
-        Returns:
-            A generator yielding the requested dataset items
+        Yields:
+            dict: An item from the dataset
         """
         cache_size = 1000
         first_item = offset
@@ -211,9 +211,9 @@ class DatasetClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
         Args:
-            item_format(str): Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
-            offset: (int, optional): Number of items that should be skipped at the start. The default value is 0
-            limit: (int, optional): Maximum number of items to return. By default there is no limit.
+            item_format (str): Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
             desc (bool, optional): By default, results are returned in the same order as they were stored.
                 To reverse the order, set this parameter to True.
             clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
@@ -224,12 +224,12 @@ class DatasetClient(ResourceClient):
                 while json, jsonl, xml, html and rss files are not. If you want to override this default behavior,
                 specify bom=True query parameter to include the BOM or bom=False to skip it.
             delimiter (str, optional): A delimiter character for CSV files. The default delimiter is a simple comma (,).
-            fields (list[str], optional): A list of fields which should be picked from the items,
+            fields (list of str, optional): A list of fields which should be picked from the items,
                 only these fields will remain in the resulting record objects.
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
-            omit: (list[str], optional): A list of fields which should be omitted from the items.
-            unwind: (str, optional): Name of a field which should be unwound.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -243,7 +243,7 @@ class DatasetClient(ResourceClient):
                 By default the element name is item.
 
         Returns:
-            The dataset items in the specified format, either as raw bytes or a file-like object
+            bytes: The dataset items as raw bytes
         """
         request_params = self._params(
             format=item_format,
@@ -296,9 +296,9 @@ class DatasetClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
         Args:
-            item_format(str): Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
-            offset: (int, optional): Number of items that should be skipped at the start. The default value is 0
-            limit: (int, optional): Maximum number of items to return. By default there is no limit.
+            item_format (str): Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
             desc (bool, optional): By default, results are returned in the same order as they were stored.
                 To reverse the order, set this parameter to True.
             clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
@@ -309,12 +309,12 @@ class DatasetClient(ResourceClient):
                 while json, jsonl, xml, html and rss files are not. If you want to override this default behavior,
                 specify bom=True query parameter to include the BOM or bom=False to skip it.
             delimiter (str, optional): A delimiter character for CSV files. The default delimiter is a simple comma (,).
-            fields (list[str], optional): A list of fields which should be picked from the items,
+            fields (list of str, optional): A list of fields which should be picked from the items,
                 only these fields will remain in the resulting record objects.
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
-            omit: (list[str], optional): A list of fields which should be omitted from the items.
-            unwind: (str, optional): Name of a field which should be unwound.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -328,7 +328,7 @@ class DatasetClient(ResourceClient):
                 By default the element name is item.
 
         Returns:
-            The dataset items in the specified format, either as raw bytes or a file-like object
+            io.IOBase: The dataset items as a file-like object
         """
         request_params = self._params(
             format=item_format,

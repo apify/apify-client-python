@@ -1,4 +1,4 @@
-name: Lint and test
+name: Check documentation status
 
 on: push
 

@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class WebhookDispatchCollectionClient(ResourceCollectionClient):
@@ -15,12 +15,13 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
+
         Args:
-            limit: How many webhook dispatches to retrieve
-            offset: What webhook dispatch to include as first when retrieving the list
-            desc: Whether to sort the webhook dispatches in descending order based on the date of their creation
+            limit (int, optional): How many webhook dispatches to retrieve
+            offset (int, optional): What webhook dispatch to include as first when retrieving the list
+            desc (bool, optional): Whether to sort the webhook dispatches in descending order based on the date of their creation
 
         Returns:
-            The retrieved webhook dispatches of a user
+            dict: The retrieved webhook dispatches of a user
         """
         return self._list(limit=limit, offset=offset, desc=desc)

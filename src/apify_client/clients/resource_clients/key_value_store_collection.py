@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class KeyValueStoreCollectionClient(ResourceCollectionClient):
@@ -16,13 +16,13 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
 
         Args:
-            unnamed: Whether to include unnamed key-value stores in the list
-            limit: How many key-value stores to retrieve
-            offset: What key-value store to include as first when retrieving the list
-            desc: Whether to sort the key-value stores in descending order based on their modification date
+            unnamed (bool, optional): Whether to include unnamed key-value stores in the list
+            limit (int, optional): How many key-value stores to retrieve
+            offset (int, optional): What key-value store to include as first when retrieving the list
+            desc (bool, optional): Whether to sort the key-value stores in descending order based on their modification date
 
         Returns:
-            The list of available key-value stores matching the specified filters.
+            dict: The list of available key-value stores matching the specified filters.
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
@@ -32,9 +32,9 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store
 
         Args:
-            name: The name of the key-value store to retrieve or create.
+            name (str, optional): The name of the key-value store to retrieve or create.
 
         Returns:
-            The retrieved key-value store.
+            dict: The retrieved or newly-created key-value store.
         """
         return self._get_or_create(name=name)

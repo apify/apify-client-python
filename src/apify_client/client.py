@@ -1,24 +1,26 @@
 from typing import Dict, Optional
 
 from ._http_client import _HTTPClient
-from .clients.resource_clients.build import BuildClient
-from .clients.resource_clients.build_collection import BuildCollectionClient
-from .clients.resource_clients.dataset import DatasetClient
-from .clients.resource_clients.dataset_collection import DatasetCollectionClient
-from .clients.resource_clients.key_value_store import KeyValueStoreClient
-from .clients.resource_clients.key_value_store_collection import KeyValueStoreCollectionClient
-from .clients.resource_clients.log import LogClient
-from .clients.resource_clients.request_queue import RequestQueueClient
-from .clients.resource_clients.request_queue_collection import RequestQueueCollectionClient
-from .clients.resource_clients.schedule import ScheduleClient
-from .clients.resource_clients.schedule_collection import ScheduleCollectionClient
-from .clients.resource_clients.task import TaskClient
-from .clients.resource_clients.task_collection import TaskCollectionClient
-from .clients.resource_clients.user import UserClient
-from .clients.resource_clients.webhook import WebhookClient
-from .clients.resource_clients.webhook_collection import WebhookCollectionClient
-from .clients.resource_clients.webhook_dispatch import WebhookDispatchClient
-from .clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient
+from .clients import (
+    BuildClient,
+    BuildCollectionClient,
+    DatasetClient,
+    DatasetCollectionClient,
+    KeyValueStoreClient,
+    KeyValueStoreCollectionClient,
+    LogClient,
+    RequestQueueClient,
+    RequestQueueCollectionClient,
+    ScheduleClient,
+    ScheduleCollectionClient,
+    TaskClient,
+    TaskCollectionClient,
+    UserClient,
+    WebhookClient,
+    WebhookCollectionClient,
+    WebhookDispatchClient,
+    WebhookDispatchCollectionClient,
+)
 
 DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
 
@@ -37,10 +39,11 @@ class ApifyClient:
         """Initialize the Apify API Client.
 
         Args:
-            token: The Apify API token
-            base_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com/v2
-            max_retries: How many times to retry a failed request at most
-            min_delay_between_retries_millis: How long will the client wait between retrying requests (increases exponentially from this value)
+            token (str, optional): The Apify API token
+            base_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com/v2
+            max_retries (int, optional): How many times to retry a failed request at most
+            min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
+                (increases exponentially from this value)
         """
         self.token = token
         self.base_url = base_url
@@ -100,7 +103,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
-            request_queue_id (str) : ID of the request queue to be manipulated
+            request_queue_id (str): ID of the request queue to be manipulated
             client_key (str): A unique identifier of the client accessing the request queue
         """
         return RequestQueueClient(resource_id=request_queue_id, client_key=client_key, **self._options())
@@ -137,7 +140,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
-            schedule_id (str) : ID of the schedule to be manipulated
+            schedule_id (str): ID of the schedule to be manipulated
         """
         return ScheduleClient(resource_id=schedule_id, **self._options())
 
@@ -146,17 +149,29 @@ class ApifyClient:
         return ScheduleCollectionClient(**self._options())
 
     def log(self, build_or_run_id: str) -> LogClient:
-        """Retrieve the sub-client for retrieving logs."""
+        """Retrieve the sub-client for retrieving logs.
+
+        Args:
+            build_or_run_id (str): ID of the actor build or run for which to access the log
+        """
         return LogClient(resource_id=build_or_run_id, **self._options())
 
     def task(self, task_id: str) -> TaskClient:
-        """Retrieve the sub-client for manipulating a single task."""
+        """Retrieve the sub-client for manipulating a single task.
+
+        Args:
+            task_id (str): ID of the task to be manipulated
+        """
         return TaskClient(resource_id=task_id, **self._options())
 
     def tasks(self) -> TaskCollectionClient:
         """Retrieve the sub-client for retrieving tasks."""
         return TaskCollectionClient(**self._options())
 
-    def user(self, user_id: str) -> UserClient:
-        """Retrieve the sub-client for querying users."""
+    def user(self, user_id: Optional[str] = None) -> UserClient:
+        """Retrieve the sub-client for querying users.
+
+        Args:
+            user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
+        """
         return UserClient(resource_id=user_id, **self._options())

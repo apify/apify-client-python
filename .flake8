@@ -17,4 +17,5 @@ ignore=
     D409
     D413
 per-file-ignores =
+    docs/*: D
     tests/*: D

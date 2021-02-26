@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
@@ -22,7 +22,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the datasets in descending order based on their modification date
 
         Returns:
-            The list of available datasets matching the specified filters.
+            dict: The list of available datasets matching the specified filters.
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
@@ -35,6 +35,6 @@ class DatasetCollectionClient(ResourceCollectionClient):
             name (str, optional): The name of the dataset to retrieve or create.
 
         Returns:
-            The retrieved dataset.
+            dict: The retrieved or newly-created dataset.
         """
         return self._get_or_create(name=name)

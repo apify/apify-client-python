@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 
 
 class WebhookDispatchClient(ResourceClient):
@@ -16,6 +16,6 @@ class WebhookDispatchClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
 
         Returns:
-            The retrieved webhook dispatch
+            dict, optional: The retrieved webhook dispatch, or None if it does not exist
         """
         return self._get()

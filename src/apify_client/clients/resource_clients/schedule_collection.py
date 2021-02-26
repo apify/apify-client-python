@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._utils import _snake_case_to_camel_case
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class ScheduleCollectionClient(ResourceCollectionClient):
@@ -17,9 +17,9 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
         Args:
-            limit: How many schedules to retrieve
-            offset: What schedules to include as first when retrieving the list
-            desc: Whether to sort the schedules in descending order based on their modification date
+            limit (int, optional): How many schedules to retrieve
+            offset (int, optional): What schedules to include as first when retrieving the list
+            desc (bool, optional): Whether to sort the schedules in descending order based on their modification date
 
         Returns:
             The list of available schedules matching the specified filters.

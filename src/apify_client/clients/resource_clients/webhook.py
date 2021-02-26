@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._utils import _snake_case_to_camel_case
-from ..base.resource_client import ResourceClient
+from ..base import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
 
 
@@ -53,7 +53,7 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
 
         Returns:
-            The retrieved webhook
+            dict, optional: The retrieved webhook, or None if it does not exist
         """
         return self._get()
 
@@ -89,7 +89,7 @@ class WebhookClient(ResourceClient):
                                         condition is fulfilled. Only applicable when actor_run_id is filled.
 
         Returns:
-            The updated webhook
+            dict: The updated webhook
         """
         parameters = locals()
         parameters.pop('self')
@@ -109,7 +109,7 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
 
         Returns:
-            A client allowing access to dispatches of this webhook using its list method
+            WebhookDispatchCollectionClient: A client allowing access to dispatches of this webhook using its list method
         """
         return WebhookDispatchCollectionClient(
             **self._sub_resource_init_options(resource_path="dispatches"),

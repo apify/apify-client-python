@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..base.resource_collection_client import ResourceCollectionClient
+from ..base import ResourceCollectionClient
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):
@@ -16,13 +16,13 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
 
         Args:
-            unnamed (bool): Whether to include unnamed request queues in the list
-            limit (int): How many request queues to retrieve
-            offset (int): What request queue to include as first when retrieving the list
-            desc (bool): Whether to sort therequest queues in descending order based on their modification date
+            unnamed (bool, optional): Whether to include unnamed request queues in the list
+            limit (int, optional): How many request queues to retrieve
+            offset (int, optional): What request queue to include as first when retrieving the list
+            desc (bool, optional): Whether to sort therequest queues in descending order based on their modification date
 
         Returns:
-            The list of available request queues matching the specified filters.
+            dict: The list of available request queues matching the specified filters.
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
@@ -35,6 +35,6 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
             name (str): The name of the request queue to retrieve or create.
 
         Returns:
-            The retrieved request queue.
+            dict: The retrieved or newly-created request queue.
         """
         return self._get_or_create(name=name)

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 sphinx-build -M markdown sphinx-config build -a -E

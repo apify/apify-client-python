@@ -47,7 +47,7 @@ them with other context for easier debugging.
 
 ### Retries with exponential backoff
 
-Network communication sometimes fails, that's a given. The client will automatically retry requests that
+Network communication sometimes fails. The client will automatically retry requests that
 failed due to a network error, an internal error of the Apify API (HTTP 500+) or rate limit error (HTTP 429).
 By default, it will retry up to 8 times. First retry will be attempted after ~500ms, second after ~1000ms
 and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries_millis`
@@ -135,4 +135,4 @@ Most methods named `list` or `list_something` return a pagination dictionary,
 containing keys `items`, `total`, `offset`, `count` and `limit`.
 There are some exceptions though, like `list_keys` or `list_head` which paginate differently.
 The results you're looking for are always stored under `items` and you can use the `limit`
-property to get only a subset of results. Other props are also available, depending on the method.
+property to get only a subset of results. Other props can be available depending on the method.

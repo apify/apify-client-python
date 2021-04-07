@@ -10,7 +10,8 @@ class DatasetClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClient."""
-        super().__init__(*args, resource_path='datasets', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'dataset')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Retrieve the dataset.
@@ -22,18 +23,22 @@ class DatasetClient(ResourceClient):
         """
         return self._get()
 
-    def update(self, new_fields: Dict) -> Dict:
+    def update(self, *, name: Optional[str] = None) -> Dict:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
 
         Args:
-            new_fields (dict): The fields of the dataset to update
+            name (str, optional): The new name for the dataset
 
         Returns:
             dict: The updated dataset
         """
-        return self._update(new_fields)
+        updated_fields = {}
+        if name is not None:
+            updated_fields['name'] = name
+
+        return self._update(updated_fields)
 
     def delete(self) -> None:
         """Delete the dataset.

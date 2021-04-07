@@ -8,7 +8,8 @@ class DatasetCollectionClient(ResourceCollectionClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClient with the passed arguments."""
-        super().__init__(*args, resource_path='datasets', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'datasets')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available datasets.
@@ -26,7 +27,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str = '') -> Dict:
+    def get_or_create(self, *, name: Optional[str] = None) -> Dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset

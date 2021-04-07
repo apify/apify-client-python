@@ -45,7 +45,8 @@ class WebhookClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClient."""
-        super().__init__(*args, resource_path='webhooks', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'webhooks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Retrieve the webhook.
@@ -94,7 +95,7 @@ class WebhookClient(ResourceClient):
         parameters = locals()
         parameters.pop('self')
         webhook = _prepare_webhook_representation(**parameters)
-        return self._update(new_fields=webhook)
+        return self._update(webhook)
 
     def delete(self) -> None:
         """Delete the webhook.

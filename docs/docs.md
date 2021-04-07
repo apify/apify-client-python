@@ -428,7 +428,7 @@ Return information about the actor build.
 
 * **Return type**
 
-  `dict`
+  `dict`, optional
 
 ***
 
@@ -470,9 +470,7 @@ Wait synchronously until the build finishes or the server times out.
 
 ### [](#buildcollectionclient) BuildCollectionClient
 
-Sub-client for listing user builds.
-
-Note that this client is not specific for a particular actor but queries all builds for a user based on the provided API token.
+Sub-client for listing actor builds.
 
 * [list()](#buildcollectionclient-list)
 
@@ -480,21 +478,22 @@ Note that this client is not specific for a particular actor but queries all bui
 
 #### [](#buildcollectionclient-list) `BuildCollectionClient.list(*, limit=None, offset=None, desc=None)`
 
-List all builds of a user.
+List all actor builds (either of a single actor, or all user’s actors, depending on where this client was initialized from).
 
+[https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds](https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds)
 [https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list](https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list)
 
 * **Parameters**
 
   * **limit** (`int`, *optional*) – How many builds to retrieve
 
-  * **offset** (`int`, *optional*) – What build store to include as first when retrieving the list
+  * **offset** (`int`, *optional*) – What build to include as first when retrieving the list
 
-  * **desc** (`bool`, *optional*) – Whether to sort the builds in descending order based on their modification date
+  * **desc** (`bool`, *optional*) – Whether to sort the builds in descending order based on their start date
 
 * **Returns**
 
-  The retrieved builds of a user
+  The retrieved actor builds
 
 * **Return type**
 
@@ -533,7 +532,7 @@ Retrieve the dataset.
 
 ***
 
-#### [](#datasetclient-update) `DatasetClient.update(new_fields)`
+#### [](#datasetclient-update) `DatasetClient.update(*, name=None)`
 
 Update the dataset with specified fields.
 
@@ -541,7 +540,7 @@ Update the dataset with specified fields.
 
 * **Parameters**
 
-  * **new_fields** (`dict`) – The fields of the dataset to update
+  * **name** (`str`, *optional*) – The new name for the dataset
 
 * **Returns**
 
@@ -836,7 +835,7 @@ List the available datasets.
 
 ***
 
-#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name='')`
+#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None)`
 
 Retrieve a named dataset, or create a new one when it doesn’t exist.
 
@@ -886,7 +885,7 @@ Retrieve the key-value store.
 
 ***
 
-#### [](#keyvaluestoreclient-update) `KeyValueStoreClient.update(new_fields)`
+#### [](#keyvaluestoreclient-update) `KeyValueStoreClient.update(*, name=None)`
 
 Update the key-value store with specified fields.
 
@@ -894,7 +893,7 @@ Update the key-value store with specified fields.
 
 * **Parameters**
 
-  * **new_fields** (`dict`) – The fields of the key-value store to update
+  * **name** (`str`, *optional*) – The new name for key-value store
 
 * **Returns**
 
@@ -1035,7 +1034,7 @@ List the available key-value stores.
 
 ***
 
-#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name='')`
+#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None)`
 
 Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
@@ -1127,7 +1126,7 @@ Retrieve the request queue.
 
 ***
 
-#### [](#requestqueueclient-update) `RequestQueueClient.update(new_fields)`
+#### [](#requestqueueclient-update) `RequestQueueClient.update(*, name=None)`
 
 Update the request queue with specified fields.
 
@@ -1135,7 +1134,7 @@ Update the request queue with specified fields.
 
 * **Parameters**
 
-  * **new_fields** (`dict`) – The fields of the request queue to update
+  * **name** (`str`, *optional*) – The new name for the request queue
 
 * **Returns**
 
@@ -1294,7 +1293,7 @@ List the available request queues.
 
 ***
 
-#### [](#requestqueuecollectionclient-get_or_create) `RequestQueueCollectionClient.get_or_create(*, name='')`
+#### [](#requestqueuecollectionclient-get_or_create) `RequestQueueCollectionClient.get_or_create(*, name=None)`
 
 Retrieve a named request queue, or create a new one when it doesn’t exist.
 
@@ -1302,7 +1301,7 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 
 * **Parameters**
 
-  * **name** (`str`) – The name of the request queue to retrieve or create.
+  * **name** (`str`, *optional*) – The name of the request queue to retrieve or create.
 
 * **Returns**
 
@@ -1560,7 +1559,7 @@ Start the task and immediately return the Run object.
 
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
-  * **wait_for_finish** (`bool`, *optional*) – The maximum number of seconds the server waits for the run to finish.
+  * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish.
   By default, it is 0, the maximum value is 300.
 
   * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
@@ -1703,7 +1702,7 @@ List the available tasks.
 
   * **offset** (`int`, *optional*) – What task to include as first when retrieving the list
 
-  * **desc** (`bool`, *optional*) – Whether to sort the tasks in descending order based on their modification date
+  * **desc** (`bool`, *optional*) – Whether to sort the tasks in descending order based on their creation date
 
 * **Returns**
 

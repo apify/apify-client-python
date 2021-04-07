@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from ..._utils import _parse_date_fields, _pluck_data
 from .base_client import BaseClient
@@ -26,7 +26,7 @@ class ResourceCollectionClient(BaseClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    def _get_or_create(self, name: str = '') -> Dict:
+    def _get_or_create(self, name: Optional[str] = None) -> Dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',

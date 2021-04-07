@@ -14,7 +14,8 @@ class RequestQueueClient(ResourceClient):
         Args:
             client_key (str, optional): A unique identifier of the client accessing the request queue
         """
-        super().__init__(*args, resource_path='request-queues', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'request-queues')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
         self.client_key = client_key
 
     def get(self) -> Optional[Dict]:
@@ -27,18 +28,22 @@ class RequestQueueClient(ResourceClient):
         """
         return self._get()
 
-    def update(self, new_fields: Dict) -> Dict:
+    def update(self, *, name: Optional[str] = None) -> Dict:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
 
         Args:
-            new_fields (dict): The fields of the request queue to update
+            name (str, optional): The new name for the request queue
 
         Returns:
             dict: The updated request queue
         """
-        return self._update(new_fields)
+        updated_fields = {}
+        if name is not None:
+            updated_fields['name'] = name
+
+        return self._update(updated_fields)
 
     def delete(self) -> None:
         """Delete the request queue.

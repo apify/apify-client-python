@@ -10,7 +10,8 @@ class ScheduleClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClient."""
-        super().__init__(*args, resource_path='schedules', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'schedules')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Return information about the schedule.

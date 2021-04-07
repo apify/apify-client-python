@@ -8,7 +8,8 @@ class WebhookDispatchClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchClient."""
-        super().__init__(*args, resource_path='webhook-dispatches', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Retrieve the webhook dispatch.

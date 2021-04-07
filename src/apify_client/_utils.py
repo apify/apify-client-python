@@ -6,7 +6,7 @@ import re
 import time
 from datetime import datetime, timezone
 from http import HTTPStatus
-from typing import Any, Callable, Dict, List, TypeVar, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 from ._errors import ApifyApiError
 from ._types import JSONSerializable
@@ -198,3 +198,22 @@ def _snake_case_to_camel_case(str_snake_case: str) -> str:
         part.capitalize() if i > 0 else part
         for i, part in enumerate(str_snake_case.split("_"))
     ])
+
+
+def _encode_key_value_store_record_value(value: Any, content_type: Optional[str] = None) -> Tuple[Any, str]:
+    if not content_type:
+        if _is_file_or_bytes(value):
+            content_type = 'application/octet-stream'
+        elif isinstance(value, str):
+            content_type = 'text/plain; charset=utf-8'
+        else:
+            content_type = 'application/json; charset=utf-8'
+
+    # TODO encode to utf-8 if necessary
+
+    if 'application/json' in content_type and not _is_file_or_bytes(value) and not isinstance(value, str):
+        # TODO decide if we should keep indenting the JSON or not, it could increase the record size considerably,
+        # but if we gzip the requests it should not matter too much with transfer size
+        value = json.dumps(value, indent=2)
+
+    return (value, content_type)

@@ -146,8 +146,12 @@ All public classes, methods and their parameters can be inspected in this API re
 The Apify API client.
 
 * [\_\_init\_\_()](#apifyclient-\_\_init\_\_)
+* [actor()](#apifyclient-actor)
+* [actors()](#apifyclient-actors)
 * [build()](#apifyclient-build)
 * [builds()](#apifyclient-builds)
+* [run()](#apifyclient-run)
+* [runs()](#apifyclient-runs)
 * [dataset()](#apifyclient-dataset)
 * [datasets()](#apifyclient-datasets)
 * [key\_value\_store()](#apifyclient-key\_value\_store)
@@ -184,6 +188,30 @@ Initialize the Apify API Client.
 
 ***
 
+#### [](#apifyclient-actor) `ApifyClient.actor(actor_id)`
+
+Retrieve the sub-client for manipulating a single actor.
+
+* **Parameters**
+
+  * **actor_id** (`str`) – ID of the actor to be manipulated
+
+* **Return type**
+
+  [`ActorClient`](#actorclient)
+
+***
+
+#### [](#apifyclient-actors) `ApifyClient.actors()`
+
+Retrieve the sub-client for retrieving actors.
+
+* **Return type**
+
+  [`ActorCollectionClient`](#actorcollectionclient)
+
+***
+
 #### [](#apifyclient-build) `ApifyClient.build(build_id)`
 
 Retrieve the sub-client for manipulating a single actor build.
@@ -205,6 +233,30 @@ Retrieve the sub-client for querying multiple builds of a user.
 * **Return type**
 
   [`BuildCollectionClient`](#buildcollectionclient)
+
+***
+
+#### [](#apifyclient-run) `ApifyClient.run(run_id)`
+
+Retrieve the sub-client for manipulating a single actor run.
+
+* **Parameters**
+
+  * **run_id** (`str`) – ID of the actor run to be manipulated
+
+* **Return type**
+
+  [`RunClient`](#runclient)
+
+***
+
+#### [](#apifyclient-runs) `ApifyClient.runs()`
+
+Retrieve the sub-client for querying multiple actor runs of a user.
+
+* **Return type**
+
+  [`RunCollectionClient`](#runcollectionclient)
 
 ***
 
@@ -403,6 +455,755 @@ Retrieve the sub-client for querying users.
 * **Return type**
 
   [`UserClient`](#userclient)
+
+***
+
+### [](#actorclient) ActorClient
+
+Sub-client for manipulating a single actor.
+
+* [get()](#actorclient-get)
+* [update()](#actorclient-update)
+* [delete()](#actorclient-delete)
+* [start()](#actorclient-start)
+* [call()](#actorclient-call)
+* [build()](#actorclient-build)
+* [builds()](#actorclient-builds)
+* [runs()](#actorclient-runs)
+* [last\_run()](#actorclient-last\_run)
+* [versions()](#actorclient-versions)
+* [version()](#actorclient-version)
+* [webhooks()](#actorclient-webhooks)
+
+***
+
+#### [](#actorclient-get) `ActorClient.get()`
+
+Retrieve the actor.
+
+[https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor](https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor)
+
+* **Returns**
+
+  The retrieved actor
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#actorclient-update) `ActorClient.update(*, name=None, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
+
+Update the actor with the specified fields.
+
+[https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor](https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor)
+
+* **Parameters**
+
+  * **name** (`str`, *optional*) – The name of the actor
+
+  * **title** (`str`, *optional*) – The title of the actor (human-readable)
+
+  * **description** (`str`, *optional*) – The description for the actor
+
+  * **seo_title** (`str`, *optional*) – The title of the actor optimized for search engines
+
+  * **seo_description** (`str`, *optional*) – The description of the actor optimized for search engines
+
+  * **versions** (`list of dict`, *optional*) – The list of actor versions
+
+  * **restart_on_error** (`bool`, *optional*) – If true, the main actor run process will be restarted whenever it exits with a non-zero status code.
+
+  * **is_public** (`bool`, *optional*) – Whether the actor is public.
+
+  * **is_deprecated** (`bool`, *optional*) – Whether the actor is deprecated.
+
+  * **is_anonymously_runnable** (`bool`, *optional*) – Whether the actor is anonymously runnable.
+
+  * **categories** (`list of str`, *optional*) – The categories to which the actor belongs to.
+
+  * **default_run_build** (`str`, *optional*) – Tag or number of the build that you want to run by default.
+
+  * **default_run_memory_mbytes** (`int`, *optional*) – Default amount of memory allocated for the runs of this actor, in megabytes.
+
+  * **default_run_timeout_secs** (`int`, *optional*) – Default timeout for the runs of this actor in seconds.
+
+  * **example_run_input_body** (`Any`, *optional*) – Input to be prefilled as default input to new users of this actor.
+
+  * **example_run_input_content_type** (`str`, *optional*) – The content type of the example run input.
+
+* **Returns**
+
+  The updated actor
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorclient-delete) `ActorClient.delete()`
+
+Delete the actor.
+
+[https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor](https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor)
+
+* **Return type**
+
+  `None`
+
+***
+
+#### [](#actorclient-start) `ActorClient.start(*, run_input=None, content_type=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
+
+Start the actor and immediately return the Run object.
+
+[https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor](https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor)
+
+* **Parameters**
+
+  * **run_input** (`Any`) – The input to pass to the actor run.
+
+  * **content_type** (`str`, *optional*) – The content type of the input.
+
+  * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
+  By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+
+  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
+  By default, the run uses a memory limit specified in the default run configuration for the actor.
+
+  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds.
+  By default, the run uses timeout specified in the default run configuration for the actor.
+
+  * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish.
+  By default, it is 0, the maximum value is 300.
+
+  * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
+  which can be used to receive a notification, e.g. when the actor finished or failed.
+  If you already have a webhook set up for the actor, you do not have to add it again here.
+
+* **Returns**
+
+  The run object
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorclient-call) `ActorClient.call(*, run_input=None, content_type=None, build=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
+
+Start the actor and wait for it to finish before returning the Run object.
+
+It waits indefinitely, unless the wait_secs argument is provided.
+
+[https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor](https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor)
+
+* **Parameters**
+
+  * **run_input** (`Any`) – The input to pass to the actor run.
+
+  * **content_type** (`str`, *optional*) – The content type of the input.
+
+  * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
+  By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+
+  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
+  By default, the run uses a memory limit specified in the default run configuration for the actor.
+
+  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds.
+  By default, the run uses timeout specified in the default run configuration for the actor.
+
+  * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
+  which can be used to receive a notification, e.g. when the actor finished or failed.
+  If you already have a webhook set up for the actor, you do not have to add it again here.
+
+  * **wait_secs** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish. If not provided, waits indefinitely.
+
+* **Returns**
+
+  The run object
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorclient-build) `ActorClient.build(*, version_number, beta_packages=None, tag=None, use_cache=None, wait_for_finish=None)`
+
+Build the actor.
+
+[https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor](https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor)
+
+* **Parameters**
+
+  * **version_number** (`str`) – Actor version number to be built.
+
+  * **beta_packages** (`bool`, *optional*) – If True, then the actor is built with beta versions of Apify NPM packages.
+  By default, the build uses latest stable packages.
+
+  * **tag** (`str`, *optional*) – Tag to be applied to the build on success. By default, the tag is taken from the actor version’s buildTag property.
+
+  * **use_cache** (`bool`, *optional*) – If True, the system will use a cache to speed up the build process. By default, cache is not used.
+
+  * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the build to finish before returning.
+  By default it is 0, the maximum value is 300.
+
+* **Returns**
+
+  The build object
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorclient-builds) `ActorClient.builds()`
+
+Retrieve RunCollectionClient for the builds of this actor.
+
+* **Return type**
+
+  [`BuildCollectionClient`](#buildcollectionclient)
+
+***
+
+#### [](#actorclient-runs) `ActorClient.runs()`
+
+Retrieve RunCollectionClient for the runs of this actor.
+
+* **Return type**
+
+  [`RunCollectionClient`](#runcollectionclient)
+
+***
+
+#### [](#actorclient-last_run) `ActorClient.last_run(*, status=None)`
+
+Retrieve the client for the last run of this actor.
+
+Last run is retrieved based on the start time of the runs.
+
+* **Parameters**
+
+  * **status** (`str`, *optional*) – Consider only runs with this status.
+
+* **Returns**
+
+  The resource client for the last run of this actor.
+
+* **Return type**
+
+  [`RunClient`](#runclient)
+
+***
+
+#### [](#actorclient-versions) `ActorClient.versions()`
+
+Retrieve ActorVersionCollectionClient for the versions of this actor.
+
+* **Return type**
+
+  [`ActorVersionCollectionClient`](#actorversioncollectionclient)
+
+***
+
+#### [](#actorclient-version) `ActorClient.version(version_number)`
+
+Retrieve the client for the specified version of this actor.
+
+* **Parameters**
+
+  * **version_number** (`str`) – The version number for which to retrieve the resource client.
+
+* **Returns**
+
+  The resource client for the specified actor version.
+
+* **Return type**
+
+  [`ActorVersionClient`](#actorversionclient)
+
+***
+
+#### [](#actorclient-webhooks) `ActorClient.webhooks()`
+
+Retrieve WebhookCollectionClient for webhooks associated with this actor.
+
+* **Return type**
+
+  [`WebhookCollectionClient`](#webhookcollectionclient)
+
+***
+
+### [](#actorcollectionclient) ActorCollectionClient
+
+Sub-client for manipulating actors.
+
+* [list()](#actorcollectionclient-list)
+* [create()](#actorcollectionclient-create)
+
+***
+
+#### [](#actorcollectionclient-list) `ActorCollectionClient.list(*, my=None, limit=None, offset=None, desc=None)`
+
+List the actors the user has created or used.
+
+[https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors](https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors)
+
+* **Parameters**
+
+  * **my** (`bool`, *optional*) – If True, will return only actors which the user has created themselves.
+
+  * **limit** (`int`, *optional*) – How many actors to list
+
+  * **offset** (`int`, *optional*) – What actor to include as first when retrieving the list
+
+  * **desc** (`bool`, *optional*) – Whether to sort the actors in descending order based on their creation date
+
+* **Returns**
+
+  The list of available actors matching the specified filters.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorcollectionclient-create) `ActorCollectionClient.create(*, name, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
+
+Create a new actor.
+
+[https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor](https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor)
+
+* **Parameters**
+
+  * **name** (`str`) – The name of the actor
+
+  * **title** (`str`, *optional*) – The title of the actor (human-readable)
+
+  * **description** (`str`, *optional*) – The description for the actor
+
+  * **seo_title** (`str`, *optional*) – The title of the actor optimized for search engines
+
+  * **seo_description** (`str`, *optional*) – The description of the actor optimized for search engines
+
+  * **versions** (`list of dict`, *optional*) – The list of actor versions
+
+  * **restart_on_error** (`bool`, *optional*) – If true, the main actor run process will be restarted whenever it exits with a non-zero status code.
+
+  * **is_public** (`bool`, *optional*) – Whether the actor is public.
+
+  * **is_deprecated** (`bool`, *optional*) – Whether the actor is deprecated.
+
+  * **is_anonymously_runnable** (`bool`, *optional*) – Whether the actor is anonymously runnable.
+
+  * **categories** (`list of str`, *optional*) – The categories to which the actor belongs to.
+
+  * **default_run_build** (`str`, *optional*) – Tag or number of the build that you want to run by default.
+
+  * **default_run_memory_mbytes** (`int`, *optional*) – Default amount of memory allocated for the runs of this actor, in megabytes.
+
+  * **default_run_timeout_secs** (`int`, *optional*) – Default timeout for the runs of this actor in seconds.
+
+  * **example_run_input_body** (`Any`, *optional*) – Input to be prefilled as default input to new users of this actor.
+
+  * **example_run_input_content_type** (`str`, *optional*) – The content type of the example run input.
+
+* **Returns**
+
+  The created actor.
+
+* **Return type**
+
+  `dict`
+
+***
+
+### [](#actorversionclient) ActorVersionClient
+
+Sub-client for manipulating a single actor version.
+
+* [get()](#actorversionclient-get)
+* [update()](#actorversionclient-update)
+* [delete()](#actorversionclient-delete)
+
+***
+
+#### [](#actorversionclient-get) `ActorVersionClient.get()`
+
+Return information about the actor version.
+
+[https://docs.apify.com/api/v2#/reference/actors/version-object/get-version](https://docs.apify.com/api/v2#/reference/actors/version-object/get-version)
+
+* **Returns**
+
+  The retrieved actor version data
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#actorversionclient-update) `ActorVersionClient.update(*, build_tag=None, env_vars=None, apply_env_vars_to_build=None, source_type=None, source_code=None, base_docker_image=None, source_files=None, git_repo_url=None, tarball_url=None, github_gist_url=None)`
+
+Update the actor version with specified fields.
+
+[https://docs.apify.com/api/v2#/reference/actors/version-object/update-version](https://docs.apify.com/api/v2#/reference/actors/version-object/update-version)
+
+* **Parameters**
+
+  * **build_tag** (`str`, *optional*) – Tag that is automatically set to the latest successful build of the current version.
+
+  * **env_vars** (`list of dict`, *optional*) – Environment variables that will be available to the actor run process,
+  and optionally also to the build process. See the API docs for their exact structure.
+
+  * **apply_env_vars_to_build** (`bool`, *optional*) – Whether the environment variables specified for the actor run
+  will also be set to the actor build process.
+
+  * **source_type** (`str`, *optional*) – What source type is the actor version using. Can be one of
+  SOURCE_CODE, SOURCE_FILES, GIT_REPO, TARBALL and GITHUB_GIST.
+
+  * **source_code** (`str`, *optional*) – Source code as a single JavaScript/Node.js file, using the base Docker image specified in baseDockerImage.
+  Required when source_type is SOURCE_CODE.
+
+  * **base_docker_image** (`str`, *optional*) – The base Docker image to use for single-file actors. Required when source_type is SOURCE_CODE.
+
+  * **source_files** (`list of dict`, *optional*) – Source code comprised of multiple files, each an item of the array.
+  Required when source_type is SOURCE_FILES. See the API docs for the exact structure.
+
+  * **git_repo_url** (`str`, *optional*) – The URL of a Git repository from which the source code will be cloned.
+  Required when source_type is GIT_REPO.
+
+  * **tarball_url** (`str`, *optional*) – The URL of a tarball or a zip archive from which the source code will be downloaded.
+  Required when source_type is TARBALL.
+
+  * **github_gist_url** (`str`, *optional*) – The URL of a GitHub Gist from which the source will be downloaded.
+  Required when source_type is GITHUB_GIST.
+
+* **Returns**
+
+  The updated actor version
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorversionclient-delete) `ActorVersionClient.delete()`
+
+Delete the actor version.
+
+[https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version](https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version)
+
+* **Return type**
+
+  `None`
+
+***
+
+### [](#actorversioncollectionclient) ActorVersionCollectionClient
+
+Sub-client for manipulating actor versions.
+
+* [list()](#actorversioncollectionclient-list)
+* [create()](#actorversioncollectionclient-create)
+
+***
+
+#### [](#actorversioncollectionclient-list) `ActorVersionCollectionClient.list()`
+
+List the available actor versions.
+
+[https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions](https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions)
+
+* **Returns**
+
+  The list of available actor versions.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#actorversioncollectionclient-create) `ActorVersionCollectionClient.create(*, version_number, build_tag=None, env_vars=None, apply_env_vars_to_build=None, source_type, source_code=None, base_docker_image=None, source_files=None, git_repo_url=None, tarball_url=None, github_gist_url=None)`
+
+Create a new actor version.
+
+[https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version](https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version)
+
+* **Parameters**
+
+  * **version_number** (`str`) – Major and minor version of the actor (e.g. 1.0)
+
+  * **build_tag** (`str`, *optional*) – Tag that is automatically set to the latest successful build of the current version.
+
+  * **env_vars** (`list of dict`, *optional*) – Environment variables that will be available to the actor run process,
+  and optionally also to the build process. See the API docs for their exact structure.
+
+  * **apply_env_vars_to_build** (`bool`, *optional*) – Whether the environment variables specified for the actor run
+  will also be set to the actor build process.
+
+  * **source_type** (`str`) – What source type is the actor version using. Can be one of
+  SOURCE_CODE, SOURCE_FILES, GIT_REPO, TARBALL and GITHUB_GIST.
+
+  * **source_code** (`str`, *optional*) – Source code as a single JavaScript/Node.js file, using the base Docker image specified in baseDockerImage.
+  Required when source_type is SOURCE_CODE.
+
+  * **base_docker_image** (`str`, *optional*) – The base Docker image to use for single-file actors. Required when source_type is SOURCE_CODE.
+
+  * **source_files** (`list of dict`, *optional*) – Source code comprised of multiple files, each an item of the array.
+  Required when source_type is SOURCE_FILES. See the API docs for the exact structure.
+
+  * **git_repo_url** (`str`, *optional*) – The URL of a Git repository from which the source code will be cloned.
+  Required when source_type is GIT_REPO.
+
+  * **tarball_url** (`str`, *optional*) – The URL of a tarball or a zip archive from which the source code will be downloaded.
+  Required when source_type is TARBALL.
+
+  * **github_gist_url** (`str`, *optional*) – The URL of a GitHub Gist from which the source will be downloaded.
+  Required when source_type is GITHUB_GIST.
+
+* **Returns**
+
+  The created actor version
+
+* **Return type**
+
+  `dict`
+
+***
+
+### [](#runclient) RunClient
+
+Sub-client for manipulating a single actor run.
+
+* [get()](#runclient-get)
+* [abort()](#runclient-abort)
+* [wait\_for\_finish()](#runclient-wait\_for\_finish)
+* [metamorph()](#runclient-metamorph)
+* [resurrect()](#runclient-resurrect)
+* [dataset()](#runclient-dataset)
+* [key\_value\_store()](#runclient-key\_value\_store)
+* [request\_queue()](#runclient-request\_queue)
+* [log()](#runclient-log)
+
+***
+
+#### [](#runclient-get) `RunClient.get()`
+
+Return information about the actor run.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run](https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run)
+
+* **Returns**
+
+  The retrieved actor run data
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-abort) `RunClient.abort()`
+
+Abort the actor run which is starting or currently running and return its details.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run](https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run)
+
+* **Returns**
+
+  The data of the aborted actor run
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-wait_for_finish) `RunClient.wait_for_finish(*, wait_secs=None)`
+
+Wait synchronously until the run finishes or the server times out.
+
+* **Parameters**
+
+  * **wait_secs** (`int`, *optional*) – how long does the client wait for run to finish. `None` for indefinite.
+
+* **Returns**
+
+  The actor run data. If the status on the object is not one of the terminal statuses
+
+    (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#runclient-metamorph) `RunClient.metamorph(*, target_actor_id, target_actor_build=None, run_input=None, content_type=None)`
+
+Transform an actor run into a run of another actor with a new input.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run](https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run)
+
+* **Parameters**
+
+  * **target_actor_id** (`str`) – ID of the target actor that the run should be transformed into
+
+  * **target_actor_build** (`str`, *optional*) – The build of the target actor. It can be either a build tag or build number.
+  By default, the run uses the build specified in the default run configuration for the target actor (typically the latest build).
+
+  * **run_input** (`Any`) – The input to pass to the new run.
+
+  * **content_type** (`str`, *optional*) – The content type of the input.
+
+* **Returns**
+
+  The actor run data.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-resurrect) `RunClient.resurrect()`
+
+Resurrect a finished actor run.
+
+Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
+Run status will be updated to RUNNING and its container will be restarted with the same default storages.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run](https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run)
+
+* **Returns**
+
+  The actor run data.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-dataset) `RunClient.dataset()`
+
+Get the client for the default dataset of the actor run.
+
+Currently this works only through actor_client.last_run().dataset().
+It will become available for all runs once the API supports it.
+
+[https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages](https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages)
+
+* **Returns**
+
+  A client allowing access to the default dataset of this actor run.
+
+* **Return type**
+
+  [`DatasetClient`](#datasetclient)
+
+***
+
+#### [](#runclient-key_value_store) `RunClient.key_value_store()`
+
+Get the client for the default key-value store of the actor run.
+
+Currently this works only through actor_client.last_run().key_value_store().
+It will become available for all runs once the API supports it.
+
+[https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages](https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages)
+
+* **Returns**
+
+  A client allowing access to the default key-value store of this actor run.
+
+* **Return type**
+
+  [`KeyValueStoreClient`](#keyvaluestoreclient)
+
+***
+
+#### [](#runclient-request_queue) `RunClient.request_queue()`
+
+Get the client for the default request queue of the actor run.
+
+Currently this works only through actor_client.last_run().request_queue().
+It will become available for all runs once the API supports it.
+
+[https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages](https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages)
+
+* **Returns**
+
+  A client allowing access to the default request_queue of this actor run.
+
+* **Return type**
+
+  [`RequestQueueClient`](#requestqueueclient)
+
+***
+
+#### [](#runclient-log) `RunClient.log()`
+
+Get the client for the log of the actor run.
+
+Currently this works only through actor_client.last_run().log().
+It will become available for all runs once the API supports it.
+
+[https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages](https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages)
+
+* **Returns**
+
+  A client allowing access to the log of this actor run.
+
+* **Return type**
+
+  [`LogClient`](#logclient)
+
+***
+
+### [](#runcollectionclient) RunCollectionClient
+
+Sub-client for listing actor runs.
+
+* [list()](#runcollectionclient-list)
+
+***
+
+#### [](#runcollectionclient-list) `RunCollectionClient.list(*, limit=None, offset=None, desc=None, status=None)`
+
+List all actor runs (either of a single actor, or all user’s actors, depending on where this client was initialized from).
+
+[https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs](https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs)
+[https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list](https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many runs to retrieve
+
+  * **offset** (`int`, *optional*) – What run to include as first when retrieving the list
+
+  * **desc** (`bool`, *optional*) – Whether to sort the runs in descending order based on their start date
+
+  * **status** (`str`, *optional*) – Retrieve only runs with the provided status
+
+* **Returns**
+
+  The retrieved actor runs
+
+* **Return type**
+
+  `dict`
 
 ***
 
@@ -1054,47 +1855,6 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
 ***
 
-### [](#logclient) LogClient
-
-Sub-client for manipulating logs.
-
-* [get()](#logclient-get)
-* [stream()](#logclient-stream)
-
-***
-
-#### [](#logclient-get) `LogClient.get()`
-
-Retrieve the log as text.
-
-[https://docs.apify.com/api/v2#/reference/logs/log/get-log](https://docs.apify.com/api/v2#/reference/logs/log/get-log)
-
-* **Returns**
-
-  The retrieved log, or `None`, if it does not exist.
-
-* **Return type**
-
-  `str`, optional
-
-***
-
-#### [](#logclient-stream) `LogClient.stream()`
-
-Retrieve the log as a file-like object.
-
-[https://docs.apify.com/api/v2#/reference/logs/log/get-log](https://docs.apify.com/api/v2#/reference/logs/log/get-log)
-
-* **Returns**
-
-  The retrieved log as a file-like object, or `None`, if it does not exist.
-
-* **Return type**
-
-  `io.IOBase`, optional
-
-***
-
 ### [](#requestqueueclient) RequestQueueClient
 
 Sub-client for manipulating a single request queue.
@@ -1313,462 +2073,44 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 
 ***
 
-### [](#scheduleclient) ScheduleClient
+### [](#logclient) LogClient
 
-Sub-client for manipulating a single schedule.
+Sub-client for manipulating logs.
 
-* [get()](#scheduleclient-get)
-* [update()](#scheduleclient-update)
-* [delete()](#scheduleclient-delete)
-* [get\_log()](#scheduleclient-get\_log)
+* [get()](#logclient-get)
+* [stream()](#logclient-stream)
 
 ***
 
-#### [](#scheduleclient-get) `ScheduleClient.get()`
+#### [](#logclient-get) `LogClient.get()`
 
-Return information about the schedule.
+Retrieve the log as text.
 
-[https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule)
+[https://docs.apify.com/api/v2#/reference/logs/log/get-log](https://docs.apify.com/api/v2#/reference/logs/log/get-log)
 
 * **Returns**
 
-  The retrieved schedule
+  The retrieved log, or `None`, if it does not exist.
 
 * **Return type**
 
-  `dict`, optional
+  `str`, optional
 
 ***
 
-#### [](#scheduleclient-update) `ScheduleClient.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None)`
+#### [](#logclient-stream) `LogClient.stream()`
 
-Update the schedule with specified fields.
+Retrieve the log as a file-like object.
 
-[https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule)
-
-* **Parameters**
-
-  * **cron_expression** (`str`, *optional*) – The cron expression used by this schedule
-
-  * **is_enabled** (`bool`, *optional*) – True if the schedule should be enabled
-
-  * **is_exclusive** (`bool`, *optional*) – When set to true, don’t start actor or actor task if it’s still running from the previous schedule.
-
-  * **name** (`str`, *optional*) – The name of the schedule to create.
-
-  * **actions** (`list of dict`, *optional*) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-
-  * **description** (`str`, *optional*) – Description of this schedule
-
-  * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
-  (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+[https://docs.apify.com/api/v2#/reference/logs/log/get-log](https://docs.apify.com/api/v2#/reference/logs/log/get-log)
 
 * **Returns**
 
-  The updated schedule
+  The retrieved log as a file-like object, or `None`, if it does not exist.
 
 * **Return type**
 
-  `dict`
-
-***
-
-#### [](#scheduleclient-delete) `ScheduleClient.delete()`
-
-Delete the schedule.
-
-[https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule)
-
-* **Return type**
-
-  `None`
-
-***
-
-#### [](#scheduleclient-get_log) `ScheduleClient.get_log()`
-
-Return log for the given schedule.
-
-[https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log](https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log)
-
-* **Returns**
-
-  Retrieved log of the given schedule
-
-* **Return type**
-
-  `list`, optional
-
-***
-
-### [](#schedulecollectionclient) ScheduleCollectionClient
-
-Sub-client for manipulating schedules.
-
-* [list()](#schedulecollectionclient-list)
-* [create()](#schedulecollectionclient-create)
-
-***
-
-#### [](#schedulecollectionclient-list) `ScheduleCollectionClient.list(*, limit=None, offset=None, desc=None)`
-
-List the available schedules.
-
-[https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules](https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules)
-
-* **Parameters**
-
-  * **limit** (`int`, *optional*) – How many schedules to retrieve
-
-  * **offset** (`int`, *optional*) – What schedules to include as first when retrieving the list
-
-  * **desc** (`bool`, *optional*) – Whether to sort the schedules in descending order based on their modification date
-
-* **Return type**
-
-  `Dict`
-
-* **Returns**
-
-  The list of available schedules matching the specified filters.
-
-***
-
-#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=[], description=None, timezone=None)`
-
-Create a new schedule.
-
-[https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule)
-
-* **Parameters**
-
-  * **cron_expression** (`str`) – The cron expression used by this schedule
-
-  * **is_enabled** (`bool`) – True if the schedule should be enabled
-
-  * **is_exclusive** (`bool`) – When set to true, don’t start actor or actor task if it’s still running from the previous schedule.
-
-  * **name** (`Optional[str]`) – The name of the schedule to create.
-
-  * **actions** (`List[Dict]`) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-
-  * **description** (`Optional[str]`) – Description of this schedule
-
-  * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
-
-* **Return type**
-
-  `Dict`
-
-* **Returns**
-
-  The created schedule.
-
-***
-
-### [](#taskclient) TaskClient
-
-Sub-client for manipulating a single task.
-
-* [get()](#taskclient-get)
-* [update()](#taskclient-update)
-* [delete()](#taskclient-delete)
-* [start()](#taskclient-start)
-* [call()](#taskclient-call)
-* [get\_input()](#taskclient-get\_input)
-* [update\_input()](#taskclient-update\_input)
-* [last\_run()](#taskclient-last\_run)
-* [runs()](#taskclient-runs)
-* [webhooks()](#taskclient-webhooks)
-
-***
-
-#### [](#taskclient-get) `TaskClient.get()`
-
-Retrieve the task.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task)
-
-* **Returns**
-
-  The retrieved task
-
-* **Return type**
-
-  `dict`, optional
-
-***
-
-#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None)`
-
-Update the task with specified fields.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task)
-
-* **Parameters**
-
-  * **name** (`str`, *optional*) – Name of the task
-
-  * **build** (`str`, *optional*) – Actor build to run. It can be either a build tag or build number.
-  By default, the run uses the build specified in the task settings (typically latest).
-
-  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
-  By default, the run uses a memory limit specified in the task settings.
-
-  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-
-  * **task_input** (`dict`, *optional*) – Task input dictionary
-
-* **Returns**
-
-  The updated task
-
-* **Return type**
-
-  `dict`
-
-***
-
-#### [](#taskclient-delete) `TaskClient.delete()`
-
-Delete the task.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task)
-
-* **Return type**
-
-  `None`
-
-***
-
-#### [](#taskclient-start) `TaskClient.start(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
-
-Start the task and immediately return the Run object.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task](https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task)
-
-* **Parameters**
-
-  * **task_input** (`dict`, *optional*) – Task input dictionary
-
-  * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
-  By default, the run uses the build specified in the task settings (typically latest).
-
-  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
-  By default, the run uses a memory limit specified in the task settings.
-
-  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-
-  * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish.
-  By default, it is 0, the maximum value is 300.
-
-  * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
-  which can be used to receive a notification, e.g. when the actor finished or failed.
-  If you already have a webhook set up for the actor or task, you do not have to add it again here.
-
-* **Returns**
-
-  The run object
-
-* **Return type**
-
-  `dict`
-
-***
-
-#### [](#taskclient-call) `TaskClient.call(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
-
-Start a task and wait for it to finish before returning the Run object.
-
-It waits indefinitely, unless the wait_secs argument is provided.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task](https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task)
-
-* **Parameters**
-
-  * **task_input** (`dict`, *optional*) – Task input dictionary
-
-  * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
-  By default, the run uses the build specified in the task settings (typically latest).
-
-  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
-  By default, the run uses a memory limit specified in the task settings.
-
-  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-
-  * **wait_for_finish** (`bool`, *optional*) – The maximum number of seconds the server waits for the run to finish.
-  By default, it is 0, the maximum value is 300.
-
-  * **webhooks** (`list`, *optional*) – Specifies optional webhooks associated with the actor run, which can be used to receive a notification
-  e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
-  you do not have to add it again here.
-
-* **Returns**
-
-  The run object
-
-* **Return type**
-
-  `dict`
-
-***
-
-#### [](#taskclient-get_input) `TaskClient.get_input()`
-
-Retrieve the default input for this task.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input](https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input)
-
-* **Returns**
-
-  Retrieved task input
-
-* **Return type**
-
-  `dict`, optional
-
-***
-
-#### [](#taskclient-update_input) `TaskClient.update_input(*, task_input)`
-
-Update the default input for this task.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input](https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input)
-
-* **Return type**
-
-  `Dict`
-
-* **Returns**
-
-  dict, Retrieved task input
-
-***
-
-#### [](#taskclient-last_run) `TaskClient.last_run(*, status=None)`
-
-Retrieve RunClient for last run of this task.
-
-Last run is retrieved based on the start time of the runs.
-
-* **Parameters**
-
-  * **status** (`optional, dict`) – Consider only runs with this status.
-
-* **Return type**
-
-  `None`
-
-***
-
-#### [](#taskclient-runs) `TaskClient.runs()`
-
-Retrieve RunCollectionClient for runs of this task.
-
-* **Return type**
-
-  `None`
-
-***
-
-#### [](#taskclient-webhooks) `TaskClient.webhooks()`
-
-Retrieve WebhookCollectionClient for webhooks associated with this task.
-
-* **Return type**
-
-  [`WebhookCollectionClient`](#webhookcollectionclient)
-
-***
-
-### [](#taskcollectionclient) TaskCollectionClient
-
-Sub-client for manipulating tasks.
-
-* [list()](#taskcollectionclient-list)
-* [create()](#taskcollectionclient-create)
-
-***
-
-#### [](#taskcollectionclient-list) `TaskCollectionClient.list(*, limit=None, offset=None, desc=None)`
-
-List the available tasks.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks](https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks)
-
-* **Parameters**
-
-  * **limit** (`int`, *optional*) – How many tasks to list
-
-  * **offset** (`int`, *optional*) – What task to include as first when retrieving the list
-
-  * **desc** (`bool`, *optional*) – Whether to sort the tasks in descending order based on their creation date
-
-* **Returns**
-
-  The list of available tasks matching the specified filters.
-
-* **Return type**
-
-  `dict`
-
-***
-
-#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None)`
-
-Create a new task.
-
-[https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task)
-
-* **Parameters**
-
-  * **actor_id** (`str`) – Id of the actor that should be run
-
-  * **name** (`str`) – Name of the task
-
-  * **build** (`str`, *optional*) – Actor build to run. It can be either a build tag or build number.
-  By default, the run uses the build specified in the task settings (typically latest).
-
-  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
-  By default, the run uses a memory limit specified in the task settings.
-
-  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-
-  * **task_input** (`dict`, *optional*) – Task input object.
-
-* **Returns**
-
-  The created task.
-
-* **Return type**
-
-  `dict`
-
-***
-
-### [](#userclient) UserClient
-
-Sub-client for querying user data.
-
-* [get()](#userclient-get)
-
-***
-
-#### [](#userclient-get) `UserClient.get()`
-
-Return information about user account.
-
-You receive all or only public info based on your token permissions.
-
-[https://docs.apify.com/api/v2#/reference/users](https://docs.apify.com/api/v2#/reference/users)
-
-* **Returns**
-
-  The retrieved user data, or `None` if the user does not exist.
-
-* **Return type**
-
-  `dict`, optional
+  `io.IOBase`, optional
 
 ***
 
@@ -1996,3 +2338,465 @@ List all webhook dispatches of a user.
 * **Return type**
 
   `dict`
+
+***
+
+### [](#taskclient) TaskClient
+
+Sub-client for manipulating a single task.
+
+* [get()](#taskclient-get)
+* [update()](#taskclient-update)
+* [delete()](#taskclient-delete)
+* [start()](#taskclient-start)
+* [call()](#taskclient-call)
+* [get\_input()](#taskclient-get\_input)
+* [update\_input()](#taskclient-update\_input)
+* [runs()](#taskclient-runs)
+* [last\_run()](#taskclient-last\_run)
+* [webhooks()](#taskclient-webhooks)
+
+***
+
+#### [](#taskclient-get) `TaskClient.get()`
+
+Retrieve the task.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task)
+
+* **Returns**
+
+  The retrieved task
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None)`
+
+Update the task with specified fields.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task)
+
+* **Parameters**
+
+  * **name** (`str`, *optional*) – Name of the task
+
+  * **build** (`str`, *optional*) – Actor build to run. It can be either a build tag or build number.
+  By default, the run uses the build specified in the task settings (typically latest).
+
+  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
+  By default, the run uses a memory limit specified in the task settings.
+
+  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+
+  * **task_input** (`dict`, *optional*) – Task input dictionary
+
+* **Returns**
+
+  The updated task
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#taskclient-delete) `TaskClient.delete()`
+
+Delete the task.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task)
+
+* **Return type**
+
+  `None`
+
+***
+
+#### [](#taskclient-start) `TaskClient.start(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
+
+Start the task and immediately return the Run object.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task](https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task)
+
+* **Parameters**
+
+  * **task_input** (`dict`, *optional*) – Task input dictionary
+
+  * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
+  By default, the run uses the build specified in the task settings (typically latest).
+
+  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
+  By default, the run uses a memory limit specified in the task settings.
+
+  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+
+  * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish.
+  By default, it is 0, the maximum value is 300.
+
+  * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
+  which can be used to receive a notification, e.g. when the actor finished or failed.
+  If you already have a webhook set up for the actor or task, you do not have to add it again here.
+
+* **Returns**
+
+  The run object
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#taskclient-call) `TaskClient.call(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
+
+Start a task and wait for it to finish before returning the Run object.
+
+It waits indefinitely, unless the wait_secs argument is provided.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task](https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task)
+
+* **Parameters**
+
+  * **task_input** (`dict`, *optional*) – Task input dictionary
+
+  * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
+  By default, the run uses the build specified in the task settings (typically latest).
+
+  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
+  By default, the run uses a memory limit specified in the task settings.
+
+  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+
+  * **webhooks** (`list`, *optional*) – Specifies optional webhooks associated with the actor run, which can be used to receive a notification
+  e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
+  you do not have to add it again here.
+
+  * **wait_secs** (`int`, *optional*) – The maximum number of seconds the server waits for the task run to finish. If not provided, waits indefinitely.
+
+* **Returns**
+
+  The run object
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#taskclient-get_input) `TaskClient.get_input()`
+
+Retrieve the default input for this task.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input](https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input)
+
+* **Returns**
+
+  Retrieved task input
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#taskclient-update_input) `TaskClient.update_input(*, task_input)`
+
+Update the default input for this task.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input](https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input)
+
+* **Return type**
+
+  `Dict`
+
+* **Returns**
+
+  dict, Retrieved task input
+
+***
+
+#### [](#taskclient-runs) `TaskClient.runs()`
+
+Retrieve RunCollectionClient for the runs of this task.
+
+* **Return type**
+
+  [`RunCollectionClient`](#runcollectionclient)
+
+***
+
+#### [](#taskclient-last_run) `TaskClient.last_run(*, status=None)`
+
+Retrieve the client for the last run of this task.
+
+Last run is retrieved based on the start time of the runs.
+
+* **Parameters**
+
+  * **status** (`str`, *optional*) – Consider only runs with this status.
+
+* **Returns**
+
+  The resource client for the last run of this task.
+
+* **Return type**
+
+  [`RunClient`](#runclient)
+
+***
+
+#### [](#taskclient-webhooks) `TaskClient.webhooks()`
+
+Retrieve WebhookCollectionClient for webhooks associated with this task.
+
+* **Return type**
+
+  [`WebhookCollectionClient`](#webhookcollectionclient)
+
+***
+
+### [](#taskcollectionclient) TaskCollectionClient
+
+Sub-client for manipulating tasks.
+
+* [list()](#taskcollectionclient-list)
+* [create()](#taskcollectionclient-create)
+
+***
+
+#### [](#taskcollectionclient-list) `TaskCollectionClient.list(*, limit=None, offset=None, desc=None)`
+
+List the available tasks.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks](https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many tasks to list
+
+  * **offset** (`int`, *optional*) – What task to include as first when retrieving the list
+
+  * **desc** (`bool`, *optional*) – Whether to sort the tasks in descending order based on their creation date
+
+* **Returns**
+
+  The list of available tasks matching the specified filters.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None)`
+
+Create a new task.
+
+[https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task](https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task)
+
+* **Parameters**
+
+  * **actor_id** (`str`) – Id of the actor that should be run
+
+  * **name** (`str`) – Name of the task
+
+  * **build** (`str`, *optional*) – Actor build to run. It can be either a build tag or build number.
+  By default, the run uses the build specified in the task settings (typically latest).
+
+  * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
+  By default, the run uses a memory limit specified in the task settings.
+
+  * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
+
+  * **task_input** (`dict`, *optional*) – Task input object.
+
+* **Returns**
+
+  The created task.
+
+* **Return type**
+
+  `dict`
+
+***
+
+### [](#scheduleclient) ScheduleClient
+
+Sub-client for manipulating a single schedule.
+
+* [get()](#scheduleclient-get)
+* [update()](#scheduleclient-update)
+* [delete()](#scheduleclient-delete)
+* [get\_log()](#scheduleclient-get\_log)
+
+***
+
+#### [](#scheduleclient-get) `ScheduleClient.get()`
+
+Return information about the schedule.
+
+[https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule)
+
+* **Returns**
+
+  The retrieved schedule
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#scheduleclient-update) `ScheduleClient.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None)`
+
+Update the schedule with specified fields.
+
+[https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule)
+
+* **Parameters**
+
+  * **cron_expression** (`str`, *optional*) – The cron expression used by this schedule
+
+  * **is_enabled** (`bool`, *optional*) – True if the schedule should be enabled
+
+  * **is_exclusive** (`bool`, *optional*) – When set to true, don’t start actor or actor task if it’s still running from the previous schedule.
+
+  * **name** (`str`, *optional*) – The name of the schedule to create.
+
+  * **actions** (`list of dict`, *optional*) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+
+  * **description** (`str`, *optional*) – Description of this schedule
+
+  * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
+  (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+* **Returns**
+
+  The updated schedule
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#scheduleclient-delete) `ScheduleClient.delete()`
+
+Delete the schedule.
+
+[https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule)
+
+* **Return type**
+
+  `None`
+
+***
+
+#### [](#scheduleclient-get_log) `ScheduleClient.get_log()`
+
+Return log for the given schedule.
+
+[https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log](https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log)
+
+* **Returns**
+
+  Retrieved log of the given schedule
+
+* **Return type**
+
+  `list`, optional
+
+***
+
+### [](#schedulecollectionclient) ScheduleCollectionClient
+
+Sub-client for manipulating schedules.
+
+* [list()](#schedulecollectionclient-list)
+* [create()](#schedulecollectionclient-create)
+
+***
+
+#### [](#schedulecollectionclient-list) `ScheduleCollectionClient.list(*, limit=None, offset=None, desc=None)`
+
+List the available schedules.
+
+[https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules](https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many schedules to retrieve
+
+  * **offset** (`int`, *optional*) – What schedules to include as first when retrieving the list
+
+  * **desc** (`bool`, *optional*) – Whether to sort the schedules in descending order based on their modification date
+
+* **Return type**
+
+  `Dict`
+
+* **Returns**
+
+  The list of available schedules matching the specified filters.
+
+***
+
+#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=[], description=None, timezone=None)`
+
+Create a new schedule.
+
+[https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule](https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule)
+
+* **Parameters**
+
+  * **cron_expression** (`str`) – The cron expression used by this schedule
+
+  * **is_enabled** (`bool`) – True if the schedule should be enabled
+
+  * **is_exclusive** (`bool`) – When set to true, don’t start actor or actor task if it’s still running from the previous schedule.
+
+  * **name** (`Optional[str]`) – The name of the schedule to create.
+
+  * **actions** (`List[Dict]`) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+
+  * **description** (`Optional[str]`) – Description of this schedule
+
+  * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+* **Return type**
+
+  `Dict`
+
+* **Returns**
+
+  The created schedule.
+
+***
+
+### [](#userclient) UserClient
+
+Sub-client for querying user data.
+
+* [get()](#userclient-get)
+
+***
+
+#### [](#userclient-get) `UserClient.get()`
+
+Return information about user account.
+
+You receive all or only public info based on your token permissions.
+
+[https://docs.apify.com/api/v2#/reference/users](https://docs.apify.com/api/v2#/reference/users)
+
+* **Returns**
+
+  The retrieved user data, or `None` if the user does not exist.
+
+* **Return type**
+
+  `dict`, optional

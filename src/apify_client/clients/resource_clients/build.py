@@ -8,7 +8,8 @@ class BuildClient(ActorJobBaseClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClient."""
-        super().__init__(*args, resource_path='actor-builds', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'actor-builds')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Return information about the actor build.
@@ -16,7 +17,7 @@ class BuildClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Returns:
-            dict: The retrieved actor build data
+            dict, optional: The retrieved actor build data
         """
         return self._get()
 

@@ -12,7 +12,8 @@ class TaskClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClient."""
-        super().__init__(*args, resource_path='actor-tasks', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'actor-tasks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Retrieve the task.
@@ -49,7 +50,7 @@ class TaskClient(ResourceClient):
         Returns:
             dict: The updated task
         """
-        new_fields = {
+        updated_fields = {
             "name": name,
             "options": {
                 "build": build,
@@ -59,7 +60,7 @@ class TaskClient(ResourceClient):
             "input": task_input,
         }
 
-        return self._update(_filter_out_none_values_recursively(new_fields))
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the task.
@@ -89,7 +90,7 @@ class TaskClient(ResourceClient):
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish (bool, optional): The maximum number of seconds the server waits for the run to finish.
+            wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
             webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
                                        which can be used to receive a notification, e.g. when the actor finished or failed.

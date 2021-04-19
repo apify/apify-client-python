@@ -11,7 +11,8 @@ class KeyValueStoreClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClient."""
-        super().__init__(*args, resource_path='key-value-stores', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'key-value-stores')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:
         """Retrieve the key-value store.
@@ -23,18 +24,22 @@ class KeyValueStoreClient(ResourceClient):
         """
         return self._get()
 
-    def update(self, new_fields: Dict) -> Dict:
+    def update(self, *, name: Optional[str] = None) -> Dict:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
 
         Args:
-            new_fields (dict): The fields of the key-value store to update
+            name (str, optional): The new name for key-value store
 
         Returns:
             dict: The updated key-value store
         """
-        return self._update(new_fields)
+        updated_fields = {}
+        if name is not None:
+            updated_fields['name'] = name
+
+        return self._update(updated_fields)
 
     def delete(self) -> None:
         """Delete the key-value store.

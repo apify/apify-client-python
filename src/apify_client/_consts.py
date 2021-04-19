@@ -22,6 +22,7 @@ class WebhookEventType(Enum):
     ACTOR_RUN_FAILED = 'ACTOR.RUN.FAILED'
     ACTOR_RUN_TIMED_OUT = 'ACTOR.RUN.TIMED_OUT'
     ACTOR_RUN_ABORTED = 'ACTOR.RUN.ABORTED'
+    ACTOR_RUN_RESURRECTED = 'ACTOR.RUN.RESURRECTED'
 
 
 # Actor job statuses that are considered terminal

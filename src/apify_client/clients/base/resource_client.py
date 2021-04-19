@@ -23,12 +23,12 @@ class ResourceClient(BaseClient):
 
         return None
 
-    def _update(self, new_fields: Dict) -> Dict:
+    def _update(self, updated_fields: Dict) -> Dict:
         response = self.http_client.call(
             url=self._url(),
             method='PUT',
             params=self._params(),
-            json=new_fields,
+            json=updated_fields,
         )
 
         return _parse_date_fields(_pluck_data(response.json()))

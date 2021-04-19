@@ -11,7 +11,8 @@ class LogClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClient."""
-        super().__init__(*args, resource_path='logs', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'logs')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[str]:
         """Retrieve the log as text.

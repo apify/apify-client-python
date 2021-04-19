@@ -9,7 +9,8 @@ class TaskCollectionClient(ResourceCollectionClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClient."""
-        super().__init__(*args, resource_path='actor-tasks', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'actor-tasks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(self, *, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available tasks.
@@ -19,7 +20,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Args:
             limit (int, optional): How many tasks to list
             offset (int, optional): What task to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the tasks in descending order based on their modification date
+            desc (bool, optional): Whether to sort the tasks in descending order based on their creation date
 
         Returns:
             dict: The list of available tasks matching the specified filters.

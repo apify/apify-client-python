@@ -170,7 +170,7 @@ def _filter_out_none_values(dictionary: Dict) -> Dict:
 
 
 def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
-    """Return copy of the dictionary, recursivelhy omitting all keys for which values are None.
+    """Return copy of the dictionary, recursively omitting all keys for which values are None.
 
     >>> _filter_out_none_values_recursively({"k1": "v1", "k2": None, "k3": {"k4": "v4", "k5": None}})
     {'k1': 'v1', 'k3': {'k4': 'v4'}}

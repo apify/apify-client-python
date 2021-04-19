@@ -8,7 +8,8 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClient with the passed arguments."""
-        super().__init__(*args, resource_path='request-queues', **kwargs)
+        resource_path = kwargs.pop('resource_path', 'request-queues')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
         """List the available request queues.
@@ -26,13 +27,13 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str = '') -> Dict:
+    def get_or_create(self, *, name: Optional[str] = None) -> Dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
 
         Args:
-            name (str): The name of the request queue to retrieve or create.
+            name (str, optional): The name of the request queue to retrieve or create.
 
         Returns:
             dict: The retrieved or newly-created request queue.

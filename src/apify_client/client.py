@@ -77,7 +77,7 @@ class ApifyClient:
         return ActorClient(resource_id=actor_id, **self._options())
 
     def actors(self) -> ActorCollectionClient:
-        """Retrieve the sub-client for retrieving actors."""
+        """Retrieve the sub-client for manipulating actors."""
         return ActorCollectionClient(**self._options())
 
     def build(self, build_id: str) -> BuildClient:
@@ -194,7 +194,7 @@ class ApifyClient:
         return TaskClient(resource_id=task_id, **self._options())
 
     def tasks(self) -> TaskCollectionClient:
-        """Retrieve the sub-client for retrieving tasks."""
+        """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClient(**self._options())
 
     def user(self, user_id: Optional[str] = None) -> UserClient:

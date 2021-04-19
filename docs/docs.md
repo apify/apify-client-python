@@ -204,7 +204,7 @@ Retrieve the sub-client for manipulating a single actor.
 
 #### [](#apifyclient-actors) `ApifyClient.actors()`
 
-Retrieve the sub-client for retrieving actors.
+Retrieve the sub-client for manipulating actors.
 
 * **Return type**
 
@@ -436,7 +436,7 @@ Retrieve the sub-client for manipulating a single task.
 
 #### [](#apifyclient-tasks) `ApifyClient.tasks()`
 
-Retrieve the sub-client for retrieving tasks.
+Retrieve the sub-client for manipulating tasks.
 
 * **Return type**
 
@@ -563,7 +563,7 @@ Start the actor and immediately return the Run object.
 
 * **Parameters**
 
-  * **run_input** (`Any`) – The input to pass to the actor run.
+  * **run_input** (`Any`, *optional*) – The input to pass to the actor run.
 
   * **content_type** (`str`, *optional*) – The content type of the input.
 
@@ -579,9 +579,14 @@ Start the actor and immediately return the Run object.
   * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish.
   By default, it is 0, the maximum value is 300.
 
-  * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
-  which can be used to receive a notification, e.g. when the actor finished or failed.
-  If you already have a webhook set up for the actor, you do not have to add it again here.
+  * **webhooks** (`list of dict`, *optional*) – Optional ad-hoc webhooks ([https://docs.apify.com/webhooks/ad-hoc-webhooks](https://docs.apify.com/webhooks/ad-hoc-webhooks))
+  associated with the actor run which can be used to receive a notification,
+  e.g. when the actor finished or failed.
+  If you already have a webhook set up for the actor or task, you do not have to add it again here.
+  Each webhook is represented by a dictionary containing these items:
+    * `event_types`: list of `WebhookEventType` values which trigger the webhook
+    * `request_url`: URL to which to send the webhook HTTP request
+    * `payload_template` (optional): Optional template for the request payload
 
 * **Returns**
 
@@ -603,7 +608,7 @@ It waits indefinitely, unless the wait_secs argument is provided.
 
 * **Parameters**
 
-  * **run_input** (`Any`) – The input to pass to the actor run.
+  * **run_input** (`Any`, *optional*) – The input to pass to the actor run.
 
   * **content_type** (`str`, *optional*) – The content type of the input.
 
@@ -647,7 +652,10 @@ Build the actor.
 
   * **tag** (`str`, *optional*) – Tag to be applied to the build on success. By default, the tag is taken from the actor version’s buildTag property.
 
-  * **use_cache** (`bool`, *optional*) – If True, the system will use a cache to speed up the build process. By default, cache is not used.
+  * **use_cache** (`bool`, *optional*) – If true, the actor’s Docker container will be rebuilt using layer cache
+  ([https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache)).
+  This is to enable quick rebuild during development.
+  By default, the cache is not used.
 
   * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the build to finish before returning.
   By default it is 0, the maximum value is 300.
@@ -664,7 +672,7 @@ Build the actor.
 
 #### [](#actorclient-builds) `ActorClient.builds()`
 
-Retrieve RunCollectionClient for the builds of this actor.
+Retrieve a client for the builds of this actor.
 
 * **Return type**
 
@@ -674,7 +682,7 @@ Retrieve RunCollectionClient for the builds of this actor.
 
 #### [](#actorclient-runs) `ActorClient.runs()`
 
-Retrieve RunCollectionClient for the runs of this actor.
+Retrieve a client for the runs of this actor.
 
 * **Return type**
 
@@ -704,7 +712,7 @@ Last run is retrieved based on the start time of the runs.
 
 #### [](#actorclient-versions) `ActorClient.versions()`
 
-Retrieve ActorVersionCollectionClient for the versions of this actor.
+Retrieve a client for the versions of this actor.
 
 * **Return type**
 
@@ -732,7 +740,7 @@ Retrieve the client for the specified version of this actor.
 
 #### [](#actorclient-webhooks) `ActorClient.webhooks()`
 
-Retrieve WebhookCollectionClient for webhooks associated with this actor.
+Retrieve a client for webhooks associated with this actor.
 
 * **Return type**
 
@@ -1063,7 +1071,7 @@ Transform an actor run into a run of another actor with a new input.
   * **target_actor_build** (`str`, *optional*) – The build of the target actor. It can be either a build tag or build number.
   By default, the run uses the build specified in the default run configuration for the target actor (typically the latest build).
 
-  * **run_input** (`Any`) – The input to pass to the new run.
+  * **run_input** (`Any`, *optional*) – The input to pass to the new run.
 
   * **content_type** (`str`, *optional*) – The content type of the input.
 
@@ -2437,9 +2445,14 @@ Start the task and immediately return the Run object.
   * **wait_for_finish** (`int`, *optional*) – The maximum number of seconds the server waits for the run to finish.
   By default, it is 0, the maximum value is 300.
 
-  * **webhooks** (`list`, *optional*) – Optional webhooks ([https://docs.apify.com/webhooks](https://docs.apify.com/webhooks)) associated with the actor run,
-  which can be used to receive a notification, e.g. when the actor finished or failed.
+  * **webhooks** (`list of dict`, *optional*) – Optional ad-hoc webhooks ([https://docs.apify.com/webhooks/ad-hoc-webhooks](https://docs.apify.com/webhooks/ad-hoc-webhooks))
+  associated with the actor run which can be used to receive a notification,
+  e.g. when the actor finished or failed.
   If you already have a webhook set up for the actor or task, you do not have to add it again here.
+  Each webhook is represented by a dictionary containing these items:
+    * `event_types`: list of `WebhookEventType` values which trigger the webhook
+    * `request_url`: URL to which to send the webhook HTTP request
+    * `payload_template` (optional): Optional template for the request payload
 
 * **Returns**
 
@@ -2521,7 +2534,7 @@ Update the default input for this task.
 
 #### [](#taskclient-runs) `TaskClient.runs()`
 
-Retrieve RunCollectionClient for the runs of this task.
+Retrieve a client for the runs of this task.
 
 * **Return type**
 
@@ -2551,7 +2564,7 @@ Last run is retrieved based on the start time of the runs.
 
 #### [](#taskclient-webhooks) `TaskClient.webhooks()`
 
-Retrieve WebhookCollectionClient for webhooks associated with this task.
+Retrieve a client for webhooks associated with this task.
 
 * **Return type**
 

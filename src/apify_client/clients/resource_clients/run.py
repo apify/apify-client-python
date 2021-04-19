@@ -64,7 +64,7 @@ class RunClient(ActorJobBaseClient):
             target_actor_id (str): ID of the target actor that the run should be transformed into
             target_actor_build (str, optional): The build of the target actor. It can be either a build tag or build number.
                 By default, the run uses the build specified in the default run configuration for the target actor (typically the latest build).
-            run_input (Any): The input to pass to the new run.
+            run_input (Any, optional): The input to pass to the new run.
             content_type (str, optional): The content type of the input.
 
         Returns:

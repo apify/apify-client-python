@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._consts import ActorJobStatus
-from ..._utils import _encode_json_to_base64, _encode_key_value_store_record_value, _parse_date_fields, _pluck_data
+from ..._utils import _encode_key_value_store_record_value, _encode_webhook_list_to_base64, _parse_date_fields, _pluck_data
 from ..base import ResourceClient
 from .actor_version import ActorVersionClient
 from .actor_version_collection import ActorVersionCollectionClient
@@ -141,7 +141,7 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input (Any): The input to pass to the actor run.
+            run_input (Any, optional): The input to pass to the actor run.
             content_type (str, optional): The content type of the input.
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the default run configuration for the actor (typically latest).
@@ -151,9 +151,14 @@ class ActorClient(ResourceClient):
                                           By default, the run uses timeout specified in the default run configuration for the actor.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
-            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
-                                       which can be used to receive a notification, e.g. when the actor finished or failed.
-                                       If you already have a webhook set up for the actor, you do not have to add it again here.
+            webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
+                                               associated with the actor run which can be used to receive a notification,
+                                               e.g. when the actor finished or failed.
+                                               If you already have a webhook set up for the actor or task, you do not have to add it again here.
+                                               Each webhook is represented by a dictionary containing these items:
+                                               * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
+                                               * ``request_url``: URL to which to send the webhook HTTP request
+                                               * ``payload_template`` (optional): Optional template for the request payload
 
         Returns:
             dict: The run object
@@ -165,7 +170,7 @@ class ActorClient(ResourceClient):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
-            webhooks=_encode_json_to_base64(webhooks) if webhooks is not None else [],
+            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = self.http_client.call(
@@ -196,7 +201,7 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input (Any): The input to pass to the actor run.
+            run_input (Any, optional): The input to pass to the actor run.
             content_type (str, optional): The content type of the input.
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the default run configuration for the actor (typically latest).
@@ -241,7 +246,10 @@ class ActorClient(ResourceClient):
             beta_packages (bool, optional): If True, then the actor is built with beta versions of Apify NPM packages.
                                             By default, the build uses latest stable packages.
             tag (str, optional): Tag to be applied to the build on success. By default, the tag is taken from the actor version's buildTag property.
-            use_cache (bool, optional): If True, the system will use a cache to speed up the build process. By default, cache is not used.
+            use_cache (bool, optional): If true, the actor's Docker container will be rebuilt using layer cache
+                                        (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).
+                                        This is to enable quick rebuild during development.
+                                        By default, the cache is not used.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the build to finish before returning.
                                              By default it is 0, the maximum value is 300.
 
@@ -250,10 +258,10 @@ class ActorClient(ResourceClient):
         """
         request_params = self._params(
             version=version_number,
-            beta_packages=beta_packages,
+            betaPackages=beta_packages,
             tag=tag,
-            use_cache=use_cache,
-            wait_for_finish=wait_for_finish,
+            useCache=use_cache,
+            waitForFinish=wait_for_finish,
         )
 
         response = self.http_client.call(
@@ -265,11 +273,11 @@ class ActorClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def builds(self) -> BuildCollectionClient:
-        """Retrieve RunCollectionClient for the builds of this actor."""
+        """Retrieve a client for the builds of this actor."""
         return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
 
     def runs(self) -> RunCollectionClient:
-        """Retrieve RunCollectionClient for the runs of this actor."""
+        """Retrieve a client for the runs of this actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClient:
@@ -282,7 +290,6 @@ class ActorClient(ResourceClient):
 
         Returns:
             RunClient: The resource client for the last run of this actor.
-
         """
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
@@ -291,7 +298,7 @@ class ActorClient(ResourceClient):
         ))
 
     def versions(self) -> ActorVersionCollectionClient:
-        """Retrieve ActorVersionCollectionClient for the versions of this actor."""
+        """Retrieve a client for the versions of this actor."""
         return ActorVersionCollectionClient(**self._sub_resource_init_options())
 
     def version(self, version_number: str) -> ActorVersionClient:
@@ -306,5 +313,5 @@ class ActorClient(ResourceClient):
         return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
 
     def webhooks(self) -> WebhookCollectionClient:
-        """Retrieve WebhookCollectionClient for webhooks associated with this actor."""
+        """Retrieve a client for webhooks associated with this actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())

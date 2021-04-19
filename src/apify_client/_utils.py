@@ -9,7 +9,6 @@ from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 from ._errors import ApifyApiError
-from ._types import JSONSerializable
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
@@ -134,30 +133,19 @@ def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
     return None
 
 
-def _encode_json_to_base64(data: JSONSerializable) -> bytes:
-    """Encode JSON serializable data to base64 string."""
+def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> bytes:
+    """Encode a list of dictionaries representing webhooks to their base64-encoded representation for the API."""
+    data = []
+    for webhook in webhooks:
+        webhook_representation = {
+            'eventTypes': webhook['event_types'],
+            'requestUrl': webhook['request_url'],
+        }
+        if 'payload_template' in webhook:
+            webhook_representation['payloadTemplate'] = webhook['payload_template']
+        data.append(webhook_representation)
+
     return base64.b64encode(json.dumps(data).encode("utf-8"))
-
-
-def _decode_base64_to_json(encoded_data: bytes) -> JSONSerializable:
-    """Decode base64 string into JSONSerializable data.
-
-    >>> _decode_base64_to_json(_encode_json_to_base64(1))
-    1
-    >>> _decode_base64_to_json(_encode_json_to_base64(1.1))
-    1.1
-    >>> _decode_base64_to_json(_encode_json_to_base64("apify"))
-    'apify'
-    >>> _decode_base64_to_json(_encode_json_to_base64(True))
-    True
-    >>> _decode_base64_to_json(_encode_json_to_base64(None)) is None
-    True
-    >>> _decode_base64_to_json(_encode_json_to_base64([1, 2, 3]))
-    [1, 2, 3]
-    >>> _decode_base64_to_json(_encode_json_to_base64({"apify": "rocks"}))
-    {'apify': 'rocks'}
-    """
-    return cast(JSONSerializable, json.loads(base64.b64decode(encoded_data).decode("utf-8")))
 
 
 def _filter_out_none_values(dictionary: Dict) -> Dict:
@@ -209,11 +197,7 @@ def _encode_key_value_store_record_value(value: Any, content_type: Optional[str]
         else:
             content_type = 'application/json; charset=utf-8'
 
-    # TODO encode to utf-8 if necessary
-
     if 'application/json' in content_type and not _is_file_or_bytes(value) and not isinstance(value, str):
-        # TODO decide if we should keep indenting the JSON or not, it could increase the record size considerably,
-        # but if we gzip the requests it should not matter too much with transfer size
-        value = json.dumps(value, indent=2)
+        value = json.dumps(value, ensure_ascii=False, indent=2).encode("utf-8")
 
     return (value, content_type)

@@ -9,6 +9,7 @@ from requests.exceptions import ConnectionError, Timeout
 from ._errors import ApifyApiError, InvalidResponseBodyError
 from ._types import JSONSerializable
 from ._utils import _is_content_type_json, _is_content_type_text, _is_content_type_xml, _retry_with_exp_backoff
+from ._version import __version__
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -22,11 +23,10 @@ class _HTTPClient:
 
         self.requests_session.headers.update({'Accept': 'application/json, */*'})
 
-        # TODO add client version
         is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
 
-        user_agent = f'ApifyClient ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
+        user_agent = f'ApifyClient/{__version__} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
         self.requests_session.headers.update({'User-Agent': user_agent})
 
     def call(

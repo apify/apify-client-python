@@ -6,9 +6,19 @@ here = pathlib.Path(__file__).parent.resolve()
 
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
+version_file = (here / 'src/apify_client/_version.py').read_text(encoding='utf-8')
+version = None
+for line in version_file.splitlines():
+    if line.startswith('__version__'):
+        delim = '"' if '"' in line else "'"
+        version = line.split(delim)[1]
+        break
+else:
+    raise RuntimeError("Unable to find version string.")
+
 setup(
     name='apify_client',
-    version='0.0.1',
+    version=version,
 
     author="Apify Technologies s.r.o.",
     author_email="support@apify.com",

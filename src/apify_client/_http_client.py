@@ -1,3 +1,5 @@
+import gzip
+import json as jsonlib
 import os
 import sys
 from http import HTTPStatus
@@ -36,13 +38,26 @@ class _HTTPClient:
         url: str,
         headers: Optional[Dict] = None,
         params: Optional[Dict] = None,
-        data: Optional[str] = None,
+        data: Optional[Any] = None,
         json: Optional[JSONSerializable] = None,
         stream: Optional[bool] = None,
         parse_response: Optional[bool] = True,
     ) -> requests.models.Response:
         request_params = self._parse_params(params)
         requests_session = self.requests_session
+
+        if not headers:
+            headers = {}
+
+        if json and not data:
+            data = jsonlib.dumps(json, ensure_ascii=False).encode('utf-8')
+            headers['Content-Type'] = 'application/json'
+
+        if isinstance(data, (str, bytes, bytearray)):
+            if isinstance(data, str):
+                data = data.encode('utf-8')
+            data = gzip.compress(data)
+            headers['Content-Encoding'] = 'gzip'
 
         def _make_request(bail: Callable, attempt: int) -> requests.models.Response:  # type: ignore[return]
             try:
@@ -52,7 +67,6 @@ class _HTTPClient:
                     headers=headers,
                     params=request_params,
                     data=data,
-                    json=json,
                     stream=stream,
                 )
                 if response.status_code < 300:

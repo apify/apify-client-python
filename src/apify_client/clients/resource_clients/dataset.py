@@ -10,7 +10,7 @@ class DatasetClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClient."""
-        resource_path = kwargs.pop('resource_path', 'dataset')
+        resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self) -> Optional[Dict]:

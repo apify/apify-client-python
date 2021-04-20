@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable
 
 from apify_client._utils import (
+    _encode_webhook_list_to_base64,
     _is_content_type_json,
     _is_content_type_text,
     _is_content_type_xml,
@@ -148,3 +149,20 @@ class UtilsTest(unittest.TestCase):
         with self.assertRaises(BailException):
             _retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
         self.assertEqual(attempt_counter, 3)
+
+    def test__encode_webhook_list_to_base64(self) -> None:
+        self.assertEqual(_encode_webhook_list_to_base64([]), b'W10=')
+        self.assertEqual(
+            _encode_webhook_list_to_base64([
+                {
+                    'event_types': ['ACTOR.RUN.CREATED'],
+                    'request_url': 'https://example.com/run-created',
+                },
+                {
+                    'event_types': ['ACTOR.RUN.SUCCEEDED'],
+                    'request_url': 'https://example.com/run-succeeded',
+                    'payload_template': '{"hello": "world", "resource":{{resource}}}',
+                },
+            ]),
+            b'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d',  # noqa: E501
+        )

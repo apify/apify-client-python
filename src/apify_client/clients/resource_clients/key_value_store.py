@@ -1,8 +1,7 @@
-import json
 from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _is_file_or_bytes, _parse_date_fields, _pluck_data
+from ..._utils import _catch_not_found_or_throw, _encode_key_value_store_record_value, _parse_date_fields, _pluck_data
 from ..base import ResourceClient
 
 
@@ -120,22 +119,7 @@ class KeyValueStoreClient(ResourceClient):
             value (Any): The value to save into the record
             content_type (str, optional): The content type of the saved value
         """
-        headers = None
-
-        if not content_type:
-            if _is_file_or_bytes(value):
-                content_type = 'application/octet-stream'
-            elif isinstance(value, str):
-                content_type = 'text/plain; charset=utf-8'
-            else:
-                content_type = 'application/json; charset=utf-8'
-
-        # TODO encode to utf-8
-
-        if 'application/json' in content_type and not _is_file_or_bytes(value) and not isinstance(value, str):
-            # TODO decide if we should keep indenting the JSON or not, it could increase the record size considerably,
-            # but if we gzip the requests it should not matter too much with transfer size
-            value = json.dumps(value, indent=2)
+        value, content_type = _encode_key_value_store_record_value(value, content_type)
 
         headers = {'content-type': content_type}
 

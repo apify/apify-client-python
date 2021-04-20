@@ -11,7 +11,14 @@ class ActorCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self, *, my: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
+    def list(
+        self,
+        *,
+        my: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> Dict:
         """List the actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors

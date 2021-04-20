@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from ..._http_client import _HTTPClient
 from ..._utils import _to_safe_id
 
+# Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
     from ...client import ApifyClient
 

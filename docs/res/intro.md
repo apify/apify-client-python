@@ -131,8 +131,8 @@ dataset_items = last_succeeded_run_client.dataset().list_items()['items']
 
 ### Pagination
 
-Most methods named `list` or `list_something` return a pagination dictionary,
-containing keys `items`, `total`, `offset`, `count` and `limit`.
+Most methods named `list` or `list_something` return a [`ListPage`](#ListPage) object,
+containing properties `items`, `total`, `offset`, `count` and `limit`.
 There are some exceptions though, like `list_keys` or `list_head` which paginate differently.
 The results you're looking for are always stored under `items` and you can use the `limit`
-property to get only a subset of results. Other props can be available depending on the method.
+property to get only a subset of results. Other properties can be available depending on the method.

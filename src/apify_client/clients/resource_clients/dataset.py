@@ -2,6 +2,7 @@ import io
 from typing import Any, Dict, Generator, List, Optional, cast
 
 from ..._types import JSONSerializable
+from ..._utils import ListPage
 from ..base import ResourceClient
 
 
@@ -59,7 +60,7 @@ class DatasetClient(ResourceClient):
         unwind: Optional[str] = None,
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
-    ) -> Dict:
+    ) -> ListPage:
         """List the items of the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -109,13 +110,13 @@ class DatasetClient(ResourceClient):
 
         data = response.json()
 
-        return {
+        return ListPage({
             'items': data,
             'total': int(response.headers['x-apify-pagination-total']),
             'offset': int(response.headers['x-apify-pagination-offset']),
             'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
             'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
-        }
+        })
 
     def iterate_items(
         self,
@@ -174,7 +175,7 @@ class DatasetClient(ResourceClient):
             else:
                 current_limit = min(cache_size, last_item - current_offset)
 
-            current_items_pagination = self.list_items(
+            current_items_page = self.list_items(
                 offset=current_offset,
                 limit=current_limit,
                 clean=clean,
@@ -186,11 +187,11 @@ class DatasetClient(ResourceClient):
                 skip_hidden=skip_hidden,
             )
 
-            current_offset += current_items_pagination['count']
-            if last_item is None or current_items_pagination['total'] < last_item:
-                last_item = current_items_pagination['total']
+            current_offset += current_items_page.count
+            if last_item is None or current_items_page.total < last_item:
+                last_item = current_items_page.total
 
-            yield from current_items_pagination['items']
+            yield from current_items_page.items
 
     def download_items(
         self,

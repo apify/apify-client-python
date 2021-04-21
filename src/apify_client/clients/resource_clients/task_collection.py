@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceCollectionClient
 
 
@@ -12,7 +12,13 @@ class TaskCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self, *, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
+    def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -23,7 +29,7 @@ class TaskCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the tasks in descending order based on their creation date
 
         Returns:
-            dict: The list of available tasks matching the specified filters.
+            ListPage: The list of available tasks matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 

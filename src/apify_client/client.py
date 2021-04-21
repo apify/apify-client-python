@@ -50,7 +50,11 @@ class ApifyClient:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
 
-        self.http_client = _HTTPClient(max_retries=max_retries, min_delay_between_retries_millis=min_delay_between_retries_millis)
+        self.http_client = _HTTPClient(
+            token=token,
+            max_retries=max_retries,
+            min_delay_between_retries_millis=min_delay_between_retries_millis,
+        )
         # TODO statistics
         # TODO logger
 
@@ -58,9 +62,6 @@ class ApifyClient:
         return {
             'base_url': self.base_url,
             'http_client': self.http_client,
-            'params': {
-                'token': self.token,
-            },
         }
 
     def build(self, build_id: str) -> BuildClient:

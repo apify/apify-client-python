@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional
 
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient
 
 
@@ -11,7 +12,14 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
+    def list(
+        self,
+        *,
+        unnamed: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -23,7 +31,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort therequest queues in descending order based on their modification date
 
         Returns:
-            dict: The list of available request queues matching the specified filters.
+            ListPage: The list of available request queues matching the specified filters.
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 

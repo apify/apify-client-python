@@ -1,20 +1,20 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _parse_date_fields, _pluck_data
+from ..._utils import ListPage, _parse_date_fields, _pluck_data
 from .base_client import BaseClient
 
 
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
-    def _list(self, **kwargs: Any) -> Dict:
+    def _list(self, **kwargs: Any) -> ListPage:
         response = self.http_client.call(
             url=self._url(),
             method='GET',
             params=self._params(**kwargs),
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return ListPage(_parse_date_fields(_pluck_data(response.json())))
 
     def _create(self, resource: Dict) -> Dict:
         response = self.http_client.call(

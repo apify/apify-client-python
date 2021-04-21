@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _snake_case_to_camel_case
+from ..._utils import ListPage, _snake_case_to_camel_case
 from ..base import ResourceCollectionClient
 
 
@@ -12,7 +12,13 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self, *, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
+    def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -23,7 +29,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the schedules in descending order based on their modification date
 
         Returns:
-            The list of available schedules matching the specified filters.
+            ListPage: The list of available schedules matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -52,7 +58,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             timezone: Timezone in which your cron expression runs (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 
         Returns:
-            The created schedule.
+            dict: The created schedule.
         """
         kwargs = {
             _snake_case_to_camel_case(key): value

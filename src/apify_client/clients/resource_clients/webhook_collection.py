@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient
 from .webhook import _prepare_webhook_representation
 
@@ -12,7 +13,13 @@ class WebhookCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self, *, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
+    def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -23,7 +30,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the webhooks in descending order based on their date of creation
 
         Returns:
-            dict: The list of available webhooks matching the specified filters.
+            ListPage: The list of available webhooks matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 

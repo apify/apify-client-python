@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._consts import ActorSourceType
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient
 
 
@@ -12,13 +13,13 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> Dict:
+    def list(self) -> ListPage:
         """List the available actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Returns:
-            dict: The list of available actor versions.
+            ListPage: The list of available actor versions.
         """
         return self._list()
 

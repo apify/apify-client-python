@@ -1,14 +1,18 @@
 # Apify API client for Python
 
-This will be an official client for [Apify API](https://www.apify.com/docs/api/v2).
-It's still work in progress, so please don't use it yet!
+This is an official client for the [Apify API](https://www.apify.com/docs/api/v2).
+It's still a work in progress, so please don't use it yet in production environments!
 
 ## Installation
 
 Requires Python 3.7+
 
-Right now the client is not available on PyPI yet, so you can install it only from the git repo.
-To do that, run `pip install git+https://github.com/apify/apify-client-python.git`
+You can install the client from its [PyPI listing](https://pypi.org/project/apify-client).
+To do that, simply run `pip install apify-client` in your terminal.
+
+## Usage
+
+For usage instructions, check the documentation on [Apify Docs](https://docs.apify.com/apify-client-python) or in [`docs/docs.md`](.docs/docs.md).
 
 ## Development
 
@@ -49,3 +53,17 @@ We document every user-facing class or method, and enforce that using the flake8
 
 The documentation is then rendered from the docstrings in the code using Sphinx and some heavy post-processing and saved as `docs/docs.md`.
 To generate the documentation, just run `./build_docs.sh`.
+
+### Release process
+
+Publishing new versions to [PyPI](https://pypi.org/project/apify-client) happens automatically through GitHub Actions.
+
+On each commit to the `master` branch, a new beta release is published, taking the version number from `src/apify_client/_version.py`
+and automatically incrementing the beta version suffix by 1 from the last beta release published to PyPI.
+
+A stable version is published when a new release is created using GitHub Releases, again taking the version number from `src/apify_client/_version.py`. The built package assets are automatically uploaded to the GitHub release.
+
+If there is already a stable version with the same version number as in `src/apify_client/_version.py` published to PyPI, the publish process fails,
+so don't forget to update the version number before releasing a new version.
+The release process also fails when the released version is not described in `CHANGELOG.md`,
+so don't forget to describe the changes in the new version there.

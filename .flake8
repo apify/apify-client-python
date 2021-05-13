@@ -17,5 +17,6 @@ ignore=
     D409
     D413
 per-file-ignores =
+    .github/*: D
     docs/*: D
     tests/*: D

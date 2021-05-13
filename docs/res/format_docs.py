@@ -12,6 +12,7 @@ subs = [
     (r'\*\*Parameters\*\*\n\n    \*\*', '**Parameters**\n\n    * **'),  # workaround for sphinx bug with single parameter not being rendered as list
     (r'\(`(.*), optional`\)', r'(`\1`, *optional*)'),  # workaround for bug formatting parameter types
     # (r'\*\*\[\*\*(\w+)\*\*\]', r'[\1]'),  # workaround for bug formatting parameter types
+    (r'  \\\*', r'    *'),  # workaround for bug with nested lists in argument descriptions
     (r'`(\w+)`\[`(\w+)`\]', r'`\1[\2]`'),  # workaround for complex parameter types with backticks
     (\
         r'`Union`\[`str`, `int`, `float`, `bool`, `None`, `Dict`\[`str`, `Any`\], `List\[Any\]`\]', \

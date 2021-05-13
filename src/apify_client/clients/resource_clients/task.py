@@ -1,9 +1,11 @@
 from typing import Any, Dict, List, Optional, cast
 
 from ..._consts import ActorJobStatus
-from ..._errors import ApifyApiError, ApifyClientError
-from ..._utils import _catch_not_found_or_throw, _encode_json_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
+from ..._errors import ApifyApiError
+from ..._utils import _catch_not_found_or_throw, _encode_webhook_list_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
 from ..base import ResourceClient
+from .run import RunClient
+from .run_collection import RunCollectionClient
 from .webhook_collection import WebhookCollectionClient
 
 
@@ -92,9 +94,14 @@ class TaskClient(ResourceClient):
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 300.
-            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
-                                       which can be used to receive a notification, e.g. when the actor finished or failed.
-                                       If you already have a webhook set up for the actor or task, you do not have to add it again here.
+            webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
+                                               associated with the actor run which can be used to receive a notification,
+                                               e.g. when the actor finished or failed.
+                                               If you already have a webhook set up for the actor or task, you do not have to add it again here.
+                                               Each webhook is represented by a dictionary containing these items:
+                                               * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
+                                               * ``request_url``: URL to which to send the webhook HTTP request
+                                               * ``payload_template`` (optional): Optional template for the request payload
 
         Returns:
             dict: The run object
@@ -104,7 +111,7 @@ class TaskClient(ResourceClient):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
-            webhooks=_encode_json_to_base64(webhooks) if webhooks is not None else [],
+            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = self.http_client.call(
@@ -124,9 +131,9 @@ class TaskClient(ResourceClient):
         build: Optional[str] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
-        wait_for_finish: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
-    ) -> Dict:
+        wait_secs: Optional[int] = None,
+    ) -> Optional[Dict]:
         """Start a task and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -140,27 +147,23 @@ class TaskClient(ResourceClient):
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish (bool, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 300.
             webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
                                        e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
                                        you do not have to add it again here.
+            wait_secs (int, optional): The maximum number of seconds the server waits for the task run to finish. If not provided, waits indefinitely.
 
         Returns:
             dict: The run object
         """
-        raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
+        started_run = self.start(
+            task_input=task_input,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+            webhooks=webhooks,
+        )
 
-        # run = self.start(
-        #     task_input=task_input,
-        #     build=build,
-        #     memory_mbytes=memory_mbytes,
-        #     timeout_secs=timeout_secs,
-        #     wait_for_finish=wait_for_finish,
-        #     webhooks=webhooks,
-        # )
-
-        # TODO - retrieve the run using Run client and wait on it
+        return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     def get_input(self) -> Optional[Dict]:
         """Retrieve the default input for this task.
@@ -197,24 +200,27 @@ class TaskClient(ResourceClient):
         )
         return cast(Dict, response.json())
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> None:
-        """Retrieve RunClient for last run of this task.
+    def runs(self) -> RunCollectionClient:
+        """Retrieve a client for the runs of this task."""
+        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
+
+    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClient:
+        """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status (optional, dict): Consider only runs with this status.
+            status (str, optional): Consider only runs with this status.
+
+        Returns:
+            RunClient: The resource client for the last run of this task.
         """
-        raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
-
-        # TODO - return run subclient for the last run
-
-    def runs(self) -> None:
-        """Retrieve RunCollectionClient for runs of this task."""
-        raise ApifyClientError('Method not yet finished. Run subclient needs to be implemented first.')
-
-        # TODO - return run collection subclient
+        return RunClient(**self._sub_resource_init_options(
+            resource_id='last',
+            resource_path='runs',
+            params=self._params(status=status),
+        ))
 
     def webhooks(self) -> WebhookCollectionClient:
-        """Retrieve WebhookCollectionClient for webhooks associated with this task."""
+        """Retrieve a client for webhooks associated with this task."""
         return WebhookCollectionClient(**self._sub_resource_init_options())

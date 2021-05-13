@@ -2,6 +2,8 @@ from typing import Dict, Optional
 
 from ._http_client import _HTTPClient
 from .clients import (
+    ActorClient,
+    ActorCollectionClient,
     BuildClient,
     BuildCollectionClient,
     DatasetClient,
@@ -11,6 +13,8 @@ from .clients import (
     LogClient,
     RequestQueueClient,
     RequestQueueCollectionClient,
+    RunClient,
+    RunCollectionClient,
     ScheduleClient,
     ScheduleCollectionClient,
     TaskClient,
@@ -56,12 +60,25 @@ class ApifyClient:
 
     def _options(self) -> Dict:
         return {
+            'root_client': self,
             'base_url': self.base_url,
             'http_client': self.http_client,
             'params': {
                 'token': self.token,
             },
         }
+
+    def actor(self, actor_id: str) -> ActorClient:
+        """Retrieve the sub-client for manipulating a single actor.
+
+        Args:
+            actor_id (str): ID of the actor to be manipulated
+        """
+        return ActorClient(resource_id=actor_id, **self._options())
+
+    def actors(self) -> ActorCollectionClient:
+        """Retrieve the sub-client for manipulating actors."""
+        return ActorCollectionClient(**self._options())
 
     def build(self, build_id: str) -> BuildClient:
         """Retrieve the sub-client for manipulating a single actor build.
@@ -74,6 +91,18 @@ class ApifyClient:
     def builds(self) -> BuildCollectionClient:
         """Retrieve the sub-client for querying multiple builds of a user."""
         return BuildCollectionClient(**self._options())
+
+    def run(self, run_id: str) -> RunClient:
+        """Retrieve the sub-client for manipulating a single actor run.
+
+        Args:
+            run_id (str): ID of the actor run to be manipulated
+        """
+        return RunClient(resource_id=run_id, **self._options())
+
+    def runs(self) -> RunCollectionClient:
+        """Retrieve the sub-client for querying multiple actor runs of a user."""
+        return RunCollectionClient(**self._options())
 
     def dataset(self, dataset_id: str) -> DatasetClient:
         """Retrieve the sub-client for manipulating a single dataset.
@@ -165,7 +194,7 @@ class ApifyClient:
         return TaskClient(resource_id=task_id, **self._options())
 
     def tasks(self) -> TaskCollectionClient:
-        """Retrieve the sub-client for retrieving tasks."""
+        """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClient(**self._options())
 
     def user(self, user_id: Optional[str] = None) -> UserClient:

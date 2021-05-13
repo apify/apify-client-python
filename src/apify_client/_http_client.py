@@ -18,7 +18,7 @@ DEFAULT_BACKOFF_RANDOM_FACTOR = 1
 
 
 class _HTTPClient:
-    def __init__(self, max_retries: int = 8, min_delay_between_retries_millis: int = 500) -> None:
+    def __init__(self, *, token: Optional[str] = None, max_retries: int = 8, min_delay_between_retries_millis: int = 500) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.requests_session = requests.Session()
@@ -30,6 +30,8 @@ class _HTTPClient:
 
         user_agent = f'ApifyClient/{__version__} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
         self.requests_session.headers.update({'User-Agent': user_agent})
+        if token is not None:
+            self.requests_session.headers.update({'Authorization': f'Bearer {token}'})
 
     def call(
         self,

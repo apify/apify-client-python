@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient
 
 
@@ -18,7 +19,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> Dict:
+    ) -> ListPage:
         """List the actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -30,7 +31,7 @@ class ActorCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the actors in descending order based on their creation date
 
         Returns:
-            dict: The list of available actors matching the specified filters.
+            ListPage: The list of available actors matching the specified filters.
         """
         return self._list(my=my, limit=limit, offset=offset, desc=desc)
 

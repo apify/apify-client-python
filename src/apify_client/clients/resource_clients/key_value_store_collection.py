@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional
 
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient
 
 
@@ -11,7 +12,14 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self, *, unnamed: Optional[bool] = None, limit: Optional[int] = None, offset: Optional[int] = None, desc: Optional[bool] = None) -> Dict:
+    def list(
+        self,
+        *,
+        unnamed: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -23,7 +31,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the key-value stores in descending order based on their modification date
 
         Returns:
-            dict: The list of available key-value stores matching the specified filters.
+            ListPage: The list of available key-value stores matching the specified filters.
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 

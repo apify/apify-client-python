@@ -131,11 +131,11 @@ dataset_items = last_succeeded_run_client.dataset().list_items()['items']
 
 ### Pagination
 
-Most methods named `list` or `list_something` return a pagination dictionary,
-containing keys `items`, `total`, `offset`, `count` and `limit`.
+Most methods named `list` or `list_something` return a [`ListPage`](#ListPage) object,
+containing properties `items`, `total`, `offset`, `count` and `limit`.
 There are some exceptions though, like `list_keys` or `list_head` which paginate differently.
 The results you're looking for are always stored under `items` and you can use the `limit`
-property to get only a subset of results. Other props can be available depending on the method.
+property to get only a subset of results. Other properties can be available depending on the method.
 
 ## API Reference
 
@@ -779,7 +779,7 @@ List the actors the user has created or used.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -938,7 +938,7 @@ List the available actor versions.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -1211,7 +1211,7 @@ List all actor runs (either of a single actor, or all user’s actors, depending
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -1306,7 +1306,7 @@ List all actor builds (either of a single actor, or all user’s actors, dependi
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -1640,7 +1640,7 @@ List the available datasets.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -1839,7 +1839,7 @@ List the available key-value stores.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -2057,7 +2057,7 @@ List the available request queues.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -2245,7 +2245,7 @@ List the available webhooks.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -2345,7 +2345,7 @@ List all webhook dispatches of a user.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -2601,7 +2601,7 @@ List the available tasks.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 
@@ -2748,13 +2748,13 @@ List the available schedules.
 
   * **desc** (`bool`, *optional*) – Whether to sort the schedules in descending order based on their modification date
 
-* **Return type**
-
-  `Dict`
-
 * **Returns**
 
   The list of available schedules matching the specified filters.
+
+* **Return type**
+
+  [`ListPage`](#listpage)
 
 ***
 
@@ -2780,13 +2780,13 @@ Create a new schedule.
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
 
-* **Return type**
-
-  `Dict`
-
 * **Returns**
 
   The created schedule.
+
+* **Return type**
+
+  `dict`
 
 ***
 
@@ -2813,3 +2813,21 @@ You receive all or only public info based on your token permissions.
 * **Return type**
 
   `dict`, optional
+
+***
+
+### [](#listpage) ListPage
+
+A single page of items returned from a list() method.
+
+#### Instance attributes
+
+Name | Type | Description
+---- | ---- | -----------
+`items` | `list` | List of returned objects on this page
+`total` | `int` | Total number of objects matching the API call criteria
+`count` | `int` | Count of the returned objects on this page
+`offset` | `int` | The limit on the number of returned objects offset specified in the API call
+`limit` | `int` | The offset of the first object specified in the API call
+
+***

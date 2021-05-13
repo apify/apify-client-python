@@ -1,6 +1,7 @@
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..._consts import ActorJobStatus
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient
 
 
@@ -19,7 +20,7 @@ class RunCollectionClient(ResourceCollectionClient):
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
         status: Optional[ActorJobStatus] = None,
-    ) -> Dict:
+    ) -> ListPage:
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
@@ -32,6 +33,6 @@ class RunCollectionClient(ResourceCollectionClient):
             status (str, optional): Retrieve only runs with the provided status
 
         Returns:
-            dict: The retrieved actor runs
+            ListPage: The retrieved actor runs
         """
         return self._list(limit=limit, offset=offset, desc=desc, status=status)

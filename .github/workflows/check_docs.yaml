@@ -3,11 +3,12 @@ name: Check documentation status
 on: push
 
 jobs:
-  build:
+  check_docs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2

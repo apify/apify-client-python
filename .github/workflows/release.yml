@@ -1,0 +1,127 @@
+name: Check & Release
+
+on:
+  # Push to master will publish a beta version
+  push:
+    branches:
+      - master
+  # A release via GitHub releases will publish a stable version
+  release:
+    types: [published]
+
+jobs:
+  lint_and_test:
+    name: Lint and run unit tests
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+
+    - name: Lint
+      run: ./lint_and_test.sh lint
+
+    - name: Type check
+      run: ./lint_and_test.sh types
+
+    - name: Unit tests
+      run: ./lint_and_test.sh tests
+
+  check_docs:
+    name: Check whether the documentation is up to date
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+
+    - name: Check whether docs are built from the latest code
+      run: ./docs/res/check.sh
+
+  deploy:
+    name: Publish to PyPI
+    needs: [lint_and_test, check_docs]
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade setuptools twine wheel
+
+    - # Determine if this is a beta or latest release
+      name: Determine release type
+      run: echo "RELEASE_TYPE=$(if [ ${{ github.event_name }} = release ]; then echo stable; else echo beta; fi)" >> $GITHUB_ENV
+
+    - # Check whether the released version is listed in CHANGELOG.md
+      name: Check whether the released version is listed in the changelog
+      run: python ./.github/scripts/check_version_in_changelog.py
+
+    - # Check version consistency and increment pre-release version number for beta releases (must be the last step before build)
+      name: Bump pre-release version
+      if: env.RELEASE_TYPE == 'beta'
+      run: python ./.github/scripts/update_version_for_beta_release.py
+
+    - # Build a source distribution and a python3-only wheel
+      name: Build distribution files
+      run: python setup.py sdist bdist_wheel
+
+    - # Check whether the package description will render correctly on PyPI
+      name: Check package rendering on PyPI
+      run: python -m twine check dist/*
+
+    - # Publish package to PyPI using their official GitHub action
+      name: Publish package to PyPI
+      run: python -m twine upload --non-interactive --disable-progress-bar dist/*
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
+    - # Tag the current commit with the version tag if this is a beta release (stable releases are tagged with the release process)
+      name: Tag Version
+      if: env.RELEASE_TYPE == 'beta'
+      run: |
+        git_tag=v`python ./.github/scripts/print_current_package_version.py`
+        git tag $git_tag
+        git push origin $git_tag
+
+    - # Upload the build artifacts to the release
+      name: Upload the build artifacts to release
+      uses: svenstaro/upload-release-action@v2
+      if: env.RELEASE_TYPE == 'stable'
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: dist/*
+        file_glob: true
+        tag: ${{ github.ref }}

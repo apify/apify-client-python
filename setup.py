@@ -24,10 +24,13 @@ setup(
     author_email="support@apify.com",
     url="https://github.com/apify/apify-client-python",
     project_urls={
+        'Documentation': 'https://docs.apify.com/apify-client-python',
+        'Source': 'https://github.com/apify/apify-client-python',
+        'Issue tracker': 'https://github.com/apify/apify-client-python/issues',
         'Apify Homepage': 'https://apify.com',
     },
     license='Apache Software License',
-    license_file='LICENSE',
+    license_files=['LICENSE'],
 
     description='Apify API client for Python',
     long_description=long_description,

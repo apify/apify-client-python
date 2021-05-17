@@ -1,16 +1,18 @@
 __pycache__
-build/
-cli_test_client.py
+.mypy_cache
+.pytest_cache
 
 .venv
 .direnv
 .envrc
 .python-version
-.mypy_cache
-.pytest_cache
 
 *.egg-info/
 *.egg
+dist/
+build/
 
 .vscode
 .idea
+
+cli_test_client.py

@@ -17,8 +17,8 @@ It provides useful features like automatic retries and convenience functions tha
 
 Requires Python 3.7+
 
-Right now the client is not available on PyPI yet, so you can install it only from its [git repo](https://github.com/apify/apify-client-python).
-To do that, run `pip install git+https://github.com/apify/apify-client-python.git`
+You can install the client from its [PyPI listing](https://pypi.org/project/apify-client/).
+To do that, simply run `pip install apify-client`.
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
 # Fetch results from the actor's default dataset
-dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items()['items']
+dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
 ```
 
 ## Features
@@ -74,16 +74,16 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 # Collection clients do not require a parameter
 actor_collection_client = apify_client.actors()
 # Create an actor with the name: my-actor
-my_actor = actor_collection_client.create({ name: 'my-actor' })
+my_actor = actor_collection_client.create(name='my-actor')
 # List all of your actors
-actor_list = actor_collection_client.list()['items']
+actor_list = actor_collection_client.list().items
 ```
 
 ```python
 # Collection clients do not require a parameter
 dataset_collection_client = apify_client.datasets()
 # Get (or create, if it doesn't exist) a dataset with the name of my-dataset
-my_dataset = dataset_collection_client.get_or_create('my-dataset')
+my_dataset = dataset_collection_client.get_or_create(name='my-dataset')
 ```
 
 ```python
@@ -92,14 +92,14 @@ actor_client = apify_client.actor('john-doe/my-actor')
 # Fetch the john-doe/my-actor object from the API
 my_actor = actor_client.get()
 # Start the run of john-doe/my-actor and return the Run object
-my_actor_run = actor_client.start();
+my_actor_run = actor_client.start()
 ```
 
 ```python
 # Resource clients accept an ID of the resource
 dataset_client = apify_client.dataset('john-doe/my-dataset')
 # Append items to the end of john-doe/my-dataset
-dataset_client.push_items([{ "foo": 1 }, { "bar": 2 }])
+dataset_client.push_items([{ 'foo': 1 }, { 'bar': 2 }])
 ```
 
 > The ID of the resource can be either the `id` of the said resource,
@@ -117,17 +117,13 @@ nested collections, such as runs of a given actor.
 actor_client = apify_client.actor('john-doe/my-actor')
 runs_client = actor_client.runs()
 # List the last 10 runs of the john-doe/hello-world actor
-actor_runs = runs_client.list(limit=10, desc=True)['items']
+actor_runs = runs_client.list(limit=10, desc=True).items
 
 # Select the last run of the john-doe/hello-world actor that finished with a SUCCEEDED status
 last_succeeded_run_client = actor_client.last_run(status='SUCCEEDED')
 # Fetch items from the run's dataset
-dataset_items = last_succeeded_run_client.dataset().list_items()['items']
+dataset_items = last_succeeded_run_client.dataset().list_items().items
 ```
-
-> The quick access to `dataset` and other storages directly from the run
-> client can now only be used with the `last_run()` method, but the feature
-> will be available to all runs in the future.
 
 ### Pagination
 

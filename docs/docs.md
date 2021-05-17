@@ -1420,7 +1420,7 @@ List the items of the dataset.
 
 ***
 
-#### [](#datasetclient-iterate_items) `DatasetClient.iterate_items(offset=0, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None)`
+#### [](#datasetclient-iterate_items) `DatasetClient.iterate_items(*, offset=0, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None)`
 
 Iterate over the items in the dataset.
 
@@ -1467,7 +1467,7 @@ Iterate over the items in the dataset.
 
 ***
 
-#### [](#datasetclient-download_items) `DatasetClient.download_items(item_format='json', *, offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclient-download_items) `DatasetClient.download_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
 
 Download the items in the dataset as raw bytes.
 
@@ -1530,7 +1530,7 @@ Download the items in the dataset as raw bytes.
 
 ***
 
-#### [](#datasetclient-stream_items) `DatasetClient.stream_items(item_format='json', *, offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclient-stream_items) `DatasetClient.stream_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
 
 Retrieve the items in the dataset as a file-like object.
 
@@ -2825,9 +2825,9 @@ A single page of items returned from a list() method.
 Name | Type | Description
 ---- | ---- | -----------
 `items` | `list` | List of returned objects on this page
-`total` | `int` | Total number of objects matching the API call criteria
-`count` | `int` | Count of the returned objects on this page
 `offset` | `int` | The limit on the number of returned objects offset specified in the API call
 `limit` | `int` | The offset of the first object specified in the API call
+`count` | `int` | Count of the returned objects on this page
+`total` | `int` | Total number of objects matching the API call criteria
 
 ***

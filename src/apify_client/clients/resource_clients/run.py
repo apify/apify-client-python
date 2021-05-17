@@ -111,9 +111,6 @@ class RunClient(ActorJobBaseClient):
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the actor run.
 
-        Currently this works only through `actor_client.last_run().dataset()`.
-        It will become available for all runs once the API supports it.
-
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
@@ -125,9 +122,6 @@ class RunClient(ActorJobBaseClient):
 
     def key_value_store(self) -> KeyValueStoreClient:
         """Get the client for the default key-value store of the actor run.
-
-        Currently this works only through `actor_client.last_run().key_value_store()`.
-        It will become available for all runs once the API supports it.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
@@ -141,9 +135,6 @@ class RunClient(ActorJobBaseClient):
     def request_queue(self) -> RequestQueueClient:
         """Get the client for the default request queue of the actor run.
 
-        Currently this works only through `actor_client.last_run().request_queue()`.
-        It will become available for all runs once the API supports it.
-
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
@@ -155,9 +146,6 @@ class RunClient(ActorJobBaseClient):
 
     def log(self) -> LogClient:
         """Get the client for the log of the actor run.
-
-        Currently this works only through `actor_client.last_run().log()`.
-        It will become available for all runs once the API supports it.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 

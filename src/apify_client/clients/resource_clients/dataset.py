@@ -120,6 +120,7 @@ class DatasetClient(ResourceClient):
 
     def iterate_items(
         self,
+        *,
         offset: int = 0,
         limit: Optional[int] = None,
         clean: Optional[bool] = None,
@@ -195,8 +196,8 @@ class DatasetClient(ResourceClient):
 
     def download_items(
         self,
-        item_format: str = 'json',
         *,
+        item_format: str = 'json',
         offset: Optional[int] = None,
         limit: Optional[int] = None,
         desc: Optional[bool] = None,
@@ -280,8 +281,8 @@ class DatasetClient(ResourceClient):
 
     def stream_items(
         self,
-        item_format: str = 'json',
         *,
+        item_format: str = 'json',
         offset: Optional[int] = None,
         limit: Optional[int] = None,
         desc: Optional[bool] = None,

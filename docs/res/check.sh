@@ -4,12 +4,12 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 
 mv ../docs.md ../old_docs.md
-OLD_MD5=$(md5 -q ../old_docs.md)
+OLD_MD5=$(md5sum ../old_docs.md | cut -f 1 -d " ")
 
 ./build.sh
 BUILD_STATUS=$?
 
-NEW_MD5=$(md5 -q ../docs.md)
+NEW_MD5=$(md5sum ../docs.md | cut -f 1 -d " ")
 mv ../old_docs.md ../docs.md
 
 

@@ -142,6 +142,6 @@ jobs:
         event-type: build-python-images
         client-payload: >
           {
-            "release_tag": "${{ env.RELEASE_TAG }}",
-            "apify_client_version": "${{ steps.get-package-version.outputs.package_version }}",
+            "release_tag": "${{ env.RELEASE_TYPE }}",
+            "apify_client_version": "${{ steps.get-package-version.outputs.package_version }}"
           }

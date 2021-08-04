@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
+-----------------------------------------------
+
+### Changed
+
+- replaced `base_url` with `api_url` in the client constructor
+  to enable easier passing of the API server url from environment variables availabl to actors on the Apify platform
+
 [0.1.0](../../releases/tag/v0.1.0) - 2021-08-02
 -----------------------------------------------
 

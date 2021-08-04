@@ -167,7 +167,7 @@ The Apify API client.
 
 ***
 
-#### [](#apifyclient-__init__) `ApifyClient.__init__(token=None, *, base_url='https://api.apify.com/v2', max_retries=8, min_delay_between_retries_millis=500)`
+#### [](#apifyclient-__init__) `ApifyClient.__init__(token=None, *, api_url=None, max_retries=8, min_delay_between_retries_millis=500)`
 
 Initialize the Apify API Client.
 
@@ -175,7 +175,7 @@ Initialize the Apify API Client.
 
   * **token** (`str`, *optional*) – The Apify API token
 
-  * **base_url** (`str`, *optional*) – The URL of the Apify API server to which to connect to. Defaults to [https://api.apify.com/v2](https://api.apify.com/v2)
+  * **api_url** (`str`, *optional*) – The URL of the Apify API server to which to connect to. Defaults to [https://api.apify.com](https://api.apify.com)
 
   * **max_retries** (`int`, *optional*) – How many times to retry a failed request at most
 

@@ -82,7 +82,7 @@ jobs:
 
     - # Determine if this is a beta or latest release
       name: Determine release type
-      run: echo "RELEASE_TYPE=$(if [ ${{ github.event_name }} = release ]; then echo stable; else echo beta; fi)" >> $GITHUB_ENV
+      run: echo "RELEASE_TYPE=$(if [ ${{ github.event_name }} = release ]; then echo latest; else echo beta; fi)" >> $GITHUB_ENV
 
     - # Check whether the released version is listed in CHANGELOG.md
       name: Check whether the released version is listed in the changelog

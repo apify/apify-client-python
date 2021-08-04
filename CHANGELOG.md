@@ -14,6 +14,7 @@ Changelog
 
 - changed tags for actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
 - updated the `requests` dependency to 2.26.0
+- updated development dependencies
 
 [0.1.0](../../releases/tag/v0.1.0) - 2021-08-02
 -----------------------------------------------

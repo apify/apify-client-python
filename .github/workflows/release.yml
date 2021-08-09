@@ -119,7 +119,7 @@ jobs:
     - # Upload the build artifacts to the release
       name: Upload the build artifacts to release
       uses: svenstaro/upload-release-action@v2
-      if: env.RELEASE_TYPE == 'stable'
+      if: env.RELEASE_TYPE == 'latest'
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: dist/*

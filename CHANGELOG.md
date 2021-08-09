@@ -8,6 +8,7 @@ Changelog
 
 - replaced `base_url` with `api_url` in the client constructor
   to enable easier passing of the API server url from environment variables availabl to actors on the Apify platform
+- added the `gracefully` parameter to the "Abort run" method
 
 ### Internal changes
 

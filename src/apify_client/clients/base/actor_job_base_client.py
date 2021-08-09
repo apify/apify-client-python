@@ -59,10 +59,12 @@ class ActorJobBaseClient(ResourceClient):
 
         return job
 
-    def _abort(self) -> Dict:
+    def _abort(self, gracefully: Optional[bool] = None) -> Dict:
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(),
+            params=self._params(
+                gracefully=gracefully,
+            ),
         )
         return _parse_date_fields(_pluck_data(response.json()))

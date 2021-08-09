@@ -26,15 +26,20 @@ class RunClient(ActorJobBaseClient):
         """
         return self._get()
 
-    def abort(self) -> Dict:
+    def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
         """Abort the actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
 
+        Args:
+            gracefully (bool, optional): If True, the actor run will abort gracefully.
+                It will send ``aborting`` and ``persistStates`` events into the run and force-stop the run after 30 seconds.
+                It is helpful in cases where you plan to resurrect the run later.
+
         Returns:
             dict: The data of the aborted actor run
         """
-        return self._abort()
+        return self._abort(gracefully=gracefully)
 
     def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
         """Wait synchronously until the run finishes or the server times out.

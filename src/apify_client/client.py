@@ -26,7 +26,8 @@ from .clients import (
     WebhookDispatchCollectionClient,
 )
 
-DEFAULT_BASE_API_URL = 'https://api.apify.com/v2'
+DEFAULT_API_URL = 'https://api.apify.com'
+API_VERSION = 'v2'
 
 
 class ApifyClient:
@@ -36,7 +37,7 @@ class ApifyClient:
         self,
         token: Optional[str] = None,
         *,
-        base_url: str = DEFAULT_BASE_API_URL,
+        api_url: Optional[str] = None,
         max_retries: int = 8,
         min_delay_between_retries_millis: int = 500,
     ):
@@ -44,13 +45,14 @@ class ApifyClient:
 
         Args:
             token (str, optional): The Apify API token
-            base_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com/v2
+            api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
             max_retries (int, optional): How many times to retry a failed request at most
             min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
                 (increases exponentially from this value)
         """
         self.token = token
-        self.base_url = base_url
+        api_url = (api_url or DEFAULT_API_URL).rstrip('/')
+        self.base_url = f'{api_url}/{API_VERSION}'
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
 

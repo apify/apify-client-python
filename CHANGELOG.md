@@ -9,6 +9,10 @@ Changelog
 - replaced `base_url` with `api_url` in the client constructor
   to enable easier passing of the API server url from environment variables availabl to actors on the Apify platform
 
+### Internal changes
+
+- changed tags for actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
+
 [0.1.0](../../releases/tag/v0.1.0) - 2021-08-02
 -----------------------------------------------
 

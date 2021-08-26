@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _snake_case_to_camel_case
+from ..._errors import ApifyApiError
+from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data, _snake_case_to_camel_case
 from ...consts import WebhookEventType
 from ..base import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
@@ -106,6 +107,30 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         return self._delete()
+
+    def test(self) -> Optional[Dict]:
+        """Test a webhook.
+
+        Creates a webhook dispatch with a dummy payload.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook
+
+        Returns:
+            dict, optional: The webhook dispatch created by the test
+        """
+        try:
+            response = self.http_client.call(
+                url=self._url('test'),
+                method='POST',
+                params=self._params(),
+            )
+
+            return _parse_date_fields(_pluck_data(response.json()))
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
 
     def dispatches(self) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.

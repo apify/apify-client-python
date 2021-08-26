@@ -2838,6 +2838,7 @@ Name | Type | Description
 `limit` | `int` | The offset of the first object specified in the API call
 `count` | `int` | Count of the returned objects on this page
 `total` | `int` | Total number of objects matching the API call criteria
+`desc` | `bool` | Whether the listing is descending or not
 
 ***
 

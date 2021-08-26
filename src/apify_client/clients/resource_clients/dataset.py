@@ -116,6 +116,7 @@ class DatasetClient(ResourceClient):
             'offset': int(response.headers['x-apify-pagination-offset']),
             'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
             'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
+            'desc': bool(response.headers['x-apify-pagination-desc']),
         })
 
     def iterate_items(

@@ -216,6 +216,8 @@ class ListPage:
     limit: int
     #: int: Total number of objects matching the API call criteria
     total: int
+    #: bool: Whether the listing is descending or not
+    desc: bool
 
     def __init__(self, data: Dict) -> None:
         """Initialize a ListPage instance from the API response data."""
@@ -224,3 +226,4 @@ class ListPage:
         self.limit = data['limit'] if 'limit' in data else 0
         self.count = data['count'] if 'count' in data else len(self.items)
         self.total = data['total'] if 'total' in data else self.offset + self.count
+        self.desc = data['desc'] if 'desc' in data else False

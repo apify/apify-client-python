@@ -52,7 +52,7 @@ class _HTTPClient:
             headers = {}
 
         if json and not data:
-            data = jsonlib.dumps(json, ensure_ascii=False).encode('utf-8')
+            data = jsonlib.dumps(json, ensure_ascii=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
 
         if isinstance(data, (str, bytes, bytearray)):

@@ -4,6 +4,7 @@ on: push
 
 jobs:
   check_docs:
+    name: Check whether documentation is up-to-date
     runs-on: ubuntu-20.04
 
     steps:

@@ -7,6 +7,7 @@ on:
 
 jobs:
   apify-pr-toolkit:
+    name: Run the Apify pull request toolkit
     runs-on: ubuntu-20.04
     steps:
       - name: clone pull-request-toolkit-action

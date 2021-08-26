@@ -88,7 +88,7 @@ class DatasetClient(ResourceClient):
             skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
 
         Returns:
-            dict: The dataset items
+            ListPage: A page of the list of dataset items according to the specified filters.
         """
         request_params = self._params(
             offset=offset,

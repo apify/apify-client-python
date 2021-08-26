@@ -1404,11 +1404,11 @@ List the items of the dataset.
 
 * **Returns**
 
-  The dataset items
+  A page of the list of dataset items according to the specified filters.
 
 * **Return type**
 
-  `dict`
+  [`ListPage`](#listpage)
 
 ***
 

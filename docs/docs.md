@@ -2121,6 +2121,7 @@ Sub-client for manipulating a single webhook.
 * [get()](#webhookclient-get)
 * [update()](#webhookclient-update)
 * [delete()](#webhookclient-delete)
+* [test()](#webhookclient-test)
 * [dispatches()](#webhookclient-dispatches)
 
 ***
@@ -2188,6 +2189,24 @@ Delete the webhook.
 * **Return type**
 
   `None`
+
+***
+
+#### [](#webhookclient-test) `WebhookClient.test()`
+
+Test a webhook.
+
+Creates a webhook dispatch with a dummy payload.
+
+[https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook](https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook)
+
+* **Returns**
+
+  The webhook dispatch created by the test
+
+* **Return type**
+
+  `dict`, optional
 
 ***
 

@@ -20,6 +20,7 @@ Changelog
 ### Internal changes
 
 - added human-friendly names to the jobs in Github Action workflows
+- updated development dependencies
 
 [0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
 -----------------------------------------------

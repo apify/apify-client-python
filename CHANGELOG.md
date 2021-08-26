@@ -7,6 +7,7 @@ Changelog
 ### Added
 
 - added the `test()` method to the webhook client
+- added support for indicating the pagination direction in the `ListPage` objects
 
 [0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
 -----------------------------------------------

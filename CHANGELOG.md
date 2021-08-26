@@ -17,6 +17,10 @@ Changelog
 
 - fixed return type in the `DatasetClient.list_items()` method docs
 
+### Internal changes
+
+- added human-friendly names to the jobs in Github Action workflows
+
 [0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
 -----------------------------------------------
 

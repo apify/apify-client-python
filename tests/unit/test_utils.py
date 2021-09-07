@@ -2,6 +2,7 @@ import io
 import time
 import unittest
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Callable
 
 from apify_client._utils import (
@@ -10,6 +11,7 @@ from apify_client._utils import (
     _is_content_type_text,
     _is_content_type_xml,
     _is_file_or_bytes,
+    _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
     _retry_with_exp_backoff,
@@ -167,3 +169,14 @@ class UtilsTest(unittest.TestCase):
             ]),
             b'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d',  # noqa: E501
         )
+
+    def test__maybe_extract_enum_member_value(self) -> None:
+        class TestEnum(Enum):
+            A = 'A'
+            B = 'B'
+
+        self.assertEqual(_maybe_extract_enum_member_value(TestEnum.A), 'A')
+        self.assertEqual(_maybe_extract_enum_member_value(TestEnum.B), 'B')
+        self.assertEqual(_maybe_extract_enum_member_value('C'), 'C')
+        self.assertEqual(_maybe_extract_enum_member_value(1), 1)
+        self.assertEqual(_maybe_extract_enum_member_value(None), None)

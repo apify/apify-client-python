@@ -5,6 +5,7 @@ import random
 import re
 import time
 from datetime import datetime, timezone
+from enum import Enum
 from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
@@ -138,7 +139,7 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> bytes:
     data = []
     for webhook in webhooks:
         webhook_representation = {
-            'eventTypes': [event_type.value for event_type in webhook['event_types']],
+            'eventTypes': [_maybe_extract_enum_member_value(event_type) for event_type in webhook['event_types']],
             'requestUrl': webhook['request_url'],
         }
         if 'payload_template' in webhook:
@@ -201,6 +202,12 @@ def _encode_key_value_store_record_value(value: Any, content_type: Optional[str]
         value = json.dumps(value, ensure_ascii=False, indent=2, default=str).encode('utf-8')
 
     return (value, content_type)
+
+
+def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
+    if isinstance(maybe_enum_member, Enum):
+        return maybe_enum_member.value
+    return maybe_enum_member
 
 
 class ListPage:

@@ -13,9 +13,9 @@ class ActorJobStatus(Enum):
     #: Actor job or build failed
     FAILED = 'FAILED'
     #: Actor job currently timing out
-    TIMING_OUT = 'TIMING_OUT'
+    TIMING_OUT = 'TIMING-OUT'
     #: Actor job timed out
-    TIMED_OUT = 'TIMED_OUT'
+    TIMED_OUT = 'TIMED-OUT'
     #: Actor job currently being aborted by user
     ABORTING = 'ABORTING'
     #: Actor job aborted by user

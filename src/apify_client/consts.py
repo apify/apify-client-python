@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ActorJobStatus(Enum):
+class ActorJobStatus(str, Enum):
     """Available statuses for actor jobs (runs or builds)."""
 
     #: Actor job initialized but not started yet
@@ -27,7 +27,7 @@ class ActorJobStatus(Enum):
         return self in (ActorJobStatus.SUCCEEDED, ActorJobStatus.FAILED, ActorJobStatus.TIMED_OUT, ActorJobStatus.ABORTED)
 
 
-class ActorSourceType(Enum):
+class ActorSourceType(str, Enum):
     """Available source types for actors."""
 
     #: Actor source code is a single JavaScript/Node.js file
@@ -42,7 +42,7 @@ class ActorSourceType(Enum):
     GITHUB_GIST = 'GITHUB_GIST'
 
 
-class WebhookEventType(Enum):
+class WebhookEventType(str, Enum):
     """Events that can trigger a webhook."""
 
     #: The actor run was created

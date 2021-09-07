@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from ..._utils import _maybe_extract_enum_member_value
 from ...consts import ActorSourceType
 from ..base import ResourceClient
 
@@ -72,7 +73,7 @@ class ActorVersionClient(ResourceClient):
         if apply_env_vars_to_build is not None:
             version_fields['applyEnvVarsToBuild'] = apply_env_vars_to_build
         if source_type is not None:
-            version_fields['sourceType'] = source_type.value
+            version_fields['sourceType'] = _maybe_extract_enum_member_value(source_type)
         if source_code is not None:
             version_fields['sourceCode'] = source_code
         if base_docker_image is not None:

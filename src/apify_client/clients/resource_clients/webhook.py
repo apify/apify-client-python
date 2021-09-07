@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data, _snake_case_to_camel_case
+from ..._utils import _catch_not_found_or_throw, _maybe_extract_enum_member_value, _parse_date_fields, _pluck_data, _snake_case_to_camel_case
 from ...consts import WebhookEventType
 from ..base import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
@@ -40,7 +40,7 @@ def _prepare_webhook_representation(
         webhook['condition'] = condition
 
     if event_types is not None:
-        webhook['eventTypes'] = [event_type.value for event_type in event_types]
+        webhook['eventTypes'] = [_maybe_extract_enum_member_value(event_type) for event_type in event_types]
 
     return webhook
 

@@ -1,7 +1,14 @@
 from typing import Any, Dict, List, Optional, cast
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _encode_webhook_list_to_base64, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
+from ..._utils import (
+    _catch_not_found_or_throw,
+    _encode_webhook_list_to_base64,
+    _filter_out_none_values_recursively,
+    _maybe_extract_enum_member_value,
+    _parse_date_fields,
+    _pluck_data,
+)
 from ...consts import ActorJobStatus
 from ..base import ResourceClient
 from .run import RunClient
@@ -218,7 +225,7 @@ class TaskClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=status.value if status is not None else None),
+            params=self._params(status=_maybe_extract_enum_member_value(status) if status is not None else None),
         ))
 
     def webhooks(self) -> WebhookCollectionClient:

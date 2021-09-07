@@ -1,6 +1,12 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _encode_key_value_store_record_value, _encode_webhook_list_to_base64, _parse_date_fields, _pluck_data
+from ..._utils import (
+    _encode_key_value_store_record_value,
+    _encode_webhook_list_to_base64,
+    _maybe_extract_enum_member_value,
+    _parse_date_fields,
+    _pluck_data,
+)
 from ...consts import ActorJobStatus
 from ..base import ResourceClient
 from .actor_version import ActorVersionClient
@@ -294,7 +300,7 @@ class ActorClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=status.value if status is not None else None),
+            params=self._params(status=_maybe_extract_enum_member_value(status) if status is not None else None),
         ))
 
     def versions(self) -> ActorVersionCollectionClient:

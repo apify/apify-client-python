@@ -6,6 +6,7 @@ Changelog
 
 ### Changed
 
+- improved handling of `Enum` arguments
 - improved support for storing more data types in key-value stores
 
 ### Fixed

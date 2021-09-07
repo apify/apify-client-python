@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[0.4.0](../../releases/tag/v0.4.0) - 2021-09-07
+-----------------------------------------------
+
+### Changed
+
+- improved support for storing more data types in key-value stores
+
 [0.3.0](../../releases/tag/v0.3.0) - 2021-08-26
 -----------------------------------------------
 

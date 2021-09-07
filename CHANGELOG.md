@@ -8,6 +8,10 @@ Changelog
 
 - improved support for storing more data types in key-value stores
 
+### Fixed
+
+- fixed values of some `ActorJobStatus` `Enum` members
+
 [0.3.0](../../releases/tag/v0.3.0) - 2021-08-26
 -----------------------------------------------
 

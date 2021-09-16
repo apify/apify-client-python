@@ -55,7 +55,7 @@ class ActorJobBaseClient(ResourceClient):
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
-            time.sleep(250)
+            time.sleep(0.25)
 
         return job
 

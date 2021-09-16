@@ -6,9 +6,8 @@ from http import HTTPStatus
 from typing import Any, Callable, Dict, Optional
 
 import requests
-from requests.exceptions import ConnectionError, Timeout
 
-from ._errors import ApifyApiError, InvalidResponseBodyError
+from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
 from ._types import JSONSerializable
 from ._utils import _is_content_type_json, _is_content_type_text, _is_content_type_xml, _retry_with_exp_backoff
 from ._version import __version__
@@ -82,10 +81,11 @@ class _HTTPClient:
                     setattr(response, '_maybe_parsed_body', _maybe_parsed_body)
                     return response
 
-            except (ConnectionError, Timeout, InvalidResponseBodyError) as e:
-                raise e
             except Exception as e:
-                bail(e)
+                if _is_retryable_error(e):
+                    raise e
+                else:
+                    bail(e)
 
             api_error = ApifyApiError(response, attempt)
             if response.status_code == HTTPStatus.TOO_MANY_REQUESTS or response.status_code >= 500:

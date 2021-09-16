@@ -1,6 +1,7 @@
 from typing import Optional
 
 import requests
+from requests.exceptions import ChunkedEncodingError, ConnectionError, Timeout
 
 
 class ApifyClientError(Exception):
@@ -69,3 +70,15 @@ class InvalidResponseBodyError(ApifyClientError):
         self.name = 'InvalidResponseBodyError'
         self.code = 'invalid-response-body'
         self.response = response
+
+
+def _is_retryable_error(e: Exception) -> bool:
+    if isinstance(e, (InvalidResponseBodyError, ConnectionError, Timeout)):
+        return True
+
+    # This can happen if an API server pod restarts while handling a long-running request
+    if isinstance(e, ChunkedEncodingError):
+        if str(e).startswith('("Connection broken: InvalidChunkLength(got length b\'\', 0 bytes read)"'):
+            return True
+
+    return False

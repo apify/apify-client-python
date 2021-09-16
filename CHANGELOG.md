@@ -8,6 +8,10 @@ Changelog
 
 - improved retrying broken API server connections
 
+### Fixed
+
+- fixed timeout value in actively waiting for a run to finish
+
 [0.4.0](../../releases/tag/v0.4.0) - 2021-09-07
 -----------------------------------------------
 

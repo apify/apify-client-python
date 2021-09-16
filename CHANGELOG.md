@@ -12,6 +12,10 @@ Changelog
 
 - fixed timeout value in actively waiting for a run to finish
 
+### Internal changes
+
+- updated development dependencies
+
 [0.4.0](../../releases/tag/v0.4.0) - 2021-09-07
 -----------------------------------------------
 

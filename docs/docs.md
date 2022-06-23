@@ -855,7 +855,7 @@ Return information about the actor version.
 
 ***
 
-#### [](#actorversionclient-update) `ActorVersionClient.update(*, build_tag=None, env_vars=None, apply_env_vars_to_build=None, source_type=None, source_code=None, base_docker_image=None, source_files=None, git_repo_url=None, tarball_url=None, github_gist_url=None)`
+#### [](#actorversionclient-update) `ActorVersionClient.update(*, build_tag=None, env_vars=None, apply_env_vars_to_build=None, source_type=None, source_files=None, git_repo_url=None, tarball_url=None, github_gist_url=None)`
 
 Update the actor version with specified fields.
 
@@ -872,13 +872,6 @@ Update the actor version with specified fields.
   will also be set to the actor build process.
 
   * **source_type** ([`ActorSourceType`](#actorsourcetype), *optional*) – What source type is the actor version using.
-
-  * **source_code** (`str`, *optional*) – Source code as a single JavaScript/Node.js file,
-  using the base Docker image specified in `baseDockerImage`.
-  Required when `source_type` is [`ActorSourceType.SOURCE_CODE`](#actorsourcetype-source_code).
-
-  * **base_docker_image** (`str`, *optional*) – The base Docker image to use for single-file actors.
-  Required when `source_type` is [`ActorSourceType.SOURCE_CODE`](#actorsourcetype-source_code).
 
   * **source_files** (`list of dict`, *optional*) – Source code comprised of multiple files, each an item of the array.
   Required when `source_type` is [`ActorSourceType.SOURCE_FILES`](#actorsourcetype-source_files). See the API docs for the exact structure.
@@ -939,7 +932,7 @@ List the available actor versions.
 
 ***
 
-#### [](#actorversioncollectionclient-create) `ActorVersionCollectionClient.create(*, version_number, build_tag=None, env_vars=None, apply_env_vars_to_build=None, source_type, source_code=None, base_docker_image=None, source_files=None, git_repo_url=None, tarball_url=None, github_gist_url=None)`
+#### [](#actorversioncollectionclient-create) `ActorVersionCollectionClient.create(*, version_number, build_tag=None, env_vars=None, apply_env_vars_to_build=None, source_type, source_files=None, git_repo_url=None, tarball_url=None, github_gist_url=None)`
 
 Create a new actor version.
 
@@ -958,13 +951,6 @@ Create a new actor version.
   will also be set to the actor build process.
 
   * **source_type** ([`ActorSourceType`](#actorsourcetype)) – What source type is the actor version using.
-
-  * **source_code** (`str`, *optional*) – Source code as a single JavaScript/Node.js file,
-  using the base Docker image specified in `baseDockerImage`.
-  Required when `source_type` is [`ActorSourceType.SOURCE_CODE`](#actorsourcetype-source_code).
-
-  * **base_docker_image** (`str`, *optional*) – The base Docker image to use for single-file actors.
-  Required when `source_type` is [`ActorSourceType.SOURCE_CODE`](#actorsourcetype-source_code).
 
   * **source_files** (`list of dict`, *optional*) – Source code comprised of multiple files, each an item of the array.
   Required when `source_type` is [`ActorSourceType.SOURCE_FILES`](#actorsourcetype-source_files). See the API docs for the exact structure.
@@ -2914,12 +2900,6 @@ Available source types for actors.
 * [GIT\_REPO](#actorsourcetype-git\_repo)
 * [TARBALL](#actorsourcetype-tarball)
 * [GITHUB\_GIST](#actorsourcetype-github\_gist)
-
-***
-
-#### [](#actorsourcetype-source_code) `ActorSourceType.SOURCE_CODE`
-
-Actor source code is a single JavaScript/Node.js file
 
 ***
 

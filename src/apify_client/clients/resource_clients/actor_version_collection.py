@@ -31,8 +31,6 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         env_vars: Optional[List[Dict]] = None,
         apply_env_vars_to_build: Optional[bool] = None,
         source_type: ActorSourceType,
-        source_code: Optional[str] = None,
-        base_docker_image: Optional[str] = None,
         source_files: Optional[List[Dict]] = None,
         git_repo_url: Optional[str] = None,
         tarball_url: Optional[str] = None,
@@ -50,11 +48,6 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
             apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the actor run
                 will also be set to the actor build process.
             source_type (ActorSourceType): What source type is the actor version using.
-            source_code (str, optional): Source code as a single JavaScript/Node.js file,
-                using the base Docker image specified in ``baseDockerImage``.
-                Required when ``source_type`` is ``ActorSourceType.SOURCE_CODE``.
-            base_docker_image (str, optional): The base Docker image to use for single-file actors.
-                Required when ``source_type`` is ``ActorSourceType.SOURCE_CODE``.
             source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
                 Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
             git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
@@ -78,10 +71,6 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
             version_fields['applyEnvVarsToBuild'] = apply_env_vars_to_build
         if source_type is not None:
             version_fields['sourceType'] = _maybe_extract_enum_member_value(source_type)
-        if source_code is not None:
-            version_fields['sourceCode'] = source_code
-        if base_docker_image is not None:
-            version_fields['baseDockerImage'] = base_docker_image
         if source_files is not None:
             version_fields['sourceFiles'] = source_files
         if git_repo_url is not None:

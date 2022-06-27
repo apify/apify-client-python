@@ -30,8 +30,6 @@ class ActorJobStatus(str, Enum):
 class ActorSourceType(str, Enum):
     """Available source types for actors."""
 
-    #: Actor source code is a single JavaScript/Node.js file
-    SOURCE_CODE = 'SOURCE_CODE'
     #: Actor source code is comprised of multiple files
     SOURCE_FILES = 'SOURCE_FILES'
     #: Actor source code is cloned from a Git repository

@@ -8,6 +8,7 @@ Changelog
 
 - updated dependencies
 - fixed some lint issues in shell scripts and `setup.py`
+- added Python 3.10 to unit test roster
 
 [0.5.0](../../releases/tag/v0.5.0) - 2021-09-16
 -----------------------------------------------

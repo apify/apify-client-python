@@ -61,9 +61,9 @@ setup(
             'mypy ~= 0.961',
             'pep8-naming ~= 0.13.0',
             'pytest ~= 7.1.2',
-            'sphinx ~= 5.0.2',
-            'sphinx-autodoc-typehints ~= 1.18.3',
-            'sphinx-markdown-builder == 0.5.4', # pinned to 0.5.4, because 0.5.5 has a formatting bug
+            'sphinx <= 4.3',  # pinned to <= 4.3, because 4.4 requires importlib_metadata >= 4.4, which is not compatible with flake8 >= 4
+            'sphinx-autodoc-typehints <= 1.17',  # pinned to <= 1.17, because 1.18 requires Sphinx >= 4.5, which is not compatible with flake8 >= 4
+            'sphinx-markdown-builder == 0.5.4',  # pinned to 0.5.4, because 0.5.5 has a formatting bug
             'types-requests ~= 2.28.0',
         ],
     },

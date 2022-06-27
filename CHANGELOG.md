@@ -4,6 +4,10 @@ Changelog
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------
 
+### Removed
+
+- Dropped support for single-file actors
+
 ### Internal changes
 
 - updated dependencies

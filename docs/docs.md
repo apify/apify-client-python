@@ -2895,7 +2895,6 @@ Actor job aborted by user
 
 Available source types for actors.
 
-* [SOURCE\_CODE](#actorsourcetype-source\_code)
 * [SOURCE\_FILES](#actorsourcetype-source\_files)
 * [GIT\_REPO](#actorsourcetype-git\_repo)
 * [TARBALL](#actorsourcetype-tarball)

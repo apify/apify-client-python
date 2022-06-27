@@ -1,6 +1,15 @@
 Changelog
 =========
 
+[0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
+-----------------------------------------------
+
+### Internal changes
+
+- updated dependencies
+- fixed some lint issues in shell scripts and `setup.py`
+- added Python 3.10 to unit test roster
+
 [0.5.0](../../releases/tag/v0.5.0) - 2021-09-16
 -----------------------------------------------
 

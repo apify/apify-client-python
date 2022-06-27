@@ -22,18 +22,18 @@ unit_tests() {
 }
 
 
-if [ "$checks_to_run" = "lint" ] ; then
+if [[ "${checks_to_run}" = "lint" ]] ; then
     lint
-elif [ "$checks_to_run" = "types" ] ; then
+elif [[ "${checks_to_run}" = "types" ]] ; then
     type_check
-elif [ "$checks_to_run" = "tests" ] ; then
+elif [[ "${checks_to_run}" = "tests" ]] ; then
     unit_tests
-elif [ "$checks_to_run" = "everything" ] ; then
+elif [[ "${checks_to_run}" = "everything" ]] ; then
     lint
     type_check
     unit_tests
 else
-    echo "Invalid type of test ($checks_to_run) requested. Use lint / types / tests or leave empty to run all tests"
+    echo "Invalid type of test (${checks_to_run}) requested. Use lint / types / tests or leave empty to run all tests"
     exit 1
 fi
 

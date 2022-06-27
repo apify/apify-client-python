@@ -13,7 +13,7 @@ NEW_MD5=$(md5sum ../docs.md | cut -f 1 -d " ")
 mv ../old_docs.md ../docs.md
 
 
-if [ $BUILD_STATUS -ne 0 ]; then
+if [[ ${BUILD_STATUS} -ne 0 ]]; then
     echo "Building docs failed!" >&2
     exit 1
 fi

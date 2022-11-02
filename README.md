@@ -40,11 +40,11 @@ To install this package and its development dependencies, run `pip install -e '.
 
 ### Formatting
 
-We use `autopep8` and `isort` to automatically format the code to a common format. To run the formatting, just run `./format.sh`.
+We use `autopep8` and `isort` to automatically format the code to a common format. To run the formatting, just run `make format`.
 
 ### Linting and Testing
 
-We use `flake8` for linting, `mypy` for type checking and `pytest` for unit testing. To run these tools, just run `./lint_and_test.sh`.
+We use `flake8` for linting, `mypy` for type checking and `pytest` for unit testing. To run these tools, just run `make check-all`.
 
 ### Documentation
 
@@ -52,7 +52,7 @@ We use the [Google docstring format](https://sphinxcontrib-napoleon.readthedocs.
 We document every user-facing class or method, and enforce that using the flake8-docstrings library.
 
 The documentation is then rendered from the docstrings in the code using Sphinx and some heavy post-processing and saved as `docs/docs.md`.
-To generate the documentation, just run `./build_docs.sh`.
+To generate the documentation, just run `make docs`.
 
 ### Release process
 

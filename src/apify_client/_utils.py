@@ -87,11 +87,11 @@ def _is_file_or_bytes(value: Any) -> bool:
 
 
 T = TypeVar('T')
-BailType = Callable[[Exception], None]
+StopRetryingType = Callable[[], None]
 
 
 def _retry_with_exp_backoff(
-    func: Callable[[BailType, int], T],
+    func: Callable[[StopRetryingType, int], T],
     *,
     max_retries: int = 8,
     backoff_base_millis: int = 500,
@@ -103,14 +103,13 @@ def _retry_with_exp_backoff(
     backoff_factor = min(max(1, backoff_factor), 10)
     swallow = True
 
-    def bail(exception: Exception) -> None:
+    def stop_retrying() -> None:
         nonlocal swallow
         swallow = False
-        raise exception
 
     for attempt in range(1, max_retries + 1):
         try:
-            return func(bail, attempt)
+            return func(stop_retrying, attempt)
         except Exception as e:
             if not swallow:
                 raise e
@@ -122,7 +121,7 @@ def _retry_with_exp_backoff(
         sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
         time.sleep(sleep_time_secs)
 
-    return func(bail, max_retries + 1)
+    return func(stop_retrying, max_retries + 1)
 
 
 def _catch_not_found_or_throw(exc: ApifyApiError) -> None:

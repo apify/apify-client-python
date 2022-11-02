@@ -113,10 +113,10 @@ class UtilsTest(unittest.TestCase):
         class RetryableError(Exception):
             pass
 
-        class BailError(Exception):
+        class NonRetryableError(Exception):
             pass
 
-        def returns_on_fifth_attempt(bail: Callable, attempt: int) -> Any:
+        def returns_on_fifth_attempt(stop_retrying: Callable, attempt: int) -> Any:
             nonlocal attempt_counter
             attempt_counter += 1
 
@@ -124,13 +124,15 @@ class UtilsTest(unittest.TestCase):
                 return 'SUCCESS'
             raise RetryableError()
 
-        def bails_on_third_attempt(bail: Callable, attempt: int) -> Any:
+        def bails_on_third_attempt(stop_retrying: Callable, attempt: int) -> Any:
             nonlocal attempt_counter
             attempt_counter += 1
 
             if attempt == 3:
-                bail(BailError())
-            raise RetryableError()
+                stop_retrying()
+                raise NonRetryableError()
+            else:
+                raise RetryableError()
 
         # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
         start = time.time()
@@ -149,7 +151,7 @@ class UtilsTest(unittest.TestCase):
 
         # Bails when the bail function is called
         attempt_counter = 0
-        with self.assertRaises(BailError):
+        with self.assertRaises(NonRetryableError):
             _retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
         self.assertEqual(attempt_counter, 3)
 

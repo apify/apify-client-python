@@ -60,7 +60,7 @@ class _HTTPClient:
             data = gzip.compress(data)
             headers['Content-Encoding'] = 'gzip'
 
-        def _make_request(bail: Callable, attempt: int) -> requests.models.Response:  # type: ignore[return]
+        def _make_request(stop_retrying: Callable, attempt: int) -> requests.models.Response:
             try:
                 response = requests_session.request(
                     method,
@@ -82,16 +82,13 @@ class _HTTPClient:
                     return response
 
             except Exception as e:
-                if _is_retryable_error(e):
-                    raise e
-                else:
-                    bail(e)
+                if not _is_retryable_error(e):
+                    stop_retrying()
+                raise e
 
-            api_error = ApifyApiError(response, attempt)
-            if response.status_code == HTTPStatus.TOO_MANY_REQUESTS or response.status_code >= 500:
-                raise api_error
-            else:
-                bail(api_error)
+            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+                stop_retrying()
+            raise ApifyApiError(response, attempt)
 
         return _retry_with_exp_backoff(
             _make_request,

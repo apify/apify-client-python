@@ -32,13 +32,13 @@ jobs:
         pip install -e .[dev]
 
     - name: Lint
-      run: ./lint_and_test.sh lint
+      run: make lint
 
     - name: Type check
-      run: ./lint_and_test.sh types
+      run: make type-check
 
     - name: Unit tests
-      run: ./lint_and_test.sh tests
+      run: make test
 
   check_docs:
     name: Check whether the documentation is up to date

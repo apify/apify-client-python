@@ -5,7 +5,7 @@ It's still a work in progress, so please don't use it yet in production environm
 
 ## Installation
 
-Requires Python 3.7+
+Requires Python 3.8+
 
 You can install the client from its [PyPI listing](https://pypi.org/project/apify-client).
 To do that, simply run `pip install apify-client` in your terminal.
@@ -18,7 +18,7 @@ For usage instructions, check the documentation on [Apify Docs](https://docs.api
 
 ### Environment
 
-For local development, it is required to have Python 3.7 installed.
+For local development, it is required to have Python 3.8 installed.
 
 It is recommended to set up a virtual environment while developing this package to isolate your development environment,
 however, due to the many varied ways Python can be installed and virtual environments can be set up,

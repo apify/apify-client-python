@@ -15,7 +15,7 @@ It provides useful features like automatic retries and convenience functions tha
 
 ## Installation
 
-Requires Python 3.7+
+Requires Python 3.8+
 
 You can install the client from its [PyPI listing](https://pypi.org/project/apify-client/).
 To do that, simply run `pip install apify-client`.

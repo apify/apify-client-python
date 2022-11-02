@@ -1,8 +1,12 @@
 Changelog
 =========
 
-Next
+[0.7.0](../../releases/tag/v0.7.0) - Upcoming
 -----------------------------------------------
+
+### Breaking changes
+
+- dropped support for Python 3.7, added support for Python 3.11
 
 ### Internal changes
 

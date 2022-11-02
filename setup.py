@@ -47,6 +47,7 @@ setup(
 
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
+    package_data={'apify_client': ['py.typed']},
     python_requires='>=3.8',
     install_requires=['requests ~= 2.28.0'],
     extras_require={

@@ -11,6 +11,7 @@ Changelog
 ### Added
 
 - added configurable socket timeout for requests to the Apify API
+- added `py.typed` file to signal type checkers that this package is typed
 
 ### Internal changes
 

@@ -7,6 +7,7 @@ Next
 ### Internal changes
 
 - simplified retrying with exponential backoff
+- simplified flake8 config
 
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------

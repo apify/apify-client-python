@@ -1,48 +1,10 @@
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _maybe_extract_enum_member_value, _parse_date_fields, _pluck_data, _snake_case_to_camel_case
+from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, _prepare_webhook_representation
 from ...consts import WebhookEventType
 from ..base import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
-
-
-def _prepare_webhook_representation(
-    *,
-    event_types: Optional[List[WebhookEventType]] = None,
-    request_url: Optional[str] = None,
-    payload_template: Optional[str] = None,
-    actor_id: Optional[str] = None,
-    actor_task_id: Optional[str] = None,
-    actor_run_id: Optional[str] = None,
-    ignore_ssl_errors: Optional[bool] = None,
-    do_not_retry: Optional[bool] = None,
-    idempotency_key: Optional[str] = None,
-    is_ad_hoc: Optional[bool] = None,
-) -> Dict:
-    """Prepare webhook dictionary representation for clients."""
-    webhook: Dict[str, Any] = {
-        _snake_case_to_camel_case(key): value
-        for key, value in locals().items() if value is not None and key not in ['event_types', 'actor_run_id', 'actor_task_id', 'actor_id']
-    }
-
-    condition = {}
-
-    if actor_run_id is not None:
-        condition['actorRunId'] = actor_run_id
-        webhook['isAdHoc'] = True
-    elif actor_task_id is not None:
-        condition['actorTaskId'] = actor_task_id
-    elif actor_id is not None:
-        condition['actorId'] = actor_id
-
-    if condition != {}:
-        webhook['condition'] = condition
-
-    if event_types is not None:
-        webhook['eventTypes'] = [_maybe_extract_enum_member_value(event_type) for event_type in event_types]
-
-    return webhook
 
 
 class WebhookClient(ResourceClient):
@@ -96,10 +58,19 @@ class WebhookClient(ResourceClient):
         Returns:
             dict: The updated webhook
         """
-        parameters = locals()
-        parameters.pop('self')
-        webhook = _prepare_webhook_representation(**parameters)
-        return self._update(webhook)
+        updated_fields = _prepare_webhook_representation(
+            event_types=event_types,
+            request_url=request_url,
+            payload_template=payload_template,
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+            ignore_ssl_errors=ignore_ssl_errors,
+            do_not_retry=do_not_retry,
+            is_ad_hoc=is_ad_hoc,
+        )
+
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the webhook.

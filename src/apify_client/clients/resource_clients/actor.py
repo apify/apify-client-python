@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from ..._utils import (
     _encode_key_value_store_record_value,
     _encode_webhook_list_to_base64,
+    _filter_out_none_values_recursively,
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
@@ -80,49 +81,30 @@ class ActorClient(ResourceClient):
         Returns:
             dict: The updated actor
         """
-        actor_fields: Dict[str, Any] = {}
-        if name is not None:
-            actor_fields['name'] = name
-        if title is not None:
-            actor_fields['title'] = title
-        if description is not None:
-            actor_fields['description'] = description
-        if seo_title is not None:
-            actor_fields['seoTitle'] = seo_title
-        if seo_description is not None:
-            actor_fields['seoDescription'] = seo_description
-        if versions is not None:
-            actor_fields['versions'] = versions
-        if restart_on_error is not None:
-            actor_fields['restartOnError'] = restart_on_error
-        if is_public is not None:
-            actor_fields['isPublic'] = is_public
-        if is_deprecated is not None:
-            actor_fields['isDeprecated'] = is_deprecated
-        if is_anonymously_runnable is not None:
-            actor_fields['isAnonymouslyRunnable'] = is_anonymously_runnable
-        if categories is not None:
-            actor_fields['categories'] = categories
+        updated_fields = {
+            'name': name,
+            'title': title,
+            'description': description,
+            'seoTitle': seo_title,
+            'seoDescription': seo_description,
+            'versions': versions,
+            'restartOnError': restart_on_error,
+            'isPublic': is_public,
+            'isDeprecated': is_deprecated,
+            'isAnonymouslyRunnable': is_anonymously_runnable,
+            'categories': categories,
+            'defaultRunOptions': {
+                'build': default_run_build,
+                'memoryMbytes': default_run_memory_mbytes,
+                'timeoutSecs': default_run_timeout_secs,
+            },
+            'exampleRunInput': {
+                'body': example_run_input_body,
+                'contentType': example_run_input_content_type,
+            },
+        }
 
-        default_run_options: Dict[str, Any] = {}
-        if default_run_build is not None:
-            default_run_options['build'] = default_run_build
-        if default_run_memory_mbytes is not None:
-            default_run_options['memoryMbytes'] = default_run_memory_mbytes
-        if default_run_timeout_secs is not None:
-            default_run_options['timeoutSecs'] = default_run_timeout_secs
-        if default_run_options:
-            actor_fields['defaultRunOptions'] = default_run_options
-
-        example_run_input: Dict[str, Any] = {}
-        if example_run_input_body is not None:
-            example_run_input['body'] = example_run_input_body
-        if example_run_input_content_type is not None:
-            example_run_input['contentType'] = example_run_input_content_type
-        if example_run_input:
-            actor_fields['exampleRunInput'] = example_run_input
-
-        return self._update(actor_fields)
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the actor.
@@ -300,7 +282,7 @@ class ActorClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status) if status is not None else None),
+            params=self._params(status=_maybe_extract_enum_member_value(status)),
         ))
 
     def versions(self) -> ActorVersionCollectionClient:

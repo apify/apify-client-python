@@ -2,9 +2,8 @@ from typing import Any, Dict, List, Optional
 
 from apify_client.consts import WebhookEventType
 
-from ..._utils import ListPage
+from ..._utils import ListPage, _filter_out_none_values_recursively, _prepare_webhook_representation
 from ..base import ResourceCollectionClient
-from .webhook import _prepare_webhook_representation
 
 
 class WebhookCollectionClient(ResourceCollectionClient):
@@ -74,7 +73,17 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created webhook
         """
-        parameters = locals()
-        parameters.pop('self')
-        webhook = _prepare_webhook_representation(**parameters)
-        return self._create(resource=webhook)
+        webhook = _prepare_webhook_representation(
+            event_types=event_types,
+            request_url=request_url,
+            payload_template=payload_template,
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+            ignore_ssl_errors=ignore_ssl_errors,
+            do_not_retry=do_not_retry,
+            idempotency_key=idempotency_key,
+            is_ad_hoc=is_ad_hoc,
+        )
+
+        return self._create(_filter_out_none_values_recursively(webhook))

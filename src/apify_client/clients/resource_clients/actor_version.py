@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _maybe_extract_enum_member_value
+from ..._utils import _filter_out_none_values_recursively, _maybe_extract_enum_member_value
 from ...consts import ActorSourceType
 from ..base import ResourceClient
 
@@ -58,25 +58,18 @@ class ActorVersionClient(ResourceClient):
         Returns:
             dict: The updated actor version
         """
-        version_fields: Dict[str, Any] = {}
-        if build_tag is not None:
-            version_fields['buildTag'] = build_tag
-        if env_vars is not None:
-            version_fields['envVars'] = env_vars
-        if apply_env_vars_to_build is not None:
-            version_fields['applyEnvVarsToBuild'] = apply_env_vars_to_build
-        if source_type is not None:
-            version_fields['sourceType'] = _maybe_extract_enum_member_value(source_type)
-        if source_files is not None:
-            version_fields['sourceFiles'] = source_files
-        if git_repo_url is not None:
-            version_fields['gitRepoUrl'] = git_repo_url
-        if tarball_url is not None:
-            version_fields['tarballUrl'] = tarball_url
-        if github_gist_url is not None:
-            version_fields['gitHubGistUrl'] = github_gist_url
+        updated_fields = {
+            'buildTag': build_tag,
+            'envVars': env_vars,
+            'applyEnvVarsToBuild': apply_env_vars_to_build,
+            'sourceType': _maybe_extract_enum_member_value(source_type),
+            'sourceFiles': source_files,
+            'gitRepoUrl': git_repo_url,
+            'tarballUrl': tarball_url,
+            'gitHubGistUrl': github_gist_url,
+        }
 
-        return self._update(version_fields)
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the actor version.

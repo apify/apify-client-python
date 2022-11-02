@@ -1,7 +1,13 @@
 from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _encode_key_value_store_record_value, _parse_date_fields, _pluck_data
+from ..._utils import (
+    _catch_not_found_or_throw,
+    _encode_key_value_store_record_value,
+    _filter_out_none_values_recursively,
+    _parse_date_fields,
+    _pluck_data,
+)
 from ..base import ResourceClient
 
 
@@ -34,11 +40,11 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             dict: The updated key-value store
         """
-        updated_fields = {}
-        if name is not None:
-            updated_fields['name'] = name
+        updated_fields = {
+            'name': name,
+        }
 
-        return self._update(updated_fields)
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the key-value store.

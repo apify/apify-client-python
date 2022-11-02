@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _snake_case_to_camel_case
+from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceCollectionClient
 
 
@@ -60,8 +60,14 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created schedule.
         """
-        kwargs = {
-            _snake_case_to_camel_case(key): value
-            for key, value in locals().items() if key != 'self' and value is not None
+        schedule = {
+            'cronExpression': cron_expression,
+            'isEnabled': is_enabled,
+            'isExclusive': is_exclusive,
+            'name': name,
+            'actions': actions,
+            'description': description,
+            'timezone': timezone,
         }
-        return self._create(kwargs)
+
+        return self._create(_filter_out_none_values_recursively(schedule))

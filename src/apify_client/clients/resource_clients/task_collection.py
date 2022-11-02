@@ -60,7 +60,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created task.
         """
-        new_fields = {
+        task = {
             'actId': actor_id,
             'name': name,
             'options': {
@@ -71,4 +71,4 @@ class TaskCollectionClient(ResourceCollectionClient):
             'input': task_input,
         }
 
-        return self._create(_filter_out_none_values_recursively(new_fields))
+        return self._create(_filter_out_none_values_recursively(task))

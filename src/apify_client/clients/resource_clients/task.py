@@ -225,7 +225,7 @@ class TaskClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status) if status is not None else None),
+            params=self._params(status=_maybe_extract_enum_member_value(status)),
         ))
 
     def webhooks(self) -> WebhookCollectionClient:

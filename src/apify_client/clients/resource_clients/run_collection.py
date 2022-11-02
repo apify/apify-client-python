@@ -39,5 +39,5 @@ class RunCollectionClient(ResourceCollectionClient):
             limit=limit,
             offset=offset,
             desc=desc,
-            status=_maybe_extract_enum_member_value(status) if status is not None else None,
+            status=_maybe_extract_enum_member_value(status),
         )

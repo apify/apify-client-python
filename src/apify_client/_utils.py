@@ -10,6 +10,7 @@ from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 from ._errors import ApifyApiError
+from .consts import WebhookEventType
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
@@ -148,26 +149,22 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> bytes:
     return base64.b64encode(json.dumps(data).encode('utf-8'))
 
 
-def _filter_out_none_values(dictionary: Dict) -> Dict:
-    """Return copy of the dictionary, omitting all keys for which values are None."""
-    return {k: v for k, v in dictionary.items() if v is not None}
-
-
 def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
     """Return copy of the dictionary, recursively omitting all keys for which values are None."""
-    return {
-        k: v if not isinstance(v, Dict) else _filter_out_none_values_recursively(v)
-        for k, v in dictionary.items()
-        if v is not None
-    }
+    return cast(dict, _filter_out_none_values_recursively_internal(dictionary))
 
 
-def _snake_case_to_camel_case(str_snake_case: str) -> str:
-    """Convert string in snake case to camel case."""
-    return ''.join([
-        part.capitalize() if i > 0 else part
-        for i, part in enumerate(str_snake_case.split('_'))
-    ])
+# Unfortunately, it's necessary to have an internal function for the correct result typing, without having to create complicated overloads
+def _filter_out_none_values_recursively_internal(dictionary: Dict, remove_empty_dicts: Optional[bool] = None) -> Optional[Dict]:
+    result = {}
+    for k, v in dictionary.items():
+        if isinstance(v, dict):
+            v = _filter_out_none_values_recursively_internal(v, remove_empty_dicts is True or remove_empty_dicts is None)
+        if v is not None:
+            result[k] = v
+    if not result and remove_empty_dicts:
+        return None
+    return result
 
 
 def _encode_key_value_store_record_value(value: Any, content_type: Optional[str] = None) -> Tuple[Any, str]:
@@ -189,6 +186,43 @@ def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
     if isinstance(maybe_enum_member, Enum):
         return maybe_enum_member.value
     return maybe_enum_member
+
+
+def _prepare_webhook_representation(
+    *,
+    event_types: Optional[List[WebhookEventType]] = None,
+    request_url: Optional[str] = None,
+    payload_template: Optional[str] = None,
+    actor_id: Optional[str] = None,
+    actor_task_id: Optional[str] = None,
+    actor_run_id: Optional[str] = None,
+    ignore_ssl_errors: Optional[bool] = None,
+    do_not_retry: Optional[bool] = None,
+    idempotency_key: Optional[str] = None,
+    is_ad_hoc: Optional[bool] = None,
+) -> Dict:
+    """Prepare webhook dictionary representation for clients."""
+    webhook: Dict[str, Any] = {
+        'requestUrl': request_url,
+        'payloadTemplate': payload_template,
+        'ignoreSslErrors': ignore_ssl_errors,
+        'doNotRetry': do_not_retry,
+        'idempotencyKey': idempotency_key,
+        'isAdHoc': is_ad_hoc,
+        'condition': {
+            'actorRunId': actor_run_id,
+            'actorTaskId': actor_task_id,
+            'actorId': actor_id,
+        },
+    }
+
+    if actor_run_id is not None:
+        webhook['isAdHoc'] = True
+
+    if event_types is not None:
+        webhook['eventTypes'] = [_maybe_extract_enum_member_value(event_type) for event_type in event_types]
+
+    return _filter_out_none_values_recursively(webhook)
 
 
 class ListPage:

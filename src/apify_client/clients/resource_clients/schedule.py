@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _pluck_data_as_list, _snake_case_to_camel_case
+from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _pluck_data_as_list
 from ..base import ResourceClient
 
 
@@ -51,11 +51,17 @@ class ScheduleClient(ResourceClient):
         Returns:
             dict: The updated schedule
         """
-        updated_kwargs = {
-            _snake_case_to_camel_case(key): value
-            for key, value in locals().items() if key != 'self' and value is not None
+        updated_fields = {
+            'cronExpression': cron_expression,
+            'isEnabled': is_enabled,
+            'isExclusive': is_exclusive,
+            'name': name,
+            'actions': actions,
+            'description': description,
+            'timezone': timezone,
         }
-        return self._update(updated_kwargs)
+
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the schedule.

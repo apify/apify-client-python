@@ -2,7 +2,7 @@ import io
 from typing import Any, Dict, Generator, List, Optional, cast
 
 from ..._types import JSONSerializable
-from ..._utils import ListPage
+from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceClient
 
 
@@ -35,11 +35,11 @@ class DatasetClient(ResourceClient):
         Returns:
             dict: The updated dataset
         """
-        updated_fields = {}
-        if name is not None:
-            updated_fields['name'] = name
+        updated_fields = {
+            'name': name,
+        }
 
-        return self._update(updated_fields)
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the dataset.

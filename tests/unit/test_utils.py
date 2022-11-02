@@ -7,8 +7,8 @@ from typing import Any, Callable
 
 from apify_client._utils import (
     _encode_webhook_list_to_base64,
-    _filter_out_none_values,
     _filter_out_none_values_recursively,
+    _filter_out_none_values_recursively_internal,
     _is_content_type_json,
     _is_content_type_text,
     _is_content_type_xml,
@@ -17,7 +17,6 @@ from apify_client._utils import (
     _parse_date_fields,
     _pluck_data,
     _retry_with_exp_backoff,
-    _snake_case_to_camel_case,
     _to_safe_id,
 )
 from apify_client.consts import WebhookEventType
@@ -186,21 +185,42 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(_maybe_extract_enum_member_value(1), 1)
         self.assertEqual(_maybe_extract_enum_member_value(None), None)
 
-    def test__filter_out_none_values(self) -> None:
-        self.assertEqual(
-            _filter_out_none_values({'k1': 'v1', 'k2': None}),
-            {'k1': 'v1'},
-        )
-
     def test__filter_out_none_values_recursively(self) -> None:
         self.assertEqual(
-            _filter_out_none_values_recursively({'k1': 'v1', 'k2': None, 'k3': {'k4': 'v4', 'k5': None}}),
+            _filter_out_none_values_recursively({'k1': 'v1'}),
+            {'k1': 'v1'},
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively({'k1': None}),
+            {},
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively({'k1': 'v1', 'k2': None, 'k3': {'k4': 'v4', 'k5': None}, 'k6': {'k7': None}}),
             {'k1': 'v1', 'k3': {'k4': 'v4'}},
         )
 
-    def test__snake_case_to_camel_case(self) -> None:
-        self.assertEqual(_snake_case_to_camel_case(''), '')
-        self.assertEqual(_snake_case_to_camel_case('making'), 'making')
-        self.assertEqual(_snake_case_to_camel_case('makingTheWebProgrammable'), 'makingTheWebProgrammable')
-        self.assertEqual(_snake_case_to_camel_case('making_the_web_programmable'), 'makingTheWebProgrammable')
-        self.assertEqual(_snake_case_to_camel_case('making_the_WEB_programmable'), 'makingTheWebProgrammable')
+    def test__filter_out_none_values_recursively_internal(self) -> None:
+        self.assertEqual(
+            _filter_out_none_values_recursively_internal({}),
+            {},
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively_internal({'k1': {}}),
+            {},
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively_internal({}, False),
+            {},
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively_internal({'k1': {}}, False),
+            {'k1': {}},
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively_internal({}, True),
+            None,
+        )
+        self.assertEqual(
+            _filter_out_none_values_recursively_internal({'k1': {}}, True),
+            None,
+        )

@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _maybe_extract_enum_member_value
+from ..._utils import ListPage, _filter_out_none_values_recursively, _maybe_extract_enum_member_value
 from ...consts import ActorSourceType
 from ..base import ResourceCollectionClient
 
@@ -60,24 +60,16 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created actor version
         """
-        version_fields: Dict[str, Any] = {}
-        if version_number is not None:
-            version_fields['versionNumber'] = version_number
-        if build_tag is not None:
-            version_fields['buildTag'] = build_tag
-        if env_vars is not None:
-            version_fields['envVars'] = env_vars
-        if apply_env_vars_to_build is not None:
-            version_fields['applyEnvVarsToBuild'] = apply_env_vars_to_build
-        if source_type is not None:
-            version_fields['sourceType'] = _maybe_extract_enum_member_value(source_type)
-        if source_files is not None:
-            version_fields['sourceFiles'] = source_files
-        if git_repo_url is not None:
-            version_fields['gitRepoUrl'] = git_repo_url
-        if tarball_url is not None:
-            version_fields['tarballUrl'] = tarball_url
-        if github_gist_url is not None:
-            version_fields['gitHubGistUrl'] = github_gist_url
+        actor_version = {
+            'versionNumber': version_number,
+            'buildTag': build_tag,
+            'envVars': env_vars,
+            'applyEnvVarsToBuild': apply_env_vars_to_build,
+            'sourceType': _maybe_extract_enum_member_value(source_type),
+            'sourceFiles': source_files,
+            'gitRepoUrl': git_repo_url,
+            'tarballUrl': tarball_url,
+            'gitHubGistUrl': github_gist_url,
+        }
 
-        return self._create(version_fields)
+        return self._create(_filter_out_none_values_recursively(actor_version))

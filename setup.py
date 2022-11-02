@@ -51,18 +51,18 @@ setup(
     install_requires=['requests ~= 2.28.0'],
     extras_require={
         'dev': [
-            'autopep8 ~= 1.6.0',
-            'flake8 ~= 4.0.1',
+            'autopep8 ~= 2.0.0',
+            'flake8 ~= 5.0.4',
             'flake8-commas ~= 2.1.0',
             'flake8-docstrings ~= 1.6.0',
-            'flake8-isort ~= 4.1.1',
+            'flake8-isort ~= 5.0.0',
             'flake8-quotes ~= 3.3.1',
             'isort ~= 5.10.1',
-            'mypy ~= 0.961',
-            'pep8-naming ~= 0.13.0',
-            'pytest ~= 7.1.2',
-            'sphinx <= 4.3',  # pinned to <= 4.3, because 4.4 requires importlib_metadata >= 4.4, which is not compatible with flake8 >= 4
-            'sphinx-autodoc-typehints <= 1.17',  # pinned to <= 1.17, because 1.18 requires Sphinx >= 4.5, which is not compatible with flake8 >= 4
+            'mypy ~= 0.982',
+            'pep8-naming ~= 0.13.2',
+            'pytest ~= 7.2.0',
+            'sphinx ~= 5.3.0',
+            'sphinx-autodoc-typehints ~= 1.19.5',
             'sphinx-markdown-builder == 0.5.4',  # pinned to 0.5.4, because 0.5.5 has a formatting bug
             'types-requests ~= 2.28.0',
         ],

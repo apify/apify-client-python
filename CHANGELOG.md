@@ -15,6 +15,7 @@ Changelog
 - updated development dependencies
 - simplified development scripts
 - updated GitHub Actions versions to fix deprecations
+- unified unit test style
 
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------

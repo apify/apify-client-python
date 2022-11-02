@@ -1,10 +1,13 @@
-.PHONY: lint test type-check check-all format docs
+.PHONY: clean lint test type-check check-all format docs
+
+clean:
+	rm -rf build dist .mypy_cache .pytest_cache src/*.egg-info __pycache__
 
 lint:
 	python3 -m flake8 src tests
 
 test:
-	python3 -m pytest -rA --doctest-modules src tests
+	python3 -m pytest -rA src tests
 
 type-check:
 	python3 -m mypy src

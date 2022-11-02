@@ -149,20 +149,12 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> bytes:
 
 
 def _filter_out_none_values(dictionary: Dict) -> Dict:
-    """Return copy of the dictionary, omitting all keys for which values are None.
-
-    >>> _filter_out_none_values({"k1": "v1", "k2": None})
-    {'k1': 'v1'}
-    """
+    """Return copy of the dictionary, omitting all keys for which values are None."""
     return {k: v for k, v in dictionary.items() if v is not None}
 
 
 def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
-    """Return copy of the dictionary, recursively omitting all keys for which values are None.
-
-    >>> _filter_out_none_values_recursively({"k1": "v1", "k2": None, "k3": {"k4": "v4", "k5": None}})
-    {'k1': 'v1', 'k3': {'k4': 'v4'}}
-    """
+    """Return copy of the dictionary, recursively omitting all keys for which values are None."""
     return {
         k: v if not isinstance(v, Dict) else _filter_out_none_values_recursively(v)
         for k, v in dictionary.items()
@@ -171,17 +163,7 @@ def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
 
 
 def _snake_case_to_camel_case(str_snake_case: str) -> str:
-    """Convert string in snake case to camel case.
-
-    >>> _snake_case_to_camel_case("")
-    ''
-    >>> _snake_case_to_camel_case("making")
-    'making'
-    >>> _snake_case_to_camel_case("making_the_web_programmable")
-    'makingTheWebProgrammable'
-    >>> _snake_case_to_camel_case("making_the_WEB_programmable")
-    'makingTheWebProgrammable'
-    """
+    """Convert string in snake case to camel case."""
     return ''.join([
         part.capitalize() if i > 0 else part
         for i, part in enumerate(str_snake_case.split('_'))

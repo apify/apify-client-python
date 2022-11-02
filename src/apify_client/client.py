@@ -40,6 +40,7 @@ class ApifyClient:
         api_url: Optional[str] = None,
         max_retries: int = 8,
         min_delay_between_retries_millis: int = 500,
+        timeout_secs: int = 360,
     ):
         """Initialize the Apify API Client.
 
@@ -49,17 +50,20 @@ class ApifyClient:
             max_retries (int, optional): How many times to retry a failed request at most
             min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
                 (increases exponentially from this value)
+            timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
         """
         self.token = token
         api_url = (api_url or DEFAULT_API_URL).rstrip('/')
         self.base_url = f'{api_url}/{API_VERSION}'
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
+        self.timeout_secs = timeout_secs
 
         self.http_client = _HTTPClient(
             token=token,
             max_retries=max_retries,
             min_delay_between_retries_millis=min_delay_between_retries_millis,
+            timeout_secs=timeout_secs,
         )
         # TODO statistics
         # TODO logger

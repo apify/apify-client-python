@@ -17,9 +17,18 @@ DEFAULT_BACKOFF_RANDOM_FACTOR = 1
 
 
 class _HTTPClient:
-    def __init__(self, *, token: Optional[str] = None, max_retries: int = 8, min_delay_between_retries_millis: int = 500) -> None:
+    def __init__(
+        self,
+        *,
+        token: Optional[str] = None,
+        max_retries: int = 8,
+        min_delay_between_retries_millis: int = 500,
+        timeout_secs: int = 360,
+    ) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
+        self.timeout_secs = timeout_secs
+
         self.requests_session = requests.Session()
 
         self.requests_session.headers.update({'Accept': 'application/json, */*'})
@@ -46,6 +55,7 @@ class _HTTPClient:
     ) -> requests.models.Response:
         request_params = self._parse_params(params)
         requests_session = self.requests_session
+        timeout = self.timeout_secs
 
         if not headers:
             headers = {}
@@ -69,6 +79,7 @@ class _HTTPClient:
                     params=request_params,
                     data=data,
                     stream=stream,
+                    timeout=timeout,
                 )
                 if response.status_code < 300:
                     if parse_response:

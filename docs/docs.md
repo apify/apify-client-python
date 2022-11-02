@@ -167,7 +167,7 @@ The Apify API client.
 
 ***
 
-#### [](#apifyclient-__init__) `ApifyClient.__init__(token=None, *, api_url=None, max_retries=8, min_delay_between_retries_millis=500)`
+#### [](#apifyclient-__init__) `ApifyClient.__init__(token=None, *, api_url=None, max_retries=8, min_delay_between_retries_millis=500, timeout_secs=360)`
 
 Initialize the Apify API Client.
 
@@ -181,6 +181,8 @@ Initialize the Apify API Client.
 
   * **min_delay_between_retries_millis** (`int`, *optional*) – How long will the client wait between retrying requests
   (increases exponentially from this value)
+
+  * **timeout_secs** (`int`, *optional*) – The socket timeout of the HTTP requests sent to the Apify API
 
 ***
 

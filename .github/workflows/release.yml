@@ -131,11 +131,11 @@ jobs:
         id: get-package-version
         run: |
           package_version=`python ./.github/scripts/print_current_package_version.py`
-          echo "::set-output name=package_version::$package_version"
+          echo "package_version=$package_version" >> $GITHUB_OUTPUT
 
     - # Trigger building the docker images in apify/apify-actor-docker repo
       name: Trigger Docker Image Build
-      uses: peter-evans/repository-dispatch@v1
+      uses: peter-evans/repository-dispatch@v2
       with:
         token: ${{ secrets.TRIGGER_DOCKER_IMAGE_BUILD_TOKEN }}
         repository: apify/apify-actor-docker

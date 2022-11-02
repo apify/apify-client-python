@@ -17,6 +17,7 @@ Changelog
 - updated GitHub Actions versions to fix deprecations
 - unified unit test style
 - unified preparing resource representation
+- updated output management in GitHub Workflows to fix deprecations
 
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------

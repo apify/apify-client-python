@@ -3,6 +3,10 @@
 clean:
 	rm -rf build dist .mypy_cache .pytest_cache src/*.egg-info __pycache__
 
+install-dev:
+	pip install --upgrade pip
+	pip install -e ".[dev]"
+
 lint:
 	python3 -m flake8 src tests
 

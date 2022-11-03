@@ -55,3 +55,14 @@ class WebhookEventType(str, Enum):
     ACTOR_RUN_ABORTED = 'ACTOR.RUN.ABORTED'
     #: The actor run was resurrected
     ACTOR_RUN_RESURRECTED = 'ACTOR.RUN.RESURRECTED'
+
+    #: The actor build was created
+    ACTOR_BUILD_CREATED = 'ACTOR.BUILD.CREATED'
+    #: The actor build has succeeded
+    ACTOR_BUILD_SUCCEEDED = 'ACTOR.BUILD.SUCCEEDED'
+    #: The actor build has failed
+    ACTOR_BUILD_FAILED = 'ACTOR.BUILD.FAILED'
+    #: The actor build has timed out
+    ACTOR_BUILD_TIMED_OUT = 'ACTOR.BUILD.TIMED_OUT'
+    #: The actor build was aborted
+    ACTOR_BUILD_ABORTED = 'ACTOR.BUILD.ABORTED'

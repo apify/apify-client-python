@@ -2938,6 +2938,11 @@ Events that can trigger a webhook.
 * [ACTOR\_RUN\_TIMED\_OUT](#webhookeventtype-actor\_run\_timed\_out)
 * [ACTOR\_RUN\_ABORTED](#webhookeventtype-actor\_run\_aborted)
 * [ACTOR\_RUN\_RESURRECTED](#webhookeventtype-actor\_run\_resurrected)
+* [ACTOR\_BUILD\_CREATED](#webhookeventtype-actor\_build\_created)
+* [ACTOR\_BUILD\_SUCCEEDED](#webhookeventtype-actor\_build\_succeeded)
+* [ACTOR\_BUILD\_FAILED](#webhookeventtype-actor\_build\_failed)
+* [ACTOR\_BUILD\_TIMED\_OUT](#webhookeventtype-actor\_build\_timed\_out)
+* [ACTOR\_BUILD\_ABORTED](#webhookeventtype-actor\_build\_aborted)
 
 ***
 
@@ -2974,3 +2979,33 @@ The actor run was aborted
 #### [](#webhookeventtype-actor_run_resurrected) `WebhookEventType.ACTOR_RUN_RESURRECTED`
 
 The actor run was resurrected
+
+***
+
+#### [](#webhookeventtype-actor_build_created) `WebhookEventType.ACTOR_BUILD_CREATED`
+
+The actor build was created
+
+***
+
+#### [](#webhookeventtype-actor_build_succeeded) `WebhookEventType.ACTOR_BUILD_SUCCEEDED`
+
+The actor build has succeeded
+
+***
+
+#### [](#webhookeventtype-actor_build_failed) `WebhookEventType.ACTOR_BUILD_FAILED`
+
+The actor build has failed
+
+***
+
+#### [](#webhookeventtype-actor_build_timed_out) `WebhookEventType.ACTOR_BUILD_TIMED_OUT`
+
+The actor build has timed out
+
+***
+
+#### [](#webhookeventtype-actor_build_aborted) `WebhookEventType.ACTOR_BUILD_ABORTED`
+
+The actor build was aborted

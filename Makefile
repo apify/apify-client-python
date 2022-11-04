@@ -1,27 +1,30 @@
-.PHONY: clean lint test type-check check-all format docs
+.PHONY: clean install-dev lint test type-check check-code format docs check-docs
 
 clean:
 	rm -rf build dist .mypy_cache .pytest_cache src/*.egg-info __pycache__
 
 install-dev:
-	pip install --upgrade pip
+	python -m pip install --upgrade pip
+	pip install --upgrade setuptools wheel
 	pip install -e ".[dev]"
 
 lint:
-	python3 -m flake8 src tests
+	python3 -m flake8
 
 test:
-	python3 -m pytest -rA src tests
+	python3 -m pytest -rA tests
 
 type-check:
-	python3 -m mypy src
+	python3 -m mypy
 
-check-all: lint type-check test
+check-code: lint type-check test
 
 format:
 	python3 -m isort src tests
 	python3 -m autopep8 --in-place --recursive src tests
 
 docs:
-	# Sphinx is pretty chatty, so we silence it this way
 	./docs/res/build.sh > /dev/null
+
+check-docs:
+	./docs/res/check.sh > /dev/null

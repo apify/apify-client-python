@@ -36,7 +36,7 @@ and [direnv](https://github.com/direnv/direnv) to automatically activate/deactiv
 
 ### Dependencies
 
-To install this package and its development dependencies, run `pip install -e '.[dev]'`
+To install this package and its development dependencies, run `make install-dev`
 
 ### Formatting
 

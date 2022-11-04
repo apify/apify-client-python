@@ -66,6 +66,7 @@ setup(
             'sphinx-autodoc-typehints ~= 1.19.5',
             'sphinx-markdown-builder == 0.5.4',  # pinned to 0.5.4, because 0.5.5 has a formatting bug
             'types-requests ~= 2.28.0',
+            'types-setuptools ~= 65.5.0.2',
         ],
     },
 )

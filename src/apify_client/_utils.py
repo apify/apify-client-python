@@ -26,16 +26,15 @@ def _to_safe_id(id: str) -> str:
     return id.replace('/', '~')
 
 
-def _parse_date_fields(data: Dict) -> Dict:
-    return cast(Dict, _parse_date_fields_internal(data))
+ListOrDict = TypeVar('ListOrDict', List, Dict)
 
 
-def _parse_date_fields_internal(data: object, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> object:
+def _parse_date_fields(data: ListOrDict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> ListOrDict:
     if max_depth < 0:
         return data
 
     if isinstance(data, list):
-        return [_parse_date_fields_internal(item, max_depth - 1) for item in data]
+        return [_parse_date_fields(item, max_depth - 1) for item in data]
 
     if isinstance(data, dict):
         def parse(key: str, value: object) -> object:
@@ -45,8 +44,10 @@ def _parse_date_fields_internal(data: object, max_depth: int = PARSE_DATE_FIELDS
                     parsed_value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
                 except ValueError:
                     pass
-            else:
-                parsed_value = _parse_date_fields_internal(value, max_depth - 1)
+            elif isinstance(value, dict):
+                parsed_value = _parse_date_fields(value, max_depth - 1)
+            elif isinstance(value, list):
+                parsed_value = _parse_date_fields(value, max_depth)
             return parsed_value
 
         return {key: parse(key, value) for (key, value) in data.items()}

@@ -189,6 +189,7 @@ class KeyValueStoreClient(ResourceClient):
                 method='GET',
                 params=self._params(),
                 parse_response=False,
+                stream=True,
             )
 
             yield {

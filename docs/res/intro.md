@@ -11,6 +11,7 @@ It provides useful features like automatic retries and convenience functions tha
 * [Usage concepts](#usage-concepts)
   * [Nested clients](#nested-clients)
   * [Pagination](#pagination)
+  * [Streaming resources](#streaming-resources)
 * [API Reference](#api-reference)
 
 ## Installation
@@ -132,3 +133,27 @@ containing properties `items`, `total`, `offset`, `count` and `limit`.
 There are some exceptions though, like `list_keys` or `list_head` which paginate differently.
 The results you're looking for are always stored under `items` and you can use the `limit`
 property to get only a subset of results. Other properties can be available depending on the method.
+
+### Streaming resources
+
+Some resources (dataset items, key-value store records and logs)
+support streaming the resource from the Apify API in parts,
+without having to download the whole (potentially huge) resource to memory before processing it.
+
+The methods to stream these resources are
+[`DatasetClient.stream_items()`](#datasetclient-stream_items),
+[`KeyValueStoreClient.stream_record()`](#keyvaluestoreclient-stream_record),
+and [`LogClient.stream()`](#logclient-stream).
+
+Instead of the parsed resource, they return a raw, context-managed
+[`Response`](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests) object,
+which has to be consumed using the `with` keyword,
+and automatically gets closed once you exit the `with` block, preventing memory leaks and unclosed connections.
+
+For example, to consume an actor run log in a streaming fashion, you can use this snippet:
+
+```python
+with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
+    for line in log_stream.iter_lines():
+        print(line)
+```

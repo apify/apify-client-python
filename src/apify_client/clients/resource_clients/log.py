@@ -1,5 +1,7 @@
-import io
-from typing import Any, Optional, cast
+from contextlib import contextmanager
+from typing import Any, Iterator, Optional
+
+import requests
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw
@@ -36,14 +38,39 @@ class LogClient(ResourceClient):
 
         return None
 
-    def stream(self) -> Optional[io.IOBase]:
-        """Retrieve the log as a file-like object.
+    def get_as_bytes(self) -> Optional[bytes]:
+        """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            io.IOBase, optional: The retrieved log as a file-like object, or None, if it does not exist.
+            bytes, optional: The retrieved log as raw bytes, or None, if it does not exist.
         """
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self._params(),
+                parse_response=False,
+            )
+
+            return response.content
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    @contextmanager
+    def stream(self) -> Iterator[Optional[requests.models.Response]]:
+        """Retrieve the log as a stream.
+
+        https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Returns:
+            requests.Response, optional: The retrieved log as a context-managed streaming Response, or None, if it does not exist.
+        """
+        response = None
         try:
             response = self.http_client.call(
                 url=self.url,
@@ -53,12 +80,10 @@ class LogClient(ResourceClient):
                 parse_response=False,
             )
 
-            response.raw.decode_content = True
-            # TODO explain response.raw.close()
-            # response.raw is the raw urllib3 response, which subclasses IOBase
-            return cast(io.IOBase, response.raw)
-
+            yield response
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
-
-        return None
+            yield None
+        finally:
+            if response:
+                response.close()

@@ -1,4 +1,6 @@
-from typing import Any, Dict, Optional
+import warnings
+from contextlib import contextmanager
+from typing import Any, Dict, Iterator, Optional
 
 from ..._errors import ApifyApiError
 from ..._utils import (
@@ -85,23 +87,46 @@ class KeyValueStoreClient(ResourceClient):
 
         Args:
             key (str): Key of the record to retrieve
-            as_bytes (bool, optional): Whether to retrieve the record as unparsed bytes, default False
-            as_file (bool, optional): Whether to retrieve the record as a file-like object, default False
+            as_bytes (bool, optional): Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes, default False
+            as_file (bool, optional): Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object, default False
 
         Returns:
             dict, optional: The requested record, or None, if the record does not exist
         """
         try:
-            # TODO revisit the as_bytes and as_file parameters when we decide how to rewrite the record-getting functions
             if as_bytes and as_file:
                 raise ValueError('You cannot have both as_bytes and as_file set.')
+
+            if as_bytes:
+                # We need to override and then restore the warnings filter so that the warning gets printed out,
+                # Otherwise it would be silently swallowed
+                with warnings.catch_warnings():
+                    warnings.simplefilter('always')
+                    warnings.warn(
+                        '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, use `KeyValueStoreClient.get_record_as_bytes()` instead.',  # noqa: E501
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
+
+                return self.get_record_as_bytes(key)
+
+            if as_file:
+                # We need to override and then restore the warnings filter so that the warning gets printed out,
+                # Otherwise it would be silently swallowed
+                with warnings.catch_warnings():
+                    warnings.simplefilter('always')
+                    warnings.warn(
+                        '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, use `KeyValueStoreClient.stream_record()` instead.',
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
+                return self.stream_record(key)  # type: ignore
 
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
                 stream=as_file,
-                parse_response=(not as_bytes and not as_file),
             )
 
             return {
@@ -114,6 +139,70 @@ class KeyValueStoreClient(ResourceClient):
             _catch_not_found_or_throw(exc)
 
         return None
+
+    def get_record_as_bytes(self, key: str) -> Optional[Dict]:
+        """Retrieve the given record from the key-value store, without parsing it.
+
+        https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
+
+        Args:
+            key (str): Key of the record to retrieve
+
+        Returns:
+            dict, optional: The requested record, or None, if the record does not exist
+        """
+        try:
+            response = self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='GET',
+                params=self._params(),
+                parse_response=False,
+            )
+
+            return {
+                'key': key,
+                'value': response.content,
+                'content_type': response.headers['content-type'],
+            }
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    @contextmanager
+    def stream_record(self, key: str) -> Iterator[Optional[Dict]]:
+        """Retrieve the given record from the key-value store, as a stream.
+
+        https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
+
+        Args:
+            key (str): Key of the record to retrieve
+
+        Returns:
+            dict, optional: The requested record as a context-managed streaming Response, or None, if the record does not exist
+        """
+        response = None
+        try:
+            response = self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='GET',
+                params=self._params(),
+                parse_response=False,
+            )
+
+            yield {
+                'key': key,
+                'value': response,
+                'content_type': response.headers['content-type'],
+            }
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+            yield None
+        finally:
+            if response:
+                response.close()
 
     def set_record(self, key: str, value: Any, content_type: Optional[str] = None) -> None:
         """Set a value to the given record in the key-value store.

@@ -2,7 +2,7 @@ import warnings
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, Iterator, List, Optional
 
-import requests
+import httpx
 
 from ..._types import JSONSerializable
 from ..._utils import ListPage, _filter_out_none_values_recursively
@@ -390,7 +390,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
-    ) -> Iterator[requests.models.Response]:
+    ) -> Iterator[httpx.Response]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -428,7 +428,7 @@ class DatasetClient(ResourceClient):
                 By default the element name is item.
 
         Returns:
-            requests.Response: The dataset items as a context-managed streaming Response
+            httpx.Response: The dataset items as a context-managed streaming Response
         """
         response = None
         try:

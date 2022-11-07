@@ -1,7 +1,6 @@
 from typing import Optional
 
-import requests
-from requests.exceptions import ChunkedEncodingError, ConnectionError, Timeout
+import httpx
 
 
 class ApifyClientError(Exception):
@@ -19,7 +18,7 @@ class ApifyApiError(ApifyClientError):
     errors, which are thrown immediately, because a correction by the user is needed.
     """
 
-    def __init__(self, response: requests.models.Response, attempt: int) -> None:
+    def __init__(self, response: httpx.Response, attempt: int) -> None:
         """Create the ApifyApiError instance.
 
         Args:
@@ -59,7 +58,7 @@ class InvalidResponseBodyError(ApifyClientError):
     request. We do that by identifying this error in the _HTTPClient.
     """
 
-    def __init__(self, response: requests.models.Response) -> None:
+    def __init__(self, response: httpx.Response) -> None:
         """Create the InvalidResponseBodyError instance.
 
         Args:
@@ -73,12 +72,7 @@ class InvalidResponseBodyError(ApifyClientError):
 
 
 def _is_retryable_error(e: Exception) -> bool:
-    if isinstance(e, (InvalidResponseBodyError, ConnectionError, Timeout)):
+    if isinstance(e, (InvalidResponseBodyError, httpx.NetworkError, httpx.TimeoutException, httpx.RemoteProtocolError)):
         return True
-
-    # This can happen if an API server pod restarts while handling a long-running request
-    if isinstance(e, ChunkedEncodingError):
-        if str(e).startswith('("Connection broken: InvalidChunkLength(got length b\'\', 0 bytes read)"'):
-            return True
 
     return False

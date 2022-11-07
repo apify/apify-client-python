@@ -146,7 +146,7 @@ The methods to stream these resources are
 and [`LogClient.stream()`](#logclient-stream).
 
 Instead of the parsed resource, they return a raw, context-managed
-[`Response`](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests) object,
+[`httpx.Response`](https://www.python-httpx.org/quickstart/#streaming-responses) object,
 which has to be consumed using the `with` keyword,
 and automatically gets closed once you exit the `with` block, preventing memory leaks and unclosed connections.
 

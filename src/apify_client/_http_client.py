@@ -40,7 +40,7 @@ class _HTTPClient:
         if token is not None:
             headers['Authorization'] = f'Bearer {token}'
 
-        self.httpx_session = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
+        self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
 
     def call(
         self,
@@ -61,7 +61,7 @@ class _HTTPClient:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         request_params = self._parse_params(params)
-        httpx_session = self.httpx_session
+        httpx_client = self.httpx_client
 
         if not headers:
             headers = {}
@@ -82,14 +82,14 @@ class _HTTPClient:
 
         def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
             try:
-                request = httpx_session.build_request(
+                request = httpx_client.build_request(
                     method=method,
                     url=url,
                     headers=headers,
                     params=request_params,
                     content=content,
                 )
-                response = httpx_session.send(
+                response = httpx_client.send(
                     request=request,
                     stream=stream or False,
                 )

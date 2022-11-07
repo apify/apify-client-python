@@ -75,7 +75,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(),
+                params=self._params(stream=True),
                 stream=True,
                 parse_response=False,
             )

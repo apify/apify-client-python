@@ -1,7 +1,7 @@
 import pathlib
 
 PACKAGE_NAME = 'apify_client'
-REPO_ROOT = pathlib.Path(__file__).parent.resolve() / '../..'
+REPO_ROOT = pathlib.Path(__file__).parent.resolve() / '..'
 VERSION_FILE_PATH = REPO_ROOT / f'src/{PACKAGE_NAME}/_version.py'
 
 

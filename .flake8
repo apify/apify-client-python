@@ -1,7 +1,7 @@
 [flake8]
 filename=
-    ./.github/*.py,
     ./docs/*.py,
+    ./scripts/*.py,
     ./src/*.py,
     ./test/*.py,
     ./setup.py
@@ -20,6 +20,6 @@ ignore=
     D409
     D413
 per-file-ignores =
-    .github/*: D
     docs/*: D
+    scripts/*: D
     tests/*: D

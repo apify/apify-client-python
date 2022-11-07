@@ -82,12 +82,12 @@ jobs:
 
     - # Check whether the released version is listed in CHANGELOG.md
       name: Check whether the released version is listed in the changelog
-      run: python ./.github/scripts/check_version_in_changelog.py
+      run: python ./scripts/check_version_in_changelog.py
 
     - # Check version consistency and increment pre-release version number for beta releases (must be the last step before build)
       name: Bump pre-release version
       if: env.RELEASE_TYPE == 'beta'
-      run: python ./.github/scripts/update_version_for_beta_release.py
+      run: python ./scripts/update_version_for_beta_release.py
 
     - # Build a source distribution and a python3-only wheel
       name: Build distribution files
@@ -108,7 +108,7 @@ jobs:
       name: Tag Version
       if: env.RELEASE_TYPE == 'beta'
       run: |
-        git_tag=v`python ./.github/scripts/print_current_package_version.py`
+        git_tag=v`python ./scripts/print_current_package_version.py`
         git tag $git_tag
         git push origin $git_tag
 
@@ -126,7 +126,7 @@ jobs:
         name: Parse package version for Docker images
         id: get-package-version
         run: |
-          package_version=`python ./.github/scripts/print_current_package_version.py`
+          package_version=`python ./scripts/print_current_package_version.py`
           echo "package_version=$package_version" >> $GITHUB_OUTPUT
 
     - # Trigger building the docker images in apify/apify-actor-docker repo

@@ -24,7 +24,7 @@ format:
 	python3 -m autopep8 --in-place --recursive src tests
 
 docs:
-	./docs/res/build.sh > /dev/null
+	./docs/res/build.sh
 
 check-docs:
-	./docs/res/check.sh > /dev/null
+	./docs/res/check.sh

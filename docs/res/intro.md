@@ -154,6 +154,7 @@ For example, to consume an actor run log in a streaming fashion, you can use thi
 
 ```python
 with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
-    for line in log_stream.iter_lines():
-        print(line)
+    if log_stream:
+        for line in log_stream.iter_lines():
+            print(line, end='')
 ```

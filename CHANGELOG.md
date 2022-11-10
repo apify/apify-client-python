@@ -8,6 +8,7 @@ Changelog
 
 - dropped support for Python 3.7, added support for Python 3.11
 - unified methods for streaming resources
+- switched underlying HTTP library from `requests` to `httpx`
 
 ### Added
 

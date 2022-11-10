@@ -5,7 +5,7 @@ import sys
 from http import HTTPStatus
 from typing import Any, Callable, Dict, Optional
 
-import requests
+import httpx
 
 from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
 from ._types import JSONSerializable
@@ -29,17 +29,18 @@ class _HTTPClient:
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.timeout_secs = timeout_secs
 
-        self.requests_session = requests.Session()
-
-        self.requests_session.headers.update({'Accept': 'application/json, */*'})
+        headers = {'Accept': 'application/json, */*'}
 
         is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
 
         user_agent = f'ApifyClient/{__version__} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
-        self.requests_session.headers.update({'User-Agent': user_agent})
+        headers['User-Agent'] = user_agent
+
         if token is not None:
-            self.requests_session.headers.update({'Authorization': f'Bearer {token}'})
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
 
     def call(
         self,
@@ -52,15 +53,21 @@ class _HTTPClient:
         json: Optional[JSONSerializable] = None,
         stream: Optional[bool] = None,
         parse_response: Optional[bool] = True,
-    ) -> requests.models.Response:
+    ) -> httpx.Response:
+        if stream and parse_response:
+            raise ValueError('Cannot stream response and parse it at the same time!')
+
+        if json and data:
+            raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
+
         request_params = self._parse_params(params)
-        requests_session = self.requests_session
-        timeout = self.timeout_secs
+        httpx_client = self.httpx_client
 
         if not headers:
             headers = {}
 
-        if json and not data:
+        # dump JSON data to string, so they can be gzipped
+        if json:
             data = jsonlib.dumps(json, ensure_ascii=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
 
@@ -70,26 +77,31 @@ class _HTTPClient:
             data = gzip.compress(data)
             headers['Content-Encoding'] = 'gzip'
 
-        def _make_request(stop_retrying: Callable, attempt: int) -> requests.models.Response:
+        # httpx uses `content` instead of `data` for binary content, let's rename it here to be clear about it
+        content = data
+
+        def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
             try:
-                response = requests_session.request(
-                    method,
-                    url,
+                request = httpx_client.build_request(
+                    method=method,
+                    url=url,
                     headers=headers,
                     params=request_params,
-                    data=data,
-                    stream=stream,
-                    timeout=timeout,
+                    content=content,
                 )
+                response = httpx_client.send(
+                    request=request,
+                    stream=stream or False,
+                )
+
                 if response.status_code < 300:
-                    if parse_response:
-                        _maybe_parsed_body = self._maybe_parse_response(response)
-                    elif stream:
-                        response.raw.decode_content = True
-                        _maybe_parsed_body = response.raw
-                    else:
-                        _maybe_parsed_body = response.content
-                    setattr(response, '_maybe_parsed_body', _maybe_parsed_body)
+                    if not stream:
+                        if parse_response:
+                            _maybe_parsed_body = self._maybe_parse_response(response)
+                        else:
+                            _maybe_parsed_body = response.content
+                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)
+
                     return response
 
             except Exception as e:
@@ -110,7 +122,7 @@ class _HTTPClient:
         )
 
     @staticmethod
-    def _maybe_parse_response(response: requests.models.Response) -> Any:
+    def _maybe_parse_response(response: httpx.Response) -> Any:
         if response.status_code == HTTPStatus.NO_CONTENT:
             return None
 
@@ -138,7 +150,7 @@ class _HTTPClient:
             # Our API needs to have boolean parameters passed as 0 or 1, therefore we have to replace them
             if isinstance(value, bool):
                 parsed_params[key] = int(value)
-            else:
+            elif value is not None:
                 parsed_params[key] = value
 
         return parsed_params

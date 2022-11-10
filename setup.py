@@ -49,7 +49,7 @@ setup(
     packages=find_packages(where='src'),
     package_data={'apify_client': ['py.typed']},
     python_requires='>=3.8',
-    install_requires=['requests ~= 2.28.0'],
+    install_requires=['httpx ~= 0.23.0'],
     extras_require={
         'dev': [
             'autopep8 ~= 2.0.0',
@@ -65,7 +65,6 @@ setup(
             'sphinx ~= 5.3.0',
             'sphinx-autodoc-typehints ~= 1.19.5',
             'sphinx-markdown-builder == 0.5.4',  # pinned to 0.5.4, because 0.5.5 has a formatting bug
-            'types-requests ~= 2.28.0',
             'types-setuptools ~= 65.5.0.2',
         ],
     },

@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from typing import Any, Iterator, Optional
 
-import requests
+import httpx
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw
@@ -62,13 +62,13 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self) -> Iterator[Optional[requests.models.Response]]:
+    def stream(self) -> Iterator[Optional[httpx.Response]]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            requests.Response, optional: The retrieved log as a context-managed streaming Response, or None, if it does not exist.
+            httpx.Response, optional: The retrieved log as a context-managed streaming Response, or None, if it does not exist.
         """
         response = None
         try:

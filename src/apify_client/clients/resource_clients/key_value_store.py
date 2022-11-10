@@ -126,7 +126,6 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                stream=as_file,
             )
 
             return {

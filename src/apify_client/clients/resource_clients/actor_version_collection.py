@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, _maybe_extract_enum_member_value
+from ..._utils import ListPage, _filter_out_none_values_recursively
 from ...consts import ActorSourceType
 from ..base import ResourceCollectionClient
+from .actor_version import _get_actor_version_representation
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):
@@ -60,16 +61,16 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created actor version
         """
-        actor_version = {
-            'versionNumber': version_number,
-            'buildTag': build_tag,
-            'envVars': env_vars,
-            'applyEnvVarsToBuild': apply_env_vars_to_build,
-            'sourceType': _maybe_extract_enum_member_value(source_type),
-            'sourceFiles': source_files,
-            'gitRepoUrl': git_repo_url,
-            'tarballUrl': tarball_url,
-            'gitHubGistUrl': github_gist_url,
-        }
+        actor_version_representation = _get_actor_version_representation(
+            version_number=version_number,
+            build_tag=build_tag,
+            env_vars=env_vars,
+            apply_env_vars_to_build=apply_env_vars_to_build,
+            source_type=source_type,
+            source_files=source_files,
+            git_repo_url=git_repo_url,
+            tarball_url=tarball_url,
+            github_gist_url=github_gist_url,
+        )
 
-        return self._create(_filter_out_none_values_recursively(actor_version))
+        return self._create(_filter_out_none_values_recursively(actor_version_representation))

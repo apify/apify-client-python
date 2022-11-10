@@ -16,6 +16,26 @@ from .run_collection import RunCollectionClient
 from .webhook_collection import WebhookCollectionClient
 
 
+def _get_task_representation(
+    actor_id: Optional[str] = None,
+    name: Optional[str] = None,
+    task_input: Optional[Dict] = None,
+    build: Optional[str] = None,
+    memory_mbytes: Optional[int] = None,
+    timeout_secs: Optional[int] = None,
+) -> Dict:
+    return {
+        'actId': actor_id,
+        'name': name,
+        'options': {
+            'build': build,
+            'memoryMbytes': memory_mbytes,
+            'timeoutSecs': timeout_secs,
+        },
+        'input': task_input,
+    }
+
+
 class TaskClient(ResourceClient):
     """Sub-client for manipulating a single task."""
 
@@ -59,17 +79,15 @@ class TaskClient(ResourceClient):
         Returns:
             dict: The updated task
         """
-        updated_fields = {
-            'name': name,
-            'options': {
-                'build': build,
-                'memoryMbytes': memory_mbytes,
-                'timeoutSecs': timeout_secs,
-            },
-            'input': task_input,
-        }
+        task_representation = _get_task_representation(
+            name=name,
+            task_input=task_input,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+        )
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(_filter_out_none_values_recursively(task_representation))
 
     def delete(self) -> None:
         """Delete the task.

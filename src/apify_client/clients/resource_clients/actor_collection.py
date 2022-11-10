@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceCollectionClient
+from .actor import _get_actor_representation
 
 
 class ActorCollectionClient(ResourceCollectionClient):
@@ -80,27 +81,23 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created actor.
         """
-        actor = {
-            'name': name,
-            'title': title,
-            'description': description,
-            'seoTitle': seo_title,
-            'seoDescription': seo_description,
-            'versions': versions,
-            'restartOnError': restart_on_error,
-            'isPublic': is_public,
-            'isDeprecated': is_deprecated,
-            'isAnonymouslyRunnable': is_anonymously_runnable,
-            'categories': categories,
-            'defaultRunOptions': {
-                'build': default_run_build,
-                'memoryMbytes': default_run_memory_mbytes,
-                'timeoutSecs': default_run_timeout_secs,
-            },
-            'exampleRunInput': {
-                'body': example_run_input_body,
-                'contentType': example_run_input_content_type,
-            },
-        }
+        actor_representation = _get_actor_representation(
+            name=name,
+            title=title,
+            description=description,
+            seo_title=seo_title,
+            seo_description=seo_description,
+            versions=versions,
+            restart_on_error=restart_on_error,
+            is_public=is_public,
+            is_deprecated=is_deprecated,
+            is_anonymously_runnable=is_anonymously_runnable,
+            categories=categories,
+            default_run_build=default_run_build,
+            default_run_memory_mbytes=default_run_memory_mbytes,
+            default_run_timeout_secs=default_run_timeout_secs,
+            example_run_input_body=example_run_input_body,
+            example_run_input_content_type=example_run_input_content_type,
+        )
 
-        return self._create(_filter_out_none_values_recursively(actor))
+        return self._create(_filter_out_none_values_recursively(actor_representation))

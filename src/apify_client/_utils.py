@@ -10,7 +10,6 @@ from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 from ._errors import ApifyApiError
-from .consts import WebhookEventType
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
@@ -187,43 +186,6 @@ def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
     if isinstance(maybe_enum_member, Enum):
         return maybe_enum_member.value
     return maybe_enum_member
-
-
-def _prepare_webhook_representation(
-    *,
-    event_types: Optional[List[WebhookEventType]] = None,
-    request_url: Optional[str] = None,
-    payload_template: Optional[str] = None,
-    actor_id: Optional[str] = None,
-    actor_task_id: Optional[str] = None,
-    actor_run_id: Optional[str] = None,
-    ignore_ssl_errors: Optional[bool] = None,
-    do_not_retry: Optional[bool] = None,
-    idempotency_key: Optional[str] = None,
-    is_ad_hoc: Optional[bool] = None,
-) -> Dict:
-    """Prepare webhook dictionary representation for clients."""
-    webhook: Dict[str, Any] = {
-        'requestUrl': request_url,
-        'payloadTemplate': payload_template,
-        'ignoreSslErrors': ignore_ssl_errors,
-        'doNotRetry': do_not_retry,
-        'idempotencyKey': idempotency_key,
-        'isAdHoc': is_ad_hoc,
-        'condition': {
-            'actorRunId': actor_run_id,
-            'actorTaskId': actor_task_id,
-            'actorId': actor_id,
-        },
-    }
-
-    if actor_run_id is not None:
-        webhook['isAdHoc'] = True
-
-    if event_types is not None:
-        webhook['eventTypes'] = [_maybe_extract_enum_member_value(event_type) for event_type in event_types]
-
-    return _filter_out_none_values_recursively(webhook)
 
 
 class ListPage:

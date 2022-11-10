@@ -18,6 +18,49 @@ from .run_collection import RunCollectionClient
 from .webhook_collection import WebhookCollectionClient
 
 
+def _get_actor_representation(
+    *,
+    name: Optional[str],
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    seo_title: Optional[str] = None,
+    seo_description: Optional[str] = None,
+    versions: Optional[List[Dict]] = None,
+    restart_on_error: Optional[bool] = None,
+    is_public: Optional[bool] = None,
+    is_deprecated: Optional[bool] = None,
+    is_anonymously_runnable: Optional[bool] = None,
+    categories: Optional[List[str]] = None,
+    default_run_build: Optional[str] = None,
+    default_run_memory_mbytes: Optional[int] = None,
+    default_run_timeout_secs: Optional[int] = None,
+    example_run_input_body: Optional[Any] = None,
+    example_run_input_content_type: Optional[str] = None,
+) -> Dict:
+    return {
+        'name': name,
+        'title': title,
+        'description': description,
+        'seoTitle': seo_title,
+        'seoDescription': seo_description,
+        'versions': versions,
+        'restartOnError': restart_on_error,
+        'isPublic': is_public,
+        'isDeprecated': is_deprecated,
+        'isAnonymouslyRunnable': is_anonymously_runnable,
+        'categories': categories,
+        'defaultRunOptions': {
+            'build': default_run_build,
+            'memoryMbytes': default_run_memory_mbytes,
+            'timeoutSecs': default_run_timeout_secs,
+        },
+        'exampleRunInput': {
+            'body': example_run_input_body,
+            'contentType': example_run_input_content_type,
+        },
+    }
+
+
 class ActorClient(ResourceClient):
     """Sub-client for manipulating a single actor."""
 
@@ -81,30 +124,26 @@ class ActorClient(ResourceClient):
         Returns:
             dict: The updated actor
         """
-        updated_fields = {
-            'name': name,
-            'title': title,
-            'description': description,
-            'seoTitle': seo_title,
-            'seoDescription': seo_description,
-            'versions': versions,
-            'restartOnError': restart_on_error,
-            'isPublic': is_public,
-            'isDeprecated': is_deprecated,
-            'isAnonymouslyRunnable': is_anonymously_runnable,
-            'categories': categories,
-            'defaultRunOptions': {
-                'build': default_run_build,
-                'memoryMbytes': default_run_memory_mbytes,
-                'timeoutSecs': default_run_timeout_secs,
-            },
-            'exampleRunInput': {
-                'body': example_run_input_body,
-                'contentType': example_run_input_content_type,
-            },
-        }
+        actor_representation = _get_actor_representation(
+            name=name,
+            title=title,
+            description=description,
+            seo_title=seo_title,
+            seo_description=seo_description,
+            versions=versions,
+            restart_on_error=restart_on_error,
+            is_public=is_public,
+            is_deprecated=is_deprecated,
+            is_anonymously_runnable=is_anonymously_runnable,
+            categories=categories,
+            default_run_build=default_run_build,
+            default_run_memory_mbytes=default_run_memory_mbytes,
+            default_run_timeout_secs=default_run_timeout_secs,
+            example_run_input_body=example_run_input_body,
+            example_run_input_content_type=example_run_input_content_type,
+        )
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(_filter_out_none_values_recursively(actor_representation))
 
     def delete(self) -> None:
         """Delete the actor.

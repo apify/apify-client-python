@@ -5,6 +5,26 @@ from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursi
 from ..base import ResourceClient
 
 
+def _get_schedule_representation(
+    cron_expression: Optional[str] = None,
+    is_enabled: Optional[bool] = None,
+    is_exclusive: Optional[bool] = None,
+    name: Optional[str] = None,
+    actions: Optional[List[Dict]] = None,
+    description: Optional[str] = None,
+    timezone: Optional[str] = None,
+) -> Dict:
+    return {
+        'cronExpression': cron_expression,
+        'isEnabled': is_enabled,
+        'isExclusive': is_exclusive,
+        'name': name,
+        'actions': actions,
+        'description': description,
+        'timezone': timezone,
+    }
+
+
 class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
@@ -51,17 +71,17 @@ class ScheduleClient(ResourceClient):
         Returns:
             dict: The updated schedule
         """
-        updated_fields = {
-            'cronExpression': cron_expression,
-            'isEnabled': is_enabled,
-            'isExclusive': is_exclusive,
-            'name': name,
-            'actions': actions,
-            'description': description,
-            'timezone': timezone,
-        }
+        schedule_representation = _get_schedule_representation(
+            cron_expression=cron_expression,
+            is_enabled=is_enabled,
+            is_exclusive=is_exclusive,
+            name=name,
+            actions=actions,
+            description=description,
+            timezone=timezone,
+        )
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(_filter_out_none_values_recursively(schedule_representation))
 
     def delete(self) -> None:
         """Delete the schedule.

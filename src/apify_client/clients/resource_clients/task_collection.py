@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 
 from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceCollectionClient
+from .task import _get_task_representation
 
 
 class TaskCollectionClient(ResourceCollectionClient):
@@ -60,15 +61,12 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created task.
         """
-        task = {
-            'actId': actor_id,
-            'name': name,
-            'options': {
-                'build': build,
-                'memoryMbytes': memory_mbytes,
-                'timeoutSecs': timeout_secs,
-            },
-            'input': task_input,
-        }
+        task_representation = _get_task_representation(
+            name=name,
+            task_input=task_input,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+        )
 
-        return self._create(_filter_out_none_values_recursively(task))
+        return self._create(_filter_out_none_values_recursively(task_representation))

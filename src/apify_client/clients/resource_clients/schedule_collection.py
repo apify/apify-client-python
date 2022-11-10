@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceCollectionClient
+from .schedule import _get_schedule_representation
 
 
 class ScheduleCollectionClient(ResourceCollectionClient):
@@ -60,14 +61,14 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created schedule.
         """
-        schedule = {
-            'cronExpression': cron_expression,
-            'isEnabled': is_enabled,
-            'isExclusive': is_exclusive,
-            'name': name,
-            'actions': actions,
-            'description': description,
-            'timezone': timezone,
-        }
+        schedule_representation = _get_schedule_representation(
+            cron_expression=cron_expression,
+            is_enabled=is_enabled,
+            is_exclusive=is_exclusive,
+            name=name,
+            actions=actions,
+            description=description,
+            timezone=timezone,
+        )
 
-        return self._create(_filter_out_none_values_recursively(schedule))
+        return self._create(_filter_out_none_values_recursively(schedule_representation))

@@ -1,10 +1,53 @@
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, _prepare_webhook_representation
+from ..._utils import (
+    _catch_not_found_or_throw,
+    _filter_out_none_values_recursively,
+    _maybe_extract_enum_member_value,
+    _parse_date_fields,
+    _pluck_data,
+)
 from ...consts import WebhookEventType
 from ..base import ResourceClient
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient
+
+
+def _get_webhook_representation(
+    *,
+    event_types: Optional[List[WebhookEventType]] = None,
+    request_url: Optional[str] = None,
+    payload_template: Optional[str] = None,
+    actor_id: Optional[str] = None,
+    actor_task_id: Optional[str] = None,
+    actor_run_id: Optional[str] = None,
+    ignore_ssl_errors: Optional[bool] = None,
+    do_not_retry: Optional[bool] = None,
+    idempotency_key: Optional[str] = None,
+    is_ad_hoc: Optional[bool] = None,
+) -> Dict:
+    """Prepare webhook dictionary representation for clients."""
+    webhook: Dict[str, Any] = {
+        'requestUrl': request_url,
+        'payloadTemplate': payload_template,
+        'ignoreSslErrors': ignore_ssl_errors,
+        'doNotRetry': do_not_retry,
+        'idempotencyKey': idempotency_key,
+        'isAdHoc': is_ad_hoc,
+        'condition': {
+            'actorRunId': actor_run_id,
+            'actorTaskId': actor_task_id,
+            'actorId': actor_id,
+        },
+    }
+
+    if actor_run_id is not None:
+        webhook['isAdHoc'] = True
+
+    if event_types is not None:
+        webhook['eventTypes'] = [_maybe_extract_enum_member_value(event_type) for event_type in event_types]
+
+    return webhook
 
 
 class WebhookClient(ResourceClient):
@@ -58,7 +101,7 @@ class WebhookClient(ResourceClient):
         Returns:
             dict: The updated webhook
         """
-        updated_fields = _prepare_webhook_representation(
+        webhook_representation = _get_webhook_representation(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
@@ -70,7 +113,7 @@ class WebhookClient(ResourceClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(_filter_out_none_values_recursively(webhook_representation))
 
     def delete(self) -> None:
         """Delete the webhook.

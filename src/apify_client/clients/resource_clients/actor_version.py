@@ -5,6 +5,31 @@ from ...consts import ActorSourceType
 from ..base import ResourceClient
 
 
+def _get_actor_version_representation(
+    *,
+    version_number: Optional[str] = None,
+    build_tag: Optional[str] = None,
+    env_vars: Optional[List[Dict]] = None,
+    apply_env_vars_to_build: Optional[bool] = None,
+    source_type: Optional[ActorSourceType] = None,
+    source_files: Optional[List[Dict]] = None,
+    git_repo_url: Optional[str] = None,
+    tarball_url: Optional[str] = None,
+    github_gist_url: Optional[str] = None,
+) -> Dict:
+    return {
+        'versionNumber': version_number,
+        'buildTag': build_tag,
+        'envVars': env_vars,
+        'applyEnvVarsToBuild': apply_env_vars_to_build,
+        'sourceType': _maybe_extract_enum_member_value(source_type),
+        'sourceFiles': source_files,
+        'gitRepoUrl': git_repo_url,
+        'tarballUrl': tarball_url,
+        'gitHubGistUrl': github_gist_url,
+    }
+
+
 class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single actor version."""
 
@@ -58,18 +83,18 @@ class ActorVersionClient(ResourceClient):
         Returns:
             dict: The updated actor version
         """
-        updated_fields = {
-            'buildTag': build_tag,
-            'envVars': env_vars,
-            'applyEnvVarsToBuild': apply_env_vars_to_build,
-            'sourceType': _maybe_extract_enum_member_value(source_type),
-            'sourceFiles': source_files,
-            'gitRepoUrl': git_repo_url,
-            'tarballUrl': tarball_url,
-            'gitHubGistUrl': github_gist_url,
-        }
+        actor_version_representation = _get_actor_version_representation(
+            build_tag=build_tag,
+            env_vars=env_vars,
+            apply_env_vars_to_build=apply_env_vars_to_build,
+            source_type=source_type,
+            source_files=source_files,
+            git_repo_url=git_repo_url,
+            tarball_url=tarball_url,
+            github_gist_url=github_gist_url,
+        )
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(_filter_out_none_values_recursively(actor_version_representation))
 
     def delete(self) -> None:
         """Delete the actor version.

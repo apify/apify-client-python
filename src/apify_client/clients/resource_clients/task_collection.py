@@ -62,6 +62,7 @@ class TaskCollectionClient(ResourceCollectionClient):
             dict: The created task.
         """
         task_representation = _get_task_representation(
+            actor_id=actor_id,
             name=name,
             task_input=task_input,
             build=build,

@@ -1,5 +1,5 @@
 [flake8]
-filename=
+filename =
     ./docs/*.py,
     ./scripts/*.py,
     ./src/*.py,
@@ -7,8 +7,8 @@ filename=
     ./setup.py
 max_line_length = 150
 # Google docstring convention + D204 & D401
-docstring-convention=all
-ignore=
+docstring-convention = all
+ignore =
     D100
     D104
     D203

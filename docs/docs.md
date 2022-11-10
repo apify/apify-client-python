@@ -11,6 +11,7 @@ It provides useful features like automatic retries and convenience functions tha
 * [Usage concepts](#usage-concepts)
   * [Nested clients](#nested-clients)
   * [Pagination](#pagination)
+  * [Streaming resources](#streaming-resources)
 * [API Reference](#api-reference)
 
 ## Installation
@@ -132,6 +133,30 @@ containing properties `items`, `total`, `offset`, `count` and `limit`.
 There are some exceptions though, like `list_keys` or `list_head` which paginate differently.
 The results you're looking for are always stored under `items` and you can use the `limit`
 property to get only a subset of results. Other properties can be available depending on the method.
+
+### Streaming resources
+
+Some resources (dataset items, key-value store records and logs)
+support streaming the resource from the Apify API in parts,
+without having to download the whole (potentially huge) resource to memory before processing it.
+
+The methods to stream these resources are
+[`DatasetClient.stream_items()`](#datasetclient-stream_items),
+[`KeyValueStoreClient.stream_record()`](#keyvaluestoreclient-stream_record),
+and [`LogClient.stream()`](#logclient-stream).
+
+Instead of the parsed resource, they return a raw, context-managed
+[`Response`](https://requests.readthedocs.io/en/latest/user/advanced/#streaming-requests) object,
+which has to be consumed using the `with` keyword,
+and automatically gets closed once you exit the `with` block, preventing memory leaks and unclosed connections.
+
+For example, to consume an actor run log in a streaming fashion, you can use this snippet:
+
+```python
+with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
+    for line in log_stream.iter_lines():
+        print(line)
+```
 
 ## API Reference
 
@@ -1300,6 +1325,7 @@ Sub-client for manipulating a single dataset.
 * [list\_items()](#datasetclient-list\_items)
 * [iterate\_items()](#datasetclient-iterate\_items)
 * [download\_items()](#datasetclient-download\_items)
+* [get\_items\_as\_bytes()](#datasetclient-get\_items\_as\_bytes)
 * [stream\_items()](#datasetclient-stream\_items)
 * [push\_items()](#datasetclient-push\_items)
 
@@ -1449,7 +1475,72 @@ Iterate over the items in the dataset.
 
 #### [](#datasetclient-download_items) `DatasetClient.download_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
 
-Download the items in the dataset as raw bytes.
+Get the items in the dataset as raw bytes.
+
+Deprecated: this function is a deprecated alias of get_items_as_bytes. It will be removed in a future version.
+
+[https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items](https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items)
+
+* **Parameters**
+
+  * **item_format** (`str`) – Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
+
+  * **offset** (`int`, *optional*) – Number of items that should be skipped at the start. The default value is 0
+
+  * **limit** (`int`, *optional*) – Maximum number of items to return. By default there is no limit.
+
+  * **desc** (`bool`, *optional*) – By default, results are returned in the same order as they were stored.
+  To reverse the order, set this parameter to True.
+
+  * **clean** (`bool`, *optional*) – If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
+  The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
+  Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
+
+  * **bom** (`bool`, *optional*) – All text responses are encoded in UTF-8 encoding.
+  By default, csv files are prefixed with the UTF-8 Byte Order Mark (BOM),
+  while json, jsonl, xml, html and rss files are not. If you want to override this default behavior,
+  specify bom=True query parameter to include the BOM or bom=False to skip it.
+
+  * **delimiter** (`str`, *optional*) – A delimiter character for CSV files. The default delimiter is a simple comma (,).
+
+  * **fields** (`list of str`, *optional*) – A list of fields which should be picked from the items,
+  only these fields will remain in the resulting record objects.
+  Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
+  You can use this feature to effectively fix the output format.
+
+  * **omit** (`list of str`, *optional*) – A list of fields which should be omitted from the items.
+
+  * **unwind** (`str`, *optional*) – Name of a field which should be unwound.
+  If the field is an array then every element of the array will become a separate record and merged with parent object.
+  If the unwound field is an object then it is merged with the parent object.
+  If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
+  then the item gets preserved as it is. Note that the unwound items ignore the desc parameter.
+
+  * **skip_empty** (`bool`, *optional*) – If True, then empty items are skipped from the output.
+  Note that if used, the results might contain less items than the limit value.
+
+  * **skip_header_row** (`bool`, *optional*) – If True, then header row in the csv format is skipped.
+
+  * **skip_hidden** (`bool`, *optional*) – If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+
+  * **xml_root** (`str`, *optional*) – Overrides default root element name of xml output. By default the root element is items.
+
+  * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
+  By default the element name is item.
+
+* **Returns**
+
+  The dataset items as raw bytes
+
+* **Return type**
+
+  `bytes`
+
+***
+
+#### [](#datasetclient-get_items_as_bytes) `DatasetClient.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+
+Get the items in the dataset as raw bytes.
 
 [https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items](https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items)
 
@@ -1512,7 +1603,7 @@ Download the items in the dataset as raw bytes.
 
 #### [](#datasetclient-stream_items) `DatasetClient.stream_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
 
-Retrieve the items in the dataset as a file-like object.
+Retrieve the items in the dataset as a stream.
 
 [https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items](https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items)
 
@@ -1565,11 +1656,11 @@ Retrieve the items in the dataset as a file-like object.
 
 * **Returns**
 
-  The dataset items as a file-like object
+  The dataset items as a context-managed streaming Response
 
 * **Return type**
 
-  `io.IOBase`
+  `requests.Response`
 
 ***
 
@@ -1653,6 +1744,8 @@ Sub-client for manipulating a single key-value store.
 * [delete()](#keyvaluestoreclient-delete)
 * [list\_keys()](#keyvaluestoreclient-list\_keys)
 * [get\_record()](#keyvaluestoreclient-get\_record)
+* [get\_record\_as\_bytes()](#keyvaluestoreclient-get\_record\_as\_bytes)
+* [stream\_record()](#keyvaluestoreclient-stream\_record)
 * [set\_record()](#keyvaluestoreclient-set\_record)
 * [delete\_record()](#keyvaluestoreclient-delete\_record)
 
@@ -1738,13 +1831,53 @@ Retrieve the given record from the key-value store.
 
   * **key** (`str`) – Key of the record to retrieve
 
-  * **as_bytes** (`bool`, *optional*) – Whether to retrieve the record as unparsed bytes, default False
+  * **as_bytes** (`bool`, *optional*) – Deprecated, use get_record_as_bytes() instead. Whether to retrieve the record as raw bytes, default False
 
-  * **as_file** (`bool`, *optional*) – Whether to retrieve the record as a file-like object, default False
+  * **as_file** (`bool`, *optional*) – Deprecated, use stream_record() instead. Whether to retrieve the record as a file-like object, default False
 
 * **Returns**
 
   The requested record, or `None`, if the record does not exist
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#keyvaluestoreclient-get_record_as_bytes) `KeyValueStoreClient.get_record_as_bytes(key)`
+
+Retrieve the given record from the key-value store, without parsing it.
+
+[https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record](https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record)
+
+* **Parameters**
+
+  * **key** (`str`) – Key of the record to retrieve
+
+* **Returns**
+
+  The requested record, or `None`, if the record does not exist
+
+* **Return type**
+
+  `dict`, optional
+
+***
+
+#### [](#keyvaluestoreclient-stream_record) `KeyValueStoreClient.stream_record(key)`
+
+Retrieve the given record from the key-value store, as a stream.
+
+[https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record](https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record)
+
+* **Parameters**
+
+  * **key** (`str`) – Key of the record to retrieve
+
+* **Returns**
+
+  The requested record as a context-managed streaming Response, or `None`, if the record does not exist
 
 * **Return type**
 
@@ -2066,6 +2199,7 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 Sub-client for manipulating logs.
 
 * [get()](#logclient-get)
+* [get\_as\_bytes()](#logclient-get\_as\_bytes)
 * [stream()](#logclient-stream)
 
 ***
@@ -2086,19 +2220,35 @@ Retrieve the log as text.
 
 ***
 
-#### [](#logclient-stream) `LogClient.stream()`
+#### [](#logclient-get_as_bytes) `LogClient.get_as_bytes()`
 
-Retrieve the log as a file-like object.
+Retrieve the log as raw bytes.
 
 [https://docs.apify.com/api/v2#/reference/logs/log/get-log](https://docs.apify.com/api/v2#/reference/logs/log/get-log)
 
 * **Returns**
 
-  The retrieved log as a file-like object, or `None`, if it does not exist.
+  The retrieved log as raw bytes, or `None`, if it does not exist.
 
 * **Return type**
 
-  `io.IOBase`, optional
+  `bytes`, optional
+
+***
+
+#### [](#logclient-stream) `LogClient.stream()`
+
+Retrieve the log as a stream.
+
+[https://docs.apify.com/api/v2#/reference/logs/log/get-log](https://docs.apify.com/api/v2#/reference/logs/log/get-log)
+
+* **Returns**
+
+  The retrieved log as a context-managed streaming Response, or `None`, if it does not exist.
+
+* **Return type**
+
+  `requests.Response`, optional
 
 ***
 

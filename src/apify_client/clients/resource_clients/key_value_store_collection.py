@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class KeyValueStoreCollectionClient(ResourceCollectionClient):
@@ -47,3 +47,27 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
             dict: The retrieved or newly-created key-value store.
         """
         return self._get_or_create(name=name)
+
+
+class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating key-value stores."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the KeyValueStoreCollectionClientAsync with the passed arguments."""
+        resource_path = kwargs.pop('resource_path', 'key-value-stores')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=KeyValueStoreCollectionClient.list)
+    async def list(
+        self,
+        *,
+        unnamed: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+
+    @_make_async_docs(src=KeyValueStoreCollectionClient.get_or_create)
+    async def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+        return await self._get_or_create(name=name)

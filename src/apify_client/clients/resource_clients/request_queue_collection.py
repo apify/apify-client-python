@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):
@@ -47,3 +47,27 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
             dict: The retrieved or newly-created request queue.
         """
         return self._get_or_create(name=name)
+
+
+class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating request queues."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the RequestQueueCollectionClientAsync with the passed arguments."""
+        resource_path = kwargs.pop('resource_path', 'request-queues')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=RequestQueueCollectionClient.list)
+    async def list(
+        self,
+        *,
+        unnamed: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+
+    @_make_async_docs(src=RequestQueueCollectionClient.get_or_create)
+    async def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+        return await self._get_or_create(name=name)

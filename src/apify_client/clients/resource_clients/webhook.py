@@ -4,13 +4,14 @@ from ..._errors import ApifyApiError
 from ..._utils import (
     _catch_not_found_or_throw,
     _filter_out_none_values_recursively,
+    _make_async_docs,
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
 )
 from ...consts import WebhookEventType
-from ..base import ResourceClient
-from .webhook_dispatch_collection import WebhookDispatchCollectionClient
+from ..base import ResourceClient, ResourceClientAsync
+from .webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
 
 def _get_webhook_representation(
@@ -155,5 +156,72 @@ class WebhookClient(ResourceClient):
             WebhookDispatchCollectionClient: A client allowing access to dispatches of this webhook using its list method
         """
         return WebhookDispatchCollectionClient(
+            **self._sub_resource_init_options(resource_path='dispatches'),
+        )
+
+
+class WebhookClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single webhook."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the WebhookClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'webhooks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=WebhookClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=WebhookClient.update)
+    async def update(
+        self,
+        *,
+        event_types: Optional[List[WebhookEventType]] = None,
+        request_url: Optional[str] = None,
+        payload_template: Optional[str] = None,
+        actor_id: Optional[str] = None,
+        actor_task_id: Optional[str] = None,
+        actor_run_id: Optional[str] = None,
+        ignore_ssl_errors: Optional[bool] = None,
+        do_not_retry: Optional[bool] = None,
+        is_ad_hoc: Optional[bool] = None,
+    ) -> Dict:
+        webhook_representation = _get_webhook_representation(
+            event_types=event_types,
+            request_url=request_url,
+            payload_template=payload_template,
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+            ignore_ssl_errors=ignore_ssl_errors,
+            do_not_retry=do_not_retry,
+            is_ad_hoc=is_ad_hoc,
+        )
+
+        return await self._update(_filter_out_none_values_recursively(webhook_representation))
+
+    @_make_async_docs(src=WebhookClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()
+
+    @_make_async_docs(src=WebhookClient.test)
+    async def test(self) -> Optional[Dict]:
+        try:
+            response = await self.http_client.call(
+                url=self._url('test'),
+                method='POST',
+                params=self._params(),
+            )
+
+            return _parse_date_fields(_pluck_data(response.json()))
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    @_make_async_docs(src=WebhookClient.dispatches)
+    def dispatches(self) -> WebhookDispatchCollectionClientAsync:
+        return WebhookDispatchCollectionClientAsync(
             **self._sub_resource_init_options(resource_path='dispatches'),
         )

@@ -1,11 +1,11 @@
-from .actor_job_base_client import ActorJobBaseClient
-from .base_client import BaseClient
-from .resource_client import ResourceClient
-from .resource_collection_client import ResourceCollectionClient
+from .actor_job_base_client import ActorJobBaseClient, ActorJobBaseClientAsync
+from .base_client import BaseClient, BaseClientAsync
+from .resource_client import ResourceClient, ResourceClientAsync
+from .resource_collection_client import ResourceCollectionClient, ResourceCollectionClientAsync
 
 __all__ = [
-    'ActorJobBaseClient',
-    'BaseClient',
-    'ResourceClient',
-    'ResourceCollectionClient',
+    'ActorJobBaseClient', 'ActorJobBaseClientAsync',
+    'BaseClient', 'BaseClientAsync',
+    'ResourceClient', 'ResourceClientAsync',
+    'ResourceCollectionClient', 'ResourceCollectionClientAsync',
 ]

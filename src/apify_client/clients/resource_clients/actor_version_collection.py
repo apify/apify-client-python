@@ -1,8 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
 from ...consts import ActorSourceType
-from ..base import ResourceCollectionClient
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_version import _get_actor_version_representation
 
 
@@ -74,3 +74,44 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         )
 
         return self._create(_filter_out_none_values_recursively(actor_version_representation))
+
+
+class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating actor versions."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the ActorVersionCollectionClientAsync with the passed arguments."""
+        resource_path = kwargs.pop('resource_path', 'versions')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=ActorVersionCollectionClient.list)
+    async def list(self) -> ListPage:
+        return await self._list()
+
+    @_make_async_docs(src=ActorVersionCollectionClient.create)
+    async def create(
+        self,
+        *,
+        version_number: str,
+        build_tag: Optional[str] = None,
+        env_vars: Optional[List[Dict]] = None,
+        apply_env_vars_to_build: Optional[bool] = None,
+        source_type: ActorSourceType,
+        source_files: Optional[List[Dict]] = None,
+        git_repo_url: Optional[str] = None,
+        tarball_url: Optional[str] = None,
+        github_gist_url: Optional[str] = None,
+    ) -> Dict:
+        actor_version_representation = _get_actor_version_representation(
+            version_number=version_number,
+            build_tag=build_tag,
+            env_vars=env_vars,
+            apply_env_vars_to_build=apply_env_vars_to_build,
+            source_type=source_type,
+            source_files=source_files,
+            git_repo_url=git_repo_url,
+            tarball_url=tarball_url,
+            github_gist_url=github_gist_url,
+        )
+
+        return await self._create(_filter_out_none_values_recursively(actor_version_representation))

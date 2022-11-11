@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 import json
@@ -7,7 +8,7 @@ import time
 from datetime import datetime, timezone
 from enum import Enum
 from http import HTTPStatus
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, cast
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, TypeVar, cast
 
 from ._errors import ApifyApiError
 
@@ -125,6 +126,40 @@ def _retry_with_exp_backoff(
     return func(stop_retrying, max_retries + 1)
 
 
+async def _retry_with_exp_backoff_async(
+    async_func: Callable[[StopRetryingType, int], Awaitable[T]],
+    *,
+    max_retries: int = 8,
+    backoff_base_millis: int = 500,
+    backoff_factor: float = 2,
+    random_factor: float = 1,
+) -> T:
+
+    random_factor = min(max(0, random_factor), 1)
+    backoff_factor = min(max(1, backoff_factor), 10)
+    swallow = True
+
+    def stop_retrying() -> None:
+        nonlocal swallow
+        swallow = False
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            return await async_func(stop_retrying, attempt)
+        except Exception as e:
+            if not swallow:
+                raise e
+
+        random_sleep_factor = random.uniform(1, 1 + random_factor)
+        backoff_base_secs = backoff_base_millis / 1000
+        backoff_exp_factor = backoff_factor ** (attempt - 1)
+
+        sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
+        await asyncio.sleep(sleep_time_secs)
+
+    return await async_func(stop_retrying, max_retries + 1)
+
+
 def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
     is_not_found_status = (exc.status_code == HTTPStatus.NOT_FOUND)
     is_not_found_message = (exc.type == NOT_FOUND_TYPE) or (isinstance(exc.message, str) and NOT_FOUND_ON_S3 in exc.message)
@@ -186,6 +221,26 @@ def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
     if isinstance(maybe_enum_member, Enum):
         return maybe_enum_member.value
     return maybe_enum_member
+
+
+BoundFunc = TypeVar('BoundFunc', bound=Callable[..., Any])
+
+
+def _make_async_docs(*, src: Callable) -> Callable[[BoundFunc], BoundFunc]:
+    """Copy docstring from another method, adjusting it to work in an async scenario."""
+    substitutions = [(r'Client', r'ClientAsync')]
+
+    def decorator(dest: BoundFunc) -> BoundFunc:
+        if not dest.__doc__ and src.__doc__:
+            dest.__doc__ = src.__doc__
+            for (pattern, replacement) in substitutions:
+                dest.__doc__ = re.sub(pattern, replacement, dest.__doc__, flags=re.M)
+        return dest
+
+    return decorator
+
+    # TODO: tests
+    # TODO: more replacements (e.g. RunClient -> RunClientAsync)
 
 
 class ListPage:

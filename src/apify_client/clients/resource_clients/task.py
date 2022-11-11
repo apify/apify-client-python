@@ -5,15 +5,16 @@ from ..._utils import (
     _catch_not_found_or_throw,
     _encode_webhook_list_to_base64,
     _filter_out_none_values_recursively,
+    _make_async_docs,
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
 )
 from ...consts import ActorJobStatus
-from ..base import ResourceClient
-from .run import RunClient
-from .run_collection import RunCollectionClient
-from .webhook_collection import WebhookCollectionClient
+from ..base import ResourceClient, ResourceClientAsync
+from .run import RunClient, RunClientAsync
+from .run_collection import RunCollectionClient, RunCollectionClientAsync
+from .webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
 
 
 def _get_task_representation(
@@ -249,3 +250,129 @@ class TaskClient(ResourceClient):
     def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this task."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
+
+
+class TaskClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single task."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the TaskClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'actor-tasks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=TaskClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=TaskClient.update)
+    async def update(
+        self,
+        *,
+        name: Optional[str] = None,
+        task_input: Optional[Dict] = None,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+    ) -> Dict:
+        task_representation = _get_task_representation(
+            name=name,
+            task_input=task_input,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+        )
+
+        return await self._update(_filter_out_none_values_recursively(task_representation))
+
+    @_make_async_docs(src=TaskClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()
+
+    @_make_async_docs(src=TaskClient.start)
+    async def start(
+        self,
+        *,
+        task_input: Optional[Dict[str, Any]] = None,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+        wait_for_finish: Optional[int] = None,
+        webhooks: Optional[List[Dict]] = None,
+    ) -> Dict:
+        request_params = self._params(
+            build=build,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+            waitForFinish=wait_for_finish,
+            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('runs'),
+            method='POST',
+            headers={'content-type': 'application/json; charset=utf-8'},
+            json=task_input,
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=TaskClient.call)
+    async def call(
+        self,
+        *,
+        task_input: Optional[Dict[str, Any]] = None,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+        webhooks: Optional[List[Dict]] = None,
+        wait_secs: Optional[int] = None,
+    ) -> Optional[Dict]:
+        started_run = await self.start(
+            task_input=task_input,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+            webhooks=webhooks,
+        )
+
+        return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+
+    @_make_async_docs(src=TaskClient.get_input)
+    async def get_input(self) -> Optional[Dict]:
+        try:
+            response = await self.http_client.call(
+                url=self._url('input'),
+                method='GET',
+                params=self._params(),
+            )
+            return cast(Dict, response.json())
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+        return None
+
+    @_make_async_docs(src=TaskClient.update_input)
+    async def update_input(self, *, task_input: Dict) -> Dict:
+        response = await self.http_client.call(
+            url=self._url('input'),
+            method='PUT',
+            params=self._params(),
+            json=task_input,
+        )
+        return cast(Dict, response.json())
+
+    @_make_async_docs(src=TaskClient.runs)
+    def runs(self) -> RunCollectionClientAsync:
+        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
+
+    @_make_async_docs(src=TaskClient.last_run)
+    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClientAsync:
+        return RunClientAsync(**self._sub_resource_init_options(
+            resource_id='last',
+            resource_path='runs',
+            params=self._params(status=_maybe_extract_enum_member_value(status)),
+        ))
+
+    @_make_async_docs(src=TaskClient.webhooks)
+    def webhooks(self) -> WebhookCollectionClientAsync:
+        return WebhookCollectionClientAsync(**self._sub_resource_init_options())

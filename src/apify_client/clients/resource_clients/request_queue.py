@@ -1,8 +1,8 @@
 from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
-from ..base import ResourceClient
+from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _make_async_docs, _parse_date_fields, _pluck_data
+from ..base import ResourceClient, ResourceClientAsync
 
 
 class RequestQueueClient(ResourceClient):
@@ -164,6 +164,109 @@ class RequestQueueClient(ResourceClient):
         )
 
         self.http_client.call(
+            url=self._url(f'requests/{request_id}'),
+            method='DELETE',
+            params=request_params,
+        )
+
+
+class RequestQueueClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single request queue."""
+
+    def __init__(self, *args: Any, client_key: Optional[str] = None, **kwargs: Any) -> None:
+        """Initialize the RequestQueueClientAsync.
+
+        Args:
+            client_key (str, optional): A unique identifier of the client accessing the request queue
+        """
+        resource_path = kwargs.pop('resource_path', 'request-queues')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+        self.client_key = client_key
+
+    @_make_async_docs(src=RequestQueueClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=RequestQueueClient.update)
+    async def update(self, *, name: Optional[str] = None) -> Dict:
+        updated_fields = {
+            'name': name,
+        }
+
+        return await self._update(_filter_out_none_values_recursively(updated_fields))
+
+    @_make_async_docs(src=RequestQueueClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()
+
+    @_make_async_docs(src=RequestQueueClient.list_head)
+    async def list_head(self, *, limit: Optional[int] = None) -> Dict:
+        request_params = self._params(limit=limit, clientKey=self.client_key)
+
+        response = await self.http_client.call(
+            url=self._url('head'),
+            method='GET',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=RequestQueueClient.add_request)
+    async def add_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
+        request_params = self._params(
+            forefront=forefront,
+            clientKey=self.client_key,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('requests'),
+            method='POST',
+            json=request,
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=RequestQueueClient.get_request)
+    async def get_request(self, request_id: str) -> Optional[Dict]:
+        try:
+            response = await self.http_client.call(
+                url=self._url(f'requests/{request_id}'),
+                method='GET',
+                params=self._params(),
+            )
+            return _parse_date_fields(_pluck_data(response.json()))
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    @_make_async_docs(src=RequestQueueClient.update_request)
+    async def update_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
+        request_id = request['id']
+
+        request_params = self._params(
+            forefront=forefront,
+            clientKey=self.client_key,
+        )
+
+        response = await self.http_client.call(
+            url=self._url(f'requests/{request_id}'),
+            method='PUT',
+            json=request,
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=RequestQueueClient.delete_request)
+    async def delete_request(self, request_id: str) -> None:
+        request_params = self._params(
+            clientKey=self.client_key,
+        )
+
+        await self.http_client.call(
             url=self._url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,

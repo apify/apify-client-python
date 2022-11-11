@@ -1,12 +1,12 @@
 import warnings
-from contextlib import contextmanager
-from typing import Any, Dict, Generator, Iterator, List, Optional
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any, AsyncGenerator, AsyncIterator, Dict, Generator, Iterator, List, Optional
 
 import httpx
 
 from ..._types import JSONSerializable
-from ..._utils import ListPage, _filter_out_none_values_recursively
-from ..base import ResourceClient
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
+from ..base import ResourceClient, ResourceClientAsync
 
 
 class DatasetClient(ResourceClient):
@@ -479,6 +479,242 @@ class DatasetClient(ResourceClient):
             json = items
 
         self.http_client.call(
+            url=self._url('items'),
+            method='POST',
+            headers={'content-type': 'application/json; charset=utf-8'},
+            params=self._params(),
+            data=data,
+            json=json,
+        )
+
+
+class DatasetClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single dataset."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the DatasetClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'datasets')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=DatasetClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=DatasetClient.update)
+    async def update(self, *, name: Optional[str] = None) -> Dict:
+        updated_fields = {
+            'name': name,
+        }
+
+        return await self._update(_filter_out_none_values_recursively(updated_fields))
+
+    @_make_async_docs(src=DatasetClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()
+
+    @_make_async_docs(src=DatasetClient.list_items)
+    async def list_items(
+        self,
+        *,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        clean: Optional[bool] = None,
+        desc: Optional[bool] = None,
+        fields: Optional[List[str]] = None,
+        omit: Optional[List[str]] = None,
+        unwind: Optional[str] = None,
+        skip_empty: Optional[bool] = None,
+        skip_hidden: Optional[bool] = None,
+    ) -> ListPage:
+        request_params = self._params(
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('items'),
+            method='GET',
+            params=request_params,
+        )
+
+        data = response.json()
+
+        return ListPage({
+            'items': data,
+            'total': int(response.headers['x-apify-pagination-total']),
+            'offset': int(response.headers['x-apify-pagination-offset']),
+            'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+            'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
+            'desc': bool(response.headers['x-apify-pagination-desc']),
+        })
+
+    @_make_async_docs(src=DatasetClient.iterate_items)
+    async def iterate_items(
+        self,
+        *,
+        offset: int = 0,
+        limit: Optional[int] = None,
+        clean: Optional[bool] = None,
+        desc: Optional[bool] = None,
+        fields: Optional[List[str]] = None,
+        omit: Optional[List[str]] = None,
+        unwind: Optional[str] = None,
+        skip_empty: Optional[bool] = None,
+        skip_hidden: Optional[bool] = None,
+    ) -> AsyncGenerator:
+        cache_size = 1000
+        first_item = offset
+
+        # If there is no limit, set last_item to None until we get the total from the first API response
+        if limit is None:
+            last_item = None
+        else:
+            last_item = offset + limit
+
+        current_offset = first_item
+        while last_item is None or current_offset < last_item:
+            if last_item is None:
+                current_limit = cache_size
+            else:
+                current_limit = min(cache_size, last_item - current_offset)
+
+            current_items_page = await self.list_items(
+                offset=current_offset,
+                limit=current_limit,
+                clean=clean,
+                desc=desc,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+            )
+
+            current_offset += current_items_page.count
+            if last_item is None or current_items_page.total < last_item:
+                last_item = current_items_page.total
+
+            for item in current_items_page.items:
+                yield item
+
+    @_make_async_docs(src=DatasetClient.get_items_as_bytes)
+    async def get_items_as_bytes(
+        self,
+        *,
+        item_format: str = 'json',
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        desc: Optional[bool] = None,
+        clean: Optional[bool] = None,
+        bom: Optional[bool] = None,
+        delimiter: Optional[str] = None,
+        fields: Optional[List[str]] = None,
+        omit: Optional[List[str]] = None,
+        unwind: Optional[str] = None,
+        skip_empty: Optional[bool] = None,
+        skip_header_row: Optional[bool] = None,
+        skip_hidden: Optional[bool] = None,
+        xml_root: Optional[str] = None,
+        xml_row: Optional[str] = None,
+    ) -> bytes:
+        request_params = self._params(
+            format=item_format,
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            bom=bom,
+            delimiter=delimiter,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHeaderRow=skip_header_row,
+            skipHidden=skip_hidden,
+            xmlRoot=xml_root,
+            xmlRow=xml_row,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('items'),
+            method='GET',
+            params=request_params,
+            parse_response=False,
+        )
+
+        return response.content
+
+    @asynccontextmanager
+    @_make_async_docs(src=DatasetClient.stream_items)
+    async def stream_items(
+        self,
+        *,
+        item_format: str = 'json',
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        desc: Optional[bool] = None,
+        clean: Optional[bool] = None,
+        bom: Optional[bool] = None,
+        delimiter: Optional[str] = None,
+        fields: Optional[List[str]] = None,
+        omit: Optional[List[str]] = None,
+        unwind: Optional[str] = None,
+        skip_empty: Optional[bool] = None,
+        skip_header_row: Optional[bool] = None,
+        skip_hidden: Optional[bool] = None,
+        xml_root: Optional[str] = None,
+        xml_row: Optional[str] = None,
+    ) -> AsyncIterator[httpx.Response]:
+        response = None
+        try:
+            request_params = self._params(
+                format=item_format,
+                offset=offset,
+                limit=limit,
+                desc=desc,
+                clean=clean,
+                bom=bom,
+                delimiter=delimiter,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skipEmpty=skip_empty,
+                skipHeaderRow=skip_header_row,
+                skipHidden=skip_hidden,
+                xmlRoot=xml_root,
+                xmlRow=xml_row,
+            )
+
+            response = await self.http_client.call(
+                url=self._url('items'),
+                method='GET',
+                params=request_params,
+                stream=True,
+                parse_response=False,
+            )
+            yield response
+        finally:
+            if response:
+                await response.aclose()
+
+    @_make_async_docs(src=DatasetClient.push_items)
+    async def push_items(self, items: JSONSerializable) -> None:
+        data = None
+        json = None
+
+        if isinstance(items, str):
+            data = items
+        else:
+            json = items
+
+        await self.http_client.call(
             url=self._url('items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},

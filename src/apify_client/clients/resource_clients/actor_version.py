@@ -1,8 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _filter_out_none_values_recursively, _maybe_extract_enum_member_value
+from ..._utils import _filter_out_none_values_recursively, _make_async_docs, _maybe_extract_enum_member_value
 from ...consts import ActorSourceType
-from ..base import ResourceClient
+from ..base import ResourceClient, ResourceClientAsync
 
 
 def _get_actor_version_representation(
@@ -102,3 +102,46 @@ class ActorVersionClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         return self._delete()
+
+
+class ActorVersionClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single actor version."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the ActorVersionClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'versions')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=ActorVersionClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=ActorVersionClient.update)
+    async def update(
+        self,
+        *,
+        build_tag: Optional[str] = None,
+        env_vars: Optional[List[Dict]] = None,
+        apply_env_vars_to_build: Optional[bool] = None,
+        source_type: Optional[ActorSourceType] = None,
+        source_files: Optional[List[Dict]] = None,
+        git_repo_url: Optional[str] = None,
+        tarball_url: Optional[str] = None,
+        github_gist_url: Optional[str] = None,
+    ) -> Dict:
+        actor_version_representation = _get_actor_version_representation(
+            build_tag=build_tag,
+            env_vars=env_vars,
+            apply_env_vars_to_build=apply_env_vars_to_build,
+            source_type=source_type,
+            source_files=source_files,
+            git_repo_url=git_repo_url,
+            tarball_url=tarball_url,
+            github_gist_url=github_gist_url,
+        )
+
+        return await self._update(_filter_out_none_values_recursively(actor_version_representation))
+
+    @_make_async_docs(src=ActorVersionClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()

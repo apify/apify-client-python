@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .schedule import _get_schedule_representation
 
 
@@ -72,3 +72,46 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         )
 
         return self._create(_filter_out_none_values_recursively(schedule_representation))
+
+
+class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating schedules."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
+        resource_path = kwargs.pop('resource_path', 'schedules')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=ScheduleCollectionClient.list)
+    async def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(limit=limit, offset=offset, desc=desc)
+
+    @_make_async_docs(src=ScheduleCollectionClient.create)
+    async def create(
+        self,
+        *,
+        cron_expression: str,
+        is_enabled: bool,
+        is_exclusive: bool,
+        name: Optional[str] = None,
+        actions: List[Dict] = [],
+        description: Optional[str] = None,
+        timezone: Optional[str] = None,
+    ) -> Dict:
+        schedule_representation = _get_schedule_representation(
+            cron_expression=cron_expression,
+            is_enabled=is_enabled,
+            is_exclusive=is_exclusive,
+            name=name,
+            actions=actions,
+            description=description,
+            timezone=timezone,
+        )
+
+        return await self._create(_filter_out_none_values_recursively(schedule_representation))

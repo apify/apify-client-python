@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor import _get_actor_representation
 
 
@@ -101,3 +101,65 @@ class ActorCollectionClient(ResourceCollectionClient):
         )
 
         return self._create(_filter_out_none_values_recursively(actor_representation))
+
+
+class ActorCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating actors."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the ActorCollectionClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'acts')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=ActorCollectionClient.list)
+    async def list(
+        self,
+        *,
+        my: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(my=my, limit=limit, offset=offset, desc=desc)
+
+    @_make_async_docs(src=ActorCollectionClient.create)
+    async def create(
+        self,
+        *,
+        name: str,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        seo_title: Optional[str] = None,
+        seo_description: Optional[str] = None,
+        versions: Optional[List[Dict]] = None,
+        restart_on_error: Optional[bool] = None,
+        is_public: Optional[bool] = None,
+        is_deprecated: Optional[bool] = None,
+        is_anonymously_runnable: Optional[bool] = None,
+        categories: Optional[List[str]] = None,
+        default_run_build: Optional[str] = None,
+        default_run_memory_mbytes: Optional[int] = None,
+        default_run_timeout_secs: Optional[int] = None,
+        example_run_input_body: Optional[Any] = None,
+        example_run_input_content_type: Optional[str] = None,
+    ) -> Dict:
+        actor_representation = _get_actor_representation(
+            name=name,
+            title=title,
+            description=description,
+            seo_title=seo_title,
+            seo_description=seo_description,
+            versions=versions,
+            restart_on_error=restart_on_error,
+            is_public=is_public,
+            is_deprecated=is_deprecated,
+            is_anonymously_runnable=is_anonymously_runnable,
+            categories=categories,
+            default_run_build=default_run_build,
+            default_run_memory_mbytes=default_run_memory_mbytes,
+            default_run_timeout_secs=default_run_timeout_secs,
+            example_run_input_body=example_run_input_body,
+            example_run_input_content_type=example_run_input_content_type,
+        )
+
+        return await self._create(_filter_out_none_values_recursively(actor_representation))

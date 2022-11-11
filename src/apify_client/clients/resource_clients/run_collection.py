@@ -1,8 +1,8 @@
 from typing import Any, Optional
 
-from ..._utils import ListPage, _maybe_extract_enum_member_value
+from ..._utils import ListPage, _make_async_docs, _maybe_extract_enum_member_value
 from ...consts import ActorJobStatus
-from ..base import ResourceCollectionClient
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class RunCollectionClient(ResourceCollectionClient):
@@ -36,6 +36,31 @@ class RunCollectionClient(ResourceCollectionClient):
             ListPage: The retrieved actor runs
         """
         return self._list(
+            limit=limit,
+            offset=offset,
+            desc=desc,
+            status=_maybe_extract_enum_member_value(status),
+        )
+
+
+class RunCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for listing actor runs."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the RunCollectionClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'actor-runs')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=RunCollectionClient.list)
+    async def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+        status: Optional[ActorJobStatus] = None,
+    ) -> ListPage:
+        return await self._list(
             limit=limit,
             offset=offset,
             desc=desc,

@@ -12,6 +12,7 @@ Changelog
 
 ### Added
 
+- added support for asynchronous usage via `ApifyClientAsync`
 - added configurable socket timeout for requests to the Apify API
 - added `py.typed` file to signal type checkers that this package is typed
 - added option to set up webhooks for actor builds

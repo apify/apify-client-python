@@ -17,12 +17,13 @@ from apify_client._utils import (
     _parse_date_fields,
     _pluck_data,
     _retry_with_exp_backoff,
+    _retry_with_exp_backoff_async,
     _to_safe_id,
 )
 from apify_client.consts import WebhookEventType
 
 
-class UtilsTest(unittest.TestCase):
+class UtilsTest(unittest.IsolatedAsyncioTestCase):
     def test__to_safe_id(self) -> None:
         self.assertEqual(_to_safe_id('abc'), 'abc')
         self.assertEqual(_to_safe_id('abc/def'), 'abc~def')
@@ -155,6 +156,54 @@ class UtilsTest(unittest.TestCase):
         attempt_counter = 0
         with self.assertRaises(NonRetryableError):
             _retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
+        self.assertEqual(attempt_counter, 3)
+
+    async def test__retry_with_exp_backoff_async(self) -> None:
+        attempt_counter = 0
+
+        class RetryableError(Exception):
+            pass
+
+        class NonRetryableError(Exception):
+            pass
+
+        async def returns_on_fifth_attempt(stop_retrying: Callable, attempt: int) -> Any:
+            nonlocal attempt_counter
+            attempt_counter += 1
+
+            if attempt == 5:
+                return 'SUCCESS'
+            raise RetryableError()
+
+        async def bails_on_third_attempt(stop_retrying: Callable, attempt: int) -> Any:
+            nonlocal attempt_counter
+            attempt_counter += 1
+
+            if attempt == 3:
+                stop_retrying()
+                raise NonRetryableError()
+            else:
+                raise RetryableError()
+
+        # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
+        start = time.time()
+        result = await _retry_with_exp_backoff_async(returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0)
+        elapsed_time_seconds = time.time() - start
+        self.assertEqual(result, 'SUCCESS')
+        self.assertEqual(attempt_counter, 5)
+        self.assertGreater(elapsed_time_seconds, 1.4)
+        self.assertLess(elapsed_time_seconds, 2.0)
+
+        # Stops retrying when failed for max_retries times
+        attempt_counter = 0
+        with self.assertRaises(RetryableError):
+            await _retry_with_exp_backoff_async(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
+        self.assertEqual(attempt_counter, 4)
+
+        # Bails when the bail function is called
+        attempt_counter = 0
+        with self.assertRaises(NonRetryableError):
+            await _retry_with_exp_backoff_async(bails_on_third_attempt, backoff_base_millis=1)
         self.assertEqual(attempt_counter, 3)
 
     def test__encode_webhook_list_to_base64(self) -> None:

@@ -1,16 +1,17 @@
 import warnings
-from contextlib import contextmanager
-from typing import Any, Dict, Iterator, Optional
+from contextlib import asynccontextmanager, contextmanager
+from typing import Any, AsyncIterator, Dict, Iterator, Optional
 
 from ..._errors import ApifyApiError
 from ..._utils import (
     _catch_not_found_or_throw,
     _encode_key_value_store_record_value,
     _filter_out_none_values_recursively,
+    _make_async_docs,
     _parse_date_fields,
     _pluck_data,
 )
-from ..base import ResourceClient
+from ..base import ResourceClient, ResourceClientAsync
 
 
 class KeyValueStoreClient(ResourceClient):
@@ -235,6 +236,135 @@ class KeyValueStoreClient(ResourceClient):
             key (str): The key of the record which to delete
         """
         self.http_client.call(
+            url=self._url(f'records/{key}'),
+            method='DELETE',
+            params=self._params(),
+        )
+
+
+class KeyValueStoreClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single key-value store."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the KeyValueStoreClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'key-value-stores')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=KeyValueStoreClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=KeyValueStoreClient.update)
+    async def update(self, *, name: Optional[str] = None) -> Dict:
+        updated_fields = {
+            'name': name,
+        }
+
+        return await self._update(_filter_out_none_values_recursively(updated_fields))
+
+    @_make_async_docs(src=KeyValueStoreClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()
+
+    @_make_async_docs(src=KeyValueStoreClient.list_keys)
+    async def list_keys(self, *, limit: Optional[int] = None, exclusive_start_key: Optional[str] = None) -> Dict:
+        request_params = self._params(
+            limit=limit,
+            exclusiveStartKey=exclusive_start_key,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('keys'),
+            method='GET',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=KeyValueStoreClient.get_record)
+    async def get_record(self, key: str) -> Optional[Dict]:
+        try:
+            response = await self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='GET',
+                params=self._params(),
+            )
+
+            return {
+                'key': key,
+                'value': response._maybe_parsed_body,  # type: ignore
+                'content_type': response.headers['content-type'],
+            }
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    @_make_async_docs(src=KeyValueStoreClient.get_record_as_bytes)
+    async def get_record_as_bytes(self, key: str) -> Optional[Dict]:
+        try:
+            response = await self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='GET',
+                params=self._params(),
+                parse_response=False,
+            )
+
+            return {
+                'key': key,
+                'value': response.content,
+                'content_type': response.headers['content-type'],
+            }
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    @asynccontextmanager
+    @_make_async_docs(src=KeyValueStoreClient.stream_record)
+    async def stream_record(self, key: str) -> AsyncIterator[Optional[Dict]]:
+        response = None
+        try:
+            response = await self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='GET',
+                params=self._params(),
+                parse_response=False,
+                stream=True,
+            )
+
+            yield {
+                'key': key,
+                'value': response,
+                'content_type': response.headers['content-type'],
+            }
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+            yield None
+        finally:
+            if response:
+                await response.aclose()
+
+    @_make_async_docs(src=KeyValueStoreClient.set_record)
+    async def set_record(self, key: str, value: Any, content_type: Optional[str] = None) -> None:
+        value, content_type = _encode_key_value_store_record_value(value, content_type)
+
+        headers = {'content-type': content_type}
+
+        await self.http_client.call(
+            url=self._url(f'records/{key}'),
+            method='PUT',
+            params=self._params(),
+            data=value,
+            headers=headers,
+        )
+
+    @_make_async_docs(src=KeyValueStoreClient.delete_record)
+    async def delete_record(self, key: str) -> None:
+        await self.http_client.call(
             url=self._url(f'records/{key}'),
             method='DELETE',
             params=self._params(),

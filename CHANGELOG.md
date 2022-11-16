@@ -14,6 +14,7 @@ Changelog
 
 - added configurable socket timeout for requests to the Apify API
 - added `py.typed` file to signal type checkers that this package is typed
+- added method to update status message for a run
 - added option to set up webhooks for actor builds
 
 ### Internal changes

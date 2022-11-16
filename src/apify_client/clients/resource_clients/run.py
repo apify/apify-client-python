@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _encode_key_value_store_record_value, _parse_date_fields, _pluck_data, _to_safe_id
+from ..._utils import _encode_key_value_store_record_value, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, _to_safe_id
 from ..base import ActorJobBaseClient
 from .dataset import DatasetClient
 from .key_value_store import KeyValueStoreClient
@@ -25,6 +25,23 @@ class RunClient(ActorJobBaseClient):
             dict: The retrieved actor run data
         """
         return self._get()
+
+    def update(self, *, status_message: Optional[str] = None) -> Dict:
+        """Update the run with the specified fields.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
+
+        Args:
+            status_message (str, optional): The new status message for the run
+
+        Returns:
+            dict: The updated run
+        """
+        updated_fields = {
+            'statusMessage': status_message,
+        }
+
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
         """Abort the actor run which is starting or currently running and return its details.

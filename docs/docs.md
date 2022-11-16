@@ -1007,6 +1007,7 @@ Create a new actor version.
 Sub-client for manipulating a single actor run.
 
 * [get()](#runclient-get)
+* [update()](#runclient-update)
 * [abort()](#runclient-abort)
 * [wait\_for\_finish()](#runclient-wait\_for\_finish)
 * [metamorph()](#runclient-metamorph)
@@ -1027,6 +1028,26 @@ Return information about the actor run.
 * **Returns**
 
   The retrieved actor run data
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-update) `RunClient.update(*, status_message=None)`
+
+Update the run with the specified fields.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run](https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run)
+
+* **Parameters**
+
+  * **status_message** (`str`, *optional*) – The new status message for the run
+
+* **Returns**
+
+  The updated run
 
 * **Return type**
 

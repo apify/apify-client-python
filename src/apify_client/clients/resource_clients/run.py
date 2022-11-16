@@ -1,6 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _encode_key_value_store_record_value, _make_async_docs, _parse_date_fields, _pluck_data, _to_safe_id
+from ..._utils import (
+    _encode_key_value_store_record_value,
+    _filter_out_none_values_recursively,
+    _make_async_docs,
+    _parse_date_fields,
+    _pluck_data,
+    _to_safe_id,
+)
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 from .dataset import DatasetClient, DatasetClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
@@ -25,6 +32,23 @@ class RunClient(ActorJobBaseClient):
             dict: The retrieved actor run data
         """
         return self._get()
+
+    def update(self, *, status_message: Optional[str] = None) -> Dict:
+        """Update the run with the specified fields.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
+
+        Args:
+            status_message (str, optional): The new status message for the run
+
+        Returns:
+            dict: The updated run
+        """
+        updated_fields = {
+            'statusMessage': status_message,
+        }
+
+        return self._update(_filter_out_none_values_recursively(updated_fields))
 
     def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
         """Abort the actor run which is starting or currently running and return its details.
@@ -173,6 +197,14 @@ class RunClientAsync(ActorJobBaseClientAsync):
     @_make_async_docs(src=RunClient.get)
     async def get(self) -> Optional[Dict]:
         return await self._get()
+
+    @_make_async_docs(src=RunClient.update)
+    async def update(self, *, status_message: Optional[str] = None) -> Dict:
+        updated_fields = {
+            'statusMessage': status_message,
+        }
+
+        return await self._update(_filter_out_none_values_recursively(updated_fields))
 
     @_make_async_docs(src=RunClient.abort)
     async def abort(self, *, gracefully: Optional[bool] = None) -> Dict:

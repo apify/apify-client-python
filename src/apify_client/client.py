@@ -61,9 +61,9 @@ class _BaseApifyClient:
         token: Optional[str] = None,
         *,
         api_url: Optional[str] = None,
-        max_retries: int = 8,
-        min_delay_between_retries_millis: int = 500,
-        timeout_secs: int = 360,
+        max_retries: Optional[int] = 8,
+        min_delay_between_retries_millis: Optional[int] = 500,
+        timeout_secs: Optional[int] = 360,
     ):
         """Initialize the Apify API Client.
 
@@ -78,9 +78,9 @@ class _BaseApifyClient:
         self.token = token
         api_url = (api_url or DEFAULT_API_URL).rstrip('/')
         self.base_url = f'{api_url}/{API_VERSION}'
-        self.max_retries = max_retries
-        self.min_delay_between_retries_millis = min_delay_between_retries_millis
-        self.timeout_secs = timeout_secs
+        self.max_retries = max_retries or 8
+        self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
+        self.timeout_secs = timeout_secs or 360
 
     def _options(self) -> Dict:
         return {
@@ -100,9 +100,9 @@ class ApifyClient(_BaseApifyClient):
         token: Optional[str] = None,
         *,
         api_url: Optional[str] = None,
-        max_retries: int = 8,
-        min_delay_between_retries_millis: int = 500,
-        timeout_secs: int = 360,
+        max_retries: Optional[int] = 8,
+        min_delay_between_retries_millis: Optional[int] = 500,
+        timeout_secs: Optional[int] = 360,
     ):
         """Initialize the ApifyClient.
 
@@ -124,9 +124,9 @@ class ApifyClient(_BaseApifyClient):
 
         self.http_client = _HTTPClient(
             token=token,
-            max_retries=max_retries,
-            min_delay_between_retries_millis=min_delay_between_retries_millis,
-            timeout_secs=timeout_secs,
+            max_retries=self.max_retries,
+            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
+            timeout_secs=self.timeout_secs,
         )
 
     def actor(self, actor_id: str) -> ActorClient:
@@ -278,9 +278,9 @@ class ApifyClientAsync(_BaseApifyClient):
         token: Optional[str] = None,
         *,
         api_url: Optional[str] = None,
-        max_retries: int = 8,
-        min_delay_between_retries_millis: int = 500,
-        timeout_secs: int = 360,
+        max_retries: Optional[int] = 8,
+        min_delay_between_retries_millis: Optional[int] = 500,
+        timeout_secs: Optional[int] = 360,
     ):
         super().__init__(
             token,
@@ -292,9 +292,9 @@ class ApifyClientAsync(_BaseApifyClient):
 
         self.http_client = _HTTPClientAsync(
             token=token,
-            max_retries=max_retries,
-            min_delay_between_retries_millis=min_delay_between_retries_millis,
-            timeout_secs=timeout_secs,
+            max_retries=self.max_retries,
+            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
+            timeout_secs=self.timeout_secs,
         )
 
     @_make_async_docs(src=ApifyClient.actor)

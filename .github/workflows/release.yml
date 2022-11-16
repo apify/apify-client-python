@@ -8,6 +8,18 @@ on:
   # A release via GitHub releases will publish a stable version
   release:
     types: [published]
+  # Workflow dispatch will publish whatever you choose
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        default: 'alpha'
+        options:
+          - 'alpha'
+          - 'beta'
+          - 'final'
 
 jobs:
   lint_and_test:
@@ -76,18 +88,38 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade setuptools twine wheel
 
-    - # Determine if this is a beta or latest release
+    - # Determine if this is a prerelease or latest release
       name: Determine release type
-      run: echo "RELEASE_TYPE=$(if [ ${{ github.event_name }} = release ]; then echo latest; else echo beta; fi)" >> $GITHUB_ENV
+      id: get-release-type
+      run: |
+        if [ ${{ github.event_name }} = release ]; then
+          release_type="final"
+        elif [ ${{ github.event_name }} = push ]; then
+          release_type="beta"
+        elif [ ${{ github.event_name }} = workflow_dispatch ]; then
+          release_type=${{ github.event.inputs.release_type }}
+        fi
+
+        if [ ${release_type} = final ]; then
+          docker_image_tag="latest"
+        elif [ ${release_type} = beta ]; then
+          docker_image_tag="beta"
+        else
+          docker_image_tag=""
+        fi
+
+        echo "release_type=${release_type}" >> $GITHUB_OUTPUT
+        echo "docker_image_tag=${docker_image_tag}" >> $GITHUB_OUTPUT
 
     - # Check whether the released version is listed in CHANGELOG.md
       name: Check whether the released version is listed in the changelog
+      if: steps.get-release-type.outputs.release_type != 'alpha'
       run: python ./scripts/check_version_in_changelog.py
 
-    - # Check version consistency and increment pre-release version number for beta releases (must be the last step before build)
+    - # Check version consistency and increment pre-release version number for prereleases (must be the last step before build)
       name: Bump pre-release version
-      if: env.RELEASE_TYPE == 'beta'
-      run: python ./scripts/update_version_for_beta_release.py
+      if: steps.get-release-type.outputs.release_type != 'final'
+      run: python ./scripts/update_version_for_prerelease.py ${{ steps.get-release-type.outputs.release_type }}
 
     - # Build a source distribution and a python3-only wheel
       name: Build distribution files
@@ -104,9 +136,9 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
-    - # Tag the current commit with the version tag if this is a beta release (stable releases are tagged with the release process)
+    - # Tag the current commit with the version tag if this is not made from the release event (releases are tagged with the release process)
       name: Tag Version
-      if: env.RELEASE_TYPE == 'beta'
+      if: github.event_name != 'release'
       run: |
         git_tag=v`python ./scripts/print_current_package_version.py`
         git tag $git_tag
@@ -115,7 +147,7 @@ jobs:
     - # Upload the build artifacts to the release
       name: Upload the build artifacts to release
       uses: svenstaro/upload-release-action@v2
-      if: env.RELEASE_TYPE == 'latest'
+      if: github.event_name == 'release'
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: dist/*
@@ -132,12 +164,13 @@ jobs:
     - # Trigger building the docker images in apify/apify-actor-docker repo
       name: Trigger Docker Image Build
       uses: peter-evans/repository-dispatch@v2
+      if: steps.get-release-type.outputs.docker_image_tag != ''
       with:
         token: ${{ secrets.TRIGGER_DOCKER_IMAGE_BUILD_TOKEN }}
         repository: apify/apify-actor-docker
         event-type: build-python-images
         client-payload: >
           {
-            "release_tag": "${{ env.RELEASE_TYPE }}",
+            "release_tag": "${{ steps.get-release-type.outputs.docker_image_tag }}",
             "apify_client_version": "${{ steps.get-package-version.outputs.package_version }}"
           }

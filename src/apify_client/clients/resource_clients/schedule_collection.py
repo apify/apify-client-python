@@ -41,7 +41,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         is_enabled: bool,
         is_exclusive: bool,
         name: Optional[str] = None,
-        actions: List[Dict] = [],
+        actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
     ) -> Dict:
@@ -61,6 +61,9 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created schedule.
         """
+        if not actions:
+            actions = []
+
         schedule_representation = _get_schedule_representation(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
@@ -100,10 +103,13 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         is_enabled: bool,
         is_exclusive: bool,
         name: Optional[str] = None,
-        actions: List[Dict] = [],
+        actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
     ) -> Dict:
+        if not actions:
+            actions = []
+
         schedule_representation = _get_schedule_representation(
             cron_expression=cron_expression,
             is_enabled=is_enabled,

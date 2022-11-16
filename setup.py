@@ -54,6 +54,7 @@ setup(
         'dev': [
             'autopep8 ~= 2.0.0',
             'flake8 ~= 5.0.4',
+            'flake8-bugbear ~= 22.10.27',
             'flake8-commas ~= 2.1.0',
             'flake8-docstrings ~= 1.6.0',
             'flake8-isort ~= 5.0.0',

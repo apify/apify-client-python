@@ -15,6 +15,7 @@ Changelog
 - added support for asynchronous usage via `ApifyClientAsync`
 - added configurable socket timeout for requests to the Apify API
 - added `py.typed` file to signal type checkers that this package is typed
+- added method to update status message for a run
 - added option to set up webhooks for actor builds
 
 ### Internal changes
@@ -28,6 +29,7 @@ Changelog
 - unified preparing resource representation
 - updated output management in GitHub Workflows to fix deprecations
 - improved type hints across codebase
+- added option to manually publish the package with a workflow dispatch
 
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------

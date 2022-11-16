@@ -1873,6 +1873,7 @@ Create a new actor version.
 Sub-client for manipulating a single actor run.
 
 * [get()](#runclient-get)
+* [update()](#runclient-update)
 * [abort()](#runclient-abort)
 * [wait\_for\_finish()](#runclient-wait\_for\_finish)
 * [metamorph()](#runclient-metamorph)
@@ -1893,6 +1894,26 @@ Return information about the actor run.
 * **Returns**
 
   The retrieved actor run data
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-update) `RunClient.update(*, status_message=None)`
+
+Update the run with the specified fields.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run](https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run)
+
+* **Parameters**
+
+  * **status_message** (`str`, *optional*) – The new status message for the run
+
+* **Returns**
+
+  The updated run
 
 * **Return type**
 
@@ -4032,6 +4053,7 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 Async sub-client for manipulating a single actor run.
 
 * [async get()](#runclientasync-get)
+* [async update()](#runclientasync-update)
 * [async abort()](#runclientasync-abort)
 * [async wait\_for\_finish()](#runclientasync-wait\_for\_finish)
 * [async metamorph()](#runclientasync-metamorph)
@@ -4052,6 +4074,26 @@ Return information about the actor run.
 * **Returns**
 
   The retrieved actor run data
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclientasync-update) `async RunClientAsync.update(*, status_message=None)`
+
+Update the run with the specified fields.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run](https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run)
+
+* **Parameters**
+
+  * **status_message** (`str`, *optional*) – The new status message for the run
+
+* **Returns**
+
+  The updated run
 
 * **Return type**
 
@@ -4613,7 +4655,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclientasync-create) `async ScheduleCollectionClientAsync.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=[], description=None, timezone=None)`
+#### [](#schedulecollectionclientasync-create) `async ScheduleCollectionClientAsync.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
 
 Create a new schedule.
 
@@ -4629,7 +4671,7 @@ Create a new schedule.
 
   * **name** (`Optional[str]`) – The name of the schedule to create.
 
-  * **actions** (`List[Dict]`) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+  * **actions** (`Optional`[`List[Dict]`]) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
 
   * **description** (`Optional[str]`) – Description of this schedule
 
@@ -5612,7 +5654,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=[], description=None, timezone=None)`
+#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
 
 Create a new schedule.
 
@@ -5628,7 +5670,7 @@ Create a new schedule.
 
   * **name** (`Optional[str]`) – The name of the schedule to create.
 
-  * **actions** (`List[Dict]`) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+  * **actions** (`Optional`[`List[Dict]`]) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
 
   * **description** (`Optional[str]`) – Description of this schedule
 

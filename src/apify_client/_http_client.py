@@ -100,7 +100,7 @@ class _HTTPClient:
                             _maybe_parsed_body = self._maybe_parse_response(response)
                         else:
                             _maybe_parsed_body = response.content
-                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)
+                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
 

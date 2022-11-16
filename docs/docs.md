@@ -2906,7 +2906,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=[], description=None, timezone=None)`
+#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
 
 Create a new schedule.
 
@@ -2922,7 +2922,7 @@ Create a new schedule.
 
   * **name** (`Optional[str]`) – The name of the schedule to create.
 
-  * **actions** (`List[Dict]`) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+  * **actions** (`Optional`[`List[Dict]`]) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
 
   * **description** (`Optional[str]`) – Description of this schedule
 

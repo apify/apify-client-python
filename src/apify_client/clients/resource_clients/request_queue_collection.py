@@ -35,18 +35,19 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+    def get_or_create(self, *, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
 
         Args:
             name (str, optional): The name of the request queue to retrieve or create.
+            resource (Dict, optional): TODO
 
         Returns:
             dict: The retrieved or newly-created request queue.
         """
-        return self._get_or_create(name=name)
+        return self._get_or_create(name=name, resource=resource)
 
 
 class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):

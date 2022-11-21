@@ -35,7 +35,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+    def get_or_create(self, *, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
@@ -46,4 +46,4 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-        return self._get_or_create(name=name)
+        return self._get_or_create(name=name, resource=resource)

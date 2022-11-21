@@ -26,11 +26,12 @@ class ResourceCollectionClient(BaseClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    def _get_or_create(self, name: Optional[str] = None) -> Dict:
+    def _get_or_create(self, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',
             params=self._params(name=name),
+            json=resource,
         )
 
         return _parse_date_fields(_pluck_data(response.json()))

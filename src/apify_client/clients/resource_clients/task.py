@@ -9,7 +9,7 @@ from ..._utils import (
     _parse_date_fields,
     _pluck_data,
 )
-from ...consts import ActorJobStatus
+from ...consts import ActorJobStatus, MetaOrigin
 from ..base import ResourceClient
 from .run import RunClient
 from .run_collection import RunCollectionClient
@@ -229,13 +229,14 @@ class TaskClient(ResourceClient):
         """Retrieve a client for the runs of this task."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClient:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClient:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
 
         Args:
             status (ActorJobStatus, optional): Consider only runs with this status.
+            origin (MetaOrigin, optional): Consider only runs started with this origin.
 
         Returns:
             RunClient: The resource client for the last run of this task.
@@ -243,7 +244,10 @@ class TaskClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status)),
+            params=self._params(
+                status=_maybe_extract_enum_member_value(status),
+                origin=_maybe_extract_enum_member_value(origin),
+            ),
         ))
 
     def webhooks(self) -> WebhookCollectionClient:

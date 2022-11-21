@@ -15,8 +15,7 @@ from ._errors import ApifyApiError
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
 
-NOT_FOUND_TYPE = 'record-not-found'
-NOT_FOUND_ON_S3 = '<Code>NoSuchKey</Code>'
+RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
 
 
 def _to_safe_id(id: str) -> str:
@@ -162,8 +161,8 @@ async def _retry_with_exp_backoff_async(
 
 def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
     is_not_found_status = (exc.status_code == HTTPStatus.NOT_FOUND)
-    is_not_found_message = (exc.type == NOT_FOUND_TYPE) or (isinstance(exc.message, str) and NOT_FOUND_ON_S3 in exc.message)
-    if not (is_not_found_status and is_not_found_message):
+    is_not_found_type = (exc.type in RECORD_NOT_FOUND_EXCEPTION_TYPES)
+    if not (is_not_found_status and is_not_found_type):
         raise exc
 
     return None

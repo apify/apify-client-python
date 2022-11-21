@@ -21,6 +21,7 @@ Changelog
 ### Internal changes
 
 - simplified retrying with exponential backoff
+- improved checks for "not found" errors
 - simplified flake8 config
 - updated development dependencies
 - simplified development scripts

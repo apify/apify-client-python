@@ -13,6 +13,7 @@ from apify_client._utils import (
     _is_content_type_text,
     _is_content_type_xml,
     _is_file_or_bytes,
+    _make_async_docs,
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
@@ -272,4 +273,18 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             _filter_out_none_values_recursively_internal({'k1': {}}, True),
             None,
+        )
+
+    def test__make_async_docs(self) -> None:
+        def source_func() -> None:
+            """source_func docs."""
+            pass
+
+        @_make_async_docs(src=source_func)
+        def target_func() -> None:
+            pass
+
+        self.assertEqual(
+            target_func.__doc__,
+            'source_func docs.',
         )

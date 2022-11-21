@@ -238,9 +238,6 @@ def _make_async_docs(*, src: Callable) -> Callable[[BoundFunc], BoundFunc]:
 
     return decorator
 
-    # TODO: tests
-    # TODO: more replacements (e.g. RunClient -> RunClientAsync)
-
 
 class ListPage:
     """A single page of items returned from a list() method."""

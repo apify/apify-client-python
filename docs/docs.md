@@ -1060,7 +1060,7 @@ Retrieve a client for the runs of this actor.
 
 ***
 
-#### [](#actorclient-last_run) `ActorClient.last_run(*, status=None)`
+#### [](#actorclient-last_run) `ActorClient.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this actor.
 
@@ -1069,6 +1069,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 
@@ -2716,7 +2718,7 @@ Delete the dataset.
 
 ***
 
-#### [](#datasetclient-list_items) `DatasetClient.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None)`
+#### [](#datasetclient-list_items) `DatasetClient.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None, flatten=None, view=None)`
 
 List the items of the dataset.
 
@@ -2752,6 +2754,10 @@ List the items of the dataset.
   Note that if used, the results might contain less items than the limit value.
 
   * **skip_hidden** (`bool`, *optional*) – If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
+
+  * **view** (`str`, *optional*) – Name of the dataset view to be used
 
 * **Returns**
 
@@ -2810,7 +2816,7 @@ Iterate over the items in the dataset.
 
 ***
 
-#### [](#datasetclient-download_items) `DatasetClient.download_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclient-download_items) `DatasetClient.download_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None, flatten=None)`
 
 Get the items in the dataset as raw bytes.
 
@@ -2865,6 +2871,8 @@ Deprecated: this function is a deprecated alias of get_items_as_bytes. It will b
   * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
   By default the element name is item.
 
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
+
 * **Returns**
 
   The dataset items as raw bytes
@@ -2875,7 +2883,7 @@ Deprecated: this function is a deprecated alias of get_items_as_bytes. It will b
 
 ***
 
-#### [](#datasetclient-get_items_as_bytes) `DatasetClient.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclient-get_items_as_bytes) `DatasetClient.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None, flatten=None)`
 
 Get the items in the dataset as raw bytes.
 
@@ -2927,6 +2935,8 @@ Get the items in the dataset as raw bytes.
 
   * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
   By default the element name is item.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
 
 * **Returns**
 
@@ -3238,7 +3248,7 @@ List the available datasets.
 
 ***
 
-#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None)`
+#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None, resource=None)`
 
 Retrieve a named dataset, or create a new one when it doesn’t exist.
 
@@ -3592,7 +3602,7 @@ List the available key-value stores.
 
 ***
 
-#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None)`
+#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None, resource=None)`
 
 Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
@@ -4028,7 +4038,7 @@ List the available request queues.
 
 ***
 
-#### [](#requestqueuecollectionclient-get_or_create) `RequestQueueCollectionClient.get_or_create(*, name=None)`
+#### [](#requestqueuecollectionclient-get_or_create) `RequestQueueCollectionClient.get_or_create(*, name=None, resource=None)`
 
 Retrieve a named request queue, or create a new one when it doesn’t exist.
 
@@ -5224,7 +5234,7 @@ Retrieve a client for the runs of this task.
 
 ***
 
-#### [](#taskclient-last_run) `TaskClient.last_run(*, status=None)`
+#### [](#taskclient-last_run) `TaskClient.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this task.
 
@@ -5233,6 +5243,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 
@@ -5964,3 +5976,9 @@ The actor build has timed out
 #### [](#webhookeventtype-actor_build_aborted) `WebhookEventType.ACTOR_BUILD_ABORTED`
 
 The actor build was aborted
+
+***
+
+### [](#metaorigin) MetaOrigin
+
+Possible origins for actor runs, i.e. how were the jobs started.

@@ -1,7 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from ..._utils import _filter_out_none_values_recursively, _make_async_docs
-from ...consts import ActorSourceType
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -96,7 +95,6 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             name=name,
             value=value,
         )
-
 
         return await self._update(_filter_out_none_values_recursively(actor_env_var_representation))
 

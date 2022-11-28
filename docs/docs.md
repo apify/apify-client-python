@@ -1362,6 +1362,8 @@ Last run is retrieved based on the start time of the runs.
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
 
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
+
 * **Returns**
 
   The resource client for the last run of this actor.
@@ -2367,6 +2369,10 @@ List the items of the dataset.
 
   * **skip_hidden** (`bool`, *optional*) – If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
 
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
+
+  * **view** (`str`, *optional*) – Name of the dataset view to be used
+
 * **Returns**
 
   A page of the list of dataset items according to the specified filters.
@@ -2476,6 +2482,8 @@ Get the items in the dataset as raw bytes.
 
   * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
   By default the element name is item.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
 
 * **Returns**
 
@@ -2643,6 +2651,8 @@ Retrieve a named dataset, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the dataset to retrieve or create.
+
+  * **resource** (`Dict`, *optional*) – TODO
 
 * **Returns**
 
@@ -3258,6 +3268,8 @@ Retrieve a named dataset, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the dataset to retrieve or create.
 
+  * **resource** (`Dict`, *optional*) – TODO
+
 * **Returns**
 
   The retrieved or newly-created dataset.
@@ -3312,6 +3324,8 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the key-value store to retrieve or create.
+
+  * **resource** (`Dict`, *optional*) – TODO
 
 * **Returns**
 
@@ -3611,6 +3625,8 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the key-value store to retrieve or create.
+
+  * **resource** (`Dict`, *optional*) – TODO
 
 * **Returns**
 
@@ -3993,6 +4009,8 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the request queue to retrieve or create.
 
+  * **resource** (`Dict`, *optional*) – TODO
+
 * **Returns**
 
   The retrieved or newly-created request queue.
@@ -4047,6 +4065,8 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the request queue to retrieve or create.
+
+  * **resource** (`Dict`, *optional*) – TODO
 
 * **Returns**
 
@@ -4923,6 +4943,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 

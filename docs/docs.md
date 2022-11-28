@@ -1352,7 +1352,7 @@ Retrieve a client for the runs of this actor.
 
 ***
 
-#### [](#actorclientasync-last_run) `ActorClientAsync.last_run(*, status=None)`
+#### [](#actorclientasync-last_run) `ActorClientAsync.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this actor.
 
@@ -2332,7 +2332,7 @@ Delete the dataset.
 
 ***
 
-#### [](#datasetclientasync-list_items) `async DatasetClientAsync.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None)`
+#### [](#datasetclientasync-list_items) `async DatasetClientAsync.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None, flatten=None, view=None)`
 
 List the items of the dataset.
 
@@ -2430,7 +2430,7 @@ Iterate over the items in the dataset.
 
 ***
 
-#### [](#datasetclientasync-get_items_as_bytes) `async DatasetClientAsync.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclientasync-get_items_as_bytes) `async DatasetClientAsync.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None, flatten=None)`
 
 Get the items in the dataset as raw bytes.
 
@@ -2642,7 +2642,7 @@ List the available datasets.
 
 ***
 
-#### [](#datasetcollectionclientasync-get_or_create) `async DatasetCollectionClientAsync.get_or_create(*, name=None)`
+#### [](#datasetcollectionclientasync-get_or_create) `async DatasetCollectionClientAsync.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named dataset, or create a new one when it doesn’t exist.
 
@@ -2652,7 +2652,7 @@ Retrieve a named dataset, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the dataset to retrieve or create.
 
-  * **resource** (`Dict`, *optional*) – TODO
+  * **schema** (`Dict`, *optional*) – The schema of the dataset
 
 * **Returns**
 
@@ -3258,7 +3258,7 @@ List the available datasets.
 
 ***
 
-#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None, resource=None)`
+#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named dataset, or create a new one when it doesn’t exist.
 
@@ -3268,7 +3268,7 @@ Retrieve a named dataset, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the dataset to retrieve or create.
 
-  * **resource** (`Dict`, *optional*) – TODO
+  * **schema** (`Dict`, *optional*) – The schema of the dataset
 
 * **Returns**
 
@@ -3315,7 +3315,7 @@ List the available key-value stores.
 
 ***
 
-#### [](#keyvaluestorecollectionclientasync-get_or_create) `async KeyValueStoreCollectionClientAsync.get_or_create(*, name=None)`
+#### [](#keyvaluestorecollectionclientasync-get_or_create) `async KeyValueStoreCollectionClientAsync.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
@@ -3325,7 +3325,7 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the key-value store to retrieve or create.
 
-  * **resource** (`Dict`, *optional*) – TODO
+  * **schema** (`Dict`, *optional*) – The schema of the key-value store
 
 * **Returns**
 
@@ -3616,7 +3616,7 @@ List the available key-value stores.
 
 ***
 
-#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None, resource=None)`
+#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
@@ -3626,7 +3626,7 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the key-value store to retrieve or create.
 
-  * **resource** (`Dict`, *optional*) – TODO
+  * **schema** (`Dict`, *optional*) – The schema of the key-value store
 
 * **Returns**
 
@@ -4009,8 +4009,6 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 
   * **name** (`str`, *optional*) – The name of the request queue to retrieve or create.
 
-  * **resource** (`Dict`, *optional*) – TODO
-
 * **Returns**
 
   The retrieved or newly-created request queue.
@@ -4056,7 +4054,7 @@ List the available request queues.
 
 ***
 
-#### [](#requestqueuecollectionclient-get_or_create) `RequestQueueCollectionClient.get_or_create(*, name=None, resource=None)`
+#### [](#requestqueuecollectionclient-get_or_create) `RequestQueueCollectionClient.get_or_create(*, name=None)`
 
 Retrieve a named request queue, or create a new one when it doesn’t exist.
 
@@ -4065,8 +4063,6 @@ Retrieve a named request queue, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the request queue to retrieve or create.
-
-  * **resource** (`Dict`, *optional*) – TODO
 
 * **Returns**
 
@@ -4934,7 +4930,7 @@ Retrieve a client for the runs of this task.
 
 ***
 
-#### [](#taskclientasync-last_run) `TaskClientAsync.last_run(*, status=None)`
+#### [](#taskclientasync-last_run) `TaskClientAsync.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this task.
 

@@ -42,7 +42,6 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
 
         Args:
             name (str, optional): The name of the request queue to retrieve or create.
-            resource (Dict, optional): TODO
 
         Returns:
             dict: The retrieved or newly-created request queue.

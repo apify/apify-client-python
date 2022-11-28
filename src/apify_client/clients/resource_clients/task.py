@@ -370,11 +370,14 @@ class TaskClientAsync(ResourceClientAsync):
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
     @_make_async_docs(src=TaskClient.last_run)
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClientAsync:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClientAsync:
         return RunClientAsync(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status)),
+            params=self._params(
+                status=_maybe_extract_enum_member_value(status),
+                origin=_maybe_extract_enum_member_value(origin),
+            ),
         ))
 
     @_make_async_docs(src=TaskClient.webhooks)

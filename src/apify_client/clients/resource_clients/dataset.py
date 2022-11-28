@@ -537,6 +537,8 @@ class DatasetClientAsync(ResourceClientAsync):
         unwind: Optional[str] = None,
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
+        flatten: Optional[List[str]] = None,
+        view: Optional[str] = None,
     ) -> ListPage:
         request_params = self._params(
             offset=offset,
@@ -548,6 +550,8 @@ class DatasetClientAsync(ResourceClientAsync):
             unwind=unwind,
             skipEmpty=skip_empty,
             skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
         )
 
         response = await self.http_client.call(
@@ -635,6 +639,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
+        flatten: Optional[List[str]] = None,
     ) -> bytes:
         request_params = self._params(
             format=item_format,
@@ -652,6 +657,7 @@ class DatasetClientAsync(ResourceClientAsync):
             skipHidden=skip_hidden,
             xmlRoot=xml_root,
             xmlRow=xml_row,
+            flatten=flatten,
         )
 
         response = await self.http_client.call(

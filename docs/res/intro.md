@@ -185,3 +185,22 @@ async def main():
 
 asyncio.run(main())
 ```
+
+### Logging
+
+The library logs some useful debug information to the `apify_client` logger
+when sending requests to the Apify API.
+To have them printed out to the standard output, you need to add a handler to the logger:
+
+```python
+import logging
+apify_client_logger = logging.getLogger('apify_client')
+apify_client_logger.setLevel(logging.DEBUG)
+apify_client_logger.addHandler(logging.StreamHandler())
+```
+
+The log records have useful properties added with the `extra` argument,
+like `attempt`, `status_code`, `url`, `client_method` and `resource_id`.
+To print those out, you'll need to use a custom log formatter.
+To learn more about log formatters and how to use them,
+please refer to the official Python [documentation on logging](https://docs.python.org/3/howto/logging.html#formatters).

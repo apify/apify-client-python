@@ -51,7 +51,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         return self._create(_filter_out_none_values_recursively(actor_env_var_representation))
 
 
-class ActorEnvVarCollectionClientClientAsync(ResourceCollectionClientAsync):
+class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

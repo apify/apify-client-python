@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional
 from ..._utils import _filter_out_none_values_recursively, _make_async_docs, _maybe_extract_enum_member_value
 from ...consts import ActorSourceType
 from ..base import ResourceClient, ResourceClientAsync
+from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
+from .actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
 
 
 def _get_actor_version_representation(
@@ -103,6 +105,21 @@ class ActorVersionClient(ResourceClient):
         """
         return self._delete()
 
+    def env_vars(self) -> ActorEnvVarCollectionClient:
+        """Retrieve a client for the environment variables of this actor version."""
+        return ActorEnvVarCollectionClient(**self._sub_resource_init_options())
+
+    def env_var(self, env_var_name: str) -> ActorEnvVarClient:
+        """Retrieve the client for the specified environment variable of this actor version.
+
+        Args:
+            env_var_name (str): The name of the environment variable for which to retrieve the resource client.
+
+        Returns:
+            ActorEnvVarClient: The resource client for the specified actor environment variable.
+        """
+        return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
+
 
 class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor version."""
@@ -145,3 +162,11 @@ class ActorVersionClientAsync(ResourceClientAsync):
     @_make_async_docs(src=ActorVersionClient.delete)
     async def delete(self) -> None:
         return await self._delete()
+
+    @_make_async_docs(src=ActorVersionClient.env_vars)
+    def env_vars(self) -> ActorEnvVarCollectionClientAsync:
+        return ActorEnvVarCollectionClientAsync(**self._sub_resource_init_options())
+
+    @_make_async_docs(src=ActorVersionClient.env_var)
+    def env_var(self, env_var_name: str) -> ActorEnvVarClientAsync:
+        return ActorEnvVarClientAsync(**self._sub_resource_init_options(resource_id=env_var_name))

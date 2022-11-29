@@ -1608,6 +1608,8 @@ Sub-client for manipulating a single actor version.
 * [get()](#actorversionclient-get)
 * [update()](#actorversionclient-update)
 * [delete()](#actorversionclient-delete)
+* [env\_vars()](#actorversionclient-env\_vars)
+* [env\_var()](#actorversionclient-env\_var)
 
 ***
 
@@ -1679,6 +1681,34 @@ Delete the actor version.
 
 ***
 
+#### [](#actorversionclient-env_vars) `ActorVersionClient.env_vars()`
+
+Retrieve a client for the environment variables of this actor version.
+
+* **Return type**
+
+  [`ActorEnvVarCollectionClient`](#actorenvvarcollectionclient)
+
+***
+
+#### [](#actorversionclient-env_var) `ActorVersionClient.env_var(env_var_name)`
+
+Retrieve the client for the specified environment variable of this actor version.
+
+* **Parameters**
+
+  * **env_var_name** (`str`) – The name of the environment variable for which to retrieve the resource client.
+
+* **Returns**
+
+  The resource client for the specified actor environment variable.
+
+* **Return type**
+
+  [`ActorEnvVarClient`](#actorenvvarclient)
+
+***
+
 ### [](#actorversionclientasync) ActorVersionClientAsync
 
 Async sub-client for manipulating a single actor version.
@@ -1686,6 +1716,8 @@ Async sub-client for manipulating a single actor version.
 * [async get()](#actorversionclientasync-get)
 * [async update()](#actorversionclientasync-update)
 * [async delete()](#actorversionclientasync-delete)
+* [env\_vars()](#actorversionclientasync-env\_vars)
+* [env\_var()](#actorversionclientasync-env\_var)
 
 ***
 
@@ -1754,6 +1786,34 @@ Delete the actor version.
 * **Return type**
 
   `None`
+
+***
+
+#### [](#actorversionclientasync-env_vars) `ActorVersionClientAsync.env_vars()`
+
+Retrieve a client for the environment variables of this actor version.
+
+* **Return type**
+
+  `ActorEnvVarCollectionClientAsync`
+
+***
+
+#### [](#actorversionclientasync-env_var) `ActorVersionClientAsync.env_var(env_var_name)`
+
+Retrieve the client for the specified environment variable of this actor version.
+
+* **Parameters**
+
+  * **env_var_name** (`str`) – The name of the environment variable for which to retrieve the resource client.
+
+* **Returns**
+
+  The resource client for the specified actor environment variable.
+
+* **Return type**
+
+  `ActorEnvVarClientAsync`
 
 ***
 

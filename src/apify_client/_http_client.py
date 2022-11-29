@@ -157,6 +157,8 @@ class _HTTPClient(_BaseHTTPClient):
                     stop_retrying()
                 raise e
 
+            # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
+            # and also retry rate limited requests that throw 429 Too Many Requests errors
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
                 stop_retrying()
             raise ApifyApiError(response, attempt)
@@ -219,6 +221,8 @@ class _HTTPClientAsync(_BaseHTTPClient):
                     stop_retrying()
                 raise e
 
+            # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
+            # and also retry rate limited requests that throw 429 Too Many Requests errors
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
                 stop_retrying()
             raise ApifyApiError(response, attempt)

@@ -4511,7 +4511,7 @@ Return information about the schedule.
 
 ***
 
-#### [](#scheduleclientasync-update) `async ScheduleClientAsync.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None)`
+#### [](#scheduleclientasync-update) `async ScheduleClientAsync.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Update the schedule with specified fields.
 
@@ -4533,6 +4533,8 @@ Update the schedule with specified fields.
 
   * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
   (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -4681,7 +4683,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclientasync-create) `async ScheduleCollectionClientAsync.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
+#### [](#schedulecollectionclientasync-create) `async ScheduleCollectionClientAsync.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Create a new schedule.
 
@@ -4702,6 +4704,8 @@ Create a new schedule.
   * **description** (`Optional[str]`) – Description of this schedule
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`Optional[str]`) – TODO
 
 * **Returns**
 
@@ -4770,7 +4774,7 @@ Retrieve the task.
 
 ***
 
-#### [](#taskclientasync-update) `async TaskClientAsync.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None)`
+#### [](#taskclientasync-update) `async TaskClientAsync.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, title=None)`
 
 Update the task with specified fields.
 
@@ -4789,6 +4793,8 @@ Update the task with specified fields.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input dictionary
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5027,7 +5033,7 @@ List the available tasks.
 
 ***
 
-#### [](#taskcollectionclientasync-create) `async TaskCollectionClientAsync.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None)`
+#### [](#taskcollectionclientasync-create) `async TaskCollectionClientAsync.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None, title=None)`
 
 Create a new task.
 
@@ -5048,6 +5054,8 @@ Create a new task.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input object.
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5092,7 +5100,7 @@ Retrieve the task.
 
 ***
 
-#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None)`
+#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, title=None)`
 
 Update the task with specified fields.
 
@@ -5111,6 +5119,8 @@ Update the task with specified fields.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input dictionary
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5343,7 +5353,7 @@ List the available tasks.
 
 ***
 
-#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None)`
+#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None, title=None)`
 
 Create a new task.
 
@@ -5364,6 +5374,8 @@ Create a new task.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input object.
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5514,7 +5526,7 @@ Return information about the schedule.
 
 ***
 
-#### [](#scheduleclient-update) `ScheduleClient.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None)`
+#### [](#scheduleclient-update) `ScheduleClient.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Update the schedule with specified fields.
 
@@ -5536,6 +5548,8 @@ Update the schedule with specified fields.
 
   * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
   (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5684,7 +5698,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
+#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Create a new schedule.
 
@@ -5705,6 +5719,8 @@ Create a new schedule.
   * **description** (`Optional[str]`) – Description of this schedule
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`Optional[str]`) – TODO
 
 * **Returns**
 

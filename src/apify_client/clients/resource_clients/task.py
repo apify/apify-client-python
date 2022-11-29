@@ -24,6 +24,7 @@ def _get_task_representation(
     build: Optional[str] = None,
     memory_mbytes: Optional[int] = None,
     timeout_secs: Optional[int] = None,
+    title: Optional[str] = None,
 ) -> Dict:
     return {
         'actId': actor_id,
@@ -34,6 +35,7 @@ def _get_task_representation(
             'timeoutSecs': timeout_secs,
         },
         'input': task_input,
+        'title': title,
     }
 
 
@@ -63,6 +65,7 @@ class TaskClient(ResourceClient):
         build: Optional[str] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         """Update the task with specified fields.
 
@@ -76,6 +79,7 @@ class TaskClient(ResourceClient):
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
+            title (str, optional): A human-friendly equivalent of the name
 
         Returns:
             dict: The updated task
@@ -86,6 +90,7 @@ class TaskClient(ResourceClient):
             build=build,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            title=title,
         )
 
         return self._update(_filter_out_none_values_recursively(task_representation))
@@ -277,6 +282,7 @@ class TaskClientAsync(ResourceClientAsync):
         build: Optional[str] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         task_representation = _get_task_representation(
             name=name,
@@ -284,6 +290,7 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            title=title,
         )
 
         return await self._update(_filter_out_none_values_recursively(task_representation))

@@ -44,6 +44,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         """Create a new schedule.
 
@@ -57,6 +58,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
             description: Description of this schedule
             timezone: Timezone in which your cron expression runs (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+            title: TODO
 
         Returns:
             dict: The created schedule.
@@ -72,6 +74,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             actions=actions,
             description=description,
             timezone=timezone,
+            title=title,
         )
 
         return self._create(_filter_out_none_values_recursively(schedule_representation))
@@ -106,6 +109,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         if not actions:
             actions = []
@@ -118,6 +122,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
             actions=actions,
             description=description,
             timezone=timezone,
+            title=title,
         )
 
         return await self._create(_filter_out_none_values_recursively(schedule_representation))

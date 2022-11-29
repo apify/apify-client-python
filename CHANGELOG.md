@@ -17,6 +17,7 @@ Changelog
 - added `py.typed` file to signal type checkers that this package is typed
 - added method to update status message for a run
 - added option to set up webhooks for actor builds
+- added logger with basic debugging info
 
 ### Internal changes
 

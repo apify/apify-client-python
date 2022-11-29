@@ -58,7 +58,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
             description: Description of this schedule
             timezone: Timezone in which your cron expression runs (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-            title: TODO
+            title: A human-friendly equivalent of the name
 
         Returns:
             dict: The created schedule.

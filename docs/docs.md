@@ -4705,7 +4705,7 @@ Create a new schedule.
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
 
-  * **title** (`Optional[str]`) – TODO
+  * **title** (`Optional[str]`) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5720,7 +5720,7 @@ Create a new schedule.
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
 
-  * **title** (`Optional[str]`) – TODO
+  * **title** (`Optional[str]`) – A human-friendly equivalent of the name
 
 * **Returns**
 

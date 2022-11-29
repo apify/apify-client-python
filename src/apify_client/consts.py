@@ -71,17 +71,17 @@ class WebhookEventType(str, Enum):
 class MetaOrigin(str, Enum):
     """Possible origins for actor runs, i.e. how were the jobs started."""
 
-    # Job started from Developer console in Source section of actor
+    #: Job started from Developer console in Source section of actor
     DEVELOPMENT = 'DEVELOPMENT'
-    # Job started from other place on the website (either console or task detail page)
+    #: Job started from other place on the website (either console or task detail page)
     WEB = 'WEB'
-    # Job started through API
+    #: Job started through API
     API = 'API'
-    # Job started through Scheduler
+    #: Job started through Scheduler
     SCHEDULER = 'SCHEDULER'
-    # Job started through test actor page
+    #: Job started through test actor page
     TEST = 'TEST'
-    # Job started by the webhook
+    #: Job started by the webhook
     WEBHOOK = 'WEBHOOK'
-    # Job started by another actor run
+    #: Job started by another actor run
     ACTOR = 'ACTOR'

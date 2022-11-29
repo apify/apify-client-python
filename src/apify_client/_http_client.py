@@ -33,10 +33,11 @@ class _BaseHTTPClient:
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.timeout_secs = timeout_secs
 
-        # todo compare to os.getenv, check whether setting header to None is ok or not
-        workflow_key = {'X-Apify-Workflow-Key': os.environ['APIFY_WORKFLOW_KEY']} if 'APIFY_WORKFLOW_KEY' in os.environ else {}
+        headers = {'Accept': 'application/json, */*'}
 
-        headers = {'Accept': 'application/json, */*', **workflow_key}
+        workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
+        if workflow_key is not None:
+            headers['X-Apify-Workflow-Key'] = workflow_key
 
         is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])

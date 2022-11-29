@@ -6095,3 +6095,53 @@ The actor build was aborted
 ### [](#metaorigin) MetaOrigin
 
 Possible origins for actor runs, i.e. how were the jobs started.
+
+* [DEVELOPMENT](#metaorigin-development)
+* [WEB](#metaorigin-web)
+* [API](#metaorigin-api)
+* [SCHEDULER](#metaorigin-scheduler)
+* [TEST](#metaorigin-test)
+* [WEBHOOK](#metaorigin-webhook)
+* [ACTOR](#metaorigin-actor)
+
+***
+
+#### [](#metaorigin-development) `MetaOrigin.DEVELOPMENT`
+
+Job started from Developer console in Source section of actor
+
+***
+
+#### [](#metaorigin-web) `MetaOrigin.WEB`
+
+Job started from other place on the website (either console or task detail page)
+
+***
+
+#### [](#metaorigin-api) `MetaOrigin.API`
+
+Job started through API
+
+***
+
+#### [](#metaorigin-scheduler) `MetaOrigin.SCHEDULER`
+
+Job started through Scheduler
+
+***
+
+#### [](#metaorigin-test) `MetaOrigin.TEST`
+
+Job started through test actor page
+
+***
+
+#### [](#metaorigin-webhook) `MetaOrigin.WEBHOOK`
+
+Job started by the webhook
+
+***
+
+#### [](#metaorigin-actor) `MetaOrigin.ACTOR`
+
+Job started by another actor run

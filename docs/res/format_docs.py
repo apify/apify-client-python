@@ -51,13 +51,14 @@ with open('api_reference.md', 'r+') as api_reference:
         if match is not None:
             current_class = match.group(1)
 
-        match = re.match(r'#### (\w+)\([^: ]', line)
+        match = re.match(r'#### (async )?(\w+)\([^: ]', line)
         if match is not None:
-            method = match.group(1)
-            method = re.sub('_', '\\_', method)
+            is_async = match.group(1) is not None
+            method_name = match.group(2)
+            method_name = re.sub('_', '\\_', method_name)
             if current_class not in toc_methods:
                 toc_methods[current_class] = []
-            toc_methods[current_class].append(method)
+            toc_methods[current_class].append((method_name, is_async))
 
         match = re.match(r'#### (\w+)\( =', line)
         if match is not None:
@@ -137,8 +138,9 @@ with open('api_reference.md', 'r+') as api_reference:
                     transformed_lines.append('')
 
                 if current_class in toc_methods:
-                    for method in toc_methods[current_class]:
-                        transformed_lines.append(f'* [{method}()](#{current_class.lower()}-{method.lower()})')
+                    for (method_name, is_async) in toc_methods[current_class]:
+                        async_prefix = 'async ' if is_async else ''
+                        transformed_lines.append(f'* [{async_prefix}{method_name}()](#{current_class.lower()}-{method_name.lower()})')
                     transformed_lines.append('')
 
                 if current_class in toc_enum_items:
@@ -168,11 +170,16 @@ with open('api_reference.md', 'r+') as api_reference:
                 line = re.sub(r'### class', f'### [](#{current_class.lower()})', line)
 
             # Add special fragment link marker to each function header (will get used in Apify docs to display "Copy link" link)
-            match = re.match(r'#### (\w+)\([^: ]', line)
+            match = re.match(r'#### (async )?(\w+)\([^: ]', line)
             if match is not None:
-                method = match.group(1)
+                is_async = match.group(1) is not None
+                method_name = match.group(2)
                 line = re.sub(r'(#### .*)\\\*(.*)', r'\1*\2', line)
-                line = re.sub(r'#### (\w+)(\([^)]*\))', f'#### [](#{current_class.lower()}-{method.lower()}) `{current_class}.\\1\\2`', line)
+                line = re.sub(
+                    r'#### (async )?(\w+)(\([^)]*\))',
+                    f'#### [](#{current_class.lower()}-{method_name.lower()}) `\\1{current_class}.\\2\\3`',
+                    line,
+                )
 
             # Add special fragment link marker to each enum item header (will get used in Apify docs to display "Copy link" link)
             match = re.match(r'#### (\w+)\( =', line)

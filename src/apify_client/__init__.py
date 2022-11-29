@@ -1,4 +1,4 @@
 from ._version import __version__
-from .client import ApifyClient
+from .client import ApifyClient, ApifyClientAsync
 
-__all__ = ['ApifyClient', '__version__']
+__all__ = ['ApifyClient', 'ApifyClientAsync', '__version__']

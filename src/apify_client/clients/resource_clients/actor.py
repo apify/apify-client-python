@@ -4,18 +4,19 @@ from ..._utils import (
     _encode_key_value_store_record_value,
     _encode_webhook_list_to_base64,
     _filter_out_none_values_recursively,
+    _make_async_docs,
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
 )
 from ...consts import ActorJobStatus
-from ..base import ResourceClient
-from .actor_version import ActorVersionClient
-from .actor_version_collection import ActorVersionCollectionClient
-from .build_collection import BuildCollectionClient
-from .run import RunClient
-from .run_collection import RunCollectionClient
-from .webhook_collection import WebhookCollectionClient
+from ..base import ResourceClient, ResourceClientAsync
+from .actor_version import ActorVersionClient, ActorVersionClientAsync
+from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
+from .build_collection import BuildCollectionClient, BuildCollectionClientAsync
+from .run import RunClient, RunClientAsync
+from .run_collection import RunCollectionClient, RunCollectionClientAsync
+from .webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
 
 
 def _get_actor_representation(
@@ -342,3 +343,171 @@ class ActorClient(ResourceClient):
     def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
+
+
+class ActorClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating a single actor."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the ActorClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'acts')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=ActorClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=ActorClient.update)
+    async def update(
+        self,
+        *,
+        name: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        seo_title: Optional[str] = None,
+        seo_description: Optional[str] = None,
+        versions: Optional[List[Dict]] = None,
+        restart_on_error: Optional[bool] = None,
+        is_public: Optional[bool] = None,
+        is_deprecated: Optional[bool] = None,
+        is_anonymously_runnable: Optional[bool] = None,
+        categories: Optional[List[str]] = None,
+        default_run_build: Optional[str] = None,
+        default_run_memory_mbytes: Optional[int] = None,
+        default_run_timeout_secs: Optional[int] = None,
+        example_run_input_body: Optional[Any] = None,
+        example_run_input_content_type: Optional[str] = None,
+    ) -> Dict:
+        actor_representation = _get_actor_representation(
+            name=name,
+            title=title,
+            description=description,
+            seo_title=seo_title,
+            seo_description=seo_description,
+            versions=versions,
+            restart_on_error=restart_on_error,
+            is_public=is_public,
+            is_deprecated=is_deprecated,
+            is_anonymously_runnable=is_anonymously_runnable,
+            categories=categories,
+            default_run_build=default_run_build,
+            default_run_memory_mbytes=default_run_memory_mbytes,
+            default_run_timeout_secs=default_run_timeout_secs,
+            example_run_input_body=example_run_input_body,
+            example_run_input_content_type=example_run_input_content_type,
+        )
+
+        return await self._update(_filter_out_none_values_recursively(actor_representation))
+
+    @_make_async_docs(src=ActorClient.delete)
+    async def delete(self) -> None:
+        return await self._delete()
+
+    @_make_async_docs(src=ActorClient.start)
+    async def start(
+        self,
+        *,
+        run_input: Optional[Any] = None,
+        content_type: Optional[str] = None,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+        wait_for_finish: Optional[int] = None,
+        webhooks: Optional[List[Dict]] = None,
+    ) -> Dict:
+        run_input, content_type = _encode_key_value_store_record_value(run_input, content_type)
+
+        request_params = self._params(
+            build=build,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+            waitForFinish=wait_for_finish,
+            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('runs'),
+            method='POST',
+            headers={'content-type': content_type},
+            data=run_input,
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=ActorClient.call)
+    async def call(
+        self,
+        *,
+        run_input: Optional[Any] = None,
+        content_type: Optional[str] = None,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+        webhooks: Optional[List[Dict]] = None,
+        wait_secs: Optional[int] = None,
+    ) -> Optional[Dict]:
+        started_run = await self.start(
+            run_input=run_input,
+            content_type=content_type,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+            webhooks=webhooks,
+        )
+
+        return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+
+    @_make_async_docs(src=ActorClient.build)
+    async def build(
+        self,
+        *,
+        version_number: str,
+        beta_packages: Optional[bool] = None,
+        tag: Optional[str] = None,
+        use_cache: Optional[bool] = None,
+        wait_for_finish: Optional[int] = None,
+    ) -> Dict:
+        request_params = self._params(
+            version=version_number,
+            betaPackages=beta_packages,
+            tag=tag,
+            useCache=use_cache,
+            waitForFinish=wait_for_finish,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('builds'),
+            method='POST',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=ActorClient.builds)
+    def builds(self) -> BuildCollectionClientAsync:
+        return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))
+
+    @_make_async_docs(src=ActorClient.runs)
+    def runs(self) -> RunCollectionClientAsync:
+        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
+
+    @_make_async_docs(src=ActorClient.last_run)
+    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClientAsync:
+        return RunClientAsync(**self._sub_resource_init_options(
+            resource_id='last',
+            resource_path='runs',
+            params=self._params(status=_maybe_extract_enum_member_value(status)),
+        ))
+
+    @_make_async_docs(src=ActorClient.versions)
+    def versions(self) -> ActorVersionCollectionClientAsync:
+        return ActorVersionCollectionClientAsync(**self._sub_resource_init_options())
+
+    @_make_async_docs(src=ActorClient.version)
+    def version(self, version_number: str) -> ActorVersionClientAsync:
+        return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))
+
+    @_make_async_docs(src=ActorClient.webhooks)
+    def webhooks(self) -> WebhookCollectionClientAsync:
+        return WebhookCollectionClientAsync(**self._sub_resource_init_options())

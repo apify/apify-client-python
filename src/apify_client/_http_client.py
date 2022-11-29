@@ -3,20 +3,20 @@ import json as jsonlib
 import os
 import sys
 from http import HTTPStatus
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import httpx
 
 from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
 from ._types import JSONSerializable
-from ._utils import _is_content_type_json, _is_content_type_text, _is_content_type_xml, _retry_with_exp_backoff
+from ._utils import _is_content_type_json, _is_content_type_text, _is_content_type_xml, _retry_with_exp_backoff, _retry_with_exp_backoff_async
 from ._version import __version__
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
 
 
-class _HTTPClient:
+class _BaseHTTPClient:
     def __init__(
         self,
         *,
@@ -41,85 +41,7 @@ class _HTTPClient:
             headers['Authorization'] = f'Bearer {token}'
 
         self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
-
-    def call(
-        self,
-        *,
-        method: str,
-        url: str,
-        headers: Optional[Dict] = None,
-        params: Optional[Dict] = None,
-        data: Optional[Any] = None,
-        json: Optional[JSONSerializable] = None,
-        stream: Optional[bool] = None,
-        parse_response: Optional[bool] = True,
-    ) -> httpx.Response:
-        if stream and parse_response:
-            raise ValueError('Cannot stream response and parse it at the same time!')
-
-        if json and data:
-            raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
-
-        request_params = self._parse_params(params)
-        httpx_client = self.httpx_client
-
-        if not headers:
-            headers = {}
-
-        # dump JSON data to string, so they can be gzipped
-        if json:
-            data = jsonlib.dumps(json, ensure_ascii=False, default=str).encode('utf-8')
-            headers['Content-Type'] = 'application/json'
-
-        if isinstance(data, (str, bytes, bytearray)):
-            if isinstance(data, str):
-                data = data.encode('utf-8')
-            data = gzip.compress(data)
-            headers['Content-Encoding'] = 'gzip'
-
-        # httpx uses `content` instead of `data` for binary content, let's rename it here to be clear about it
-        content = data
-
-        def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
-            try:
-                request = httpx_client.build_request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    params=request_params,
-                    content=content,
-                )
-                response = httpx_client.send(
-                    request=request,
-                    stream=stream or False,
-                )
-
-                if response.status_code < 300:
-                    if not stream:
-                        if parse_response:
-                            _maybe_parsed_body = self._maybe_parse_response(response)
-                        else:
-                            _maybe_parsed_body = response.content
-                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
-
-                    return response
-
-            except Exception as e:
-                if not _is_retryable_error(e):
-                    stop_retrying()
-                raise e
-
-            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
-                stop_retrying()
-            raise ApifyApiError(response, attempt)
-
-        return _retry_with_exp_backoff(
-            _make_request,
-            max_retries=self.max_retries,
-            backoff_base_millis=self.min_delay_between_retries_millis,
-            backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
-            random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
-        )
+        self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
 
     @staticmethod
     def _maybe_parse_response(response: httpx.Response) -> Any:
@@ -154,3 +76,163 @@ class _HTTPClient:
                 parsed_params[key] = value
 
         return parsed_params
+
+    def _prepare_request_call(
+        self,
+        headers: Optional[Dict] = None,
+        params: Optional[Dict] = None,
+        data: Optional[Any] = None,
+        json: Optional[JSONSerializable] = None,
+    ) -> Tuple[Dict, Optional[Dict], Any]:
+        if json and data:
+            raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
+
+        if not headers:
+            headers = {}
+
+        # dump JSON data to string, so they can be gzipped
+        if json:
+            data = jsonlib.dumps(json, ensure_ascii=False, default=str).encode('utf-8')
+            headers['Content-Type'] = 'application/json'
+
+        if isinstance(data, (str, bytes, bytearray)):
+            if isinstance(data, str):
+                data = data.encode('utf-8')
+            data = gzip.compress(data)
+            headers['Content-Encoding'] = 'gzip'
+
+        return (
+            headers,
+            self._parse_params(params),
+            data,
+        )
+
+
+class _HTTPClient(_BaseHTTPClient):
+    def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: Optional[Dict] = None,
+        params: Optional[Dict] = None,
+        data: Optional[Any] = None,
+        json: Optional[JSONSerializable] = None,
+        stream: Optional[bool] = None,
+        parse_response: Optional[bool] = True,
+    ) -> httpx.Response:
+        if stream and parse_response:
+            raise ValueError('Cannot stream response and parse it at the same time!')
+
+        headers, params, content = self._prepare_request_call(headers, params, data, json)
+
+        httpx_client = self.httpx_client
+
+        def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
+            try:
+                request = httpx_client.build_request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    params=params,
+                    content=content,
+                )
+                response = httpx_client.send(
+                    request=request,
+                    stream=stream or False,
+                )
+
+                # If response status is < 300, the request was successful, and we can return the result
+                if response.status_code < 300:
+                    if not stream:
+                        if parse_response:
+                            _maybe_parsed_body = self._maybe_parse_response(response)
+                        else:
+                            _maybe_parsed_body = response.content
+                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
+
+                    return response
+
+            except Exception as e:
+                if not _is_retryable_error(e):
+                    stop_retrying()
+                raise e
+
+            # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
+            # and also retry rate limited requests that throw 429 Too Many Requests errors
+            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+                stop_retrying()
+            raise ApifyApiError(response, attempt)
+
+        return _retry_with_exp_backoff(
+            _make_request,
+            max_retries=self.max_retries,
+            backoff_base_millis=self.min_delay_between_retries_millis,
+            backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
+            random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
+        )
+
+
+class _HTTPClientAsync(_BaseHTTPClient):
+    async def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: Optional[Dict] = None,
+        params: Optional[Dict] = None,
+        data: Optional[Any] = None,
+        json: Optional[JSONSerializable] = None,
+        stream: Optional[bool] = None,
+        parse_response: Optional[bool] = True,
+    ) -> httpx.Response:
+        if stream and parse_response:
+            raise ValueError('Cannot stream response and parse it at the same time!')
+
+        headers, params, content = self._prepare_request_call(headers, params, data, json)
+
+        httpx_async_client = self.httpx_async_client
+
+        async def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
+            try:
+                request = httpx_async_client.build_request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    params=params,
+                    content=content,
+                )
+                response = await httpx_async_client.send(
+                    request=request,
+                    stream=stream or False,
+                )
+
+                # If response status is < 300, the request was successful, and we can return the result
+                if response.status_code < 300:
+                    if not stream:
+                        if parse_response:
+                            _maybe_parsed_body = self._maybe_parse_response(response)
+                        else:
+                            _maybe_parsed_body = response.content
+                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
+
+                    return response
+
+            except Exception as e:
+                if not _is_retryable_error(e):
+                    stop_retrying()
+                raise e
+
+            # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
+            # and also retry rate limited requests that throw 429 Too Many Requests errors
+            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+                stop_retrying()
+            raise ApifyApiError(response, attempt)
+
+        return await _retry_with_exp_backoff_async(
+            _make_request,
+            max_retries=self.max_retries,
+            backoff_base_millis=self.min_delay_between_retries_millis,
+            backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
+            random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
+        )

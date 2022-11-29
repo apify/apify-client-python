@@ -1,11 +1,18 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _encode_key_value_store_record_value, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, _to_safe_id
-from ..base import ActorJobBaseClient
-from .dataset import DatasetClient
-from .key_value_store import KeyValueStoreClient
-from .log import LogClient
-from .request_queue import RequestQueueClient
+from ..._utils import (
+    _encode_key_value_store_record_value,
+    _filter_out_none_values_recursively,
+    _make_async_docs,
+    _parse_date_fields,
+    _pluck_data,
+    _to_safe_id,
+)
+from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
+from .dataset import DatasetClient, DatasetClientAsync
+from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
+from .log import LogClient, LogClientAsync
+from .request_queue import RequestQueueClient, RequestQueueClientAsync
 
 
 class RunClient(ActorJobBaseClient):
@@ -175,5 +182,96 @@ class RunClient(ActorJobBaseClient):
             LogClient: A client allowing access to the log of this actor run.
         """
         return LogClient(
+            **self._sub_resource_init_options(resource_path='log'),
+        )
+
+
+class RunClientAsync(ActorJobBaseClientAsync):
+    """Async sub-client for manipulating a single actor run."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the RunClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'actor-runs')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=RunClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=RunClient.update)
+    async def update(self, *, status_message: Optional[str] = None) -> Dict:
+        updated_fields = {
+            'statusMessage': status_message,
+        }
+
+        return await self._update(_filter_out_none_values_recursively(updated_fields))
+
+    @_make_async_docs(src=RunClient.abort)
+    async def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
+        return await self._abort(gracefully=gracefully)
+
+    @_make_async_docs(src=RunClient.wait_for_finish)
+    async def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
+        return await self._wait_for_finish(wait_secs=wait_secs)
+
+    @_make_async_docs(src=RunClient.metamorph)
+    async def metamorph(
+        self,
+        *,
+        target_actor_id: str,
+        target_actor_build: Optional[str] = None,
+        run_input: Optional[Any] = None,
+        content_type: Optional[str] = None,
+    ) -> Dict:
+        run_input, content_type = _encode_key_value_store_record_value(run_input, content_type)
+
+        safe_target_actor_id = _to_safe_id(target_actor_id)
+
+        request_params = self._params(
+            targetActorId=safe_target_actor_id,
+            build=target_actor_build,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('metamorph'),
+            method='POST',
+            headers={'content-type': content_type},
+            data=run_input,
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=RunClient.resurrect)
+    async def resurrect(self) -> Dict:
+        response = await self.http_client.call(
+            url=self._url('resurrect'),
+            method='POST',
+            params=self._params(),
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    @_make_async_docs(src=RunClient.dataset)
+    def dataset(self) -> DatasetClientAsync:
+        return DatasetClientAsync(
+            **self._sub_resource_init_options(resource_path='dataset'),
+        )
+
+    @_make_async_docs(src=RunClient.key_value_store)
+    def key_value_store(self) -> KeyValueStoreClientAsync:
+        return KeyValueStoreClientAsync(
+            **self._sub_resource_init_options(resource_path='key-value-store'),
+        )
+
+    @_make_async_docs(src=RunClient.request_queue)
+    def request_queue(self) -> RequestQueueClientAsync:
+        return RequestQueueClientAsync(
+            **self._sub_resource_init_options(resource_path='request-queue'),
+        )
+
+    @_make_async_docs(src=RunClient.log)
+    def log(self) -> LogClientAsync:
+        return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
         )

@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data
-from .base_client import BaseClient
+from .base_client import BaseClient, BaseClientAsync
 
 
 class ResourceClient(BaseClient):
@@ -36,6 +36,46 @@ class ResourceClient(BaseClient):
     def _delete(self) -> None:
         try:
             self.http_client.call(
+                url=self._url(),
+                method='DELETE',
+                params=self._params(),
+            )
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+
+class ResourceClientAsync(BaseClientAsync):
+    """Base class for async sub-clients manipulating a single resource."""
+
+    async def _get(self) -> Optional[Dict]:
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self._params(),
+            )
+
+            return _parse_date_fields(_pluck_data(response.json()))
+
+        except ApifyApiError as exc:
+            _catch_not_found_or_throw(exc)
+
+        return None
+
+    async def _update(self, updated_fields: Dict) -> Dict:
+        response = await self.http_client.call(
+            url=self._url(),
+            method='PUT',
+            params=self._params(),
+            json=updated_fields,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    async def _delete(self) -> None:
+        try:
+            await self.http_client.call(
                 url=self._url(),
                 method='DELETE',
                 params=self._params(),

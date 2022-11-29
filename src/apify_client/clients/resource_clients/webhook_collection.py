@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Optional
 
 from apify_client.consts import WebhookEventType
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .webhook import _get_webhook_representation
 
 
@@ -88,3 +88,52 @@ class WebhookCollectionClient(ResourceCollectionClient):
         )
 
         return self._create(_filter_out_none_values_recursively(webhook_representation))
+
+
+class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating webhooks."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the WebhookCollectionClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'webhooks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=WebhookCollectionClient.list)
+    async def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(limit=limit, offset=offset, desc=desc)
+
+    @_make_async_docs(src=WebhookCollectionClient.create)
+    async def create(
+        self,
+        *,
+        event_types: List[WebhookEventType],
+        request_url: str,
+        payload_template: Optional[str] = None,
+        actor_id: Optional[str] = None,
+        actor_task_id: Optional[str] = None,
+        actor_run_id: Optional[str] = None,
+        ignore_ssl_errors: Optional[bool] = None,
+        do_not_retry: Optional[bool] = None,
+        idempotency_key: Optional[str] = None,
+        is_ad_hoc: Optional[bool] = None,
+    ) -> Dict:
+        webhook_representation = _get_webhook_representation(
+            event_types=event_types,
+            request_url=request_url,
+            payload_template=payload_template,
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+            ignore_ssl_errors=ignore_ssl_errors,
+            do_not_retry=do_not_retry,
+            idempotency_key=idempotency_key,
+            is_ad_hoc=is_ad_hoc,
+        )
+
+        return await self._create(_filter_out_none_values_recursively(webhook_representation))

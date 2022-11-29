@@ -1,37 +1,60 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
-from ._http_client import _HTTPClient
+from ._http_client import _HTTPClient, _HTTPClientAsync
+from ._utils import _make_async_docs
 from .clients import (
     ActorClient,
+    ActorClientAsync,
     ActorCollectionClient,
+    ActorCollectionClientAsync,
     BuildClient,
+    BuildClientAsync,
     BuildCollectionClient,
+    BuildCollectionClientAsync,
     DatasetClient,
+    DatasetClientAsync,
     DatasetCollectionClient,
+    DatasetCollectionClientAsync,
     KeyValueStoreClient,
+    KeyValueStoreClientAsync,
     KeyValueStoreCollectionClient,
+    KeyValueStoreCollectionClientAsync,
     LogClient,
+    LogClientAsync,
     RequestQueueClient,
+    RequestQueueClientAsync,
     RequestQueueCollectionClient,
+    RequestQueueCollectionClientAsync,
     RunClient,
+    RunClientAsync,
     RunCollectionClient,
+    RunCollectionClientAsync,
     ScheduleClient,
+    ScheduleClientAsync,
     ScheduleCollectionClient,
+    ScheduleCollectionClientAsync,
     TaskClient,
+    TaskClientAsync,
     TaskCollectionClient,
+    TaskCollectionClientAsync,
     UserClient,
+    UserClientAsync,
     WebhookClient,
+    WebhookClientAsync,
     WebhookCollectionClient,
+    WebhookCollectionClientAsync,
     WebhookDispatchClient,
+    WebhookDispatchClientAsync,
     WebhookDispatchCollectionClient,
+    WebhookDispatchCollectionClientAsync,
 )
 
 DEFAULT_API_URL = 'https://api.apify.com'
 API_VERSION = 'v2'
 
 
-class ApifyClient:
-    """The Apify API client."""
+class _BaseApifyClient:
+    http_client: Union[_HTTPClient, _HTTPClientAsync]
 
     def __init__(
         self,
@@ -59,21 +82,52 @@ class ApifyClient:
         self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
         self.timeout_secs = timeout_secs or 360
 
-        self.http_client = _HTTPClient(
-            token=token,
-            max_retries=self.max_retries,
-            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
-            timeout_secs=self.timeout_secs,
-        )
-        # TODO statistics
-        # TODO logger
-
     def _options(self) -> Dict:
         return {
             'root_client': self,
             'base_url': self.base_url,
             'http_client': self.http_client,
         }
+
+
+class ApifyClient(_BaseApifyClient):
+    """The Apify API client."""
+
+    http_client: _HTTPClient
+
+    def __init__(
+        self,
+        token: Optional[str] = None,
+        *,
+        api_url: Optional[str] = None,
+        max_retries: Optional[int] = 8,
+        min_delay_between_retries_millis: Optional[int] = 500,
+        timeout_secs: Optional[int] = 360,
+    ):
+        """Initialize the ApifyClient.
+
+        Args:
+            token (str, optional): The Apify API token
+            api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
+            max_retries (int, optional): How many times to retry a failed request at most
+            min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
+                (increases exponentially from this value)
+            timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
+        """
+        super().__init__(
+            token,
+            api_url=api_url,
+            max_retries=max_retries,
+            min_delay_between_retries_millis=min_delay_between_retries_millis,
+            timeout_secs=timeout_secs,
+        )
+
+        self.http_client = _HTTPClient(
+            token=token,
+            max_retries=self.max_retries,
+            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
+            timeout_secs=self.timeout_secs,
+        )
 
     def actor(self, actor_id: str) -> ActorClient:
         """Retrieve the sub-client for manipulating a single actor.
@@ -211,3 +265,122 @@ class ApifyClient:
             user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
         """
         return UserClient(resource_id=user_id, **self._options())
+
+
+class ApifyClientAsync(_BaseApifyClient):
+    """The asynchronous version of the Apify API client."""
+
+    http_client: _HTTPClientAsync
+
+    @_make_async_docs(src=ApifyClient.__init__)
+    def __init__(
+        self,
+        token: Optional[str] = None,
+        *,
+        api_url: Optional[str] = None,
+        max_retries: Optional[int] = 8,
+        min_delay_between_retries_millis: Optional[int] = 500,
+        timeout_secs: Optional[int] = 360,
+    ):
+        super().__init__(
+            token,
+            api_url=api_url,
+            max_retries=max_retries,
+            min_delay_between_retries_millis=min_delay_between_retries_millis,
+            timeout_secs=timeout_secs,
+        )
+
+        self.http_client = _HTTPClientAsync(
+            token=token,
+            max_retries=self.max_retries,
+            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
+            timeout_secs=self.timeout_secs,
+        )
+
+    @_make_async_docs(src=ApifyClient.actor)
+    def actor(self, actor_id: str) -> ActorClientAsync:
+        return ActorClientAsync(resource_id=actor_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.actors)
+    def actors(self) -> ActorCollectionClientAsync:
+        return ActorCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.build)
+    def build(self, build_id: str) -> BuildClientAsync:
+        return BuildClientAsync(resource_id=build_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.builds)
+    def builds(self) -> BuildCollectionClientAsync:
+        return BuildCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.run)
+    def run(self, run_id: str) -> RunClientAsync:
+        return RunClientAsync(resource_id=run_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.runs)
+    def runs(self) -> RunCollectionClientAsync:
+        return RunCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.dataset)
+    def dataset(self, dataset_id: str) -> DatasetClientAsync:
+        return DatasetClientAsync(resource_id=dataset_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.datasets)
+    def datasets(self) -> DatasetCollectionClientAsync:
+        return DatasetCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.key_value_store)
+    def key_value_store(self, key_value_store_id: str) -> KeyValueStoreClientAsync:
+        return KeyValueStoreClientAsync(resource_id=key_value_store_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.key_value_stores)
+    def key_value_stores(self) -> KeyValueStoreCollectionClientAsync:
+        return KeyValueStoreCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.request_queue)
+    def request_queue(self, request_queue_id: str, *, client_key: Optional[str] = None) -> RequestQueueClientAsync:
+        return RequestQueueClientAsync(resource_id=request_queue_id, client_key=client_key, **self._options())
+
+    @_make_async_docs(src=ApifyClient.request_queues)
+    def request_queues(self) -> RequestQueueCollectionClientAsync:
+        return RequestQueueCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.webhook)
+    def webhook(self, webhook_id: str) -> WebhookClientAsync:
+        return WebhookClientAsync(resource_id=webhook_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.webhooks)
+    def webhooks(self) -> WebhookCollectionClientAsync:
+        return WebhookCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.webhook_dispatch)
+    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClientAsync:
+        return WebhookDispatchClientAsync(resource_id=webhook_dispatch_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.webhook_dispatches)
+    def webhook_dispatches(self) -> WebhookDispatchCollectionClientAsync:
+        return WebhookDispatchCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.schedule)
+    def schedule(self, schedule_id: str) -> ScheduleClientAsync:
+        return ScheduleClientAsync(resource_id=schedule_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.schedules)
+    def schedules(self) -> ScheduleCollectionClientAsync:
+        return ScheduleCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.log)
+    def log(self, build_or_run_id: str) -> LogClientAsync:
+        return LogClientAsync(resource_id=build_or_run_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.task)
+    def task(self, task_id: str) -> TaskClientAsync:
+        return TaskClientAsync(resource_id=task_id, **self._options())
+
+    @_make_async_docs(src=ApifyClient.tasks)
+    def tasks(self) -> TaskCollectionClientAsync:
+        return TaskCollectionClientAsync(**self._options())
+
+    @_make_async_docs(src=ApifyClient.user)
+    def user(self, user_id: Optional[str] = None) -> UserClientAsync:
+        return UserClientAsync(resource_id=user_id, **self._options())

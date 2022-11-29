@@ -54,6 +54,11 @@ By default, it will retry up to 8 times. First retry will be attempted after ~50
 and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries_millis`
 options of the `ApifyClient` constructor.
 
+### Support for asynchronous usage
+
+Starting with version 0.7.0, the package offers an asynchronous version of the client, [`ApifyClientAsync`](#ApifyClientAsync),
+which allows you to work with the Apify API in an asynchronous way, using the standard `async`/`await` syntax.
+
 ### Convenience functions and options
 
 Some actions can't be performed by the API itself, such as indefinite waiting for an actor run to finish
@@ -157,4 +162,26 @@ with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
     if log_stream:
         for line in log_stream.iter_lines():
             print(line, end='')
+```
+
+### Asynchronous usage
+
+To use the asynchronous [`ApifyClientAsync`](#ApifyClientAsync) in your async code,
+you can use the standard `async`/`await` syntax [offered by Python](https://docs.python.org/3/library/asyncio-task.html).
+
+For example, to run an actor and asynchronously stream its log while it's running, you can use this snippet:
+
+```python
+from apify_client import ApifyClientAsync
+apify_client_async = ApifyClientAsync('MY-APIFY-TOKEN')
+
+async def main():
+    run = await apify_client_async.actor('my-actor').start()
+
+    async with apify_client_async.run(run['id']).log().stream() as async_log_stream:
+        if async_log_stream:
+            async for line in async_log_stream.aiter_lines():
+                print(line, end='')
+
+asyncio.run(main())
 ```

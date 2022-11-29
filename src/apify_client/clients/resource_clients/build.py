@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
-from ..base import ActorJobBaseClient
+from ..._utils import _make_async_docs
+from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 
 
 class BuildClient(ActorJobBaseClient):
@@ -42,3 +43,24 @@ class BuildClient(ActorJobBaseClient):
                 (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return self._wait_for_finish(wait_secs=wait_secs)
+
+
+class BuildClientAsync(ActorJobBaseClientAsync):
+    """Async sub-client for manipulating a single actor build."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the BuildClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'actor-builds')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=BuildClient.get)
+    async def get(self) -> Optional[Dict]:
+        return await self._get()
+
+    @_make_async_docs(src=BuildClient.abort)
+    async def abort(self) -> Dict:
+        return await self._abort()
+
+    @_make_async_docs(src=BuildClient.wait_for_finish)
+    async def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
+        return await self._wait_for_finish(wait_secs=wait_secs)

@@ -1,7 +1,7 @@
 from typing import Any, Optional
 
-from ..._utils import ListPage
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class BuildCollectionClient(ResourceCollectionClient):
@@ -33,3 +33,22 @@ class BuildCollectionClient(ResourceCollectionClient):
             ListPage: The retrieved actor builds
         """
         return self._list(limit=limit, offset=offset, desc=desc)
+
+
+class BuildCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for listing actor builds."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the BuildCollectionClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'actor-builds')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=BuildCollectionClient.list)
+    async def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(limit=limit, offset=offset, desc=desc)

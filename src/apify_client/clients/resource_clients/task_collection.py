@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
-from ..base import ResourceCollectionClient
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
+from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .task import _get_task_representation
 
 
@@ -71,3 +71,44 @@ class TaskCollectionClient(ResourceCollectionClient):
         )
 
         return self._create(_filter_out_none_values_recursively(task_representation))
+
+
+class TaskCollectionClientAsync(ResourceCollectionClientAsync):
+    """Async sub-client for manipulating tasks."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the TaskCollectionClientAsync."""
+        resource_path = kwargs.pop('resource_path', 'actor-tasks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    @_make_async_docs(src=TaskCollectionClient.list)
+    async def list(
+        self,
+        *,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        desc: Optional[bool] = None,
+    ) -> ListPage:
+        return await self._list(limit=limit, offset=offset, desc=desc)
+
+    @_make_async_docs(src=TaskCollectionClient.create)
+    async def create(
+        self,
+        *,
+        actor_id: str,
+        name: str,
+        build: Optional[str] = None,
+        timeout_secs: Optional[int] = None,
+        memory_mbytes: Optional[int] = None,
+        task_input: Optional[Dict] = None,
+    ) -> Dict:
+        task_representation = _get_task_representation(
+            actor_id=actor_id,
+            name=name,
+            task_input=task_input,
+            build=build,
+            memory_mbytes=memory_mbytes,
+            timeout_secs=timeout_secs,
+        )
+
+        return await self._create(_filter_out_none_values_recursively(task_representation))

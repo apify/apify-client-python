@@ -142,6 +142,7 @@ class _HTTPClient(_BaseHTTPClient):
                     stream=stream or False,
                 )
 
+                # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:
                     if not stream:
                         if parse_response:
@@ -206,6 +207,7 @@ class _HTTPClientAsync(_BaseHTTPClient):
                     stream=stream or False,
                 )
 
+                # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:
                     if not stream:
                         if parse_response:

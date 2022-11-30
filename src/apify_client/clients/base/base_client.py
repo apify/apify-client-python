@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from ..._http_client import _HTTPClient, _HTTPClientAsync
+from ..._logging import _WithLogDetailsClient
 from ..._utils import _make_async_docs, _to_safe_id
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
@@ -10,7 +11,8 @@ if TYPE_CHECKING:
     from ...client import ApifyClient, ApifyClientAsync
 
 
-class _BaseBaseClient:
+class _BaseBaseClient(metaclass=_WithLogDetailsClient):
+    resource_id: Optional[str]
     url: str
     params: Dict
     http_client: Union[_HTTPClient, _HTTPClientAsync]

@@ -18,6 +18,12 @@ Changelog
 - added method to update status message for a run
 - added option to set up webhooks for actor builds
 - added logger with basic debugging info
+- added support for `schema` parameter in `getOrCreate` method for datasets and key-value stores
+- added support for `title` parameter in task and schedule methods
+- added `x-apify-workflow-key` header support
+- added support for `flatten` and `view` parameters in dataset items methods
+- added support for `origin` parameter in actor/task run methods
+- added clients for actor version environment variables
 
 ### Internal changes
 

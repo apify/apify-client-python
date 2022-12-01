@@ -19,6 +19,10 @@ Changelog
 - added option to set up webhooks for actor builds
 - added logger with basic debugging info
 
+### Fixed
+
+- disallowed `NaN` and `Infinity` values in JSONs sent to the Apify API
+
 ### Internal changes
 
 - simplified retrying with exponential backoff

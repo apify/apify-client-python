@@ -63,6 +63,8 @@ class DatasetClient(ResourceClient):
         unwind: Optional[str] = None,
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
+        flatten: Optional[List[str]] = None,
+        view: Optional[str] = None,
     ) -> ListPage:
         """List the items of the dataset.
 
@@ -89,6 +91,8 @@ class DatasetClient(ResourceClient):
             skip_empty (bool, optional): If True, then empty items are skipped from the output.
                 Note that if used, the results might contain less items than the limit value.
             skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+            flatten (list of str, optional): A list of fields that should be flattened
+            view (str, optional): Name of the dataset view to be used
 
         Returns:
             ListPage: A page of the list of dataset items according to the specified filters.
@@ -103,6 +107,8 @@ class DatasetClient(ResourceClient):
             unwind=unwind,
             skipEmpty=skip_empty,
             skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
         )
 
         response = self.http_client.call(
@@ -216,6 +222,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
+        flatten: Optional[List[str]] = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -254,6 +261,7 @@ class DatasetClient(ResourceClient):
             xml_root (str, optional): Overrides default root element name of xml output. By default the root element is items.
             xml_row (str, optional): Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            flatten (list of str, optional): A list of fields that should be flattened
 
         Returns:
             bytes: The dataset items as raw bytes
@@ -284,6 +292,7 @@ class DatasetClient(ResourceClient):
             skip_hidden=skip_hidden,
             xml_root=xml_root,
             xml_row=xml_row,
+            flatten=flatten,
         )
 
     def get_items_as_bytes(
@@ -304,6 +313,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
+        flatten: Optional[List[str]] = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -340,6 +350,7 @@ class DatasetClient(ResourceClient):
             xml_root (str, optional): Overrides default root element name of xml output. By default the root element is items.
             xml_row (str, optional): Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            flatten (list of str, optional): A list of fields that should be flattened
 
         Returns:
             bytes: The dataset items as raw bytes
@@ -360,6 +371,7 @@ class DatasetClient(ResourceClient):
             skipHidden=skip_hidden,
             xmlRoot=xml_root,
             xmlRow=xml_row,
+            flatten=flatten,
         )
 
         response = self.http_client.call(
@@ -525,6 +537,8 @@ class DatasetClientAsync(ResourceClientAsync):
         unwind: Optional[str] = None,
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
+        flatten: Optional[List[str]] = None,
+        view: Optional[str] = None,
     ) -> ListPage:
         request_params = self._params(
             offset=offset,
@@ -536,6 +550,8 @@ class DatasetClientAsync(ResourceClientAsync):
             unwind=unwind,
             skipEmpty=skip_empty,
             skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
         )
 
         response = await self.http_client.call(
@@ -623,6 +639,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: Optional[bool] = None,
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
+        flatten: Optional[List[str]] = None,
     ) -> bytes:
         request_params = self._params(
             format=item_format,
@@ -640,6 +657,7 @@ class DatasetClientAsync(ResourceClientAsync):
             skipHidden=skip_hidden,
             xmlRoot=xml_root,
             xmlRow=xml_row,
+            flatten=flatten,
         )
 
         response = await self.http_client.call(

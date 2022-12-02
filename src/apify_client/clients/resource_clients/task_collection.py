@@ -43,6 +43,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         timeout_secs: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         task_input: Optional[Dict] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         """Create a new task.
 
@@ -57,6 +58,7 @@ class TaskCollectionClient(ResourceCollectionClient):
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input object.
+            title (str, optional): A human-friendly equivalent of the name
 
         Returns:
             dict: The created task.
@@ -68,6 +70,7 @@ class TaskCollectionClient(ResourceCollectionClient):
             build=build,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            title=title,
         )
 
         return self._create(_filter_out_none_values_recursively(task_representation))
@@ -101,6 +104,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         timeout_secs: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         task_input: Optional[Dict] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         task_representation = _get_task_representation(
             actor_id=actor_id,
@@ -109,6 +113,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
             build=build,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            title=title,
         )
 
         return await self._create(_filter_out_none_values_recursively(task_representation))

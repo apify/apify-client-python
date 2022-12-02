@@ -9,7 +9,7 @@ from ..._utils import (
     _parse_date_fields,
     _pluck_data,
 )
-from ...consts import ActorJobStatus
+from ...consts import ActorJobStatus, MetaOrigin
 from ..base import ResourceClient, ResourceClientAsync
 from .actor_version import ActorVersionClient, ActorVersionClientAsync
 from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
@@ -308,13 +308,14 @@ class ActorClient(ResourceClient):
         """Retrieve a client for the runs of this actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClient:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClient:
         """Retrieve the client for the last run of this actor.
 
         Last run is retrieved based on the start time of the runs.
 
         Args:
             status (ActorJobStatus, optional): Consider only runs with this status.
+            origin (MetaOrigin, optional): Consider only runs started with this origin.
 
         Returns:
             RunClient: The resource client for the last run of this actor.
@@ -322,7 +323,10 @@ class ActorClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status)),
+            params=self._params(
+                status=_maybe_extract_enum_member_value(status),
+                origin=_maybe_extract_enum_member_value(origin),
+            ),
         ))
 
     def versions(self) -> ActorVersionCollectionClient:
@@ -493,11 +497,14 @@ class ActorClientAsync(ResourceClientAsync):
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
     @_make_async_docs(src=ActorClient.last_run)
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClientAsync:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClientAsync:
         return RunClientAsync(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status)),
+            params=self._params(
+                status=_maybe_extract_enum_member_value(status),
+                origin=_maybe_extract_enum_member_value(origin),
+            ),
         ))
 
     @_make_async_docs(src=ActorClient.versions)

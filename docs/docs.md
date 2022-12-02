@@ -1079,7 +1079,7 @@ Retrieve a client for the runs of this actor.
 
 ***
 
-#### [](#actorclient-last_run) `ActorClient.last_run(*, status=None)`
+#### [](#actorclient-last_run) `ActorClient.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this actor.
 
@@ -1088,6 +1088,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 
@@ -1369,7 +1371,7 @@ Retrieve a client for the runs of this actor.
 
 ***
 
-#### [](#actorclientasync-last_run) `ActorClientAsync.last_run(*, status=None)`
+#### [](#actorclientasync-last_run) `ActorClientAsync.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this actor.
 
@@ -1378,6 +1380,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 
@@ -1604,6 +1608,8 @@ Sub-client for manipulating a single actor version.
 * [get()](#actorversionclient-get)
 * [update()](#actorversionclient-update)
 * [delete()](#actorversionclient-delete)
+* [env\_vars()](#actorversionclient-env\_vars)
+* [env\_var()](#actorversionclient-env\_var)
 
 ***
 
@@ -1675,6 +1681,34 @@ Delete the actor version.
 
 ***
 
+#### [](#actorversionclient-env_vars) `ActorVersionClient.env_vars()`
+
+Retrieve a client for the environment variables of this actor version.
+
+* **Return type**
+
+  [`ActorEnvVarCollectionClient`](#actorenvvarcollectionclient)
+
+***
+
+#### [](#actorversionclient-env_var) `ActorVersionClient.env_var(env_var_name)`
+
+Retrieve the client for the specified environment variable of this actor version.
+
+* **Parameters**
+
+  * **env_var_name** (`str`) – The name of the environment variable for which to retrieve the resource client.
+
+* **Returns**
+
+  The resource client for the specified actor environment variable.
+
+* **Return type**
+
+  [`ActorEnvVarClient`](#actorenvvarclient)
+
+***
+
 ### [](#actorversionclientasync) ActorVersionClientAsync
 
 Async sub-client for manipulating a single actor version.
@@ -1682,6 +1716,8 @@ Async sub-client for manipulating a single actor version.
 * [async get()](#actorversionclientasync-get)
 * [async update()](#actorversionclientasync-update)
 * [async delete()](#actorversionclientasync-delete)
+* [env\_vars()](#actorversionclientasync-env\_vars)
+* [env\_var()](#actorversionclientasync-env\_var)
 
 ***
 
@@ -1750,6 +1786,34 @@ Delete the actor version.
 * **Return type**
 
   `None`
+
+***
+
+#### [](#actorversionclientasync-env_vars) `ActorVersionClientAsync.env_vars()`
+
+Retrieve a client for the environment variables of this actor version.
+
+* **Return type**
+
+  `ActorEnvVarCollectionClientAsync`
+
+***
+
+#### [](#actorversionclientasync-env_var) `ActorVersionClientAsync.env_var(env_var_name)`
+
+Retrieve the client for the specified environment variable of this actor version.
+
+* **Parameters**
+
+  * **env_var_name** (`str`) – The name of the environment variable for which to retrieve the resource client.
+
+* **Returns**
+
+  The resource client for the specified actor environment variable.
+
+* **Return type**
+
+  `ActorEnvVarClientAsync`
 
 ***
 
@@ -2347,7 +2411,7 @@ Delete the dataset.
 
 ***
 
-#### [](#datasetclientasync-list_items) `async DatasetClientAsync.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None)`
+#### [](#datasetclientasync-list_items) `async DatasetClientAsync.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None, flatten=None, view=None)`
 
 List the items of the dataset.
 
@@ -2383,6 +2447,10 @@ List the items of the dataset.
   Note that if used, the results might contain less items than the limit value.
 
   * **skip_hidden** (`bool`, *optional*) – If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
+
+  * **view** (`str`, *optional*) – Name of the dataset view to be used
 
 * **Returns**
 
@@ -2441,7 +2509,7 @@ Iterate over the items in the dataset.
 
 ***
 
-#### [](#datasetclientasync-get_items_as_bytes) `async DatasetClientAsync.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclientasync-get_items_as_bytes) `async DatasetClientAsync.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None, flatten=None)`
 
 Get the items in the dataset as raw bytes.
 
@@ -2493,6 +2561,8 @@ Get the items in the dataset as raw bytes.
 
   * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
   By default the element name is item.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
 
 * **Returns**
 
@@ -2651,7 +2721,7 @@ List the available datasets.
 
 ***
 
-#### [](#datasetcollectionclientasync-get_or_create) `async DatasetCollectionClientAsync.get_or_create(*, name=None)`
+#### [](#datasetcollectionclientasync-get_or_create) `async DatasetCollectionClientAsync.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named dataset, or create a new one when it doesn’t exist.
 
@@ -2660,6 +2730,8 @@ Retrieve a named dataset, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the dataset to retrieve or create.
+
+  * **schema** (`Dict`, *optional*) – The schema of the dataset
 
 * **Returns**
 
@@ -2735,7 +2807,7 @@ Delete the dataset.
 
 ***
 
-#### [](#datasetclient-list_items) `DatasetClient.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None)`
+#### [](#datasetclient-list_items) `DatasetClient.list_items(*, offset=None, limit=None, clean=None, desc=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_hidden=None, flatten=None, view=None)`
 
 List the items of the dataset.
 
@@ -2771,6 +2843,10 @@ List the items of the dataset.
   Note that if used, the results might contain less items than the limit value.
 
   * **skip_hidden** (`bool`, *optional*) – If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
+
+  * **view** (`str`, *optional*) – Name of the dataset view to be used
 
 * **Returns**
 
@@ -2829,7 +2905,7 @@ Iterate over the items in the dataset.
 
 ***
 
-#### [](#datasetclient-download_items) `DatasetClient.download_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclient-download_items) `DatasetClient.download_items(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None, flatten=None)`
 
 Get the items in the dataset as raw bytes.
 
@@ -2884,6 +2960,8 @@ Deprecated: this function is a deprecated alias of get_items_as_bytes. It will b
   * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
   By default the element name is item.
 
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
+
 * **Returns**
 
   The dataset items as raw bytes
@@ -2894,7 +2972,7 @@ Deprecated: this function is a deprecated alias of get_items_as_bytes. It will b
 
 ***
 
-#### [](#datasetclient-get_items_as_bytes) `DatasetClient.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None)`
+#### [](#datasetclient-get_items_as_bytes) `DatasetClient.get_items_as_bytes(*, item_format='json', offset=None, limit=None, desc=None, clean=None, bom=None, delimiter=None, fields=None, omit=None, unwind=None, skip_empty=None, skip_header_row=None, skip_hidden=None, xml_root=None, xml_row=None, flatten=None)`
 
 Get the items in the dataset as raw bytes.
 
@@ -2946,6 +3024,8 @@ Get the items in the dataset as raw bytes.
 
   * **xml_row** (`str`, *optional*) – Overrides default element name that wraps each page or page function result object in xml output.
   By default the element name is item.
+
+  * **flatten** (`list of str`, *optional*) – A list of fields that should be flattened
 
 * **Returns**
 
@@ -3257,7 +3337,7 @@ List the available datasets.
 
 ***
 
-#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None)`
+#### [](#datasetcollectionclient-get_or_create) `DatasetCollectionClient.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named dataset, or create a new one when it doesn’t exist.
 
@@ -3266,6 +3346,8 @@ Retrieve a named dataset, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the dataset to retrieve or create.
+
+  * **schema** (`Dict`, *optional*) – The schema of the dataset
 
 * **Returns**
 
@@ -3312,7 +3394,7 @@ List the available key-value stores.
 
 ***
 
-#### [](#keyvaluestorecollectionclientasync-get_or_create) `async KeyValueStoreCollectionClientAsync.get_or_create(*, name=None)`
+#### [](#keyvaluestorecollectionclientasync-get_or_create) `async KeyValueStoreCollectionClientAsync.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
@@ -3321,6 +3403,8 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the key-value store to retrieve or create.
+
+  * **schema** (`Dict`, *optional*) – The schema of the key-value store
 
 * **Returns**
 
@@ -3611,7 +3695,7 @@ List the available key-value stores.
 
 ***
 
-#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None)`
+#### [](#keyvaluestorecollectionclient-get_or_create) `KeyValueStoreCollectionClient.get_or_create(*, name=None, schema=None)`
 
 Retrieve a named key-value store, or create a new one when it doesn’t exist.
 
@@ -3620,6 +3704,8 @@ Retrieve a named key-value store, or create a new one when it doesn’t exist.
 * **Parameters**
 
   * **name** (`str`, *optional*) – The name of the key-value store to retrieve or create.
+
+  * **schema** (`Dict`, *optional*) – The schema of the key-value store
 
 * **Returns**
 
@@ -4504,7 +4590,7 @@ Return information about the schedule.
 
 ***
 
-#### [](#scheduleclientasync-update) `async ScheduleClientAsync.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None)`
+#### [](#scheduleclientasync-update) `async ScheduleClientAsync.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Update the schedule with specified fields.
 
@@ -4526,6 +4612,8 @@ Update the schedule with specified fields.
 
   * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
   (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -4674,7 +4762,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclientasync-create) `async ScheduleCollectionClientAsync.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
+#### [](#schedulecollectionclientasync-create) `async ScheduleCollectionClientAsync.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Create a new schedule.
 
@@ -4695,6 +4783,8 @@ Create a new schedule.
   * **description** (`Optional[str]`) – Description of this schedule
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`Optional[str]`) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -4763,7 +4853,7 @@ Retrieve the task.
 
 ***
 
-#### [](#taskclientasync-update) `async TaskClientAsync.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None)`
+#### [](#taskclientasync-update) `async TaskClientAsync.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, title=None)`
 
 Update the task with specified fields.
 
@@ -4782,6 +4872,8 @@ Update the task with specified fields.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input dictionary
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -4923,7 +5015,7 @@ Retrieve a client for the runs of this task.
 
 ***
 
-#### [](#taskclientasync-last_run) `TaskClientAsync.last_run(*, status=None)`
+#### [](#taskclientasync-last_run) `TaskClientAsync.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this task.
 
@@ -4932,6 +5024,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 
@@ -5018,7 +5112,7 @@ List the available tasks.
 
 ***
 
-#### [](#taskcollectionclientasync-create) `async TaskCollectionClientAsync.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None)`
+#### [](#taskcollectionclientasync-create) `async TaskCollectionClientAsync.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None, title=None)`
 
 Create a new task.
 
@@ -5039,6 +5133,8 @@ Create a new task.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input object.
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5083,7 +5179,7 @@ Retrieve the task.
 
 ***
 
-#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None)`
+#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, title=None)`
 
 Update the task with specified fields.
 
@@ -5102,6 +5198,8 @@ Update the task with specified fields.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input dictionary
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5243,7 +5341,7 @@ Retrieve a client for the runs of this task.
 
 ***
 
-#### [](#taskclient-last_run) `TaskClient.last_run(*, status=None)`
+#### [](#taskclient-last_run) `TaskClient.last_run(*, status=None, origin=None)`
 
 Retrieve the client for the last run of this task.
 
@@ -5252,6 +5350,8 @@ Last run is retrieved based on the start time of the runs.
 * **Parameters**
 
   * **status** ([`ActorJobStatus`](#actorjobstatus), *optional*) – Consider only runs with this status.
+
+  * **origin** (`MetaOrigin`, *optional*) – Consider only runs started with this origin.
 
 * **Returns**
 
@@ -5332,7 +5432,7 @@ List the available tasks.
 
 ***
 
-#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None)`
+#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None, title=None)`
 
 Create a new task.
 
@@ -5353,6 +5453,8 @@ Create a new task.
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
   * **task_input** (`dict`, *optional*) – Task input object.
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5503,7 +5605,7 @@ Return information about the schedule.
 
 ***
 
-#### [](#scheduleclient-update) `ScheduleClient.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None)`
+#### [](#scheduleclient-update) `ScheduleClient.update(*, cron_expression=None, is_enabled=None, is_exclusive=None, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Update the schedule with specified fields.
 
@@ -5525,6 +5627,8 @@ Update the schedule with specified fields.
 
   * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
   (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`str`, *optional*) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5673,7 +5777,7 @@ List the available schedules.
 
 ***
 
-#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None)`
+#### [](#schedulecollectionclient-create) `ScheduleCollectionClient.create(*, cron_expression, is_enabled, is_exclusive, name=None, actions=None, description=None, timezone=None, title=None)`
 
 Create a new schedule.
 
@@ -5694,6 +5798,8 @@ Create a new schedule.
   * **description** (`Optional[str]`) – Description of this schedule
 
   * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
+
+  * **title** (`Optional[str]`) – A human-friendly equivalent of the name
 
 * **Returns**
 
@@ -5983,3 +6089,59 @@ The actor build has timed out
 #### [](#webhookeventtype-actor_build_aborted) `WebhookEventType.ACTOR_BUILD_ABORTED`
 
 The actor build was aborted
+
+***
+
+### [](#metaorigin) MetaOrigin
+
+Possible origins for actor runs, i.e. how were the jobs started.
+
+* [DEVELOPMENT](#metaorigin-development)
+* [WEB](#metaorigin-web)
+* [API](#metaorigin-api)
+* [SCHEDULER](#metaorigin-scheduler)
+* [TEST](#metaorigin-test)
+* [WEBHOOK](#metaorigin-webhook)
+* [ACTOR](#metaorigin-actor)
+
+***
+
+#### [](#metaorigin-development) `MetaOrigin.DEVELOPMENT`
+
+Job started from Developer console in Source section of actor
+
+***
+
+#### [](#metaorigin-web) `MetaOrigin.WEB`
+
+Job started from other place on the website (either console or task detail page)
+
+***
+
+#### [](#metaorigin-api) `MetaOrigin.API`
+
+Job started through API
+
+***
+
+#### [](#metaorigin-scheduler) `MetaOrigin.SCHEDULER`
+
+Job started through Scheduler
+
+***
+
+#### [](#metaorigin-test) `MetaOrigin.TEST`
+
+Job started through test actor page
+
+***
+
+#### [](#metaorigin-webhook) `MetaOrigin.WEBHOOK`
+
+Job started by the webhook
+
+***
+
+#### [](#metaorigin-actor) `MetaOrigin.ACTOR`
+
+Job started by another actor run

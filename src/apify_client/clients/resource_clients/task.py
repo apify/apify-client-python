@@ -10,7 +10,7 @@ from ..._utils import (
     _parse_date_fields,
     _pluck_data,
 )
-from ...consts import ActorJobStatus
+from ...consts import ActorJobStatus, MetaOrigin
 from ..base import ResourceClient, ResourceClientAsync
 from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -24,6 +24,7 @@ def _get_task_representation(
     build: Optional[str] = None,
     memory_mbytes: Optional[int] = None,
     timeout_secs: Optional[int] = None,
+    title: Optional[str] = None,
 ) -> Dict:
     return {
         'actId': actor_id,
@@ -34,6 +35,7 @@ def _get_task_representation(
             'timeoutSecs': timeout_secs,
         },
         'input': task_input,
+        'title': title,
     }
 
 
@@ -63,6 +65,7 @@ class TaskClient(ResourceClient):
         build: Optional[str] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         """Update the task with specified fields.
 
@@ -76,6 +79,7 @@ class TaskClient(ResourceClient):
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
+            title (str, optional): A human-friendly equivalent of the name
 
         Returns:
             dict: The updated task
@@ -86,6 +90,7 @@ class TaskClient(ResourceClient):
             build=build,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            title=title,
         )
 
         return self._update(_filter_out_none_values_recursively(task_representation))
@@ -230,13 +235,14 @@ class TaskClient(ResourceClient):
         """Retrieve a client for the runs of this task."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClient:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClient:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
 
         Args:
             status (ActorJobStatus, optional): Consider only runs with this status.
+            origin (MetaOrigin, optional): Consider only runs started with this origin.
 
         Returns:
             RunClient: The resource client for the last run of this task.
@@ -244,7 +250,10 @@ class TaskClient(ResourceClient):
         return RunClient(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status)),
+            params=self._params(
+                status=_maybe_extract_enum_member_value(status),
+                origin=_maybe_extract_enum_member_value(origin),
+            ),
         ))
 
     def webhooks(self) -> WebhookCollectionClient:
@@ -273,6 +282,7 @@ class TaskClientAsync(ResourceClientAsync):
         build: Optional[str] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         task_representation = _get_task_representation(
             name=name,
@@ -280,6 +290,7 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            title=title,
         )
 
         return await self._update(_filter_out_none_values_recursively(task_representation))
@@ -366,11 +377,14 @@ class TaskClientAsync(ResourceClientAsync):
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
     @_make_async_docs(src=TaskClient.last_run)
-    def last_run(self, *, status: Optional[ActorJobStatus] = None) -> RunClientAsync:
+    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClientAsync:
         return RunClientAsync(**self._sub_resource_init_options(
             resource_id='last',
             resource_path='runs',
-            params=self._params(status=_maybe_extract_enum_member_value(status)),
+            params=self._params(
+                status=_maybe_extract_enum_member_value(status),
+                origin=_maybe_extract_enum_member_value(origin),
+            ),
         ))
 
     @_make_async_docs(src=TaskClient.webhooks)

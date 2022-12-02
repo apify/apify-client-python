@@ -13,6 +13,7 @@ def _get_schedule_representation(
     actions: Optional[List[Dict]] = None,
     description: Optional[str] = None,
     timezone: Optional[str] = None,
+    title: Optional[str] = None,
 ) -> Dict:
     return {
         'cronExpression': cron_expression,
@@ -22,6 +23,7 @@ def _get_schedule_representation(
         'actions': actions,
         'description': description,
         'timezone': timezone,
+        'title': title,
     }
 
 
@@ -53,6 +55,7 @@ class ScheduleClient(ResourceClient):
         actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         """Update the schedule with specified fields.
 
@@ -67,6 +70,7 @@ class ScheduleClient(ResourceClient):
             description (str, optional): Description of this schedule
             timezone (str, optional): Timezone in which your cron expression runs
                                       (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+            title (str, optional): A human-friendly equivalent of the name
 
         Returns:
             dict: The updated schedule
@@ -79,6 +83,7 @@ class ScheduleClient(ResourceClient):
             actions=actions,
             description=description,
             timezone=timezone,
+            title=title,
         )
 
         return self._update(_filter_out_none_values_recursively(schedule_representation))
@@ -134,6 +139,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         actions: Optional[List[Dict]] = None,
         description: Optional[str] = None,
         timezone: Optional[str] = None,
+        title: Optional[str] = None,
     ) -> Dict:
         schedule_representation = _get_schedule_representation(
             cron_expression=cron_expression,
@@ -143,6 +149,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             actions=actions,
             description=description,
             timezone=timezone,
+            title=title,
         )
 
         return await self._update(_filter_out_none_values_recursively(schedule_representation))

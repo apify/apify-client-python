@@ -35,6 +35,10 @@ class _BaseHTTPClient:
 
         headers = {'Accept': 'application/json, */*'}
 
+        workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
+        if workflow_key is not None:
+            headers['X-Apify-Workflow-Key'] = workflow_key
+
         is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
 

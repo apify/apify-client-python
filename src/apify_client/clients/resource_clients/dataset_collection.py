@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _make_async_docs
+from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
@@ -35,18 +35,19 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+    def get_or_create(self, *, name: Optional[str] = None, schema: Optional[Dict] = None) -> Dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
 
         Args:
             name (str, optional): The name of the dataset to retrieve or create.
+            schema (Dict, optional): The schema of the dataset
 
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-        return self._get_or_create(name=name)
+        return self._get_or_create(name=name, resource=_filter_out_none_values_recursively({'schema': schema}))
 
 
 class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
@@ -69,5 +70,5 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     @_make_async_docs(src=DatasetCollectionClient.get_or_create)
-    async def get_or_create(self, *, name: Optional[str] = None) -> Dict:
-        return await self._get_or_create(name=name)
+    async def get_or_create(self, *, name: Optional[str] = None, schema: Optional[Dict] = None) -> Dict:
+        return await self._get_or_create(name=name, resource=_filter_out_none_values_recursively({'schema': schema}))

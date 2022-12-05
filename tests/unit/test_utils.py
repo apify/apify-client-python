@@ -120,7 +120,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         class NonRetryableError(Exception):
             pass
 
-        def returns_on_fifth_attempt(stop_retrying: Callable, attempt: int) -> Any:
+        def returns_on_fifth_attempt(_stop_retrying: Callable, attempt: int) -> Any:
             nonlocal attempt_counter
             attempt_counter += 1
 
@@ -168,7 +168,7 @@ class UtilsTest(unittest.IsolatedAsyncioTestCase):
         class NonRetryableError(Exception):
             pass
 
-        async def returns_on_fifth_attempt(stop_retrying: Callable, attempt: int) -> Any:
+        async def returns_on_fifth_attempt(_stop_retrying: Callable, attempt: int) -> Any:
             nonlocal attempt_counter
             attempt_counter += 1
 

@@ -3,7 +3,7 @@ filename =
     ./docs/*.py,
     ./scripts/*.py,
     ./src/*.py,
-    ./test/*.py,
+    ./tests/*.py,
     ./setup.py
 max_line_length = 150
 # Google docstring convention + D204 & D401
@@ -19,6 +19,7 @@ ignore =
     D408
     D409
     D413
+    U101
 ignore-decorators = _make_async_docs
 per-file-ignores =
     docs/*: D

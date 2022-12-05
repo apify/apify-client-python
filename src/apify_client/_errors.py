@@ -22,8 +22,8 @@ class ApifyApiError(ApifyClientError):
         """Create the ApifyApiError instance.
 
         Args:
-            response: The response to the failed API call
-            attempt: Which attempt was the request that failed
+            response (httpx.Response): The response to the failed API call
+            attempt (int): Which attempt was the request that failed
         """
         self.message: Optional[str] = None
         self.type: Optional[str] = None

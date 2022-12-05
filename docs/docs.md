@@ -4776,15 +4776,14 @@ Create a new schedule.
 
   * **is_exclusive** (`bool`) – When set to true, don’t start actor or actor task if it’s still running from the previous schedule.
 
-  * **name** (`Optional[str]`) – The name of the schedule to create.
+  * **name** (`str`, *optional*) – The name of the schedule to create.
 
-  * **actions** (`Optional`[`List[Dict]`]) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+  * **actions** (`list of dict`, *optional*) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
 
-  * **description** (`Optional[str]`) – Description of this schedule
+  * **description** (`str`, *optional*) – Description of this schedule
 
-  * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
-
-  * **title** (`Optional[str]`) – A human-friendly equivalent of the name
+  * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
+  (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
 
 * **Returns**
 
@@ -5791,15 +5790,14 @@ Create a new schedule.
 
   * **is_exclusive** (`bool`) – When set to true, don’t start actor or actor task if it’s still running from the previous schedule.
 
-  * **name** (`Optional[str]`) – The name of the schedule to create.
+  * **name** (`str`, *optional*) – The name of the schedule to create.
 
-  * **actions** (`Optional`[`List[Dict]`]) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+  * **actions** (`list of dict`, *optional*) – Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
 
-  * **description** (`Optional[str]`) – Description of this schedule
+  * **description** (`str`, *optional*) – Description of this schedule
 
-  * **timezone** (`Optional[str]`) – Timezone in which your cron expression runs (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
-
-  * **title** (`Optional[str]`) – A human-friendly equivalent of the name
+  * **timezone** (`str`, *optional*) – Timezone in which your cron expression runs
+  (TZ database name from [https://en.wikipedia.org/wiki/List_of_tz_database_time_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones))
 
 * **Returns**
 

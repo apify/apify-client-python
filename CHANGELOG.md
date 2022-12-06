@@ -42,6 +42,7 @@ Changelog
 - updated output management in GitHub Workflows to fix deprecations
 - improved type hints across codebase
 - added option to manually publish the package with a workflow dispatch
+- added `pre-commit` to run code quality checks before committing
 
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------

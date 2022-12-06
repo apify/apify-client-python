@@ -25,6 +25,10 @@ Changelog
 - added support for `origin` parameter in actor/task run methods
 - added clients for actor version environment variables
 
+### Fixed
+
+- disallowed `NaN` and `Infinity` values in JSONs sent to the Apify API
+
 ### Internal changes
 
 - simplified retrying with exponential backoff

@@ -100,7 +100,7 @@ class _BaseHTTPClient:
 
         # dump JSON data to string, so they can be gzipped
         if json:
-            data = jsonlib.dumps(json, ensure_ascii=False, default=str).encode('utf-8')
+            data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
 
         if isinstance(data, (str, bytes, bytearray)):

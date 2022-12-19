@@ -16,3 +16,12 @@ build/
 .idea
 
 cli_test_client.py
+
+node_modules
+*.log
+*.pid
+*.seed
+.DS_Store
+.docusaurus
+tsconfig.tsbuildinfo
+.turbo

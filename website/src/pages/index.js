@@ -14,11 +14,11 @@ function Hero() {
                     <div className={clsx(styles.relative, 'row')}>
                         <div className="col">
                             <h1 className={styles.tagline}>
-                                ApifyClient.js is the official library to access Apify API from your JavaScript applications.
+                                apify-client is the official library to access Apify API from your Python applications.
                             </h1>
                             <h1 className={styles.tagline}>
                                 {/* eslint-disable-next-line max-len */}
-                                <span>ApifyClient.js</span> is the <span>official</span> library to access <span>Apify</span> API from your <span>JavaScript</span> applications.
+                                <span>apify-client</span> is the <span>official</span> library to access <span>Apify</span> API from your <span>Python</span> applications.
                             </h1>
                         </div>
                     </div>
@@ -26,16 +26,15 @@ function Hero() {
                         <div className="col">
                             <h2></h2>
                             <h2>
-                                It runs both in Node.js and browser and provides useful features like automatic retries and convenience functions
-                                that improve the experience of using the Apify API.
+                                It provides useful features like automatic retries and convenience functions that improve the experience of using the Apify API.
                             </h2>
                         </div>
                     </div>
                     <div className="row">
                         <div className="col">
                             <div className={styles.heroButtons}>
-                                <Link to="docs/guides/apify-platform" className={styles.getStarted}>Get Started</Link>
-                                <iframe src="https://ghbtns.com/github-btn.html?user=apify&repo=apify-sdk-js&type=star&count=true&size=large" frameBorder="0" scrolling="0" width="170" height="30" title="GitHub"></iframe>
+                                <Link to="docs/docs" className={styles.getStarted}>Get Started</Link>
+                                <iframe src="https://ghbtns.com/github-btn.html?user=apify&repo=apify-client-python&type=star&count=true&size=large" width="170" height="30" title="GitHub"></iframe>
                             </div>
                         </div>
                     </div>
@@ -46,7 +45,7 @@ function Hero() {
                     </div>
                     <div className={styles.codeBlock}>
                         <CodeBlock className="language-bash">
-                            npm install apify-client
+                            pip install apify-client
                         </CodeBlock>
                     </div>
                 </div>

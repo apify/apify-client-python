@@ -36,14 +36,6 @@ module.exports = {
             }),
         ],
     ]),
-    plugins: [
-        // [
-        //     'docusaurus-gtm-plugin',
-        //     {
-        //         id: 'GTM-TKBX678',
-        //     },
-        // ],
-    ],
     themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */ ({
         docs: {
@@ -130,38 +122,6 @@ module.exports = {
                     position: 'left',
                     target: '_self',
                     rel: 'dofollow',
-                },
-                {
-                    // type: 'custom-api',
-                    to: 'api',
-                    label: '(API)',
-                    position: 'left',
-                    activeBaseRegex: 'client-js/api(?!.*/changelog)',
-                    className: 'subnav',
-                    // subnav: 'true',
-                },
-                {
-                    to: 'basic-usage',
-                    label: '(Basic Usage)',
-                    position: 'left',
-                    activeBaseRegex: 'client-js/api(?!.*/changelog)',
-                    className: 'subnav',
-                    // subnav: 'true',
-                },
-                {
-                    // type: 'custom-api',
-                    to: 'api/changelog',
-                    label: '(Changelog)',
-                    position: 'left',
-                    activeBaseRegex: 'changelog',
-                    className: 'subnav changelog',
-                    // subnav: 'true',
-                },
-                {
-                    type: 'docsVersionDropdown',
-                    position: 'left',
-                    className: 'subnav',
-                    // subnav: 'true',
                 },
                 {
                     label: 'Open Source',

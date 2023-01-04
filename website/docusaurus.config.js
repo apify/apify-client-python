@@ -22,7 +22,32 @@ module.exports = {
     themes: [
         [
             '@apify/docs-theme',
-            {},
+            {
+                subNavbar: {
+                    title: 'Apify Client Python',
+                    items: [
+                        {
+                            to: 'docs/docs',
+                            label: 'Docs',
+                            position: 'left',
+                            activeBaseRegex: 'docs',
+                        },
+                        // {
+                        //     to: 'api/changelog',
+                        //     label: 'Changelog',
+                        //     position: 'left',
+                        //     activeBaseRegex: 'changelog',
+                        // },
+                        {
+                            type: 'docsVersionDropdown',
+                            position: 'left',
+                            className: 'navbar__item', // fixes margin around dropdown - hackish, should be fixed in theme
+                            dropdownItemsBefore: [],
+                            dropdownItemsAfter: [],
+                        },
+                    ],
+                },
+            },
         ],
     ],
     presets: /** @type {import('@docusaurus/types').PresetConfig[]} */ ([
@@ -34,9 +59,6 @@ module.exports = {
                     path: '../docs',
                     sidebarPath: './sidebars.js',
                     rehypePlugins: [externalLinkProcessor],
-                },
-                theme: {
-                    customCss: '/src/css/custom.css',
                 },
             }),
         ],

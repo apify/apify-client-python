@@ -2505,7 +2505,7 @@ Iterate over the items in the dataset.
 
 * **Return type**
 
-  `AsyncGenerator`
+  `AsyncIterator[Dict]`
 
 ***
 

@@ -1,6 +1,6 @@
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncGenerator, AsyncIterator, Dict, Generator, Iterator, List, Optional
+from typing import Any, AsyncIterator, Dict, Generator, Iterator, List, Optional
 
 import httpx
 
@@ -584,7 +584,7 @@ class DatasetClientAsync(ResourceClientAsync):
         unwind: Optional[str] = None,
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
-    ) -> AsyncGenerator:
+    ) -> AsyncIterator[Dict]:
         cache_size = 1000
         first_item = offset
 

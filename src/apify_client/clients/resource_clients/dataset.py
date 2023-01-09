@@ -1,6 +1,6 @@
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncIterator, Dict, Generator, Iterator, List, Optional
+from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 
 import httpx
 
@@ -140,7 +140,7 @@ class DatasetClient(ResourceClient):
         unwind: Optional[str] = None,
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
-    ) -> Generator:
+    ) -> Iterator[Dict]:
         """Iterate over the items in the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items

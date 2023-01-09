@@ -2901,7 +2901,7 @@ Iterate over the items in the dataset.
 
 * **Return type**
 
-  `Generator`
+  `Iterator[Dict]`
 
 ***
 

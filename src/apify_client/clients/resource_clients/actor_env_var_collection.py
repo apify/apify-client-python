@@ -13,7 +13,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage:
+    def list(self) -> ListPage[Dict]:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -60,7 +60,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     @_make_async_docs(src=ActorEnvVarCollectionClient.list)
-    async def list(self) -> ListPage:
+    async def list(self) -> ListPage[Dict]:
         return await self._list()
 
     @_make_async_docs(src=ActorEnvVarCollectionClient.create)

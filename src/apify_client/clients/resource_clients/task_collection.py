@@ -19,7 +19,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -91,7 +91,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     @_make_async_docs(src=TaskCollectionClient.create)

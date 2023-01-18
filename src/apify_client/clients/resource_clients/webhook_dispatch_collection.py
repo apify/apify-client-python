@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from ..._utils import ListPage, _make_async_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
@@ -18,7 +18,7 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -49,5 +49,5 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(limit=limit, offset=offset, desc=desc)

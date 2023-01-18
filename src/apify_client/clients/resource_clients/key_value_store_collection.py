@@ -19,7 +19,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -66,7 +66,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     @_make_async_docs(src=KeyValueStoreCollectionClient.get_or_create)

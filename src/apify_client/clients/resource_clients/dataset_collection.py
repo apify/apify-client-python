@@ -19,7 +19,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -66,7 +66,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     @_make_async_docs(src=DatasetCollectionClient.get_or_create)

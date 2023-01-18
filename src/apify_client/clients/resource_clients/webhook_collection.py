@@ -21,7 +21,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -105,7 +105,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     @_make_async_docs(src=WebhookCollectionClient.create)

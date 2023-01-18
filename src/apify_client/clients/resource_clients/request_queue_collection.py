@@ -19,7 +19,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -65,7 +65,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     @_make_async_docs(src=RequestQueueCollectionClient.get_or_create)

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from ..._utils import ListPage, _make_async_docs, _maybe_extract_enum_member_value
 from ...consts import ActorJobStatus
@@ -20,7 +20,7 @@ class RunCollectionClient(ResourceCollectionClient):
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
         status: Optional[ActorJobStatus] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
@@ -59,7 +59,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
         status: Optional[ActorJobStatus] = None,
-    ) -> ListPage:
+    ) -> ListPage[Dict]:
         return await self._list(
             limit=limit,
             offset=offset,

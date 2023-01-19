@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timezone
 from enum import Enum
 from http import HTTPStatus
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, TypeVar, cast
+from typing import Any, Awaitable, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, cast
 
 from ._errors import ApifyApiError
 
@@ -239,11 +239,11 @@ def _make_async_docs(*, src: Callable) -> Callable[[BoundFunc], BoundFunc]:
     return decorator
 
 
-class ListPage:
+class ListPage(Generic[T]):
     """A single page of items returned from a list() method."""
 
     #: list: List of returned objects on this page
-    items: List
+    items: List[T]
     #: int: Count of the returned objects on this page
     count: int
     #: int: The limit on the number of returned objects offset specified in the API call

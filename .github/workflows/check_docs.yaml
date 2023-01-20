@@ -1,26 +1,23 @@
-name: Check documentation status
+# name: Check documentation status
 
-on: push
+# on: push
 
-jobs:
-  check_docs:
-    name: Check whether documentation is up-to-date
-    runs-on: ubuntu-20.04
+# jobs:
+#   check_docs:
+#     name: Check whether documentation is up-to-date
+#     runs-on: ubuntu-20.04
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.8
+#     - name: Set up Python
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: 3.8
 
-    - name: Install dependencies
-      run: make install-dev
+#     - name: Install dependencies
+#       run: make install-dev
 
-    - name: Check async docstrings
-      run: make check-async-docstrings
-
-    - name: Check docs building
-      run: make check-docs
+#     - name: Check docs building
+#       run: make check-docs

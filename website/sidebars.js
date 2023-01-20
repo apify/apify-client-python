@@ -1,9 +1,10 @@
 module.exports = {
-    docs: [
-        'docs',
-        'features',
-        'usage-concepts',
-        'usage-guide',
-        'api',
-    ],
+    sidebar: {
+        'Documentation': [
+            'intro',
+        ],
+        'API Documentation': [
+            require('../docs/reference/sidebar.json'),
+        ],
+    },
 };

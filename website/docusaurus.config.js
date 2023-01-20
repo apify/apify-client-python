@@ -27,10 +27,10 @@ module.exports = {
                     title: 'Apify Client Python',
                     items: [
                         {
-                            to: 'docs/docs',
+                            to: 'docs/intro',
                             label: 'Docs',
                             position: 'left',
-                            activeBaseRegex: 'docs',
+                            activeBaseRegex: 'docs/(?!reference)',
                         },
                         // {
                         //     to: 'api/changelog',
@@ -38,12 +38,18 @@ module.exports = {
                         //     position: 'left',
                         //     activeBaseRegex: 'changelog',
                         // },
+                        // {
+                        //     type: 'docsVersionDropdown',
+                        //     position: 'left',
+                        //     className: 'navbar__item', // fixes margin around dropdown - hackish, should be fixed in theme
+                        //     dropdownItemsBefore: [],
+                        //     dropdownItemsAfter: [],
+                        // },
                         {
-                            type: 'docsVersionDropdown',
+                            to: 'docs/reference',
+                            label: 'Reference',
                             position: 'left',
-                            className: 'navbar__item', // fixes margin around dropdown - hackish, should be fixed in theme
-                            dropdownItemsBefore: [],
-                            dropdownItemsAfter: [],
+                            activeBaseRegex: 'docs/reference',
                         },
                     ],
                 },
@@ -63,6 +69,12 @@ module.exports = {
             }),
         ],
     ]),
-    themeConfig: config.themeConfig,
+    themeConfig: {
+        ...config.themeConfig,
+        tableOfContents: {
+            ...config.themeConfig.tableOfContents,
+            maxHeadingLevel: 5,
+        },
+    },
     staticDirectories: ['node_modules/@apify/docs-theme/static', 'static'],
 };

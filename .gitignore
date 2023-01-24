@@ -25,3 +25,7 @@ node_modules
 .docusaurus
 tsconfig.tsbuildinfo
 .turbo
+
+docs/reference/apify_client
+docs/reference/sidebar.json
+docs/changelog.md

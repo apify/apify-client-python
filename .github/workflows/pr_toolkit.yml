@@ -13,17 +13,10 @@ concurrency: # This is to make sure that it's executed only for the most recent 
 
 jobs:
   apify-pr-toolkit:
-    runs-on: ubuntu-20.04
-    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
     steps:
-      - name: clone pull-request-toolkit-action
-        uses: actions/checkout@v3
-        with:
-          repository: apify/pull-request-toolkit-action
-          path: ./.github/actions/pull-request-toolkit-action
-
       - name: run pull-request-toolkit action
-        uses: ./.github/actions/pull-request-toolkit-action
+        uses: apify/pull-request-toolkit-action@main
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           org-token: ${{ secrets.PULL_REQUEST_TOOLKIT_ACTION_GITHUB_TOKEN }}

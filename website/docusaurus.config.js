@@ -30,7 +30,7 @@ module.exports = {
                             to: 'docs/intro',
                             label: 'Docs',
                             position: 'left',
-                            activeBaseRegex: 'docs/(?!reference)',
+                            activeBaseRegex: 'docs(?!/reference|/changelog)',
                         },
                         // {
                         //     type: 'docsVersionDropdown',
@@ -46,7 +46,7 @@ module.exports = {
                             activeBaseRegex: 'docs/reference',
                         },
                         {
-                            to: '/changelog',
+                            to: 'docs/changelog',
                             label: 'Changelog',
                             position: 'left',
                             activeBaseRegex: 'changelog',

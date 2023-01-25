@@ -222,23 +222,6 @@ def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
     return maybe_enum_member
 
 
-BoundFunc = TypeVar('BoundFunc', bound=Callable[..., Any])
-
-
-def _make_async_docs(*, src: Callable) -> Callable[[BoundFunc], BoundFunc]:
-    """Copy docstring from another method, adjusting it to work in an async scenario."""
-    substitutions = [(r'Client', r'ClientAsync')]
-
-    def decorator(dest: BoundFunc) -> BoundFunc:
-        if not dest.__doc__ and src.__doc__:
-            dest.__doc__ = src.__doc__
-            for (pattern, replacement) in substitutions:
-                dest.__doc__ = re.sub(pattern, replacement, dest.__doc__, flags=re.M)
-        return dest
-
-    return decorator
-
-
 class ListPage(Generic[T]):
     """A single page of items returned from a list() method."""
 

@@ -19,5 +19,8 @@ jobs:
     - name: Install dependencies
       run: make install-dev
 
+    - name: Check async docstrings
+      run: make check-async-docstrings
+
     - name: Check docs building
       run: make check-docs

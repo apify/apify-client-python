@@ -1,4 +1,5 @@
 import pathlib
+import re
 
 PACKAGE_NAME = 'apify_client'
 REPO_ROOT = pathlib.Path(__file__).parent.resolve() / '..'
@@ -36,3 +37,13 @@ def set_current_package_version(version: str) -> None:
         version_file.seek(0)
         version_file.write('\n'.join(updated_version_file_lines))
         version_file.truncate()
+
+
+# Generate convert a docstring from a sync resource client method
+# into a doctring for its async resource client analogue
+def sync_to_async_docstring(docstring: str) -> str:
+    substitutions = [(r'Client', r'ClientAsync')]
+    res = docstring
+    for (pattern, replacement) in substitutions:
+        res = re.sub(pattern, replacement, res, flags=re.M)
+    return res

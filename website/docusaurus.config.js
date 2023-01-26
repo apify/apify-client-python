@@ -1,6 +1,7 @@
 /* eslint-disable global-require,import/no-extraneous-dependencies */
 const { config } = require('@apify/docs-theme');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
+const { groupSort } = require('./transformDocs.js');
 
 const { absoluteUrl } = config;
 
@@ -81,6 +82,7 @@ module.exports = {
                     excludeExternals: false,
                 },
                 pathToTypedocJSON: `${__dirname}/api-typedoc-generated.json`,
+                sortSidebar: groupSort,
             },
         ],
     ],

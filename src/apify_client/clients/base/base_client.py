@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from ..._http_client import _HTTPClient, _HTTPClientAsync
 from ..._logging import _WithLogDetailsClient
-from ..._utils import _make_async_docs, _to_safe_id
+from ..._utils import _to_safe_id
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
@@ -90,7 +90,6 @@ class BaseClientAsync(_BaseBaseClient):
     http_client: _HTTPClientAsync
     root_client: ApifyClientAsync
 
-    @_make_async_docs(src=BaseClient.__init__)
     def __init__(
         self,
         *,
@@ -101,6 +100,16 @@ class BaseClientAsync(_BaseBaseClient):
         resource_path: str,
         params: Optional[Dict] = None,
     ) -> None:
+        """Initialize the sub-client.
+
+        Args:
+            base_url (str): Base URL of the API server
+            root_client (ApifyClientAsync): The ApifyClientAsync instance under which this resource client exists
+            http_client (_HTTPClientAsync): The _HTTPClientAsync instance to be used in this client
+            resource_id (str): ID of the manipulated resource, in case of a single-resource client
+            resource_path (str): Path to the resource's endpoint on the API server
+            params (dict): Parameters to include in all requests from this client
+        """
         if resource_path.endswith('/'):
             raise ValueError('resource_path must not end with "/"')
 

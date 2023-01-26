@@ -32,19 +32,54 @@ const acc = {
 
 let oid = 1;
 
-function plural(word) {
-    const plurals = {
-        'Class': 'Classes',
-        'Method': 'Methods',
-        'Constructor': 'Constructors',
-        'Property': 'Properties',
-        'Enumeration': 'Enumerations',
-        'Enumeration Member': 'Enumeration Members',
-    }
+function getGroupName(object) {
+    const groupPredicates = {
+        'Errors': (x) => x.name.toLowerCase().includes('error'),
+        'Async Resource Clients': (x) => x.name.toLowerCase().includes('async'),
+        'Resource Clients': (x) => x.name.toLowerCase().includes('client'),
+        'Helper Classes': (x) => x.kindString === 'Class',
+        'Methods': (x) => x.kindString === 'Method',
+        'Constructors': (x) => x.kindString === 'Constructor',
+        'Properties': (x) => x.kindString === 'Property',
+        'Enumerations': (x) => x.kindString === 'Enumeration',
+        'Enumeration Members': (x) => x.kindString === 'Enumeration Member',
+    };
+    
+    const [group] = Object.entries(groupPredicates).find(
+        ([_, predicate]) => predicate(object)
+    );
 
-    return plurals[word];
+    return group;
 }
 
+const groupsOrdered = [
+    'Resource Clients',
+    'Async Resource Clients',
+    'Helper Classes',
+    'Enumerations',
+    'Errors',
+    'Constructors',
+    'Methods',
+    'Properties',
+    'Enumeration Members'
+];
+
+const hidden = [
+    '_BaseApifyClient',
+    'BaseClient',
+    'ActorJobBaseClient',
+    'ResourceClient',
+    'ResourceCollectionClient',
+    '_BaseApifyClientAsync',
+    'BaseClientAsync',
+    'ActorJobBaseClientAsync',
+    'ResourceClientAsync',
+    'ResourceCollectionClientAsync'
+]
+
+const groupSort = (a, b) => groupsOrdered.indexOf(a.title) - groupsOrdered.indexOf(b.title);
+
+// Taken from https://github.com/TypeStrong/typedoc/blob/v0.23.24/src/lib/models/reflections/kind.ts, modified
 const kinds = {
     'class': {
         kind: 128,
@@ -69,7 +104,7 @@ const kinds = {
 }
 
 function stripOptional(s) {
-    return s ? s.replace(/(Optional|\[|\])/g, '') : null;
+    return s ? s.replace(/Optional\[(.*)\]/g, '$1').replace('ListPage[Dict]', 'ListPage') : null;
 }
 
 function isCustomClass(s) {
@@ -105,7 +140,7 @@ function traverse(o, parent) {
             }
         }
 
-        if(x.type in kinds) {
+        if(x.type in kinds && !hidden.includes(x.name)) {
 
             let newObj = {
                 id: oid++,
@@ -130,6 +165,13 @@ function traverse(o, parent) {
                     kind: 4096,
                     kindString: 'Call signature',
                     flags: {},
+                    comment: x.docstring ? {
+                        summary: [{
+                            kind: 'text',
+                            text: x.docstring?.content
+                                .replace(/\**(Args|Arguments|Returns)[\s\S]+/, ''),
+                        }],
+                    } : undefined,
                     type: inferType(x.return_type),
                     parameters: x.args.map((p) => (p.name === 'self' ? undefined : {
                         id: oid++,
@@ -140,6 +182,16 @@ function traverse(o, parent) {
                             isOptional: p.datatype?.includes('Optional') ? 'true' : undefined,
                         },
                         type: inferType(p.datatype),
+                        comment: x.docstring ? {
+                            summary: [{
+                                kind: 'text',
+                                text: x.docstring?.content
+                                    .slice((() =>{
+                                        const i = x.docstring?.content.toLowerCase().search(p.name.toLowerCase());
+                                        return i === -1 ? x.docstring?.content.length : i;
+                                    })()).split('\n')[0].split('- ')[1],
+                            }]
+                        } : undefined,
                     })).filter(x => x),
                 }];
             }
@@ -151,12 +203,15 @@ function traverse(o, parent) {
 
             traverse(x, newObj);
 
-            const group = parent.groups.find((g) => g.title === plural(newObj.kindString));
+            newObj.groups.sort(groupSort);
+            const groupName = getGroupName(newObj);
+
+            const group = parent.groups.find((g) => g.title === groupName);
             if(group) {
                 group.children.push(newObj.id);
             } else {
                 parent.groups.push({
-                    title: plural(newObj.kindString),
+                    title: groupName,
                     children: [newObj.id],
                 });
             }
@@ -213,4 +268,10 @@ function main() {
     fs.writeFileSync(path.join(__dirname, 'api-typedoc-generated.json'), JSON.stringify(acc, null, 2));
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = {
+    groupSort,
+}

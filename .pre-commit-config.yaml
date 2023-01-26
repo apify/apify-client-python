@@ -7,6 +7,12 @@ repos:
       language: system
       pass_filenames: false
 
+    - id: check-docs
+      name: "Check whether async docstrings are aligned with sync ones"
+      entry: "make check-async-docstrings"
+      language: system
+      pass_filenames: false
+
     - id: type-check
       name: "Type-check codebase"
       entry: "make type-check"

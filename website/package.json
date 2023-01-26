@@ -10,7 +10,9 @@
         "prettify": "prettier --write --config ./tools/docs-prettier.config.js ../docs/guides/*.md",
         "swizzle": "docusaurus swizzle",
         "deploy": "rimraf .docusaurus && docusaurus deploy",
-        "docusaurus": "docusaurus"
+        "docusaurus": "docusaurus",
+        "postinstall": "patch-package",
+        "postci": "patch-package"
     },
     "devDependencies": {
         "@apify/eslint-config-ts": "^0.2.3",
@@ -23,6 +25,7 @@
         "eslint-plugin-react-hooks": "^4.3.0",
         "fs-extra": "^10.0.1",
         "got": "^11.8.2",
+        "patch-package": "^6.5.1",
         "path-browserify": "^1.0.1",
         "prettier": "^2.5.1",
         "rimraf": "^3.0.2"
@@ -34,7 +37,7 @@
         "@docusaurus/preset-classic": "2.2.0",
         "clsx": "^1.2.1",
         "docusaurus-gtm-plugin": "^0.0.2",
-        "docusaurus-plugin-typedoc-api": "2.5.0",
+        "docusaurus-plugin-typedoc-api": "2.5.1",
         "prop-types": "^15.8.1",
         "raw-loader": "^4.0.2",
         "react": "^17.0.2",

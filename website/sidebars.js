@@ -4,8 +4,5 @@ module.exports = {
             'intro',
             'changelog',
         ],
-        'API Documentation': [
-            require('../docs/reference/sidebar.json'),
-        ],
     },
 };

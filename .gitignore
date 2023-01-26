@@ -16,3 +16,4 @@ build/
 .idea
 
 cli_test_client.py
+.DS_Store

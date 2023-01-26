@@ -30,7 +30,7 @@ module.exports = {
                             to: 'docs/intro',
                             label: 'Docs',
                             position: 'left',
-                            activeBaseRegex: 'docs(?!/reference|/changelog)',
+                            activeBaseRegex: 'docs(?!/changelog)',
                         },
                         // {
                         //     type: 'docsVersionDropdown',
@@ -40,10 +40,10 @@ module.exports = {
                         //     dropdownItemsAfter: [],
                         // },
                         {
-                            to: 'docs/reference',
+                            to: '/api',
                             label: 'Reference',
                             position: 'left',
-                            activeBaseRegex: 'docs/reference',
+                            activeBaseRegex: '/api',
                         },
                         {
                             to: 'docs/changelog',
@@ -69,6 +69,21 @@ module.exports = {
             }),
         ],
     ]),
+    plugins: [
+        [
+            'docusaurus-plugin-typedoc-api',
+            {
+                projectRoot: `.`,
+                changelogs: false,
+                readmes: false,
+                packages: [{ path: '.' }],
+                typedocOptions: {
+                    excludeExternals: false,
+                },
+                pathToTypedocJSON: `${__dirname}/api-typedoc-generated.json`,
+            },
+        ],
+    ],
     themeConfig: {
         ...config.themeConfig,
         tableOfContents: {

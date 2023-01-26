@@ -4,7 +4,7 @@ from typing import Any, AsyncIterator, Iterator, Optional
 import httpx
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _make_async_docs
+from ..._utils import _catch_not_found_or_throw
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -97,8 +97,14 @@ class LogClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    @_make_async_docs(src=LogClient.get)
     async def get(self) -> Optional[str]:
+        """Retrieve the log as text.
+
+        https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Returns:
+            str, optional: The retrieved log, or None, if it does not exist.
+        """
         try:
             response = await self.http_client.call(
                 url=self.url,
@@ -113,8 +119,14 @@ class LogClientAsync(ResourceClientAsync):
 
         return None
 
-    @_make_async_docs(src=LogClient.get_as_bytes)
     async def get_as_bytes(self) -> Optional[bytes]:
+        """Retrieve the log as raw bytes.
+
+        https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Returns:
+            bytes, optional: The retrieved log as raw bytes, or None, if it does not exist.
+        """
         try:
             response = await self.http_client.call(
                 url=self.url,
@@ -131,8 +143,14 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    @_make_async_docs(src=LogClient.stream)
     async def stream(self) -> AsyncIterator[Optional[httpx.Response]]:
+        """Retrieve the log as a stream.
+
+        https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Returns:
+            httpx.Response, optional: The retrieved log as a context-managed streaming Response, or None, if it does not exist.
+        """
         response = None
         try:
             response = await self.http_client.call(

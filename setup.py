@@ -70,6 +70,7 @@ setup(
             'pre-commit ~= 2.20.0',
             'pytest ~= 7.2.0',
             'pytest-asyncio ~= 0.20.3',
+            'redbaron ~= 0.9.2',
             'sphinx ~= 5.3.0',
             'sphinx-autodoc-typehints ~= 1.19.5',
             'sphinx-markdown-builder == 0.5.4',  # pinned to 0.5.4, because 0.5.5 has a formatting bug

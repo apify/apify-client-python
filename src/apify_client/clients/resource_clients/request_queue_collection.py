@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _make_async_docs
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
@@ -57,7 +57,6 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    @_make_async_docs(src=RequestQueueCollectionClient.list)
     async def list(
         self,
         *,
@@ -66,8 +65,30 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         offset: Optional[int] = None,
         desc: Optional[bool] = None,
     ) -> ListPage[Dict]:
+        """List the available request queues.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
+
+        Args:
+            unnamed (bool, optional): Whether to include unnamed request queues in the list
+            limit (int, optional): How many request queues to retrieve
+            offset (int, optional): What request queue to include as first when retrieving the list
+            desc (bool, optional): Whether to sort therequest queues in descending order based on their modification date
+
+        Returns:
+            ListPage: The list of available request queues matching the specified filters.
+        """
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    @_make_async_docs(src=RequestQueueCollectionClient.get_or_create)
     async def get_or_create(self, *, name: Optional[str] = None) -> Dict:
+        """Retrieve a named request queue, or create a new one when it doesn't exist.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
+
+        Args:
+            name (str, optional): The name of the request queue to retrieve or create.
+
+        Returns:
+            dict: The retrieved or newly-created request queue.
+        """
         return await self._get_or_create(name=name)

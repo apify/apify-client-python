@@ -18,7 +18,7 @@ test:
 type-check:
 	python3 -m mypy
 
-check-code: lint type-check test
+check-code: lint check-async-docstrings type-check test
 
 format:
 	python3 -m isort src tests
@@ -29,6 +29,12 @@ docs:
 
 check-docs:
 	./docs/res/check.sh
+
+check-async-docstrings:
+	python3 scripts/check_async_docstrings.py
+
+fix-async-docstrings:
+	python3 scripts/fix_async_docstrings.py
 
 check-changelog-entry:
 	python3 scripts/check_version_in_changelog.py

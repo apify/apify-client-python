@@ -1,6 +1,5 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _make_async_docs
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 
 
@@ -53,14 +52,34 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    @_make_async_docs(src=BuildClient.get)
     async def get(self) -> Optional[Dict]:
+        """Return information about the actor build.
+
+        https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
+
+        Returns:
+            dict, optional: The retrieved actor build data
+        """
         return await self._get()
 
-    @_make_async_docs(src=BuildClient.abort)
     async def abort(self) -> Dict:
+        """Abort the actor build which is starting or currently running and return its details.
+
+        https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
+
+        Returns:
+            dict: The data of the aborted actor build
+        """
         return await self._abort()
 
-    @_make_async_docs(src=BuildClient.wait_for_finish)
     async def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
+        """Wait synchronously until the build finishes or the server times out.
+
+        Args:
+            wait_secs (int, optional): how long does the client wait for build to finish. None for indefinite.
+
+        Returns:
+            dict, optional: The actor build data. If the status on the object is not one of the terminal statuses
+                (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
+        """
         return await self._wait_for_finish(wait_secs=wait_secs)

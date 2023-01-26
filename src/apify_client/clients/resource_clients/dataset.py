@@ -5,7 +5,7 @@ from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 import httpx
 
 from ..._types import JSONSerializable
-from ..._utils import ListPage, _filter_out_none_values_recursively, _make_async_docs
+from ..._utils import ListPage, _filter_out_none_values_recursively
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -508,23 +508,40 @@ class DatasetClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    @_make_async_docs(src=DatasetClient.get)
     async def get(self) -> Optional[Dict]:
+        """Retrieve the dataset.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
+
+        Returns:
+            dict, optional: The retrieved dataset, or None, if it does not exist
+        """
         return await self._get()
 
-    @_make_async_docs(src=DatasetClient.update)
     async def update(self, *, name: Optional[str] = None) -> Dict:
+        """Update the dataset with specified fields.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
+
+        Args:
+            name (str, optional): The new name for the dataset
+
+        Returns:
+            dict: The updated dataset
+        """
         updated_fields = {
             'name': name,
         }
 
         return await self._update(_filter_out_none_values_recursively(updated_fields))
 
-    @_make_async_docs(src=DatasetClient.delete)
     async def delete(self) -> None:
+        """Delete the dataset.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
+        """
         return await self._delete()
 
-    @_make_async_docs(src=DatasetClient.list_items)
     async def list_items(
         self,
         *,
@@ -540,6 +557,37 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: Optional[List[str]] = None,
         view: Optional[str] = None,
     ) -> ListPage:
+        """List the items of the dataset.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
+
+        Args:
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
+            desc (bool, optional): By default, results are returned in the same order as they were stored.
+                To reverse the order, set this parameter to True.
+            clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
+                The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
+                Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
+            fields (list of str, optional): A list of fields which should be picked from the items,
+                only these fields will remain in the resulting record objects.
+                Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
+                You can use this feature to effectively fix the output format.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
+                If the field is an array then every element of the array will become a separate record and merged with parent object.
+                If the unwound field is an object then it is merged with the parent object.
+                If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
+                then the item gets preserved as it is. Note that the unwound items ignore the desc parameter.
+            skip_empty (bool, optional): If True, then empty items are skipped from the output.
+                Note that if used, the results might contain less items than the limit value.
+            skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+            flatten (list of str, optional): A list of fields that should be flattened
+            view (str, optional): Name of the dataset view to be used
+
+        Returns:
+            ListPage: A page of the list of dataset items according to the specified filters.
+        """
         request_params = self._params(
             offset=offset,
             limit=limit,
@@ -571,7 +619,6 @@ class DatasetClientAsync(ResourceClientAsync):
             'desc': bool(response.headers['x-apify-pagination-desc']),
         })
 
-    @_make_async_docs(src=DatasetClient.iterate_items)
     async def iterate_items(
         self,
         *,
@@ -585,6 +632,35 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_empty: Optional[bool] = None,
         skip_hidden: Optional[bool] = None,
     ) -> AsyncIterator[Dict]:
+        """Iterate over the items in the dataset.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
+
+        Args:
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
+            desc (bool, optional): By default, results are returned in the same order as they were stored.
+                To reverse the order, set this parameter to True.
+            clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
+                The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
+                Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
+            fields (list of str, optional): A list of fields which should be picked from the items,
+                only these fields will remain in the resulting record objects.
+                Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
+                You can use this feature to effectively fix the output format.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
+                If the field is an array then every element of the array will become a separate record and merged with parent object.
+                If the unwound field is an object then it is merged with the parent object.
+                If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
+                then the item gets preserved as it is. Note that the unwound items ignore the desc parameter.
+            skip_empty (bool, optional): If True, then empty items are skipped from the output.
+                Note that if used, the results might contain less items than the limit value.
+            skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+
+        Yields:
+            dict: An item from the dataset
+        """
         cache_size = 1000
         first_item = offset
 
@@ -620,7 +696,6 @@ class DatasetClientAsync(ResourceClientAsync):
             for item in current_items_page.items:
                 yield item
 
-    @_make_async_docs(src=DatasetClient.get_items_as_bytes)
     async def get_items_as_bytes(
         self,
         *,
@@ -641,6 +716,46 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_row: Optional[str] = None,
         flatten: Optional[List[str]] = None,
     ) -> bytes:
+        """Get the items in the dataset as raw bytes.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
+
+        Args:
+            item_format (str): Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
+            desc (bool, optional): By default, results are returned in the same order as they were stored.
+                To reverse the order, set this parameter to True.
+            clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
+                The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
+                Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
+            bom (bool, optional): All text responses are encoded in UTF-8 encoding.
+                By default, csv files are prefixed with the UTF-8 Byte Order Mark (BOM),
+                while json, jsonl, xml, html and rss files are not. If you want to override this default behavior,
+                specify bom=True query parameter to include the BOM or bom=False to skip it.
+            delimiter (str, optional): A delimiter character for CSV files. The default delimiter is a simple comma (,).
+            fields (list of str, optional): A list of fields which should be picked from the items,
+                only these fields will remain in the resulting record objects.
+                Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
+                You can use this feature to effectively fix the output format.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
+                If the field is an array then every element of the array will become a separate record and merged with parent object.
+                If the unwound field is an object then it is merged with the parent object.
+                If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
+                then the item gets preserved as it is. Note that the unwound items ignore the desc parameter.
+            skip_empty (bool, optional): If True, then empty items are skipped from the output.
+                Note that if used, the results might contain less items than the limit value.
+            skip_header_row (bool, optional): If True, then header row in the csv format is skipped.
+            skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+            xml_root (str, optional): Overrides default root element name of xml output. By default the root element is items.
+            xml_row (str, optional): Overrides default element name that wraps each page or page function result object in xml output.
+                By default the element name is item.
+            flatten (list of str, optional): A list of fields that should be flattened
+
+        Returns:
+            bytes: The dataset items as raw bytes
+        """
         request_params = self._params(
             format=item_format,
             offset=offset,
@@ -670,7 +785,6 @@ class DatasetClientAsync(ResourceClientAsync):
         return response.content
 
     @asynccontextmanager
-    @_make_async_docs(src=DatasetClient.stream_items)
     async def stream_items(
         self,
         *,
@@ -690,6 +804,45 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_root: Optional[str] = None,
         xml_row: Optional[str] = None,
     ) -> AsyncIterator[httpx.Response]:
+        """Retrieve the items in the dataset as a stream.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
+
+        Args:
+            item_format (str): Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss. The default value is json.
+            offset (int, optional): Number of items that should be skipped at the start. The default value is 0
+            limit (int, optional): Maximum number of items to return. By default there is no limit.
+            desc (bool, optional): By default, results are returned in the same order as they were stored.
+                To reverse the order, set this parameter to True.
+            clean (bool, optional): If True, returns only non-empty items and skips hidden fields (i.e. fields starting with the # character).
+                The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True parameters.
+                Note that since some objects might be skipped from the output, that the result might contain less items than the limit value.
+            bom (bool, optional): All text responses are encoded in UTF-8 encoding.
+                By default, csv files are prefixed with the UTF-8 Byte Order Mark (BOM),
+                while json, jsonl, xml, html and rss files are not. If you want to override this default behavior,
+                specify bom=True query parameter to include the BOM or bom=False to skip it.
+            delimiter (str, optional): A delimiter character for CSV files. The default delimiter is a simple comma (,).
+            fields (list of str, optional): A list of fields which should be picked from the items,
+                only these fields will remain in the resulting record objects.
+                Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
+                You can use this feature to effectively fix the output format.
+            omit (list of str, optional): A list of fields which should be omitted from the items.
+            unwind (str, optional): Name of a field which should be unwound.
+                If the field is an array then every element of the array will become a separate record and merged with parent object.
+                If the unwound field is an object then it is merged with the parent object.
+                If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
+                then the item gets preserved as it is. Note that the unwound items ignore the desc parameter.
+            skip_empty (bool, optional): If True, then empty items are skipped from the output.
+                Note that if used, the results might contain less items than the limit value.
+            skip_header_row (bool, optional): If True, then header row in the csv format is skipped.
+            skip_hidden (bool, optional): If True, then hidden fields are skipped from the output, i.e. fields starting with the # character.
+            xml_root (str, optional): Overrides default root element name of xml output. By default the root element is items.
+            xml_row (str, optional): Overrides default element name that wraps each page or page function result object in xml output.
+                By default the element name is item.
+
+        Returns:
+            httpx.Response: The dataset items as a context-managed streaming Response
+        """
         response = None
         try:
             request_params = self._params(
@@ -722,8 +875,14 @@ class DatasetClientAsync(ResourceClientAsync):
             if response:
                 await response.aclose()
 
-    @_make_async_docs(src=DatasetClient.push_items)
     async def push_items(self, items: JSONSerializable) -> None:
+        """Push items to the dataset.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
+
+        Args:
+            items: The items which to push in the dataset. Either a stringified JSON, a dictionary, or a list of strings or dictionaries.
+        """
         data = None
         json = None
 

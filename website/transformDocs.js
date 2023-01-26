@@ -137,7 +137,7 @@ function traverse(o, parent) {
                         kind: 32768,
                         kindString: 'Parameter',
                         flags: {
-                            isOptional: p.datatype?.includes('Optional'),
+                            isOptional: p.datatype?.includes('Optional') ? 'true' : undefined,
                         },
                         type: inferType(p.datatype),
                     })).filter(x => x),

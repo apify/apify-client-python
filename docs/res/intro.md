@@ -7,11 +7,14 @@ It provides useful features like automatic retries and convenience functions tha
 * [Features](#features)
   * [Automatic parsing and error handling](#automatic-parsing-and-error-handling)
   * [Retries with exponential backoff](#retries-with-exponential-backoff)
+  * [Support for asynchronous usage](#support-for-asynchronous-usage)
   * [Convenience functions and options](#convenience-functions-and-options)
 * [Usage concepts](#usage-concepts)
   * [Nested clients](#nested-clients)
   * [Pagination](#pagination)
   * [Streaming resources](#streaming-resources)
+  * [Asynchronous usage](#asynchronous-usage)
+  * [Logging](#logging)
 * [API Reference](#api-reference)
 
 ## Installation

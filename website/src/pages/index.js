@@ -14,11 +14,11 @@ function Hero() {
                     <div className={clsx(styles.relative, 'row')}>
                         <div className="col">
                             <h1 className={styles.tagline}>
-                                apify-client is the official library to access Apify API from your Python applications.
+                                Apify API client for Python
                             </h1>
                             <h1 className={styles.tagline}>
                                 {/* eslint-disable-next-line max-len */}
-                                <span>apify-client</span> is the <span>official</span> library to access <span>Apify</span> API from your <span>Python</span> applications.
+                                <span>Apify API client</span> for Python.
                             </h1>
                         </div>
                     </div>
@@ -26,7 +26,8 @@ function Hero() {
                         <div className="col">
                             <h2></h2>
                             <h2>
-                                It provides useful features like automatic retries and convenience functions that improve the experience of using the Apify API.
+                                Apify API Client for Python is the official library to access Apify API from your Python applications. 
+                                It provides useful features like automatic retries and convenience functions that improve the Apify API experience.
                             </h2>
                         </div>
                     </div>
@@ -62,10 +63,26 @@ export default function Home() {
             title={`${siteConfig.title} · ${siteConfig.tagline}`}
             description={siteConfig.description}>
             <Hero />
-            <div className="container">
-                <div className="row">
-                    <div className="col text--center padding-top--lg padding-bottom--xl">
-                        <SvgLogo className={styles.bottomLogo} />
+              <div>
+                <div className="container">
+                    <div className="row padding-horiz--md" >
+                        <div className="col col--4">
+                            <p style={{ lineHeight: '200%' }}>
+                            Using Apify Client for Python, you can easily run your own actors or actors from Apify Store
+                            and await them to finish using the convenient .call() method and retrieve results from the resulting dataset.
+                            </p>
+                        </div>
+                        <div className="col col--8">
+                            <CodeBlock language='python'>{`from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+# Start an actor and waits for it to finish
+actor_call = apify_client.actor('john-doe/my-cool-actor').call()
+
+# Fetch results from the actor's default dataset
+dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items`}</CodeBlock>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -28,10 +28,16 @@ module.exports = {
                     title: 'Apify Client Python',
                     items: [
                         {
-                            to: 'docs/intro',
+                            to: 'docs/guides',
                             label: 'Docs',
                             position: 'left',
-                            activeBaseRegex: 'docs(?!/changelog)',
+                            activeBaseRegex: 'docs/guides',
+                        },
+                        {
+                            to: 'docs/examples',
+                            label: 'Examples',
+                            position: 'left',
+                            activeBaseRegex: 'docs/examples',
                         },
                         // {
                         //     type: 'docsVersionDropdown',
@@ -51,6 +57,11 @@ module.exports = {
                             label: 'Changelog',
                             position: 'left',
                             activeBaseRegex: 'changelog',
+                        },
+                        {
+                            to: 'https://github.com/apify/apify-client-python',
+                            label: 'GitHub',
+                            position: 'left',
                         },
                     ],
                 },

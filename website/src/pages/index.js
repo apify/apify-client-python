@@ -26,8 +26,8 @@ function Hero() {
                         <div className="col">
                             <h2></h2>
                             <h2>
-                                Apify API Client for Python is the official library to access Apify API from your Python applications. 
-                                It provides useful features like automatic retries and convenience functions that improve the Apify API experience.
+                                The Python Apify API Client is the official library to access Apify API from your Python applications. 
+                                It provides useful features like automatic retries and convenience functions to improve your experience in the Apify platform.
                             </h2>
                         </div>
                     </div>
@@ -68,8 +68,8 @@ export default function Home() {
                     <div className="row padding-horiz--md" >
                         <div className="col col--4">
                             <p style={{ lineHeight: '200%' }}>
-                            Using Apify Client for Python, you can easily run your own actors or actors from Apify Store
-                            and await them to finish using the convenient .call() method and retrieve results from the resulting dataset.
+                            The Python Apify API Client, makes it easy to run your own actors or actors from <a href='https://apify.com/store'>Apify Store</a>
+                            by simply using the <code>.call()</code> method to retrieve data from the resulting dataset.
                             </p>
                         </div>
                         <div className="col col--8">

@@ -1,4 +1,5 @@
 {
+    "name": "apify-client-python",
     "scripts": {
         "examples": "docusaurus-examples",
         "start": "rimraf .docusaurus && docusaurus start",

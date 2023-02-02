@@ -12,14 +12,14 @@ const acc = {
     'originalName': '',
     'children': [],
     'groups': [],
-    "comment": {
-        "summary": [
-            {
-                "kind": "text",
-                "text": "# Apify Client for Python\nApify Client for Python is a library for controlling your actors on the Apify Platform from Python. It is a thin wrapper around the [Apify API](https://docs.apify.com/api/v2). The library is available on [PyPI](https://pypi.org/project/apify-client/) and can be installed using `pip install apify-client`."
-            },
-        ]
-    },
+    // "comment": {
+    //     "summary": [
+    //         {
+    //             "kind": "text",
+    //             "text": "# Apify Client for Python\nApify Client for Python is a library for controlling your actors on the Apify Platform from Python. It is a thin wrapper around the [Apify API](https://docs.apify.com/api/v2). The library is available on [PyPI](https://pypi.org/project/apify-client/) and can be installed using `pip install apify-client`."
+    //         },
+    //     ]
+    // },
     "sources": [
         {
             "fileName": "src/index.ts",
@@ -35,6 +35,7 @@ let oid = 1;
 function getGroupName(object) {
     const groupPredicates = {
         'Errors': (x) => x.name.toLowerCase().includes('error'),
+        'Main Clients': (x) => ['ApifyClient', 'ApifyClientAsync'].includes(x.name),
         'Async Resource Clients': (x) => x.name.toLowerCase().includes('async'),
         'Resource Clients': (x) => x.name.toLowerCase().includes('client'),
         'Helper Classes': (x) => x.kindString === 'Class',
@@ -53,6 +54,7 @@ function getGroupName(object) {
 }
 
 const groupsOrdered = [
+    'Main Clients',
     'Resource Clients',
     'Async Resource Clients',
     'Helper Classes',
@@ -77,7 +79,12 @@ const hidden = [
     'ResourceCollectionClientAsync'
 ]
 
-const groupSort = (a, b) => groupsOrdered.indexOf(a.title) - groupsOrdered.indexOf(b.title);
+const groupSort = (a, b) => {
+    if(groupsOrdered.includes(a) && groupsOrdered.includes(b)){
+        return groupsOrdered.indexOf(a) - groupsOrdered.indexOf(b)
+    }
+    return a.localeCompare(b);
+};
 
 // Taken from https://github.com/TypeStrong/typedoc/blob/v0.23.24/src/lib/models/reflections/kind.ts, modified
 const kinds = {
@@ -121,9 +128,19 @@ function inferType(x) {
     }
 }
 
+function sortChildren(acc) {
+    for (let group of acc.groups) {
+        group.children
+            .sort((a, b) => {
+                const firstName = acc.children.find(x => x.id === a).name;
+                const secondName = acc.children.find(x => x.id === b).name;
+                return firstName.localeCompare(secondName);
+            });
+    }
+}
+
 function traverse(o, parent) {
     for( let x of o.members ?? []) {
-        console.log(x.name);
         let typeDocType = kinds[x.type];
 
         if(x.bases?.includes('Enum')) {
@@ -141,7 +158,6 @@ function traverse(o, parent) {
         }
 
         if(x.type in kinds && !hidden.includes(x.name)) {
-
             let newObj = {
                 id: oid++,
                 name: x.name,
@@ -162,6 +178,7 @@ function traverse(o, parent) {
                 newObj.signatures = [{
                     id: oid++,
                     name: x.name,
+                    modifiers: x.modifiers ?? [],
                     kind: 4096,
                     kindString: 'Call signature',
                     flags: {},
@@ -197,13 +214,13 @@ function traverse(o, parent) {
             }
 
             if(newObj.name === '__init__') {
+                if(!['ApifyClient', 'ApifyClientAsync'].includes(parent.name)) continue;
                 newObj.kindString = 'Constructor';
                 newObj.kind = 512;
             }
 
             traverse(x, newObj);
 
-            newObj.groups.sort(groupSort);
             const groupName = getGroupName(newObj);
 
             const group = parent.groups.find((g) => g.title === groupName);
@@ -216,6 +233,7 @@ function traverse(o, parent) {
                 });
             }
 
+            sortChildren(newObj);
             parent.children.push(newObj);
         }
     }
@@ -264,6 +282,7 @@ function main() {
         }
     }
     fixRefs(acc);
+    sortChildren(acc);
 
     fs.writeFileSync(path.join(__dirname, 'api-typedoc-generated.json'), JSON.stringify(acc, null, 2));
 }

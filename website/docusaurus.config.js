@@ -85,7 +85,7 @@ module.exports = {
         [
             'docusaurus-plugin-typedoc-api',
             {
-                projectRoot: `.`,
+                projectRoot: '.',
                 changelogs: false,
                 readmes: false,
                 packages: [{ path: '.' }],

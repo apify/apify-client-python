@@ -31,7 +31,7 @@ from apify_client import ApifyClient
 
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
-# Start an actor and waits for it to finish
+# Start an actor and wait for it to finish
 actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
 # Fetch results from the actor's default dataset
@@ -2234,6 +2234,7 @@ Sub-client for listing actor runs.
 List all actor runs (either of a single actor, or all user’s actors, depending on where this client was initialized from).
 
 [https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs](https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs)
+
 [https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list](https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list)
 
 * **Parameters**
@@ -4432,6 +4433,7 @@ Async sub-client for listing actor runs.
 List all actor runs (either of a single actor, or all user’s actors, depending on where this client was initialized from).
 
 [https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs](https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs)
+
 [https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list](https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list)
 
 * **Parameters**

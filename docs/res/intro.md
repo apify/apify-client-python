@@ -31,7 +31,7 @@ from apify_client import ApifyClient
 
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
-# Start an actor and waits for it to finish
+# Start an actor and wait for it to finish
 actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
 # Fetch results from the actor's default dataset

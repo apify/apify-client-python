@@ -24,6 +24,7 @@ class RunCollectionClient(ResourceCollectionClient):
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
+
         https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list
 
         Args:
@@ -62,6 +63,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
+
         https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list
 
         Args:

@@ -8,7 +8,9 @@ class UserClient(ResourceClient):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the UserClient."""
-        resource_id = kwargs.pop('resource_id', 'me')
+        resource_id = kwargs.pop('resource_id', None)
+        if resource_id is None:
+            resource_id = 'me'
         resource_path = kwargs.pop('resource_path', 'users')
         super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
 
@@ -30,7 +32,9 @@ class UserClientAsync(ResourceClientAsync):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the UserClientAsync."""
-        resource_id = kwargs.pop('resource_id', 'me')
+        resource_id = kwargs.pop('resource_id', None)
+        if resource_id is None:
+            resource_id = 'me'
         resource_path = kwargs.pop('resource_path', 'users')
         super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
 

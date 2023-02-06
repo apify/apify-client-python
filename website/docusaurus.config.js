@@ -47,10 +47,10 @@ module.exports = {
                         //     dropdownItemsAfter: [],
                         // },
                         {
-                            to: '/api',
+                            to: '/reference',
                             label: 'Reference',
                             position: 'left',
-                            activeBaseRegex: '/api',
+                            activeBaseRegex: '/reference',
                         },
                         {
                             to: 'docs/changelog',
@@ -94,6 +94,7 @@ module.exports = {
                 },
                 pathToTypedocJSON: `${__dirname}/api-typedoc-generated.json`,
                 sortSidebar: groupSort,
+                routeBasePath: 'reference',
             },
         ],
     ],

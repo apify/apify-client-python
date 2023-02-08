@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _filter_out_none_values_recursively, _maybe_extract_enum_member_value
+from ..._utils import _filter_out_none_values_recursively, _maybe_extract_enum_member_value, ignore_docs
 from ...consts import ActorSourceType
 from ..base import ResourceClient, ResourceClientAsync
 from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
@@ -35,6 +35,7 @@ def _get_actor_version_representation(
 class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single actor version."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionClient."""
         resource_path = kwargs.pop('resource_path', 'versions')
@@ -124,6 +125,7 @@ class ActorVersionClient(ResourceClient):
 class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor version."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'versions')

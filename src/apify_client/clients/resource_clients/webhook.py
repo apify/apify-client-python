@@ -7,6 +7,7 @@ from ..._utils import (
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
+    ignore_docs,
 )
 from ...consts import WebhookEventType
 from ..base import ResourceClient, ResourceClientAsync
@@ -53,6 +54,7 @@ def _get_webhook_representation(
 class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
@@ -162,6 +164,7 @@ class WebhookClient(ResourceClient):
 class WebhookClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single webhook."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')

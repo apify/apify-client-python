@@ -1,11 +1,13 @@
 from typing import Any, Dict, Optional
 
+from ..._utils import ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
 class WebhookDispatchClient(ResourceClient):
     """Sub-client for querying information about a webhook dispatch."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
@@ -25,6 +27,7 @@ class WebhookDispatchClient(ResourceClient):
 class WebhookDispatchClientAsync(ResourceClientAsync):
     """Async sub-client for querying information about a webhook dispatch."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')

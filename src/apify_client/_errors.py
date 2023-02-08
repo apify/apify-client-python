@@ -2,6 +2,8 @@ from typing import Optional
 
 import httpx
 
+from ._utils import ignore_docs
+
 
 class ApifyClientError(Exception):
     """Base class for errors specific to the Apify API Client."""
@@ -18,6 +20,7 @@ class ApifyApiError(ApifyClientError):
     errors, which are thrown immediately, because a correction by the user is needed.
     """
 
+    @ignore_docs
     def __init__(self, response: httpx.Response, attempt: int) -> None:
         """Create the ApifyApiError instance.
 
@@ -58,6 +61,7 @@ class InvalidResponseBodyError(ApifyClientError):
     request. We do that by identifying this error in the _HTTPClient.
     """
 
+    @ignore_docs
     def __init__(self, response: httpx.Response) -> None:
         """Create the InvalidResponseBodyError instance.
 

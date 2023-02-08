@@ -9,6 +9,7 @@ from ..._utils import (
     _filter_out_none_values_recursively,
     _parse_date_fields,
     _pluck_data,
+    ignore_docs,
 )
 from ..base import ResourceClient, ResourceClientAsync
 
@@ -16,6 +17,7 @@ from ..base import ResourceClient, ResourceClientAsync
 class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClient."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
@@ -244,6 +246,7 @@ class KeyValueStoreClient(ResourceClient):
 class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClientAsync."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')

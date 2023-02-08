@@ -1,12 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating datasets."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
@@ -53,6 +54,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
 class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating datasets."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')

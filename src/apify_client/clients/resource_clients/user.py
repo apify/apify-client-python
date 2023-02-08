@@ -1,11 +1,13 @@
 from typing import Any, Dict, Optional
 
+from ..._utils import ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
 class UserClient(ResourceClient):
     """Sub-client for querying user data."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the UserClient."""
         resource_id = kwargs.pop('resource_id', None)
@@ -30,6 +32,7 @@ class UserClient(ResourceClient):
 class UserClientAsync(ResourceClientAsync):
     """Async sub-client for querying user data."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the UserClientAsync."""
         resource_id = kwargs.pop('resource_id', None)

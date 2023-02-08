@@ -8,9 +8,10 @@ import time
 from datetime import datetime, timezone
 from enum import Enum
 from http import HTTPStatus
-from typing import Any, Awaitable, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, cast
 
-from ._errors import ApifyApiError
+if TYPE_CHECKING:
+    from ._errors import ApifyApiError
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
@@ -159,7 +160,7 @@ async def _retry_with_exp_backoff_async(
     return await async_func(stop_retrying, max_retries + 1)
 
 
-def _catch_not_found_or_throw(exc: ApifyApiError) -> None:
+def _catch_not_found_or_throw(exc: 'ApifyApiError') -> None:
     is_not_found_status = (exc.status_code == HTTPStatus.NOT_FOUND)
     is_not_found_type = (exc.type in RECORD_NOT_FOUND_EXCEPTION_TYPES)
     if not (is_not_found_status and is_not_found_type):
@@ -222,6 +223,11 @@ def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
     return maybe_enum_member
 
 
+def ignore_docs(method: T) -> T:
+    """Mark that a method's documentation should not be rendered. Functionally, this decorator is a noop."""
+    return method
+
+
 class ListPage(Generic[T]):
     """A single page of items returned from a list() method."""
 
@@ -238,6 +244,7 @@ class ListPage(Generic[T]):
     #: bool: Whether the listing is descending or not
     desc: bool
 
+    @ignore_docs
     def __init__(self, data: Dict) -> None:
         """Initialize a ListPage instance from the API response data."""
         self.items = data['items'] if 'items' in data else []

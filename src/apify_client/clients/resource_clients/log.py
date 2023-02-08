@@ -4,13 +4,14 @@ from typing import Any, AsyncIterator, Iterator, Optional
 import httpx
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw
+from ..._utils import _catch_not_found_or_throw, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
 class LogClient(ResourceClient):
     """Sub-client for manipulating logs."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClient."""
         resource_path = kwargs.pop('resource_path', 'logs')
@@ -92,6 +93,7 @@ class LogClient(ResourceClient):
 class LogClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating logs."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClientAsync."""
         resource_path = kwargs.pop('resource_path', 'logs')

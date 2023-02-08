@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _maybe_extract_enum_member_value
+from ..._utils import ListPage, _maybe_extract_enum_member_value, ignore_docs
 from ...consts import ActorJobStatus
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
@@ -8,6 +8,7 @@ from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 class RunCollectionClient(ResourceCollectionClient):
     """Sub-client for listing actor runs."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
@@ -47,6 +48,7 @@ class RunCollectionClient(ResourceCollectionClient):
 class RunCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing actor runs."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')

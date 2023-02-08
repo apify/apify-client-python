@@ -59,7 +59,7 @@ module.exports = {
                             activeBaseRegex: 'changelog',
                         },
                         {
-                            to: 'https://github.com/apify/apify-client-python',
+                            href: 'https://github.com/apify/apify-client-python',
                             label: 'GitHub',
                             position: 'left',
                         },

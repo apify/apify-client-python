@@ -32,7 +32,7 @@
         "rimraf": "^3.0.2"
     },
     "dependencies": {
-        "@apify/docs-theme": "^1.0.25",
+        "@apify/docs-theme": "^1.0.52",
         "@docusaurus/core": "^2.3.0",
         "@docusaurus/plugin-client-redirects": "^2.3.0",
         "@docusaurus/preset-classic": "^2.3.0",

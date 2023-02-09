@@ -68,8 +68,8 @@ export default function Home() {
                     <div className="row padding-horiz--md" >
                         <div className="col col--4">
                             <p style={{ lineHeight: '200%' }}>
-                            The Python Apify API Client, makes it easy to run your own actors or actors from <a href='https://apify.com/store'>Apify Store</a>
-                            by simply using the <code>.call()</code> method to retrieve data from the resulting dataset.
+                            The Python Apify API Client, makes it easy to run your own actors or actors from <a href='https://apify.com/store'>Apify Store</a> by
+                             simply using the <code>.call()</code> method to retrieve data from the resulting dataset.
                             </p>
                         </div>
                         <div className="col col--8">

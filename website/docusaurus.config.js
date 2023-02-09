@@ -7,7 +7,7 @@ const { absoluteUrl } = config;
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
-    title: 'Apify Docs v2',
+    title: 'Apify Documentation',
     tagline: 'Apify Documentation',
     url: absoluteUrl,
     baseUrl: '/api/client/python',
@@ -33,12 +33,12 @@ module.exports = {
                             position: 'left',
                             activeBaseRegex: 'docs/guides',
                         },
-                        {
-                            to: 'docs/examples',
-                            label: 'Examples',
-                            position: 'left',
-                            activeBaseRegex: 'docs/examples',
-                        },
+                        // {
+                        //     to: 'docs/examples',
+                        //     label: 'Examples',
+                        //     position: 'left',
+                        //     activeBaseRegex: 'docs/examples',
+                        // },
                         // {
                         //     type: 'docsVersionDropdown',
                         //     position: 'left',

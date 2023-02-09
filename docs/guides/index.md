@@ -1,6 +1,7 @@
 ---
 title: Apify API client for Python
 sidebar_label: Home
+sidebar_position: 0
 ---
 
 `apify_client` is the official library to access the [Apify API](https://docs.apify.com/api/v2) from your Python applications.

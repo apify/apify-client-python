@@ -26,7 +26,7 @@ function Hero() {
                         <div className="col">
                             <h2></h2>
                             <h2>
-                                The Python Apify API Client is the official library to access Apify API from your Python applications. 
+                                The Python Apify API Client is the official library to access Apify API from your Python applications.
                                 It provides useful features like automatic retries and convenience functions to improve your experience in the Apify platform.
                             </h2>
                         </div>
@@ -34,7 +34,7 @@ function Hero() {
                     <div className="row">
                         <div className="col">
                             <div className={styles.heroButtons}>
-                                <Link to="docs/intro" className={styles.getStarted}>Get Started</Link>
+                                <Link to="docs/guides" className={styles.getStarted}>Get Started</Link>
                                 <iframe src="https://ghbtns.com/github-btn.html?user=apify&repo=apify-client-python&type=star&count=true&size=large" width="170" height="30" title="GitHub"></iframe>
                             </div>
                         </div>

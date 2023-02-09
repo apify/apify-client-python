@@ -28,10 +28,10 @@ module.exports = {
                     title: 'Apify Client Python',
                     items: [
                         {
-                            to: 'docs/guides',
+                            to: 'docs/quick-start',
                             label: 'Docs',
                             position: 'left',
-                            activeBaseRegex: 'docs/guides',
+                            activeBaseRegex: 'docs/quick-start',
                         },
                         // {
                         //     to: 'docs/examples',

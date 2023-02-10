@@ -24,7 +24,7 @@ setup(
     author_email='support@apify.com',
     url='https://github.com/apify/apify-client-python',
     project_urls={
-        'Documentation': 'https://docs.apify.com/apify-client-python',
+        'Documentation': 'https://docs.apify.com/api/client/python/',
         'Source': 'https://github.com/apify/apify-client-python',
         'Issue tracker': 'https://github.com/apify/apify-client-python/issues',
         'Apify Homepage': 'https://apify.com',
@@ -74,9 +74,6 @@ setup(
             'pytest-timeout ~= 2.1.0',
             'pytest-xdist ~= 3.2.0',
             'redbaron ~= 0.9.2',
-            'sphinx ~= 6.1.3',
-            'sphinx-autodoc-typehints ~= 1.22',
-            'sphinx-markdown-builder == 0.5.4',  # pinned to 0.5.4, because 0.5.5 has a formatting bug
             'types-setuptools',  # always latest, since we always install latest setuptools
         ],
     },

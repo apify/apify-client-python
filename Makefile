@@ -1,4 +1,4 @@
-.PHONY: clean install-dev lint unit-tests type-check check-code format docs check-docs check-async-docstrings fix-async-docstrings check-changelog-entry
+.PHONY: clean install-dev lint unit-tests type-check check-code format check-async-docstrings fix-async-docstrings check-changelog-entry
 
 clean:
 	rm -rf build dist .mypy_cache .pytest_cache src/*.egg-info __pycache__
@@ -23,12 +23,6 @@ check-code: lint check-async-docstrings type-check unit-tests
 format:
 	python3 -m isort src tests
 	python3 -m autopep8 --in-place --recursive src tests
-
-docs:
-	./docs/res/build.sh
-
-check-docs:
-	./docs/res/check.sh
 
 check-async-docstrings:
 	python3 scripts/check_async_docstrings.py

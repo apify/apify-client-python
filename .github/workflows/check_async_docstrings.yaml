@@ -1,11 +1,11 @@
-name: Check documentation status
+name: Check async docstrings
 
 on:
   workflow_call:
 
 jobs:
-  check_docs:
-    name: Check whether documentation is up-to-date
+  check_async_docstrings:
+    name: Check whether doctrings for async methods are up-to-date
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +22,3 @@ jobs:
 
     - name: Check async docstrings
       run: make check-async-docstrings
-
-    - name: Check docs building
-      run: make check-docs

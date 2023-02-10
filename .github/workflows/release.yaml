@@ -32,13 +32,13 @@ jobs:
     name: Run unit tests
     uses: ./.github/workflows/unit_tests.yaml
 
-  check_docs:
-    name: Check whether the documentation is up to date
-    uses: ./.github/workflows/check_docs.yaml
+  check_async_docstrings:
+    name: Check whether async dostrings are up to date
+    uses: ./.github/workflows/check_async_docstrings.yaml
 
   deploy:
     name: Publish to PyPI
-    needs: [lint_and_type_checks, unit_tests, check_docs]
+    needs: [lint_and_type_checks, unit_tests, check_async_docstrings]
     runs-on: ubuntu-latest
 
     steps:

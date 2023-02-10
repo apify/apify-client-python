@@ -13,7 +13,7 @@ jobs:
     needs: [lint_and_type_checks]
     uses: ./.github/workflows/unit_tests.yaml
 
-  check_docs:
-    name: Check whether the documentation is up to date
-    uses: ./.github/workflows/check_docs.yaml
+  check_async_docstrings:
+    name: Check async dostrings
+    uses: ./.github/workflows/check_async_docstrings.yaml
 

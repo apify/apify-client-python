@@ -139,6 +139,24 @@ function sortChildren(acc) {
     }
 }
 
+function parseArguments(docstring) {
+    return (docstring
+        .split('Args:')[1] ?? '').split('Returns:')[0]
+        .split(/(^|\n)\s*([\w]+)\s*\(.*?\)\s*:\s*/)
+        .filter(x => x.length > 1)
+        .reduce((p,x,i,a) => {
+            if(i%2 === 0){
+                return {...p, [x]: a[i+1]}
+            }
+            return p;
+        }, {}
+    );
+}
+
+function isHidden(x) {
+    return x.decorations?.some(d => d.name === 'ignore_docs') || !x.docstring?.content;
+}
+
 function traverse(o, parent) {
     for( let x of o.members ?? []) {
         let typeDocType = kinds[x.type];
@@ -157,7 +175,7 @@ function traverse(o, parent) {
             }
         }
 
-        if(x.type in kinds && !hidden.includes(x.name)) {
+        if(x.type in kinds && !isHidden(x)) {
             let newObj = {
                 id: oid++,
                 name: x.name,
@@ -175,6 +193,8 @@ function traverse(o, parent) {
             };
 
             if(newObj.kindString === 'Method') {
+                const parameters = parseArguments(x.docstring?.content ?? '');
+
                 newObj.signatures = [{
                     id: oid++,
                     name: x.name,
@@ -199,14 +219,10 @@ function traverse(o, parent) {
                             isOptional: p.datatype?.includes('Optional') ? 'true' : undefined,
                         },
                         type: inferType(p.datatype),
-                        comment: x.docstring ? {
+                        comment: parameters[p.name] ? {
                             summary: [{
                                 kind: 'text',
-                                text: x.docstring?.content
-                                    .slice((() =>{
-                                        const i = x.docstring?.content.toLowerCase().search(p.name.toLowerCase());
-                                        return i === -1 ? x.docstring?.content.length : i;
-                                    })()).split('\n')[0].split('- ')[1],
+                                text: parameters[p.name]
                             }]
                         } : undefined,
                     })).filter(x => x),
@@ -214,7 +230,6 @@ function traverse(o, parent) {
             }
 
             if(newObj.name === '__init__') {
-                if(!['ApifyClient', 'ApifyClientAsync'].includes(parent.name)) continue;
                 newObj.kindString = 'Constructor';
                 newObj.kind = 512;
             }

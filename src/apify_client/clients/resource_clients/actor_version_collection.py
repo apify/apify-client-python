@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ...consts import ActorSourceType
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_version import _get_actor_version_representation
@@ -9,6 +9,7 @@ from .actor_version import _get_actor_version_representation
 class ActorVersionCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor versions."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
@@ -79,6 +80,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
 class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor versions."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')

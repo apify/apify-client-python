@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from apify_client.consts import WebhookEventType
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .webhook import _get_webhook_representation
 
@@ -10,6 +10,7 @@ from .webhook import _get_webhook_representation
 class WebhookCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating webhooks."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
@@ -93,6 +94,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
 class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating webhooks."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')

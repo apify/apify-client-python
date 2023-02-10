@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .schedule import _get_schedule_representation
 
@@ -8,6 +8,7 @@ from .schedule import _get_schedule_representation
 class ScheduleCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating schedules."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
@@ -83,6 +84,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
 class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating schedules."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')

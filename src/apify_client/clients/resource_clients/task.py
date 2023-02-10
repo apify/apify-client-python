@@ -8,6 +8,7 @@ from ..._utils import (
     _maybe_extract_enum_member_value,
     _parse_date_fields,
     _pluck_data,
+    ignore_docs,
 )
 from ...consts import ActorJobStatus, MetaOrigin
 from ..base import ResourceClient, ResourceClientAsync
@@ -41,6 +42,7 @@ def _get_task_representation(
 class TaskClient(ResourceClient):
     """Sub-client for manipulating a single task."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
@@ -263,6 +265,7 @@ class TaskClient(ResourceClient):
 class TaskClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single task."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')

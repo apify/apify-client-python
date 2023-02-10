@@ -1,13 +1,14 @@
 from typing import Any, Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data
+from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
 class RequestQueueClient(ResourceClient):
     """Sub-client for manipulating a single request queue."""
 
+    @ignore_docs
     def __init__(self, *args: Any, client_key: Optional[str] = None, **kwargs: Any) -> None:
         """Initialize the RequestQueueClient.
 
@@ -173,6 +174,7 @@ class RequestQueueClient(ResourceClient):
 class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
 
+    @ignore_docs
     def __init__(self, *args: Any, client_key: Optional[str] = None, **kwargs: Any) -> None:
         """Initialize the RequestQueueClientAsync.
 

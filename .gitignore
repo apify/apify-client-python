@@ -15,8 +15,6 @@ build/
 .vscode
 .idea
 
-cli_test_client.py
-
 node_modules
 *.log
 *.pid

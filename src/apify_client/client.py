@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Union
 
 from ._http_client import _HTTPClient, _HTTPClientAsync
+from ._utils import ignore_docs
 from .clients import (
     ActorClient,
     ActorClientAsync,
@@ -55,6 +56,7 @@ API_VERSION = 'v2'
 class _BaseApifyClient:
     http_client: Union[_HTTPClient, _HTTPClientAsync]
 
+    @ignore_docs
     def __init__(
         self,
         token: Optional[str] = None,

@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _maybe_extract_enum_member_value
+from ..._utils import ListPage, _maybe_extract_enum_member_value, ignore_docs
 from ...consts import ActorJobStatus
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
@@ -8,6 +8,7 @@ from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 class RunCollectionClient(ResourceCollectionClient):
     """Sub-client for listing actor runs."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
@@ -24,6 +25,7 @@ class RunCollectionClient(ResourceCollectionClient):
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
+
         https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list
 
         Args:
@@ -46,6 +48,7 @@ class RunCollectionClient(ResourceCollectionClient):
 class RunCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing actor runs."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
@@ -62,6 +65,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
+
         https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list
 
         Args:

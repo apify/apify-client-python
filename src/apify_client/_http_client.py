@@ -11,7 +11,14 @@ import httpx
 from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
 from ._logging import logger_name
 from ._types import JSONSerializable
-from ._utils import _is_content_type_json, _is_content_type_text, _is_content_type_xml, _retry_with_exp_backoff, _retry_with_exp_backoff_async
+from ._utils import (
+    _is_content_type_json,
+    _is_content_type_text,
+    _is_content_type_xml,
+    _retry_with_exp_backoff,
+    _retry_with_exp_backoff_async,
+    ignore_docs,
+)
 from ._version import __version__
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
@@ -21,6 +28,7 @@ logger = logging.getLogger(logger_name)
 
 
 class _BaseHTTPClient:
+    @ignore_docs
     def __init__(
         self,
         *,

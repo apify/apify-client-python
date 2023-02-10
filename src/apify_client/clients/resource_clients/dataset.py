@@ -5,13 +5,14 @@ from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 import httpx
 
 from ..._types import JSONSerializable
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
 class DatasetClient(ResourceClient):
     """Sub-client for manipulating a single dataset."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClient."""
         resource_path = kwargs.pop('resource_path', 'datasets')
@@ -503,6 +504,7 @@ class DatasetClient(ResourceClient):
 class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClientAsync."""
         resource_path = kwargs.pop('resource_path', 'datasets')

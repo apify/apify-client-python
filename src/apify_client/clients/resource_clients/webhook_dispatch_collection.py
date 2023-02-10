@@ -1,12 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage
+from ..._utils import ListPage, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class WebhookDispatchCollectionClient(ResourceCollectionClient):
     """Sub-client for listing webhook dispatches."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
@@ -37,6 +38,7 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
 class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing webhook dispatches."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')

@@ -20,6 +20,7 @@ from apify_client._utils import (
     _retry_with_exp_backoff,
     _retry_with_exp_backoff_async,
     _to_safe_id,
+    ignore_docs,
 )
 from apify_client.consts import WebhookEventType
 
@@ -162,7 +163,6 @@ def test__retry_with_exp_backoff() -> None:
     assert attempt_counter == 3
 
 
-@pytest.mark.asyncio
 async def test__retry_with_exp_backoff_async() -> None:
     attempt_counter = 0
 
@@ -253,3 +253,11 @@ def test__filter_out_none_values_recursively_internal() -> None:
     assert _filter_out_none_values_recursively_internal({'k1': {}}, False) == {'k1': {}}
     assert _filter_out_none_values_recursively_internal({}, True) is None
     assert _filter_out_none_values_recursively_internal({'k1': {}}, True) is None
+
+
+def test_ignore_docs() -> None:
+    def testing_function(_a: str, _b: str) -> str:
+        """Dummy docstring"""
+        return 'dummy'
+
+    assert testing_function is ignore_docs(testing_function)

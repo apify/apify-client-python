@@ -1,12 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class KeyValueStoreCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating key-value stores."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
@@ -53,6 +54,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
 class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')

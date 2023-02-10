@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from ..._http_client import _HTTPClient, _HTTPClientAsync
 from ..._logging import _WithLogDetailsClient
-from ..._utils import _to_safe_id
+from ..._utils import _to_safe_id, ignore_docs
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
@@ -49,6 +49,7 @@ class BaseClient(_BaseBaseClient):
     http_client: _HTTPClient
     root_client: ApifyClient
 
+    @ignore_docs
     def __init__(
         self,
         *,
@@ -90,6 +91,7 @@ class BaseClientAsync(_BaseBaseClient):
     http_client: _HTTPClientAsync
     root_client: ApifyClientAsync
 
+    @ignore_docs
     def __init__(
         self,
         *,

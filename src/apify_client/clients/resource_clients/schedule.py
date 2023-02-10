@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _pluck_data_as_list
+from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _pluck_data_as_list, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -30,6 +30,7 @@ def _get_schedule_representation(
 class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClient."""
         resource_path = kwargs.pop('resource_path', 'schedules')
@@ -119,6 +120,7 @@ class ScheduleClient(ResourceClient):
 class ScheduleClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single schedule."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClientAsync."""
         resource_path = kwargs.pop('resource_path', 'schedules')

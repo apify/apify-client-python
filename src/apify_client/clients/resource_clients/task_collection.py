@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .task import _get_task_representation
 
@@ -8,6 +8,7 @@ from .task import _get_task_representation
 class TaskCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating tasks."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
@@ -79,6 +80,7 @@ class TaskCollectionClient(ResourceCollectionClient):
 class TaskCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating tasks."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')

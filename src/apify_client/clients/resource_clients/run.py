@@ -1,6 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _encode_key_value_store_record_value, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, _to_safe_id
+from ..._utils import (
+    _encode_key_value_store_record_value,
+    _filter_out_none_values_recursively,
+    _parse_date_fields,
+    _pluck_data,
+    _to_safe_id,
+    ignore_docs,
+)
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 from .dataset import DatasetClient, DatasetClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
@@ -11,6 +18,7 @@ from .request_queue import RequestQueueClient, RequestQueueClientAsync
 class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single actor run."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
@@ -182,6 +190,7 @@ class RunClient(ActorJobBaseClient):
 class RunClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single actor run."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')

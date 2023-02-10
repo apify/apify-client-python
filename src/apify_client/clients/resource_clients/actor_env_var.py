@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _filter_out_none_values_recursively
+from ..._utils import _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -20,6 +20,7 @@ def _get_actor_env_var_representation(
 class ActorEnvVarClient(ResourceClient):
     """Sub-client for manipulating a single actor environment variable."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarClient."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
@@ -73,6 +74,7 @@ class ActorEnvVarClient(ResourceClient):
 class ActorEnvVarClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor environment variable."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarClientAsync."""
         resource_path = kwargs.pop('resource_path', 'env-vars')

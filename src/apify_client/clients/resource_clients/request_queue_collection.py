@@ -1,12 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage
+from ..._utils import ListPage, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating request queues."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
@@ -52,6 +53,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
 class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating request queues."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')

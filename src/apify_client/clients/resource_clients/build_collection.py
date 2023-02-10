@@ -1,12 +1,13 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage
+from ..._utils import ListPage, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
 class BuildCollectionClient(ResourceCollectionClient):
     """Sub-client for listing actor builds."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
@@ -38,6 +39,7 @@ class BuildCollectionClient(ResourceCollectionClient):
 class BuildCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing actor builds."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')

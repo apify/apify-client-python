@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor import _get_actor_representation
 
@@ -8,6 +8,7 @@ from .actor import _get_actor_representation
 class ActorCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actors."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
@@ -106,6 +107,7 @@ class ActorCollectionClient(ResourceCollectionClient):
 class ActorCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actors."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')

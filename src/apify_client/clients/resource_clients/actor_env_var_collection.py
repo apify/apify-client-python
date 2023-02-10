@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively
+from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_env_var import _get_actor_env_var_representation
 
@@ -8,6 +8,7 @@ from .actor_env_var import _get_actor_env_var_representation
 class ActorEnvVarCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor env vars."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
@@ -54,6 +55,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
 class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')

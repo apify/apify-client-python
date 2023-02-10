@@ -1,11 +1,13 @@
 from typing import Any, Dict, Optional
 
+from ..._utils import ignore_docs
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 
 
 class BuildClient(ActorJobBaseClient):
     """Sub-client for manipulating a single actor build."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
@@ -47,6 +49,7 @@ class BuildClient(ActorJobBaseClient):
 class BuildClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single actor build."""
 
+    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')

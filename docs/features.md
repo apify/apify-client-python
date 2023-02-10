@@ -21,7 +21,8 @@ options of the `ApifyClient` constructor.
 
 ### Support for asynchronous usage
 
-Starting with version 0.7.0, the package offers an asynchronous version of the client, [`ApifyClientAsync`](#ApifyClientAsync),
+Starting with version 0.7.0, the package offers an asynchronous version of the client,
+[`ApifyClientAsync`](https://docs.apify.com/api/client/python/reference/class/ApifyClientAsync),
 which allows you to work with the Apify API in an asynchronous way, using the standard `async`/`await` syntax.
 
 ### Convenience functions and options

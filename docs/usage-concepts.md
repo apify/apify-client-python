@@ -67,7 +67,7 @@ dataset_items = last_succeeded_run_client.dataset().list_items().items
 
 ### Pagination
 
-Most methods named `list` or `list_something` return a [`ListPage`](#ListPage) object,
+Most methods named `list` or `list_something` return a [`ListPage`](https://docs.apify.com/api/client/python/reference/class/ListPage) object,
 containing properties `items`, `total`, `offset`, `count` and `limit`.
 There are some exceptions though, like `list_keys` or `list_head` which paginate differently.
 The results you're looking for are always stored under `items` and you can use the `limit`
@@ -80,9 +80,9 @@ support streaming the resource from the Apify API in parts,
 without having to download the whole (potentially huge) resource to memory before processing it.
 
 The methods to stream these resources are
-[`DatasetClient.stream_items()`](#datasetclient-stream_items),
-[`KeyValueStoreClient.stream_record()`](#keyvaluestoreclient-stream_record),
-and [`LogClient.stream()`](#logclient-stream).
+[`DatasetClient.stream_items()`](https://docs.apify.com/api/client/python/reference/class/DatasetClient#stream_items),
+[`KeyValueStoreClient.stream_record()`](https://docs.apify.com/api/client/python/reference/class/KeyValueStoreClient#stream_record),
+and [`LogClient.stream()`](https://docs.apify.com/api/client/python/reference/class/LogClient#stream).
 
 Instead of the parsed resource, they return a raw, context-managed
 [`httpx.Response`](https://www.python-httpx.org/quickstart/#streaming-responses) object,
@@ -100,7 +100,7 @@ with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
 
 ### Asynchronous usage
 
-To use the asynchronous [`ApifyClientAsync`](#ApifyClientAsync) in your async code,
+To use the asynchronous [`ApifyClientAsync`](https://docs.apify.com/api/client/python/reference/class/ApifyClientAsync) in your async code,
 you can use the standard `async`/`await` syntax [offered by Python](https://docs.python.org/3/library/asyncio-task.html).
 
 For example, to run an actor and asynchronously stream its log while it's running, you can use this snippet:

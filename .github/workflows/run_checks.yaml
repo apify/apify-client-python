@@ -1,0 +1,19 @@
+name: Code quality checks
+
+on:
+  pull_request:
+
+jobs:
+  lint_and_type_checks:
+    name: Run lint and type checks
+    uses: ./.github/workflows/lint_and_type_checks.yaml
+
+  unit_tests:
+    name: Run unit tests
+    needs: [lint_and_type_checks]
+    uses: ./.github/workflows/unit_tests.yaml
+
+  check_docs:
+    name: Check whether the documentation is up to date
+    uses: ./.github/workflows/check_docs.yaml
+

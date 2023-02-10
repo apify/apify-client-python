@@ -1,4 +1,4 @@
-.PHONY: clean install-dev lint test type-check check-code format docs check-docs
+.PHONY: clean install-dev lint unit-tests type-check check-code format docs check-docs check-async-docstrings fix-async-docstrings check-changelog-entry
 
 clean:
 	rm -rf build dist .mypy_cache .pytest_cache src/*.egg-info __pycache__
@@ -6,19 +6,19 @@ clean:
 install-dev:
 	python -m pip install --upgrade pip
 	pip install --upgrade setuptools wheel
-	pip install -e ".[dev]"
+	pip install --no-cache-dir -e ".[dev]"
 	pre-commit install
 
 lint:
 	python3 -m flake8
 
-test:
-	python3 -m pytest -rA tests
+unit-tests:
+	python3 -m pytest -n auto -ra tests/unit
 
 type-check:
 	python3 -m mypy
 
-check-code: lint check-async-docstrings type-check test
+check-code: lint check-async-docstrings type-check unit-tests
 
 format:
 	python3 -m isort src tests

@@ -44,6 +44,7 @@ Changelog
 - added option to manually publish the package with a workflow dispatch
 - added `pre-commit` to run code quality checks before committing
 - converted `unittest`-style tests to `pytest`-style tests
+- backported project setup improvements from `apify-sdk-python`
 
 [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 -----------------------------------------------

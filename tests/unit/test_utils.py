@@ -163,7 +163,6 @@ def test__retry_with_exp_backoff() -> None:
     assert attempt_counter == 3
 
 
-@pytest.mark.asyncio
 async def test__retry_with_exp_backoff_async() -> None:
     attempt_counter = 0
 

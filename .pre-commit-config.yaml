@@ -7,7 +7,7 @@ repos:
       language: system
       pass_filenames: false
 
-    - id: check-docs
+    - id: check-async-docstrings
       name: "Check whether async docstrings are aligned with sync ones"
       entry: "make check-async-docstrings"
       language: system
@@ -21,7 +21,7 @@ repos:
 
     - id: unit-test
       name: "Run unit tests"
-      entry: "make test"
+      entry: "make unit-tests"
       language: system
       pass_filenames: false
 

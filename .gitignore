@@ -27,3 +27,5 @@ tsconfig.tsbuildinfo
 docs/reference/apify_client
 docs/reference/sidebar.json
 docs/changelog.md
+
+website/docspec-dump.json

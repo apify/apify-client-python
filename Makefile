@@ -1,4 +1,4 @@
-.PHONY: clean install-dev lint unit-tests type-check check-code format check-async-docstrings fix-async-docstrings check-changelog-entry
+.PHONY: clean install-dev lint unit-tests type-check check-code format check-async-docstrings fix-async-docstrings check-changelog-entry build-api-reference
 
 clean:
 	rm -rf build dist .mypy_cache .pytest_cache src/*.egg-info __pycache__
@@ -32,3 +32,8 @@ fix-async-docstrings:
 
 check-changelog-entry:
 	python3 scripts/check_version_in_changelog.py
+
+build-api-reference:
+	cd website && \
+	pydoc-markdown --quiet --dump > docspec-dump.json && \
+	node transformDocs.js docspec-dump.json

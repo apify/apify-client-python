@@ -10,6 +10,7 @@
         "rename-version": "docusaurus rename-version",
         "prettify": "prettier --write --config ./tools/docs-prettier.config.js ../docs/guides/*.md",
         "swizzle": "docusaurus swizzle",
+        "clean": "rimraf .docusaurus build",
         "deploy": "rimraf .docusaurus && docusaurus deploy",
         "docusaurus": "docusaurus",
         "postinstall": "patch-package",

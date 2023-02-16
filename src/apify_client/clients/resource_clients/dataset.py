@@ -172,24 +172,23 @@ class DatasetClient(ResourceClient):
             dict: An item from the dataset
         """
         cache_size = 1000
-        first_item = offset
 
-        # If there is no limit, set last_item to None until we get the total from the first API response
-        if limit is None:
-            last_item = None
-        else:
-            last_item = offset + limit
+        should_finish = False
+        read_items = 0
 
-        current_offset = first_item
-        while last_item is None or current_offset < last_item:
-            if last_item is None:
-                current_limit = cache_size
-            else:
-                current_limit = min(cache_size, last_item - current_offset)
+        # We can't rely on ListPage.total because that is updated with a delay,
+        # so if you try to read the dataset items right after a run finishes, you could miss some.
+        # Instead, we just read and read until we reach the limit, or until there are no more items to read.
+        while not should_finish:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_items == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_items)
 
             current_items_page = self.list_items(
-                offset=current_offset,
-                limit=current_limit,
+                offset=offset + read_items,
+                limit=effective_limit,
                 clean=clean,
                 desc=desc,
                 fields=fields,
@@ -199,11 +198,13 @@ class DatasetClient(ResourceClient):
                 skip_hidden=skip_hidden,
             )
 
-            current_offset += current_items_page.count
-            if last_item is None or current_items_page.total < last_item:
-                last_item = current_items_page.total
-
             yield from current_items_page.items
+
+            current_page_item_count = len(current_items_page.items)
+            read_items += current_page_item_count
+
+            if current_page_item_count < cache_size:
+                should_finish = True
 
     def download_items(
         self,
@@ -664,24 +665,23 @@ class DatasetClientAsync(ResourceClientAsync):
             dict: An item from the dataset
         """
         cache_size = 1000
-        first_item = offset
 
-        # If there is no limit, set last_item to None until we get the total from the first API response
-        if limit is None:
-            last_item = None
-        else:
-            last_item = offset + limit
+        should_finish = False
+        read_items = 0
 
-        current_offset = first_item
-        while last_item is None or current_offset < last_item:
-            if last_item is None:
-                current_limit = cache_size
-            else:
-                current_limit = min(cache_size, last_item - current_offset)
+        # We can't rely on ListPage.total because that is updated with a delay,
+        # so if you try to read the dataset items right after a run finishes, you could miss some.
+        # Instead, we just read and read until we reach the limit, or until there are no more items to read.
+        while not should_finish:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_items == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_items)
 
             current_items_page = await self.list_items(
-                offset=current_offset,
-                limit=current_limit,
+                offset=offset + read_items,
+                limit=effective_limit,
                 clean=clean,
                 desc=desc,
                 fields=fields,
@@ -691,12 +691,14 @@ class DatasetClientAsync(ResourceClientAsync):
                 skip_hidden=skip_hidden,
             )
 
-            current_offset += current_items_page.count
-            if last_item is None or current_items_page.total < last_item:
-                last_item = current_items_page.total
-
             for item in current_items_page.items:
                 yield item
+
+            current_page_item_count = len(current_items_page.items)
+            read_items += current_page_item_count
+
+            if current_page_item_count < cache_size:
+                should_finish = True
 
     async def get_items_as_bytes(
         self,

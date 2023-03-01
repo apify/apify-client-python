@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data
+from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data, ignore_docs
 from ...consts import ActorJobStatus
 from .resource_client import ResourceClient, ResourceClientAsync
 
@@ -15,6 +15,7 @@ DEFAULT_WAIT_FOR_FINISH_SEC = 999999
 DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
 
 
+@ignore_docs
 class ActorJobBaseClient(ResourceClient):
     """Base sub-client class for actor runs and actor builds."""
 
@@ -71,6 +72,7 @@ class ActorJobBaseClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
 
+@ignore_docs
 class ActorJobBaseClientAsync(ResourceClientAsync):
     """Base async sub-client class for actor runs and actor builds."""
 

@@ -1,10 +1,11 @@
 from typing import Dict, Optional
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data
+from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data, ignore_docs
 from .base_client import BaseClient, BaseClientAsync
 
 
+@ignore_docs
 class ResourceClient(BaseClient):
     """Base class for sub-clients manipulating a single resource."""
 
@@ -45,6 +46,7 @@ class ResourceClient(BaseClient):
             _catch_not_found_or_throw(exc)
 
 
+@ignore_docs
 class ResourceClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a single resource."""
 

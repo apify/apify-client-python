@@ -4,6 +4,7 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import CodeBlock from '@theme/CodeBlock';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './index.module.css';
 
 function Hero() {
@@ -26,7 +27,7 @@ function Hero() {
                         <div className="col">
                             <h2></h2>
                             <h2>
-                                The Python Apify API Client is the official library to access Apify API from your Python applications.
+                                The Apify API Client for Python is the official library to access Apify API from your Python applications.
                                 It provides useful features like automatic retries and convenience functions to improve your experience with the Apify API.
                             </h2>
                         </div>
@@ -42,7 +43,7 @@ function Hero() {
                 </div>
                 <div className={clsx(styles.relative, 'col', 'col--5')}>
                     <div className={styles.logoBlur}>
-                        <img src={require('/img/logo-blur.png').default} className={clsx(styles.hideSmall)} />
+                        <img src={useBaseUrl('img/logo-blur.png')} className={clsx(styles.hideSmall)} />
                     </div>
                     <div className={styles.codeBlock}>
                         <CodeBlock className="language-bash">
@@ -66,7 +67,7 @@ export default function Home() {
                     <div className="row padding-horiz--md" >
                         <div className="col col--4">
                             <p style={{ lineHeight: '200%' }}>
-                            Fox example, the Python Apify API Client makes it easy to run your own actors or actors from <a href='https://apify.com/store'>Apify Store</a>
+                            For example, the Apify API Client for Python makes it easy to run your own actors or actors from the <a href='https://apify.com/store'>Apify Store</a>
                                 {' '}by simply using the <code>.call()</code> method to start an actor and wait for it to finish.
                             </p>
                         </div>

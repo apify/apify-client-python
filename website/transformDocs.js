@@ -12,20 +12,12 @@ const acc = {
     'originalName': '',
     'children': [],
     'groups': [],
-    // "comment": {
-    //     "summary": [
-    //         {
-    //             "kind": "text",
-    //             "text": "# Apify Client for Python\nApify Client for Python is a library for controlling your actors on the Apify Platform from Python. It is a thin wrapper around the [Apify API](https://docs.apify.com/api/v2). The library is available on [PyPI](https://pypi.org/project/apify-client/) and can be installed using `pip install apify-client`."
-    //         },
-    //     ]
-    // },
-    "sources": [
+    'sources': [
         {
-            "fileName": "src/index.ts",
-            "line": 1,
-            "character": 0,
-            "url": "https://github.com/apify/apify-client-python/blob/123456/src/dummy.py"
+            'fileName': 'src/index.ts',
+            'line': 1,
+            'character': 0,
+            'url': 'https://github.com/apify/apify-client-python/blob/123456/src/dummy.py'
         }
     ]
 };
@@ -58,11 +50,11 @@ const groupsOrdered = [
     'Resource Clients',
     'Async Resource Clients',
     'Helper Classes',
-    'Enumerations',
     'Errors',
     'Constructors',
     'Methods',
     'Properties',
+    'Enumerations',
     'Enumeration Members'
 ];
 
@@ -81,7 +73,7 @@ const kinds = {
     },
     'function': {
         kind: 2048,
-        kindString: "Method",
+        kindString: 'Method',
     },
     'data': {
         kind: 1024,
@@ -89,11 +81,11 @@ const kinds = {
     },
     'enum': {
         kind: 8,
-        kindString: "Enumeration",
+        kindString: 'Enumeration',
     },
     'enumValue': {
         kind: 16,
-        kindString: "Enumeration Member",
+        kindString: 'Enumeration Member',
     },
 }
 

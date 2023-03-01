@@ -25,7 +25,7 @@ module.exports = {
             '@apify/docs-theme',
             {
                 subNavbar: {
-                    title: 'Apify Client Python',
+                    title: 'Apify Client for Python',
                     items: [
                         {
                             to: 'docs/quick-start',

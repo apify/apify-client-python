@@ -43,6 +43,7 @@ class _BaseBaseClient(metaclass=_WithLogDetailsClient):
         }
 
 
+@ignore_docs
 class BaseClient(_BaseBaseClient):
     """Base class for sub-clients."""
 
@@ -85,6 +86,7 @@ class BaseClient(_BaseBaseClient):
             self.url = f'{self.url}/{self.safe_id}'
 
 
+@ignore_docs
 class BaseClientAsync(_BaseBaseClient):
     """Base class for async sub-clients."""
 

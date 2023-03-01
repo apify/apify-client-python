@@ -1,9 +1,10 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _parse_date_fields, _pluck_data
+from ..._utils import ListPage, _parse_date_fields, _pluck_data, ignore_docs
 from .base_client import BaseClient, BaseClientAsync
 
 
+@ignore_docs
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
@@ -37,6 +38,7 @@ class ResourceCollectionClient(BaseClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
 
+@ignore_docs
 class ResourceCollectionClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a resource collection."""
 

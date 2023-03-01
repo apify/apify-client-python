@@ -39,7 +39,7 @@ class _WithLogDetailsClient(type):
 # of the resource client (which is the `self` argument of the method)
 # to the log context vars
 def _injects_client_details_to_log_context(fun: Callable) -> Callable:
-    if inspect.iscoroutinefunction(fun) or inspect.isasyncgenfunction(fun):
+    if inspect.iscoroutinefunction(fun):
         @functools.wraps(fun)
         async def async_wrapper(resource_client: '_BaseBaseClient', *args: Any, **kwargs: Any) -> Any:
             ctx_client_method.set(fun.__qualname__)
@@ -48,6 +48,16 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
             return await fun(resource_client, *args, **kwargs)
         return async_wrapper
+    elif inspect.isasyncgenfunction(fun):
+        @functools.wraps(fun)
+        async def async_generator_wrapper(resource_client: '_BaseBaseClient', *args: Any, **kwargs: Any) -> Any:
+            ctx_client_method.set(fun.__qualname__)
+            ctx_resource_id.set(resource_client.resource_id)
+            ctx_url.set(resource_client.url)
+
+            async for item in fun(resource_client, *args, **kwargs):
+                yield item
+        return async_generator_wrapper
     else:
         @functools.wraps(fun)
         def wrapper(resource_client: '_BaseBaseClient', *args: Any, **kwargs: Any) -> Any:

@@ -45,7 +45,7 @@ function getGroupName(object) {
         'Enumerations': (x) => x.kindString === 'Enumeration',
         'Enumeration Members': (x) => x.kindString === 'Enumeration Member',
     };
-    
+
     const [group] = Object.entries(groupPredicates).find(
         ([_, predicate]) => predicate(object)
     );
@@ -141,7 +141,7 @@ function parseArguments(docstring) {
 }
 
 function isHidden(x) {
-    return x.decorations?.some(d => d.name === 'ignore_docs') || !x.docstring?.content;
+    return x.decorations?.some(d => d.name === 'ignore_docs') || x.name === 'ignore_docs' || !x.docstring?.content;
 }
 
 function traverse(o, parent) {
@@ -245,7 +245,7 @@ function main() {
     const argv = process.argv.slice(2);
 
     const rawdump = fs.readFileSync(argv[0], 'utf8');
-    const modules = rawdump.split('\n').filter((line) => line !== '');   
+    const modules = rawdump.split('\n').filter((line) => line !== '');
 
     for (const module of modules) {
         const o = JSON.parse(module);
@@ -262,7 +262,7 @@ function main() {
         }
     }
     collectIds(acc);
-    
+
     function fixRefs(o) {
         for (const child of o.children ?? []) {
             if (child.type?.type === 'reference') {

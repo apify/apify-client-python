@@ -27,7 +27,7 @@ function Hero() {
                             <h2></h2>
                             <h2>
                                 The Python Apify API Client is the official library to access Apify API from your Python applications.
-                                It provides useful features like automatic retries and convenience functions to improve your experience in the Apify platform.
+                                It provides useful features like automatic retries and convenience functions to improve your experience with the Apify API.
                             </h2>
                         </div>
                     </div>
@@ -56,20 +56,18 @@ function Hero() {
 }
 
 export default function Home() {
-    const SvgLogo = require('/img/apify_logo.svg').default;
     const { siteConfig } = useDocusaurusContext();
     return (
         <Layout
-            title={`${siteConfig.title} · ${siteConfig.tagline}`}
             description={siteConfig.description}>
             <Hero />
-              <div>
+            <div>
                 <div className="container">
                     <div className="row padding-horiz--md" >
                         <div className="col col--4">
                             <p style={{ lineHeight: '200%' }}>
-                            The Python Apify API Client, makes it easy to run your own actors or actors from <a href='https://apify.com/store'>Apify Store</a>
-                            by simply using the <code>.call()</code> method to retrieve data from the resulting dataset.
+                            Fox example, the Python Apify API Client makes it easy to run your own actors or actors from <a href='https://apify.com/store'>Apify Store</a>
+                                {' '}by simply using the <code>.call()</code> method to start an actor and wait for it to finish.
                             </p>
                         </div>
                         <div className="col col--8">
@@ -77,10 +75,10 @@ export default function Home() {
 
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
-# Start an actor and waits for it to finish
+# Start an actor and wait for it to finish
 actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
-# Fetch results from the actor's default dataset
+# Fetch results from the actor run's default dataset
 dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items`}</CodeBlock>
                         </div>
                     </div>

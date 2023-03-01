@@ -124,6 +124,7 @@ function sortChildren(acc) {
                 return firstName.localeCompare(secondName);
             });
     }
+    acc.groups.sort((a, b) => groupSort(a.title, b.title));
 }
 
 function parseArguments(docstring) {

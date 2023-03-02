@@ -25,27 +25,14 @@ module.exports = {
             '@apify/docs-theme',
             {
                 subNavbar: {
-                    title: 'Apify Client for Python',
+                    title: 'API Client for Python',
                     items: [
                         {
                             to: 'docs/quick-start',
                             label: 'Docs',
                             position: 'left',
-                            activeBaseRegex: 'docs/quick-start',
+                            activeBaseRegex: '/docs(?!/changelog)',
                         },
-                        // {
-                        //     to: 'docs/examples',
-                        //     label: 'Examples',
-                        //     position: 'left',
-                        //     activeBaseRegex: 'docs/examples',
-                        // },
-                        // {
-                        //     type: 'docsVersionDropdown',
-                        //     position: 'left',
-                        //     className: 'navbar__item', // fixes margin around dropdown - hackish, should be fixed in theme
-                        //     dropdownItemsBefore: [],
-                        //     dropdownItemsAfter: [],
-                        // },
                         {
                             to: '/reference',
                             label: 'Reference',
@@ -56,7 +43,7 @@ module.exports = {
                             to: 'docs/changelog',
                             label: 'Changelog',
                             position: 'left',
-                            activeBaseRegex: 'changelog',
+                            activeBaseRegex: '/docs/changelog',
                         },
                         {
                             href: 'https://github.com/apify/apify-client-python',

@@ -190,7 +190,7 @@ function traverse(o, parent) {
                         }],
                     } : undefined,
                     type: inferType(x.return_type),
-                    parameters: x.args.map((p) => (p.name === 'self' ? undefined : {
+                    parameters: x.args.map((p) => ((p.name === 'self' || p.name === 'cls') ? undefined : {
                         id: oid++,
                         name: p.name,
                         kind: 32768,

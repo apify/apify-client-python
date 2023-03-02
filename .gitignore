@@ -14,19 +14,6 @@ build/
 
 .vscode
 .idea
-
-node_modules
-*.log
-*.pid
-*.seed
 .DS_Store
-.docusaurus
-tsconfig.tsbuildinfo
-.turbo
 
-docs/reference/apify_client
-docs/reference/sidebar.json
 docs/changelog.md
-
-website/api-typedoc-generated.json
-website/docspec-dump.json

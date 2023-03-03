@@ -24,7 +24,7 @@ setup(
     author_email='support@apify.com',
     url='https://github.com/apify/apify-client-python',
     project_urls={
-        'Documentation': 'https://docs.apify.com/api/client/python',
+        'Documentation': 'https://docs.apify.com/api/client/python/',
         'Source': 'https://github.com/apify/apify-client-python',
         'Issue tracker': 'https://github.com/apify/apify-client-python/issues',
         'Apify Homepage': 'https://apify.com',

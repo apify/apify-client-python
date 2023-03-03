@@ -36,9 +36,14 @@ jobs:
     name: Check whether async dostrings are up to date
     uses: ./.github/workflows/check_async_docstrings.yaml
 
+  integration_tests:
+    name: Run integration tests
+    uses: ./.github/workflows/integration_tests.yaml
+    secrets: inherit
+
   deploy:
     name: Publish to PyPI
-    needs: [lint_and_type_checks, unit_tests, check_async_docstrings]
+    needs: [lint_and_type_checks, unit_tests, integration_tests, check_async_docstrings]
     runs-on: ubuntu-latest
 
     steps:

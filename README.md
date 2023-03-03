@@ -1,18 +1,21 @@
 # Apify API client for Python
 
-This is an official client for the [Apify API](https://www.apify.com/docs/api/v2).
-It's still a work in progress, so please don't use it yet in production environments!
+The Apify API Client for Python is the official library to access the [Apify API](https://docs.apify.com/api/v2) from your Python applications.
+It provides useful features like automatic retries and convenience functions to improve your experience with the Apify API.
+
+If you want to develop Apify Actors in Python,
+check out the [Apify SDK for Python](https://docs.apify.com/sdk/python) instead.
 
 ## Installation
 
 Requires Python 3.8+
 
-You can install the client from its [PyPI listing](https://pypi.org/project/apify-client).
+You can install the package from its [PyPI listing](https://pypi.org/project/apify-client).
 To do that, simply run `pip install apify-client` in your terminal.
 
 ## Usage
 
-For usage instructions, check the documentation on [Apify Docs](https://docs.apify.com/apify-client-python) or in [`docs/docs.md`](docs/docs.md).
+For usage instructions, check the documentation on [Apify Docs](https://docs.apify.com/api/client/python/) or in [`docs/docs.md`](docs/docs.md).
 
 ## Development
 
@@ -21,7 +24,7 @@ For usage instructions, check the documentation on [Apify Docs](https://docs.api
 For local development, it is required to have Python 3.8 installed.
 
 It is recommended to set up a virtual environment while developing this package to isolate your development environment,
-however, due to the many varied ways Python can be installed, and virtual environments can be set up,
+however, due to the many varied ways Python can be installed and virtual environments can be set up,
 this is left up to the developers to do themselves.
 
 One recommended way is with the built-in `venv` module:
@@ -42,7 +45,7 @@ To install this package and its development dependencies, run `make install-dev`
 
 We use `autopep8` and `isort` to automatically format the code to a common format. To run the formatting, just run `make format`.
 
-### Linting and Testing
+### Linting, type-checking and unit testing
 
 We use `flake8` for linting, `mypy` for type checking and `pytest` for unit testing. To run these tools, just run `make check-code`.
 

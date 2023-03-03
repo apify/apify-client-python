@@ -1,7 +1,7 @@
 import asyncio
 import math
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from ..._errors import ApifyApiError
@@ -20,7 +20,7 @@ class ActorJobBaseClient(ResourceClient):
     """Base sub-client class for actor runs and actor builds."""
 
     def _wait_for_finish(self, wait_secs: Optional[int] = None) -> Optional[Dict]:
-        started_at = datetime.now()
+        started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: Optional[Dict] = None
         seconds_elapsed = 0
@@ -38,7 +38,7 @@ class ActorJobBaseClient(ResourceClient):
                 )
                 job = _parse_date_fields(_pluck_data(response.json()))
 
-                seconds_elapsed = math.floor(((datetime.now() - started_at).total_seconds()))
+                seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
                 if (
                     ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs)
                 ):
@@ -77,7 +77,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
     """Base async sub-client class for actor runs and actor builds."""
 
     async def _wait_for_finish(self, wait_secs: Optional[int] = None) -> Optional[Dict]:
-        started_at = datetime.now()
+        started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: Optional[Dict] = None
         seconds_elapsed = 0
@@ -95,7 +95,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 )
                 job = _parse_date_fields(_pluck_data(response.json()))
 
-                seconds_elapsed = math.floor(((datetime.now() - started_at).total_seconds()))
+                seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
                 if (
                     ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs)
                 ):

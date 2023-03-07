@@ -118,10 +118,8 @@ jobs:
 
     - # Upload the build artifacts to the release
       name: Upload the build artifacts to release
-      uses: svenstaro/upload-release-action@v2
       if: github.event_name == 'release'
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: dist/*
-        file_glob: true
-        tag: ${{ github.ref }}
+      run: gh release upload ${{ github.ref_name }} dist/*
+      env:
+        GH_TOKEN: ${{ github.token }}
+

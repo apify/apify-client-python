@@ -1,7 +1,7 @@
 Changelog
 =========
 
-[0.7.0](../../releases/tag/v0.7.0) - Upcoming
+[1.0.0](../../releases/tag/v1.0.0) - 2023-03-13
 -----------------------------------------------
 
 ### Breaking changes

@@ -34,7 +34,7 @@ class RunClient(ActorJobBaseClient):
         """
         return self._get()
 
-    def update(self, *, status_message: Optional[str] = None) -> Dict:
+    def update(self, *, status_message: Optional[str] = None, is_status_message_terminal: Optional[bool] = None) -> Dict:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -47,6 +47,7 @@ class RunClient(ActorJobBaseClient):
         """
         updated_fields = {
             'statusMessage': status_message,
+            'isStatusMessageTerminal': is_status_message_terminal,
         }
 
         return self._update(_filter_out_none_values_recursively(updated_fields))
@@ -206,7 +207,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         return await self._get()
 
-    async def update(self, *, status_message: Optional[str] = None) -> Dict:
+    async def update(self, *, status_message: Optional[str] = None, is_status_message_terminal: Optional[bool] = None) -> Dict:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -219,6 +220,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         updated_fields = {
             'statusMessage': status_message,
+            'isStatusMessageTerminal': is_status_message_terminal,
         }
 
         return await self._update(_filter_out_none_values_recursively(updated_fields))

@@ -1987,7 +1987,7 @@ Return information about the actor run.
 
 ***
 
-#### [](#runclient-update) `RunClient.update(*, status_message=None)`
+#### [](#runclient-update) `RunClient.update(*, status_message=None, is_status_message_terminal=None)`
 
 Update the run with the specified fields.
 
@@ -1996,6 +1996,8 @@ Update the run with the specified fields.
 * **Parameters**
 
   * **status_message** (`str`, *optional*) – The new status message for the run
+
+  * **is_status_message_terminal** (`bool`, *optional*) – Set this flag to True if this is the final status message of the Actor run.
 
 * **Returns**
 
@@ -4190,7 +4192,7 @@ Return information about the actor run.
 
 ***
 
-#### [](#runclientasync-update) `async RunClientAsync.update(*, status_message=None)`
+#### [](#runclientasync-update) `async RunClientAsync.update(*, status_message=None, is_status_message_terminal=None)`
 
 Update the run with the specified fields.
 
@@ -4199,6 +4201,8 @@ Update the run with the specified fields.
 * **Parameters**
 
   * **status_message** (`str`, *optional*) – The new status message for the run
+
+  * **is_status_message_terminal** (`bool`, *optional*) – Set this flag to True if this is the final status message of the Actor run.
 
 * **Returns**
 

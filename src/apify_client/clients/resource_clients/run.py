@@ -41,6 +41,7 @@ class RunClient(ActorJobBaseClient):
 
         Args:
             status_message (str, optional): The new status message for the run
+            is_status_message_terminal (bool, optional): Set this flag to True if this is the final status message of the Actor run.
 
         Returns:
             dict: The updated run

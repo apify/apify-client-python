@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from http import HTTPStatus
+from importlib import metadata
 from typing import Any, Callable, Dict, Optional, Tuple
 
 import httpx
@@ -19,7 +20,6 @@ from ._utils import (
     _retry_with_exp_backoff_async,
     ignore_docs,
 )
-from ._version import __version__
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -49,8 +49,9 @@ class _BaseHTTPClient:
 
         is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
+        client_version = metadata.version('apify-client')
 
-        user_agent = f'ApifyClient/{__version__} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
+        user_agent = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
         headers['User-Agent'] = user_agent
 
         if token is not None:

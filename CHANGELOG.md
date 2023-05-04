@@ -1,6 +1,12 @@
 Changelog
 =========
 
+[1.1.0](../../releases/tag/v1.1.0) - Unreleased
+
+### Added
+
+- added support for `is_status_message_terminal` flag in Actor run status message update
+
 [1.0.0](../../releases/tag/v1.0.0) - 2023-03-13
 -----------------------------------------------
 

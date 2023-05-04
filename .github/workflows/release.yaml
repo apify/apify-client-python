@@ -46,6 +46,7 @@ jobs:
     needs: [lint_and_type_checks, unit_tests, integration_tests, check_docs]
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       id-token: write
     environment:
       name: pypi

@@ -29,6 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "autopep8 ~= 2.0.1",
+    "build ~= 0.10.0",
     "flake8 ~= 6.0.0",
     "flake8-bugbear ~= 23.1.20",
     "flake8-commas ~= 2.1.0",

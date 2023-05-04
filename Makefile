@@ -8,7 +8,6 @@ clean:
 
 install-dev:
 	python -m pip install --upgrade pip
-	pip install --upgrade build
 	pip install --no-cache-dir -e ".[dev]"
 	pre-commit install
 

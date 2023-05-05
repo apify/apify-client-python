@@ -1,6 +1,12 @@
 Changelog
 =========
 
+[1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
+
+### Internal changes
+
+- changed GitHub workflows to use new secrets
+
 [1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
 
 ### Added

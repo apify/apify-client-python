@@ -1,7 +1,7 @@
 Changelog
 =========
 
-[1.1.0](../../releases/tag/v1.1.0) - Unreleased
+[1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
 
 ### Added
 

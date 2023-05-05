@@ -71,7 +71,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["apify_client"]
+include = ["apify_client*"]
 
 [tool.setuptools.package-data]
 apify_client = ["py.typed"]

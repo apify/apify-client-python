@@ -1,6 +1,16 @@
 Changelog
 =========
 
+[1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
+
+### Added
+
+- added support for `is_status_message_terminal` flag in Actor run status message update
+
+### Internal changes
+
+- switched from `setup.py` to `pyproject.toml` for specifying project setup
+
 [1.0.0](../../releases/tag/v1.0.0) - 2023-03-13
 -----------------------------------------------
 

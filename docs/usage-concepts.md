@@ -96,7 +96,7 @@ For example, to consume an actor run log in a streaming fashion, you can use thi
 with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
     if log_stream:
         for line in log_stream.iter_lines():
-            print(line, end='')
+            print(line)
 ```
 
 ### Asynchronous usage
@@ -116,7 +116,7 @@ async def main():
     async with apify_client_async.run(run['id']).log().stream() as async_log_stream:
         if async_log_stream:
             async for line in async_log_stream.aiter_lines():
-                print(line, end='')
+                print(line)
 
 asyncio.run(main())
 ```

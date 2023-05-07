@@ -23,7 +23,7 @@ classifiers = [
 
 requires-python = ">=3.8"
 dependencies = [
-    "httpx ~= 0.23.0"
+    "httpx >=0.23.0,<1.0.0"
 ]
 
 [project.optional-dependencies]

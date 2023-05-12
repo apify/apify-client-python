@@ -179,7 +179,7 @@ class ActorClient(ResourceClient):
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
                                           By default, the run uses timeout specified in the default run configuration for the actor.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 300.
+                                               By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
                                                associated with the actor run which can be used to receive a notification,
                                                e.g. when the actor finished or failed.
@@ -280,7 +280,7 @@ class ActorClient(ResourceClient):
                                         This is to enable quick rebuild during development.
                                         By default, the cache is not used.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the build to finish before returning.
-                                             By default it is 0, the maximum value is 300.
+                                             By default it is 0, the maximum value is 60.
 
         Returns:
             dict: The build object
@@ -467,7 +467,7 @@ class ActorClientAsync(ResourceClientAsync):
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
                                           By default, the run uses timeout specified in the default run configuration for the actor.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 300.
+                                               By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
                                                associated with the actor run which can be used to receive a notification,
                                                e.g. when the actor finished or failed.
@@ -568,7 +568,7 @@ class ActorClientAsync(ResourceClientAsync):
                                         This is to enable quick rebuild during development.
                                         By default, the cache is not used.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the build to finish before returning.
-                                             By default it is 0, the maximum value is 300.
+                                             By default it is 0, the maximum value is 60.
 
         Returns:
             dict: The build object

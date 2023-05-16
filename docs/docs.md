@@ -2078,7 +2078,7 @@ Transform an actor run into a run of another actor with a new input.
 
 ***
 
-#### [](#runclient-resurrect) `RunClient.resurrect()`
+#### [](#runclient-resurrect) `RunClient.resurrect(*, build=None, memory_mbytes=None, timeout_secs=None)`
 
 Resurrect a finished actor run.
 
@@ -2086,6 +2086,17 @@ Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OU
 Run status will be updated to RUNNING and its container will be restarted with the same default storages.
 
 [https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run](https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run)
+
+* **Parameters**
+
+  * **build** (`str`, *optional*) – Which actor build the resurrected run should use. It can be either a build tag or build number.
+  By default, the resurrected run uses the same build as before.
+
+  * **memory_mbytes** (`int`, *optional*) – New memory limit for the resurrected run, in megabytes.
+  By default, the resurrected run uses the same memory limit as before.
+
+  * **timeout_secs** (`int`, *optional*) – New timeout for the resurrected run, in seconds.
+  By default, the resurrected run uses the same timeout as before.
 
 * **Returns**
 
@@ -4283,7 +4294,7 @@ Transform an actor run into a run of another actor with a new input.
 
 ***
 
-#### [](#runclientasync-resurrect) `async RunClientAsync.resurrect()`
+#### [](#runclientasync-resurrect) `async RunClientAsync.resurrect(*, build=None, memory_mbytes=None, timeout_secs=None)`
 
 Resurrect a finished actor run.
 
@@ -4291,6 +4302,17 @@ Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OU
 Run status will be updated to RUNNING and its container will be restarted with the same default storages.
 
 [https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run](https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run)
+
+* **Parameters**
+
+  * **build** (`str`, *optional*) – Which actor build the resurrected run should use. It can be either a build tag or build number.
+  By default, the resurrected run uses the same build as before.
+
+  * **memory_mbytes** (`int`, *optional*) – New memory limit for the resurrected run, in megabytes.
+  By default, the resurrected run uses the same memory limit as before.
+
+  * **timeout_secs** (`int`, *optional*) – New timeout for the resurrected run, in seconds.
+  By default, the resurrected run uses the same timeout as before.
 
 * **Returns**
 

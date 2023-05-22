@@ -121,7 +121,13 @@ class RunClient(ActorJobBaseClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    def resurrect(self) -> Dict:
+    def resurrect(
+        self,
+        *,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+    ) -> Dict:
         """Resurrect a finished actor run.
 
         Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
@@ -129,13 +135,27 @@ class RunClient(ActorJobBaseClient):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run
 
+        Args:
+            build (str, optional): Which actor build the resurrected run should use. It can be either a build tag or build number.
+                                   By default, the resurrected run uses the same build as before.
+            memory_mbytes (int, optional): New memory limit for the resurrected run, in megabytes.
+                                           By default, the resurrected run uses the same memory limit as before.
+            timeout_secs (int, optional): New timeout for the resurrected run, in seconds.
+                                           By default, the resurrected run uses the same timeout as before.
+
         Returns:
             dict: The actor run data.
         """
+        request_params = self._params(
+            build=build,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+        )
+
         response = self.http_client.call(
             url=self._url('resurrect'),
             method='POST',
-            params=self._params(),
+            params=request_params,
         )
 
         return _parse_date_fields(_pluck_data(response.json()))
@@ -295,7 +315,13 @@ class RunClientAsync(ActorJobBaseClientAsync):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
-    async def resurrect(self) -> Dict:
+    async def resurrect(
+        self,
+        *,
+        build: Optional[str] = None,
+        memory_mbytes: Optional[int] = None,
+        timeout_secs: Optional[int] = None,
+    ) -> Dict:
         """Resurrect a finished actor run.
 
         Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
@@ -303,13 +329,27 @@ class RunClientAsync(ActorJobBaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run
 
+        Args:
+            build (str, optional): Which actor build the resurrected run should use. It can be either a build tag or build number.
+                                   By default, the resurrected run uses the same build as before.
+            memory_mbytes (int, optional): New memory limit for the resurrected run, in megabytes.
+                                           By default, the resurrected run uses the same memory limit as before.
+            timeout_secs (int, optional): New timeout for the resurrected run, in seconds.
+                                           By default, the resurrected run uses the same timeout as before.
+
         Returns:
             dict: The actor run data.
         """
+        request_params = self._params(
+            build=build,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+        )
+
         response = await self.http_client.call(
             url=self._url('resurrect'),
             method='POST',
-            params=self._params(),
+            params=request_params,
         )
 
         return _parse_date_fields(_pluck_data(response.json()))

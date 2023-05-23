@@ -1,4 +1,4 @@
-.PHONY: clean install-dev lint unit-tests integration-tests type-check check-code format check-async-docstrings fix-async-docstrings check-changelog-entry build-api-reference
+.PHONY: clean install-dev build publish twine-check lint unit-tests integration-tests type-check check-code format check-async-docstrings fix-async-docstrings check-changelog-entry build-api-reference
 
 # This is default for local testing, but GitHub workflows override it to a higher value in CI
 INTEGRATION_TESTS_CONCURRENCY = 1

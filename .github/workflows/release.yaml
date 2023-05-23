@@ -123,4 +123,3 @@ jobs:
       run: gh release upload ${{ github.ref_name }} dist/*
       env:
         GH_TOKEN: ${{ github.token }}
-

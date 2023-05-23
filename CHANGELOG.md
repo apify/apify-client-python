@@ -1,6 +1,16 @@
 Changelog
 =========
 
+[1.2.0](../../releases/tag/v1.2.0) - 2023-05-23
+
+### Added
+
+- added option to change the build, memory limit and timeout when resurrecting a run
+
+### Internal changes
+
+- updated dependencies
+
 [1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
 
 ### Internal changes

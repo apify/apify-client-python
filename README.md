@@ -17,56 +17,47 @@ To do that, simply run `pip install apify-client` in your terminal.
 
 For usage instructions, check the documentation on [Apify Docs](https://docs.apify.com/api/client/python/) or in [`docs/docs.md`](docs/docs.md).
 
-## Development
+## Quick Start
 
-### Environment
+```python
+from apify_client import ApifyClient
 
-For local development, it is required to have Python 3.8 installed.
+apify_client = ApifyClient('MY-APIFY-TOKEN')
 
-It is recommended to set up a virtual environment while developing this package to isolate your development environment,
-however, due to the many varied ways Python can be installed and virtual environments can be set up,
-this is left up to the developers to do themselves.
+# Start an actor and wait for it to finish
+actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
-One recommended way is with the built-in `venv` module:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
+# Fetch results from the actor's default dataset
+dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
 ```
 
-To improve on the experience, you can use [pyenv](https://github.com/pyenv/pyenv) to have an environment with a pinned Python version,
-and [direnv](https://github.com/direnv/direnv) to automatically activate/deactivate the environment when you enter/exit the project folder.
+## Features
 
-### Dependencies
+Besides greatly simplifying the process of querying the Apify API, the client provides other useful features.
 
-To install this package and its development dependencies, run `make install-dev`
+### Automatic parsing and error handling
 
-### Formatting
+Based on the endpoint, the client automatically extracts the relevant data and returns it in the
+expected format. Date strings are automatically converted to `datetime.datetime` objects. For exceptions,
+we throw an `ApifyApiError`, which wraps the plain JSON errors returned by API and enriches
+them with other context for easier debugging.
 
-We use `autopep8` and `isort` to automatically format the code to a common format. To run the formatting, just run `make format`.
+### Retries with exponential backoff
 
-### Linting, type-checking and unit testing
+Network communication sometimes fails. The client will automatically retry requests that
+failed due to a network error, an internal error of the Apify API (HTTP 500+) or rate limit error (HTTP 429).
+By default, it will retry up to 8 times. First retry will be attempted after ~500ms, second after ~1000ms
+and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries_millis`
+options of the `ApifyClient` constructor.
 
-We use `flake8` for linting, `mypy` for type checking and `pytest` for unit testing. To run these tools, just run `make check-code`.
+### Support for asynchronous usage
 
-### Documentation
+Starting with version 1.0.0, the package offers an asynchronous version of the client, [`ApifyClientAsync`](https://docs.apify.com/api/client/python),
+which allows you to work with the Apify API in an asynchronous way, using the standard `async`/`await` syntax.
 
-We use the [Google docstring format](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for documenting the code.
-We document every user-facing class or method, and enforce that using the flake8-docstrings library.
+### Convenience functions and options
 
-The documentation is then rendered from the docstrings in the code using Sphinx and some heavy post-processing and saved as `docs/docs.md`.
-To generate the documentation, just run `make docs`.
-
-### Release process
-
-Publishing new versions to [PyPI](https://pypi.org/project/apify-client) happens automatically through GitHub Actions.
-
-On each commit to the `master` branch, a new beta release is published, taking the version number from `pyproject.toml`
-and automatically incrementing the beta version suffix by 1 from the last beta release published to PyPI.
-
-A stable version is published when a new release is created using GitHub Releases, again taking the version number from `pyproject.toml`. The built package assets are automatically uploaded to the GitHub release.
-
-If there is already a stable version with the same version number as in `pyproject.toml` published to PyPI, the publish process fails,
-so don't forget to update the version number before releasing a new version.
-The release process also fails when the released version is not described in `CHANGELOG.md`,
-so don't forget to describe the changes in the new version there.
+Some actions can't be performed by the API itself, such as indefinite waiting for an actor run to finish
+(because of network timeouts). The client provides convenient `call()` and `wait_for_finish()` functions that do that.
+Key-value store records can be retrieved as objects, buffers or streams via the respective options, dataset items
+can be fetched as individual objects or serialized data and we plan to add better stream support and async iterators.

@@ -169,7 +169,7 @@ def _catch_not_found_or_throw(exc: 'ApifyApiError') -> None:
     return None
 
 
-def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> bytes:
+def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
     """Encode a list of dictionaries representing webhooks to their base64-encoded representation for the API."""
     data = []
     for webhook in webhooks:
@@ -181,7 +181,7 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> bytes:
             webhook_representation['payloadTemplate'] = webhook['payload_template']
         data.append(webhook_representation)
 
-    return base64.b64encode(json.dumps(data).encode('utf-8'))
+    return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
 def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:

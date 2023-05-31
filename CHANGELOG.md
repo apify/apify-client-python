@@ -1,6 +1,12 @@
 Changelog
 =========
 
+[1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
+
+### Fixed
+
+- Fixed encoding webhook lists in request parameters
+
 [1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
 
 ### Fixed

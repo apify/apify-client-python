@@ -213,7 +213,7 @@ async def test__retry_with_exp_backoff_async() -> None:
 
 
 def test__encode_webhook_list_to_base64() -> None:
-    assert _encode_webhook_list_to_base64([]) == b'W10='
+    assert _encode_webhook_list_to_base64([]) == 'W10='
     assert _encode_webhook_list_to_base64([
         {
             'event_types': [WebhookEventType.ACTOR_RUN_CREATED],
@@ -224,7 +224,7 @@ def test__encode_webhook_list_to_base64() -> None:
             'request_url': 'https://example.com/run-succeeded',
             'payload_template': '{"hello": "world", "resource":{{resource}}}',
         },
-    ]) == b'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
+    ]) == 'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
 
 
 def test__maybe_extract_enum_member_value() -> None:

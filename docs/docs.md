@@ -3742,10 +3742,13 @@ Async sub-client for manipulating a single request queue.
 * [async update()](#requestqueueclientasync-update)
 * [async delete()](#requestqueueclientasync-delete)
 * [async list\_head()](#requestqueueclientasync-list\_head)
+* [async list\_and\_lock\_head()](#requestqueueclientasync-list\_and\_lock\_head)
 * [async add\_request()](#requestqueueclientasync-add\_request)
 * [async get\_request()](#requestqueueclientasync-get\_request)
 * [async update\_request()](#requestqueueclientasync-update\_request)
 * [async delete\_request()](#requestqueueclientasync-delete\_request)
+* [async prolong\_request\_lock()](#requestqueueclientasync-prolong\_request\_lock)
+* [async delete\_request\_lock()](#requestqueueclientasync-delete\_request\_lock)
 
 ***
 
@@ -3810,6 +3813,28 @@ Retrieve a given number of requests from the beginning of the queue.
 * **Returns**
 
   The desired number of requests from the beginning of the queue.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#requestqueueclientasync-list_and_lock_head) `async RequestQueueClientAsync.list_and_lock_head(*, lock_secs, limit=None)`
+
+Retrieve the given number of first requests from the queue and locks them for the given time.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock](https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock)
+
+* **Parameters**
+
+  * **lock_secs** (`int`) – How long the second request will be locked for
+
+  * **limit** (`int`, *optional*) – How many requests to retrieve
+
+* **Returns**
+
+  The desired number of locked requests from the beginning of the queue.
 
 * **Return type**
 
@@ -3897,6 +3922,44 @@ Delete a request from the queue.
 
 ***
 
+#### [](#requestqueueclientasync-prolong_request_lock) `async RequestQueueClientAsync.prolong_request_lock(request_id, *, lock_secs, forefront=None)`
+
+Prolong the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to prolong the lock
+
+  * **lock_secs** (`int`) – How long to prolong the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock exppires
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclientasync-delete_request_lock) `async RequestQueueClientAsync.delete_request_lock(request_id, *, forefront=None)`
+
+Delete the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to delete the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock deletes
+
+* **Return type**
+
+  `None`
+
+***
+
 ### [](#requestqueueclient) RequestQueueClient
 
 Sub-client for manipulating a single request queue.
@@ -3905,10 +3968,13 @@ Sub-client for manipulating a single request queue.
 * [update()](#requestqueueclient-update)
 * [delete()](#requestqueueclient-delete)
 * [list\_head()](#requestqueueclient-list\_head)
+* [list\_and\_lock\_head()](#requestqueueclient-list\_and\_lock\_head)
 * [add\_request()](#requestqueueclient-add\_request)
 * [get\_request()](#requestqueueclient-get\_request)
 * [update\_request()](#requestqueueclient-update\_request)
 * [delete\_request()](#requestqueueclient-delete\_request)
+* [prolong\_request\_lock()](#requestqueueclient-prolong\_request\_lock)
+* [delete\_request\_lock()](#requestqueueclient-delete\_request\_lock)
 
 ***
 
@@ -3973,6 +4039,28 @@ Retrieve a given number of requests from the beginning of the queue.
 * **Returns**
 
   The desired number of requests from the beginning of the queue.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#requestqueueclient-list_and_lock_head) `RequestQueueClient.list_and_lock_head(*, lock_secs, limit=None)`
+
+Retrieve the given number of first requests from the queue and locks them for the given time.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock](https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock)
+
+* **Parameters**
+
+  * **lock_secs** (`int`) – How long the second request will be locked for
+
+  * **limit** (`int`, *optional*) – How many requests to retrieve
+
+* **Returns**
+
+  The desired number of locked requests from the beginning of the queue.
 
 * **Return type**
 
@@ -4053,6 +4141,44 @@ Delete a request from the queue.
 * **Parameters**
 
   * **request_id** (`str`) – ID of the request to delete.
+
+* **Return type**
+
+  `None`
+
+***
+
+#### [](#requestqueueclient-prolong_request_lock) `RequestQueueClient.prolong_request_lock(request_id, *, lock_secs, forefront=None)`
+
+Prolong the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to prolong the lock
+
+  * **lock_secs** (`int`) – How long to prolong the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock exppires
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclient-delete_request_lock) `RequestQueueClient.delete_request_lock(request_id, *, forefront=None)`
+
+Delete the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to delete the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock deleted
 
 * **Return type**
 

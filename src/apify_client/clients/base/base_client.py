@@ -24,6 +24,7 @@ class _BaseBaseClient(metaclass=_WithLogDetailsClient):
         return self.url
 
     def _params(self, **kwargs: Any) -> Dict:
+        print(f'kwargs: {kwargs}')
         return {
             **self.params,
             **kwargs,

@@ -74,6 +74,29 @@ class RequestQueueClient(ResourceClient):
 
         return _parse_date_fields(_pluck_data(response.json()))
 
+    def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
+        """Retrieve the given number of first requests from the queue and locks them for the given time.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
+
+        Args:
+            lock_secs (int): How long the second request will be locked for
+            limit (int, optional): How many requests to retrieve
+
+
+        Returns:
+            dict: The desired number of locked requests from the beginning of the queue.
+        """
+        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
+
+        response = self.http_client.call(
+            url=self._url('head/lock'),
+            method='POST',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
     def add_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
         """Add a request to the queue.
 
@@ -170,6 +193,50 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
+    def prolong_request_lock(self, request_id: str, *, lock_secs: int, forefront: Optional[bool] = None) -> Dict:
+        """Prolong the lock on a request.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
+
+        Args:
+            request_id (str): ID of the request to prolong the lock
+            lock_secs (int): How long to prolong the lock
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock exppires
+        """
+        request_params = self._params(
+            forefront=forefront,
+            lockSecs=lock_secs,
+            clientKey=self.client_key,
+        )
+
+        response = self.http_client.call(
+            url=self._url(f'requests/{request_id}/lock'),
+            method='PUT',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    def delete_request_lock(self, request_id: str, *, forefront: Optional[bool] = None) -> None:
+        """Delete the lock on a request.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
+
+        Args:
+            request_id (str): ID of the request to delete the lock
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock deleted
+        """
+        request_params = self._params(
+            clientKey=self.client_key,
+            forefront=forefront,
+        )
+
+        self.http_client.call(
+            url=self._url(f'requests/{request_id}/lock'),
+            method='DELETE',
+            params=request_params,
+        )
+
 
 class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
@@ -235,6 +302,29 @@ class RequestQueueClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('head'),
             method='GET',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    async def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
+        """Retrieve the given number of first requests from the queue and locks them for the given time.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
+
+        Args:
+            lock_secs (int): How long the second request will be locked for
+            limit (int, optional): How many requests to retrieve
+
+
+        Returns:
+            dict: The desired number of locked requests from the beginning of the queue.
+        """
+        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
+
+        response = await self.http_client.call(
+            url=self._url('head/lock'),
+            method='POST',
             params=request_params,
         )
 
@@ -332,6 +422,50 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         await self.http_client.call(
             url=self._url(f'requests/{request_id}'),
+            method='DELETE',
+            params=request_params,
+        )
+
+    async def prolong_request_lock(self, request_id: str, *, lock_secs: int, forefront: Optional[bool] = None) -> Dict:
+        """Prolong the lock on a request.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
+
+        Args:
+            request_id (str): ID of the request to prolong the lock
+            lock_secs (int): How long to prolong the lock
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock exppires
+        """
+        request_params = self._params(
+            forefront=forefront,
+            lockSecs=lock_secs,
+            clientKey=self.client_key,
+        )
+
+        response = await self.http_client.call(
+            url=self._url(f'requests/{request_id}/lock'),
+            method='PUT',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    async def delete_request_lock(self, request_id: str, *, forefront: Optional[bool] = None) -> None:
+        """Delete the lock on a request.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
+
+        Args:
+            request_id (str): ID of the request to delete the lock
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock deleted
+        """
+        request_params = self._params(
+            clientKey=self.client_key,
+            forefront=forefront,
+        )
+
+        await self.http_client.call(
+            url=self._url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
         )

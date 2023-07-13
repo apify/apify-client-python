@@ -22,12 +22,12 @@ class TestRequestQueueSync:
         locked_requests = locked_requests_list['items']
         for locked_request in locked_requests:
             assert locked_request['lockExpiresAt'] is not None
-        queue.delete_request_lock(locked_requests[1])
+        queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
         queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
         assert queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)['lockExpiresAt'] is not None
         queue.delete()
         assert apify_client.request_queue(created_queue['id']).get() is None
@@ -45,10 +45,10 @@ class TestRequestQueueAsync:
             assert locked_request['lockExpiresAt'] is not None
         await queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = await queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
         await queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = await queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
         prolonged_request = await queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)
         assert prolonged_request['lockExpiresAt'] is not None
         await queue.delete()

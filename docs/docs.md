@@ -3952,7 +3952,7 @@ Delete the lock on a request.
 
   * **request_id** (`str`) – ID of the request to delete the lock
 
-  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock deletes
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock deleted
 
 * **Return type**
 

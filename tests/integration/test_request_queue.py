@@ -17,20 +17,33 @@ class TestRequestQueueSync:
         created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client.request_queue(created_queue['id'], client_key=random_string(10))
         for i in range(15):
-            queue.add_request({'url': f'http://example.com3{i}', 'uniqueKey': f'http://example.com3{i}'})
+            queue.add_request({'url': f'http://test-lock.com/{i}', 'uniqueKey': f'http://test-lock.com/{i}'})
         locked_requests_list = queue.list_and_lock_head(limit=10, lock_secs=10)
         locked_requests = locked_requests_list['items']
         for locked_request in locked_requests:
             assert locked_request['lockExpiresAt'] is not None
-        queue.delete_request_lock(locked_requests[1])
+        queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
         queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
         assert queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)['lockExpiresAt'] is not None
         queue.delete()
         assert apify_client.request_queue(created_queue['id']).get() is None
+
+    def test_request_batch_operations(self, apify_client: ApifyClient) -> None:
+        created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
+        queue = apify_client.request_queue(created_queue['id'])
+        requests_to_add = [{'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(60)]
+        queue.batch_add_requests(requests_to_add)
+        requuests_in_queue = queue.list_requests()
+        assert len(requuests_in_queue['items']) == 60
+        requests_to_delete = requuests_in_queue['items'][:20]
+        delete_response = queue.batch_delete_requests([{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete])
+        requuests_in_queue2 = queue.list_requests()
+        assert len(requuests_in_queue2['items']) == 60 - len(delete_response['processedRequests'])
+        queue.delete()
 
 
 class TestRequestQueueAsync:
@@ -38,18 +51,32 @@ class TestRequestQueueAsync:
         created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client_async.request_queue(created_queue['id'], client_key=random_string(10))
         for i in range(15):
-            await queue.add_request({'url': f'http://example.com3{i}', 'uniqueKey': f'http://example.com3{i}'})
+            await queue.add_request({'url': f'http://test-lock.com/{i}', 'uniqueKey': f'http://test-lock.com/{i}'})
         locked_requests_list = await queue.list_and_lock_head(limit=10, lock_secs=10)
         locked_requests = locked_requests_list['items']
         for locked_request in locked_requests:
             assert locked_request['lockExpiresAt'] is not None
         await queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = await queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
         await queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = await queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2['lockExpiresAt'] is not None  # type: ignore
+        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
         prolonged_request = await queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)
         assert prolonged_request['lockExpiresAt'] is not None
         await queue.delete()
         assert await apify_client_async.request_queue(created_queue['id']).get() is None
+
+    async def test_request_batch_operations(self, apify_client_async: ApifyClientAsync) -> None:
+        created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
+        queue = apify_client_async.request_queue(created_queue['id'])
+        requests_to_add = [{'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(60)]
+        await queue.batch_add_requests(requests_to_add)
+        requuests_in_queue = await queue.list_requests()
+        print(requuests_in_queue)
+        assert len(requuests_in_queue['items']) == 60
+        requests_to_delete = requuests_in_queue['items'][:20]
+        delete_response = await queue.batch_delete_requests([{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete])
+        requuests_in_queue2 = await queue.list_requests()
+        assert len(requuests_in_queue2['items']) == 60 - len(delete_response['processedRequests'])
+        await queue.delete()

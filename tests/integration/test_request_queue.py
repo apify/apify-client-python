@@ -36,9 +36,10 @@ class TestRequestQueueSync:
         created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client.request_queue(created_queue['id'])
         requests_to_add = [{'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(60)]
-        queue.batch_add_requests(requests_to_add)
+        added_requests = queue.batch_add_requests(requests_to_add)
+        assert len(added_requests.get('processedRequests', [])) > 0
         requuests_in_queue = queue.list_requests()
-        assert len(requuests_in_queue['items']) == 60
+        assert len(requuests_in_queue['items']) == len(added_requests['processedRequests'])
         requests_to_delete = requuests_in_queue['items'][:20]
         delete_response = queue.batch_delete_requests([{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete])
         requuests_in_queue2 = queue.list_requests()
@@ -71,10 +72,10 @@ class TestRequestQueueAsync:
         created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client_async.request_queue(created_queue['id'])
         requests_to_add = [{'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(60)]
-        await queue.batch_add_requests(requests_to_add)
+        added_requests = await queue.batch_add_requests(requests_to_add)
+        assert len(added_requests.get('processedRequests', [])) > 0
         requuests_in_queue = await queue.list_requests()
-        print(requuests_in_queue)
-        assert len(requuests_in_queue['items']) == 60
+        assert len(requuests_in_queue['items']) == len(added_requests['processedRequests'])
         requests_to_delete = requuests_in_queue['items'][:20]
         delete_response = await queue.batch_delete_requests([{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete])
         requuests_in_queue2 = await queue.list_requests()

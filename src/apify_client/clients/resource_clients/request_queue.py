@@ -1,19 +1,10 @@
-import asyncio
 import logging
-import math
-import random
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
 from ..._logging import logger_name
 from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
-
-MAX_REQUESTS_PER_BATCH_OPERATION = 25
-DEFAULT_PARALLEL_BATCH_ADD_REQUESTS = 5
-DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS = 3
-DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES_MILLIS = 500
-DEFAULT_REQUEST_QUEUE_REQUEST_PAGE_LIMIT = 1000
 
 logger = logging.getLogger(logger_name)
 
@@ -88,12 +79,12 @@ class RequestQueueClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
-        """Retrieve the given number of first requests from the queue and locks them for the given time.
+        """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_secs (int): How long the second request will be locked for
+            lock_secs (int): How long the requests will be locked for, in seconds
             limit (int, optional): How many requests to retrieve
 
 
@@ -206,20 +197,20 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-    def prolong_request_lock(self, request_id: str, *, lock_secs: int, forefront: Optional[bool] = None) -> Dict:
+    def prolong_request_lock(self, request_id: str, *, forefront: Optional[bool] = None, lock_secs: int) -> Dict:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
             request_id (str): ID of the request to prolong the lock
-            lock_secs (int): How long to prolong the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock exppires
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
+            lock_secs (int): By how much to prolong the lock, in seconds
         """
         request_params = self._params(
+            clientKey=self.client_key,
             forefront=forefront,
             lockSecs=lock_secs,
-            clientKey=self.client_key,
         )
 
         response = self.http_client.call(
@@ -237,7 +228,7 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             request_id (str): ID of the request to delete the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock deleted
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
         """
         request_params = self._params(
             clientKey=self.client_key,
@@ -250,9 +241,8 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-    @ignore_docs
-    def _batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
-        """Add requests to the queue in single batch.
+    def batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
+        """Add requests to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
@@ -272,35 +262,6 @@ class RequestQueueClient(ResourceClient):
             json=requests,
         )
         return _parse_date_fields(_pluck_data(response.json()))
-
-    def batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
-        """Add requests to the queue.
-
-        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
-
-        Args:
-            requests (List[Dict[str, Any]]): List of the requests to add
-            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
-        """
-        processed_requests = []
-        unprocessed_requests = []
-
-        for i in range(0, len(requests), MAX_REQUESTS_PER_BATCH_OPERATION):
-            batch = requests[i:i + MAX_REQUESTS_PER_BATCH_OPERATION]
-            try:
-                response = self._batch_add_requests(batch, forefront=forefront)
-                processed_requests += response['processedRequests']
-                unprocessed_requests += response['unprocessedRequests']
-            except Exception as err:
-                # When something fails and http client does not retry, the remaining requests are treated as unprocessed.
-                # This ensures that this method does not throw and keeps the signature.
-                logger.error('Batch add requests throws failed', exc_info=err)
-                unprocessed_requests += batch
-
-        return {
-            'processedRequests': processed_requests,
-            'unprocessedRequests': unprocessed_requests,
-        }
 
     def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
         """Batch-deletes given requests batch from the queue.
@@ -413,12 +374,12 @@ class RequestQueueClientAsync(ResourceClientAsync):
         return _parse_date_fields(_pluck_data(response.json()))
 
     async def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
-        """Retrieve the given number of first requests from the queue and locks them for the given time.
+        """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_secs (int): How long the second request will be locked for
+            lock_secs (int): How long the requests will be locked for, in seconds
             limit (int, optional): How many requests to retrieve
 
 
@@ -531,20 +492,20 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-    async def prolong_request_lock(self, request_id: str, *, lock_secs: int, forefront: Optional[bool] = None) -> Dict:
+    async def prolong_request_lock(self, request_id: str, *, forefront: Optional[bool] = None, lock_secs: int) -> Dict:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
             request_id (str): ID of the request to prolong the lock
-            lock_secs (int): How long to prolong the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock exppires
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
+            lock_secs (int): By how much to prolong the lock, in seconds
         """
         request_params = self._params(
+            clientKey=self.client_key,
             forefront=forefront,
             lockSecs=lock_secs,
-            clientKey=self.client_key,
         )
 
         response = await self.http_client.call(
@@ -562,7 +523,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         Args:
             request_id (str): ID of the request to delete the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock deleted
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
         """
         request_params = self._params(
             clientKey=self.client_key,
@@ -575,9 +536,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-    @ignore_docs
-    async def _batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
-        """Add requests to the queue in single batch.
+    async def batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
+        """Add requests to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
@@ -597,100 +557,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
             json=requests,
         )
         return _parse_date_fields(_pluck_data(response.json()))
-
-    @ignore_docs
-    async def _batch_add_requests_with_retries(
-        self,
-        requests: List[Dict[str, Any]],
-        *,
-        forefront: Optional[bool] = None,
-        max_unprocessed_requests_retries: int = DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS,
-        min_delay_between_unprocessed_requests_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES_MILLIS,
-    ) -> Dict:
-        remaining_requests = requests[:]
-        processed_requests = []
-        unprocessed_requests = []
-
-        for i in range(max_unprocessed_requests_retries + 1):
-            try:
-                response = await self._batch_add_requests(remaining_requests, forefront=forefront)
-                processed_requests += response['processedRequests']
-                unprocessed_requests = response['unprocessedRequests']
-
-                processed_requests_unique_keys = [req['uniqueKey'] for req in processed_requests]
-                remaining_requests = [
-                    req for req in requests
-                    if req['uniqueKey'] not in processed_requests_unique_keys
-                ]
-
-                if len(remaining_requests) == 0:
-                    break
-
-            except Exception as err:
-                # When something fails and http client does not retry, the remaining requests are treated as unprocessed.
-                # This ensures that this method does not throw and keeps the signature.
-                logger.error('Batch add requests throws failed', exc_info=err)
-                processed_requests_unique_keys = [req['uniqueKey'] for req in processed_requests]
-                unprocessed_requests = [
-                    {'method': req.get('method'), 'uniqueKey': req.get('uniqueKey'), 'url': req.get('url')} for req in requests
-                    if req.get('uniqueKey') not in processed_requests_unique_keys
-                ]
-
-                break
-
-            # Exponential backoff
-            delay_millis = math.floor(
-                (1 + random.random()) * (2 ** i) * min_delay_between_unprocessed_requests_retries_millis,
-            )
-            await asyncio.sleep(delay_millis / 1000)
-
-        return {
-            'processedRequests': processed_requests,
-            'unprocessedRequests': unprocessed_requests,
-        }
-
-    async def batch_add_requests(
-        self,
-        requests: List[Dict[str, Any]],
-        *,
-        forefront: Optional[bool] = None,
-        max_unprocessed_requests_retries: int = DEFAULT_UNPROCESSED_RETRIES_BATCH_ADD_REQUESTS,
-        min_delay_between_unprocessed_requests_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_UNPROCESSED_REQUESTS_RETRIES_MILLIS,
-        max_parallel: int = DEFAULT_PARALLEL_BATCH_ADD_REQUESTS,
-    ) -> Dict:
-        """Add requests to the queue.
-
-        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
-
-        Args:
-            requests (List[Dict[str, Any]]): List of the requests to add
-            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
-            max_unprocessed_requests_retries (int, optional): How many times to retry adding unprocessed requests
-            min_delay_between_unprocessed_requests_retries_millis (int, optional): How long to wait between retries
-        """
-        processed_requests = []
-        unprocessed_requests = []
-
-        parallel_coroutines = []
-        for i in range(0, len(requests), MAX_REQUESTS_PER_BATCH_OPERATION):
-            requests_in_batch = requests[i:i + MAX_REQUESTS_PER_BATCH_OPERATION]
-            parallel_coroutines.append(self._batch_add_requests_with_retries(
-                requests_in_batch,
-                forefront=forefront,
-                max_unprocessed_requests_retries=max_unprocessed_requests_retries,
-                min_delay_between_unprocessed_requests_retries_millis=min_delay_between_unprocessed_requests_retries_millis,
-            ))
-            if len(parallel_coroutines) >= max_parallel or len(requests_in_batch) < MAX_REQUESTS_PER_BATCH_OPERATION:
-                individual_results = await asyncio.gather(*parallel_coroutines)
-                for result in individual_results:
-                    processed_requests += result.get('processedRequests', [])
-                    unprocessed_requests += result.get('unprocessedRequests', [])
-                parallel_coroutines = []
-
-        return {
-            'processedRequests': processed_requests,
-            'unprocessedRequests': unprocessed_requests,
-        }
 
     async def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
         """Batch-deletes given requests batch from the queue.

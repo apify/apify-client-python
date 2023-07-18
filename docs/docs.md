@@ -3825,13 +3825,13 @@ Retrieve a given number of requests from the beginning of the queue.
 
 #### [](#requestqueueclientasync-list_and_lock_head) `async RequestQueueClientAsync.list_and_lock_head(*, lock_secs, limit=None)`
 
-Retrieve the given number of first requests from the queue and locks them for the given time.
+Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
 [https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock](https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock)
 
 * **Parameters**
 
-  * **lock_secs** (`int`) – How long the second request will be locked for
+  * **lock_secs** (`int`) – How long the requests will be locked for, in seconds
 
   * **limit** (`int`, *optional*) – How many requests to retrieve
 
@@ -3925,7 +3925,7 @@ Delete a request from the queue.
 
 ***
 
-#### [](#requestqueueclientasync-prolong_request_lock) `async RequestQueueClientAsync.prolong_request_lock(request_id, *, lock_secs, forefront=None)`
+#### [](#requestqueueclientasync-prolong_request_lock) `async RequestQueueClientAsync.prolong_request_lock(request_id, *, forefront=None, lock_secs)`
 
 Prolong the lock on a request.
 
@@ -3935,9 +3935,9 @@ Prolong the lock on a request.
 
   * **request_id** (`str`) – ID of the request to prolong the lock
 
-  * **lock_secs** (`int`) – How long to prolong the lock
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock expires
 
-  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock exppires
+  * **lock_secs** (`int`) – By how much to prolong the lock, in seconds
 
 * **Return type**
 
@@ -3955,7 +3955,7 @@ Delete the lock on a request.
 
   * **request_id** (`str`) – ID of the request to delete the lock
 
-  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock deleted
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after the lock is deleted
 
 * **Return type**
 
@@ -3963,7 +3963,7 @@ Delete the lock on a request.
 
 ***
 
-#### [](#requestqueueclientasync-batch_add_requests) `async RequestQueueClientAsync.batch_add_requests(requests, *, forefront=None, max_unprocessed_requests_retries=3, min_delay_between_unprocessed_requests_retries_millis=500, max_parallel=5)`
+#### [](#requestqueueclientasync-batch_add_requests) `async RequestQueueClientAsync.batch_add_requests(requests, *, forefront=None)`
 
 Add requests to the queue.
 
@@ -4106,13 +4106,13 @@ Retrieve a given number of requests from the beginning of the queue.
 
 #### [](#requestqueueclient-list_and_lock_head) `RequestQueueClient.list_and_lock_head(*, lock_secs, limit=None)`
 
-Retrieve the given number of first requests from the queue and locks them for the given time.
+Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
 [https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock](https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock)
 
 * **Parameters**
 
-  * **lock_secs** (`int`) – How long the second request will be locked for
+  * **lock_secs** (`int`) – How long the requests will be locked for, in seconds
 
   * **limit** (`int`, *optional*) – How many requests to retrieve
 
@@ -4206,7 +4206,7 @@ Delete a request from the queue.
 
 ***
 
-#### [](#requestqueueclient-prolong_request_lock) `RequestQueueClient.prolong_request_lock(request_id, *, lock_secs, forefront=None)`
+#### [](#requestqueueclient-prolong_request_lock) `RequestQueueClient.prolong_request_lock(request_id, *, forefront=None, lock_secs)`
 
 Prolong the lock on a request.
 
@@ -4216,9 +4216,9 @@ Prolong the lock on a request.
 
   * **request_id** (`str`) – ID of the request to prolong the lock
 
-  * **lock_secs** (`int`) – How long to prolong the lock
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock expires
 
-  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock exppires
+  * **lock_secs** (`int`) – By how much to prolong the lock, in seconds
 
 * **Return type**
 
@@ -4236,7 +4236,7 @@ Delete the lock on a request.
 
   * **request_id** (`str`) – ID of the request to delete the lock
 
-  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock deleted
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after the lock is deleted
 
 * **Return type**
 

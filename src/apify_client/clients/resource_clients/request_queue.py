@@ -1,12 +1,8 @@
-import logging
 from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
-from ..._logging import logger_name
 from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, ignore_docs
 from ..base import ResourceClient, ResourceClientAsync
-
-logger = logging.getLogger(logger_name)
 
 
 class RequestQueueClient(ResourceClient):
@@ -264,7 +260,7 @@ class RequestQueueClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
-        """Batch-deletes given requests batch from the queue.
+        """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
@@ -290,7 +286,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
-            limit (List[Dict[str, Any]]): Number of keys to be returned.
+            limit (int, optional): How many requests to retrieve
             exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
         """
         request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
@@ -559,7 +555,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         return _parse_date_fields(_pluck_data(response.json()))
 
     async def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
-        """Batch-deletes given requests batch from the queue.
+        """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
@@ -584,7 +580,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
-            limit (List[Dict[str, Any]]): Number of keys to be returned.
+            limit (int, optional): How many requests to retrieve
             exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
         """
         request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)

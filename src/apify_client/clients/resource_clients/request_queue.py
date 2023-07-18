@@ -75,12 +75,12 @@ class RequestQueueClient(ResourceClient):
         return _parse_date_fields(_pluck_data(response.json()))
 
     def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
-        """Retrieve the given number of first requests from the queue and locks them for the given time.
+        """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_secs (int): How long the second request will be locked for
+            lock_secs (int): How long the requests will be locked for, in seconds
             limit (int, optional): How many requests to retrieve
 
 
@@ -200,8 +200,8 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             request_id (str): ID of the request to prolong the lock
-            lock_secs (int): How long to prolong the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock exppires
+            lock_secs (int): By how much to prolong the lock, in seconds
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
         """
         request_params = self._params(
             forefront=forefront,
@@ -224,7 +224,7 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             request_id (str): ID of the request to delete the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock deleted
+            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
         """
         request_params = self._params(
             clientKey=self.client_key,

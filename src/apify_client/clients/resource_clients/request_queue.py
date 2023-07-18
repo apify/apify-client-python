@@ -193,7 +193,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-    def prolong_request_lock(self, request_id: str, *, lock_secs: int, forefront: Optional[bool] = None) -> Dict:
+    def prolong_request_lock(self, request_id: str, *, forefront: Optional[bool] = None, lock_secs: int) -> Dict:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -437,9 +437,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
             lock_secs (int): By how much to prolong the lock, in seconds
         """
         request_params = self._params(
+            clientKey=self.client_key,
             forefront=forefront,
             lockSecs=lock_secs,
-            clientKey=self.client_key,
         )
 
         response = await self.http_client.call(

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+NEXT
+
+### Added
+
+- Added list_and_lock_head, delete_request_lock, prolong_request_lock methods for the RequestQueueClient(Async) classes
+ 
 [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
 
 ### Fixed

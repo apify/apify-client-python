@@ -1,7 +1,7 @@
 Changelog
 =========
 
-NEXT
+[1.3.0](../../releases/tag/v1.3.0) - TBD
 
 ### Added
 

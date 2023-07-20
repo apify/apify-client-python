@@ -3983,7 +3983,7 @@ Add requests to the queue.
 
 #### [](#requestqueueclientasync-batch_delete_requests) `async RequestQueueClientAsync.batch_delete_requests(requests)`
 
-Batch-deletes given requests batch from the queue.
+Delete given requests from the queue.
 
 [https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests](https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests)
 
@@ -4005,7 +4005,7 @@ List requests in the queue.
 
 * **Parameters**
 
-  * **limit** (`List[Dict[str, Any]]`) – Number of keys to be returned.
+  * **limit** (`int`, *optional*) – How many requests to retrieve
 
   * **exclusive_start_id** (`str`, *optional*) – All requests up to this one (including) are skipped from the result
 
@@ -4264,7 +4264,7 @@ Add requests to the queue.
 
 #### [](#requestqueueclient-batch_delete_requests) `RequestQueueClient.batch_delete_requests(requests)`
 
-Batch-deletes given requests batch from the queue.
+Delete given requests from the queue.
 
 [https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests](https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests)
 
@@ -4286,7 +4286,7 @@ List requests in the queue.
 
 * **Parameters**
 
-  * **limit** (`List[Dict[str, Any]]`) – Number of keys to be returned.
+  * **limit** (`int`, *optional*) – How many requests to retrieve
 
   * **exclusive_start_id** (`str`, *optional*) – All requests up to this one (including) are skipped from the result
 

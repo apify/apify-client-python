@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ..._errors import ApifyApiError
 from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, ignore_docs
@@ -237,6 +237,68 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
+    def batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
+        """Add requests to the queue.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
+
+        Args:
+            requests (List[Dict[str, Any]]): List of the requests to add
+            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
+        """
+        request_params = self._params(
+            clientKey=self.client_key,
+            forefront=forefront,
+        )
+
+        response = self.http_client.call(
+            url=self._url('requests/batch'),
+            method='POST',
+            params=request_params,
+            json=requests,
+        )
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
+        """Delete given requests from the queue.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
+
+        Args:
+            requests (List[Dict[str, Any]]): List of the requests to delete
+        """
+        request_params = self._params(
+            clientKey=self.client_key,
+        )
+
+        response = self.http_client.call(
+            url=self._url('requests/batch'),
+            method='DELETE',
+            params=request_params,
+            json=requests,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    def list_requests(self, *, limit: Optional[int] = None, exclusive_start_id: Optional[str] = None) -> Dict:
+        """List requests in the queue.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
+
+        Args:
+            limit (int, optional): How many requests to retrieve
+            exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
+        """
+        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+
+        response = self.http_client.call(
+            url=self._url('requests'),
+            method='GET',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))
+
 
 class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
@@ -469,3 +531,64 @@ class RequestQueueClientAsync(ResourceClientAsync):
             method='DELETE',
             params=request_params,
         )
+
+    async def batch_add_requests(self, requests: List[Dict[str, Any]], *, forefront: Optional[bool] = None) -> Dict:
+        """Add requests to the queue.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
+
+        Args:
+            requests (List[Dict[str, Any]]): List of the requests to add
+            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
+        """
+        request_params = self._params(
+            clientKey=self.client_key,
+            forefront=forefront,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('requests/batch'),
+            method='POST',
+            params=request_params,
+            json=requests,
+        )
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    async def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
+        """Delete given requests from the queue.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
+
+        Args:
+            requests (List[Dict[str, Any]]): List of the requests to delete
+        """
+        request_params = self._params(
+            clientKey=self.client_key,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('requests/batch'),
+            method='DELETE',
+            params=request_params,
+            json=requests,
+        )
+        return _parse_date_fields(_pluck_data(response.json()))
+
+    async def list_requests(self, *, limit: Optional[int] = None, exclusive_start_id: Optional[str] = None) -> Dict:
+        """List requests in the queue.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
+
+        Args:
+            limit (int, optional): How many requests to retrieve
+            exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
+        """
+        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+
+        response = await self.http_client.call(
+            url=self._url('requests'),
+            method='GET',
+            params=request_params,
+        )
+
+        return _parse_date_fields(_pluck_data(response.json()))

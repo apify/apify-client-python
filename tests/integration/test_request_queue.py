@@ -1,11 +1,11 @@
-import random
+import secrets
 import string
 
 from apify_client import ApifyClient, ApifyClientAsync
 
 
 def random_string(length: int = 10) -> str:
-    return ''.join(random.choice(string.ascii_letters) for _ in range(length))
+    return ''.join(secrets.choice(string.ascii_letters) for _ in range(length))
 
 
 def random_queue_name() -> str:

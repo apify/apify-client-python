@@ -26,6 +26,10 @@ for client_source_path in clients_path.glob('**/*.py'):
             # Find corresponding sync method in the sync class
             sync_method = sync_class.find('DefNode', name=async_method.name)
 
+            # Skip methods with @ignore_docs decorator
+            if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
+                continue
+
             # If the sync method has a docstring, copy it to the async method (with adjustments)
             if isinstance(sync_method.value[0].value, str):
                 sync_docstring = sync_method.value[0].value

@@ -3742,10 +3742,16 @@ Async sub-client for manipulating a single request queue.
 * [async update()](#requestqueueclientasync-update)
 * [async delete()](#requestqueueclientasync-delete)
 * [async list\_head()](#requestqueueclientasync-list\_head)
+* [async list\_and\_lock\_head()](#requestqueueclientasync-list\_and\_lock\_head)
 * [async add\_request()](#requestqueueclientasync-add\_request)
 * [async get\_request()](#requestqueueclientasync-get\_request)
 * [async update\_request()](#requestqueueclientasync-update\_request)
 * [async delete\_request()](#requestqueueclientasync-delete\_request)
+* [async prolong\_request\_lock()](#requestqueueclientasync-prolong\_request\_lock)
+* [async delete\_request\_lock()](#requestqueueclientasync-delete\_request\_lock)
+* [async batch\_add\_requests()](#requestqueueclientasync-batch\_add\_requests)
+* [async batch\_delete\_requests()](#requestqueueclientasync-batch\_delete\_requests)
+* [async list\_requests()](#requestqueueclientasync-list\_requests)
 
 ***
 
@@ -3810,6 +3816,28 @@ Retrieve a given number of requests from the beginning of the queue.
 * **Returns**
 
   The desired number of requests from the beginning of the queue.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#requestqueueclientasync-list_and_lock_head) `async RequestQueueClientAsync.list_and_lock_head(*, lock_secs, limit=None)`
+
+Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock](https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock)
+
+* **Parameters**
+
+  * **lock_secs** (`int`) – How long the requests will be locked for, in seconds
+
+  * **limit** (`int`, *optional*) – How many requests to retrieve
+
+* **Returns**
+
+  The desired number of locked requests from the beginning of the queue.
 
 * **Return type**
 
@@ -3897,6 +3925,96 @@ Delete a request from the queue.
 
 ***
 
+#### [](#requestqueueclientasync-prolong_request_lock) `async RequestQueueClientAsync.prolong_request_lock(request_id, *, forefront=None, lock_secs)`
+
+Prolong the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to prolong the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock expires
+
+  * **lock_secs** (`int`) – By how much to prolong the lock, in seconds
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclientasync-delete_request_lock) `async RequestQueueClientAsync.delete_request_lock(request_id, *, forefront=None)`
+
+Delete the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to delete the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after the lock is deleted
+
+* **Return type**
+
+  `None`
+
+***
+
+#### [](#requestqueueclientasync-batch_add_requests) `async RequestQueueClientAsync.batch_add_requests(requests, *, forefront=None)`
+
+Add requests to the queue.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests](https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests)
+
+* **Parameters**
+
+  * **requests** (`List[Dict[str, Any]]`) – List of the requests to add
+
+  * **forefront** (`bool`, *optional*) – Whether to add the requests to the head or the end of the queue
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclientasync-batch_delete_requests) `async RequestQueueClientAsync.batch_delete_requests(requests)`
+
+Delete given requests from the queue.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests](https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests)
+
+* **Parameters**
+
+  * **requests** (`List[Dict[str, Any]]`) – List of the requests to delete
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclientasync-list_requests) `async RequestQueueClientAsync.list_requests(*, limit=None, exclusive_start_id=None)`
+
+List requests in the queue.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests](https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many requests to retrieve
+
+  * **exclusive_start_id** (`str`, *optional*) – All requests up to this one (including) are skipped from the result
+
+* **Return type**
+
+  `Dict`
+
+***
+
 ### [](#requestqueueclient) RequestQueueClient
 
 Sub-client for manipulating a single request queue.
@@ -3905,10 +4023,16 @@ Sub-client for manipulating a single request queue.
 * [update()](#requestqueueclient-update)
 * [delete()](#requestqueueclient-delete)
 * [list\_head()](#requestqueueclient-list\_head)
+* [list\_and\_lock\_head()](#requestqueueclient-list\_and\_lock\_head)
 * [add\_request()](#requestqueueclient-add\_request)
 * [get\_request()](#requestqueueclient-get\_request)
 * [update\_request()](#requestqueueclient-update\_request)
 * [delete\_request()](#requestqueueclient-delete\_request)
+* [prolong\_request\_lock()](#requestqueueclient-prolong\_request\_lock)
+* [delete\_request\_lock()](#requestqueueclient-delete\_request\_lock)
+* [batch\_add\_requests()](#requestqueueclient-batch\_add\_requests)
+* [batch\_delete\_requests()](#requestqueueclient-batch\_delete\_requests)
+* [list\_requests()](#requestqueueclient-list\_requests)
 
 ***
 
@@ -3973,6 +4097,28 @@ Retrieve a given number of requests from the beginning of the queue.
 * **Returns**
 
   The desired number of requests from the beginning of the queue.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#requestqueueclient-list_and_lock_head) `RequestQueueClient.list_and_lock_head(*, lock_secs, limit=None)`
+
+Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock](https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock)
+
+* **Parameters**
+
+  * **lock_secs** (`int`) – How long the requests will be locked for, in seconds
+
+  * **limit** (`int`, *optional*) – How many requests to retrieve
+
+* **Returns**
+
+  The desired number of locked requests from the beginning of the queue.
 
 * **Return type**
 
@@ -4057,6 +4203,96 @@ Delete a request from the queue.
 * **Return type**
 
   `None`
+
+***
+
+#### [](#requestqueueclient-prolong_request_lock) `RequestQueueClient.prolong_request_lock(request_id, *, forefront=None, lock_secs)`
+
+Prolong the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to prolong the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after lock expires
+
+  * **lock_secs** (`int`) – By how much to prolong the lock, in seconds
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclient-delete_request_lock) `RequestQueueClient.delete_request_lock(request_id, *, forefront=None)`
+
+Delete the lock on a request.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock](https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock)
+
+* **Parameters**
+
+  * **request_id** (`str`) – ID of the request to delete the lock
+
+  * **forefront** (`bool`, *optional*) – Whether to put the request in the beginning or the end of the queue after the lock is deleted
+
+* **Return type**
+
+  `None`
+
+***
+
+#### [](#requestqueueclient-batch_add_requests) `RequestQueueClient.batch_add_requests(requests, *, forefront=None)`
+
+Add requests to the queue.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests](https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests)
+
+* **Parameters**
+
+  * **requests** (`List[Dict[str, Any]]`) – List of the requests to add
+
+  * **forefront** (`bool`, *optional*) – Whether to add the requests to the head or the end of the queue
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclient-batch_delete_requests) `RequestQueueClient.batch_delete_requests(requests)`
+
+Delete given requests from the queue.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests](https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests)
+
+* **Parameters**
+
+  * **requests** (`List[Dict[str, Any]]`) – List of the requests to delete
+
+* **Return type**
+
+  `Dict`
+
+***
+
+#### [](#requestqueueclient-list_requests) `RequestQueueClient.list_requests(*, limit=None, exclusive_start_id=None)`
+
+List requests in the queue.
+
+[https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests](https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many requests to retrieve
+
+  * **exclusive_start_id** (`str`, *optional*) – All requests up to this one (including) are skipped from the result
+
+* **Return type**
+
+  `Dict`
 
 ***
 

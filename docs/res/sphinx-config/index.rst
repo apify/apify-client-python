@@ -7,5 +7,3 @@
     :members:
 .. automodule:: apify_client.clients.resource_clients
     :members:
-.. autoclass:: apify_client._utils.ListPage
-    :members:

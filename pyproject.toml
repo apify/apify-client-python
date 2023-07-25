@@ -23,7 +23,7 @@ classifiers = [
 
 requires-python = ">=3.8"
 dependencies = [
-    "apify-shared ~= 1.0.0b2",
+    "apify-shared ~= 1.0.0b3",
     "httpx >= 0.24.1",
 ]
 

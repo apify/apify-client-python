@@ -1,9 +1,9 @@
 from typing import Any, Dict, List, Optional
 
 from apify_shared.consts import ActorSourceType
+from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
-from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_version import _get_actor_version_representation
 

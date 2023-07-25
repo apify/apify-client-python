@@ -1,8 +1,9 @@
 from typing import Any, Dict, Optional
 
+from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from ..._utils import ListPage, _pluck_data
+from ..._utils import _pluck_data
 from .base_client import BaseClient, BaseClientAsync
 
 

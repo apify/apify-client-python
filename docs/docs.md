@@ -6155,22 +6155,3 @@ List all webhook dispatches of a user.
 * **Return type**
 
   [`ListPage`](#listpage)
-
-***
-
-### [](#listpage) ListPage
-
-A single page of items returned from a list() method.
-
-#### Instance attributes
-
-Name | Type | Description
----- | ---- | -----------
-`items` | `list` | List of returned objects on this page
-`offset` | `int` | The limit on the number of returned objects offset specified in the API call
-`limit` | `int` | The offset of the first object specified in the API call
-`count` | `int` | Count of the returned objects on this page
-`total` | `int` | Total number of objects matching the API call criteria
-`desc` | `bool` | Whether the listing is descending or not
-
-***

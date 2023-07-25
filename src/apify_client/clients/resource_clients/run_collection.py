@@ -1,9 +1,9 @@
 from typing import Any, Dict, Optional
 
 from apify_shared.consts import ActorJobStatus
+from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
 
-from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 

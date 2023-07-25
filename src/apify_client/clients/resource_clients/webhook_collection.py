@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
 
-from apify_client.consts import WebhookEventType
+from apify_shared.consts import WebhookEventType
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .webhook import _get_webhook_representation
 
@@ -88,7 +89,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return self._create(_filter_out_none_values_recursively(webhook_representation))
+        return self._create(filter_out_none_values_recursively(webhook_representation))
 
 
 class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
@@ -172,4 +173,4 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return await self._create(_filter_out_none_values_recursively(webhook_representation))
+        return await self._create(filter_out_none_values_recursively(webhook_representation))

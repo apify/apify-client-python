@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
-from ...consts import ActorSourceType
+from apify_shared.consts import ActorSourceType
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_version import _get_actor_version_representation
 
@@ -74,7 +76,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
             github_gist_url=github_gist_url,
         )
 
-        return self._create(_filter_out_none_values_recursively(actor_version_representation))
+        return self._create(filter_out_none_values_recursively(actor_version_representation))
 
 
 class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
@@ -145,4 +147,4 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        return await self._create(_filter_out_none_values_recursively(actor_version_representation))
+        return await self._create(filter_out_none_values_recursively(actor_version_representation))

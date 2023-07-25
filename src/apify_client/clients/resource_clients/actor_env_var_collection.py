@@ -1,6 +1,8 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_env_var import _get_actor_env_var_representation
 
@@ -49,7 +51,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
             value=value,
         )
 
-        return self._create(_filter_out_none_values_recursively(actor_env_var_representation))
+        return self._create(filter_out_none_values_recursively(actor_env_var_representation))
 
 
 class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
@@ -96,4 +98,4 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
             value=value,
         )
 
-        return await self._create(_filter_out_none_values_recursively(actor_env_var_representation))
+        return await self._create(filter_out_none_values_recursively(actor_env_var_representation))

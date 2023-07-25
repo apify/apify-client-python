@@ -1,6 +1,8 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .task import _get_task_representation
 
@@ -74,7 +76,7 @@ class TaskCollectionClient(ResourceCollectionClient):
             title=title,
         )
 
-        return self._create(_filter_out_none_values_recursively(task_representation))
+        return self._create(filter_out_none_values_recursively(task_representation))
 
 
 class TaskCollectionClientAsync(ResourceCollectionClientAsync):
@@ -146,4 +148,4 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
             title=title,
         )
 
-        return await self._create(_filter_out_none_values_recursively(task_representation))
+        return await self._create(filter_out_none_values_recursively(task_representation))

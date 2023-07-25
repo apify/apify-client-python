@@ -1,6 +1,8 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, ignore_docs
+from apify_shared.utils import ignore_docs
+
+from ..._utils import ListPage
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 

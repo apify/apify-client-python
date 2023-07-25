@@ -1,15 +1,10 @@
 from typing import Any, Dict, List, Optional
 
+from apify_shared.consts import WebhookEventType
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
+
 from ..._errors import ApifyApiError
-from ..._utils import (
-    _catch_not_found_or_throw,
-    _filter_out_none_values_recursively,
-    _maybe_extract_enum_member_value,
-    _parse_date_fields,
-    _pluck_data,
-    ignore_docs,
-)
-from ...consts import WebhookEventType
+from ..._utils import _catch_not_found_or_throw, _pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
@@ -46,7 +41,7 @@ def _get_webhook_representation(
         webhook['isAdHoc'] = True
 
     if event_types is not None:
-        webhook['eventTypes'] = [_maybe_extract_enum_member_value(event_type) for event_type in event_types]
+        webhook['eventTypes'] = [maybe_extract_enum_member_value(event_type) for event_type in event_types]
 
     return webhook
 
@@ -115,7 +110,7 @@ class WebhookClient(ResourceClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return self._update(_filter_out_none_values_recursively(webhook_representation))
+        return self._update(filter_out_none_values_recursively(webhook_representation))
 
     def delete(self) -> None:
         """Delete the webhook.
@@ -141,7 +136,7 @@ class WebhookClient(ResourceClient):
                 params=self._params(),
             )
 
-            return _parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(_pluck_data(response.json()))
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
@@ -225,7 +220,7 @@ class WebhookClientAsync(ResourceClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return await self._update(_filter_out_none_values_recursively(webhook_representation))
+        return await self._update(filter_out_none_values_recursively(webhook_representation))
 
     async def delete(self) -> None:
         """Delete the webhook.
@@ -251,7 +246,7 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            return _parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(_pluck_data(response.json()))
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)

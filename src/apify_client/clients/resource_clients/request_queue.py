@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional
 
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
+
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _parse_date_fields, _pluck_data, ignore_docs
+from ..._utils import _catch_not_found_or_throw, _pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -44,7 +46,7 @@ class RequestQueueClient(ResourceClient):
             'name': name,
         }
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the request queue.
@@ -72,7 +74,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
@@ -95,7 +97,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def add_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
         """Add a request to the queue.
@@ -121,7 +123,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def get_request(self, request_id: str) -> Optional[Dict]:
         """Retrieve a request from the queue.
@@ -140,7 +142,7 @@ class RequestQueueClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return _parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(_pluck_data(response.json()))
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
@@ -173,7 +175,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -215,7 +217,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def delete_request_lock(self, request_id: str, *, forefront: Optional[bool] = None) -> None:
         """Delete the lock on a request.
@@ -257,7 +259,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
             json=requests,
         )
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
         """Delete given requests from the queue.
@@ -278,7 +280,7 @@ class RequestQueueClient(ResourceClient):
             json=requests,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def list_requests(self, *, limit: Optional[int] = None, exclusive_start_id: Optional[str] = None) -> Dict:
         """List requests in the queue.
@@ -297,7 +299,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
 
 class RequestQueueClientAsync(ResourceClientAsync):
@@ -339,7 +341,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             'name': name,
         }
 
-        return await self._update(_filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields))
 
     async def delete(self) -> None:
         """Delete the request queue.
@@ -367,7 +369,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def list_and_lock_head(self, *, lock_secs: int, limit: Optional[int] = None) -> Dict:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
@@ -390,7 +392,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def add_request(self, request: Dict, *, forefront: Optional[bool] = None) -> Dict:
         """Add a request to the queue.
@@ -416,7 +418,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def get_request(self, request_id: str) -> Optional[Dict]:
         """Retrieve a request from the queue.
@@ -435,7 +437,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return _parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(_pluck_data(response.json()))
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
@@ -468,7 +470,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -510,7 +512,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def delete_request_lock(self, request_id: str, *, forefront: Optional[bool] = None) -> None:
         """Delete the lock on a request.
@@ -552,7 +554,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
             json=requests,
         )
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def batch_delete_requests(self, requests: List[Dict[str, Any]]) -> Dict:
         """Delete given requests from the queue.
@@ -572,7 +574,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
             json=requests,
         )
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def list_requests(self, *, limit: Optional[int] = None, exclusive_start_id: Optional[str] = None) -> Dict:
         """List requests in the queue.
@@ -591,4 +593,4 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))

@@ -9,17 +9,12 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 import httpx
 
+from apify_shared.types import JSONSerializable
+from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
+
 from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
 from ._logging import logger_name
-from ._types import JSONSerializable
-from ._utils import (
-    _is_content_type_json,
-    _is_content_type_text,
-    _is_content_type_xml,
-    _retry_with_exp_backoff,
-    _retry_with_exp_backoff_async,
-    ignore_docs,
-)
+from ._utils import _retry_with_exp_backoff, _retry_with_exp_backoff_async
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -70,9 +65,9 @@ class _BaseHTTPClient:
             content_type = response.headers['content-type'].split(';')[0].strip()
 
         try:
-            if _is_content_type_json(content_type):
+            if is_content_type_json(content_type):
                 return response.json()
-            elif _is_content_type_xml(content_type) or _is_content_type_text(content_type):
+            elif is_content_type_xml(content_type) or is_content_type_text(content_type):
                 return response.text
             else:
                 return response.content

@@ -4,8 +4,10 @@ from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 
 import httpx
 
-from ..._types import JSONSerializable
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from apify_shared.types import JSONSerializable
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
+from ..._utils import ListPage
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -43,7 +45,7 @@ class DatasetClient(ResourceClient):
             'name': name,
         }
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the dataset.
@@ -536,7 +538,7 @@ class DatasetClientAsync(ResourceClientAsync):
             'name': name,
         }
 
-        return await self._update(_filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields))
 
     async def delete(self) -> None:
         """Delete the dataset.

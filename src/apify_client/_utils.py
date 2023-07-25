@@ -1,14 +1,12 @@
 import asyncio
 import base64
-import io
 import json
 import random
-import re
 import time
-from datetime import datetime, timezone
-from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, cast
+
+from apify_shared.utils import ignore_docs, is_file_or_bytes, maybe_extract_enum_member_value
 
 if TYPE_CHECKING:
     from ._errors import ApifyApiError
@@ -18,41 +16,15 @@ PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
 
 RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
 
+T = TypeVar('T')
+StopRetryingType = Callable[[], None]
+
 
 def _to_safe_id(id: str) -> str:
     # Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
     # Since the `/` character has a special meaning in URL paths,
     # we replace it with `~` for proper route parsing on the API, where after parsing the URL it's replaced back to `/`.
     return id.replace('/', '~')
-
-
-ListOrDict = TypeVar('ListOrDict', List, Dict)
-
-
-def _parse_date_fields(data: ListOrDict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> ListOrDict:
-    if max_depth < 0:
-        return data
-
-    if isinstance(data, list):
-        return [_parse_date_fields(item, max_depth - 1) for item in data]
-
-    if isinstance(data, dict):
-        def parse(key: str, value: object) -> object:
-            parsed_value = value
-            if key.endswith(PARSE_DATE_FIELDS_KEY_SUFFIX) and isinstance(value, str):
-                try:
-                    parsed_value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
-                except ValueError:
-                    pass
-            elif isinstance(value, dict):
-                parsed_value = _parse_date_fields(value, max_depth - 1)
-            elif isinstance(value, list):
-                parsed_value = _parse_date_fields(value, max_depth)
-            return parsed_value
-
-        return {key: parse(key, value) for (key, value) in data.items()}
-
-    return data
 
 
 def _pluck_data(parsed_response: Any) -> Dict:
@@ -67,29 +39,6 @@ def _pluck_data_as_list(parsed_response: Any) -> List:
         return cast(List, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
-
-
-def _is_content_type_json(content_type: str) -> bool:
-    return bool(re.search(r'^application/json', content_type, flags=re.IGNORECASE))
-
-
-def _is_content_type_xml(content_type: str) -> bool:
-    return bool(re.search(r'^application/.*xml$', content_type, flags=re.IGNORECASE))
-
-
-def _is_content_type_text(content_type: str) -> bool:
-    return bool(re.search(r'^text/', content_type, flags=re.IGNORECASE))
-
-
-def _is_file_or_bytes(value: Any) -> bool:
-    # The check for IOBase is not ideal, it would be better to use duck typing,
-    # but then the check would be super complex, judging from how the 'requests' library does it.
-    # This way should be good enough for the vast majority of use cases, if it causes issues, we can improve it later.
-    return isinstance(value, (bytes, bytearray, io.IOBase))
-
-
-T = TypeVar('T')
-StopRetryingType = Callable[[], None]
 
 
 def _retry_with_exp_backoff(
@@ -174,7 +123,7 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
     data = []
     for webhook in webhooks:
         webhook_representation = {
-            'eventTypes': [_maybe_extract_enum_member_value(event_type) for event_type in webhook['event_types']],
+            'eventTypes': [maybe_extract_enum_member_value(event_type) for event_type in webhook['event_types']],
             'requestUrl': webhook['request_url'],
         }
         if 'payload_template' in webhook:
@@ -184,48 +133,19 @@ def _encode_webhook_list_to_base64(webhooks: List[Dict]) -> str:
     return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
-def _filter_out_none_values_recursively(dictionary: Dict) -> Dict:
-    """Return copy of the dictionary, recursively omitting all keys for which values are None."""
-    return cast(dict, _filter_out_none_values_recursively_internal(dictionary))
-
-
-# Unfortunately, it's necessary to have an internal function for the correct result typing, without having to create complicated overloads
-def _filter_out_none_values_recursively_internal(dictionary: Dict, remove_empty_dicts: Optional[bool] = None) -> Optional[Dict]:
-    result = {}
-    for k, v in dictionary.items():
-        if isinstance(v, dict):
-            v = _filter_out_none_values_recursively_internal(v, remove_empty_dicts is True or remove_empty_dicts is None)
-        if v is not None:
-            result[k] = v
-    if not result and remove_empty_dicts:
-        return None
-    return result
-
-
 def _encode_key_value_store_record_value(value: Any, content_type: Optional[str] = None) -> Tuple[Any, str]:
     if not content_type:
-        if _is_file_or_bytes(value):
+        if is_file_or_bytes(value):
             content_type = 'application/octet-stream'
         elif isinstance(value, str):
             content_type = 'text/plain; charset=utf-8'
         else:
             content_type = 'application/json; charset=utf-8'
 
-    if 'application/json' in content_type and not _is_file_or_bytes(value) and not isinstance(value, str):
+    if 'application/json' in content_type and not is_file_or_bytes(value) and not isinstance(value, str):
         value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
 
     return (value, content_type)
-
-
-def _maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
-    if isinstance(maybe_enum_member, Enum):
-        return maybe_enum_member.value
-    return maybe_enum_member
-
-
-def ignore_docs(method: T) -> T:
-    """Mark that a method's documentation should not be rendered. Functionally, this decorator is a noop."""
-    return method
 
 
 class ListPage(Generic[T]):

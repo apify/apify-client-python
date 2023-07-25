@@ -1,7 +1,9 @@
 from typing import Dict, Optional
 
+from apify_shared.utils import ignore_docs, parse_date_fields
+
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data, ignore_docs
+from ..._utils import _catch_not_found_or_throw, _pluck_data
 from .base_client import BaseClient, BaseClientAsync
 
 
@@ -17,7 +19,7 @@ class ResourceClient(BaseClient):
                 params=self._params(),
             )
 
-            return _parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(_pluck_data(response.json()))
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
@@ -32,7 +34,7 @@ class ResourceClient(BaseClient):
             json=updated_fields,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def _delete(self) -> None:
         try:
@@ -58,7 +60,7 @@ class ResourceClientAsync(BaseClientAsync):
                 params=self._params(),
             )
 
-            return _parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(_pluck_data(response.json()))
 
         except ApifyApiError as exc:
             _catch_not_found_or_throw(exc)
@@ -73,7 +75,7 @@ class ResourceClientAsync(BaseClientAsync):
             json=updated_fields,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def _delete(self) -> None:
         try:

@@ -1,13 +1,8 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import (
-    _encode_key_value_store_record_value,
-    _filter_out_none_values_recursively,
-    _parse_date_fields,
-    _pluck_data,
-    _to_safe_id,
-    ignore_docs,
-)
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
+
+from ..._utils import _encode_key_value_store_record_value, _pluck_data, _to_safe_id
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 from .dataset import DatasetClient, DatasetClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
@@ -51,7 +46,7 @@ class RunClient(ActorJobBaseClient):
             'isStatusMessageTerminal': is_status_message_terminal,
         }
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields))
 
     def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
         """Abort the actor run which is starting or currently running and return its details.
@@ -119,7 +114,7 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def resurrect(
         self,
@@ -158,7 +153,7 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the actor run.
@@ -245,7 +240,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             'isStatusMessageTerminal': is_status_message_terminal,
         }
 
-        return await self._update(_filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields))
 
     async def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
         """Abort the actor run which is starting or currently running and return its details.
@@ -313,7 +308,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def resurrect(
         self,
@@ -352,7 +347,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the actor run.

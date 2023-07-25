@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ignore_docs
+from apify_shared.utils import ignore_docs
+
 from ..base import ResourceClient, ResourceClientAsync
 
 

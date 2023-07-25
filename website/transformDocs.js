@@ -101,9 +101,14 @@ function isCustomClass(s) {
 }
 
 function inferType(x) {
-    return !isCustomClass(stripOptional(x) ?? '') ? {
+    const typeWithoutOptional = stripOptional(x);
+    if (!typeWithoutOptional) {
+        return undefined;
+    }
+
+    return !isCustomClass(stripOptional(x)) ? {
         type: 'intrinsic',
-        name: stripOptional(x) ?? 'void',
+        name: stripOptional(x),
     } : {
         type: 'reference',
         name: stripOptional(x),
@@ -218,6 +223,7 @@ function traverse(o, parent) {
                                 text: parameters[p.name]
                             }]
                         } : undefined,
+                        defaultValue: p.default_value,
                     })).filter(x => x),
                 }];
             }

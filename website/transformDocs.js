@@ -3,6 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 
+const REPO_BASE_URL = 'https://github.com/apify/apify-client-python';
+const DEFAULT_BRANCH = 'master';
+
 const acc = {
     'id': 0,
     'name': 'apify-client',
@@ -17,7 +20,7 @@ const acc = {
             'fileName': 'src/index.ts',
             'line': 1,
             'character': 0,
-            'url': 'https://github.com/apify/apify-client-python/blob/123456/src/dummy.py'
+            'url': `${REPO_BASE_URL}/blob/123456/src/dummy.py`,
         }
     ]
 };
@@ -98,9 +101,14 @@ function isCustomClass(s) {
 }
 
 function inferType(x) {
-    return !isCustomClass(stripOptional(x) ?? '') ? {
+    const typeWithoutOptional = stripOptional(x);
+    if (!typeWithoutOptional) {
+        return undefined;
+    }
+
+    return !isCustomClass(stripOptional(x)) ? {
         type: 'intrinsic',
-        name: stripOptional(x) ?? 'void',
+        name: stripOptional(x),
     } : {
         type: 'reference',
         name: stripOptional(x),
@@ -156,6 +164,9 @@ function traverse(o, parent) {
         }
 
         if(x.type in kinds && !isHidden(x)) {
+            const filePathInRepo = path.relative(path.join(__dirname, '..'), x.location.filename);
+            const memberGitHubUrl = `${REPO_BASE_URL}/blob/${DEFAULT_BRANCH}/${filePathInRepo}#L${x.location.lineno}`;
+
             let newObj = {
                 id: oid++,
                 name: x.name,
@@ -170,6 +181,12 @@ function traverse(o, parent) {
                 type,
                 children: [],
                 groups: [],
+                sources: [{
+                    filename: filePathInRepo,
+                    line: x.location.lineno,
+                    character: 1,
+                    url: memberGitHubUrl,
+                }],
             };
 
             if(newObj.kindString === 'Method') {
@@ -197,6 +214,7 @@ function traverse(o, parent) {
                         kindString: 'Parameter',
                         flags: {
                             isOptional: p.datatype?.includes('Optional') ? 'true' : undefined,
+                            'keyword-only': p.type === 'KEYWORD_ONLY' ? 'true' : undefined,
                         },
                         type: inferType(p.datatype),
                         comment: parameters[p.name] ? {
@@ -205,6 +223,7 @@ function traverse(o, parent) {
                                 text: parameters[p.name]
                             }]
                         } : undefined,
+                        defaultValue: p.default_value,
                     })).filter(x => x),
                 }];
             }

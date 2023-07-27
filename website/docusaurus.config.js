@@ -7,7 +7,7 @@ const { absoluteUrl } = config;
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
-    title: 'Apify Client for Python | Apify Documentation',
+    title: 'API client for Python | Apify Documentation',
     url: absoluteUrl,
     baseUrl: '/api/client/python',
     trailingSlash: false,

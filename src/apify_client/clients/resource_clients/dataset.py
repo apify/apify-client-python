@@ -273,7 +273,6 @@ class DatasetClient(ResourceClient):
         # We need to override and then restore the warnings filter so that the warning gets printed out,
         # Otherwise it would be silently swallowed
         with warnings.catch_warnings():
-            warnings.simplefilter('always')
             warnings.warn(
                 '`DatasetClient.download_items()` is deprecated, use `DatasetClient.get_items_as_bytes()` instead.',
                 DeprecationWarning,

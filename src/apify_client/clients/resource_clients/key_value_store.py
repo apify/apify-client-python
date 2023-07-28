@@ -95,26 +95,19 @@ class KeyValueStoreClient(ResourceClient):
                 raise ValueError('You cannot have both as_bytes and as_file set.')
 
             if as_bytes:
-                # We need to override and then restore the warnings filter so that the warning gets printed out,
-                # Otherwise it would be silently swallowed
-                with warnings.catch_warnings():
-                    warnings.warn(
-                        '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, use `KeyValueStoreClient.get_record_as_bytes()` instead.',  # noqa: E501
-                        DeprecationWarning,
-                        stacklevel=2,
-                    )
-
+                warnings.warn(
+                    '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, use `KeyValueStoreClient.get_record_as_bytes()` instead.',  # noqa: E501
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
                 return self.get_record_as_bytes(key)
 
             if as_file:
-                # We need to override and then restore the warnings filter so that the warning gets printed out,
-                # Otherwise it would be silently swallowed
-                with warnings.catch_warnings():
-                    warnings.warn(
-                        '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, use `KeyValueStoreClient.stream_record()` instead.',
-                        DeprecationWarning,
-                        stacklevel=2,
-                    )
+                warnings.warn(
+                    '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, use `KeyValueStoreClient.stream_record()` instead.',
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
                 return self.stream_record(key)  # type: ignore
 
             response = self.http_client.call(

@@ -2,7 +2,7 @@ from typing import Optional
 
 import httpx
 
-from ._utils import ignore_docs
+from apify_shared.utils import ignore_docs
 
 
 class ApifyClientError(Exception):

@@ -2,15 +2,10 @@ import warnings
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any, AsyncIterator, Dict, Iterator, Optional
 
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
+
 from ..._errors import ApifyApiError
-from ..._utils import (
-    _catch_not_found_or_throw,
-    _encode_key_value_store_record_value,
-    _filter_out_none_values_recursively,
-    _parse_date_fields,
-    _pluck_data,
-    ignore_docs,
-)
+from ..._utils import _catch_not_found_or_throw, _encode_key_value_store_record_value, _pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -48,7 +43,7 @@ class KeyValueStoreClient(ResourceClient):
             'name': name,
         }
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the key-value store.
@@ -80,7 +75,7 @@ class KeyValueStoreClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def get_record(self, key: str, *, as_bytes: bool = False, as_file: bool = False) -> Optional[Dict]:
         """Retrieve the given record from the key-value store.
@@ -277,7 +272,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             'name': name,
         }
 
-        return await self._update(_filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields))
 
     async def delete(self) -> None:
         """Delete the key-value store.
@@ -309,7 +304,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def get_record(self, key: str) -> Optional[Dict]:
         """Retrieve the given record from the key-value store.

@@ -1,7 +1,8 @@
 from typing import Dict, Optional, Union
 
+from apify_shared.utils import ignore_docs
+
 from ._http_client import _HTTPClient, _HTTPClientAsync
-from ._utils import ignore_docs
 from .clients import (
     ActorClient,
     ActorClientAsync,

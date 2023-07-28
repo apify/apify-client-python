@@ -5,7 +5,7 @@ description = "Apify API client for Python"
 readme = "README.md"
 license = {text = "Apache Software License"}
 authors = [
-    {name = "Apify Technologies s.r.o.", email = "support@apify.com" }
+    {name = "Apify Technologies s.r.o.", email = "support@apify.com"},
 ]
 keywords = ["apify", "api", "client", "scraping", "automation"]
 
@@ -23,7 +23,8 @@ classifiers = [
 
 requires-python = ">=3.8"
 dependencies = [
-    "httpx >= 0.24.1"
+    "apify-shared ~= 1.0.0",
+    "httpx >= 0.24.1",
 ]
 
 [project.optional-dependencies]

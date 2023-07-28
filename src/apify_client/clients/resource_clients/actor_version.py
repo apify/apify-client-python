@@ -1,7 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import _filter_out_none_values_recursively, _maybe_extract_enum_member_value, ignore_docs
-from ...consts import ActorSourceType
+from apify_shared.consts import ActorSourceType
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value
+
 from ..base import ResourceClient, ResourceClientAsync
 from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from .actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
@@ -24,7 +25,7 @@ def _get_actor_version_representation(
         'buildTag': build_tag,
         'envVars': env_vars,
         'applyEnvVarsToBuild': apply_env_vars_to_build,
-        'sourceType': _maybe_extract_enum_member_value(source_type),
+        'sourceType': maybe_extract_enum_member_value(source_type),
         'sourceFiles': source_files,
         'gitRepoUrl': git_repo_url,
         'tarballUrl': tarball_url,
@@ -97,7 +98,7 @@ class ActorVersionClient(ResourceClient):
             github_gist_url=github_gist_url,
         )
 
-        return self._update(_filter_out_none_values_recursively(actor_version_representation))
+        return self._update(filter_out_none_values_recursively(actor_version_representation))
 
     def delete(self) -> None:
         """Delete the actor version.
@@ -187,7 +188,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        return await self._update(_filter_out_none_values_recursively(actor_version_representation))
+        return await self._update(filter_out_none_values_recursively(actor_version_representation))
 
     async def delete(self) -> None:
         """Delete the actor version.

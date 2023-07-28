@@ -1,6 +1,8 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from apify_shared.models import ListPage
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
@@ -48,7 +50,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-        return self._get_or_create(name=name, resource=_filter_out_none_values_recursively({'schema': schema}))
+        return self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
 
 
 class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
@@ -95,4 +97,4 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             dict: The retrieved or newly-created dataset.
         """
-        return await self._get_or_create(name=name, resource=_filter_out_none_values_recursively({'schema': schema}))
+        return await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))

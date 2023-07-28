@@ -1,10 +1,10 @@
 import warnings
 from typing import Any
 
-from apify_shared.consts import ActorJobStatus as ActorJobStatus_
-from apify_shared.consts import ActorSourceType as ActorSourceType_
-from apify_shared.consts import MetaOrigin as MetaOrigin_
-from apify_shared.consts import WebhookEventType as WebhookEventType_
+from apify_shared.consts import ActorJobStatus as _ActorJobStatus
+from apify_shared.consts import ActorSourceType as _ActorSourceType
+from apify_shared.consts import MetaOrigin as _MetaOrigin
+from apify_shared.consts import WebhookEventType as _WebhookEventType
 
 DEPRECATED_NAMES = [
     'ActorJobStatus',
@@ -27,5 +27,5 @@ def __getattr__(name: str) -> Any:
             category=DeprecationWarning,
             stacklevel=2,
         )
-        return globals()[f'{name}_']
+        return globals()[f'_{name}']
     raise AttributeError(f'module {__name__!r} has no attribute {name!r}')

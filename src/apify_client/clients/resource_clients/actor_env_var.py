@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import _filter_out_none_values_recursively, ignore_docs
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -61,7 +62,7 @@ class ActorEnvVarClient(ResourceClient):
             value=value,
         )
 
-        return self._update(_filter_out_none_values_recursively(actor_env_var_representation))
+        return self._update(filter_out_none_values_recursively(actor_env_var_representation))
 
     def delete(self) -> None:
         """Delete the actor environment variable.
@@ -115,7 +116,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             value=value,
         )
 
-        return await self._update(_filter_out_none_values_recursively(actor_env_var_representation))
+        return await self._update(filter_out_none_values_recursively(actor_env_var_representation))
 
     async def delete(self) -> None:
         """Delete the actor environment variable.

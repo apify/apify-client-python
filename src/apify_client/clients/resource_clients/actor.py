@@ -1,15 +1,9 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import (
-    _encode_key_value_store_record_value,
-    _encode_webhook_list_to_base64,
-    _filter_out_none_values_recursively,
-    _maybe_extract_enum_member_value,
-    _parse_date_fields,
-    _pluck_data,
-    ignore_docs,
-)
-from ...consts import ActorJobStatus, MetaOrigin
+from apify_shared.consts import ActorJobStatus, MetaOrigin
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
+
+from ..._utils import _encode_key_value_store_record_value, _encode_webhook_list_to_base64, _pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 from .actor_version import ActorVersionClient, ActorVersionClientAsync
 from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
@@ -145,7 +139,7 @@ class ActorClient(ResourceClient):
             example_run_input_content_type=example_run_input_content_type,
         )
 
-        return self._update(_filter_out_none_values_recursively(actor_representation))
+        return self._update(filter_out_none_values_recursively(actor_representation))
 
     def delete(self) -> None:
         """Delete the actor.
@@ -210,7 +204,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def call(
         self,
@@ -299,7 +293,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this actor."""
@@ -325,8 +319,8 @@ class ActorClient(ResourceClient):
             resource_id='last',
             resource_path='runs',
             params=self._params(
-                status=_maybe_extract_enum_member_value(status),
-                origin=_maybe_extract_enum_member_value(origin),
+                status=maybe_extract_enum_member_value(status),
+                origin=maybe_extract_enum_member_value(origin),
             ),
         ))
 
@@ -433,7 +427,7 @@ class ActorClientAsync(ResourceClientAsync):
             example_run_input_content_type=example_run_input_content_type,
         )
 
-        return await self._update(_filter_out_none_values_recursively(actor_representation))
+        return await self._update(filter_out_none_values_recursively(actor_representation))
 
     async def delete(self) -> None:
         """Delete the actor.
@@ -498,7 +492,7 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def call(
         self,
@@ -587,7 +581,7 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this actor."""
@@ -613,8 +607,8 @@ class ActorClientAsync(ResourceClientAsync):
             resource_id='last',
             resource_path='runs',
             params=self._params(
-                status=_maybe_extract_enum_member_value(status),
-                origin=_maybe_extract_enum_member_value(origin),
+                status=maybe_extract_enum_member_value(status),
+                origin=maybe_extract_enum_member_value(origin),
             ),
         ))
 

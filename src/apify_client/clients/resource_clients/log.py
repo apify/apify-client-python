@@ -3,8 +3,10 @@ from typing import Any, AsyncIterator, Iterator, Optional
 
 import httpx
 
+from apify_shared.utils import ignore_docs
+
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, ignore_docs
+from ..._utils import _catch_not_found_or_throw
 from ..base import ResourceClient, ResourceClientAsync
 
 

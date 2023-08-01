@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from apify_shared.models import ListPage
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .schedule import _get_schedule_representation
 
@@ -78,7 +80,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             title=title,
         )
 
-        return self._create(_filter_out_none_values_recursively(schedule_representation))
+        return self._create(filter_out_none_values_recursively(schedule_representation))
 
 
 class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
@@ -154,4 +156,4 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
             title=title,
         )
 
-        return await self._create(_filter_out_none_values_recursively(schedule_representation))
+        return await self._create(filter_out_none_values_recursively(schedule_representation))

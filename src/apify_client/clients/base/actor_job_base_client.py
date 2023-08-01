@@ -4,9 +4,11 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
+from apify_shared.consts import ActorJobStatus
+from apify_shared.utils import ignore_docs, parse_date_fields
+
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _parse_date_fields, _pluck_data, ignore_docs
-from ...consts import ActorJobStatus
+from ..._utils import _catch_not_found_or_throw, _pluck_data
 from .resource_client import ResourceClient, ResourceClientAsync
 
 DEFAULT_WAIT_FOR_FINISH_SEC = 999999
@@ -36,7 +38,7 @@ class ActorJobBaseClient(ResourceClient):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = _parse_date_fields(_pluck_data(response.json()))
+                job = parse_date_fields(_pluck_data(response.json()))
 
                 seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
                 if (
@@ -69,7 +71,7 @@ class ActorJobBaseClient(ResourceClient):
                 gracefully=gracefully,
             ),
         )
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
 
 @ignore_docs
@@ -93,7 +95,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = _parse_date_fields(_pluck_data(response.json()))
+                job = parse_date_fields(_pluck_data(response.json()))
 
                 seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
                 if (
@@ -126,4 +128,4 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 gracefully=gracefully,
             ),
         )
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))

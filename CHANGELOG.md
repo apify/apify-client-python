@@ -1,6 +1,19 @@
 Changelog
 =========
 
+[1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
+
+### Internal changes
+
+- Import general constants and utilities from apify-shared library
+
+[1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
+
+### Added
+
+- Added list_and_lock_head, delete_request_lock, prolong_request_lock methods for the RequestQueueClient(Async) classes
+- Added batch_add_requests, batch_delete_requests, list_requests methods for the RequestQueueClient(Async) classes
+
 [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
 
 ### Fixed

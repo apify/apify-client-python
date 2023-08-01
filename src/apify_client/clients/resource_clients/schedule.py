@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional
 
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _filter_out_none_values_recursively, _pluck_data_as_list, ignore_docs
+from ..._utils import _catch_not_found_or_throw, _pluck_data_as_list
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -87,7 +89,7 @@ class ScheduleClient(ResourceClient):
             title=title,
         )
 
-        return self._update(_filter_out_none_values_recursively(schedule_representation))
+        return self._update(filter_out_none_values_recursively(schedule_representation))
 
     def delete(self) -> None:
         """Delete the schedule.
@@ -177,7 +179,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             title=title,
         )
 
-        return await self._update(_filter_out_none_values_recursively(schedule_representation))
+        return await self._update(filter_out_none_values_recursively(schedule_representation))
 
     async def delete(self) -> None:
         """Delete the schedule.

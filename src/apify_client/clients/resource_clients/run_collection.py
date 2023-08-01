@@ -1,7 +1,9 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _maybe_extract_enum_member_value, ignore_docs
-from ...consts import ActorJobStatus
+from apify_shared.consts import ActorJobStatus
+from apify_shared.models import ListPage
+from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
+
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 
@@ -41,7 +43,7 @@ class RunCollectionClient(ResourceCollectionClient):
             limit=limit,
             offset=offset,
             desc=desc,
-            status=_maybe_extract_enum_member_value(status),
+            status=maybe_extract_enum_member_value(status),
         )
 
 
@@ -81,5 +83,5 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             limit=limit,
             offset=offset,
             desc=desc,
-            status=_maybe_extract_enum_member_value(status),
+            status=maybe_extract_enum_member_value(status),
         )

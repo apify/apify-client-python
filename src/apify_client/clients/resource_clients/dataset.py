@@ -4,8 +4,10 @@ from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
 
 import httpx
 
-from ..._types import JSONSerializable
-from ..._utils import ListPage, _filter_out_none_values_recursively, ignore_docs
+from apify_shared.models import ListPage
+from apify_shared.types import JSONSerializable
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+
 from ..base import ResourceClient, ResourceClientAsync
 
 
@@ -43,7 +45,7 @@ class DatasetClient(ResourceClient):
             'name': name,
         }
 
-        return self._update(_filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields))
 
     def delete(self) -> None:
         """Delete the dataset.
@@ -268,15 +270,11 @@ class DatasetClient(ResourceClient):
         Returns:
             bytes: The dataset items as raw bytes
         """
-        # We need to override and then restore the warnings filter so that the warning gets printed out,
-        # Otherwise it would be silently swallowed
-        with warnings.catch_warnings():
-            warnings.simplefilter('always')
-            warnings.warn(
-                '`DatasetClient.download_items()` is deprecated, use `DatasetClient.get_items_as_bytes()` instead.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
+        warnings.warn(
+            '`DatasetClient.download_items()` is deprecated, use `DatasetClient.get_items_as_bytes()` instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         return self.get_items_as_bytes(
             item_format=item_format,
@@ -536,7 +534,7 @@ class DatasetClientAsync(ResourceClientAsync):
             'name': name,
         }
 
-        return await self._update(_filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields))
 
     async def delete(self) -> None:
         """Delete the dataset.

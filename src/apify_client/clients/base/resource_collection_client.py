@@ -1,6 +1,9 @@
 from typing import Any, Dict, Optional
 
-from ..._utils import ListPage, _parse_date_fields, _pluck_data, ignore_docs
+from apify_shared.models import ListPage
+from apify_shared.utils import ignore_docs, parse_date_fields
+
+from ..._utils import _pluck_data
 from .base_client import BaseClient, BaseClientAsync
 
 
@@ -15,7 +18,7 @@ class ResourceCollectionClient(BaseClient):
             params=self._params(**kwargs),
         )
 
-        return ListPage(_parse_date_fields(_pluck_data(response.json())))
+        return ListPage(parse_date_fields(_pluck_data(response.json())))
 
     def _create(self, resource: Dict) -> Dict:
         response = self.http_client.call(
@@ -25,7 +28,7 @@ class ResourceCollectionClient(BaseClient):
             json=resource,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def _get_or_create(self, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
         response = self.http_client.call(
@@ -35,7 +38,7 @@ class ResourceCollectionClient(BaseClient):
             json=resource,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
 
 @ignore_docs
@@ -49,7 +52,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             params=self._params(**kwargs),
         )
 
-        return ListPage(_parse_date_fields(_pluck_data(response.json())))
+        return ListPage(parse_date_fields(_pluck_data(response.json())))
 
     async def _create(self, resource: Dict) -> Dict:
         response = await self.http_client.call(
@@ -59,7 +62,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             json=resource,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def _get_or_create(self, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
         response = await self.http_client.call(
@@ -69,4 +72,4 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             json=resource,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))

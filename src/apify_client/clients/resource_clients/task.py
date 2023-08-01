@@ -1,16 +1,10 @@
 from typing import Any, Dict, List, Optional, cast
 
+from apify_shared.consts import ActorJobStatus, MetaOrigin
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
+
 from ..._errors import ApifyApiError
-from ..._utils import (
-    _catch_not_found_or_throw,
-    _encode_webhook_list_to_base64,
-    _filter_out_none_values_recursively,
-    _maybe_extract_enum_member_value,
-    _parse_date_fields,
-    _pluck_data,
-    ignore_docs,
-)
-from ...consts import ActorJobStatus, MetaOrigin
+from ..._utils import _catch_not_found_or_throw, _encode_webhook_list_to_base64, _pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -94,7 +88,7 @@ class TaskClient(ResourceClient):
             title=title,
         )
 
-        return self._update(_filter_out_none_values_recursively(task_representation))
+        return self._update(filter_out_none_values_recursively(task_representation))
 
     def delete(self) -> None:
         """Delete the task.
@@ -154,7 +148,7 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     def call(
         self,
@@ -252,8 +246,8 @@ class TaskClient(ResourceClient):
             resource_id='last',
             resource_path='runs',
             params=self._params(
-                status=_maybe_extract_enum_member_value(status),
-                origin=_maybe_extract_enum_member_value(origin),
+                status=maybe_extract_enum_member_value(status),
+                origin=maybe_extract_enum_member_value(origin),
             ),
         ))
 
@@ -317,7 +311,7 @@ class TaskClientAsync(ResourceClientAsync):
             title=title,
         )
 
-        return await self._update(_filter_out_none_values_recursively(task_representation))
+        return await self._update(filter_out_none_values_recursively(task_representation))
 
     async def delete(self) -> None:
         """Delete the task.
@@ -377,7 +371,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return _parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(_pluck_data(response.json()))
 
     async def call(
         self,
@@ -475,8 +469,8 @@ class TaskClientAsync(ResourceClientAsync):
             resource_id='last',
             resource_path='runs',
             params=self._params(
-                status=_maybe_extract_enum_member_value(status),
-                origin=_maybe_extract_enum_member_value(origin),
+                status=maybe_extract_enum_member_value(status),
+                origin=maybe_extract_enum_member_value(origin),
             ),
         ))
 

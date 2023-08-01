@@ -28,9 +28,8 @@ ctx_url = ContextVar[Optional[str]]('url', default=None)
 class _WithLogDetailsClient(type):
     def __new__(cls: Type[type], name: str, bases: Tuple, attrs: Dict) -> '_WithLogDetailsClient':
         for attr_name, attr_value in attrs.items():
-            if not attr_name.startswith('_'):
-                if inspect.isfunction(attr_value):
-                    attrs[attr_name] = _injects_client_details_to_log_context(attr_value)
+            if not attr_name.startswith('_') and inspect.isfunction(attr_value):
+                attrs[attr_name] = _injects_client_details_to_log_context(attr_value)
 
         return cast(_WithLogDetailsClient, type.__new__(cls, name, bases, attrs))
 

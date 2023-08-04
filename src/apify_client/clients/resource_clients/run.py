@@ -155,6 +155,16 @@ class RunClient(ActorJobBaseClient):
 
         return parse_date_fields(_pluck_data(response.json()))
 
+    def reboot(self) -> Dict:
+        """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
+
+        Returns:
+            dics: Details about the rebooted run.
+        """
+        return self._reboot()
+
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the actor run.
 
@@ -348,6 +358,16 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
         return parse_date_fields(_pluck_data(response.json()))
+
+    async def reboot(self) -> Dict:
+        """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
+
+        Returns:
+            dics: Details about the rebooted run.
+        """
+        return await self._reboot()
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the actor run.

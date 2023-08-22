@@ -161,7 +161,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
 
         Returns:
-            dics: Details about the rebooted run.
+            dict: The Actor run data.
         """
         return self._reboot()
 

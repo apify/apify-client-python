@@ -163,7 +163,11 @@ class RunClient(ActorJobBaseClient):
         Returns:
             dict: The Actor run data.
         """
-        return self._reboot()
+        response = self.http_client.call(
+            url=self._url('reboot'),
+            method='POST',
+        )
+        return parse_date_fields(_pluck_data(response.json()))
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the actor run.
@@ -365,9 +369,13 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
 
         Returns:
-            dics: Details about the rebooted run.
+            dict: The Actor run data.
         """
-        return await self._reboot()
+        response = await self.http_client.call(
+            url=self._url('reboot'),
+            method='POST',
+        )
+        return parse_date_fields(_pluck_data(response.json()))
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the actor run.

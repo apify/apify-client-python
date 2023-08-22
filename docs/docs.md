@@ -2117,11 +2117,11 @@ Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING c
 
 * **Returns**
 
-  Details about the rebooted run.
+  The Actor run data.
 
 * **Return type**
 
-  `dics`
+  `dict`
 
 ***
 
@@ -4586,11 +4586,11 @@ Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING c
 
 * **Returns**
 
-  Details about the rebooted run.
+  The Actor run data.
 
 * **Return type**
 
-  `dics`
+  `dict`
 
 ***
 

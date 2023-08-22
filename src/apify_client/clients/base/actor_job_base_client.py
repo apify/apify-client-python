@@ -73,13 +73,6 @@ class ActorJobBaseClient(ResourceClient):
         )
         return parse_date_fields(_pluck_data(response.json()))
 
-    def _reboot(self) -> Dict:
-        response = self.http_client.call(
-            url=self._url('reboot'),
-            method='POST',
-        )
-        return parse_date_fields(_pluck_data(response.json()))
-
 
 @ignore_docs
 class ActorJobBaseClientAsync(ResourceClientAsync):
@@ -134,12 +127,5 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
             params=self._params(
                 gracefully=gracefully,
             ),
-        )
-        return parse_date_fields(_pluck_data(response.json()))
-
-    async def _reboot(self) -> Dict:
-        response = await self.http_client.call(
-            url=self._url('reboot'),
-            method='POST',
         )
         return parse_date_fields(_pluck_data(response.json()))

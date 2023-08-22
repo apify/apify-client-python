@@ -1,13 +1,27 @@
 Changelog
 =========
 
+[1.4.0](../../releases/tag/v1.4.0) - 2023-08-22
+-----------------------------------------------
+
+### Added
+
+- Add Actor reboot method to the `RunClient`
+
+### Internal changes
+
+- Code simplification via `flake8-simplify`
+- Unify indentation in configuration files
+
 [1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
+-----------------------------------------------
 
 ### Internal changes
 
 - Import general constants and utilities from apify-shared library
 
 [1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
+-----------------------------------------------
 
 ### Added
 
@@ -15,18 +29,21 @@ Changelog
 - Added batch_add_requests, batch_delete_requests, list_requests methods for the RequestQueueClient(Async) classes
 
 [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
+-----------------------------------------------
 
 ### Fixed
 
 - Fixed encoding webhook lists in request parameters
 
 [1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
+-----------------------------------------------
 
 ### Fixed
 
 - relaxed dependency requirements to improve compatibility with other libraries
 
 [1.2.0](../../releases/tag/v1.2.0) - 2023-05-23
+-----------------------------------------------
 
 ### Added
 
@@ -37,12 +54,14 @@ Changelog
 - updated dependencies
 
 [1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
+-----------------------------------------------
 
 ### Internal changes
 
 - changed GitHub workflows to use new secrets
 
 [1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
+-----------------------------------------------
 
 ### Added
 

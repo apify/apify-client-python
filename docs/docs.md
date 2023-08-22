@@ -1964,6 +1964,7 @@ Sub-client for manipulating a single actor run.
 * [wait\_for\_finish()](#runclient-wait\_for\_finish)
 * [metamorph()](#runclient-metamorph)
 * [resurrect()](#runclient-resurrect)
+* [reboot()](#runclient-reboot)
 * [dataset()](#runclient-dataset)
 * [key\_value\_store()](#runclient-key\_value\_store)
 * [request\_queue()](#runclient-request\_queue)
@@ -2101,6 +2102,22 @@ Run status will be updated to RUNNING and its container will be restarted with t
 * **Returns**
 
   The actor run data.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclient-reboot) `RunClient.reboot()`
+
+Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run](https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run)
+
+* **Returns**
+
+  The Actor run data.
 
 * **Return type**
 
@@ -4416,6 +4433,7 @@ Async sub-client for manipulating a single actor run.
 * [async wait\_for\_finish()](#runclientasync-wait\_for\_finish)
 * [async metamorph()](#runclientasync-metamorph)
 * [async resurrect()](#runclientasync-resurrect)
+* [async reboot()](#runclientasync-reboot)
 * [dataset()](#runclientasync-dataset)
 * [key\_value\_store()](#runclientasync-key\_value\_store)
 * [request\_queue()](#runclientasync-request\_queue)
@@ -4553,6 +4571,22 @@ Run status will be updated to RUNNING and its container will be restarted with t
 * **Returns**
 
   The actor run data.
+
+* **Return type**
+
+  `dict`
+
+***
+
+#### [](#runclientasync-reboot) `async RunClientAsync.reboot()`
+
+Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
+
+[https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run](https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run)
+
+* **Returns**
+
+  The Actor run data.
 
 * **Return type**
 

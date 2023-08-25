@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[1.4.1](../../releases/tag/v1.4.1) - Unreleased
+-----------------------------------------------
+
+### Internal changes
+
+- Improved logging of HTTP requests
+
 [1.4.0](../../releases/tag/v1.4.0) - 2023-08-22
 -----------------------------------------------
 

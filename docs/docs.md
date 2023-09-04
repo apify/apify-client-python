@@ -885,7 +885,7 @@ Retrieve the actor.
 
 ***
 
-#### [](#actorclient-update) `ActorClient.update(*, name=None, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
+#### [](#actorclient-update) `ActorClient.update(*, name=None, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_max_items=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
 
 Update the actor with the specified fields.
 
@@ -917,6 +917,9 @@ Update the actor with the specified fields.
 
   * **default_run_build** (`str`, *optional*) – Tag or number of the build that you want to run by default.
 
+  * **default_run_max_items** (`int`, *optional*) – Default limit of the number of results that will be returned by runs of this Actor,
+  if the Actor is charged per result.
+
   * **default_run_memory_mbytes** (`int`, *optional*) – Default amount of memory allocated for the runs of this actor, in megabytes.
 
   * **default_run_timeout_secs** (`int`, *optional*) – Default timeout for the runs of this actor in seconds.
@@ -947,7 +950,7 @@ Delete the actor.
 
 ***
 
-#### [](#actorclient-start) `ActorClient.start(*, run_input=None, content_type=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
+#### [](#actorclient-start) `ActorClient.start(*, run_input=None, content_type=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
 
 Start the actor and immediately return the Run object.
 
@@ -961,6 +964,9 @@ Start the actor and immediately return the Run object.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the default run configuration for the actor.
@@ -990,7 +996,7 @@ Start the actor and immediately return the Run object.
 
 ***
 
-#### [](#actorclient-call) `ActorClient.call(*, run_input=None, content_type=None, build=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
+#### [](#actorclient-call) `ActorClient.call(*, run_input=None, content_type=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
 
 Start the actor and wait for it to finish before returning the Run object.
 
@@ -1006,6 +1012,9 @@ It waits indefinitely, unless the wait_secs argument is provided.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the default run configuration for the actor.
@@ -1177,7 +1186,7 @@ Retrieve the actor.
 
 ***
 
-#### [](#actorclientasync-update) `async ActorClientAsync.update(*, name=None, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
+#### [](#actorclientasync-update) `async ActorClientAsync.update(*, name=None, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_max_items=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
 
 Update the actor with the specified fields.
 
@@ -1209,6 +1218,9 @@ Update the actor with the specified fields.
 
   * **default_run_build** (`str`, *optional*) – Tag or number of the build that you want to run by default.
 
+  * **default_run_max_items** (`int`, *optional*) – Default limit of the number of results that will be returned by runs of this Actor,
+  if the Actor is charged per result.
+
   * **default_run_memory_mbytes** (`int`, *optional*) – Default amount of memory allocated for the runs of this actor, in megabytes.
 
   * **default_run_timeout_secs** (`int`, *optional*) – Default timeout for the runs of this actor in seconds.
@@ -1239,7 +1251,7 @@ Delete the actor.
 
 ***
 
-#### [](#actorclientasync-start) `async ActorClientAsync.start(*, run_input=None, content_type=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
+#### [](#actorclientasync-start) `async ActorClientAsync.start(*, run_input=None, content_type=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
 
 Start the actor and immediately return the Run object.
 
@@ -1253,6 +1265,9 @@ Start the actor and immediately return the Run object.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the default run configuration for the actor.
@@ -1282,7 +1297,7 @@ Start the actor and immediately return the Run object.
 
 ***
 
-#### [](#actorclientasync-call) `async ActorClientAsync.call(*, run_input=None, content_type=None, build=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
+#### [](#actorclientasync-call) `async ActorClientAsync.call(*, run_input=None, content_type=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
 
 Start the actor and wait for it to finish before returning the Run object.
 
@@ -1298,6 +1313,9 @@ It waits indefinitely, unless the wait_secs argument is provided.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the default run configuration for the actor.
@@ -1469,7 +1487,7 @@ List the actors the user has created or used.
 
 ***
 
-#### [](#actorcollectionclient-create) `ActorCollectionClient.create(*, name, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
+#### [](#actorcollectionclient-create) `ActorCollectionClient.create(*, name, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_max_items=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
 
 Create a new actor.
 
@@ -1500,6 +1518,9 @@ Create a new actor.
   * **categories** (`list of str`, *optional*) – The categories to which the actor belongs to.
 
   * **default_run_build** (`str`, *optional*) – Tag or number of the build that you want to run by default.
+
+  * **default_run_max_items** (`int`, *optional*) – Default limit of the number of results that will be returned by runs of this Actor,
+  if the Actor is charged per result.
 
   * **default_run_memory_mbytes** (`int`, *optional*) – Default amount of memory allocated for the runs of this actor, in megabytes.
 
@@ -1554,7 +1575,7 @@ List the actors the user has created or used.
 
 ***
 
-#### [](#actorcollectionclientasync-create) `async ActorCollectionClientAsync.create(*, name, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
+#### [](#actorcollectionclientasync-create) `async ActorCollectionClientAsync.create(*, name, title=None, description=None, seo_title=None, seo_description=None, versions=None, restart_on_error=None, is_public=None, is_deprecated=None, is_anonymously_runnable=None, categories=None, default_run_build=None, default_run_max_items=None, default_run_memory_mbytes=None, default_run_timeout_secs=None, example_run_input_body=None, example_run_input_content_type=None)`
 
 Create a new actor.
 
@@ -1585,6 +1606,9 @@ Create a new actor.
   * **categories** (`list of str`, *optional*) – The categories to which the actor belongs to.
 
   * **default_run_build** (`str`, *optional*) – Tag or number of the build that you want to run by default.
+
+  * **default_run_max_items** (`int`, *optional*) – Default limit of the number of results that will be returned by runs of this Actor,
+  if the Actor is charged per result.
 
   * **default_run_memory_mbytes** (`int`, *optional*) – Default amount of memory allocated for the runs of this actor, in megabytes.
 
@@ -5153,7 +5177,7 @@ Retrieve the task.
 
 ***
 
-#### [](#taskclientasync-update) `async TaskClientAsync.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, title=None)`
+#### [](#taskclientasync-update) `async TaskClientAsync.update(*, name=None, task_input=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, title=None)`
 
 Update the task with specified fields.
 
@@ -5165,6 +5189,9 @@ Update the task with specified fields.
 
   * **build** (`str`, *optional*) – Actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the task settings (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
@@ -5197,7 +5224,7 @@ Delete the task.
 
 ***
 
-#### [](#taskclientasync-start) `async TaskClientAsync.start(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
+#### [](#taskclientasync-start) `async TaskClientAsync.start(*, task_input=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
 
 Start the task and immediately return the Run object.
 
@@ -5209,6 +5236,9 @@ Start the task and immediately return the Run object.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the task settings (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
@@ -5237,7 +5267,7 @@ Start the task and immediately return the Run object.
 
 ***
 
-#### [](#taskclientasync-call) `async TaskClientAsync.call(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
+#### [](#taskclientasync-call) `async TaskClientAsync.call(*, task_input=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
 
 Start a task and wait for it to finish before returning the Run object.
 
@@ -5251,6 +5281,9 @@ It waits indefinitely, unless the wait_secs argument is provided.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the task settings (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
@@ -5412,7 +5445,7 @@ List the available tasks.
 
 ***
 
-#### [](#taskcollectionclientasync-create) `async TaskCollectionClientAsync.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None, title=None)`
+#### [](#taskcollectionclientasync-create) `async TaskCollectionClientAsync.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, max_items=None, task_input=None, title=None)`
 
 Create a new task.
 
@@ -5429,6 +5462,9 @@ Create a new task.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by runs of this task.
+  If the Actor of this task is charged per result, you will not be charged for more results than the given limit.
 
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 
@@ -5479,7 +5515,7 @@ Retrieve the task.
 
 ***
 
-#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, title=None)`
+#### [](#taskclient-update) `TaskClient.update(*, name=None, task_input=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, title=None)`
 
 Update the task with specified fields.
 
@@ -5491,6 +5527,9 @@ Update the task with specified fields.
 
   * **build** (`str`, *optional*) – Actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the task settings (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
@@ -5523,7 +5562,7 @@ Delete the task.
 
 ***
 
-#### [](#taskclient-start) `TaskClient.start(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
+#### [](#taskclient-start) `TaskClient.start(*, task_input=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, wait_for_finish=None, webhooks=None)`
 
 Start the task and immediately return the Run object.
 
@@ -5535,6 +5574,9 @@ Start the task and immediately return the Run object.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the task settings (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
@@ -5563,7 +5605,7 @@ Start the task and immediately return the Run object.
 
 ***
 
-#### [](#taskclient-call) `TaskClient.call(*, task_input=None, build=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
+#### [](#taskclient-call) `TaskClient.call(*, task_input=None, build=None, max_items=None, memory_mbytes=None, timeout_secs=None, webhooks=None, wait_secs=None)`
 
 Start a task and wait for it to finish before returning the Run object.
 
@@ -5577,6 +5619,9 @@ It waits indefinitely, unless the wait_secs argument is provided.
 
   * **build** (`str`, *optional*) – Specifies the actor build to run. It can be either a build tag or build number.
   By default, the run uses the build specified in the task settings (typically latest).
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by this run.
+  If the Actor is charged per result, you will not be charged for more results than the given limit.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
@@ -5732,7 +5777,7 @@ List the available tasks.
 
 ***
 
-#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, task_input=None, title=None)`
+#### [](#taskcollectionclient-create) `TaskCollectionClient.create(*, actor_id, name, build=None, timeout_secs=None, memory_mbytes=None, max_items=None, task_input=None, title=None)`
 
 Create a new task.
 
@@ -5749,6 +5794,9 @@ Create a new task.
 
   * **memory_mbytes** (`int`, *optional*) – Memory limit for the run, in megabytes.
   By default, the run uses a memory limit specified in the task settings.
+
+  * **max_items** (`int`, *optional*) – Maximum number of results that will be returned by runs of this task.
+  If the Actor of this task is charged per result, you will not be charged for more results than the given limit.
 
   * **timeout_secs** (`int`, *optional*) – Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
 

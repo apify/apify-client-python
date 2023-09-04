@@ -43,6 +43,8 @@ from .resource_clients import (
     ScheduleClientAsync,
     ScheduleCollectionClient,
     ScheduleCollectionClientAsync,
+    StoreCollectionClient,
+    StoreCollectionClientAsync,
     TaskClient,
     TaskClientAsync,
     TaskCollectionClient,
@@ -88,4 +90,5 @@ __all__ = [
     'WebhookCollectionClient', 'WebhookCollectionClientAsync',
     'WebhookDispatchClient', 'WebhookDispatchClientAsync',
     'WebhookDispatchCollectionClient', 'WebhookDispatchCollectionClientAsync',
+    'StoreCollectionClient', 'StoreCollectionClientAsync',
 ]

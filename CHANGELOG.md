@@ -4,6 +4,10 @@ Changelog
 [1.4.1](../../releases/tag/v1.4.1) - Unreleased
 -----------------------------------------------
 
+### Added
+
+- Add StoreCollectionClient for listing Actors in Apify store
+
 ### Internal changes
 
 - Improved logging of HTTP requests

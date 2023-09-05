@@ -6236,7 +6236,7 @@ List Actors in Apify store.
 
   * **search** (`str`, *optional*) – String to search by. The search runs on the following fields: title, name, description, username, readme.
 
-  * **sort_be** (`str`, *optional*) – Specifies the field by which to sort the results.
+  * **sort_by** (`str`, *optional*) – Specifies the field by which to sort the results.
 
   * **category** (`str`, *optional*) – Filter by this category
 
@@ -6276,7 +6276,7 @@ List Actors in Apify store.
 
   * **search** (`str`, *optional*) – String to search by. The search runs on the following fields: title, name, description, username, readme.
 
-  * **sort_be** (`str`, *optional*) – Specifies the field by which to sort the results.
+  * **sort_by** (`str`, *optional*) – Specifies the field by which to sort the results.
 
   * **category** (`str`, *optional*) – Filter by this category
 

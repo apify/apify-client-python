@@ -34,7 +34,7 @@ class StoreCollectionClient(ResourceCollectionClient):
             limit (int, optional): How many Actors to list
             offset (int, optional): What Actor to include as first when retrieving the list
             search (str, optional): String to search by. The search runs on the following fields: title, name, description, username, readme.
-            sort_be (str, optional): Specifies the field by which to sort the results.
+            sort_by (str, optional): Specifies the field by which to sort the results.
             category (str, optional): Filter by this category
             username (str, optional): Filter by this username
             pricing_model (str, optional): Filter by this pricing model
@@ -81,7 +81,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
             limit (int, optional): How many Actors to list
             offset (int, optional): What Actor to include as first when retrieving the list
             search (str, optional): String to search by. The search runs on the following fields: title, name, description, username, readme.
-            sort_be (str, optional): Specifies the field by which to sort the results.
+            sort_by (str, optional): Specifies the field by which to sort the results.
             category (str, optional): Filter by this category
             username (str, optional): Filter by this username
             pricing_model (str, optional): Filter by this pricing model

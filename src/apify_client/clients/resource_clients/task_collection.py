@@ -45,6 +45,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         build: Optional[str] = None,
         timeout_secs: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
+        max_items: Optional[int] = None,
         task_input: Optional[Dict] = None,
         title: Optional[str] = None,
     ) -> Dict:
@@ -59,6 +60,8 @@ class TaskCollectionClient(ResourceCollectionClient):
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
+            max_items (int, optional): Maximum number of results that will be returned by runs of this task.
+                                       If the Actor of this task is charged per result, you will not be charged for more results than the given limit.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input object.
             title (str, optional): A human-friendly equivalent of the name
@@ -71,6 +74,7 @@ class TaskCollectionClient(ResourceCollectionClient):
             name=name,
             task_input=task_input,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             title=title,
@@ -117,6 +121,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         build: Optional[str] = None,
         timeout_secs: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
+        max_items: Optional[int] = None,
         task_input: Optional[Dict] = None,
         title: Optional[str] = None,
     ) -> Dict:
@@ -131,6 +136,8 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
                                    By default, the run uses the build specified in the task settings (typically latest).
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
+            max_items (int, optional): Maximum number of results that will be returned by runs of this task.
+                                       If the Actor of this task is charged per result, you will not be charged for more results than the given limit.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input object.
             title (str, optional): A human-friendly equivalent of the name
@@ -143,6 +150,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
             name=name,
             task_input=task_input,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             title=title,

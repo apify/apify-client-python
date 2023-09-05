@@ -4,6 +4,10 @@ Changelog
 [1.4.1](../../releases/tag/v1.4.1) - Unreleased
 -----------------------------------------------
 
+### Added
+
+- support for specifying the `max_items` parameter for pay-per result Actors and their runs
+
 ### Internal changes
 
 - Improved logging of HTTP requests

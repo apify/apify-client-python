@@ -1,52 +1,52 @@
 Changelog
 =========
 
-[1.4.1](../../releases/tag/v1.4.1) - Unreleased
+[1.4.1](../../releases/tag/v1.4.1) - 2023-09-06
 -----------------------------------------------
 
 ### Added
 
-- Add StoreCollectionClient for listing Actors in Apify store
-- support for specifying the `max_items` parameter for pay-per result Actors and their runs
+- added `StoreCollectionClient` for listing Actors in the Apify Store
+- added support for specifying the `max_items` parameter for pay-per result Actors and their runs
 
 ### Internal changes
 
-- Improved logging of HTTP requests
-- Removed `pytest-randomly` Pytest plugin
+- improved logging of HTTP requests
+- removed `pytest-randomly` Pytest plugin
 
-[1.4.0](../../releases/tag/v1.4.0) - 2023-08-22
+[1.4.0](../../releases/tag/v1.4.0) - 2023-08-23
 -----------------------------------------------
 
 ### Added
 
-- Add Actor reboot method to the `RunClient`
+- added `RunClient.reboot` method to reboot Actor runs
 
 ### Internal changes
 
-- Code simplification via `flake8-simplify`
-- Unify indentation in configuration files
+- simplified code via `flake8-simplify`
+- unified indentation in configuration files
 
 [1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
 -----------------------------------------------
 
 ### Internal changes
 
-- Import general constants and utilities from apify-shared library
+- started importing general constants and utilities from the `apify-shared` library
 
 [1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
 -----------------------------------------------
 
 ### Added
 
-- Added list_and_lock_head, delete_request_lock, prolong_request_lock methods for the RequestQueueClient(Async) classes
-- Added batch_add_requests, batch_delete_requests, list_requests methods for the RequestQueueClient(Async) classes
+- added `list_and_lock_head`, `delete_request_lock`, `prolong_request_lock` methods to `RequestQueueClient`
+- added `batch_add_requests`, `batch_delete_requests`, `list_requests` methods `RequestQueueClient`
 
 [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
 -----------------------------------------------
 
 ### Fixed
 
-- Fixed encoding webhook lists in request parameters
+- fixed encoding webhook lists in request parameters
 
 [1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
 -----------------------------------------------

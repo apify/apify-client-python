@@ -7,6 +7,7 @@ Changelog
 ### Added
 
 - Add StoreCollectionClient for listing Actors in Apify store
+- support for specifying the `max_items` parameter for pay-per result Actors and their runs
 
 ### Internal changes
 

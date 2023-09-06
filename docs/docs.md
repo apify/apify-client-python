@@ -239,6 +239,7 @@ The Apify API client.
 * [task()](#apifyclient-task)
 * [tasks()](#apifyclient-tasks)
 * [user()](#apifyclient-user)
+* [store()](#apifyclient-store)
 
 ***
 
@@ -531,6 +532,16 @@ Retrieve the sub-client for querying users.
 
 ***
 
+#### [](#apifyclient-store) `ApifyClient.store()`
+
+Retrieve the sub-client for Apify store.
+
+* **Return type**
+
+  [`StoreCollectionClient`](#storecollectionclient)
+
+***
+
 ### [](#apifyclientasync) ApifyClientAsync
 
 The asynchronous version of the Apify API client.
@@ -558,6 +569,7 @@ The asynchronous version of the Apify API client.
 * [task()](#apifyclientasync-task)
 * [tasks()](#apifyclientasync-tasks)
 * [user()](#apifyclientasync-user)
+* [store()](#apifyclientasync-store)
 
 ***
 
@@ -847,6 +859,16 @@ Retrieve the sub-client for querying users.
 * **Return type**
 
   `UserClientAsync`
+
+***
+
+#### [](#apifyclientasync-store) `ApifyClientAsync.store()`
+
+Retrieve the sub-client for Apify store.
+
+* **Return type**
+
+  `StoreCollectionClientAsync`
 
 ***
 
@@ -6233,6 +6255,86 @@ List all webhook dispatches of a user.
 * **Returns**
 
   The retrieved webhook dispatches of a user
+
+* **Return type**
+
+  [`ListPage`](#listpage)
+
+***
+
+### [](#storecollectionclient) StoreCollectionClient
+
+Sub-client for Apify store.
+
+* [list()](#storecollectionclient-list)
+
+***
+
+#### [](#storecollectionclient-list) `StoreCollectionClient.list(*, limit=None, offset=None, search=None, sort_by=None, category=None, username=None, pricing_model=None)`
+
+List Actors in Apify store.
+
+[https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store](https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many Actors to list
+
+  * **offset** (`int`, *optional*) – What Actor to include as first when retrieving the list
+
+  * **search** (`str`, *optional*) – String to search by. The search runs on the following fields: title, name, description, username, readme.
+
+  * **sort_by** (`str`, *optional*) – Specifies the field by which to sort the results.
+
+  * **category** (`str`, *optional*) – Filter by this category
+
+  * **username** (`str`, *optional*) – Filter by this username
+
+  * **pricing_model** (`str`, *optional*) – Filter by this pricing model
+
+* **Returns**
+
+  The list of available tasks matching the specified filters.
+
+* **Return type**
+
+  [`ListPage`](#listpage)
+
+***
+
+### [](#storecollectionclientasync) StoreCollectionClientAsync
+
+Async sub-client for Apify store.
+
+* [async list()](#storecollectionclientasync-list)
+
+***
+
+#### [](#storecollectionclientasync-list) `async StoreCollectionClientAsync.list(*, limit=None, offset=None, search=None, sort_by=None, category=None, username=None, pricing_model=None)`
+
+List Actors in Apify store.
+
+[https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store](https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store)
+
+* **Parameters**
+
+  * **limit** (`int`, *optional*) – How many Actors to list
+
+  * **offset** (`int`, *optional*) – What Actor to include as first when retrieving the list
+
+  * **search** (`str`, *optional*) – String to search by. The search runs on the following fields: title, name, description, username, readme.
+
+  * **sort_by** (`str`, *optional*) – Specifies the field by which to sort the results.
+
+  * **category** (`str`, *optional*) – Filter by this category
+
+  * **username** (`str`, *optional*) – Filter by this username
+
+  * **pricing_model** (`str`, *optional*) – Filter by this pricing model
+
+* **Returns**
+
+  The list of available tasks matching the specified filters.
 
 * **Return type**
 

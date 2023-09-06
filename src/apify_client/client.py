@@ -34,6 +34,8 @@ from .clients import (
     ScheduleClientAsync,
     ScheduleCollectionClient,
     ScheduleCollectionClientAsync,
+    StoreCollectionClient,
+    StoreCollectionClientAsync,
     TaskClient,
     TaskClientAsync,
     TaskCollectionClient,
@@ -268,6 +270,10 @@ class ApifyClient(_BaseApifyClient):
         """
         return UserClient(resource_id=user_id, **self._options())
 
+    def store(self) -> StoreCollectionClient:
+        """Retrieve the sub-client for Apify store."""
+        return StoreCollectionClient(**self._options())
+
 
 class ApifyClientAsync(_BaseApifyClient):
     """The asynchronous version of the Apify API client."""
@@ -444,3 +450,7 @@ class ApifyClientAsync(_BaseApifyClient):
             user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
         """
         return UserClientAsync(resource_id=user_id, **self._options())
+
+    def store(self) -> StoreCollectionClientAsync:
+        """Retrieve the sub-client for Apify store."""
+        return StoreCollectionClientAsync(**self._options())

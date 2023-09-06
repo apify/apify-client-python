@@ -15,6 +15,7 @@ from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .schedule import ScheduleClient, ScheduleClientAsync
 from .schedule_collection import ScheduleCollectionClient, ScheduleCollectionClientAsync
+from .store_collection import StoreCollectionClient, StoreCollectionClientAsync
 from .task import TaskClient, TaskClientAsync
 from .task_collection import TaskCollectionClient, TaskCollectionClientAsync
 from .user import UserClient, UserClientAsync
@@ -48,4 +49,5 @@ __all__ = [
     'ScheduleClient', 'WebhookCollectionClientAsync',
     'ScheduleCollectionClient', 'WebhookDispatchClientAsync',
     'UserClient', 'WebhookDispatchCollectionClientAsync',
+    'StoreCollectionClient', 'StoreCollectionClientAsync',
 ]

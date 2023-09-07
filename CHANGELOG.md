@@ -2,6 +2,7 @@ Changelog
 =========
 
 [1.4.2](../../releases/tag/v1.4.2) - Unreleased
+-----------------------------------------------
 
 ### Internal changes
 

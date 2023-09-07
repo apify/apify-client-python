@@ -1,32 +1,62 @@
 Changelog
 =========
 
-[1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
-
-### Internal changes
-
-- Import general constants and utilities from apify-shared library
-
-[1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
+[1.4.1](../../releases/tag/v1.4.1) - 2023-09-06
+-----------------------------------------------
 
 ### Added
 
-- Added list_and_lock_head, delete_request_lock, prolong_request_lock methods for the RequestQueueClient(Async) classes
-- Added batch_add_requests, batch_delete_requests, list_requests methods for the RequestQueueClient(Async) classes
+- added `StoreCollectionClient` for listing Actors in the Apify Store
+- added support for specifying the `max_items` parameter for pay-per result Actors and their runs
+
+### Internal changes
+
+- improved logging of HTTP requests
+- removed `pytest-randomly` Pytest plugin
+
+[1.4.0](../../releases/tag/v1.4.0) - 2023-08-23
+-----------------------------------------------
+
+### Added
+
+- added `RunClient.reboot` method to reboot Actor runs
+
+### Internal changes
+
+- simplified code via `flake8-simplify`
+- unified indentation in configuration files
+
+[1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
+-----------------------------------------------
+
+### Internal changes
+
+- started importing general constants and utilities from the `apify-shared` library
+
+[1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
+-----------------------------------------------
+
+### Added
+
+- added `list_and_lock_head`, `delete_request_lock`, `prolong_request_lock` methods to `RequestQueueClient`
+- added `batch_add_requests`, `batch_delete_requests`, `list_requests` methods `RequestQueueClient`
 
 [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
+-----------------------------------------------
 
 ### Fixed
 
-- Fixed encoding webhook lists in request parameters
+- fixed encoding webhook lists in request parameters
 
 [1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
+-----------------------------------------------
 
 ### Fixed
 
 - relaxed dependency requirements to improve compatibility with other libraries
 
 [1.2.0](../../releases/tag/v1.2.0) - 2023-05-23
+-----------------------------------------------
 
 ### Added
 
@@ -37,12 +67,14 @@ Changelog
 - updated dependencies
 
 [1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
+-----------------------------------------------
 
 ### Internal changes
 
 - changed GitHub workflows to use new secrets
 
 [1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
+-----------------------------------------------
 
 ### Added
 

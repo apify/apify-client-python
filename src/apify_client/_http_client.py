@@ -13,7 +13,7 @@ from apify_shared.types import JSONSerializable
 from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
 
 from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
-from ._logging import logger_name
+from ._logging import log_context, logger_name
 from ._utils import _retry_with_exp_backoff, _retry_with_exp_backoff_async
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
@@ -133,6 +133,9 @@ class _HTTPClient(_BaseHTTPClient):
         stream: Optional[bool] = None,
         parse_response: Optional[bool] = True,
     ) -> httpx.Response:
+        log_context.method.set(method)
+        log_context.url.set(url)
+
         if stream and parse_response:
             raise ValueError('Cannot stream response and parse it at the same time!')
 
@@ -141,7 +144,8 @@ class _HTTPClient(_BaseHTTPClient):
         httpx_client = self.httpx_client
 
         def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
-            logger.debug(f'Sending request to {url}', extra={'attempt': attempt})
+            log_context.attempt.set(attempt)
+            logger.debug('Sending request')
             try:
                 request = httpx_client.build_request(
                     method=method,
@@ -157,7 +161,7 @@ class _HTTPClient(_BaseHTTPClient):
 
                 # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:
-                    logger.debug(f'Request to {url} successful', extra={'attempt': attempt, 'status_code': response.status_code})
+                    logger.debug('Request successful', extra={'status_code': response.status_code})
                     if not stream:
                         if parse_response:
                             _maybe_parsed_body = self._maybe_parse_response(response)
@@ -168,17 +172,17 @@ class _HTTPClient(_BaseHTTPClient):
                     return response
 
             except Exception as e:
-                logger.debug(f'Request to {url} threw exception', exc_info=e, extra={'attempt': attempt})
+                logger.debug('Request threw exception', exc_info=e)
                 if not _is_retryable_error(e):
-                    logger.debug('Exception is not retryable', exc_info=e, extra={'attempt': attempt})
+                    logger.debug('Exception is not retryable', exc_info=e)
                     stop_retrying()
                 raise e
 
             # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
             # and also retry rate limited requests that throw 429 Too Many Requests errors
-            logger.debug(f'Request to {url} unsuccessful', extra={'attempt': attempt, 'status_code': response.status_code})
+            logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
-                logger.debug('Status code is not retryable', extra={'attempt': attempt, 'status_code': response.status_code})
+                logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
             raise ApifyApiError(response, attempt)
 
@@ -204,6 +208,9 @@ class _HTTPClientAsync(_BaseHTTPClient):
         stream: Optional[bool] = None,
         parse_response: Optional[bool] = True,
     ) -> httpx.Response:
+        log_context.method.set(method)
+        log_context.url.set(url)
+
         if stream and parse_response:
             raise ValueError('Cannot stream response and parse it at the same time!')
 
@@ -212,6 +219,7 @@ class _HTTPClientAsync(_BaseHTTPClient):
         httpx_async_client = self.httpx_async_client
 
         async def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
+            log_context.attempt.set(attempt)
             logger.debug('Sending request')
             try:
                 request = httpx_async_client.build_request(

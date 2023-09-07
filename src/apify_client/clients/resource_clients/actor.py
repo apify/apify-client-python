@@ -27,6 +27,7 @@ def _get_actor_representation(
     is_anonymously_runnable: Optional[bool] = None,
     categories: Optional[List[str]] = None,
     default_run_build: Optional[str] = None,
+    default_run_max_items: Optional[int] = None,
     default_run_memory_mbytes: Optional[int] = None,
     default_run_timeout_secs: Optional[int] = None,
     example_run_input_body: Optional[Any] = None,
@@ -46,6 +47,7 @@ def _get_actor_representation(
         'categories': categories,
         'defaultRunOptions': {
             'build': default_run_build,
+            'maxItems': default_run_max_items,
             'memoryMbytes': default_run_memory_mbytes,
             'timeoutSecs': default_run_timeout_secs,
         },
@@ -90,6 +92,7 @@ class ActorClient(ResourceClient):
         is_anonymously_runnable: Optional[bool] = None,
         categories: Optional[List[str]] = None,
         default_run_build: Optional[str] = None,
+        default_run_max_items: Optional[int] = None,
         default_run_memory_mbytes: Optional[int] = None,
         default_run_timeout_secs: Optional[int] = None,
         example_run_input_body: Optional[Any] = None,
@@ -112,6 +115,8 @@ class ActorClient(ResourceClient):
             is_anonymously_runnable (bool, optional): Whether the actor is anonymously runnable.
             categories (list of str, optional): The categories to which the actor belongs to.
             default_run_build (str, optional): Tag or number of the build that you want to run by default.
+            default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
+                                                   if the Actor is charged per result.
             default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this actor, in megabytes.
             default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
             example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
@@ -133,6 +138,7 @@ class ActorClient(ResourceClient):
             is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
             default_run_build=default_run_build,
+            default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
             default_run_timeout_secs=default_run_timeout_secs,
             example_run_input_body=example_run_input_body,
@@ -154,6 +160,7 @@ class ActorClient(ResourceClient):
         run_input: Optional[Any] = None,
         content_type: Optional[str] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
@@ -168,6 +175,8 @@ class ActorClient(ResourceClient):
             content_type (str, optional): The content type of the input.
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the default run configuration for the actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
@@ -190,6 +199,7 @@ class ActorClient(ResourceClient):
 
         request_params = self._params(
             build=build,
+            maxItems=max_items,
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
@@ -212,6 +222,7 @@ class ActorClient(ResourceClient):
         run_input: Optional[Any] = None,
         content_type: Optional[str] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -228,6 +239,8 @@ class ActorClient(ResourceClient):
             content_type (str, optional): The content type of the input.
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the default run configuration for the actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
@@ -244,6 +257,7 @@ class ActorClient(ResourceClient):
             run_input=run_input,
             content_type=content_type,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,
@@ -378,6 +392,7 @@ class ActorClientAsync(ResourceClientAsync):
         is_anonymously_runnable: Optional[bool] = None,
         categories: Optional[List[str]] = None,
         default_run_build: Optional[str] = None,
+        default_run_max_items: Optional[int] = None,
         default_run_memory_mbytes: Optional[int] = None,
         default_run_timeout_secs: Optional[int] = None,
         example_run_input_body: Optional[Any] = None,
@@ -400,6 +415,8 @@ class ActorClientAsync(ResourceClientAsync):
             is_anonymously_runnable (bool, optional): Whether the actor is anonymously runnable.
             categories (list of str, optional): The categories to which the actor belongs to.
             default_run_build (str, optional): Tag or number of the build that you want to run by default.
+            default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
+                                                   if the Actor is charged per result.
             default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this actor, in megabytes.
             default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
             example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
@@ -421,6 +438,7 @@ class ActorClientAsync(ResourceClientAsync):
             is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
             default_run_build=default_run_build,
+            default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
             default_run_timeout_secs=default_run_timeout_secs,
             example_run_input_body=example_run_input_body,
@@ -442,6 +460,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_input: Optional[Any] = None,
         content_type: Optional[str] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
@@ -456,6 +475,8 @@ class ActorClientAsync(ResourceClientAsync):
             content_type (str, optional): The content type of the input.
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the default run configuration for the actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
@@ -478,6 +499,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         request_params = self._params(
             build=build,
+            maxItems=max_items,
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
@@ -500,6 +522,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_input: Optional[Any] = None,
         content_type: Optional[str] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -516,6 +539,8 @@ class ActorClientAsync(ResourceClientAsync):
             content_type (str, optional): The content type of the input.
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the default run configuration for the actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
@@ -532,6 +557,7 @@ class ActorClientAsync(ResourceClientAsync):
             run_input=run_input,
             content_type=content_type,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,

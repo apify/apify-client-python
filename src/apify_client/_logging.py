@@ -3,7 +3,7 @@ import inspect
 import json
 import logging
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Type, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, NamedTuple, Optional, Tuple, Type, cast
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
@@ -15,12 +15,22 @@ logger_name = __name__.split('.')[0]
 # Logger used throughout the library
 logger = logging.getLogger(logger_name)
 
+# Context containing the details of the request and the resource client making the request
+LogContext = NamedTuple('LogContext', [
+    ('attempt', ContextVar[Optional[int]]),
+    ('client_method', ContextVar[Optional[str]]),
+    ('method', ContextVar[Optional[str]]),
+    ('resource_id', ContextVar[Optional[str]]),
+    ('url', ContextVar[Optional[str]]),
+])
 
-# Context variables containing the current resource client running in that context
-# Used during logging to inject the resource client context to the log
-ctx_client_method = ContextVar[Optional[str]]('client_method', default=None)
-ctx_resource_id = ContextVar[Optional[str]]('resource_id', default=None)
-ctx_url = ContextVar[Optional[str]]('url', default=None)
+log_context = LogContext(
+    attempt=ContextVar('attempt', default=None),
+    client_method=ContextVar('client_method', default=None),
+    method=ContextVar('method', default=None),
+    resource_id=ContextVar('resource_id', default=None),
+    url=ContextVar('url', default=None),
+)
 
 
 # Metaclass for resource clients which wraps all their public methods
@@ -28,9 +38,8 @@ ctx_url = ContextVar[Optional[str]]('url', default=None)
 class _WithLogDetailsClient(type):
     def __new__(cls: Type[type], name: str, bases: Tuple, attrs: Dict) -> '_WithLogDetailsClient':
         for attr_name, attr_value in attrs.items():
-            if not attr_name.startswith('_'):
-                if inspect.isfunction(attr_value):
-                    attrs[attr_name] = _injects_client_details_to_log_context(attr_value)
+            if not attr_name.startswith('_') and inspect.isfunction(attr_value):
+                attrs[attr_name] = _injects_client_details_to_log_context(attr_value)
 
         return cast(_WithLogDetailsClient, type.__new__(cls, name, bases, attrs))
 
@@ -42,18 +51,16 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     if inspect.iscoroutinefunction(fun):
         @functools.wraps(fun)
         async def async_wrapper(resource_client: '_BaseBaseClient', *args: Any, **kwargs: Any) -> Any:
-            ctx_client_method.set(fun.__qualname__)
-            ctx_resource_id.set(resource_client.resource_id)
-            ctx_url.set(resource_client.url)
+            log_context.client_method.set(fun.__qualname__)
+            log_context.resource_id.set(resource_client.resource_id)
 
             return await fun(resource_client, *args, **kwargs)
         return async_wrapper
     elif inspect.isasyncgenfunction(fun):
         @functools.wraps(fun)
         async def async_generator_wrapper(resource_client: '_BaseBaseClient', *args: Any, **kwargs: Any) -> Any:
-            ctx_client_method.set(fun.__qualname__)
-            ctx_resource_id.set(resource_client.resource_id)
-            ctx_url.set(resource_client.url)
+            log_context.client_method.set(fun.__qualname__)
+            log_context.resource_id.set(resource_client.resource_id)
 
             async for item in fun(resource_client, *args, **kwargs):
                 yield item
@@ -61,9 +68,8 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     else:
         @functools.wraps(fun)
         def wrapper(resource_client: '_BaseBaseClient', *args: Any, **kwargs: Any) -> Any:
-            ctx_client_method.set(fun.__qualname__)
-            ctx_resource_id.set(resource_client.resource_id)
-            ctx_url.set(resource_client.url)
+            log_context.client_method.set(fun.__qualname__)
+            log_context.resource_id.set(resource_client.resource_id)
 
             return fun(resource_client, *args, **kwargs)
         return wrapper
@@ -73,9 +79,11 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 # but adds the current logging context to the record
 class _ContextInjectingFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        record.client_method = ctx_client_method.get()
-        record.resource_id = ctx_resource_id.get()
-        record.url = ctx_url.get()
+        record.client_method = log_context.client_method.get()
+        record.resource_id = log_context.resource_id.get()
+        record.method = log_context.method.get()
+        record.url = log_context.url.get()
+        record.attempt = log_context.attempt.get()
         return True
 
 
@@ -87,6 +95,7 @@ logger.addFilter(_ContextInjectingFilter())
 class _DebugLogFormatter(logging.Formatter):
     empty_record = logging.LogRecord('dummy', 0, 'dummy', 0, 'dummy', None, None)
 
+    # Gets the extra fields from the log record which are not present on an empty record
     def _get_extra_fields(self, record: logging.LogRecord) -> Dict[str, Any]:
         extra_fields: Dict[str, Any] = {}
         for key, value in record.__dict__.items():

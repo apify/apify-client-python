@@ -54,6 +54,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         is_anonymously_runnable: Optional[bool] = None,
         categories: Optional[List[str]] = None,
         default_run_build: Optional[str] = None,
+        default_run_max_items: Optional[int] = None,
         default_run_memory_mbytes: Optional[int] = None,
         default_run_timeout_secs: Optional[int] = None,
         example_run_input_body: Optional[Any] = None,
@@ -76,6 +77,8 @@ class ActorCollectionClient(ResourceCollectionClient):
             is_anonymously_runnable (bool, optional): Whether the actor is anonymously runnable.
             categories (list of str, optional): The categories to which the actor belongs to.
             default_run_build (str, optional): Tag or number of the build that you want to run by default.
+            default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
+                                                   if the Actor is charged per result.
             default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this actor, in megabytes.
             default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
             example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
@@ -97,6 +100,7 @@ class ActorCollectionClient(ResourceCollectionClient):
             is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
             default_run_build=default_run_build,
+            default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
             default_run_timeout_secs=default_run_timeout_secs,
             example_run_input_body=example_run_input_body,
@@ -153,6 +157,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         is_anonymously_runnable: Optional[bool] = None,
         categories: Optional[List[str]] = None,
         default_run_build: Optional[str] = None,
+        default_run_max_items: Optional[int] = None,
         default_run_memory_mbytes: Optional[int] = None,
         default_run_timeout_secs: Optional[int] = None,
         example_run_input_body: Optional[Any] = None,
@@ -175,6 +180,8 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             is_anonymously_runnable (bool, optional): Whether the actor is anonymously runnable.
             categories (list of str, optional): The categories to which the actor belongs to.
             default_run_build (str, optional): Tag or number of the build that you want to run by default.
+            default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
+                                                   if the Actor is charged per result.
             default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this actor, in megabytes.
             default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
             example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
@@ -196,6 +203,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
             default_run_build=default_run_build,
+            default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
             default_run_timeout_secs=default_run_timeout_secs,
             example_run_input_body=example_run_input_body,

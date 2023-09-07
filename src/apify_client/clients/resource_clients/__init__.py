@@ -17,6 +17,7 @@ from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .schedule import ScheduleClient, ScheduleClientAsync
 from .schedule_collection import ScheduleCollectionClient, ScheduleCollectionClientAsync
+from .store_collection import StoreCollectionClient, StoreCollectionClientAsync
 from .task import TaskClient, TaskClientAsync
 from .task_collection import TaskCollectionClient, TaskCollectionClientAsync
 from .user import UserClient, UserClientAsync
@@ -32,24 +33,25 @@ __all__ = [
     'ActorEnvVarCollectionClient', 'ActorEnvVarCollectionClientAsync',
     'ActorVersionClient', 'ActorVersionClientAsync',
     'ActorVersionCollectionClient', 'ActorVersionCollectionClientAsync',
-    'BuildClient', 'BuildClientAsync',
-    'BuildCollectionClient', 'BuildCollectionClientAsync',
-    'DatasetClient', 'DatasetClientAsync',
-    'DatasetCollectionClient', 'DatasetCollectionClientAsync',
-    'KeyValueStoreClient', 'KeyValueStoreClientAsync',
-    'KeyValueStoreCollectionClient', 'KeyValueStoreCollectionClientAsync',
-    'LogClient', 'LogClientAsync',
-    'RequestQueueClient', 'RequestQueueClientAsync',
-    'RequestQueueCollectionClient', 'RequestQueueCollectionClientAsync',
-    'RunClient', 'RunClientAsync',
-    'RunCollectionClient', 'RunCollectionClientAsync',
-    'ScheduleClient', 'ScheduleClientAsync',
-    'ScheduleCollectionClient', 'ScheduleCollectionClientAsync',
-    'TaskClient', 'TaskClientAsync',
-    'TaskCollectionClient', 'TaskCollectionClientAsync',
-    'UserClient', 'UserClientAsync',
-    'WebhookClient', 'WebhookClientAsync',
-    'WebhookCollectionClient', 'WebhookCollectionClientAsync',
-    'WebhookDispatchClient', 'WebhookDispatchClientAsync',
-    'WebhookDispatchCollectionClient', 'WebhookDispatchCollectionClientAsync',
+    'RunClient', 'BuildClientAsync',
+    'RunCollectionClient', 'BuildCollectionClientAsync',
+    'BuildClient', 'DatasetClientAsync',
+    'BuildCollectionClient', 'DatasetCollectionClientAsync',
+    'DatasetClient', 'KeyValueStoreClientAsync',
+    'DatasetCollectionClient', 'KeyValueStoreCollectionClientAsync',
+    'KeyValueStoreClient', 'LogClientAsync',
+    'KeyValueStoreCollectionClient', 'RequestQueueClientAsync',
+    'RequestQueueClient', 'RequestQueueCollectionClientAsync',
+    'RequestQueueCollectionClient', 'RunClientAsync',
+    'LogClient', 'RunCollectionClientAsync',
+    'WebhookClient', 'ScheduleClientAsync',
+    'WebhookCollectionClient', 'ScheduleCollectionClientAsync',
+    'WebhookDispatchClient', 'TaskClientAsync',
+    'WebhookDispatchCollectionClient', 'TaskCollectionClientAsync',
+    'TaskClient', 'UserClientAsync',
+    'TaskCollectionClient', 'WebhookClientAsync',
+    'ScheduleClient', 'WebhookCollectionClientAsync',
+    'ScheduleCollectionClient', 'WebhookDispatchClientAsync',
+    'UserClient', 'WebhookDispatchCollectionClientAsync',
+    'StoreCollectionClient', 'StoreCollectionClientAsync',
 ]

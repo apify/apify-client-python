@@ -16,6 +16,7 @@ def _get_task_representation(
     name: Optional[str] = None,
     task_input: Optional[Dict] = None,
     build: Optional[str] = None,
+    max_items: Optional[int] = None,
     memory_mbytes: Optional[int] = None,
     timeout_secs: Optional[int] = None,
     title: Optional[str] = None,
@@ -25,6 +26,7 @@ def _get_task_representation(
         'name': name,
         'options': {
             'build': build,
+            'maxItems': max_items,
             'memoryMbytes': memory_mbytes,
             'timeoutSecs': timeout_secs,
         },
@@ -58,6 +60,7 @@ class TaskClient(ResourceClient):
         name: Optional[str] = None,
         task_input: Optional[Dict] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         title: Optional[str] = None,
@@ -70,6 +73,8 @@ class TaskClient(ResourceClient):
             name (str, optional): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
@@ -83,6 +88,7 @@ class TaskClient(ResourceClient):
             name=name,
             task_input=task_input,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             title=title,
@@ -102,6 +108,7 @@ class TaskClient(ResourceClient):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
@@ -115,6 +122,8 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
@@ -134,6 +143,7 @@ class TaskClient(ResourceClient):
         """
         request_params = self._params(
             build=build,
+            maxItems=max_items,
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
@@ -155,6 +165,7 @@ class TaskClient(ResourceClient):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -170,6 +181,8 @@ class TaskClient(ResourceClient):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
@@ -184,6 +197,7 @@ class TaskClient(ResourceClient):
         started_run = self.start(
             task_input=task_input,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,
@@ -281,6 +295,7 @@ class TaskClientAsync(ResourceClientAsync):
         name: Optional[str] = None,
         task_input: Optional[Dict] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         title: Optional[str] = None,
@@ -293,6 +308,8 @@ class TaskClientAsync(ResourceClientAsync):
             name (str, optional): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
@@ -306,6 +323,7 @@ class TaskClientAsync(ResourceClientAsync):
             name=name,
             task_input=task_input,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             title=title,
@@ -325,6 +343,7 @@ class TaskClientAsync(ResourceClientAsync):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         wait_for_finish: Optional[int] = None,
@@ -338,6 +357,8 @@ class TaskClientAsync(ResourceClientAsync):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
@@ -357,6 +378,7 @@ class TaskClientAsync(ResourceClientAsync):
         """
         request_params = self._params(
             build=build,
+            maxItems=max_items,
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
@@ -378,6 +400,7 @@ class TaskClientAsync(ResourceClientAsync):
         *,
         task_input: Optional[Dict[str, Any]] = None,
         build: Optional[str] = None,
+        max_items: Optional[int] = None,
         memory_mbytes: Optional[int] = None,
         timeout_secs: Optional[int] = None,
         webhooks: Optional[List[Dict]] = None,
@@ -393,6 +416,8 @@ class TaskClientAsync(ResourceClientAsync):
             task_input (dict, optional): Task input dictionary
             build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
+            max_items (int, optional): Maximum number of results that will be returned by this run.
+                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
@@ -407,6 +432,7 @@ class TaskClientAsync(ResourceClientAsync):
         started_run = await self.start(
             task_input=task_input,
             build=build,
+            max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,

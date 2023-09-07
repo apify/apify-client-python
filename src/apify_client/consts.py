@@ -1,10 +1,10 @@
 import warnings
 from typing import Any
 
-from apify_shared.consts import ActorJobStatus as _ActorJobStatus
-from apify_shared.consts import ActorSourceType as _ActorSourceType
-from apify_shared.consts import MetaOrigin as _MetaOrigin
-from apify_shared.consts import WebhookEventType as _WebhookEventType
+from apify_shared.consts import ActorJobStatus as _ActorJobStatus  # noqa: F401
+from apify_shared.consts import ActorSourceType as _ActorSourceType  # noqa: F401
+from apify_shared.consts import MetaOrigin as _MetaOrigin  # noqa: F401
+from apify_shared.consts import WebhookEventType as _WebhookEventType  # noqa: F401
 
 DEPRECATED_NAMES = [
     'ActorJobStatus',

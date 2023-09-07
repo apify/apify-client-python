@@ -128,7 +128,7 @@ class TaskClient(ResourceClient):
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 300.
+                                               By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
                                                associated with the actor run which can be used to receive a notification,
                                                e.g. when the actor finished or failed.
@@ -363,7 +363,7 @@ class TaskClientAsync(ResourceClientAsync):
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 300.
+                                               By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
                                                associated with the actor run which can be used to receive a notification,
                                                e.g. when the actor finished or failed.

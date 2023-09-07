@@ -30,6 +30,15 @@ We use `autopep8` and `isort` to automatically format the code to a common forma
 
 We use `flake8` for linting, `mypy` for type checking and `pytest` for unit testing. To run these tools, just run `make check-code`.
 
+## Integration tests
+
+We have integration tests which send API requests using the API client to the Apify Platform.
+To run these tests, you need to set the `APIFY_TEST_USER_API_TOKEN` environment variable to the API token of the Apify user you want to use for the tests,
+and then start them with `make integration-tests`.
+
+If you want to run the integration tests on a different environment than the main Apify Platform,
+you need to set the `APIFY_INTEGRATION_TESTS_API_URL` environment variable to the right URL to the Apify API you want to use.
+
 ## Documentation
 
 We use the [Google docstring format](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for documenting the code.

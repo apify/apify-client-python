@@ -15,3 +15,5 @@ build/
 .vscode
 .idea
 .DS_Store
+
+docs/changelog.md

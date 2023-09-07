@@ -1,5 +1,7 @@
 from .actor import ActorClient, ActorClientAsync
 from .actor_collection import ActorCollectionClient, ActorCollectionClientAsync
+from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
+from .actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
 from .actor_version import ActorVersionClient, ActorVersionClientAsync
 from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
 from .build import BuildClient, BuildClientAsync
@@ -27,6 +29,8 @@ from .webhook_dispatch_collection import WebhookDispatchCollectionClient, Webhoo
 __all__ = [
     'ActorClient', 'ActorClientAsync',
     'ActorCollectionClient', 'ActorCollectionClientAsync',
+    'ActorEnvVarClient', 'ActorEnvVarClientAsync',
+    'ActorEnvVarCollectionClient', 'ActorEnvVarCollectionClientAsync',
     'ActorVersionClient', 'ActorVersionClientAsync',
     'ActorVersionCollectionClient', 'ActorVersionCollectionClientAsync',
     'RunClient', 'BuildClientAsync',

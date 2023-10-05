@@ -24,6 +24,13 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._get()
 
+    def delete(self) -> None:
+        """Delete the run
+
+        TODO: Docs
+        """
+        return self._delete()
+
     def abort(self) -> Dict:
         """Abort the actor build which is starting or currently running and return its details.
 
@@ -75,6 +82,13 @@ class BuildClientAsync(ActorJobBaseClientAsync):
             dict: The data of the aborted actor build
         """
         return await self._abort()
+
+    async def delete(self) -> None:
+        """Delete the run
+
+        TODO: Docs
+        """
+        return await self._delete()
 
     async def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
         """Wait synchronously until the build finishes or the server times out.

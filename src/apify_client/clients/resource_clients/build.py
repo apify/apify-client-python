@@ -25,9 +25,9 @@ class BuildClient(ActorJobBaseClient):
         return self._get()
 
     def delete(self) -> None:
-        """Delete the run.
+        """Delete the build.
 
-        TODO: Docs
+        https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         return self._delete()
 
@@ -84,9 +84,9 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         return await self._abort()
 
     async def delete(self) -> None:
-        """Delete the run.
+        """Delete the build.
 
-        TODO: Docs
+        https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         return await self._delete()
 

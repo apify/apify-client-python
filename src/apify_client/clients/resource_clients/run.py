@@ -51,7 +51,7 @@ class RunClient(ActorJobBaseClient):
     def delete(self) -> None:
         """Delete the run.
 
-        TODO: Docs
+        https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
         return self._delete()
 
@@ -293,7 +293,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
     async def delete(self) -> None:
         """Delete the run.
 
-        TODO: Docs
+        https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
         return await self._delete()
 

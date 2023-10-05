@@ -25,7 +25,7 @@ class BuildClient(ActorJobBaseClient):
         return self._get()
 
     def delete(self) -> None:
-        """Delete the run
+        """Delete the run.
 
         TODO: Docs
         """
@@ -84,7 +84,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         return await self._abort()
 
     async def delete(self) -> None:
-        """Delete the run
+        """Delete the run.
 
         TODO: Docs
         """

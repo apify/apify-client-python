@@ -48,8 +48,8 @@ class RunClient(ActorJobBaseClient):
 
         return self._update(filter_out_none_values_recursively(updated_fields))
 
-    def delete(self)-> None:
-        """Delete the run
+    def delete(self) -> None:
+        """Delete the run.
 
         TODO: Docs
         """
@@ -290,8 +290,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
 
-    async def delete(self)-> None:
-        """Delete the run
+    async def delete(self) -> None:
+        """Delete the run.
 
         TODO: Docs
         """

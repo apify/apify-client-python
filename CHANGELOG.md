@@ -7,9 +7,6 @@ Changelog
 - added DELETE to Actor runs
 - added DELETE to Actor builds
 
-[1.4.2](../../releases/tag/v1.4.2) - Unreleased
------------------------------------------------
-
 ### Internal changes
 
 - rewrote documentation publication to use Docusaurus

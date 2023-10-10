@@ -48,6 +48,13 @@ class RunClient(ActorJobBaseClient):
 
         return self._update(filter_out_none_values_recursively(updated_fields))
 
+    def delete(self) -> None:
+        """Delete the run.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
+        """
+        return self._delete()
+
     def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
         """Abort the actor run which is starting or currently running and return its details.
 
@@ -282,6 +289,13 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
+
+    async def delete(self) -> None:
+        """Delete the run.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
+        """
+        return await self._delete()
 
     async def metamorph(
         self,

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+[1.5.0](../../releases/tag/v1.5.0) - Unreleased
+-----------------------------------------------
+### Added
+- added DELETE to Actor runs
+- added DELETE to Actor builds
+
 [1.4.2](../../releases/tag/v1.4.2) - Unreleased
 -----------------------------------------------
 

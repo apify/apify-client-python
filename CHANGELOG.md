@@ -3,7 +3,10 @@ Changelog
 
 [1.5.0](../../releases/tag/v1.5.0) - Unreleased
 -----------------------------------------------
+
 ### Added
+
+- added support for Python 3.12
 - added DELETE to Actor runs
 - added DELETE to Actor builds
 

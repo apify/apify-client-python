@@ -1,5 +1,7 @@
+import json
 import pathlib
 import re
+import urllib.request
 
 PACKAGE_NAME = 'apify_client'
 REPO_ROOT = pathlib.Path(__file__).parent.resolve() / '..'
@@ -47,3 +49,17 @@ def sync_to_async_docstring(docstring: str) -> str:
     for (pattern, replacement) in substitutions:
         res = re.sub(pattern, replacement, res, flags=re.M)
     return res
+
+
+# Load the version numbers of the currently published versions from PyPI
+def get_published_package_versions() -> list:
+    package_info_url = f'https://pypi.org/pypi/{PACKAGE_NAME}/json'
+    try:
+        package_data = json.load(urllib.request.urlopen(package_info_url))
+        published_versions = list(package_data['releases'].keys())
+    # If the URL returns 404, it means the package has no releases yet (which is okay in our case)
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            raise e
+        published_versions = []
+    return published_versions

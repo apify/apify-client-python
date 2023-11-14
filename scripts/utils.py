@@ -60,7 +60,7 @@ def get_published_package_versions() -> list:
         published_versions = list(package_data['releases'].keys())
     # If the URL returns 404, it means the package has no releases yet (which is okay in our case)
     except HTTPError as e:
-        if e.code != 404:  # noqa: PLR2004
+        if e.code != 404:
             raise
         published_versions = []
     return published_versions

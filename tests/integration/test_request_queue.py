@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import secrets
 import string
+from typing import TYPE_CHECKING
 
-from apify_client import ApifyClient, ApifyClientAsync
+if TYPE_CHECKING:
+    from apify_client import ApifyClient, ApifyClientAsync
 
 
 def random_string(length: int = 10) -> str:
@@ -13,7 +17,7 @@ def random_queue_name() -> str:
 
 
 class TestRequestQueueSync:
-    def test_request_queue_lock(self, apify_client: ApifyClient) -> None:
+    def test_request_queue_lock(self: TestRequestQueueSync, apify_client: ApifyClient) -> None:
         created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client.request_queue(created_queue['id'], client_key=random_string(10))
 
@@ -39,7 +43,7 @@ class TestRequestQueueSync:
         queue.delete()
         assert apify_client.request_queue(created_queue['id']).get() is None
 
-    def test_request_batch_operations(self, apify_client: ApifyClient) -> None:
+    def test_request_batch_operations(self: TestRequestQueueSync, apify_client: ApifyClient) -> None:
         created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client.request_queue(created_queue['id'])
 
@@ -60,7 +64,7 @@ class TestRequestQueueSync:
 
 
 class TestRequestQueueAsync:
-    async def test_request_queue_lock(self, apify_client_async: ApifyClientAsync) -> None:
+    async def test_request_queue_lock(self: TestRequestQueueAsync, apify_client_async: ApifyClientAsync) -> None:
         created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client_async.request_queue(created_queue['id'], client_key=random_string(10))
 
@@ -87,7 +91,7 @@ class TestRequestQueueAsync:
         await queue.delete()
         assert await apify_client_async.request_queue(created_queue['id']).get() is None
 
-    async def test_request_batch_operations(self, apify_client_async: ApifyClientAsync) -> None:
+    async def test_request_batch_operations(self: TestRequestQueueAsync, apify_client_async: ApifyClientAsync) -> None:
         created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client_async.request_queue(created_queue['id'])
 

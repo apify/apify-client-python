@@ -21,10 +21,7 @@ classifiers = [
 ]
 
 requires-python = ">=3.8"
-dependencies = [
-    "apify-shared ~= 1.0.4",
-    "httpx ~= 0.25.1",
-]
+dependencies = ["apify-shared ~= 1.0.4", "httpx ~= 0.25.1"]
 
 [project.optional-dependencies]
 dev = [
@@ -90,15 +87,17 @@ indent-style = "space"
     "F401", # Unused imports
 ]
 "**/{scripts}/*" = [
-    "D",      # Everything from the pydocstyle
-    "INP001", # File {filename} is part of an implicit namespace package, add an __init__.py
-    "T20",    # flake8-print
+    "D",       # Everything from the pydocstyle
+    "INP001",  # File {filename} is part of an implicit namespace package, add an __init__.py
+    "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
+    "T20",     # flake8-print
 ]
 "**/{tests}/*" = [
-    "D",      # Everything from the pydocstyle
-    "INP001", # File {filename} is part of an implicit namespace package, add an __init__.py
-    "T20",    # flake8-print
-    "S101",   # Use of assert detected
+    "D",       # Everything from the pydocstyle
+    "INP001",  # File {filename} is part of an implicit namespace package, add an __init__.py
+    "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
+    "T20",     # flake8-print
+    "S101",    # Use of assert detected
 ]
 
 [tool.ruff.lint.flake8-quotes]

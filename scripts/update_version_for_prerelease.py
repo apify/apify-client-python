@@ -9,7 +9,7 @@ from utils import get_current_package_version, get_published_package_versions, s
 # and if not, modifies the package version number in pyproject.toml
 # from a stable release version (X.Y.Z) to a prerelease version (X.Y.ZbN or X.Y.Z.aN or X.Y.Z.rcN)
 if __name__ == '__main__':
-    if len(sys.argv) != 2:  # noqa: PLR2004
+    if len(sys.argv) != 2:
         raise RuntimeError('You must pass the prerelease type as an argument to this script!')
 
     prerelease_type = sys.argv[1]

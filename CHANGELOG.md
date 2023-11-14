@@ -4,7 +4,9 @@ Changelog
 [1.5.1](../../releases/tag/v1.5.1) - Unreleased
 -----------------------------------------------
 
-...
+### Internal changes
+
+- Migrate from Autopep8 and Flake8 to Ruff
 
 [1.5.0](../../releases/tag/v1.5.0) - 2023-10-18
 -----------------------------------------------

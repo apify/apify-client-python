@@ -1,14 +1,15 @@
+from __future__ import annotations
+
 import asyncio
 import math
 import time
 from datetime import datetime, timezone
-from typing import Dict, Optional
 
 from apify_shared.consts import ActorJobStatus
 from apify_shared.utils import ignore_docs, parse_date_fields
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _pluck_data
+from ..._utils import catch_not_found_or_throw, pluck_data
 from .resource_client import ResourceClient, ResourceClientAsync
 
 DEFAULT_WAIT_FOR_FINISH_SEC = 999999
@@ -21,10 +22,10 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
 class ActorJobBaseClient(ResourceClient):
     """Base sub-client class for actor runs and actor builds."""
 
-    def _wait_for_finish(self, wait_secs: Optional[int] = None) -> Optional[Dict]:
+    def _wait_for_finish(self: ActorJobBaseClient, wait_secs: int | None = None) -> dict | None:
         started_at = datetime.now(timezone.utc)
         should_repeat = True
-        job: Optional[Dict] = None
+        job: dict | None = None
         seconds_elapsed = 0
 
         while should_repeat:
@@ -38,11 +39,11 @@ class ActorJobBaseClient(ResourceClient):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(_pluck_data(response.json()))
+                job = parse_date_fields(pluck_data(response.json()))
 
-                seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
-                if (
-                    ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs)
+                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+                if ActorJobStatus(job['status']).is_terminal or (
+                    wait_secs is not None and seconds_elapsed >= wait_secs
                 ):
                     should_repeat = False
 
@@ -51,11 +52,11 @@ class ActorJobBaseClient(ResourceClient):
                     return job
 
             except ApifyApiError as exc:
-                _catch_not_found_or_throw(exc)
+                catch_not_found_or_throw(exc)
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up and return None
                 # In such case, the requested record probably really doesn't exist.
-                if (seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC):
+                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -63,7 +64,7 @@ class ActorJobBaseClient(ResourceClient):
 
         return job
 
-    def _abort(self, gracefully: Optional[bool] = None) -> Dict:
+    def _abort(self: ActorJobBaseClient, gracefully: bool | None = None) -> dict:
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
@@ -71,17 +72,17 @@ class ActorJobBaseClient(ResourceClient):
                 gracefully=gracefully,
             ),
         )
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
 
 @ignore_docs
 class ActorJobBaseClientAsync(ResourceClientAsync):
     """Base async sub-client class for actor runs and actor builds."""
 
-    async def _wait_for_finish(self, wait_secs: Optional[int] = None) -> Optional[Dict]:
+    async def _wait_for_finish(self: ActorJobBaseClientAsync, wait_secs: int | None = None) -> dict | None:
         started_at = datetime.now(timezone.utc)
         should_repeat = True
-        job: Optional[Dict] = None
+        job: dict | None = None
         seconds_elapsed = 0
 
         while should_repeat:
@@ -95,11 +96,11 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(_pluck_data(response.json()))
+                job = parse_date_fields(pluck_data(response.json()))
 
-                seconds_elapsed = math.floor(((datetime.now(timezone.utc) - started_at).total_seconds()))
-                if (
-                    ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs)
+                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+                if ActorJobStatus(job['status']).is_terminal or (
+                    wait_secs is not None and seconds_elapsed >= wait_secs
                 ):
                     should_repeat = False
 
@@ -108,11 +109,11 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     return job
 
             except ApifyApiError as exc:
-                _catch_not_found_or_throw(exc)
+                catch_not_found_or_throw(exc)
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up and return None
                 # In such case, the requested record probably really doesn't exist.
-                if (seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC):
+                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -120,7 +121,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
 
         return job
 
-    async def _abort(self, gracefully: Optional[bool] = None) -> Dict:
+    async def _abort(self: ActorJobBaseClientAsync, gracefully: bool | None = None) -> dict:
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',
@@ -128,4 +129,4 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 gracefully=gracefully,
             ),
         )
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))

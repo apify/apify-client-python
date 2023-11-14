@@ -1,9 +1,9 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
 from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from ..._utils import _pluck_data
+from ..._utils import pluck_data
 from .base_client import BaseClient, BaseClientAsync
 
 
@@ -11,16 +11,16 @@ from .base_client import BaseClient, BaseClientAsync
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
-    def _list(self, **kwargs: Any) -> ListPage:
+    def _list(self: ResourceCollectionClient, **kwargs: dict) -> ListPage:
         response = self.http_client.call(
             url=self._url(),
             method='GET',
             params=self._params(**kwargs),
         )
 
-        return ListPage(parse_date_fields(_pluck_data(response.json())))
+        return ListPage(parse_date_fields(pluck_data(response.json())))
 
-    def _create(self, resource: Dict) -> Dict:
+    def _create(self: ResourceCollectionClient, resource: dict) -> dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',
@@ -28,33 +28,37 @@ class ResourceCollectionClient(BaseClient):
             json=resource,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    def _get_or_create(self, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
+    def _get_or_create(
+        self: ResourceCollectionClient,
+        name: str | None = None,
+        resource: dict | None = None,
+    ) -> dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(name=name),
+            params=self._params(name=name),  # type: ignore
             json=resource,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
 
 @ignore_docs
 class ResourceCollectionClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a resource collection."""
 
-    async def _list(self, **kwargs: Any) -> ListPage:
+    async def _list(self: ResourceCollectionClientAsync, **kwargs: dict) -> ListPage:
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
             params=self._params(**kwargs),
         )
 
-        return ListPage(parse_date_fields(_pluck_data(response.json())))
+        return ListPage(parse_date_fields(pluck_data(response.json())))
 
-    async def _create(self, resource: Dict) -> Dict:
+    async def _create(self: ResourceCollectionClientAsync, resource: dict) -> dict:
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
@@ -62,14 +66,18 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             json=resource,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    async def _get_or_create(self, name: Optional[str] = None, resource: Optional[Dict] = None) -> Dict:
+    async def _get_or_create(
+        self: ResourceCollectionClientAsync,
+        name: str | None = None,
+        resource: dict | None = None,
+    ) -> dict:
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(name=name),
+            params=self._params(name=name),  # type: ignore
             json=resource,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))

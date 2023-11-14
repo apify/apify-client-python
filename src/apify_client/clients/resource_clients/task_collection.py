@@ -1,28 +1,32 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
-from .task import _get_task_representation
+from .task import get_task_representation
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class TaskCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating tasks."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: TaskCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the TaskCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: TaskCollectionClient,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -38,17 +42,17 @@ class TaskCollectionClient(ResourceCollectionClient):
         return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
-        self,
+        self: TaskCollectionClient,
         *,
         actor_id: str,
         name: str,
-        build: Optional[str] = None,
-        timeout_secs: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        max_items: Optional[int] = None,
-        task_input: Optional[Dict] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        build: str | None = None,
+        timeout_secs: int | None = None,
+        memory_mbytes: int | None = None,
+        max_items: int | None = None,
+        task_input: dict | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Create a new task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
@@ -69,7 +73,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created task.
         """
-        task_representation = _get_task_representation(
+        task_representation = get_task_representation(
             actor_id=actor_id,
             name=name,
             task_input=task_input,
@@ -87,18 +91,18 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating tasks."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: TaskCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the TaskCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: TaskCollectionClientAsync,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -114,17 +118,17 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self,
+        self: TaskCollectionClientAsync,
         *,
         actor_id: str,
         name: str,
-        build: Optional[str] = None,
-        timeout_secs: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        max_items: Optional[int] = None,
-        task_input: Optional[Dict] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        build: str | None = None,
+        timeout_secs: int | None = None,
+        memory_mbytes: int | None = None,
+        max_items: int | None = None,
+        task_input: dict | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Create a new task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
@@ -145,7 +149,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             dict: The created task.
         """
-        task_representation = _get_task_representation(
+        task_representation = get_task_representation(
             actor_id=actor_id,
             name=name,
             task_input=task_input,

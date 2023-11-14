@@ -1,25 +1,28 @@
-from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncIterator, Iterator, Optional
+from __future__ import annotations
 
-import httpx
+from contextlib import asynccontextmanager, contextmanager
+from typing import TYPE_CHECKING, AsyncIterator, Iterator
 
 from apify_shared.utils import ignore_docs
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw
+from ..._utils import catch_not_found_or_throw
 from ..base import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    import httpx
 
 
 class LogClient(ResourceClient):
     """Sub-client for manipulating logs."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: LogClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the LogClient."""
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[str]:
+    def get(self: LogClient) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -34,14 +37,14 @@ class LogClient(ResourceClient):
                 params=self._params(),
             )
 
-            return response.text
+            return response.text  # noqa: TRY300
 
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
-    def get_as_bytes(self) -> Optional[bytes]:
+    def get_as_bytes(self: LogClient) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -57,15 +60,15 @@ class LogClient(ResourceClient):
                 parse_response=False,
             )
 
-            return response.content
+            return response.content  # noqa: TRY300
 
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
     @contextmanager
-    def stream(self) -> Iterator[Optional[httpx.Response]]:
+    def stream(self: LogClient) -> Iterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -85,7 +88,7 @@ class LogClient(ResourceClient):
 
             yield response
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
             yield None
         finally:
             if response:
@@ -96,12 +99,12 @@ class LogClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating logs."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: LogClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the LogClientAsync."""
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[str]:
+    async def get(self: LogClientAsync) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -116,14 +119,14 @@ class LogClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            return response.text
+            return response.text  # noqa: TRY300
 
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
-    async def get_as_bytes(self) -> Optional[bytes]:
+    async def get_as_bytes(self: LogClientAsync) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -139,15 +142,15 @@ class LogClientAsync(ResourceClientAsync):
                 parse_response=False,
             )
 
-            return response.content
+            return response.content  # noqa: TRY300
 
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
     @asynccontextmanager
-    async def stream(self) -> AsyncIterator[Optional[httpx.Response]]:
+    async def stream(self: LogClientAsync) -> AsyncIterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -167,7 +170,7 @@ class LogClientAsync(ResourceClientAsync):
 
             yield response
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
             yield None
         finally:
             if response:

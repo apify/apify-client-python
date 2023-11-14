@@ -1,28 +1,32 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class KeyValueStoreCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating key-value stores."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: KeyValueStoreCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: KeyValueStoreCollectionClient,
         *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -38,14 +42,19 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: Optional[str] = None, schema: Optional[Dict] = None) -> Dict:
+    def get_or_create(
+        self: KeyValueStoreCollectionClient,
+        *,
+        name: str | None = None,
+        schema: dict | None = None,
+    ) -> dict:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store
 
         Args:
             name (str, optional): The name of the key-value store to retrieve or create.
-            schema (Dict, optional): The schema of the key-value store
+            schema (dict, optional): The schema of the key-value store
 
         Returns:
             dict: The retrieved or newly-created key-value store.
@@ -57,19 +66,19 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: KeyValueStoreCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the KeyValueStoreCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: KeyValueStoreCollectionClientAsync,
         *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -85,14 +94,19 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         """
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    async def get_or_create(self, *, name: Optional[str] = None, schema: Optional[Dict] = None) -> Dict:
+    async def get_or_create(
+        self: KeyValueStoreCollectionClientAsync,
+        *,
+        name: str | None = None,
+        schema: dict | None = None,
+    ) -> dict:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store
 
         Args:
             name (str, optional): The name of the key-value store to retrieve or create.
-            schema (Dict, optional): The schema of the key-value store
+            schema (dict, optional): The schema of the key-value store
 
         Returns:
             dict: The retrieved or newly-created key-value store.

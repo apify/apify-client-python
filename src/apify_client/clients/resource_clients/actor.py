@@ -1,9 +1,15 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from apify_shared.consts import ActorJobStatus, MetaOrigin
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
+from typing import TYPE_CHECKING, Any
 
-from ..._utils import _encode_key_value_store_record_value, _encode_webhook_list_to_base64, _pluck_data
+from apify_shared.utils import (
+    filter_out_none_values_recursively,
+    ignore_docs,
+    maybe_extract_enum_member_value,
+    parse_date_fields,
+)
+
+from ..._utils import encode_key_value_store_record_value, encode_webhook_list_to_base64, pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 from .actor_version import ActorVersionClient, ActorVersionClientAsync
 from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
@@ -12,27 +18,31 @@ from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
 
+if TYPE_CHECKING:
+    from apify_shared.consts import ActorJobStatus, MetaOrigin
 
-def _get_actor_representation(
+
+def get_actor_representation(
     *,
-    name: Optional[str],
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    seo_title: Optional[str] = None,
-    seo_description: Optional[str] = None,
-    versions: Optional[List[Dict]] = None,
-    restart_on_error: Optional[bool] = None,
-    is_public: Optional[bool] = None,
-    is_deprecated: Optional[bool] = None,
-    is_anonymously_runnable: Optional[bool] = None,
-    categories: Optional[List[str]] = None,
-    default_run_build: Optional[str] = None,
-    default_run_max_items: Optional[int] = None,
-    default_run_memory_mbytes: Optional[int] = None,
-    default_run_timeout_secs: Optional[int] = None,
-    example_run_input_body: Optional[Any] = None,
-    example_run_input_content_type: Optional[str] = None,
-) -> Dict:
+    name: str | None,
+    title: str | None = None,
+    description: str | None = None,
+    seo_title: str | None = None,
+    seo_description: str | None = None,
+    versions: list[dict] | None = None,
+    restart_on_error: bool | None = None,
+    is_public: bool | None = None,
+    is_deprecated: bool | None = None,
+    is_anonymously_runnable: bool | None = None,
+    categories: list[str] | None = None,
+    default_run_build: str | None = None,
+    default_run_max_items: int | None = None,
+    default_run_memory_mbytes: int | None = None,
+    default_run_timeout_secs: int | None = None,
+    example_run_input_body: Any = None,  # noqa: ANN401
+    example_run_input_content_type: str | None = None,
+) -> dict:
+    """Get dictionary representation of the Actor."""
     return {
         'name': name,
         'title': title,
@@ -62,12 +72,12 @@ class ActorClient(ResourceClient):
     """Sub-client for manipulating a single actor."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ActorClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
-    def get(self) -> Optional[Dict]:
+    def get(self: ActorClient) -> dict | None:
         """Retrieve the actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -78,26 +88,26 @@ class ActorClient(ResourceClient):
         return self._get()
 
     def update(
-        self,
+        self: ActorClient,
         *,
-        name: Optional[str] = None,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        seo_title: Optional[str] = None,
-        seo_description: Optional[str] = None,
-        versions: Optional[List[Dict]] = None,
-        restart_on_error: Optional[bool] = None,
-        is_public: Optional[bool] = None,
-        is_deprecated: Optional[bool] = None,
-        is_anonymously_runnable: Optional[bool] = None,
-        categories: Optional[List[str]] = None,
-        default_run_build: Optional[str] = None,
-        default_run_max_items: Optional[int] = None,
-        default_run_memory_mbytes: Optional[int] = None,
-        default_run_timeout_secs: Optional[int] = None,
-        example_run_input_body: Optional[Any] = None,
-        example_run_input_content_type: Optional[str] = None,
-    ) -> Dict:
+        name: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        seo_title: str | None = None,
+        seo_description: str | None = None,
+        versions: list[dict] | None = None,
+        restart_on_error: bool | None = None,
+        is_public: bool | None = None,
+        is_deprecated: bool | None = None,
+        is_anonymously_runnable: bool | None = None,
+        categories: list[str] | None = None,
+        default_run_build: str | None = None,
+        default_run_max_items: int | None = None,
+        default_run_memory_mbytes: int | None = None,
+        default_run_timeout_secs: int | None = None,
+        example_run_input_body: Any = None,  # noqa: ANN401
+        example_run_input_content_type: str | None = None,
+    ) -> dict:
         """Update the actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -125,7 +135,7 @@ class ActorClient(ResourceClient):
         Returns:
             dict: The updated actor
         """
-        actor_representation = _get_actor_representation(
+        actor_representation = get_actor_representation(
             name=name,
             title=title,
             description=description,
@@ -147,7 +157,7 @@ class ActorClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(actor_representation))
 
-    def delete(self) -> None:
+    def delete(self: ActorClient) -> None:
         """Delete the actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
@@ -155,17 +165,17 @@ class ActorClient(ResourceClient):
         return self._delete()
 
     def start(
-        self,
+        self: ActorClient,
         *,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        wait_for_finish: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-    ) -> Dict:
+        run_input: Any = None,  # noqa: ANN401
+        content_type: str | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        wait_for_finish: int | None = None,
+        webhooks: list[dict] | None = None,
+    ) -> dict:
         """Start the actor and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
@@ -195,15 +205,15 @@ class ActorClient(ResourceClient):
         Returns:
             dict: The run object
         """
-        run_input, content_type = _encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         request_params = self._params(
-            build=build,
-            maxItems=max_items,
-            memory=memory_mbytes,
-            timeout=timeout_secs,
-            waitForFinish=wait_for_finish,
-            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            build=build,  # type: ignore
+            maxItems=max_items,  # type: ignore
+            memory=memory_mbytes,  # type: ignore
+            timeout=timeout_secs,  # type: ignore
+            waitForFinish=wait_for_finish,  # type: ignore
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,  # type: ignore
         )
 
         response = self.http_client.call(
@@ -214,20 +224,20 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
     def call(
-        self,
+        self: ActorClient,
         *,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-        wait_secs: Optional[int] = None,
-    ) -> Optional[Dict]:
+        run_input: Any = None,  # noqa: ANN401
+        content_type: str | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        webhooks: list[dict] | None = None,
+        wait_secs: int | None = None,
+    ) -> dict | None:
         """Start the actor and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -266,14 +276,14 @@ class ActorClient(ResourceClient):
         return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     def build(
-        self,
+        self: ActorClient,
         *,
         version_number: str,
-        beta_packages: Optional[bool] = None,
-        tag: Optional[str] = None,
-        use_cache: Optional[bool] = None,
-        wait_for_finish: Optional[int] = None,
-    ) -> Dict:
+        beta_packages: bool | None = None,
+        tag: str | None = None,
+        use_cache: bool | None = None,
+        wait_for_finish: int | None = None,
+    ) -> dict:
         """Build the actor.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor
@@ -294,11 +304,11 @@ class ActorClient(ResourceClient):
             dict: The build object
         """
         request_params = self._params(
-            version=version_number,
-            betaPackages=beta_packages,
-            tag=tag,
-            useCache=use_cache,
-            waitForFinish=wait_for_finish,
+            version=version_number,  # type: ignore
+            betaPackages=beta_packages,  # type: ignore
+            tag=tag,  # type: ignore
+            useCache=use_cache,  # type: ignore
+            waitForFinish=wait_for_finish,  # type: ignore
         )
 
         response = self.http_client.call(
@@ -307,17 +317,22 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    def builds(self) -> BuildCollectionClient:
+    def builds(self: ActorClient) -> BuildCollectionClient:
         """Retrieve a client for the builds of this actor."""
-        return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
+        return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))  # type: ignore
 
-    def runs(self) -> RunCollectionClient:
+    def runs(self: ActorClient) -> RunCollectionClient:
         """Retrieve a client for the runs of this actor."""
-        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
+        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))  # type: ignore
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClient:
+    def last_run(
+        self: ActorClient,
+        *,
+        status: ActorJobStatus | None = None,
+        origin: MetaOrigin | None = None,
+    ) -> RunClient:
         """Retrieve the client for the last run of this actor.
 
         Last run is retrieved based on the start time of the runs.
@@ -329,20 +344,22 @@ class ActorClient(ResourceClient):
         Returns:
             RunClient: The resource client for the last run of this actor.
         """
-        return RunClient(**self._sub_resource_init_options(
-            resource_id='last',
-            resource_path='runs',
-            params=self._params(
-                status=maybe_extract_enum_member_value(status),
-                origin=maybe_extract_enum_member_value(origin),
-            ),
-        ))
+        return RunClient(
+            **self._sub_resource_init_options(
+                resource_id='last',  # type: ignore
+                resource_path='runs',  # type: ignore
+                params=self._params(
+                    status=maybe_extract_enum_member_value(status),
+                    origin=maybe_extract_enum_member_value(origin),
+                ),
+            )
+        )
 
-    def versions(self) -> ActorVersionCollectionClient:
+    def versions(self: ActorClient) -> ActorVersionCollectionClient:
         """Retrieve a client for the versions of this actor."""
         return ActorVersionCollectionClient(**self._sub_resource_init_options())
 
-    def version(self, version_number: str) -> ActorVersionClient:
+    def version(self: ActorClient, version_number: str) -> ActorVersionClient:
         """Retrieve the client for the specified version of this actor.
 
         Args:
@@ -351,9 +368,9 @@ class ActorClient(ResourceClient):
         Returns:
             ActorVersionClient: The resource client for the specified actor version.
         """
-        return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
+        return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))  # type: ignore
 
-    def webhooks(self) -> WebhookCollectionClient:
+    def webhooks(self: ActorClient) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
@@ -362,12 +379,12 @@ class ActorClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ActorClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: ActorClientAsync) -> dict | None:
         """Retrieve the actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -378,26 +395,26 @@ class ActorClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self,
+        self: ActorClientAsync,
         *,
-        name: Optional[str] = None,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        seo_title: Optional[str] = None,
-        seo_description: Optional[str] = None,
-        versions: Optional[List[Dict]] = None,
-        restart_on_error: Optional[bool] = None,
-        is_public: Optional[bool] = None,
-        is_deprecated: Optional[bool] = None,
-        is_anonymously_runnable: Optional[bool] = None,
-        categories: Optional[List[str]] = None,
-        default_run_build: Optional[str] = None,
-        default_run_max_items: Optional[int] = None,
-        default_run_memory_mbytes: Optional[int] = None,
-        default_run_timeout_secs: Optional[int] = None,
-        example_run_input_body: Optional[Any] = None,
-        example_run_input_content_type: Optional[str] = None,
-    ) -> Dict:
+        name: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        seo_title: str | None = None,
+        seo_description: str | None = None,
+        versions: list[dict] | None = None,
+        restart_on_error: bool | None = None,
+        is_public: bool | None = None,
+        is_deprecated: bool | None = None,
+        is_anonymously_runnable: bool | None = None,
+        categories: list[str] | None = None,
+        default_run_build: str | None = None,
+        default_run_max_items: int | None = None,
+        default_run_memory_mbytes: int | None = None,
+        default_run_timeout_secs: int | None = None,
+        example_run_input_body: Any = None,  # noqa: ANN401
+        example_run_input_content_type: str | None = None,
+    ) -> dict:
         """Update the actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -425,7 +442,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             dict: The updated actor
         """
-        actor_representation = _get_actor_representation(
+        actor_representation = get_actor_representation(
             name=name,
             title=title,
             description=description,
@@ -447,7 +464,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(actor_representation))
 
-    async def delete(self) -> None:
+    async def delete(self: ActorClientAsync) -> None:
         """Delete the actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
@@ -455,17 +472,17 @@ class ActorClientAsync(ResourceClientAsync):
         return await self._delete()
 
     async def start(
-        self,
+        self: ActorClientAsync,
         *,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        wait_for_finish: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-    ) -> Dict:
+        run_input: Any = None,  # noqa: ANN401
+        content_type: str | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        wait_for_finish: int | None = None,
+        webhooks: list[dict] | None = None,
+    ) -> dict:
         """Start the actor and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
@@ -495,15 +512,15 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             dict: The run object
         """
-        run_input, content_type = _encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         request_params = self._params(
-            build=build,
-            maxItems=max_items,
-            memory=memory_mbytes,
-            timeout=timeout_secs,
-            waitForFinish=wait_for_finish,
-            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            build=build,  # type: ignore
+            maxItems=max_items,  # type: ignore
+            memory=memory_mbytes,  # type: ignore
+            timeout=timeout_secs,  # type: ignore
+            waitForFinish=wait_for_finish,  # type: ignore
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,  # type: ignore
         )
 
         response = await self.http_client.call(
@@ -514,20 +531,20 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def call(
-        self,
+        self: ActorClientAsync,
         *,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-        wait_secs: Optional[int] = None,
-    ) -> Optional[Dict]:
+        run_input: Any = None,  # noqa: ANN401
+        content_type: str | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        webhooks: list[dict] | None = None,
+        wait_secs: int | None = None,
+    ) -> dict | None:
         """Start the actor and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -566,14 +583,14 @@ class ActorClientAsync(ResourceClientAsync):
         return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     async def build(
-        self,
+        self: ActorClientAsync,
         *,
         version_number: str,
-        beta_packages: Optional[bool] = None,
-        tag: Optional[str] = None,
-        use_cache: Optional[bool] = None,
-        wait_for_finish: Optional[int] = None,
-    ) -> Dict:
+        beta_packages: bool | None = None,
+        tag: str | None = None,
+        use_cache: bool | None = None,
+        wait_for_finish: int | None = None,
+    ) -> dict:
         """Build the actor.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor
@@ -594,11 +611,11 @@ class ActorClientAsync(ResourceClientAsync):
             dict: The build object
         """
         request_params = self._params(
-            version=version_number,
-            betaPackages=beta_packages,
-            tag=tag,
-            useCache=use_cache,
-            waitForFinish=wait_for_finish,
+            version=version_number,  # type: ignore
+            betaPackages=beta_packages,  # type: ignore
+            tag=tag,  # type: ignore
+            useCache=use_cache,  # type: ignore
+            waitForFinish=wait_for_finish,  # type: ignore
         )
 
         response = await self.http_client.call(
@@ -607,17 +624,17 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    def builds(self) -> BuildCollectionClientAsync:
+    def builds(self: ActorClientAsync) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this actor."""
-        return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))
+        return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))  # type: ignore
 
-    def runs(self) -> RunCollectionClientAsync:
+    def runs(self: ActorClientAsync) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this actor."""
-        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
+        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))  # type: ignore
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClientAsync:
+    def last_run(self: ActorClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this actor.
 
         Last run is retrieved based on the start time of the runs.
@@ -629,20 +646,22 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             RunClientAsync: The resource client for the last run of this actor.
         """
-        return RunClientAsync(**self._sub_resource_init_options(
-            resource_id='last',
-            resource_path='runs',
-            params=self._params(
-                status=maybe_extract_enum_member_value(status),
-                origin=maybe_extract_enum_member_value(origin),
-            ),
-        ))
+        return RunClientAsync(
+            **self._sub_resource_init_options(
+                resource_id='last',  # type: ignore
+                resource_path='runs',  # type: ignore
+                params=self._params(
+                    status=maybe_extract_enum_member_value(status),
+                    origin=maybe_extract_enum_member_value(origin),
+                ),
+            )
+        )
 
-    def versions(self) -> ActorVersionCollectionClientAsync:
+    def versions(self: ActorClientAsync) -> ActorVersionCollectionClientAsync:
         """Retrieve a client for the versions of this actor."""
         return ActorVersionCollectionClientAsync(**self._sub_resource_init_options())
 
-    def version(self, version_number: str) -> ActorVersionClientAsync:
+    def version(self: ActorClientAsync, version_number: str) -> ActorVersionClientAsync:
         """Retrieve the client for the specified version of this actor.
 
         Args:
@@ -651,8 +670,8 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             ActorVersionClientAsync: The resource client for the specified actor version.
         """
-        return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))
+        return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))  # type: ignore
 
-    def webhooks(self) -> WebhookCollectionClientAsync:
+    def webhooks(self: ActorClientAsync) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this actor."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())

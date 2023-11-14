@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
 from apify_shared.utils import ignore_docs
 
@@ -9,12 +9,12 @@ class WebhookDispatchClient(ResourceClient):
     """Sub-client for querying information about a webhook dispatch."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookDispatchClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookDispatchClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: WebhookDispatchClient) -> dict | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
@@ -29,12 +29,12 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
     """Async sub-client for querying information about a webhook dispatch."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookDispatchClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookDispatchClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: WebhookDispatchClientAsync) -> dict | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch

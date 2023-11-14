@@ -1,28 +1,32 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating datasets."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: DatasetCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the DatasetCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: DatasetCollectionClient,
         *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -38,14 +42,14 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: Optional[str] = None, schema: Optional[Dict] = None) -> Dict:
+    def get_or_create(self: DatasetCollectionClient, *, name: str | None = None, schema: dict | None = None) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
 
         Args:
             name (str, optional): The name of the dataset to retrieve or create.
-            schema (Dict, optional): The schema of the dataset
+            schema (dict, optional): The schema of the dataset
 
         Returns:
             dict: The retrieved or newly-created dataset.
@@ -57,19 +61,19 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating datasets."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: DatasetCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the DatasetCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: DatasetCollectionClientAsync,
         *,
-        unnamed: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -85,14 +89,19 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         """
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    async def get_or_create(self, *, name: Optional[str] = None, schema: Optional[Dict] = None) -> Dict:
+    async def get_or_create(
+        self: DatasetCollectionClientAsync,
+        *,
+        name: str | None = None,
+        schema: dict | None = None,
+    ) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
 
         Args:
             name (str, optional): The name of the dataset to retrieve or create.
-            schema (Dict, optional): The schema of the dataset
+            schema (dict, optional): The schema of the dataset
 
         Returns:
             dict: The retrieved or newly-created dataset.

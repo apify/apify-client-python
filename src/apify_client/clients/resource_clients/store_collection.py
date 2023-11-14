@@ -1,31 +1,35 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class StoreCollectionClient(ResourceCollectionClient):
     """Sub-client for Apify store."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: StoreCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the StoreCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: StoreCollectionClient,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        search: Optional[str] = None,
-        sort_by: Optional[str] = None,
-        category: Optional[str] = None,
-        username: Optional[str] = None,
-        pricing_model: Optional[str] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        search: str | None = None,
+        sort_by: str | None = None,
+        category: str | None = None,
+        username: str | None = None,
+        pricing_model: str | None = None,
+    ) -> ListPage[dict]:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -57,22 +61,22 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for Apify store."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: StoreCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the StoreCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: StoreCollectionClientAsync,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        search: Optional[str] = None,
-        sort_by: Optional[str] = None,
-        category: Optional[str] = None,
-        username: Optional[str] = None,
-        pricing_model: Optional[str] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        search: str | None = None,
+        sort_by: str | None = None,
+        category: str | None = None,
+        username: str | None = None,
+        pricing_model: str | None = None,
+    ) -> ListPage[dict]:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store

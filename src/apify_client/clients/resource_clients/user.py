@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
 from apify_shared.utils import ignore_docs
 
@@ -9,7 +9,7 @@ class UserClient(ResourceClient):
     """Sub-client for querying user data."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: UserClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the UserClient."""
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
@@ -17,7 +17,7 @@ class UserClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'users')
         super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: UserClient) -> dict | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
@@ -34,7 +34,7 @@ class UserClientAsync(ResourceClientAsync):
     """Async sub-client for querying user data."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: UserClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the UserClientAsync."""
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
@@ -42,7 +42,7 @@ class UserClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'users')
         super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: UserClientAsync) -> dict | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.

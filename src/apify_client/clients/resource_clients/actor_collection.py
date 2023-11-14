@@ -1,29 +1,33 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING, Any
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
-from .actor import _get_actor_representation
+from .actor import get_actor_representation
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class ActorCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actors."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ActorCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: ActorCollectionClient,
         *,
-        my: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        my: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -37,29 +41,29 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available actors matching the specified filters.
         """
-        return self._list(my=my, limit=limit, offset=offset, desc=desc)
+        return self._list(my=my, limit=limit, offset=offset, desc=desc)  # type: ignore
 
     def create(
-        self,
+        self: ActorCollectionClient,
         *,
         name: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        seo_title: Optional[str] = None,
-        seo_description: Optional[str] = None,
-        versions: Optional[List[Dict]] = None,
-        restart_on_error: Optional[bool] = None,
-        is_public: Optional[bool] = None,
-        is_deprecated: Optional[bool] = None,
-        is_anonymously_runnable: Optional[bool] = None,
-        categories: Optional[List[str]] = None,
-        default_run_build: Optional[str] = None,
-        default_run_max_items: Optional[int] = None,
-        default_run_memory_mbytes: Optional[int] = None,
-        default_run_timeout_secs: Optional[int] = None,
-        example_run_input_body: Optional[Any] = None,
-        example_run_input_content_type: Optional[str] = None,
-    ) -> Dict:
+        title: str | None = None,
+        description: str | None = None,
+        seo_title: str | None = None,
+        seo_description: str | None = None,
+        versions: list[dict] | None = None,  # type: ignore
+        restart_on_error: bool | None = None,
+        is_public: bool | None = None,
+        is_deprecated: bool | None = None,
+        is_anonymously_runnable: bool | None = None,
+        categories: list[str] | None = None,  # type: ignore
+        default_run_build: str | None = None,
+        default_run_max_items: int | None = None,
+        default_run_memory_mbytes: int | None = None,
+        default_run_timeout_secs: int | None = None,
+        example_run_input_body: Any = None,  # # noqa: ANN401
+        example_run_input_content_type: str | None = None,
+    ) -> dict:
         """Create a new actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
@@ -87,7 +91,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created actor.
         """
-        actor_representation = _get_actor_representation(
+        actor_representation = get_actor_representation(
             name=name,
             title=title,
             description=description,
@@ -114,19 +118,19 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actors."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ActorCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: ActorCollectionClientAsync,
         *,
-        my: Optional[bool] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        my: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -140,29 +144,29 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available actors matching the specified filters.
         """
-        return await self._list(my=my, limit=limit, offset=offset, desc=desc)
+        return await self._list(my=my, limit=limit, offset=offset, desc=desc)  # type: ignore
 
     async def create(
-        self,
+        self: ActorCollectionClientAsync,
         *,
         name: str,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        seo_title: Optional[str] = None,
-        seo_description: Optional[str] = None,
-        versions: Optional[List[Dict]] = None,
-        restart_on_error: Optional[bool] = None,
-        is_public: Optional[bool] = None,
-        is_deprecated: Optional[bool] = None,
-        is_anonymously_runnable: Optional[bool] = None,
-        categories: Optional[List[str]] = None,
-        default_run_build: Optional[str] = None,
-        default_run_max_items: Optional[int] = None,
-        default_run_memory_mbytes: Optional[int] = None,
-        default_run_timeout_secs: Optional[int] = None,
-        example_run_input_body: Optional[Any] = None,
-        example_run_input_content_type: Optional[str] = None,
-    ) -> Dict:
+        title: str | None = None,
+        description: str | None = None,
+        seo_title: str | None = None,
+        seo_description: str | None = None,
+        versions: list[dict] | None = None,  # type: ignore
+        restart_on_error: bool | None = None,
+        is_public: bool | None = None,
+        is_deprecated: bool | None = None,
+        is_anonymously_runnable: bool | None = None,
+        categories: list[str] | None = None,  # type: ignore
+        default_run_build: str | None = None,
+        default_run_max_items: int | None = None,
+        default_run_memory_mbytes: int | None = None,
+        default_run_timeout_secs: int | None = None,
+        example_run_input_body: Any = None,  # noqa: ANN401
+        example_run_input_content_type: str | None = None,
+    ) -> dict:
         """Create a new actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
@@ -190,7 +194,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             dict: The created actor.
         """
-        actor_representation = _get_actor_representation(
+        actor_representation = get_actor_representation(
             name=name,
             title=title,
             description=description,

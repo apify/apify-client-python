@@ -1,23 +1,27 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from apify_shared.consts import ActorSourceType
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .actor_version import _get_actor_version_representation
+
+if TYPE_CHECKING:
+    from apify_shared.consts import ActorSourceType
+    from apify_shared.models import ListPage
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor versions."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorVersionCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ActorVersionCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
-    def list(self) -> ListPage[Dict]:
+    def list(self: ActorVersionCollectionClient) -> ListPage[dict]:  # noqa: A003
         """List the available actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -28,18 +32,18 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         return self._list()
 
     def create(
-        self,
+        self: ActorVersionCollectionClient,
         *,
         version_number: str,
-        build_tag: Optional[str] = None,
-        env_vars: Optional[List[Dict]] = None,
-        apply_env_vars_to_build: Optional[bool] = None,
+        build_tag: str | None = None,
+        env_vars: list[dict] | None = None,  # type: ignore
+        apply_env_vars_to_build: bool | None = None,
         source_type: ActorSourceType,
-        source_files: Optional[List[Dict]] = None,
-        git_repo_url: Optional[str] = None,
-        tarball_url: Optional[str] = None,
-        github_gist_url: Optional[str] = None,
-    ) -> Dict:
+        source_files: list[dict] | None = None,  # type: ignore
+        git_repo_url: str | None = None,
+        tarball_url: str | None = None,
+        github_gist_url: str | None = None,
+    ) -> dict:
         """Create a new actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version
@@ -83,12 +87,12 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor versions."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorVersionCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ActorVersionCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
-    async def list(self) -> ListPage[Dict]:
+    async def list(self: ActorVersionCollectionClientAsync) -> ListPage[dict]:  # noqa: A003
         """List the available actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -99,18 +103,18 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list()
 
     async def create(
-        self,
+        self: ActorVersionCollectionClientAsync,
         *,
         version_number: str,
-        build_tag: Optional[str] = None,
-        env_vars: Optional[List[Dict]] = None,
-        apply_env_vars_to_build: Optional[bool] = None,
+        build_tag: str | None = None,
+        env_vars: list[dict] | None = None,  # type: ignore
+        apply_env_vars_to_build: bool | None = None,
         source_type: ActorSourceType,
-        source_files: Optional[List[Dict]] = None,
-        git_repo_url: Optional[str] = None,
-        tarball_url: Optional[str] = None,
-        github_gist_url: Optional[str] = None,
-    ) -> Dict:
+        source_files: list[dict] | None = None,  # type: ignore
+        git_repo_url: str | None = None,
+        tarball_url: str | None = None,
+        github_gist_url: str | None = None,
+    ) -> dict:
         """Create a new actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version

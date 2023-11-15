@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, parse_date_fields
 
@@ -11,7 +13,7 @@ from .base_client import BaseClient, BaseClientAsync
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
-    def _list(self: ResourceCollectionClient, **kwargs: dict) -> ListPage:
+    def _list(self: ResourceCollectionClient, **kwargs: Any) -> ListPage:
         response = self.http_client.call(
             url=self._url(),
             method='GET',
@@ -38,7 +40,7 @@ class ResourceCollectionClient(BaseClient):
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(name=name),  # type: ignore
+            params=self._params(name=name),
             json=resource,
         )
 
@@ -49,7 +51,7 @@ class ResourceCollectionClient(BaseClient):
 class ResourceCollectionClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a resource collection."""
 
-    async def _list(self: ResourceCollectionClientAsync, **kwargs: dict) -> ListPage:
+    async def _list(self: ResourceCollectionClientAsync, **kwargs: Any) -> ListPage:
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
@@ -76,7 +78,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(name=name),  # type: ignore
+            params=self._params(name=name),
             json=resource,
         )
 

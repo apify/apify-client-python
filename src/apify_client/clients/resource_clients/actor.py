@@ -39,7 +39,7 @@ def get_actor_representation(
     default_run_max_items: int | None = None,
     default_run_memory_mbytes: int | None = None,
     default_run_timeout_secs: int | None = None,
-    example_run_input_body: Any = None,  # noqa: ANN401
+    example_run_input_body: Any = None,
     example_run_input_content_type: str | None = None,
 ) -> dict:
     """Get dictionary representation of the Actor."""
@@ -72,10 +72,10 @@ class ActorClient(ResourceClient):
     """Sub-client for manipulating a single actor."""
 
     @ignore_docs
-    def __init__(self: ActorClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ActorClient) -> dict | None:
         """Retrieve the actor.
@@ -105,7 +105,7 @@ class ActorClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout_secs: int | None = None,
-        example_run_input_body: Any = None,  # noqa: ANN401
+        example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
     ) -> dict:
         """Update the actor with the specified fields.
@@ -167,7 +167,7 @@ class ActorClient(ResourceClient):
     def start(
         self: ActorClient,
         *,
-        run_input: Any = None,  # noqa: ANN401
+        run_input: Any = None,
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
@@ -208,12 +208,12 @@ class ActorClient(ResourceClient):
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         request_params = self._params(
-            build=build,  # type: ignore
-            maxItems=max_items,  # type: ignore
-            memory=memory_mbytes,  # type: ignore
-            timeout=timeout_secs,  # type: ignore
-            waitForFinish=wait_for_finish,  # type: ignore
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,  # type: ignore
+            build=build,
+            maxItems=max_items,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+            waitForFinish=wait_for_finish,
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = self.http_client.call(
@@ -229,7 +229,7 @@ class ActorClient(ResourceClient):
     def call(
         self: ActorClient,
         *,
-        run_input: Any = None,  # noqa: ANN401
+        run_input: Any = None,
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
@@ -304,11 +304,11 @@ class ActorClient(ResourceClient):
             dict: The build object
         """
         request_params = self._params(
-            version=version_number,  # type: ignore
-            betaPackages=beta_packages,  # type: ignore
-            tag=tag,  # type: ignore
-            useCache=use_cache,  # type: ignore
-            waitForFinish=wait_for_finish,  # type: ignore
+            version=version_number,
+            betaPackages=beta_packages,
+            tag=tag,
+            useCache=use_cache,
+            waitForFinish=wait_for_finish,
         )
 
         response = self.http_client.call(
@@ -321,11 +321,11 @@ class ActorClient(ResourceClient):
 
     def builds(self: ActorClient) -> BuildCollectionClient:
         """Retrieve a client for the builds of this actor."""
-        return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))  # type: ignore
+        return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
 
     def runs(self: ActorClient) -> RunCollectionClient:
         """Retrieve a client for the runs of this actor."""
-        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))  # type: ignore
+        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(
         self: ActorClient,
@@ -346,8 +346,8 @@ class ActorClient(ResourceClient):
         """
         return RunClient(
             **self._sub_resource_init_options(
-                resource_id='last',  # type: ignore
-                resource_path='runs',  # type: ignore
+                resource_id='last',
+                resource_path='runs',
                 params=self._params(
                     status=maybe_extract_enum_member_value(status),
                     origin=maybe_extract_enum_member_value(origin),
@@ -368,7 +368,7 @@ class ActorClient(ResourceClient):
         Returns:
             ActorVersionClient: The resource client for the specified actor version.
         """
-        return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))  # type: ignore
+        return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
 
     def webhooks(self: ActorClient) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this actor."""
@@ -379,10 +379,10 @@ class ActorClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor."""
 
     @ignore_docs
-    def __init__(self: ActorClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ActorClientAsync) -> dict | None:
         """Retrieve the actor.
@@ -412,7 +412,7 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout_secs: int | None = None,
-        example_run_input_body: Any = None,  # noqa: ANN401
+        example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
     ) -> dict:
         """Update the actor with the specified fields.
@@ -474,7 +474,7 @@ class ActorClientAsync(ResourceClientAsync):
     async def start(
         self: ActorClientAsync,
         *,
-        run_input: Any = None,  # noqa: ANN401
+        run_input: Any = None,
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
@@ -515,12 +515,12 @@ class ActorClientAsync(ResourceClientAsync):
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         request_params = self._params(
-            build=build,  # type: ignore
-            maxItems=max_items,  # type: ignore
-            memory=memory_mbytes,  # type: ignore
-            timeout=timeout_secs,  # type: ignore
-            waitForFinish=wait_for_finish,  # type: ignore
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,  # type: ignore
+            build=build,
+            maxItems=max_items,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+            waitForFinish=wait_for_finish,
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = await self.http_client.call(
@@ -536,7 +536,7 @@ class ActorClientAsync(ResourceClientAsync):
     async def call(
         self: ActorClientAsync,
         *,
-        run_input: Any = None,  # noqa: ANN401
+        run_input: Any = None,
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
@@ -611,11 +611,11 @@ class ActorClientAsync(ResourceClientAsync):
             dict: The build object
         """
         request_params = self._params(
-            version=version_number,  # type: ignore
-            betaPackages=beta_packages,  # type: ignore
-            tag=tag,  # type: ignore
-            useCache=use_cache,  # type: ignore
-            waitForFinish=wait_for_finish,  # type: ignore
+            version=version_number,
+            betaPackages=beta_packages,
+            tag=tag,
+            useCache=use_cache,
+            waitForFinish=wait_for_finish,
         )
 
         response = await self.http_client.call(
@@ -628,11 +628,11 @@ class ActorClientAsync(ResourceClientAsync):
 
     def builds(self: ActorClientAsync) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this actor."""
-        return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))  # type: ignore
+        return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))
 
     def runs(self: ActorClientAsync) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this actor."""
-        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))  # type: ignore
+        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(self: ActorClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this actor.
@@ -648,8 +648,8 @@ class ActorClientAsync(ResourceClientAsync):
         """
         return RunClientAsync(
             **self._sub_resource_init_options(
-                resource_id='last',  # type: ignore
-                resource_path='runs',  # type: ignore
+                resource_id='last',
+                resource_path='runs',
                 params=self._params(
                     status=maybe_extract_enum_member_value(status),
                     origin=maybe_extract_enum_member_value(origin),
@@ -670,7 +670,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             ActorVersionClientAsync: The resource client for the specified actor version.
         """
-        return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))  # type: ignore
+        return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))
 
     def webhooks(self: ActorClientAsync) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this actor."""

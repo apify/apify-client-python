@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -15,10 +15,10 @@ class TaskCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating tasks."""
 
     @ignore_docs
-    def __init__(self: TaskCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: TaskCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: TaskCollectionClient,
@@ -39,7 +39,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available tasks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
         self: TaskCollectionClient,
@@ -91,10 +91,10 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating tasks."""
 
     @ignore_docs
-    def __init__(self: TaskCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: TaskCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: TaskCollectionClientAsync,
@@ -115,7 +115,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available tasks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
         self: TaskCollectionClientAsync,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceClient, ResourceClientAsync
@@ -23,10 +25,10 @@ class ActorEnvVarClient(ResourceClient):
     """Sub-client for manipulating a single actor environment variable."""
 
     @ignore_docs
-    def __init__(self: ActorEnvVarClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorEnvVarClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarClient."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ActorEnvVarClient) -> dict | None:
         """Return information about the actor environment variable.
@@ -77,10 +79,10 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor environment variable."""
 
     @ignore_docs
-    def __init__(self: ActorEnvVarClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorEnvVarClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarClientAsync."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ActorEnvVarClientAsync) -> dict | None:
         """Return information about the actor environment variable.

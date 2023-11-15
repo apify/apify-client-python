@@ -29,14 +29,14 @@ def to_safe_id(id: str) -> str:  # noqa: A002
     return id.replace('/', '~')
 
 
-def pluck_data(parsed_response: Any) -> dict:  # noqa: ANN401
+def pluck_data(parsed_response: Any) -> dict:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
         return cast(Dict, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 
 
-def pluck_data_as_list(parsed_response: Any) -> list:  # noqa: ANN401
+def pluck_data_as_list(parsed_response: Any) -> list:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
         return cast(List, parsed_response['data'])
 
@@ -131,7 +131,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
     return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
-def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:  # noqa: ANN401
+def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:
     if not content_type:
         if is_file_or_bytes(value):
             content_type = 'application/octet-stream'

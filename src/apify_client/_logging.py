@@ -54,7 +54,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     if inspect.iscoroutinefunction(fun):
 
         @functools.wraps(fun)
-        async def async_wrapper(resource_client: _BaseBaseClient, *args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
+        async def async_wrapper(resource_client: _BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
             log_context.client_method.set(fun.__qualname__)
             log_context.resource_id.set(resource_client.resource_id)
 
@@ -64,7 +64,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     elif inspect.isasyncgenfunction(fun):  # noqa: RET505
 
         @functools.wraps(fun)
-        async def async_generator_wrapper(resource_client: _BaseBaseClient, *args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
+        async def async_generator_wrapper(resource_client: _BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
             log_context.client_method.set(fun.__qualname__)
             log_context.resource_id.set(resource_client.resource_id)
 
@@ -75,7 +75,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     else:
 
         @functools.wraps(fun)
-        def wrapper(resource_client: _BaseBaseClient, *args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
+        def wrapper(resource_client: _BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
             log_context.client_method.set(fun.__qualname__)
             log_context.resource_id.set(resource_client.resource_id)
 

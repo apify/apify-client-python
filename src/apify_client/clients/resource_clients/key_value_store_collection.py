@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -14,10 +14,10 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating key-value stores."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: KeyValueStoreCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: KeyValueStoreCollectionClient,
@@ -40,7 +40,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available key-value stores matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(
         self: KeyValueStoreCollectionClient,
@@ -66,10 +66,10 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: KeyValueStoreCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: KeyValueStoreCollectionClientAsync,
@@ -92,7 +92,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available key-value stores matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self: KeyValueStoreCollectionClientAsync,

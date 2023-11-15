@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
@@ -14,10 +14,10 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating request queues."""
 
     @ignore_docs
-    def __init__(self: RequestQueueCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: RequestQueueCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: RequestQueueCollectionClient,
@@ -40,7 +40,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available request queues matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(self: RequestQueueCollectionClient, *, name: str | None = None) -> dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -60,10 +60,10 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating request queues."""
 
     @ignore_docs
-    def __init__(self: RequestQueueCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: RequestQueueCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: RequestQueueCollectionClientAsync,
@@ -86,7 +86,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available request queues matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(self: RequestQueueCollectionClientAsync, *, name: str | None = None) -> dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.

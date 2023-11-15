@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from apify_shared.utils import ignore_docs
 
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
@@ -9,10 +11,10 @@ class BuildClient(ActorJobBaseClient):
     """Sub-client for manipulating a single actor build."""
 
     @ignore_docs
-    def __init__(self: BuildClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: BuildClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: BuildClient) -> dict | None:
         """Return information about the actor build.
@@ -58,10 +60,10 @@ class BuildClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single actor build."""
 
     @ignore_docs
-    def __init__(self: BuildClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: BuildClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: BuildClientAsync) -> dict | None:
         """Return information about the actor build.

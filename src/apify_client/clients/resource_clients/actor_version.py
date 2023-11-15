@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value
 
@@ -41,10 +41,10 @@ class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single actor version."""
 
     @ignore_docs
-    def __init__(self: ActorVersionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorVersionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionClient."""
         resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ActorVersionClient) -> dict | None:
         """Return information about the actor version.
@@ -124,17 +124,17 @@ class ActorVersionClient(ResourceClient):
         Returns:
             ActorEnvVarClient: The resource client for the specified actor environment variable.
         """
-        return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))  # type: ignore
+        return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
 
 
 class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single actor version."""
 
     @ignore_docs
-    def __init__(self: ActorVersionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorVersionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ActorVersionClientAsync) -> dict | None:
         """Return information about the actor version.
@@ -214,4 +214,4 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             ActorEnvVarClientAsync: The resource client for the specified actor environment variable.
         """
-        return ActorEnvVarClientAsync(**self._sub_resource_init_options(resource_id=env_var_name))  # type: ignore
+        return ActorEnvVarClientAsync(**self._sub_resource_init_options(resource_id=env_var_name))

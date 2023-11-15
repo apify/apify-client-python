@@ -16,10 +16,10 @@ class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single actor run."""
 
     @ignore_docs
-    def __init__(self: RunClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: RunClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: RunClient) -> dict | None:
         """Return information about the actor run.
@@ -89,7 +89,7 @@ class RunClient(ActorJobBaseClient):
         *,
         target_actor_id: str,
         target_actor_build: str | None = None,
-        run_input: Any = None,  # noqa: ANN401
+        run_input: Any = None,
         content_type: str | None = None,
     ) -> dict:
         """Transform an actor run into a run of another actor with a new input.
@@ -111,8 +111,8 @@ class RunClient(ActorJobBaseClient):
         safe_target_actor_id = to_safe_id(target_actor_id)
 
         request_params = self._params(
-            targetActorId=safe_target_actor_id,  # type: ignore
-            build=target_actor_build,  # type: ignore
+            targetActorId=safe_target_actor_id,
+            build=target_actor_build,
         )
 
         response = self.http_client.call(
@@ -151,9 +151,9 @@ class RunClient(ActorJobBaseClient):
             dict: The actor run data.
         """
         request_params = self._params(
-            build=build,  # type: ignore
-            memory=memory_mbytes,  # type: ignore
-            timeout=timeout_secs,  # type: ignore
+            build=build,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
         )
 
         response = self.http_client.call(
@@ -187,7 +187,7 @@ class RunClient(ActorJobBaseClient):
             DatasetClient: A client allowing access to the default dataset of this actor run.
         """
         return DatasetClient(
-            **self._sub_resource_init_options(resource_path='dataset'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='dataset'),
         )
 
     def key_value_store(self: RunClient) -> KeyValueStoreClient:
@@ -199,7 +199,7 @@ class RunClient(ActorJobBaseClient):
             KeyValueStoreClient: A client allowing access to the default key-value store of this actor run.
         """
         return KeyValueStoreClient(
-            **self._sub_resource_init_options(resource_path='key-value-store'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='key-value-store'),
         )
 
     def request_queue(self: RunClient) -> RequestQueueClient:
@@ -211,7 +211,7 @@ class RunClient(ActorJobBaseClient):
             RequestQueueClient: A client allowing access to the default request_queue of this actor run.
         """
         return RequestQueueClient(
-            **self._sub_resource_init_options(resource_path='request-queue'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='request-queue'),
         )
 
     def log(self: RunClient) -> LogClient:
@@ -223,7 +223,7 @@ class RunClient(ActorJobBaseClient):
             LogClient: A client allowing access to the log of this actor run.
         """
         return LogClient(
-            **self._sub_resource_init_options(resource_path='log'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='log'),
         )
 
 
@@ -231,10 +231,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single actor run."""
 
     @ignore_docs
-    def __init__(self: RunClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: RunClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: RunClientAsync) -> dict | None:
         """Return information about the actor run.
@@ -304,7 +304,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         *,
         target_actor_id: str,
         target_actor_build: str | None = None,
-        run_input: Any = None,  # noqa: ANN401
+        run_input: Any = None,
         content_type: str | None = None,
     ) -> dict:
         """Transform an actor run into a run of another actor with a new input.
@@ -326,8 +326,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         safe_target_actor_id = to_safe_id(target_actor_id)
 
         request_params = self._params(
-            targetActorId=safe_target_actor_id,  # type: ignore
-            build=target_actor_build,  # type: ignore
+            targetActorId=safe_target_actor_id,
+            build=target_actor_build,
         )
 
         response = await self.http_client.call(
@@ -366,9 +366,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
             dict: The actor run data.
         """
         request_params = self._params(
-            build=build,  # type: ignore
-            memory=memory_mbytes,  # type: ignore
-            timeout=timeout_secs,  # type: ignore
+            build=build,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
         )
 
         response = await self.http_client.call(
@@ -402,7 +402,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             DatasetClientAsync: A client allowing access to the default dataset of this actor run.
         """
         return DatasetClientAsync(
-            **self._sub_resource_init_options(resource_path='dataset'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='dataset'),
         )
 
     def key_value_store(self: RunClientAsync) -> KeyValueStoreClientAsync:
@@ -414,7 +414,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             KeyValueStoreClientAsync: A client allowing access to the default key-value store of this actor run.
         """
         return KeyValueStoreClientAsync(
-            **self._sub_resource_init_options(resource_path='key-value-store'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='key-value-store'),
         )
 
     def request_queue(self: RunClientAsync) -> RequestQueueClientAsync:
@@ -426,7 +426,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             RequestQueueClientAsync: A client allowing access to the default request_queue of this actor run.
         """
         return RequestQueueClientAsync(
-            **self._sub_resource_init_options(resource_path='request-queue'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='request-queue'),
         )
 
     def log(self: RunClientAsync) -> LogClientAsync:
@@ -438,5 +438,5 @@ class RunClientAsync(ActorJobBaseClientAsync):
             LogClientAsync: A client allowing access to the log of this actor run.
         """
         return LogClientAsync(
-            **self._sub_resource_init_options(resource_path='log'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='log'),
         )

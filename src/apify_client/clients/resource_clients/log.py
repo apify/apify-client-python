@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 
 from apify_shared.utils import ignore_docs
 
@@ -17,10 +17,10 @@ class LogClient(ResourceClient):
     """Sub-client for manipulating logs."""
 
     @ignore_docs
-    def __init__(self: LogClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: LogClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClient."""
         resource_path = kwargs.pop('resource_path', 'logs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: LogClient) -> str | None:
         """Retrieve the log as text.
@@ -81,7 +81,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True),  # type: ignore
+                params=self._params(stream=True),
                 stream=True,
                 parse_response=False,
             )
@@ -99,10 +99,10 @@ class LogClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating logs."""
 
     @ignore_docs
-    def __init__(self: LogClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: LogClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClientAsync."""
         resource_path = kwargs.pop('resource_path', 'logs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: LogClientAsync) -> str | None:
         """Retrieve the log as text.
@@ -163,7 +163,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True),  # type: ignore
+                params=self._params(stream=True),
                 stream=True,
                 parse_response=False,
             )

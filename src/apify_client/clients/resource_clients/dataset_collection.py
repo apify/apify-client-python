@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -14,10 +14,10 @@ class DatasetCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating datasets."""
 
     @ignore_docs
-    def __init__(self: DatasetCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: DatasetCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: DatasetCollectionClient,
@@ -40,7 +40,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available datasets matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(self: DatasetCollectionClient, *, name: str | None = None, schema: dict | None = None) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -61,10 +61,10 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating datasets."""
 
     @ignore_docs
-    def __init__(self: DatasetCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: DatasetCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: DatasetCollectionClientAsync,
@@ -87,7 +87,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available datasets matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self: DatasetCollectionClientAsync,

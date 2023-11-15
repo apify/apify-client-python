@@ -15,10 +15,10 @@ class ActorCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actors."""
 
     @ignore_docs
-    def __init__(self: ActorCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: ActorCollectionClient,
@@ -41,7 +41,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available actors matching the specified filters.
         """
-        return self._list(my=my, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(my=my, limit=limit, offset=offset, desc=desc)
 
     def create(
         self: ActorCollectionClient,
@@ -61,7 +61,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout_secs: int | None = None,
-        example_run_input_body: Any = None,  # # noqa: ANN401
+        example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
     ) -> dict:
         """Create a new actor.
@@ -118,10 +118,10 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actors."""
 
     @ignore_docs
-    def __init__(self: ActorCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: ActorCollectionClientAsync,
@@ -144,7 +144,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available actors matching the specified filters.
         """
-        return await self._list(my=my, limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(my=my, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self: ActorCollectionClientAsync,
@@ -164,7 +164,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout_secs: int | None = None,
-        example_run_input_body: Any = None,  # noqa: ANN401
+        example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
     ) -> dict:
         """Create a new actor.

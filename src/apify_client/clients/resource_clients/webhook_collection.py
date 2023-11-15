@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -16,10 +16,10 @@ class WebhookCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating webhooks."""
 
     @ignore_docs
-    def __init__(self: WebhookCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: WebhookCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: WebhookCollectionClient,
@@ -40,7 +40,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available webhooks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
         self: WebhookCollectionClient,
@@ -100,10 +100,10 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating webhooks."""
 
     @ignore_docs
-    def __init__(self: WebhookCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: WebhookCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: WebhookCollectionClientAsync,
@@ -124,7 +124,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available webhooks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
         self: WebhookCollectionClientAsync,

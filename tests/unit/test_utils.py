@@ -42,7 +42,7 @@ def test__retry_with_exp_backoff() -> None:
     class NonRetryableError(Exception):
         pass
 
-    def returns_on_fifth_attempt(_stop_retrying: Callable, attempt: int) -> Any:  # noqa: ANN401
+    def returns_on_fifth_attempt(_stop_retrying: Callable, attempt: int) -> Any:
         nonlocal attempt_counter
         attempt_counter += 1
 
@@ -50,7 +50,7 @@ def test__retry_with_exp_backoff() -> None:
             return 'SUCCESS'
         raise RetryableError
 
-    def bails_on_third_attempt(stop_retrying: Callable, attempt: int) -> Any:  # noqa: ANN401
+    def bails_on_third_attempt(stop_retrying: Callable, attempt: int) -> Any:
         nonlocal attempt_counter
         attempt_counter += 1
 
@@ -91,7 +91,7 @@ async def test__retry_with_exp_backoff_async() -> None:
     class NonRetryableError(Exception):
         pass
 
-    async def returns_on_fifth_attempt(_stop_retrying: Callable, attempt: int) -> Any:  # noqa: ANN401
+    async def returns_on_fifth_attempt(_stop_retrying: Callable, attempt: int) -> Any:
         nonlocal attempt_counter
         attempt_counter += 1
 
@@ -99,7 +99,7 @@ async def test__retry_with_exp_backoff_async() -> None:
             return 'SUCCESS'
         raise RetryableError
 
-    async def bails_on_third_attempt(stop_retrying: Callable, attempt: int) -> Any:  # noqa: ANN401
+    async def bails_on_third_attempt(stop_retrying: Callable, attempt: int) -> Any:
         nonlocal attempt_counter
         attempt_counter += 1
 

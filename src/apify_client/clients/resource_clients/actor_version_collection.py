@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -16,10 +16,10 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor versions."""
 
     @ignore_docs
-    def __init__(self: ActorVersionCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorVersionCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(self: ActorVersionCollectionClient) -> ListPage[dict]:  # noqa: A003
         """List the available actor versions.
@@ -87,10 +87,10 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor versions."""
 
     @ignore_docs
-    def __init__(self: ActorVersionCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorVersionCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(self: ActorVersionCollectionClientAsync) -> ListPage[dict]:  # noqa: A003
         """List the available actor versions.

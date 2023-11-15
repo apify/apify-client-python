@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 
 from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
@@ -19,10 +19,10 @@ class DatasetClient(ResourceClient):
     """Sub-client for manipulating a single dataset."""
 
     @ignore_docs
-    def __init__(self: DatasetClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: DatasetClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClient."""
         resource_path = kwargs.pop('resource_path', 'datasets')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: DatasetClient) -> dict | None:
         """Retrieve the dataset.
@@ -105,17 +105,17 @@ class DatasetClient(ResourceClient):
             ListPage: A page of the list of dataset items according to the specified filters.
         """
         request_params = self._params(
-            offset=offset,  # type: ignore
-            limit=limit,  # type: ignore
-            desc=desc,  # type: ignore
-            clean=clean,  # type: ignore
-            fields=fields,  # type: ignore
-            omit=omit,  # type: ignore
-            unwind=unwind,  # type: ignore
-            skipEmpty=skip_empty,  # type: ignore
-            skipHidden=skip_hidden,  # type: ignore
-            flatten=flatten,  # type: ignore
-            view=view,  # type: ignore
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
         )
 
         response = self.http_client.call(
@@ -362,22 +362,22 @@ class DatasetClient(ResourceClient):
             bytes: The dataset items as raw bytes
         """
         request_params = self._params(
-            format=item_format,  # type: ignore
-            offset=offset,  # type: ignore
-            limit=limit,  # type: ignore
-            desc=desc,  # type: ignore
-            clean=clean,  # type: ignore
-            bom=bom,  # type: ignore
-            delimiter=delimiter,  # type: ignore
-            fields=fields,  # type: ignore
-            omit=omit,  # type: ignore
-            unwind=unwind,  # type: ignore
-            skipEmpty=skip_empty,  # type: ignore
-            skipHeaderRow=skip_header_row,  # type: ignore
-            skipHidden=skip_hidden,  # type: ignore
-            xmlRoot=xml_root,  # type: ignore
-            xmlRow=xml_row,  # type: ignore
-            flatten=flatten,  # type: ignore
+            format=item_format,
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            bom=bom,
+            delimiter=delimiter,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHeaderRow=skip_header_row,
+            skipHidden=skip_hidden,
+            xmlRoot=xml_root,
+            xmlRow=xml_row,
+            flatten=flatten,
         )
 
         response = self.http_client.call(
@@ -451,21 +451,21 @@ class DatasetClient(ResourceClient):
         response = None
         try:
             request_params = self._params(
-                format=item_format,  # type: ignore
-                offset=offset,  # type: ignore
-                limit=limit,  # type: ignore
-                desc=desc,  # type: ignore
-                clean=clean,  # type: ignore
-                bom=bom,  # type: ignore
-                delimiter=delimiter,  # type: ignore
-                fields=fields,  # type: ignore
-                omit=omit,  # type: ignore
-                unwind=unwind,  # type: ignore
-                skipEmpty=skip_empty,  # type: ignore
-                skipHeaderRow=skip_header_row,  # type: ignore
-                skipHidden=skip_hidden,  # type: ignore
-                xmlRoot=xml_root,  # type: ignore
-                xmlRow=xml_row,  # type: ignore
+                format=item_format,
+                offset=offset,
+                limit=limit,
+                desc=desc,
+                clean=clean,
+                bom=bom,
+                delimiter=delimiter,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skipEmpty=skip_empty,
+                skipHeaderRow=skip_header_row,
+                skipHidden=skip_hidden,
+                xmlRoot=xml_root,
+                xmlRow=xml_row,
             )
 
             response = self.http_client.call(
@@ -510,10 +510,10 @@ class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
 
     @ignore_docs
-    def __init__(self: DatasetClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: DatasetClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClientAsync."""
         resource_path = kwargs.pop('resource_path', 'datasets')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: DatasetClientAsync) -> dict | None:
         """Retrieve the dataset.
@@ -596,17 +596,17 @@ class DatasetClientAsync(ResourceClientAsync):
             ListPage: A page of the list of dataset items according to the specified filters.
         """
         request_params = self._params(
-            offset=offset,  # type: ignore
-            limit=limit,  # type: ignore
-            desc=desc,  # type: ignore
-            clean=clean,  # type: ignore
-            fields=fields,  # type: ignore
-            omit=omit,  # type: ignore
-            unwind=unwind,  # type: ignore
-            skipEmpty=skip_empty,  # type: ignore
-            skipHidden=skip_hidden,  # type: ignore
-            flatten=flatten,  # type: ignore
-            view=view,  # type: ignore
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
         )
 
         response = await self.http_client.call(
@@ -767,22 +767,22 @@ class DatasetClientAsync(ResourceClientAsync):
             bytes: The dataset items as raw bytes
         """
         request_params = self._params(
-            format=item_format,  # type: ignore
-            offset=offset,  # type: ignore
-            limit=limit,  # type: ignore
-            desc=desc,  # type: ignore
-            clean=clean,  # type: ignore
-            bom=bom,  # type: ignore
-            delimiter=delimiter,  # type: ignore
-            fields=fields,  # type: ignore
-            omit=omit,  # type: ignore
-            unwind=unwind,  # type: ignore
-            skipEmpty=skip_empty,  # type: ignore
-            skipHeaderRow=skip_header_row,  # type: ignore
-            skipHidden=skip_hidden,  # type: ignore
-            xmlRoot=xml_root,  # type: ignore
-            xmlRow=xml_row,  # type: ignore
-            flatten=flatten,  # type: ignore
+            format=item_format,
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            bom=bom,
+            delimiter=delimiter,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHeaderRow=skip_header_row,
+            skipHidden=skip_hidden,
+            xmlRoot=xml_root,
+            xmlRow=xml_row,
+            flatten=flatten,
         )
 
         response = await self.http_client.call(
@@ -856,21 +856,21 @@ class DatasetClientAsync(ResourceClientAsync):
         response = None
         try:
             request_params = self._params(
-                format=item_format,  # type: ignore
-                offset=offset,  # type: ignore
-                limit=limit,  # type: ignore
-                desc=desc,  # type: ignore
-                clean=clean,  # type: ignore
-                bom=bom,  # type: ignore
-                delimiter=delimiter,  # type: ignore
-                fields=fields,  # type: ignore
-                omit=omit,  # type: ignore
-                unwind=unwind,  # type: ignore
-                skipEmpty=skip_empty,  # type: ignore
-                skipHeaderRow=skip_header_row,  # type: ignore
-                skipHidden=skip_hidden,  # type: ignore
-                xmlRoot=xml_root,  # type: ignore
-                xmlRow=xml_row,  # type: ignore
+                format=item_format,
+                offset=offset,
+                limit=limit,
+                desc=desc,
+                clean=clean,
+                bom=bom,
+                delimiter=delimiter,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skipEmpty=skip_empty,
+                skipHeaderRow=skip_header_row,
+                skipHidden=skip_hidden,
+                xmlRoot=xml_root,
+                xmlRow=xml_row,
             )
 
             response = await self.http_client.call(

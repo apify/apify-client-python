@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
@@ -14,10 +14,10 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
     """Sub-client for listing webhook dispatches."""
 
     @ignore_docs
-    def __init__(self: WebhookDispatchCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: WebhookDispatchCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: WebhookDispatchCollectionClient,
@@ -38,17 +38,17 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The retrieved webhook dispatches of a user
         """
-        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(limit=limit, offset=offset, desc=desc)
 
 
 class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing webhook dispatches."""
 
     @ignore_docs
-    def __init__(self: WebhookDispatchCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: WebhookDispatchCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: WebhookDispatchCollectionClientAsync,
@@ -69,4 +69,4 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The retrieved webhook dispatches of a user
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(limit=limit, offset=offset, desc=desc)

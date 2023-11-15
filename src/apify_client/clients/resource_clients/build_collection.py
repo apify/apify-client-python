@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
@@ -14,10 +14,10 @@ class BuildCollectionClient(ResourceCollectionClient):
     """Sub-client for listing actor builds."""
 
     @ignore_docs
-    def __init__(self: BuildCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: BuildCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: BuildCollectionClient,
@@ -39,17 +39,17 @@ class BuildCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The retrieved actor builds
         """
-        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(limit=limit, offset=offset, desc=desc)
 
 
 class BuildCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing actor builds."""
 
     @ignore_docs
-    def __init__(self: BuildCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: BuildCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: BuildCollectionClientAsync,
@@ -71,4 +71,4 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The retrieved actor builds
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(limit=limit, offset=offset, desc=desc)

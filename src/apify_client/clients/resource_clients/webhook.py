@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import (
     filter_out_none_values_recursively,
@@ -59,10 +59,10 @@ class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
     @ignore_docs
-    def __init__(self: WebhookClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: WebhookClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: WebhookClient) -> dict | None:
         """Retrieve the webhook.
@@ -161,7 +161,7 @@ class WebhookClient(ResourceClient):
             WebhookDispatchCollectionClient: A client allowing access to dispatches of this webhook using its list method
         """
         return WebhookDispatchCollectionClient(
-            **self._sub_resource_init_options(resource_path='dispatches'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='dispatches'),
         )
 
 
@@ -169,10 +169,10 @@ class WebhookClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single webhook."""
 
     @ignore_docs
-    def __init__(self: WebhookClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: WebhookClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: WebhookClientAsync) -> dict | None:
         """Retrieve the webhook.
@@ -271,5 +271,5 @@ class WebhookClientAsync(ResourceClientAsync):
             WebhookDispatchCollectionClientAsync: A client allowing access to dispatches of this webhook using its list method
         """
         return WebhookDispatchCollectionClientAsync(
-            **self._sub_resource_init_options(resource_path='dispatches'),  # type: ignore
+            **self._sub_resource_init_options(resource_path='dispatches'),
         )

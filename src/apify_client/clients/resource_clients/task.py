@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from apify_shared.utils import (
     filter_out_none_values_recursively,
@@ -49,10 +49,10 @@ class TaskClient(ResourceClient):
     """Sub-client for manipulating a single task."""
 
     @ignore_docs
-    def __init__(self: TaskClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: TaskClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: TaskClient) -> dict | None:
         """Retrieve the task.
@@ -152,12 +152,12 @@ class TaskClient(ResourceClient):
             dict: The run object
         """
         request_params = self._params(
-            build=build,  # type: ignore
-            maxItems=max_items,  # type: ignore
-            memory=memory_mbytes,  # type: ignore
-            timeout=timeout_secs,  # type: ignore
-            waitForFinish=wait_for_finish,  # type: ignore
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,  # type: ignore
+            build=build,
+            maxItems=max_items,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+            waitForFinish=wait_for_finish,
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = self.http_client.call(
@@ -252,7 +252,7 @@ class TaskClient(ResourceClient):
 
     def runs(self: TaskClient) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
-        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))  # type: ignore
+        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(self: TaskClient, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClient:
         """Retrieve the client for the last run of this task.
@@ -268,8 +268,8 @@ class TaskClient(ResourceClient):
         """
         return RunClient(
             **self._sub_resource_init_options(
-                resource_id='last',  # type: ignore
-                resource_path='runs',  # type: ignore
+                resource_id='last',
+                resource_path='runs',
                 params=self._params(
                     status=maybe_extract_enum_member_value(status),
                     origin=maybe_extract_enum_member_value(origin),
@@ -286,10 +286,10 @@ class TaskClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single task."""
 
     @ignore_docs
-    def __init__(self: TaskClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: TaskClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: TaskClientAsync) -> dict | None:
         """Retrieve the task.
@@ -389,12 +389,12 @@ class TaskClientAsync(ResourceClientAsync):
             dict: The run object
         """
         request_params = self._params(
-            build=build,  # type: ignore
-            maxItems=max_items,  # type: ignore
-            memory=memory_mbytes,  # type: ignore
-            timeout=timeout_secs,  # type: ignore
-            waitForFinish=wait_for_finish,  # type: ignore
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,  # type: ignore
+            build=build,
+            maxItems=max_items,
+            memory=memory_mbytes,
+            timeout=timeout_secs,
+            waitForFinish=wait_for_finish,
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = await self.http_client.call(
@@ -489,7 +489,7 @@ class TaskClientAsync(ResourceClientAsync):
 
     def runs(self: TaskClientAsync) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""
-        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))  # type: ignore
+        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(self: TaskClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this task.
@@ -505,8 +505,8 @@ class TaskClientAsync(ResourceClientAsync):
         """
         return RunClientAsync(
             **self._sub_resource_init_options(
-                resource_id='last',  # type: ignore
-                resource_path='runs',  # type: ignore
+                resource_id='last',
+                resource_path='runs',
                 params=self._params(
                     status=maybe_extract_enum_member_value(status),
                     origin=maybe_extract_enum_member_value(origin),

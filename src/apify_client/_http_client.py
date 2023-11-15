@@ -61,7 +61,7 @@ class _BaseHTTPClient:
         self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
 
     @staticmethod
-    def _maybe_parse_response(response: httpx.Response) -> Any:  # noqa: ANN401
+    def _maybe_parse_response(response: httpx.Response) -> Any:
         if response.status_code == HTTPStatus.NO_CONTENT:
             return None
 
@@ -98,7 +98,7 @@ class _BaseHTTPClient:
         self: _BaseHTTPClient,
         headers: dict | None = None,
         params: dict | None = None,
-        data: Any = None,  # noqa: ANN401
+        data: Any = None,
         json: JSONSerializable | None = None,
     ) -> tuple[dict, dict | None, Any]:
         if json and data:
@@ -133,7 +133,7 @@ class HTTPClient(_BaseHTTPClient):
         url: str,
         headers: dict | None = None,
         params: dict | None = None,
-        data: Any = None,  # noqa: ANN401
+        data: Any = None,
         json: JSONSerializable | None = None,
         stream: bool | None = None,
         parse_response: bool | None = True,
@@ -205,7 +205,7 @@ class HTTPClientAsync(_BaseHTTPClient):
         url: str,
         headers: dict | None = None,
         params: dict | None = None,
-        data: Any = None,  # noqa: ANN401
+        data: Any = None,
         json: JSONSerializable | None = None,
         stream: bool | None = None,
         parse_response: bool | None = True,

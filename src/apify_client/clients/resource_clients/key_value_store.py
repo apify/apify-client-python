@@ -15,10 +15,10 @@ class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: KeyValueStoreClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClient."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: KeyValueStoreClient) -> dict | None:
         """Retrieve the key-value store.
@@ -66,7 +66,7 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             dict: The list of keys in the key-value store matching the given arguments
         """
-        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)  # type: ignore
+        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)
 
         response = self.http_client.call(
             url=self._url('keys'),
@@ -194,7 +194,7 @@ class KeyValueStoreClient(ResourceClient):
     def set_record(
         self: KeyValueStoreClient,
         key: str,
-        value: Any,  # noqa: ANN401
+        value: Any,
         content_type: str | None = None,
     ) -> None:
         """Set a value to the given record in the key-value store.
@@ -237,10 +237,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: KeyValueStoreClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClientAsync."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: KeyValueStoreClientAsync) -> dict | None:
         """Retrieve the key-value store.
@@ -288,7 +288,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             dict: The list of keys in the key-value store matching the given arguments
         """
-        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)  # type: ignore
+        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)
 
         response = await self.http_client.call(
             url=self._url('keys'),
@@ -397,7 +397,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     async def set_record(
         self: KeyValueStoreClientAsync,
         key: str,
-        value: Any,  # noqa: ANN401
+        value: Any,
         content_type: str | None = None,
     ) -> None:
         """Set a value to the given record in the key-value store.

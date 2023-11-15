@@ -19,7 +19,7 @@ DEPRECATED_NAMES = [
 # The following piece of code is highly inspired by the example in https://peps.python.org/pep-0562.
 # The else branch is missing intentionally! Check the following discussion for details:
 # https://github.com/apify/apify-client-python/pull/132#discussion_r1277294315.
-def __getattr__(name: str) -> Any:  # noqa: ANN401
+def __getattr__(name: str) -> Any:
     if name in DEPRECATED_NAMES:
         warnings.warn(
             (

@@ -23,13 +23,13 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "apify-shared ~= 1.0.1",
-    "httpx >= 0.24.1",
+    "httpx ~= 0.25.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "build ~= 1.0.3",
-    "mypy ~= 1.5.1",
+    "mypy ~= 1.7.0",
     "pre-commit ~= 3.4.0",
     "pydoc-markdown ~= 4.8.2",
     "pytest ~= 7.4.2",
@@ -65,6 +65,7 @@ apify_client = ["py.typed"]
 line-length = 150
 select = ["ALL"]
 ignore = [
+    "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in {filename}
     "BLE001",  # Do not catch blind exception
     "COM812",  # This rule may cause conflicts when used with the formatter
     "D100",    # Missing docstring in public module

@@ -32,10 +32,12 @@ class TestRequestQueueSync:
         # Check if the delete request works
         queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request is not None
+        assert delete_lock_request.get('lockExpiresAt') is None
         queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request2 is not None
+        assert delete_lock_request2.get('lockExpiresAt') is None
 
         # Check if the prolong request works
         assert queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)['lockExpiresAt'] is not None
@@ -79,10 +81,12 @@ class TestRequestQueueAsync:
         # Check if the delete request works
         await queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = await queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request is not None
+        assert delete_lock_request.get('lockExpiresAt') is None
         await queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = await queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request2 is not None
+        assert delete_lock_request2.get('lockExpiresAt') is None
 
         # Check if the prolong request works
         prolonged_request = await queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)

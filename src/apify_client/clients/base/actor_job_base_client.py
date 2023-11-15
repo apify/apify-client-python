@@ -37,7 +37,7 @@ class ActorJobBaseClient(ResourceClient):
                 response = self.http_client.call(
                     url=self._url(),
                     method='GET',
-                    params=self._params(waitForFinish=wait_for_finish),  # type: ignore
+                    params=self._params(waitForFinish=wait_for_finish),
                 )
                 job = parse_date_fields(pluck_data(response.json()))
 
@@ -66,7 +66,7 @@ class ActorJobBaseClient(ResourceClient):
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(gracefully=gracefully),  # type: ignore
+            params=self._params(gracefully=gracefully),
         )
         return parse_date_fields(pluck_data(response.json()))
 
@@ -90,7 +90,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 response = await self.http_client.call(
                     url=self._url(),
                     method='GET',
-                    params=self._params(waitForFinish=wait_for_finish),  # type: ignore
+                    params=self._params(waitForFinish=wait_for_finish),
                 )
                 job = parse_date_fields(pluck_data(response.json()))
 
@@ -119,6 +119,6 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(gracefully=gracefully),  # type: ignore
+            params=self._params(gracefully=gracefully),
         )
         return parse_date_fields(pluck_data(response.json()))

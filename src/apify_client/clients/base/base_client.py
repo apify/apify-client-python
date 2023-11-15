@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
@@ -25,13 +25,13 @@ class _BaseBaseClient(metaclass=WithLogDetailsClient):
             return f'{self.url}/{path}'
         return self.url
 
-    def _params(self: _BaseBaseClient, **kwargs: dict) -> dict:
+    def _params(self: _BaseBaseClient, **kwargs: Any) -> dict:
         return {
             **self.params,
             **kwargs,
         }
 
-    def _sub_resource_init_options(self: _BaseBaseClient, **kwargs: dict) -> dict:
+    def _sub_resource_init_options(self: _BaseBaseClient, **kwargs: Any) -> dict:
         options = {
             'base_url': self.url,
             'http_client': self.http_client,

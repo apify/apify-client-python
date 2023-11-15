@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
@@ -14,10 +14,10 @@ class StoreCollectionClient(ResourceCollectionClient):
     """Sub-client for Apify store."""
 
     @ignore_docs
-    def __init__(self: StoreCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: StoreCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the StoreCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'store')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: StoreCollectionClient,
@@ -47,13 +47,13 @@ class StoreCollectionClient(ResourceCollectionClient):
             ListPage: The list of available tasks matching the specified filters.
         """
         return self._list(
-            limit=limit,  # type: ignore
-            offset=offset,  # type: ignore
-            search=search,  # type: ignore
-            sortBy=sort_by,  # type: ignore
-            category=category,  # type: ignore
-            username=username,  # type: ignore
-            pricingModel=pricing_model,  # type: ignore
+            limit=limit,
+            offset=offset,
+            search=search,
+            sortBy=sort_by,
+            category=category,
+            username=username,
+            pricingModel=pricing_model,
         )
 
 
@@ -61,10 +61,10 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for Apify store."""
 
     @ignore_docs
-    def __init__(self: StoreCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: StoreCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the StoreCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'store')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: StoreCollectionClientAsync,
@@ -94,11 +94,11 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
             ListPage: The list of available tasks matching the specified filters.
         """
         return await self._list(
-            limit=limit,  # type: ignore
-            offset=offset,  # type: ignore
-            search=search,  # type: ignore
-            sortBy=sort_by,  # type: ignore
-            category=category,  # type: ignore
-            username=username,  # type: ignore
-            pricingModel=pricing_model,  # type: ignore
+            limit=limit,
+            offset=offset,
+            search=search,
+            sortBy=sort_by,
+            category=category,
+            username=username,
+            pricingModel=pricing_model,
         )

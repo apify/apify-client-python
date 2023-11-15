@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..._errors import ApifyApiError
@@ -33,10 +35,10 @@ class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
     @ignore_docs
-    def __init__(self: ScheduleClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ScheduleClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClient."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ScheduleClient) -> dict | None:
         """Return information about the schedule.
@@ -123,10 +125,10 @@ class ScheduleClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single schedule."""
 
     @ignore_docs
-    def __init__(self: ScheduleClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ScheduleClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClientAsync."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ScheduleClientAsync) -> dict | None:
         """Return information about the schedule.

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -15,10 +15,10 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor env vars."""
 
     @ignore_docs
-    def __init__(self: ActorEnvVarCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorEnvVarCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(self: ActorEnvVarCollectionClient) -> ListPage[dict]:  # noqa: A003
         """List the available actor environment variables.
@@ -62,10 +62,10 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
     @ignore_docs
-    def __init__(self: ActorEnvVarCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ActorEnvVarCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(self: ActorEnvVarCollectionClientAsync) -> ListPage[dict]:  # noqa: A003
         """List the available actor environment variables.

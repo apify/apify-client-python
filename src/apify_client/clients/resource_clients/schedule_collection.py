@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -15,10 +15,10 @@ class ScheduleCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating schedules."""
 
     @ignore_docs
-    def __init__(self: ScheduleCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ScheduleCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: ScheduleCollectionClient,
@@ -39,7 +39,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available schedules matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
         self: ScheduleCollectionClient,
@@ -79,7 +79,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,  # type: ignore
+            actions=actions,
             description=description,
             timezone=timezone,
             title=title,
@@ -92,10 +92,10 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating schedules."""
 
     @ignore_docs
-    def __init__(self: ScheduleCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: ScheduleCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: ScheduleCollectionClientAsync,
@@ -116,7 +116,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available schedules matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
+        return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
         self: ScheduleCollectionClientAsync,
@@ -156,7 +156,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,  # type: ignore
+            actions=actions,
             description=description,
             timezone=timezone,
             title=title,

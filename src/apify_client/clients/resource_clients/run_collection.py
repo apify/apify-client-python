@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
 
@@ -15,10 +15,10 @@ class RunCollectionClient(ResourceCollectionClient):
     """Sub-client for listing actor runs."""
 
     @ignore_docs
-    def __init__(self: RunCollectionClient, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: RunCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(  # noqa: A003
         self: RunCollectionClient,
@@ -44,9 +44,9 @@ class RunCollectionClient(ResourceCollectionClient):
             ListPage: The retrieved actor runs
         """
         return self._list(
-            limit=limit,  # type: ignore
-            offset=offset,  # type: ignore
-            desc=desc,  # type: ignore
+            limit=limit,
+            offset=offset,
+            desc=desc,
             status=maybe_extract_enum_member_value(status),
         )
 
@@ -55,10 +55,10 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing actor runs."""
 
     @ignore_docs
-    def __init__(self: RunCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self: RunCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
+        super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(  # noqa: A003
         self: RunCollectionClientAsync,
@@ -84,8 +84,8 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             ListPage: The retrieved actor runs
         """
         return await self._list(
-            limit=limit,  # type: ignore
-            offset=offset,  # type: ignore
-            desc=desc,  # type: ignore
+            limit=limit,
+            offset=offset,
+            desc=desc,
             status=maybe_extract_enum_member_value(status),
         )

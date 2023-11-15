@@ -17,7 +17,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
     def __init__(self: DatasetCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the DatasetCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: DatasetCollectionClient,
@@ -40,7 +40,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available datasets matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
 
     def get_or_create(self: DatasetCollectionClient, *, name: str | None = None, schema: dict | None = None) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -64,7 +64,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: DatasetCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the DatasetCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: DatasetCollectionClientAsync,
@@ -87,7 +87,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available datasets matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
 
     async def get_or_create(
         self: DatasetCollectionClientAsync,

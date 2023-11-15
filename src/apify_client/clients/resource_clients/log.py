@@ -20,7 +20,7 @@ class LogClient(ResourceClient):
     def __init__(self: LogClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the LogClient."""
         resource_path = kwargs.pop('resource_path', 'logs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def get(self: LogClient) -> str | None:
         """Retrieve the log as text.
@@ -81,7 +81,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True),
+                params=self._params(stream=True),  # type: ignore
                 stream=True,
                 parse_response=False,
             )
@@ -102,7 +102,7 @@ class LogClientAsync(ResourceClientAsync):
     def __init__(self: LogClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the LogClientAsync."""
         resource_path = kwargs.pop('resource_path', 'logs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def get(self: LogClientAsync) -> str | None:
         """Retrieve the log as text.
@@ -163,7 +163,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True),
+                params=self._params(stream=True),  # type: ignore
                 stream=True,
                 parse_response=False,
             )

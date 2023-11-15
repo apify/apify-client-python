@@ -19,7 +19,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
     def __init__(self: WebhookCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: WebhookCollectionClient,
@@ -40,12 +40,12 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available webhooks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
     def create(
         self: WebhookCollectionClient,
         *,
-        event_types: list[WebhookEventType],
+        event_types: list[WebhookEventType],  # type: ignore
         request_url: str,
         payload_template: str | None = None,
         actor_id: str | None = None,
@@ -103,7 +103,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: WebhookCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: WebhookCollectionClientAsync,
@@ -124,12 +124,12 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available webhooks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
     async def create(
         self: WebhookCollectionClientAsync,
         *,
-        event_types: list[WebhookEventType],
+        event_types: list[WebhookEventType],  # type: ignore
         request_url: str,
         payload_template: str | None = None,
         actor_id: str | None = None,

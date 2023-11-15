@@ -12,7 +12,7 @@ class WebhookDispatchClient(ResourceClient):
     def __init__(self: WebhookDispatchClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookDispatchClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def get(self: WebhookDispatchClient) -> dict | None:
         """Retrieve the webhook dispatch.
@@ -32,7 +32,7 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
     def __init__(self: WebhookDispatchClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookDispatchClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def get(self: WebhookDispatchClientAsync) -> dict | None:
         """Retrieve the webhook dispatch.

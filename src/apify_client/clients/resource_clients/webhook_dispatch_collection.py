@@ -17,7 +17,7 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
     def __init__(self: WebhookDispatchCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookDispatchCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: WebhookDispatchCollectionClient,
@@ -38,7 +38,7 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The retrieved webhook dispatches of a user
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
 
 class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
@@ -48,7 +48,7 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: WebhookDispatchCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the WebhookDispatchCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: WebhookDispatchCollectionClientAsync,
@@ -69,4 +69,4 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The retrieved webhook dispatches of a user
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore

@@ -17,7 +17,7 @@ class StoreCollectionClient(ResourceCollectionClient):
     def __init__(self: StoreCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the StoreCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'store')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: StoreCollectionClient,
@@ -47,13 +47,13 @@ class StoreCollectionClient(ResourceCollectionClient):
             ListPage: The list of available tasks matching the specified filters.
         """
         return self._list(
-            limit=limit,
-            offset=offset,
-            search=search,
-            sortBy=sort_by,
-            category=category,
-            username=username,
-            pricingModel=pricing_model,
+            limit=limit,  # type: ignore
+            offset=offset,  # type: ignore
+            search=search,  # type: ignore
+            sortBy=sort_by,  # type: ignore
+            category=category,  # type: ignore
+            username=username,  # type: ignore
+            pricingModel=pricing_model,  # type: ignore
         )
 
 
@@ -64,7 +64,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: StoreCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the StoreCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'store')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: StoreCollectionClientAsync,
@@ -94,11 +94,11 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
             ListPage: The list of available tasks matching the specified filters.
         """
         return await self._list(
-            limit=limit,
-            offset=offset,
-            search=search,
-            sortBy=sort_by,
-            category=category,
-            username=username,
-            pricingModel=pricing_model,
+            limit=limit,  # type: ignore
+            offset=offset,  # type: ignore
+            search=search,  # type: ignore
+            sortBy=sort_by,  # type: ignore
+            category=category,  # type: ignore
+            username=username,  # type: ignore
+            pricingModel=pricing_model,  # type: ignore
         )

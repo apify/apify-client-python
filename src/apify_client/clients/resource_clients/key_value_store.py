@@ -18,7 +18,7 @@ class KeyValueStoreClient(ResourceClient):
     def __init__(self: KeyValueStoreClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the KeyValueStoreClient."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def get(self: KeyValueStoreClient) -> dict | None:
         """Retrieve the key-value store.
@@ -66,10 +66,7 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             dict: The list of keys in the key-value store matching the given arguments
         """
-        request_params = self._params(
-            limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-        )
+        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('keys'),
@@ -120,7 +117,7 @@ class KeyValueStoreClient(ResourceClient):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # noqa: SLF001
+                'value': response._maybe_parsed_body,  # type: ignore  # noqa: SLF001
                 'content_type': response.headers['content-type'],
             }
 
@@ -243,7 +240,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     def __init__(self: KeyValueStoreClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the KeyValueStoreClientAsync."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def get(self: KeyValueStoreClientAsync) -> dict | None:
         """Retrieve the key-value store.
@@ -291,10 +288,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             dict: The list of keys in the key-value store matching the given arguments
         """
-        request_params = self._params(
-            limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-        )
+        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('keys'),
@@ -326,7 +320,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # noqa: SLF001
+                'value': response._maybe_parsed_body,  # type: ignore  # noqa: SLF001
                 'content_type': response.headers['content-type'],
             }
 

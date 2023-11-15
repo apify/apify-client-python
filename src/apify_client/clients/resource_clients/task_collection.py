@@ -18,7 +18,7 @@ class TaskCollectionClient(ResourceCollectionClient):
     def __init__(self: TaskCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the TaskCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: TaskCollectionClient,
@@ -39,7 +39,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available tasks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
     def create(
         self: TaskCollectionClient,
@@ -94,7 +94,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: TaskCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the TaskCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: TaskCollectionClientAsync,
@@ -115,7 +115,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available tasks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
     async def create(
         self: TaskCollectionClientAsync,

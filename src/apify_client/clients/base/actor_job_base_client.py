@@ -37,14 +37,12 @@ class ActorJobBaseClient(ResourceClient):
                 response = self.http_client.call(
                     url=self._url(),
                     method='GET',
-                    params=self._params(waitForFinish=wait_for_finish),
+                    params=self._params(waitForFinish=wait_for_finish),  # type: ignore
                 )
                 job = parse_date_fields(pluck_data(response.json()))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
-                if ActorJobStatus(job['status']).is_terminal or (
-                    wait_secs is not None and seconds_elapsed >= wait_secs
-                ):
+                if ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):  # noqa: SLF001
                     should_repeat = False
 
                 if not should_repeat:
@@ -68,9 +66,7 @@ class ActorJobBaseClient(ResourceClient):
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(
-                gracefully=gracefully,
-            ),
+            params=self._params(gracefully=gracefully),  # type: ignore
         )
         return parse_date_fields(pluck_data(response.json()))
 
@@ -94,14 +90,12 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 response = await self.http_client.call(
                     url=self._url(),
                     method='GET',
-                    params=self._params(waitForFinish=wait_for_finish),
+                    params=self._params(waitForFinish=wait_for_finish),  # type: ignore
                 )
                 job = parse_date_fields(pluck_data(response.json()))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
-                if ActorJobStatus(job['status']).is_terminal or (
-                    wait_secs is not None and seconds_elapsed >= wait_secs
-                ):
+                if ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):  # noqa: SLF001
                     should_repeat = False
 
                 if not should_repeat:
@@ -125,8 +119,6 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(
-                gracefully=gracefully,
-            ),
+            params=self._params(gracefully=gracefully),  # type: ignore
         )
         return parse_date_fields(pluck_data(response.json()))

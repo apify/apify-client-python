@@ -23,7 +23,7 @@ class RequestQueueClient(ResourceClient):
             client_key (str, optional): A unique identifier of the client accessing the request queue
         """
         resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
         self.client_key = client_key
 
     def get(self: RequestQueueClient) -> dict | None:
@@ -71,7 +71,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             dict: The desired number of requests from the beginning of the queue.
         """
-        request_params = self._params(limit=limit, clientKey=self.client_key)
+        request_params = self._params(limit=limit, clientKey=self.client_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('head'),
@@ -94,7 +94,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             dict: The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
+        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('head/lock'),
@@ -116,10 +116,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             dict: The added request.
         """
-        request_params = self._params(
-            forefront=forefront,
-            clientKey=self.client_key,
-        )
+        request_params = self._params(forefront=forefront, clientKey=self.client_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('requests'),
@@ -168,10 +165,7 @@ class RequestQueueClient(ResourceClient):
         """
         request_id = request['id']
 
-        request_params = self._params(
-            forefront=forefront,
-            clientKey=self.client_key,
-        )
+        request_params = self._params(forefront=forefront, clientKey=self.client_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url(f'requests/{request_id}'),
@@ -191,7 +185,7 @@ class RequestQueueClient(ResourceClient):
             request_id (str): ID of the request to delete.
         """
         request_params = self._params(
-            clientKey=self.client_key,
+            clientKey=self.client_key,  # type: ignore
         )
 
         self.http_client.call(
@@ -216,11 +210,7 @@ class RequestQueueClient(ResourceClient):
             forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
             lock_secs (int): By how much to prolong the lock, in seconds
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-            lockSecs=lock_secs,
-        )
+        request_params = self._params(clientKey=self.client_key, forefront=forefront, lockSecs=lock_secs)  # type: ignore
 
         response = self.http_client.call(
             url=self._url(f'requests/{request_id}/lock'),
@@ -239,10 +229,7 @@ class RequestQueueClient(ResourceClient):
             request_id (str): ID of the request to delete the lock
             forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-        )
+        request_params = self._params(clientKey=self.client_key, forefront=forefront)  # type: ignore
 
         self.http_client.call(
             url=self._url(f'requests/{request_id}/lock'),
@@ -264,10 +251,7 @@ class RequestQueueClient(ResourceClient):
             requests (list[dict]): list of the requests to add
             forefront (bool, optional): Whether to add the requests to the head or the end of the queue
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-        )
+        request_params = self._params(clientKey=self.client_key, forefront=forefront)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('requests/batch'),
@@ -285,9 +269,7 @@ class RequestQueueClient(ResourceClient):
         Args:
             requests (list[dict]): list of the requests to delete
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-        )
+        request_params = self._params(clientKey=self.client_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('requests/batch'),
@@ -312,7 +294,7 @@ class RequestQueueClient(ResourceClient):
             limit (int, optional): How many requests to retrieve
             exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
         """
-        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)  # type: ignore
 
         response = self.http_client.call(
             url=self._url('requests'),
@@ -339,7 +321,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             client_key (str, optional): A unique identifier of the client accessing the request queue
         """
         resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
         self.client_key = client_key
 
     async def get(self: RequestQueueClientAsync) -> dict | None:
@@ -387,7 +369,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             dict: The desired number of requests from the beginning of the queue.
         """
-        request_params = self._params(limit=limit, clientKey=self.client_key)
+        request_params = self._params(limit=limit, clientKey=self.client_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('head'),
@@ -410,7 +392,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             dict: The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
+        request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('head/lock'),
@@ -432,10 +414,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             dict: The added request.
         """
-        request_params = self._params(
-            forefront=forefront,
-            clientKey=self.client_key,
-        )
+        request_params = self._params(forefront=forefront, clientKey=self.client_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('requests'),
@@ -484,10 +463,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_id = request['id']
 
-        request_params = self._params(
-            forefront=forefront,
-            clientKey=self.client_key,
-        )
+        request_params = self._params(forefront=forefront, clientKey=self.client_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url(f'requests/{request_id}'),
@@ -506,9 +482,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Args:
             request_id (str): ID of the request to delete.
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-        )
+        request_params = self._params(clientKey=self.client_key)  # type: ignore
 
         await self.http_client.call(
             url=self._url(f'requests/{request_id}'),
@@ -532,11 +506,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
             lock_secs (int): By how much to prolong the lock, in seconds
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-            lockSecs=lock_secs,
-        )
+        request_params = self._params(clientKey=self.client_key, forefront=forefront, lockSecs=lock_secs)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url(f'requests/{request_id}/lock'),
@@ -560,10 +530,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             request_id (str): ID of the request to delete the lock
             forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-        )
+        request_params = self._params(clientKey=self.client_key, forefront=forefront)  # type: ignore
 
         await self.http_client.call(
             url=self._url(f'requests/{request_id}/lock'),
@@ -582,13 +549,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests (list[dict]): List of the requests to add
+            requests (list[dict]): list of the requests to add
             forefront (bool, optional): Whether to add the requests to the head or the end of the queue
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-            forefront=forefront,
-        )
+        request_params = self._params(clientKey=self.client_key, forefront=forefront)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('requests/batch'),
@@ -604,11 +568,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests (list[dict]): List of the requests to delete
+            requests (list[dict]): list of the requests to delete
         """
-        request_params = self._params(
-            clientKey=self.client_key,
-        )
+        request_params = self._params(clientKey=self.client_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('requests/batch'),
@@ -632,7 +594,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             limit (int, optional): How many requests to retrieve
             exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
         """
-        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)  # type: ignore
 
         response = await self.http_client.call(
             url=self._url('requests'),

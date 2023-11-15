@@ -18,7 +18,7 @@ class RunCollectionClient(ResourceCollectionClient):
     def __init__(self: RunCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the RunCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: RunCollectionClient,
@@ -44,9 +44,9 @@ class RunCollectionClient(ResourceCollectionClient):
             ListPage: The retrieved actor runs
         """
         return self._list(
-            limit=limit,
-            offset=offset,
-            desc=desc,
+            limit=limit,  # type: ignore
+            offset=offset,  # type: ignore
+            desc=desc,  # type: ignore
             status=maybe_extract_enum_member_value(status),
         )
 
@@ -58,7 +58,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: RunCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the RunCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: RunCollectionClientAsync,
@@ -84,8 +84,8 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             ListPage: The retrieved actor runs
         """
         return await self._list(
-            limit=limit,
-            offset=offset,
-            desc=desc,
+            limit=limit,  # type: ignore
+            offset=offset,  # type: ignore
+            desc=desc,  # type: ignore
             status=maybe_extract_enum_member_value(status),
         )

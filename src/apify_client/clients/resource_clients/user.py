@@ -13,9 +13,9 @@ class UserClient(ResourceClient):
         """Initialize the UserClient."""
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
-            resource_id = 'me'
+            resource_id = 'me'  # type: ignore
         resource_path = kwargs.pop('resource_path', 'users')
-        super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)  # type: ignore
 
     def get(self: UserClient) -> dict | None:
         """Return information about user account.
@@ -38,9 +38,9 @@ class UserClientAsync(ResourceClientAsync):
         """Initialize the UserClientAsync."""
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
-            resource_id = 'me'
+            resource_id = 'me'  # type: ignore
         resource_path = kwargs.pop('resource_path', 'users')
-        super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def get(self: UserClientAsync) -> dict | None:
         """Return information about user account.

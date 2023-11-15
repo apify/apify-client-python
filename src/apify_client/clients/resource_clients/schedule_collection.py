@@ -18,7 +18,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
     def __init__(self: ScheduleCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ScheduleCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: ScheduleCollectionClient,
@@ -39,7 +39,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available schedules matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        return self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
     def create(
         self: ScheduleCollectionClient,
@@ -48,7 +48,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         is_enabled: bool,
         is_exclusive: bool,
         name: str | None = None,
-        actions: list[dict] | None = None,
+        actions: list[dict] | None = None,  # type: ignore
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -79,7 +79,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,
+            actions=actions,  # type: ignore
             description=description,
             timezone=timezone,
             title=title,
@@ -95,7 +95,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: ScheduleCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: ScheduleCollectionClientAsync,
@@ -116,7 +116,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available schedules matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return await self._list(limit=limit, offset=offset, desc=desc)  # type: ignore
 
     async def create(
         self: ScheduleCollectionClientAsync,
@@ -125,7 +125,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         is_enabled: bool,
         is_exclusive: bool,
         name: str | None = None,
-        actions: list[dict] | None = None,
+        actions: list[dict] | None = None,  # type: ignore
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -156,7 +156,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,
+            actions=actions,  # type: ignore
             description=description,
             timezone=timezone,
             title=title,

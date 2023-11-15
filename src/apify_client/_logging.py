@@ -17,6 +17,7 @@ logger_name = __name__.split('.')[0]
 # Logger used throughout the library
 logger = logging.getLogger(logger_name)
 
+
 # Context containing the details of the request and the resource client making the request
 class LogContext(NamedTuple):
     attempt: ContextVar[int | None]
@@ -24,6 +25,7 @@ class LogContext(NamedTuple):
     method: ContextVar[str | None]
     resource_id: ContextVar[str | None]
     url: ContextVar[str | None]
+
 
 log_context = LogContext(
     attempt=ContextVar('attempt', default=None),
@@ -50,14 +52,17 @@ class WithLogDetailsClient(type):
 # to the log context vars
 def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     if inspect.iscoroutinefunction(fun):
+
         @functools.wraps(fun)
         async def async_wrapper(resource_client: _BaseBaseClient, *args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
             log_context.client_method.set(fun.__qualname__)
             log_context.resource_id.set(resource_client.resource_id)
 
             return await fun(resource_client, *args, **kwargs)
+
         return async_wrapper
     elif inspect.isasyncgenfunction(fun):  # noqa: RET505
+
         @functools.wraps(fun)
         async def async_generator_wrapper(resource_client: _BaseBaseClient, *args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
             log_context.client_method.set(fun.__qualname__)
@@ -65,14 +70,17 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
             async for item in fun(resource_client, *args, **kwargs):
                 yield item
+
         return async_generator_wrapper
     else:
+
         @functools.wraps(fun)
         def wrapper(resource_client: _BaseBaseClient, *args: tuple, **kwargs: dict) -> Any:  # noqa: ANN401
             log_context.client_method.set(fun.__qualname__)
             log_context.resource_id.set(resource_client.resource_id)
 
             return fun(resource_client, *args, **kwargs)
+
         return wrapper
 
 

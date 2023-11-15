@@ -36,7 +36,7 @@ class ScheduleClient(ResourceClient):
     def __init__(self: ScheduleClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ScheduleClient."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def get(self: ScheduleClient) -> dict | None:
         """Return information about the schedule.
@@ -126,7 +126,7 @@ class ScheduleClientAsync(ResourceClientAsync):
     def __init__(self: ScheduleClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the ScheduleClientAsync."""
         resource_path = kwargs.pop('resource_path', 'schedules')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def get(self: ScheduleClientAsync) -> dict | None:
         """Return information about the schedule.

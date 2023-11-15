@@ -17,7 +17,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
     def __init__(self: KeyValueStoreCollectionClient, *args: tuple, **kwargs: dict) -> None:
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     def list(  # noqa: A003
         self: KeyValueStoreCollectionClient,
@@ -40,7 +40,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         Returns:
             ListPage: The list of available key-value stores matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
 
     def get_or_create(
         self: KeyValueStoreCollectionClient,
@@ -69,7 +69,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self: KeyValueStoreCollectionClientAsync, *args: tuple, **kwargs: dict) -> None:
         """Initialize the KeyValueStoreCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(*args, resource_path=resource_path, **kwargs)  # type: ignore
 
     async def list(  # noqa: A003
         self: KeyValueStoreCollectionClientAsync,
@@ -92,7 +92,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             ListPage: The list of available key-value stores matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)  # type: ignore
 
     async def get_or_create(
         self: KeyValueStoreCollectionClientAsync,

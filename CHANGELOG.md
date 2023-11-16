@@ -1,15 +1,12 @@
-Changelog
-=========
+# Changelog
 
-[1.6.0](../../releases/tag/v1.6.0) - Unreleased
------------------------------------------------
+## [1.6.0](../../releases/tag/v1.6.0) - Unreleased
 
 ### Internal changes
 
 - Migrate from Autopep8 and Flake8 to Ruff
 
-[1.5.0](../../releases/tag/v1.5.0) - 2023-10-18
------------------------------------------------
+## [1.5.0](../../releases/tag/v1.5.0) - 2023-10-18
 
 ### Added
 
@@ -22,8 +19,7 @@ Changelog
 - rewrote documentation publication to use Docusaurus
 - removed PR Toolkit workflow
 
-[1.4.1](../../releases/tag/v1.4.1) - 2023-09-06
------------------------------------------------
+## [1.4.1](../../releases/tag/v1.4.1) - 2023-09-06
 
 ### Added
 
@@ -35,8 +31,7 @@ Changelog
 - improved logging of HTTP requests
 - removed `pytest-randomly` Pytest plugin
 
-[1.4.0](../../releases/tag/v1.4.0) - 2023-08-23
------------------------------------------------
+## [1.4.0](../../releases/tag/v1.4.0) - 2023-08-23
 
 ### Added
 
@@ -47,37 +42,32 @@ Changelog
 - simplified code via `flake8-simplify`
 - unified indentation in configuration files
 
-[1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
------------------------------------------------
+## [1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
 
 ### Internal changes
 
 - started importing general constants and utilities from the `apify-shared` library
 
-[1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
------------------------------------------------
+## [1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
 
 ### Added
 
 - added `list_and_lock_head`, `delete_request_lock`, `prolong_request_lock` methods to `RequestQueueClient`
 - added `batch_add_requests`, `batch_delete_requests`, `list_requests` methods `RequestQueueClient`
 
-[1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
------------------------------------------------
+## [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
 
 ### Fixed
 
 - fixed encoding webhook lists in request parameters
 
-[1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
------------------------------------------------
+## [1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
 
 ### Fixed
 
 - relaxed dependency requirements to improve compatibility with other libraries
 
-[1.2.0](../../releases/tag/v1.2.0) - 2023-05-23
------------------------------------------------
+## [1.2.0](../../releases/tag/v1.2.0) - 2023-05-23
 
 ### Added
 
@@ -87,15 +77,13 @@ Changelog
 
 - updated dependencies
 
-[1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
------------------------------------------------
+## [1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
 
 ### Internal changes
 
 - changed GitHub workflows to use new secrets
 
-[1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
------------------------------------------------
+## [1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
 
 ### Added
 
@@ -105,8 +93,7 @@ Changelog
 
 - switched from `setup.py` to `pyproject.toml` for specifying project setup
 
-[1.0.0](../../releases/tag/v1.0.0) - 2023-03-13
------------------------------------------------
+## [1.0.0](../../releases/tag/v1.0.0) - 2023-03-13
 
 ### Breaking changes
 
@@ -150,8 +137,7 @@ Changelog
 - converted `unittest`-style tests to `pytest`-style tests
 - backported project setup improvements from `apify-sdk-python`
 
-[0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
------------------------------------------------
+## [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
 
 ### Removed
 
@@ -163,8 +149,7 @@ Changelog
 - fixed some lint issues in shell scripts and `setup.py`
 - added Python 3.10 to unit test roster
 
-[0.5.0](../../releases/tag/v0.5.0) - 2021-09-16
------------------------------------------------
+## [0.5.0](../../releases/tag/v0.5.0) - 2021-09-16
 
 ### Changed
 
@@ -178,8 +163,7 @@ Changelog
 
 - updated development dependencies
 
-[0.4.0](../../releases/tag/v0.4.0) - 2021-09-07
------------------------------------------------
+## [0.4.0](../../releases/tag/v0.4.0) - 2021-09-07
 
 ### Changed
 
@@ -190,8 +174,7 @@ Changelog
 
 - fixed values of some `ActorJobStatus` `Enum` members
 
-[0.3.0](../../releases/tag/v0.3.0) - 2021-08-26
------------------------------------------------
+## [0.3.0](../../releases/tag/v0.3.0) - 2021-08-26
 
 ### Added
 
@@ -211,8 +194,7 @@ Changelog
 - added human-friendly names to the jobs in Github Action workflows
 - updated development dependencies
 
-[0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
------------------------------------------------
+## [0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
 
 ### Added
 
@@ -229,8 +211,7 @@ Changelog
 - updated the `requests` dependency to 2.26.0
 - updated development dependencies
 
-[0.1.0](../../releases/tag/v0.1.0) - 2021-08-02
------------------------------------------------
+## [0.1.0](../../releases/tag/v0.1.0) - 2021-08-02
 
 ### Changed
 
@@ -243,7 +224,6 @@ Changelog
 - enforced unified use of single quotes and double quotes
 - added repository dispatch to build actor images with this client when publishing a new version
 
-[0.0.1](../../releases/tag/v0.0.1) - 2021-05-13
------------------------------------------------
+## [0.0.1](../../releases/tag/v0.0.1) - 2021-05-13
 
 Initial release of the package.

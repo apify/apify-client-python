@@ -45,10 +45,10 @@ class ApifyApiError(ApifyClientError):
         self.attempt = attempt
         self.http_method = response.request.method
 
-        # TODO: self.client_method   # noqa: TD002, TD003
-        # TODO: self.original_stack  # noqa: TD002, TD003
-        # TODO: self.path  # noqa: TD002, TD003
-        # TODO: self.stack  # noqa: TD002, TD003
+        # TODO: self.client_method   # noqa: TD003
+        # TODO: self.original_stack  # noqa: TD003
+        # TODO: self.path  # noqa: TD003
+        # TODO: self.stack  # noqa: TD003
 
 
 class InvalidResponseBodyError(ApifyClientError):

@@ -1,37 +1,37 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
-from ..._http_client import _HTTPClient, _HTTPClientAsync
-from ..._logging import _WithLogDetailsClient
-from ..._utils import _to_safe_id
+from ..._logging import WithLogDetailsClient
+from ..._utils import to_safe_id
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
+    from ..._http_client import HTTPClient, HTTPClientAsync
     from ...client import ApifyClient, ApifyClientAsync
 
 
-class _BaseBaseClient(metaclass=_WithLogDetailsClient):
-    resource_id: Optional[str]
+class _BaseBaseClient(metaclass=WithLogDetailsClient):
+    resource_id: str | None
     url: str
-    params: Dict
-    http_client: Union[_HTTPClient, _HTTPClientAsync]
-    root_client: Union[ApifyClient, ApifyClientAsync]
+    params: dict
+    http_client: HTTPClient | HTTPClientAsync
+    root_client: ApifyClient | ApifyClientAsync
 
-    def _url(self, path: Optional[str] = None) -> str:
+    def _url(self: _BaseBaseClient, path: str | None = None) -> str:
         if path is not None:
             return f'{self.url}/{path}'
         return self.url
 
-    def _params(self, **kwargs: Any) -> Dict:
+    def _params(self: _BaseBaseClient, **kwargs: Any) -> dict:
         return {
             **self.params,
             **kwargs,
         }
 
-    def _sub_resource_init_options(self, **kwargs: Any) -> Dict:
+    def _sub_resource_init_options(self: _BaseBaseClient, **kwargs: Any) -> dict:
         options = {
             'base_url': self.url,
             'http_client': self.http_client,
@@ -49,26 +49,26 @@ class _BaseBaseClient(metaclass=_WithLogDetailsClient):
 class BaseClient(_BaseBaseClient):
     """Base class for sub-clients."""
 
-    http_client: _HTTPClient
+    http_client: HTTPClient
     root_client: ApifyClient
 
     @ignore_docs
     def __init__(
-        self,
+        self: BaseClient,
         *,
         base_url: str,
         root_client: ApifyClient,
-        http_client: _HTTPClient,
-        resource_id: Optional[str] = None,
+        http_client: HTTPClient,
+        resource_id: str | None = None,
         resource_path: str,
-        params: Optional[Dict] = None,
+        params: dict | None = None,
     ) -> None:
         """Initialize the sub-client.
 
         Args:
             base_url (str): Base URL of the API server
             root_client (ApifyClient): The ApifyClient instance under which this resource client exists
-            http_client (_HTTPClient): The _HTTPClient instance to be used in this client
+            http_client (HTTPClient): The HTTPClient instance to be used in this client
             resource_id (str): ID of the manipulated resource, in case of a single-resource client
             resource_path (str): Path to the resource's endpoint on the API server
             params (dict): Parameters to include in all requests from this client
@@ -84,7 +84,7 @@ class BaseClient(_BaseBaseClient):
         self.resource_id = resource_id
         self.url = f'{self.base_url}/{self.resource_path}'
         if self.resource_id is not None:
-            self.safe_id = _to_safe_id(self.resource_id)
+            self.safe_id = to_safe_id(self.resource_id)
             self.url = f'{self.url}/{self.safe_id}'
 
 
@@ -92,26 +92,26 @@ class BaseClient(_BaseBaseClient):
 class BaseClientAsync(_BaseBaseClient):
     """Base class for async sub-clients."""
 
-    http_client: _HTTPClientAsync
+    http_client: HTTPClientAsync
     root_client: ApifyClientAsync
 
     @ignore_docs
     def __init__(
-        self,
+        self: BaseClientAsync,
         *,
         base_url: str,
         root_client: ApifyClientAsync,
-        http_client: _HTTPClientAsync,
-        resource_id: Optional[str] = None,
+        http_client: HTTPClientAsync,
+        resource_id: str | None = None,
         resource_path: str,
-        params: Optional[Dict] = None,
+        params: dict | None = None,
     ) -> None:
         """Initialize the sub-client.
 
         Args:
             base_url (str): Base URL of the API server
             root_client (ApifyClientAsync): The ApifyClientAsync instance under which this resource client exists
-            http_client (_HTTPClientAsync): The _HTTPClientAsync instance to be used in this client
+            http_client (HTTPClientAsync): The HTTPClientAsync instance to be used in this client
             resource_id (str): ID of the manipulated resource, in case of a single-resource client
             resource_path (str): Path to the resource's endpoint on the API server
             params (dict): Parameters to include in all requests from this client
@@ -127,5 +127,5 @@ class BaseClientAsync(_BaseBaseClient):
         self.resource_id = resource_id
         self.url = f'{self.base_url}/{self.resource_path}'
         if self.resource_id is not None:
-            self.safe_id = _to_safe_id(self.resource_id)
+            self.safe_id = to_safe_id(self.resource_id)
             self.url = f'{self.url}/{self.safe_id}'

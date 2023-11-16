@@ -1,26 +1,30 @@
+from __future__ import annotations
+
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncIterator, Dict, Iterator, List, Optional
-
-import httpx
+from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 
 from apify_shared.models import ListPage
-from apify_shared.types import JSONSerializable
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    import httpx
+
+    from apify_shared.types import JSONSerializable
 
 
 class DatasetClient(ResourceClient):
     """Sub-client for manipulating a single dataset."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: DatasetClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClient."""
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: DatasetClient) -> dict | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -30,7 +34,7 @@ class DatasetClient(ResourceClient):
         """
         return self._get()
 
-    def update(self, *, name: Optional[str] = None) -> Dict:
+    def update(self: DatasetClient, *, name: str | None = None) -> dict:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -47,7 +51,7 @@ class DatasetClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(updated_fields))
 
-    def delete(self) -> None:
+    def delete(self: DatasetClient) -> None:
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
@@ -55,19 +59,19 @@ class DatasetClient(ResourceClient):
         return self._delete()
 
     def list_items(
-        self,
+        self: DatasetClient,
         *,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        flatten: Optional[List[str]] = None,
-        view: Optional[str] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        clean: bool | None = None,
+        desc: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+        flatten: list[str] | None = None,
+        view: str | None = None,
     ) -> ListPage:
         """List the items of the dataset.
 
@@ -122,28 +126,30 @@ class DatasetClient(ResourceClient):
 
         data = response.json()
 
-        return ListPage({
-            'items': data,
-            'total': int(response.headers['x-apify-pagination-total']),
-            'offset': int(response.headers['x-apify-pagination-offset']),
-            'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-            'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
-            'desc': bool(response.headers['x-apify-pagination-desc']),
-        })
+        return ListPage(
+            {
+                'items': data,
+                'total': int(response.headers['x-apify-pagination-total']),
+                'offset': int(response.headers['x-apify-pagination-offset']),
+                'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+                'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
+                'desc': bool(response.headers['x-apify-pagination-desc']),
+            }
+        )
 
     def iterate_items(
-        self,
+        self: DatasetClient,
         *,
         offset: int = 0,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-    ) -> Iterator[Dict]:
+        limit: int | None = None,
+        clean: bool | None = None,
+        desc: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+    ) -> Iterator[dict]:
         """Iterate over the items in the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -209,24 +215,24 @@ class DatasetClient(ResourceClient):
                 should_finish = True
 
     def download_items(
-        self,
+        self: DatasetClient,
         *,
         item_format: str = 'json',
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        desc: Optional[bool] = None,
-        clean: Optional[bool] = None,
-        bom: Optional[bool] = None,
-        delimiter: Optional[str] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_header_row: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        xml_root: Optional[str] = None,
-        xml_row: Optional[str] = None,
-        flatten: Optional[List[str]] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+        clean: bool | None = None,
+        bom: bool | None = None,
+        delimiter: str | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_header_row: bool | None = None,
+        skip_hidden: bool | None = None,
+        xml_root: str | None = None,
+        xml_row: str | None = None,
+        flatten: list[str] | None = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -296,24 +302,24 @@ class DatasetClient(ResourceClient):
         )
 
     def get_items_as_bytes(
-        self,
+        self: DatasetClient,
         *,
         item_format: str = 'json',
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        desc: Optional[bool] = None,
-        clean: Optional[bool] = None,
-        bom: Optional[bool] = None,
-        delimiter: Optional[str] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_header_row: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        xml_root: Optional[str] = None,
-        xml_row: Optional[str] = None,
-        flatten: Optional[List[str]] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+        clean: bool | None = None,
+        bom: bool | None = None,
+        delimiter: str | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_header_row: bool | None = None,
+        skip_hidden: bool | None = None,
+        xml_root: str | None = None,
+        xml_row: str | None = None,
+        flatten: list[str] | None = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -385,23 +391,23 @@ class DatasetClient(ResourceClient):
 
     @contextmanager
     def stream_items(
-        self,
+        self: DatasetClient,
         *,
         item_format: str = 'json',
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        desc: Optional[bool] = None,
-        clean: Optional[bool] = None,
-        bom: Optional[bool] = None,
-        delimiter: Optional[str] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_header_row: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        xml_root: Optional[str] = None,
-        xml_row: Optional[str] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+        clean: bool | None = None,
+        bom: bool | None = None,
+        delimiter: str | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_header_row: bool | None = None,
+        skip_hidden: bool | None = None,
+        xml_root: str | None = None,
+        xml_row: str | None = None,
     ) -> Iterator[httpx.Response]:
         """Retrieve the items in the dataset as a stream.
 
@@ -474,7 +480,7 @@ class DatasetClient(ResourceClient):
             if response:
                 response.close()
 
-    def push_items(self, items: JSONSerializable) -> None:
+    def push_items(self: DatasetClient, items: JSONSerializable) -> None:
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -504,12 +510,12 @@ class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: DatasetClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetClientAsync."""
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: DatasetClientAsync) -> dict | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -519,7 +525,7 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         return await self._get()
 
-    async def update(self, *, name: Optional[str] = None) -> Dict:
+    async def update(self: DatasetClientAsync, *, name: str | None = None) -> dict:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -536,7 +542,7 @@ class DatasetClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(updated_fields))
 
-    async def delete(self) -> None:
+    async def delete(self: DatasetClientAsync) -> None:
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
@@ -544,19 +550,19 @@ class DatasetClientAsync(ResourceClientAsync):
         return await self._delete()
 
     async def list_items(
-        self,
+        self: DatasetClientAsync,
         *,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        flatten: Optional[List[str]] = None,
-        view: Optional[str] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        clean: bool | None = None,
+        desc: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+        flatten: list[str] | None = None,
+        view: str | None = None,
     ) -> ListPage:
         """List the items of the dataset.
 
@@ -611,28 +617,30 @@ class DatasetClientAsync(ResourceClientAsync):
 
         data = response.json()
 
-        return ListPage({
-            'items': data,
-            'total': int(response.headers['x-apify-pagination-total']),
-            'offset': int(response.headers['x-apify-pagination-offset']),
-            'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-            'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
-            'desc': bool(response.headers['x-apify-pagination-desc']),
-        })
+        return ListPage(
+            {
+                'items': data,
+                'total': int(response.headers['x-apify-pagination-total']),
+                'offset': int(response.headers['x-apify-pagination-offset']),
+                'count': len(data),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+                'limit': int(response.headers['x-apify-pagination-limit']),  # API returns 999999999999 when no limit is used
+                'desc': bool(response.headers['x-apify-pagination-desc']),
+            }
+        )
 
     async def iterate_items(
-        self,
+        self: DatasetClientAsync,
         *,
         offset: int = 0,
-        limit: Optional[int] = None,
-        clean: Optional[bool] = None,
-        desc: Optional[bool] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-    ) -> AsyncIterator[Dict]:
+        limit: int | None = None,
+        clean: bool | None = None,
+        desc: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+    ) -> AsyncIterator[dict]:
         """Iterate over the items in the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -699,24 +707,24 @@ class DatasetClientAsync(ResourceClientAsync):
                 should_finish = True
 
     async def get_items_as_bytes(
-        self,
+        self: DatasetClientAsync,
         *,
         item_format: str = 'json',
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        desc: Optional[bool] = None,
-        clean: Optional[bool] = None,
-        bom: Optional[bool] = None,
-        delimiter: Optional[str] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_header_row: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        xml_root: Optional[str] = None,
-        xml_row: Optional[str] = None,
-        flatten: Optional[List[str]] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+        clean: bool | None = None,
+        bom: bool | None = None,
+        delimiter: str | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_header_row: bool | None = None,
+        skip_hidden: bool | None = None,
+        xml_root: str | None = None,
+        xml_row: str | None = None,
+        flatten: list[str] | None = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -788,23 +796,23 @@ class DatasetClientAsync(ResourceClientAsync):
 
     @asynccontextmanager
     async def stream_items(
-        self,
+        self: DatasetClientAsync,
         *,
         item_format: str = 'json',
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        desc: Optional[bool] = None,
-        clean: Optional[bool] = None,
-        bom: Optional[bool] = None,
-        delimiter: Optional[str] = None,
-        fields: Optional[List[str]] = None,
-        omit: Optional[List[str]] = None,
-        unwind: Optional[str] = None,
-        skip_empty: Optional[bool] = None,
-        skip_header_row: Optional[bool] = None,
-        skip_hidden: Optional[bool] = None,
-        xml_root: Optional[str] = None,
-        xml_row: Optional[str] = None,
+        offset: int | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+        clean: bool | None = None,
+        bom: bool | None = None,
+        delimiter: str | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: str | None = None,
+        skip_empty: bool | None = None,
+        skip_header_row: bool | None = None,
+        skip_hidden: bool | None = None,
+        xml_root: str | None = None,
+        xml_row: str | None = None,
     ) -> AsyncIterator[httpx.Response]:
         """Retrieve the items in the dataset as a stream.
 
@@ -877,7 +885,7 @@ class DatasetClientAsync(ResourceClientAsync):
             if response:
                 await response.aclose()
 
-    async def push_items(self, items: JSONSerializable) -> None:
+    async def push_items(self: DatasetClientAsync, items: JSONSerializable) -> None:
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items

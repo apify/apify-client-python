@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import secrets
 import string
+from typing import TYPE_CHECKING
 
-from apify_client import ApifyClient, ApifyClientAsync
+if TYPE_CHECKING:
+    from apify_client import ApifyClient, ApifyClientAsync
 
 
 def random_string(length: int = 10) -> str:
@@ -13,7 +17,7 @@ def random_queue_name() -> str:
 
 
 class TestRequestQueueSync:
-    def test_request_queue_lock(self, apify_client: ApifyClient) -> None:
+    def test_request_queue_lock(self: TestRequestQueueSync, apify_client: ApifyClient) -> None:
         created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client.request_queue(created_queue['id'], client_key=random_string(10))
 
@@ -28,10 +32,12 @@ class TestRequestQueueSync:
         # Check if the delete request works
         queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request is not None
+        assert delete_lock_request.get('lockExpiresAt') is None
         queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request2 is not None
+        assert delete_lock_request2.get('lockExpiresAt') is None
 
         # Check if the prolong request works
         assert queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)['lockExpiresAt'] is not None
@@ -39,7 +45,7 @@ class TestRequestQueueSync:
         queue.delete()
         assert apify_client.request_queue(created_queue['id']).get() is None
 
-    def test_request_batch_operations(self, apify_client: ApifyClient) -> None:
+    def test_request_batch_operations(self: TestRequestQueueSync, apify_client: ApifyClient) -> None:
         created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client.request_queue(created_queue['id'])
 
@@ -60,7 +66,7 @@ class TestRequestQueueSync:
 
 
 class TestRequestQueueAsync:
-    async def test_request_queue_lock(self, apify_client_async: ApifyClientAsync) -> None:
+    async def test_request_queue_lock(self: TestRequestQueueAsync, apify_client_async: ApifyClientAsync) -> None:
         created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client_async.request_queue(created_queue['id'], client_key=random_string(10))
 
@@ -75,10 +81,12 @@ class TestRequestQueueAsync:
         # Check if the delete request works
         await queue.delete_request_lock(locked_requests[1]['id'])
         delete_lock_request = await queue.get_request(locked_requests[1]['id'])
-        assert delete_lock_request.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request is not None
+        assert delete_lock_request.get('lockExpiresAt') is None
         await queue.delete_request_lock(locked_requests[2]['id'], forefront=True)
         delete_lock_request2 = await queue.get_request(locked_requests[2]['id'])
-        assert delete_lock_request2.get('lockExpiresAt') is None  # type: ignore
+        assert delete_lock_request2 is not None
+        assert delete_lock_request2.get('lockExpiresAt') is None
 
         # Check if the prolong request works
         prolonged_request = await queue.prolong_request_lock(locked_requests[3]['id'], lock_secs=15)
@@ -87,7 +95,7 @@ class TestRequestQueueAsync:
         await queue.delete()
         assert await apify_client_async.request_queue(created_queue['id']).get() is None
 
-    async def test_request_batch_operations(self, apify_client_async: ApifyClientAsync) -> None:
+    async def test_request_batch_operations(self: TestRequestQueueAsync, apify_client_async: ApifyClientAsync) -> None:
         created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
         queue = apify_client_async.request_queue(created_queue['id'])
 

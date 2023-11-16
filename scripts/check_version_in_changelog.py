@@ -16,7 +16,7 @@ if __name__ == '__main__':
     with open(CHANGELOG_PATH, encoding='utf-8') as changelog_file:
         for line in changelog_file:
             # The heading for the changelog entry for the given version can start with either the version number, or the version number in a link
-            if re.match(fr'\[?{current_package_version}([\] ]|$)', line):
+            if re.match(rf'\[?{current_package_version}([\] ]|$)', line):
                 break
         else:
             raise RuntimeError(f'There is no entry in the changelog for the current package version ({current_package_version})')

@@ -1,29 +1,38 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from apify_shared.consts import WebhookEventType
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
+from typing import TYPE_CHECKING, Any
+
+from apify_shared.utils import (
+    filter_out_none_values_recursively,
+    ignore_docs,
+    maybe_extract_enum_member_value,
+    parse_date_fields,
+)
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _pluck_data
+from ..._utils import catch_not_found_or_throw, pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 from .webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
+if TYPE_CHECKING:
+    from apify_shared.consts import WebhookEventType
 
-def _get_webhook_representation(
+
+def get_webhook_representation(
     *,
-    event_types: Optional[List[WebhookEventType]] = None,
-    request_url: Optional[str] = None,
-    payload_template: Optional[str] = None,
-    actor_id: Optional[str] = None,
-    actor_task_id: Optional[str] = None,
-    actor_run_id: Optional[str] = None,
-    ignore_ssl_errors: Optional[bool] = None,
-    do_not_retry: Optional[bool] = None,
-    idempotency_key: Optional[str] = None,
-    is_ad_hoc: Optional[bool] = None,
-) -> Dict:
+    event_types: list[WebhookEventType] | None = None,
+    request_url: str | None = None,
+    payload_template: str | None = None,
+    actor_id: str | None = None,
+    actor_task_id: str | None = None,
+    actor_run_id: str | None = None,
+    ignore_ssl_errors: bool | None = None,
+    do_not_retry: bool | None = None,
+    idempotency_key: str | None = None,
+    is_ad_hoc: bool | None = None,
+) -> dict:
     """Prepare webhook dictionary representation for clients."""
-    webhook: Dict[str, Any] = {
+    webhook: dict = {
         'requestUrl': request_url,
         'payloadTemplate': payload_template,
         'ignoreSslErrors': ignore_ssl_errors,
@@ -50,12 +59,12 @@ class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: WebhookClient) -> dict | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -66,18 +75,18 @@ class WebhookClient(ResourceClient):
         return self._get()
 
     def update(
-        self,
+        self: WebhookClient,
         *,
-        event_types: Optional[List[WebhookEventType]] = None,
-        request_url: Optional[str] = None,
-        payload_template: Optional[str] = None,
-        actor_id: Optional[str] = None,
-        actor_task_id: Optional[str] = None,
-        actor_run_id: Optional[str] = None,
-        ignore_ssl_errors: Optional[bool] = None,
-        do_not_retry: Optional[bool] = None,
-        is_ad_hoc: Optional[bool] = None,
-    ) -> Dict:
+        event_types: list[WebhookEventType] | None = None,
+        request_url: str | None = None,
+        payload_template: str | None = None,
+        actor_id: str | None = None,
+        actor_task_id: str | None = None,
+        actor_run_id: str | None = None,
+        ignore_ssl_errors: bool | None = None,
+        do_not_retry: bool | None = None,
+        is_ad_hoc: bool | None = None,
+    ) -> dict:
         """Update the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
@@ -98,7 +107,7 @@ class WebhookClient(ResourceClient):
         Returns:
             dict: The updated webhook
         """
-        webhook_representation = _get_webhook_representation(
+        webhook_representation = get_webhook_representation(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
@@ -112,14 +121,14 @@ class WebhookClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(webhook_representation))
 
-    def delete(self) -> None:
+    def delete(self: WebhookClient) -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         return self._delete()
 
-    def test(self) -> Optional[Dict]:
+    def test(self: WebhookClient) -> dict | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -136,14 +145,14 @@ class WebhookClient(ResourceClient):
                 params=self._params(),
             )
 
-            return parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
-    def dispatches(self) -> WebhookDispatchCollectionClient:
+    def dispatches(self: WebhookClient) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
@@ -160,12 +169,12 @@ class WebhookClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single webhook."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: WebhookClientAsync) -> dict | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -176,18 +185,18 @@ class WebhookClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self,
+        self: WebhookClientAsync,
         *,
-        event_types: Optional[List[WebhookEventType]] = None,
-        request_url: Optional[str] = None,
-        payload_template: Optional[str] = None,
-        actor_id: Optional[str] = None,
-        actor_task_id: Optional[str] = None,
-        actor_run_id: Optional[str] = None,
-        ignore_ssl_errors: Optional[bool] = None,
-        do_not_retry: Optional[bool] = None,
-        is_ad_hoc: Optional[bool] = None,
-    ) -> Dict:
+        event_types: list[WebhookEventType] | None = None,
+        request_url: str | None = None,
+        payload_template: str | None = None,
+        actor_id: str | None = None,
+        actor_task_id: str | None = None,
+        actor_run_id: str | None = None,
+        ignore_ssl_errors: bool | None = None,
+        do_not_retry: bool | None = None,
+        is_ad_hoc: bool | None = None,
+    ) -> dict:
         """Update the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
@@ -208,7 +217,7 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             dict: The updated webhook
         """
-        webhook_representation = _get_webhook_representation(
+        webhook_representation = get_webhook_representation(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
@@ -222,14 +231,14 @@ class WebhookClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(webhook_representation))
 
-    async def delete(self) -> None:
+    async def delete(self: WebhookClientAsync) -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         return await self._delete()
 
-    async def test(self) -> Optional[Dict]:
+    async def test(self: WebhookClientAsync) -> dict | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -246,14 +255,14 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            return parse_date_fields(_pluck_data(response.json()))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
-    def dispatches(self) -> WebhookDispatchCollectionClientAsync:
+    def dispatches(self: WebhookClientAsync) -> WebhookDispatchCollectionClientAsync:
         """Get dispatches of the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection

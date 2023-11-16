@@ -1,4 +1,4 @@
-from typing import Optional
+from __future__ import annotations
 
 import httpx
 
@@ -7,8 +7,6 @@ from apify_shared.utils import ignore_docs
 
 class ApifyClientError(Exception):
     """Base class for errors specific to the Apify API Client."""
-
-    pass
 
 
 class ApifyApiError(ApifyClientError):
@@ -21,15 +19,15 @@ class ApifyApiError(ApifyClientError):
     """
 
     @ignore_docs
-    def __init__(self, response: httpx.Response, attempt: int) -> None:
+    def __init__(self: ApifyApiError, response: httpx.Response, attempt: int) -> None:
         """Create the ApifyApiError instance.
 
         Args:
             response (httpx.Response): The response to the failed API call
             attempt (int): Which attempt was the request that failed
         """
-        self.message: Optional[str] = None
-        self.type: Optional[str] = None
+        self.message: str | None = None
+        self.type: str | None = None
 
         self.message = f'Unexpected error: {response.text}'
         try:
@@ -47,10 +45,10 @@ class ApifyApiError(ApifyClientError):
         self.attempt = attempt
         self.http_method = response.request.method
 
-        # TODO self.client_method
-        # TODO self.original_stack
-        # TODO self.path
-        # TODO self.stack
+        # TODO: self.client_method   # noqa: TD002, TD003
+        # TODO: self.original_stack  # noqa: TD002, TD003
+        # TODO: self.path  # noqa: TD002, TD003
+        # TODO: self.stack  # noqa: TD002, TD003
 
 
 class InvalidResponseBodyError(ApifyClientError):
@@ -58,11 +56,11 @@ class InvalidResponseBodyError(ApifyClientError):
 
     This error exists for the quite common situation, where only a partial JSON response is received and
     an attempt to parse the JSON throws an error. In most cases this can be resolved by retrying the
-    request. We do that by identifying this error in the _HTTPClient.
+    request. We do that by identifying this error in the HTTPClient.
     """
 
     @ignore_docs
-    def __init__(self, response: httpx.Response) -> None:
+    def __init__(self: InvalidResponseBodyError, response: httpx.Response) -> None:
         """Create the InvalidResponseBodyError instance.
 
         Args:
@@ -75,7 +73,8 @@ class InvalidResponseBodyError(ApifyClientError):
         self.response = response
 
 
-def _is_retryable_error(e: Exception) -> bool:
+def is_retryable_error(e: Exception) -> bool:
+    """Check if the given error is retryable."""
     if isinstance(e, (InvalidResponseBodyError, httpx.NetworkError, httpx.TimeoutException, httpx.RemoteProtocolError)):
         return True
 

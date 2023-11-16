@@ -1,26 +1,36 @@
-from typing import Any, Dict, List, Optional, cast
+from __future__ import annotations
 
-from apify_shared.consts import ActorJobStatus, MetaOrigin
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value, parse_date_fields
+from typing import TYPE_CHECKING, Any, cast
+
+from apify_shared.utils import (
+    filter_out_none_values_recursively,
+    ignore_docs,
+    maybe_extract_enum_member_value,
+    parse_date_fields,
+)
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _encode_webhook_list_to_base64, _pluck_data
+from ..._utils import catch_not_found_or_throw, encode_webhook_list_to_base64, pluck_data
 from ..base import ResourceClient, ResourceClientAsync
 from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
 
+if TYPE_CHECKING:
+    from apify_shared.consts import ActorJobStatus, MetaOrigin
 
-def _get_task_representation(
-    actor_id: Optional[str] = None,
-    name: Optional[str] = None,
-    task_input: Optional[Dict] = None,
-    build: Optional[str] = None,
-    max_items: Optional[int] = None,
-    memory_mbytes: Optional[int] = None,
-    timeout_secs: Optional[int] = None,
-    title: Optional[str] = None,
-) -> Dict:
+
+def get_task_representation(
+    actor_id: str | None = None,
+    name: str | None = None,
+    task_input: dict | None = None,
+    build: str | None = None,
+    max_items: int | None = None,
+    memory_mbytes: int | None = None,
+    timeout_secs: int | None = None,
+    title: str | None = None,
+) -> dict:
+    """Get the dictionary representation of a task."""
     return {
         'actId': actor_id,
         'name': name,
@@ -39,12 +49,12 @@ class TaskClient(ResourceClient):
     """Sub-client for manipulating a single task."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: TaskClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: TaskClient) -> dict | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -55,16 +65,16 @@ class TaskClient(ResourceClient):
         return self._get()
 
     def update(
-        self,
+        self: TaskClient,
         *,
-        name: Optional[str] = None,
-        task_input: Optional[Dict] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        name: str | None = None,
+        task_input: dict | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Update the task with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
@@ -84,7 +94,7 @@ class TaskClient(ResourceClient):
         Returns:
             dict: The updated task
         """
-        task_representation = _get_task_representation(
+        task_representation = get_task_representation(
             name=name,
             task_input=task_input,
             build=build,
@@ -96,7 +106,7 @@ class TaskClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(task_representation))
 
-    def delete(self) -> None:
+    def delete(self: TaskClient) -> None:
         """Delete the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
@@ -104,16 +114,16 @@ class TaskClient(ResourceClient):
         return self._delete()
 
     def start(
-        self,
+        self: TaskClient,
         *,
-        task_input: Optional[Dict[str, Any]] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        wait_for_finish: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-    ) -> Dict:
+        task_input: dict | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        wait_for_finish: int | None = None,
+        webhooks: list[dict] | None = None,
+    ) -> dict:
         """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
@@ -147,7 +157,7 @@ class TaskClient(ResourceClient):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
-            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = self.http_client.call(
@@ -158,19 +168,19 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
     def call(
-        self,
+        self: TaskClient,
         *,
-        task_input: Optional[Dict[str, Any]] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-        wait_secs: Optional[int] = None,
-    ) -> Optional[Dict]:
+        task_input: dict | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        webhooks: list[dict] | None = None,
+        wait_secs: int | None = None,
+    ) -> dict | None:
         """Start a task and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -205,7 +215,7 @@ class TaskClient(ResourceClient):
 
         return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
-    def get_input(self) -> Optional[Dict]:
+    def get_input(self: TaskClient) -> dict | None:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -219,12 +229,12 @@ class TaskClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return cast(Dict, response.json())
+            return cast(dict, response.json())
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
         return None
 
-    def update_input(self, *, task_input: Dict) -> Dict:
+    def update_input(self: TaskClient, *, task_input: dict) -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
@@ -238,13 +248,13 @@ class TaskClient(ResourceClient):
             params=self._params(),
             json=task_input,
         )
-        return cast(Dict, response.json())
+        return cast(dict, response.json())
 
-    def runs(self) -> RunCollectionClient:
+    def runs(self: TaskClient) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClient:
+    def last_run(self: TaskClient, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClient:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
@@ -256,16 +266,18 @@ class TaskClient(ResourceClient):
         Returns:
             RunClient: The resource client for the last run of this task.
         """
-        return RunClient(**self._sub_resource_init_options(
-            resource_id='last',
-            resource_path='runs',
-            params=self._params(
-                status=maybe_extract_enum_member_value(status),
-                origin=maybe_extract_enum_member_value(origin),
-            ),
-        ))
+        return RunClient(
+            **self._sub_resource_init_options(
+                resource_id='last',
+                resource_path='runs',
+                params=self._params(
+                    status=maybe_extract_enum_member_value(status),
+                    origin=maybe_extract_enum_member_value(origin),
+                ),
+            )
+        )
 
-    def webhooks(self) -> WebhookCollectionClient:
+    def webhooks(self: TaskClient) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this task."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
@@ -274,12 +286,12 @@ class TaskClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single task."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: TaskClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: TaskClientAsync) -> dict | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -290,16 +302,16 @@ class TaskClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self,
+        self: TaskClientAsync,
         *,
-        name: Optional[str] = None,
-        task_input: Optional[Dict] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        name: str | None = None,
+        task_input: dict | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Update the task with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
@@ -319,7 +331,7 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             dict: The updated task
         """
-        task_representation = _get_task_representation(
+        task_representation = get_task_representation(
             name=name,
             task_input=task_input,
             build=build,
@@ -331,7 +343,7 @@ class TaskClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(task_representation))
 
-    async def delete(self) -> None:
+    async def delete(self: TaskClientAsync) -> None:
         """Delete the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
@@ -339,16 +351,16 @@ class TaskClientAsync(ResourceClientAsync):
         return await self._delete()
 
     async def start(
-        self,
+        self: TaskClientAsync,
         *,
-        task_input: Optional[Dict[str, Any]] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        wait_for_finish: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-    ) -> Dict:
+        task_input: dict | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        wait_for_finish: int | None = None,
+        webhooks: list[dict] | None = None,
+    ) -> dict:
         """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
@@ -382,7 +394,7 @@ class TaskClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
-            webhooks=_encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
         response = await self.http_client.call(
@@ -393,19 +405,19 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def call(
-        self,
+        self: TaskClientAsync,
         *,
-        task_input: Optional[Dict[str, Any]] = None,
-        build: Optional[str] = None,
-        max_items: Optional[int] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-        webhooks: Optional[List[Dict]] = None,
-        wait_secs: Optional[int] = None,
-    ) -> Optional[Dict]:
+        task_input: dict | None = None,
+        build: str | None = None,
+        max_items: int | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+        webhooks: list[dict] | None = None,
+        wait_secs: int | None = None,
+    ) -> dict | None:
         """Start a task and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -440,7 +452,7 @@ class TaskClientAsync(ResourceClientAsync):
 
         return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
-    async def get_input(self) -> Optional[Dict]:
+    async def get_input(self: TaskClientAsync) -> dict | None:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -454,12 +466,12 @@ class TaskClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return cast(Dict, response.json())
+            return cast(dict, response.json())
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
         return None
 
-    async def update_input(self, *, task_input: Dict) -> Dict:
+    async def update_input(self: TaskClientAsync, *, task_input: dict) -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
@@ -473,13 +485,13 @@ class TaskClientAsync(ResourceClientAsync):
             params=self._params(),
             json=task_input,
         )
-        return cast(Dict, response.json())
+        return cast(dict, response.json())
 
-    def runs(self) -> RunCollectionClientAsync:
+    def runs(self: TaskClientAsync) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: Optional[ActorJobStatus] = None, origin: Optional[MetaOrigin] = None) -> RunClientAsync:
+    def last_run(self: TaskClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
@@ -491,15 +503,17 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             RunClientAsync: The resource client for the last run of this task.
         """
-        return RunClientAsync(**self._sub_resource_init_options(
-            resource_id='last',
-            resource_path='runs',
-            params=self._params(
-                status=maybe_extract_enum_member_value(status),
-                origin=maybe_extract_enum_member_value(origin),
-            ),
-        ))
+        return RunClientAsync(
+            **self._sub_resource_init_options(
+                resource_id='last',
+                resource_path='runs',
+                params=self._params(
+                    status=maybe_extract_enum_member_value(status),
+                    origin=maybe_extract_enum_member_value(origin),
+                ),
+            )
+        )
 
-    def webhooks(self) -> WebhookCollectionClientAsync:
+    def webhooks(self: TaskClientAsync) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this task."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())

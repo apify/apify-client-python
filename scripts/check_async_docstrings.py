@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re
 import sys
 from pathlib import Path
@@ -12,7 +14,7 @@ clients_path = Path(__file__).parent.resolve() / '../src/apify_client'
 
 # Go through every Python file in that directory
 for client_source_path in clients_path.glob('**/*.py'):
-    with open(client_source_path, 'r', encoding='utf-8') as source_file:
+    with open(client_source_path, encoding='utf-8') as source_file:
         # Read the source file and parse the code using Red Baron
         red = RedBaron(source_code=source_file.read())
 

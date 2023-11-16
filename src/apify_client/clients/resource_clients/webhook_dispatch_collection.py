@@ -1,27 +1,31 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING, Any
+
 from apify_shared.utils import ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class WebhookDispatchCollectionClient(ResourceCollectionClient):
     """Sub-client for listing webhook dispatches."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookDispatchCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: WebhookDispatchCollectionClient,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -41,18 +45,18 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing webhook dispatches."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookDispatchCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: WebhookDispatchCollectionClientAsync,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches

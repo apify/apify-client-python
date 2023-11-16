@@ -1,27 +1,31 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING, Any
+
 from apify_shared.utils import ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class BuildCollectionClient(ResourceCollectionClient):
     """Sub-client for listing actor builds."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: BuildCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: BuildCollectionClient,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
@@ -42,18 +46,18 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing actor builds."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: BuildCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: BuildCollectionClientAsync,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds

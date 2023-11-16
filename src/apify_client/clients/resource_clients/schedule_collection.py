@@ -1,28 +1,32 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING, Any
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
 from .schedule import _get_schedule_representation
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class ScheduleCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating schedules."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ScheduleCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: ScheduleCollectionClient,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -38,17 +42,17 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
-        self,
+        self: ScheduleCollectionClient,
         *,
         cron_expression: str,
         is_enabled: bool,
         is_exclusive: bool,
-        name: Optional[str] = None,
-        actions: Optional[List[Dict]] = None,
-        description: Optional[str] = None,
-        timezone: Optional[str] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        name: str | None = None,
+        actions: list[dict] | None = None,  # type: ignore
+        description: str | None = None,
+        timezone: str | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Create a new schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
@@ -62,6 +66,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             description (str, optional): Description of this schedule
             timezone (str, optional): Timezone in which your cron expression runs
                 (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+            title: str, optional): Title of this schedule
 
         Returns:
             dict: The created schedule.
@@ -87,18 +92,18 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating schedules."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ScheduleCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: ScheduleCollectionClientAsync,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -114,17 +119,17 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self,
+        self: ScheduleCollectionClientAsync,
         *,
         cron_expression: str,
         is_enabled: bool,
         is_exclusive: bool,
-        name: Optional[str] = None,
-        actions: Optional[List[Dict]] = None,
-        description: Optional[str] = None,
-        timezone: Optional[str] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        name: str | None = None,
+        actions: list[dict] | None = None,  # type: ignore
+        description: str | None = None,
+        timezone: str | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Create a new schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
@@ -138,6 +143,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
             description (str, optional): Description of this schedule
             timezone (str, optional): Timezone in which your cron expression runs
                 (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+            title: str, optional): Title of this schedule
 
         Returns:
             dict: The created schedule.

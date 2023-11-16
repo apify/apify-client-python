@@ -1,22 +1,26 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING, Any
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
-from .actor_env_var import _get_actor_env_var_representation
+from .actor_env_var import get_actor_env_var_representation
+
+if TYPE_CHECKING:
+    from apify_shared.models import ListPage
 
 
 class ActorEnvVarCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor env vars."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorEnvVarCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage[Dict]:
+    def list(self: ActorEnvVarCollectionClient) -> ListPage[dict]:  # noqa: A003
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -27,12 +31,12 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         return self._list()
 
     def create(
-        self,
+        self: ActorEnvVarCollectionClient,
         *,
-        is_secret: Optional[bool] = None,
+        is_secret: bool | None = None,
         name: str,
         value: str,
-    ) -> Dict:
+    ) -> dict:
         """Create a new actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/create-environment-variable
@@ -45,7 +49,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created actor environment variable
         """
-        actor_env_var_representation = _get_actor_env_var_representation(
+        actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,
             name=name,
             value=value,
@@ -58,12 +62,12 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ActorEnvVarCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self) -> ListPage[Dict]:
+    async def list(self: ActorEnvVarCollectionClientAsync) -> ListPage[dict]:  # noqa: A003
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -74,12 +78,12 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list()
 
     async def create(
-        self,
+        self: ActorEnvVarCollectionClientAsync,
         *,
-        is_secret: Optional[bool] = None,
+        is_secret: bool | None = None,
         name: str,
         value: str,
-    ) -> Dict:
+    ) -> dict:
         """Create a new actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/create-environment-variable
@@ -92,7 +96,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             dict: The created actor environment variable
         """
-        actor_env_var_representation = _get_actor_env_var_representation(
+        actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,
             name=name,
             value=value,

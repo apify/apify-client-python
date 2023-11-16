@@ -1,22 +1,24 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..._errors import ApifyApiError
-from ..._utils import _catch_not_found_or_throw, _pluck_data_as_list
+from ..._utils import catch_not_found_or_throw, pluck_data_as_list
 from ..base import ResourceClient, ResourceClientAsync
 
 
 def _get_schedule_representation(
-    cron_expression: Optional[str] = None,
-    is_enabled: Optional[bool] = None,
-    is_exclusive: Optional[bool] = None,
-    name: Optional[str] = None,
-    actions: Optional[List[Dict]] = None,
-    description: Optional[str] = None,
-    timezone: Optional[str] = None,
-    title: Optional[str] = None,
-) -> Dict:
+    cron_expression: str | None = None,
+    is_enabled: bool | None = None,
+    is_exclusive: bool | None = None,
+    name: str | None = None,
+    actions: list[dict] | None = None,
+    description: str | None = None,
+    timezone: str | None = None,
+    title: str | None = None,
+) -> dict:
     return {
         'cronExpression': cron_expression,
         'isEnabled': is_enabled,
@@ -33,12 +35,12 @@ class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ScheduleClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClient."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: ScheduleClient) -> dict | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
@@ -49,17 +51,17 @@ class ScheduleClient(ResourceClient):
         return self._get()
 
     def update(
-        self,
+        self: ScheduleClient,
         *,
-        cron_expression: Optional[str] = None,
-        is_enabled: Optional[bool] = None,
-        is_exclusive: Optional[bool] = None,
-        name: Optional[str] = None,
-        actions: Optional[List[Dict]] = None,
-        description: Optional[str] = None,
-        timezone: Optional[str] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        cron_expression: str | None = None,
+        is_enabled: bool | None = None,
+        is_exclusive: bool | None = None,
+        name: str | None = None,
+        actions: list[dict] | None = None,
+        description: str | None = None,
+        timezone: str | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Update the schedule with specified fields.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
@@ -91,14 +93,14 @@ class ScheduleClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(schedule_representation))
 
-    def delete(self) -> None:
+    def delete(self: ScheduleClient) -> None:
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
         self._delete()
 
-    def get_log(self) -> Optional[List]:
+    def get_log(self: ScheduleClient) -> list | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -112,9 +114,9 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return _pluck_data_as_list(response.json())
+            return pluck_data_as_list(response.json())
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None
 
@@ -123,12 +125,12 @@ class ScheduleClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single schedule."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: ScheduleClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleClientAsync."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: ScheduleClientAsync) -> dict | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
@@ -139,17 +141,17 @@ class ScheduleClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self,
+        self: ScheduleClientAsync,
         *,
-        cron_expression: Optional[str] = None,
-        is_enabled: Optional[bool] = None,
-        is_exclusive: Optional[bool] = None,
-        name: Optional[str] = None,
-        actions: Optional[List[Dict]] = None,
-        description: Optional[str] = None,
-        timezone: Optional[str] = None,
-        title: Optional[str] = None,
-    ) -> Dict:
+        cron_expression: str | None = None,
+        is_enabled: bool | None = None,
+        is_exclusive: bool | None = None,
+        name: str | None = None,
+        actions: list[dict] | None = None,
+        description: str | None = None,
+        timezone: str | None = None,
+        title: str | None = None,
+    ) -> dict:
         """Update the schedule with specified fields.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
@@ -181,14 +183,14 @@ class ScheduleClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(schedule_representation))
 
-    async def delete(self) -> None:
+    async def delete(self: ScheduleClientAsync) -> None:
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
         await self._delete()
 
-    async def get_log(self) -> Optional[List]:
+    async def get_log(self: ScheduleClientAsync) -> list | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -202,8 +204,8 @@ class ScheduleClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return _pluck_data_as_list(response.json())
+            return pluck_data_as_list(response.json())
         except ApifyApiError as exc:
-            _catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc)
 
         return None

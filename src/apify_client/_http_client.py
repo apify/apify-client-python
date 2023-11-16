@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import gzip
 import json as jsonlib
 import logging
@@ -5,16 +7,19 @@ import os
 import sys
 from http import HTTPStatus
 from importlib import metadata
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable
 
 import httpx
 
-from apify_shared.types import JSONSerializable
 from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
 
-from ._errors import ApifyApiError, InvalidResponseBodyError, _is_retryable_error
+from ._errors import ApifyApiError, InvalidResponseBodyError, is_retryable_error
 from ._logging import log_context, logger_name
-from ._utils import _retry_with_exp_backoff, _retry_with_exp_backoff_async
+from ._utils import retry_with_exp_backoff, retry_with_exp_backoff_async
+
+if TYPE_CHECKING:
+    from apify_shared.types import JSONSerializable
+
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -25,9 +30,9 @@ logger = logging.getLogger(logger_name)
 class _BaseHTTPClient:
     @ignore_docs
     def __init__(
-        self,
+        self: _BaseHTTPClient,
         *,
-        token: Optional[str] = None,
+        token: str | None = None,
         max_retries: int = 8,
         min_delay_between_retries_millis: int = 500,
         timeout_secs: int = 360,
@@ -42,7 +47,7 @@ class _BaseHTTPClient:
         if workflow_key is not None:
             headers['X-Apify-Workflow-Key'] = workflow_key
 
-        is_at_home = ('APIFY_IS_AT_HOME' in os.environ)
+        is_at_home = 'APIFY_IS_AT_HOME' in os.environ
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
         client_version = metadata.version('apify-client')
 
@@ -67,7 +72,7 @@ class _BaseHTTPClient:
         try:
             if is_content_type_json(content_type):
                 return response.json()
-            elif is_content_type_xml(content_type) or is_content_type_text(content_type):
+            elif is_content_type_xml(content_type) or is_content_type_text(content_type):  # noqa: RET505
                 return response.text
             else:
                 return response.content
@@ -75,7 +80,7 @@ class _BaseHTTPClient:
             raise InvalidResponseBodyError(response) from err
 
     @staticmethod
-    def _parse_params(params: Optional[Dict]) -> Optional[Dict]:
+    def _parse_params(params: dict | None) -> dict | None:
         if params is None:
             return None
 
@@ -90,12 +95,12 @@ class _BaseHTTPClient:
         return parsed_params
 
     def _prepare_request_call(
-        self,
-        headers: Optional[Dict] = None,
-        params: Optional[Dict] = None,
-        data: Optional[Any] = None,
-        json: Optional[JSONSerializable] = None,
-    ) -> Tuple[Dict, Optional[Dict], Any]:
+        self: _BaseHTTPClient,
+        headers: dict | None = None,
+        params: dict | None = None,
+        data: Any = None,
+        json: JSONSerializable | None = None,
+    ) -> tuple[dict, dict | None, Any]:
         if json and data:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
@@ -120,18 +125,18 @@ class _BaseHTTPClient:
         )
 
 
-class _HTTPClient(_BaseHTTPClient):
+class HTTPClient(_BaseHTTPClient):
     def call(
-        self,
+        self: HTTPClient,
         *,
         method: str,
         url: str,
-        headers: Optional[Dict] = None,
-        params: Optional[Dict] = None,
-        data: Optional[Any] = None,
-        json: Optional[JSONSerializable] = None,
-        stream: Optional[bool] = None,
-        parse_response: Optional[bool] = True,
+        headers: dict | None = None,
+        params: dict | None = None,
+        data: Any = None,
+        json: JSONSerializable | None = None,
+        stream: bool | None = None,
+        parse_response: bool | None = True,
     ) -> httpx.Response:
         log_context.method.set(method)
         log_context.url.set(url)
@@ -160,33 +165,30 @@ class _HTTPClient(_BaseHTTPClient):
                 )
 
                 # If response status is < 300, the request was successful, and we can return the result
-                if response.status_code < 300:
+                if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
                     if not stream:
-                        if parse_response:
-                            _maybe_parsed_body = self._maybe_parse_response(response)
-                        else:
-                            _maybe_parsed_body = response.content
+                        _maybe_parsed_body = self._maybe_parse_response(response) if parse_response else response.content
                         setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
 
             except Exception as e:
                 logger.debug('Request threw exception', exc_info=e)
-                if not _is_retryable_error(e):
+                if not is_retryable_error(e):
                     logger.debug('Exception is not retryable', exc_info=e)
                     stop_retrying()
-                raise e
+                raise
 
             # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
             # and also retry rate limited requests that throw 429 Too Many Requests errors
             logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
-            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
                 logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
             raise ApifyApiError(response, attempt)
 
-        return _retry_with_exp_backoff(
+        return retry_with_exp_backoff(
             _make_request,
             max_retries=self.max_retries,
             backoff_base_millis=self.min_delay_between_retries_millis,
@@ -195,18 +197,18 @@ class _HTTPClient(_BaseHTTPClient):
         )
 
 
-class _HTTPClientAsync(_BaseHTTPClient):
+class HTTPClientAsync(_BaseHTTPClient):
     async def call(
-        self,
+        self: HTTPClientAsync,
         *,
         method: str,
         url: str,
-        headers: Optional[Dict] = None,
-        params: Optional[Dict] = None,
-        data: Optional[Any] = None,
-        json: Optional[JSONSerializable] = None,
-        stream: Optional[bool] = None,
-        parse_response: Optional[bool] = True,
+        headers: dict | None = None,
+        params: dict | None = None,
+        data: Any = None,
+        json: JSONSerializable | None = None,
+        stream: bool | None = None,
+        parse_response: bool | None = True,
     ) -> httpx.Response:
         log_context.method.set(method)
         log_context.url.set(url)
@@ -235,33 +237,30 @@ class _HTTPClientAsync(_BaseHTTPClient):
                 )
 
                 # If response status is < 300, the request was successful, and we can return the result
-                if response.status_code < 300:
+                if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
                     if not stream:
-                        if parse_response:
-                            _maybe_parsed_body = self._maybe_parse_response(response)
-                        else:
-                            _maybe_parsed_body = response.content
+                        _maybe_parsed_body = self._maybe_parse_response(response) if parse_response else response.content
                         setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
 
             except Exception as e:
                 logger.debug('Request threw exception', exc_info=e)
-                if not _is_retryable_error(e):
+                if not is_retryable_error(e):
                     logger.debug('Exception is not retryable', exc_info=e)
                     stop_retrying()
-                raise e
+                raise
 
             # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
             # and also retry rate limited requests that throw 429 Too Many Requests errors
             logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
-            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
+            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
                 logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
             raise ApifyApiError(response, attempt)
 
-        return await _retry_with_exp_backoff_async(
+        return await retry_with_exp_backoff_async(
             _make_request,
             max_retries=self.max_retries,
             backoff_base_millis=self.min_delay_between_retries_millis,

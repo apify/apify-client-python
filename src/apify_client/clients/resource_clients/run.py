@@ -1,8 +1,10 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
-from ..._utils import _encode_key_value_store_record_value, _pluck_data, _to_safe_id
+from ..._utils import encode_key_value_store_record_value, pluck_data, to_safe_id
 from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
 from .dataset import DatasetClient, DatasetClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
@@ -14,12 +16,12 @@ class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single actor run."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: RunClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Optional[Dict]:
+    def get(self: RunClient) -> dict | None:
         """Return information about the actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
@@ -29,7 +31,7 @@ class RunClient(ActorJobBaseClient):
         """
         return self._get()
 
-    def update(self, *, status_message: Optional[str] = None, is_status_message_terminal: Optional[bool] = None) -> Dict:
+    def update(self: RunClient, *, status_message: str | None = None, is_status_message_terminal: bool | None = None) -> dict:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -48,14 +50,14 @@ class RunClient(ActorJobBaseClient):
 
         return self._update(filter_out_none_values_recursively(updated_fields))
 
-    def delete(self) -> None:
+    def delete(self: RunClient) -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
         return self._delete()
 
-    def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
+    def abort(self: RunClient, *, gracefully: bool | None = None) -> dict:
         """Abort the actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -70,7 +72,7 @@ class RunClient(ActorJobBaseClient):
         """
         return self._abort(gracefully=gracefully)
 
-    def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
+    def wait_for_finish(self: RunClient, *, wait_secs: int | None = None) -> dict | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
@@ -83,13 +85,13 @@ class RunClient(ActorJobBaseClient):
         return self._wait_for_finish(wait_secs=wait_secs)
 
     def metamorph(
-        self,
+        self: RunClient,
         *,
         target_actor_id: str,
-        target_actor_build: Optional[str] = None,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-    ) -> Dict:
+        target_actor_build: str | None = None,
+        run_input: Any = None,
+        content_type: str | None = None,
+    ) -> dict:
         """Transform an actor run into a run of another actor with a new input.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run
@@ -104,9 +106,9 @@ class RunClient(ActorJobBaseClient):
         Returns:
             dict: The actor run data.
         """
-        run_input, content_type = _encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        safe_target_actor_id = _to_safe_id(target_actor_id)
+        safe_target_actor_id = to_safe_id(target_actor_id)
 
         request_params = self._params(
             targetActorId=safe_target_actor_id,
@@ -121,15 +123,15 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
     def resurrect(
-        self,
+        self: RunClient,
         *,
-        build: Optional[str] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-    ) -> Dict:
+        build: str | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+    ) -> dict:
         """Resurrect a finished actor run.
 
         Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
@@ -160,9 +162,9 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    def reboot(self) -> Dict:
+    def reboot(self: RunClient) -> dict:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
@@ -174,9 +176,9 @@ class RunClient(ActorJobBaseClient):
             url=self._url('reboot'),
             method='POST',
         )
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    def dataset(self) -> DatasetClient:
+    def dataset(self: RunClient) -> DatasetClient:
         """Get the client for the default dataset of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -188,7 +190,7 @@ class RunClient(ActorJobBaseClient):
             **self._sub_resource_init_options(resource_path='dataset'),
         )
 
-    def key_value_store(self) -> KeyValueStoreClient:
+    def key_value_store(self: RunClient) -> KeyValueStoreClient:
         """Get the client for the default key-value store of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -200,7 +202,7 @@ class RunClient(ActorJobBaseClient):
             **self._sub_resource_init_options(resource_path='key-value-store'),
         )
 
-    def request_queue(self) -> RequestQueueClient:
+    def request_queue(self: RunClient) -> RequestQueueClient:
         """Get the client for the default request queue of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -212,7 +214,7 @@ class RunClient(ActorJobBaseClient):
             **self._sub_resource_init_options(resource_path='request-queue'),
         )
 
-    def log(self) -> LogClient:
+    def log(self: RunClient) -> LogClient:
         """Get the client for the log of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -229,12 +231,12 @@ class RunClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single actor run."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: RunClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Optional[Dict]:
+    async def get(self: RunClientAsync) -> dict | None:
         """Return information about the actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
@@ -244,7 +246,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         return await self._get()
 
-    async def update(self, *, status_message: Optional[str] = None, is_status_message_terminal: Optional[bool] = None) -> Dict:
+    async def update(self: RunClientAsync, *, status_message: str | None = None, is_status_message_terminal: bool | None = None) -> dict:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -263,7 +265,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
 
         return await self._update(filter_out_none_values_recursively(updated_fields))
 
-    async def abort(self, *, gracefully: Optional[bool] = None) -> Dict:
+    async def abort(self: RunClientAsync, *, gracefully: bool | None = None) -> dict:
         """Abort the actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -278,7 +280,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         return await self._abort(gracefully=gracefully)
 
-    async def wait_for_finish(self, *, wait_secs: Optional[int] = None) -> Optional[Dict]:
+    async def wait_for_finish(self: RunClientAsync, *, wait_secs: int | None = None) -> dict | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
@@ -290,7 +292,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
 
-    async def delete(self) -> None:
+    async def delete(self: RunClientAsync) -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
@@ -298,13 +300,13 @@ class RunClientAsync(ActorJobBaseClientAsync):
         return await self._delete()
 
     async def metamorph(
-        self,
+        self: RunClientAsync,
         *,
         target_actor_id: str,
-        target_actor_build: Optional[str] = None,
-        run_input: Optional[Any] = None,
-        content_type: Optional[str] = None,
-    ) -> Dict:
+        target_actor_build: str | None = None,
+        run_input: Any = None,
+        content_type: str | None = None,
+    ) -> dict:
         """Transform an actor run into a run of another actor with a new input.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run
@@ -319,9 +321,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Returns:
             dict: The actor run data.
         """
-        run_input, content_type = _encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        safe_target_actor_id = _to_safe_id(target_actor_id)
+        safe_target_actor_id = to_safe_id(target_actor_id)
 
         request_params = self._params(
             targetActorId=safe_target_actor_id,
@@ -336,15 +338,15 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def resurrect(
-        self,
+        self: RunClientAsync,
         *,
-        build: Optional[str] = None,
-        memory_mbytes: Optional[int] = None,
-        timeout_secs: Optional[int] = None,
-    ) -> Dict:
+        build: str | None = None,
+        memory_mbytes: int | None = None,
+        timeout_secs: int | None = None,
+    ) -> dict:
         """Resurrect a finished actor run.
 
         Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
@@ -375,9 +377,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    async def reboot(self) -> Dict:
+    async def reboot(self: RunClientAsync) -> dict:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
@@ -389,9 +391,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
             url=self._url('reboot'),
             method='POST',
         )
-        return parse_date_fields(_pluck_data(response.json()))
+        return parse_date_fields(pluck_data(response.json()))
 
-    def dataset(self) -> DatasetClientAsync:
+    def dataset(self: RunClientAsync) -> DatasetClientAsync:
         """Get the client for the default dataset of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -403,7 +405,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             **self._sub_resource_init_options(resource_path='dataset'),
         )
 
-    def key_value_store(self) -> KeyValueStoreClientAsync:
+    def key_value_store(self: RunClientAsync) -> KeyValueStoreClientAsync:
         """Get the client for the default key-value store of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -415,7 +417,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             **self._sub_resource_init_options(resource_path='key-value-store'),
         )
 
-    def request_queue(self) -> RequestQueueClientAsync:
+    def request_queue(self: RunClientAsync) -> RequestQueueClientAsync:
         """Get the client for the default request queue of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
@@ -427,7 +429,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             **self._sub_resource_init_options(resource_path='request-queue'),
         )
 
-    def log(self) -> LogClientAsync:
+    def log(self: RunClientAsync) -> LogClientAsync:
         """Get the client for the log of the actor run.
 
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages

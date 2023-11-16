@@ -1,29 +1,33 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from apify_shared.consts import WebhookEventType
-from apify_shared.models import ListPage
+from typing import TYPE_CHECKING, Any
+
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
 from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
-from .webhook import _get_webhook_representation
+from .webhook import get_webhook_representation
+
+if TYPE_CHECKING:
+    from apify_shared.consts import WebhookEventType
+    from apify_shared.models import ListPage
 
 
 class WebhookCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating webhooks."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookCollectionClient, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(
-        self,
+    def list(  # noqa: A003
+        self: WebhookCollectionClient,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -39,19 +43,19 @@ class WebhookCollectionClient(ResourceCollectionClient):
         return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
-        self,
+        self: WebhookCollectionClient,
         *,
-        event_types: List[WebhookEventType],
+        event_types: list[WebhookEventType],  # type: ignore
         request_url: str,
-        payload_template: Optional[str] = None,
-        actor_id: Optional[str] = None,
-        actor_task_id: Optional[str] = None,
-        actor_run_id: Optional[str] = None,
-        ignore_ssl_errors: Optional[bool] = None,
-        do_not_retry: Optional[bool] = None,
-        idempotency_key: Optional[str] = None,
-        is_ad_hoc: Optional[bool] = None,
-    ) -> Dict:
+        payload_template: str | None = None,
+        actor_id: str | None = None,
+        actor_task_id: str | None = None,
+        actor_run_id: str | None = None,
+        ignore_ssl_errors: bool | None = None,
+        do_not_retry: bool | None = None,
+        idempotency_key: str | None = None,
+        is_ad_hoc: bool | None = None,
+    ) -> dict:
         """Create a new webhook.
 
         You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
@@ -76,7 +80,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             dict: The created webhook
         """
-        webhook_representation = _get_webhook_representation(
+        webhook_representation = get_webhook_representation(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
@@ -96,18 +100,18 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating webhooks."""
 
     @ignore_docs
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: WebhookCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
-        self,
+    async def list(  # noqa: A003
+        self: WebhookCollectionClientAsync,
         *,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        desc: Optional[bool] = None,
-    ) -> ListPage[Dict]:
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListPage[dict]:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -123,19 +127,19 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self,
+        self: WebhookCollectionClientAsync,
         *,
-        event_types: List[WebhookEventType],
+        event_types: list[WebhookEventType],  # type: ignore
         request_url: str,
-        payload_template: Optional[str] = None,
-        actor_id: Optional[str] = None,
-        actor_task_id: Optional[str] = None,
-        actor_run_id: Optional[str] = None,
-        ignore_ssl_errors: Optional[bool] = None,
-        do_not_retry: Optional[bool] = None,
-        idempotency_key: Optional[str] = None,
-        is_ad_hoc: Optional[bool] = None,
-    ) -> Dict:
+        payload_template: str | None = None,
+        actor_id: str | None = None,
+        actor_task_id: str | None = None,
+        actor_run_id: str | None = None,
+        ignore_ssl_errors: bool | None = None,
+        do_not_retry: bool | None = None,
+        idempotency_key: str | None = None,
+        is_ad_hoc: bool | None = None,
+    ) -> dict:
         """Create a new webhook.
 
         You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
@@ -160,7 +164,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             dict: The created webhook
         """
-        webhook_representation = _get_webhook_representation(
+        webhook_representation = get_webhook_representation(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,

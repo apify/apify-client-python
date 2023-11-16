@@ -42,7 +42,7 @@ class ActorJobBaseClient(ResourceClient):
                 job = parse_date_fields(pluck_data(response.json()))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
-                if ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):  # noqa: SLF001
+                if ActorJobStatus(job['status']).is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):
                     should_repeat = False
 
                 if not should_repeat:
@@ -95,7 +95,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 job = parse_date_fields(pluck_data(response.json()))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
-                if ActorJobStatus(job['status'])._is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):  # noqa: SLF001
+                if ActorJobStatus(job['status']).is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):
                     should_repeat = False
 
                 if not should_repeat:

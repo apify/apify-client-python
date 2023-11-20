@@ -39,7 +39,7 @@ log_context = LogContext(
 # Metaclass for resource clients which wraps all their public methods
 # With injection of their details to the log context vars
 class WithLogDetailsClient(type):
-    def __new__(cls: type[type], name: str, bases: tuple, attrs: dict) -> WithLogDetailsClient:  # noqa: PYI034
+    def __new__(cls: type[type], name: str, bases: tuple, attrs: dict) -> WithLogDetailsClient:
         for attr_name, attr_value in attrs.items():
             if not attr_name.startswith('_') and inspect.isfunction(attr_value):
                 attrs[attr_name] = _injects_client_details_to_log_context(attr_value)

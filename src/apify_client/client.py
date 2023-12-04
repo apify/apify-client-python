@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from apify_shared.utils import ignore_docs
 
 from ._http_client import HTTPClient, HTTPClientAsync
@@ -443,12 +445,15 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClientAsync(**self._options())
 
-    def user(self: ApifyClientAsync, user_id: str | None = None) -> UserClientAsync:
+    def user(self: ApifyClientAsync, user_id: Optional[str] = None) -> UserClientAsync:  # noqa: UP007
         """Retrieve the sub-client for querying users.
 
         Args:
             user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
         """
+        # TODO: This method has to have the old type signature for the compatibility with typing.get_type_hints()
+        # which is used in the unit tests of Apify SDK.
+        # https://github.com/apify/apify-sdk-python/issues/151
         return UserClientAsync(resource_id=user_id, **self._options())
 
     def store(self: ApifyClientAsync) -> StoreCollectionClientAsync:

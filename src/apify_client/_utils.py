@@ -66,7 +66,7 @@ def retry_with_exp_backoff(
             if not swallow:
                 raise
 
-        random_sleep_factor = random.uniform(1, 1 + random_factor)  # noqa: S311
+        random_sleep_factor = random.uniform(1, 1 + random_factor)
         backoff_base_secs = backoff_base_millis / 1000
         backoff_exp_factor = backoff_factor ** (attempt - 1)
 
@@ -99,7 +99,7 @@ async def retry_with_exp_backoff_async(
             if not swallow:
                 raise
 
-        random_sleep_factor = random.uniform(1, 1 + random_factor)  # noqa: S311
+        random_sleep_factor = random.uniform(1, 1 + random_factor)
         backoff_base_secs = backoff_base_millis / 1000
         backoff_exp_factor = backoff_factor ** (attempt - 1)
 

@@ -84,11 +84,14 @@ class _BaseHTTPClient:
         if params is None:
             return None
 
-        parsed_params = {}
+        parsed_params: dict = {}
         for key, value in params.items():
-            # Our API needs to have boolean parameters passed as 0 or 1, therefore we have to replace them
+            # Our API needs boolean parameters passed as 0 or 1
             if isinstance(value, bool):
                 parsed_params[key] = int(value)
+            # Our API needs lists passed as comma-separated strings
+            elif isinstance(value, list):
+                parsed_params[key] = ','.join(value)
             elif value is not None:
                 parsed_params[key] = value
 

@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Fixed `_BaseHTTPClient._parse_params()` method to ensure correct conversion of API list parameters.
+- Fixed `_BaseHTTPClient._parse_params()` method to ensure correct conversion of API list parameters
 
 ## [1.6.0](../../releases/tag/v1.6.0) - 2023-11-16
 

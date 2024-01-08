@@ -2,7 +2,9 @@
 
 ## [1.6.2](../../releases/tag/v1.6.2) - Unreleased
 
-...
+### Internal changes
+
+- Relative imports were replaced for absolute imports
 
 ## [1.6.1](../../releases/tag/v1.6.1) - 2023-12-11
 

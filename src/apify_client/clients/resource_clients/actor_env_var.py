@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
-from ..base import ResourceClient, ResourceClientAsync
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 
 def get_actor_env_var_representation(

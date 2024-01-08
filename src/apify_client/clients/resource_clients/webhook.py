@@ -9,10 +9,10 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from ..._errors import ApifyApiError
-from ..._utils import catch_not_found_or_throw, pluck_data
-from ..base import ResourceClient, ResourceClientAsync
-from .webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
+from apify_client._errors import ApifyApiError
+from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
+from apify_client.clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType

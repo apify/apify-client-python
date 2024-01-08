@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
-from ..._logging import WithLogDetailsClient
-from ..._utils import to_safe_id
+from apify_client._logging import WithLogDetailsClient
+from apify_client._utils import to_safe_id
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
-    from ..._http_client import HTTPClient, HTTPClientAsync
-    from ...client import ApifyClient, ApifyClientAsync
+    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client._http_client import HTTPClient, HTTPClientAsync
 
 
 class _BaseBaseClient(metaclass=WithLogDetailsClient):

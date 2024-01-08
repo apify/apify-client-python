@@ -6,9 +6,9 @@ from typing import Any, AsyncIterator, Iterator
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
-from ..._errors import ApifyApiError
-from ..._utils import catch_not_found_or_throw, encode_key_value_store_record_value, pluck_data
-from ..base import ResourceClient, ResourceClientAsync
+from apify_client._errors import ApifyApiError
+from apify_client._utils import catch_not_found_or_throw, encode_key_value_store_record_value, pluck_data
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 
 class KeyValueStoreClient(ResourceClient):

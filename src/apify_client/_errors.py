@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import httpx
-
 from apify_shared.utils import ignore_docs
 
 

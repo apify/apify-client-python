@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 
 from apify_shared.utils import ignore_docs
 
-from ..._errors import ApifyApiError
-from ..._utils import catch_not_found_or_throw
-from ..base import ResourceClient, ResourceClientAsync
+from apify_client._errors import ApifyApiError
+from apify_client._utils import catch_not_found_or_throw
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
     import httpx

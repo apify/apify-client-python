@@ -26,7 +26,7 @@ requires-python = ">=3.8"
 # compatibility with a wide range of external packages. This decision was discussed in detail in the following PR:
 # https://github.com/apify/apify-sdk-python/pull/154
 dependencies = [
-    "apify-shared ~= 1.1.0",
+    "apify-shared ~= 1.1.1",
     "httpx >= 0.25.1",
 ]
 
@@ -94,7 +94,6 @@ ignore = [
     "S303",    # Use of insecure MD2, MD4, MD5, or SHA1 hash function
     "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
     "TD002",   # Missing author in TODO; try: `# TODO(<author_name>): ...` or `# TODO @<author_name>: ...
-    "TID252",  # Relative imports from parent modules are bannedRuff
     "TRY003",  # Avoid specifying long messages outside the exception class
 ]
 
@@ -126,7 +125,7 @@ docstring-quotes = "double"
 inline-quotes = "single"
 
 [tool.ruff.lint.isort]
-known-first-party = ["apify", "apify_client", "apify_shared"]
+known-local-folder = ["apify_client"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

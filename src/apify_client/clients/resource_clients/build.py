@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_shared.utils import ignore_docs
 
-from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
+from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 
 
 class BuildClient(ActorJobBaseClient):

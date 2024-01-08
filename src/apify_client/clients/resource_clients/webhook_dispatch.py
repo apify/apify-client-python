@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_shared.utils import ignore_docs
 
-from ..base import ResourceClient, ResourceClientAsync
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 
 class WebhookDispatchClient(ResourceClient):

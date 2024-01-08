@@ -5,8 +5,8 @@ from typing import Any
 from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from ..._utils import pluck_data
-from .base_client import BaseClient, BaseClientAsync
+from apify_client._utils import pluck_data
+from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
 
 
 @ignore_docs

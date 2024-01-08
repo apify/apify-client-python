@@ -4,12 +4,12 @@ from typing import Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
-from ..._utils import encode_key_value_store_record_value, pluck_data, to_safe_id
-from ..base import ActorJobBaseClient, ActorJobBaseClientAsync
-from .dataset import DatasetClient, DatasetClientAsync
-from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-from .log import LogClient, LogClientAsync
-from .request_queue import RequestQueueClient, RequestQueueClientAsync
+from apify_client._utils import encode_key_value_store_record_value, pluck_data, to_safe_id
+from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
+from apify_client.clients.resource_clients.dataset import DatasetClient, DatasetClientAsync
+from apify_client.clients.resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
+from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
+from apify_client.clients.resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
 
 class RunClient(ActorJobBaseClient):

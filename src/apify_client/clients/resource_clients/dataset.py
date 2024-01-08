@@ -7,11 +7,10 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
 from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
-from ..base import ResourceClient, ResourceClientAsync
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
     import httpx
-
     from apify_shared.types import JSONSerializable
 
 

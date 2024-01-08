@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Callable, NamedTuple, cast
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
-    from .clients.base.base_client import _BaseBaseClient
+    from apify_client.clients.base.base_client import _BaseBaseClient
 
 # Name of the logger used throughout the library
 logger_name = __name__.split('.')[0]

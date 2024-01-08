@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
 
-from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorJobStatus

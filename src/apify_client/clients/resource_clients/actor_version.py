@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value
 
-from ..base import ResourceClient, ResourceClientAsync
-from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
-from .actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
+from apify_client.clients.resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
+from apify_client.clients.resource_clients.actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorSourceType

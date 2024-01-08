@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
-from ..base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
     from apify_shared.models import ListPage

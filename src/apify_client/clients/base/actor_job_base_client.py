@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 from apify_shared.consts import ActorJobStatus
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from ..._errors import ApifyApiError
-from ..._utils import catch_not_found_or_throw, pluck_data
-from .resource_client import ResourceClient, ResourceClientAsync
+from apify_client._errors import ApifyApiError
+from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client.clients.base.resource_client import ResourceClient, ResourceClientAsync
 
 DEFAULT_WAIT_FOR_FINISH_SEC = 999999
 

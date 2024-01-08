@@ -2,6 +2,7 @@ import time
 from typing import Any, Callable
 
 import pytest
+from apify_shared.consts import WebhookEventType
 
 from apify_client._utils import (
     encode_webhook_list_to_base64,
@@ -10,7 +11,6 @@ from apify_client._utils import (
     retry_with_exp_backoff_async,
     to_safe_id,
 )
-from apify_shared.consts import WebhookEventType
 
 
 def test__to_safe_id() -> None:

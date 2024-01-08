@@ -9,14 +9,14 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from ..._utils import encode_key_value_store_record_value, encode_webhook_list_to_base64, pluck_data
-from ..base import ResourceClient, ResourceClientAsync
-from .actor_version import ActorVersionClient, ActorVersionClientAsync
-from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
-from .build_collection import BuildCollectionClient, BuildCollectionClientAsync
-from .run import RunClient, RunClientAsync
-from .run_collection import RunCollectionClient, RunCollectionClientAsync
-from .webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
+from apify_client._utils import encode_key_value_store_record_value, encode_webhook_list_to_base64, pluck_data
+from apify_client.clients.base import ResourceClient, ResourceClientAsync
+from apify_client.clients.resource_clients.actor_version import ActorVersionClient, ActorVersionClientAsync
+from apify_client.clients.resource_clients.actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
+from apify_client.clients.resource_clients.build_collection import BuildCollectionClient, BuildCollectionClientAsync
+from apify_client.clients.resource_clients.run import RunClient, RunClientAsync
+from apify_client.clients.resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
+from apify_client.clients.resource_clients.webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorJobStatus, MetaOrigin

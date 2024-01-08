@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from apify_shared.utils import ignore_docs
 
-from ._http_client import HTTPClient, HTTPClientAsync
-from .clients import (
+from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client.clients import (
     ActorClient,
     ActorClientAsync,
     ActorCollectionClient,

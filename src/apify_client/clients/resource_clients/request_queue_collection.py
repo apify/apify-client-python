@@ -19,7 +19,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(  # noqa: A003
+    def list(
         self: RequestQueueCollectionClient,
         *,
         unnamed: bool | None = None,
@@ -65,7 +65,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(  # noqa: A003
+    async def list(
         self: RequestQueueCollectionClientAsync,
         *,
         unnamed: bool | None = None,

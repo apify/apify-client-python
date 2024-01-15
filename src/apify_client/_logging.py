@@ -113,7 +113,7 @@ class _DebugLogFormatter(logging.Formatter):
 
         return extra_fields
 
-    def format(self: _DebugLogFormatter, record: logging.LogRecord) -> str:  # noqa: A003
+    def format(self: _DebugLogFormatter, record: logging.LogRecord) -> str:
         extra = self._get_extra_fields(record)
 
         log_string = super().format(record)

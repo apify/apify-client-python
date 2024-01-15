@@ -20,7 +20,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(  # noqa: A003
+    def list(
         self: ScheduleCollectionClient,
         *,
         limit: int | None = None,
@@ -97,7 +97,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(  # noqa: A003
+    async def list(
         self: ScheduleCollectionClientAsync,
         *,
         limit: int | None = None,

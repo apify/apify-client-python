@@ -19,7 +19,7 @@ class BuildCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(  # noqa: A003
+    def list(
         self: BuildCollectionClient,
         *,
         limit: int | None = None,
@@ -51,7 +51,7 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(  # noqa: A003
+    async def list(
         self: BuildCollectionClientAsync,
         *,
         limit: int | None = None,

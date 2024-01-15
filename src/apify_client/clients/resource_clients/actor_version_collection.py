@@ -21,7 +21,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self: ActorVersionCollectionClient) -> ListPage[dict]:  # noqa: A003
+    def list(self: ActorVersionCollectionClient) -> ListPage[dict]:
         """List the available actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -92,7 +92,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self: ActorVersionCollectionClientAsync) -> ListPage[dict]:  # noqa: A003
+    async def list(self: ActorVersionCollectionClientAsync) -> ListPage[dict]:
         """List the available actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions

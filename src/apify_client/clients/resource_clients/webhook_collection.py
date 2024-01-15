@@ -21,7 +21,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(  # noqa: A003
+    def list(
         self: WebhookCollectionClient,
         *,
         limit: int | None = None,
@@ -105,7 +105,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(  # noqa: A003
+    async def list(
         self: WebhookCollectionClientAsync,
         *,
         limit: int | None = None,

@@ -19,7 +19,7 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(  # noqa: A003
+    def list(
         self: WebhookDispatchCollectionClient,
         *,
         limit: int | None = None,
@@ -50,7 +50,7 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(  # noqa: A003
+    async def list(
         self: WebhookDispatchCollectionClientAsync,
         *,
         limit: int | None = None,

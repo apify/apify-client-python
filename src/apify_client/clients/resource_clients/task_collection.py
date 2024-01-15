@@ -20,7 +20,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(  # noqa: A003
+    def list(
         self: TaskCollectionClient,
         *,
         limit: int | None = None,
@@ -96,7 +96,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(  # noqa: A003
+    async def list(
         self: TaskCollectionClientAsync,
         *,
         limit: int | None = None,

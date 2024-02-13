@@ -5,6 +5,7 @@ from typing import Any
 from apify_shared.utils import ignore_docs
 
 from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
+from apify_client.clients.resource_clients.log import LogClient
 
 
 class BuildClient(ActorJobBaseClient):
@@ -54,6 +55,18 @@ class BuildClient(ActorJobBaseClient):
                 (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return self._wait_for_finish(wait_secs=wait_secs)
+
+    def log(self: BuildClient) -> LogClient:
+        """Get the client for the log of the actor build.
+
+        // TODO: Add documentation link when it's available
+
+        Returns:
+            LogClient: A client allowing access to the log of this actor build.
+        """
+        return LogClient(
+            **self._sub_resource_init_options(resource_path='log'),
+        )
 
 
 class BuildClientAsync(ActorJobBaseClientAsync):

@@ -59,7 +59,7 @@ class BuildClient(ActorJobBaseClient):
     def log(self: BuildClient) -> LogClient:
         """Get the client for the log of the actor build.
 
-        // TODO: Add documentation link when it's available
+        https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log
 
         Returns:
             LogClient: A client allowing access to the log of this actor build.

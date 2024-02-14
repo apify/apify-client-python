@@ -2,7 +2,7 @@
 
 ## [1.6.3](../../releases/tag/v1.6.3) - Unreleased
 
-...
+- added `log()` method to `BuildClient`
 
 ## [1.6.2](../../releases/tag/v1.6.2) - 2023-01-08
 

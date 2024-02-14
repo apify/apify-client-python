@@ -5,6 +5,7 @@ from typing import Any
 from apify_shared.utils import ignore_docs
 
 from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
+from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
 
 
 class BuildClient(ActorJobBaseClient):
@@ -55,6 +56,18 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._wait_for_finish(wait_secs=wait_secs)
 
+    def log(self: BuildClient) -> LogClient:
+        """Get the client for the log of the actor build.
+
+        https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log
+
+        Returns:
+            LogClient: A client allowing access to the log of this actor build.
+        """
+        return LogClient(
+            **self._sub_resource_init_options(resource_path='log'),
+        )
+
 
 class BuildClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single actor build."""
@@ -103,3 +116,15 @@ class BuildClientAsync(ActorJobBaseClientAsync):
                 (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
+
+    def log(self: BuildClientAsync) -> LogClientAsync:
+        """Get the client for the log of the actor build.
+
+        https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log
+
+        Returns:
+            LogClientAsync: A client allowing access to the log of this actor build.
+        """
+        return LogClientAsync(
+            **self._sub_resource_init_options(resource_path='log'),
+        )

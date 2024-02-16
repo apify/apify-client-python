@@ -96,12 +96,12 @@ Production release happens after the GitHub release is created. Before you do th
 - When drafting a new GitHub release:
     - Create a new tag in the format of `v1.2.3` targeting the master branch.
     - Fill in the release title in the format of `1.2.3`.
-    - Copy the changes from the [CHANGELOG.md](https://github.com/apify/apify-sdk-python/blob/master/CHANGELOG.md) and paste them into the release description.
+    - Copy the changes from the [CHANGELOG.md](https://github.com/apify/apify-sdk-python/blob/master/CHANGELOG.md) and paste them into the release description. Make sure that all changes are properly categorized using headlines (`Added`, `Fixed` or `Internal changes`).
     - Check the "Set as the latest release" option.
 
 Currently, there is no explicit approval process, so when you are done with the checklist, proceed with the release.
 
-Once release, bump the version in `pyproject.toml`.
+Once released, manually bump the version in `pyproject.toml` ([PR example](https://github.com/apify/apify-client-python/pull/180)).
 
 ## Maintanance
 

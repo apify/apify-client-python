@@ -6,6 +6,8 @@
 
 ## [1.6.3](../../releases/tag/v1.6.3) - 2023-01-16
 
+### Added
+
 - added `log()` method to `BuildClient`
 
 ## [1.6.2](../../releases/tag/v1.6.2) - 2023-01-08

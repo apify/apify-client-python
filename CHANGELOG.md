@@ -1,6 +1,12 @@
 # Changelog
 
-## [1.6.3](../../releases/tag/v1.6.3) - Unreleased
+## [1.6.4](../../releases/tag/v1.6.4) - Not released yet
+
+...
+
+## [1.6.3](../../releases/tag/v1.6.3) - 2023-01-16
+
+### Added
 
 - added `log()` method to `BuildClient`
 

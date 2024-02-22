@@ -29,7 +29,7 @@ class UserClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/users
 
         Returns:
-            dict, optional: The retrieved user data, or None if the user does not exist.
+            The retrieved user data, or None if the user does not exist.
         """
         return self._get()
 
@@ -43,7 +43,7 @@ class UserClient(ResourceClient):
         https://docs.apify.com/api/v2/#/reference/users/monthly-usage
 
         Returns:
-            dict, optional: The retrieved request, or None, if it did not exist.
+            The retrieved request, or None, if it did not exist.
         """
         try:
             response = self.http_client.call(
@@ -67,7 +67,7 @@ class UserClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Returns:
-            dict, optional: The retrieved request, or None, if it did not exist.
+            The retrieved request, or None, if it did not exist.
         """
         try:
             response = self.http_client.call(
@@ -103,7 +103,7 @@ class UserClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/users
 
         Returns:
-            dict, optional: The retrieved user data, or None if the user does not exist.
+            The retrieved user data, or None if the user does not exist.
         """
         return await self._get()
 
@@ -117,7 +117,7 @@ class UserClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2/#/reference/users/monthly-usage
 
         Returns:
-            dict, optional: The retrieved request, or None, if it did not exist.
+            The retrieved request, or None, if it did not exist.
         """
         try:
             response = await self.http_client.call(
@@ -141,7 +141,7 @@ class UserClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Returns:
-            dict, optional: The retrieved request, or None, if it did not exist.
+            The retrieved request, or None, if it did not exist.
         """
         try:
             response = await self.http_client.call(

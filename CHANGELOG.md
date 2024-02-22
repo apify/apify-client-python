@@ -2,7 +2,9 @@
 
 ## [1.6.4](../../releases/tag/v1.6.4) - Not released yet
 
-...
+### Added
+
+- added `monthlyUsage()` and `limits()` methods to `UserClient`
 
 ## [1.6.3](../../releases/tag/v1.6.3) - 2023-01-16
 

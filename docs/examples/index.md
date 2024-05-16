@@ -29,24 +29,27 @@ To run multiple inputs with the same Actor, most convenient way is to create mul
 Task input is persisted on Apify platform when task is created.
 
 ```python
+from __future__ import annotations
+
 import asyncio
 
 from apify_client import ApifyClientAsync
+from apify_client.clients.resource_clients import TaskClientAsync
 
 animal_hashtags = ['zebra', 'lion', 'hippo']
 
 
-async def run_apify_task(client):
+async def run_apify_task(client: TaskClientAsync) -> dict:
     result = await client.call()
     return result or {}
 
 
-async def main():
+async def main() -> None:
     apify_client = ApifyClientAsync(token='MY_APIFY_TOKEN')
 
     # Create Apify tasks
 
-    apify_tasks = []
+    apify_tasks: list[dict] = []
     apify_tasks_client = apify_client.tasks()
 
     for hashtag in animal_hashtags:
@@ -62,7 +65,7 @@ async def main():
 
     # Create Apify task clients
 
-    apify_task_clients = []
+    apify_task_clients: list[TaskClientAsync] = []
 
     for apify_task in apify_tasks:
         task_id = apify_task['id']

@@ -1,11 +1,16 @@
 # Changelog
 
-## [1.7.0](../../releases/tag/v1.7.0) - Not released yet
+## [1.7.1](../../releases/tag/v1.7.1) - Unreleased
+
+...
+
+## [1.7.0](../../releases/tag/v1.7.0) - 2024-05-20
 
 ### Fixed
 
 - fix abort of last task run
 - fix abort of last Actor run
+- `ActorClient`'s and `TaskClient`'s `last_run` methods are asynchronous
 
 ## [1.6.4](../../releases/tag/v1.6.4) - 2024-02-27
 

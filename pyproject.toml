@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "build ~= 1.0.3",
+    "build ~=1.2.1",
     "mypy ~= 1.7.0",
     "pre-commit ~= 3.4.0",
     "pydoc-markdown ~= 4.8.2",

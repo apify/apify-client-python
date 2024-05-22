@@ -14,6 +14,10 @@ module.exports = {
         },
         {
             type: 'doc',
+            id: 'examples',
+        },
+        {
+            type: 'doc',
             id: 'changelog',
         },
     ],

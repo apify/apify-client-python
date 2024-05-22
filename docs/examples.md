@@ -14,7 +14,7 @@ from apify_client import ApifyClient
 # Client initialization with the API token
 apify_client = ApifyClient(token='MY_APIFY_TOKEN')
 
-actor_client = client.actor('apify/instagram-hashtag-scraper')
+actor_client = apify_client.actor('apify/instagram-hashtag-scraper')
 
 input_data = { 'hashtags': ['rainbow'], 'resultsLimit': 20 }
 
@@ -125,11 +125,11 @@ Following example demonstrates how to load items from the last dataset run and p
 Pandas is a data analysis library that provides data structures and functions to efficiently manipulate large datasets.
 
 ```python
-import apify_client
+from apify_client import ApifyClient
 import pandas
 
 # Initialize the Apify client
-client = apify_client.ApifyClient(token="MY_APIFY_TOKEN")
+client = ApifyClient(token="MY_APIFY_TOKEN")
 
 # Load items from last dataset run
 dataset_data = client.actor('apify/web-scraper').last_run().dataset().list_items()

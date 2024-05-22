@@ -29,7 +29,6 @@ To run multiple inputs with the same Actor, most convenient way is to create mul
 Task input is persisted on Apify platform when task is created.
 
 ```python
-from __future__ import annotations
 
 import asyncio
 

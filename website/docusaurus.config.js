@@ -27,7 +27,7 @@ module.exports = {
                     title: 'API Client for Python',
                     items: [
                         {
-                            to: 'docs/quick-start',
+                            to: 'docs',
                             label: 'Docs',
                             position: 'left',
                             activeBaseRegex: '/docs(?!/changelog)',

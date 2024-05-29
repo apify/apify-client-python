@@ -4,5 +4,9 @@ module.exports = {
             type: 'doc',
             id: 'index',
         },
+        {
+            type: 'doc',
+            id: 'examples',
+        },
     ],
 };

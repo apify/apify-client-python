@@ -27,7 +27,7 @@ requires-python = ">=3.8"
 # https://github.com/apify/apify-sdk-python/pull/154
 dependencies = [
     "apify-shared ~= 1.1.1",
-    "httpx >= 0.25.1",
+    "httpx >= 0.25.0",
 ]
 
 [project.optional-dependencies]
@@ -44,6 +44,7 @@ dev = [
     "pytest-xdist ~= 3.6.0",
     "redbaron ~= 0.9.0",
     "ruff ~= 0.4.0",
+    "setuptools ~= 70.0.0",
     "twine ~= 5.1.0",
 ]
 
@@ -56,7 +57,7 @@ dev = [
 "Apify Homepage" = "https://apify.com"
 
 [build-system]
-requires = ["setuptools>=64.0.0", "wheel"]
+requires = ["setuptools ~= 70.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

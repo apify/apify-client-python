@@ -290,7 +290,7 @@ from apify_client import ApifyClient
 
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
-# Resource clients accept an ID of the resource.
+# Resource clients accept an ID of the resource
 dataset_client = apify_client.dataset('dataset-id')
 
 # Number of items per page

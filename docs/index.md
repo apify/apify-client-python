@@ -24,7 +24,7 @@ To do that, run:
 pip install apify-client
 ```
 
-## Authentication and Initialization
+## Authentication and initialization
 
 To use the client, you need an [API token](https://docs.apify.com/platform/integrations/api#api-token). You can find your token under [Integrations](https://console.apify.com/account/integrations) tab in Apify Console. Copy the token and initialize the client by providing the token (`MY-APIFY-TOKEN`) as a parameter to the `ApifyClient` constructor.
 
@@ -73,7 +73,7 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 
 # Define the input for the Actor
 actor_input = {
-    "some": "input",
+    'some': 'input',
 }
 
 # Start an Actor and waits for it to finish
@@ -194,7 +194,7 @@ apify_client = ApifyClient(
     max_retries=8,
     min_delay_between_retries_millis=500, # 0.5s
     timeout_secs=360, # 6 mins
-    )
+)
 ```
 
 ### Support for asynchronous usage
@@ -287,8 +287,8 @@ while True:
     response = dataset_client.list_items(limit=limit, offset=offset)
     items = response.items
     total = response.total
-
-    print(f"Fetched {len(items)} items")
+    
+    print(f'Fetched {len(items)} items')
 
     # Merge new items with other already loaded items
     all_items.extend(items)
@@ -299,9 +299,7 @@ while True:
 
     offset += limit
 
-print(f"Overall fetched {len(all_items)} items")
-
-```
+print(f'Overall fetched {len(all_items)} items')
 
 ### Streaming resources
 

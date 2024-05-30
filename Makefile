@@ -26,13 +26,13 @@ lint:
 	python3 -m ruff check $(DIRS_WITH_CODE)
 
 unit-tests:
-	python3 -m pytest -n auto -ra tests/unit --cov=src/apify_client
+	python3 -m pytest --numprocesses=auto --verbose -ra --cov=src/apify_client tests/unit
 
 unit-tests-cov:
-	python3 -m pytest -n auto -ra tests/unit --cov=src/apify_client --cov-report=html
+	python3 -m pytest --numprocesses=auto --verbose -ra --cov=src/apify_client --cov-report=html tests/unit
 
 integration-tests:
-	python3 -m pytest -n $(INTEGRATION_TESTS_CONCURRENCY) -ra tests/integration
+	python3 -m pytest --numprocesses=$(INTEGRATION_TESTS_CONCURRENCY) --verbose -ra tests/integration
 
 type-check:
 	python3 -m mypy $(DIRS_WITH_CODE)

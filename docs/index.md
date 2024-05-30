@@ -54,8 +54,11 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 # Start an Actor and waits for it to finish
 actor_call = apify_client.actor('username/actor-name').call()
 
+# Get a Actor's dataset
+dataset_client = apify_client.dataset(actor_call['defaultDatasetId'])
+
 # Lists items from the Actor's dataset
-dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
+dataset_items = dataset_client.list_items().items
 ```
 
 ### Running Actors
@@ -89,8 +92,11 @@ from apify_client import ApifyClient
 
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
+# Get dataset
+dataset_client = apify_client.dataset('dataset-id')
+
 # Lists items from the Actor's dataset
-dataset_items = apify_client.dataset('daset-id').list_items().items
+dataset_items = dataset_client.list_items().items
 ```
 
 :::note Dataset access
@@ -113,8 +119,10 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 
 # Collection clients do not require a parameter
 actor_collection_client = apify_client.actors()
+
 # Create an actor with the name: my-actor
 my_actor = actor_collection_client.create(name='my-actor')
+
 # List all of your actors
 actor_list = actor_collection_client.list().items
 ```
@@ -128,8 +136,10 @@ The resource ID can be either the `id` of the said resource, or a combination 
 ```python
 # Resource clients accept an ID of the resource
 actor_client = apify_client.actor('username/actor-name')
+
 # Fetch the 'username/actor-name' object from the API
 my_actor = actor_client.get()
+
 # Start the run of 'username/actor-name' and return the Run object
 my_actor_run = actor_client.start()
 ```
@@ -145,13 +155,18 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 
 actor_client = apify_client.actor('username/actor-name')
 runs_client = actor_client.runs()
+
 # List the last 10 runs of the Actor
 actor_runs = runs_client.list(limit=10, desc=True).items
 
 # Select the last run of the Actor that finished with a SUCCEEDED status
 last_succeeded_run_client = actor_client.last_run(status='SUCCEEDED')
+
+# Get dataset
+actor_run_dataset_client = last_succeeded_run_client.dataset()
+
 # Fetch items from the run's dataset
-dataset_items = last_succeeded_run_client.dataset().list_items().items
+dataset_items = actor_run_dataset_client.list_items().items
 ```
 
 The quick access to `dataset` and other storage directly from the run client can be used with the [`last_run()`](/reference/class/ActorClient#last_run) method.
@@ -170,7 +185,9 @@ from apify_client import ApifyClient
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
 try:
-    dataset_items = apify_client.dataset('not-existing-dataset-id').list_items().items
+    # Try to list items from non-existing dataset
+    dataset_client = apify_client.dataset('not-existing-dataset-id')
+    dataset_items = dataset_client.list_items().items
 except Exception as ApifyApiError:
     # The exception is an instance of ApifyApiError
     print(ApifyApiError)
@@ -300,6 +317,7 @@ while True:
     offset += limit
 
 print(f'Overall fetched {len(all_items)} items')
+```
 
 ### Streaming resources
 

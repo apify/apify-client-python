@@ -2,7 +2,7 @@
 
 ## [1.7.1](../../releases/tag/v1.7.1) - Unreleased
 
-...
+- add `headers_template` kwarg to webhook create and update
 
 ## [1.7.0](../../releases/tag/v1.7.0) - 2024-05-20
 

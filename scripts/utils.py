@@ -48,7 +48,7 @@ def sync_to_async_docstring(docstring: str) -> str:
     substitutions = [(r'Client', r'ClientAsync')]
     res = docstring
     for pattern, replacement in substitutions:
-        res = re.sub(pattern, replacement, res, flags=re.M)
+        res = re.sub(pattern, replacement, res, flags=re.MULTILINE)
     return res
 
 

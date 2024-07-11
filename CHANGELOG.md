@@ -2,7 +2,10 @@
 
 ## [1.7.1](../../releases/tag/v1.7.1) - Unreleased
 
-...
+### Fixed
+
+- fix breaking change (sync -> async) in 1.7.0
+- fix getting storages of last run
 
 ## [1.7.0](../../releases/tag/v1.7.0) - 2024-05-20
 

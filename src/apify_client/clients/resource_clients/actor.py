@@ -344,31 +344,10 @@ class ActorClient(ResourceClient):
         Returns:
             RunClient: The resource client for the last run of this actor.
         """
-        # Note:
-        # The API does not provide a direct endpoint for aborting the last Actor run using a URL like:
-        # https://api.apify.com/v2/acts/{actor_id}/runs/last/abort
-        # To achieve this, we need to implement a workaround using the following URL format:
-        # https://api.apify.com/v2/acts/{actorId}/runs/{runId}/abort
-
-        last_run_client = RunClient(
+        return RunClient(
             **self._sub_resource_init_options(
                 resource_id='last',
                 resource_path='runs',
-                params=self._params(
-                    status=maybe_extract_enum_member_value(status),
-                    origin=maybe_extract_enum_member_value(origin),
-                ),
-            )
-        )
-
-        last_run_client_info = last_run_client.get()
-        actor_id = last_run_client_info['actId']  # type: ignore
-        actor_run_id = last_run_client_info['id']  # type: ignore
-
-        return RunClient(
-            **self._sub_resource_init_options(
-                base_url='https://api.apify.com/v2',
-                resource_path=f'acts/{actor_id}/runs/{actor_run_id}',
                 params=self._params(
                     status=maybe_extract_enum_member_value(status),
                     origin=maybe_extract_enum_member_value(origin),
@@ -655,7 +634,7 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve a client for the runs of this actor."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
-    async def last_run(self: ActorClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
+    def last_run(self: ActorClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this actor.
 
         Last run is retrieved based on the start time of the runs.
@@ -667,31 +646,10 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             RunClientAsync: The resource client for the last run of this actor.
         """
-        # Note:
-        # The API does not provide a direct endpoint for aborting the last Actor run using a URL like:
-        # https://api.apify.com/v2/acts/{actor_id}/runs/last/abort
-        # To achieve this, we need to implement a workaround using the following URL format:
-        # https://api.apify.com/v2/acts/{actorId}/runs/{runId}/abort
-
-        last_run_client = RunClientAsync(
+        return RunClientAsync(
             **self._sub_resource_init_options(
                 resource_id='last',
                 resource_path='runs',
-                params=self._params(
-                    status=maybe_extract_enum_member_value(status),
-                    origin=maybe_extract_enum_member_value(origin),
-                ),
-            )
-        )
-
-        last_run_client_info = await last_run_client.get()
-        actor_id = last_run_client_info['actId']  # type: ignore
-        actor_run_id = last_run_client_info['id']  # type: ignore
-
-        return RunClientAsync(
-            **self._sub_resource_init_options(
-                base_url='https://api.apify.com/v2',
-                resource_path=f'acts/{actor_id}/runs/{actor_run_id}',
                 params=self._params(
                     status=maybe_extract_enum_member_value(status),
                     origin=maybe_extract_enum_member_value(origin),

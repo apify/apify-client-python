@@ -72,9 +72,14 @@ class InvalidResponseBodyError(ApifyClientError):
         self.response = response
 
 
-def is_retryable_error(e: Exception) -> bool:
+def is_retryable_error(exc: Exception) -> bool:
     """Check if the given error is retryable."""
-    if isinstance(e, (InvalidResponseBodyError, httpx.NetworkError, httpx.TimeoutException, httpx.RemoteProtocolError)):
-        return True
-
-    return False
+    return isinstance(
+        exc,
+        (
+            InvalidResponseBodyError,
+            httpx.NetworkError,
+            httpx.TimeoutException,
+            httpx.RemoteProtocolError,
+        ),
+    )

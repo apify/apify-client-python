@@ -42,7 +42,7 @@ for client_source_path in clients_path.glob('**/*.py'):
                     continue
 
                 # Work around a bug in Red Baron, which indents docstrings too much when you insert them, so we have to un-indent it one level first
-                correct_async_docstring = re.sub('^    ', '', correct_async_docstring, flags=re.M)
+                correct_async_docstring = re.sub('^    ', '', correct_async_docstring, flags=re.MULTILINE)
 
                 if not isinstance(async_docstring, str):
                     print(f'Fixing missing docstring for "{async_class.name}.{async_method.name}"...')
@@ -54,14 +54,14 @@ for client_source_path in clients_path.glob('**/*.py'):
 
         # Work around a bug in Red Baron, which adds indents to docstrings when you insert them (including empty lines),
         # so we have to remove the extra whitespace
-        updated_source_code = re.sub('^    $', '', updated_source_code, flags=re.M)
+        updated_source_code = re.sub('^    $', '', updated_source_code, flags=re.MULTILINE)
 
         # Work around a bug in Red Baron, which indents `except` and `finally` statements wrong
         # so we have to add some extra whitespace
-        updated_source_code = re.sub('^except', '        except', updated_source_code, flags=re.M)
-        updated_source_code = re.sub('^    except', '        except', updated_source_code, flags=re.M)
-        updated_source_code = re.sub('^finally', '        finally', updated_source_code, flags=re.M)
-        updated_source_code = re.sub('^    finally', '        finally', updated_source_code, flags=re.M)
+        updated_source_code = re.sub('^except', '        except', updated_source_code, flags=re.MULTILINE)
+        updated_source_code = re.sub('^    except', '        except', updated_source_code, flags=re.MULTILINE)
+        updated_source_code = re.sub('^finally', '        finally', updated_source_code, flags=re.MULTILINE)
+        updated_source_code = re.sub('^    finally', '        finally', updated_source_code, flags=re.MULTILINE)
 
         # Work around a bug in Red Baron, which sometimes adds an extra new line to the end of a file
         updated_source_code = updated_source_code.rstrip() + '\n'

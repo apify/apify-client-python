@@ -23,6 +23,7 @@ def get_webhook_representation(
     event_types: list[WebhookEventType] | None = None,
     request_url: str | None = None,
     payload_template: str | None = None,
+    headers_template: str | None = None,
     actor_id: str | None = None,
     actor_task_id: str | None = None,
     actor_run_id: str | None = None,
@@ -35,6 +36,7 @@ def get_webhook_representation(
     webhook: dict = {
         'requestUrl': request_url,
         'payloadTemplate': payload_template,
+        'headersTemplate': headers_template,
         'ignoreSslErrors': ignore_ssl_errors,
         'doNotRetry': do_not_retry,
         'idempotencyKey': idempotency_key,
@@ -80,6 +82,7 @@ class WebhookClient(ResourceClient):
         event_types: list[WebhookEventType] | None = None,
         request_url: str | None = None,
         payload_template: str | None = None,
+        headers_template: str | None = None,
         actor_id: str | None = None,
         actor_task_id: str | None = None,
         actor_run_id: str | None = None,
@@ -95,6 +98,7 @@ class WebhookClient(ResourceClient):
             event_types (list of WebhookEventType, optional): List of event types that should trigger the webhook. At least one is required.
             request_url (str, optional): URL that will be invoked once the webhook is triggered.
             payload_template (str, optional): Specification of the payload that will be sent to request_url
+            headers_template (str, optional): Headers that will be sent to the request_url
             actor_id (str, optional): Id of the actor whose runs should trigger the webhook.
             actor_task_id (str, optional): Id of the actor task whose runs should trigger the webhook.
             actor_run_id (str, optional): Id of the actor run which should trigger the webhook.
@@ -111,6 +115,7 @@ class WebhookClient(ResourceClient):
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
+            headers_template=headers_template,
             actor_id=actor_id,
             actor_task_id=actor_task_id,
             actor_run_id=actor_run_id,
@@ -190,6 +195,7 @@ class WebhookClientAsync(ResourceClientAsync):
         event_types: list[WebhookEventType] | None = None,
         request_url: str | None = None,
         payload_template: str | None = None,
+        headers_template: str | None = None,
         actor_id: str | None = None,
         actor_task_id: str | None = None,
         actor_run_id: str | None = None,
@@ -205,6 +211,7 @@ class WebhookClientAsync(ResourceClientAsync):
             event_types (list of WebhookEventType, optional): List of event types that should trigger the webhook. At least one is required.
             request_url (str, optional): URL that will be invoked once the webhook is triggered.
             payload_template (str, optional): Specification of the payload that will be sent to request_url
+            headers_template (str, optional): Headers that will be sent to the request_url
             actor_id (str, optional): Id of the actor whose runs should trigger the webhook.
             actor_task_id (str, optional): Id of the actor task whose runs should trigger the webhook.
             actor_run_id (str, optional): Id of the actor run which should trigger the webhook.
@@ -221,6 +228,7 @@ class WebhookClientAsync(ResourceClientAsync):
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
+            headers_template=headers_template,
             actor_id=actor_id,
             actor_task_id=actor_task_id,
             actor_run_id=actor_run_id,

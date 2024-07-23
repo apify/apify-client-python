@@ -29,6 +29,11 @@ def get_task_representation(
     memory_mbytes: int | None = None,
     timeout_secs: int | None = None,
     title: str | None = None,
+    actor_standby_desired_requests_per_actor_run: int | None = None,
+    actor_standby_max_requests_per_actor_run: int | None = None,
+    actor_standby_idle_timeout_secs: int | None = None,
+    actor_standby_build: str | None = None,
+    actor_standby_memory_mbytes: int | None = None,
 ) -> dict:
     """Get the dictionary representation of a task."""
     return {
@@ -42,6 +47,13 @@ def get_task_representation(
         },
         'input': task_input,
         'title': title,
+        'actorStandby': {
+            'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
+            'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
+            'idleTimeoutSecs': actor_standby_idle_timeout_secs,
+            'build': actor_standby_build,
+            'memoryMbytes': actor_standby_memory_mbytes,
+        },
     }
 
 
@@ -74,6 +86,11 @@ class TaskClient(ResourceClient):
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         title: str | None = None,
+        actor_standby_desired_requests_per_actor_run: int | None = None,
+        actor_standby_max_requests_per_actor_run: int | None = None,
+        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_build: str | None = None,
+        actor_standby_memory_mbytes: int | None = None,
     ) -> dict:
         """Update the task with specified fields.
 
@@ -90,6 +107,12 @@ class TaskClient(ResourceClient):
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
             task_input (dict, optional): Task input dictionary
             title (str, optional): A human-friendly equivalent of the name
+            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
+            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
+            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
             dict: The updated task
@@ -102,6 +125,11 @@ class TaskClient(ResourceClient):
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             title=title,
+            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_build=actor_standby_build,
+            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
         return self._update(filter_out_none_values_recursively(task_representation))

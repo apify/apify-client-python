@@ -63,6 +63,12 @@ class ActorCollectionClient(ResourceCollectionClient):
         default_run_timeout_secs: int | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
+        actor_standby_is_enabled: bool | None = None,
+        actor_standby_desired_requests_per_actor_run: int | None = None,
+        actor_standby_max_requests_per_actor_run: int | None = None,
+        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_build: str | None = None,
+        actor_standby_memory_mbytes: int | None = None,
     ) -> dict:
         """Create a new actor.
 
@@ -87,6 +93,13 @@ class ActorCollectionClient(ResourceCollectionClient):
             default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
             example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
             example_run_input_content_type (str, optional): The content type of the example run input.
+            actor_standby_is_enabled (bool, optional): Whether the Actor Standby is enabled.
+            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
+            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
+            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
             dict: The created actor.
@@ -109,6 +122,12 @@ class ActorCollectionClient(ResourceCollectionClient):
             default_run_timeout_secs=default_run_timeout_secs,
             example_run_input_body=example_run_input_body,
             example_run_input_content_type=example_run_input_content_type,
+            actor_standby_is_enabled=actor_standby_is_enabled,
+            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_build=actor_standby_build,
+            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
         return self._create(filter_out_none_values_recursively(actor_representation))

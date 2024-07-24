@@ -57,7 +57,7 @@ dev = [
 "Apify Homepage" = "https://apify.com"
 
 [build-system]
-requires = ["setuptools ~= 70.3.0", "wheel"]
+requires = ["setuptools ~=71.1.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

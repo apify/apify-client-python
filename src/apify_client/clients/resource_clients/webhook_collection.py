@@ -68,9 +68,9 @@ class WebhookCollectionClient(ResourceCollectionClient):
             request_url (str): URL that will be invoked once the webhook is triggered.
             payload_template (str, optional): Specification of the payload that will be sent to request_url
             headers_template (str, optional): Headers that will be sent to the request_url
-            actor_id (str, optional): Id of the actor whose runs should trigger the webhook.
-            actor_task_id (str, optional): Id of the actor task whose runs should trigger the webhook.
-            actor_run_id (str, optional): Id of the actor run which should trigger the webhook.
+            actor_id (str, optional): Id of the Actor whose runs should trigger the webhook.
+            actor_task_id (str, optional): Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id (str, optional): Id of the Actor run which should trigger the webhook.
             ignore_ssl_errors (bool, optional): Whether the webhook should ignore SSL errors returned by request_url
             do_not_retry (bool, optional): Whether the webhook should retry sending the payload to request_url upon
                                            failure.
@@ -155,9 +155,9 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
             request_url (str): URL that will be invoked once the webhook is triggered.
             payload_template (str, optional): Specification of the payload that will be sent to request_url
             headers_template (str, optional): Headers that will be sent to the request_url
-            actor_id (str, optional): Id of the actor whose runs should trigger the webhook.
-            actor_task_id (str, optional): Id of the actor task whose runs should trigger the webhook.
-            actor_run_id (str, optional): Id of the actor run which should trigger the webhook.
+            actor_id (str, optional): Id of the Actor whose runs should trigger the webhook.
+            actor_task_id (str, optional): Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id (str, optional): Id of the Actor run which should trigger the webhook.
             ignore_ssl_errors (bool, optional): Whether the webhook should ignore SSL errors returned by request_url
             do_not_retry (bool, optional): Whether the webhook should retry sending the payload to request_url upon
                                            failure.

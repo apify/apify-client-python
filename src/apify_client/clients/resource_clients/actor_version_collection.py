@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):
-    """Sub-client for manipulating actor versions."""
+    """Sub-client for manipulating Actor versions."""
 
     @ignore_docs
     def __init__(self: ActorVersionCollectionClient, *args: Any, **kwargs: Any) -> None:
@@ -22,12 +22,12 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(self: ActorVersionCollectionClient) -> ListPage[dict]:
-        """List the available actor versions.
+        """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Returns:
-            ListPage: The list of available actor versions.
+            ListPage: The list of available Actor versions.
         """
         return self._list()
 
@@ -44,18 +44,18 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
     ) -> dict:
-        """Create a new actor version.
+        """Create a new Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version
 
         Args:
-            version_number (str): Major and minor version of the actor (e.g. ``1.0``)
+            version_number (str): Major and minor version of the Actor (e.g. ``1.0``)
             build_tag (str, optional): Tag that is automatically set to the latest successful build of the current version.
-            env_vars (list of dict, optional): Environment variables that will be available to the actor run process,
+            env_vars (list of dict, optional): Environment variables that will be available to the Actor run process,
                 and optionally also to the build process. See the API docs for their exact structure.
-            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the actor run
-                will also be set to the actor build process.
-            source_type (ActorSourceType): What source type is the actor version using.
+            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the Actor run
+                will also be set to the Actor build process.
+            source_type (ActorSourceType): What source type is the Actor version using.
             source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
                 Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
             git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
@@ -66,7 +66,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
                 Required when ``source_type`` is ``ActorSourceType.GITHUB_GIST``.
 
         Returns:
-            dict: The created actor version
+            dict: The created Actor version
         """
         actor_version_representation = _get_actor_version_representation(
             version_number=version_number,
@@ -84,7 +84,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
 
 
 class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
-    """Async sub-client for manipulating actor versions."""
+    """Async sub-client for manipulating Actor versions."""
 
     @ignore_docs
     def __init__(self: ActorVersionCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
@@ -93,12 +93,12 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(self: ActorVersionCollectionClientAsync) -> ListPage[dict]:
-        """List the available actor versions.
+        """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Returns:
-            ListPage: The list of available actor versions.
+            ListPage: The list of available Actor versions.
         """
         return await self._list()
 
@@ -115,18 +115,18 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
     ) -> dict:
-        """Create a new actor version.
+        """Create a new Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version
 
         Args:
-            version_number (str): Major and minor version of the actor (e.g. ``1.0``)
+            version_number (str): Major and minor version of the Actor (e.g. ``1.0``)
             build_tag (str, optional): Tag that is automatically set to the latest successful build of the current version.
-            env_vars (list of dict, optional): Environment variables that will be available to the actor run process,
+            env_vars (list of dict, optional): Environment variables that will be available to the Actor run process,
                 and optionally also to the build process. See the API docs for their exact structure.
-            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the actor run
-                will also be set to the actor build process.
-            source_type (ActorSourceType): What source type is the actor version using.
+            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the Actor run
+                will also be set to the Actor build process.
+            source_type (ActorSourceType): What source type is the Actor version using.
             source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
                 Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
             git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
@@ -137,7 +137,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
                 Required when ``source_type`` is ``ActorSourceType.GITHUB_GIST``.
 
         Returns:
-            dict: The created actor version
+            dict: The created Actor version
         """
         actor_version_representation = _get_actor_version_representation(
             version_number=version_number,

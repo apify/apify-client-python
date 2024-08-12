@@ -168,9 +168,9 @@ class TaskClient(ResourceClient):
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-                                               associated with the actor run which can be used to receive a notification,
-                                               e.g. when the actor finished or failed.
-                                               If you already have a webhook set up for the actor or task, you do not have to add it again here.
+                                               associated with the Actor run which can be used to receive a notification,
+                                               e.g. when the Actor finished or failed.
+                                               If you already have a webhook set up for the Actor or task, you do not have to add it again here.
                                                Each webhook is represented by a dictionary containing these items:
                                                * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
                                                * ``request_url``: URL to which to send the webhook HTTP request
@@ -217,15 +217,15 @@ class TaskClient(ResourceClient):
 
         Args:
             task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
-                                       e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
+            webhooks (list, optional): Specifies optional webhooks associated with the Actor run, which can be used to receive a notification
+                                       e.g. when the Actor finished or failed. Note: if you already have a webhook set up for the Actor or task,
                                        you do not have to add it again here.
             wait_secs (int, optional): The maximum number of seconds the server waits for the task run to finish. If not provided, waits indefinitely.
 
@@ -411,7 +411,7 @@ class TaskClientAsync(ResourceClientAsync):
 
         Args:
             task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
@@ -421,9 +421,9 @@ class TaskClientAsync(ResourceClientAsync):
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-                                               associated with the actor run which can be used to receive a notification,
-                                               e.g. when the actor finished or failed.
-                                               If you already have a webhook set up for the actor or task, you do not have to add it again here.
+                                               associated with the Actor run which can be used to receive a notification,
+                                               e.g. when the Actor finished or failed.
+                                               If you already have a webhook set up for the Actor or task, you do not have to add it again here.
                                                Each webhook is represented by a dictionary containing these items:
                                                * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
                                                * ``request_url``: URL to which to send the webhook HTTP request
@@ -470,15 +470,15 @@ class TaskClientAsync(ResourceClientAsync):
 
         Args:
             task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
                                            By default, the run uses a memory limit specified in the task settings.
             timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            webhooks (list, optional): Specifies optional webhooks associated with the actor run, which can be used to receive a notification
-                                       e.g. when the actor finished or failed. Note: if you already have a webhook set up for the actor or task,
+            webhooks (list, optional): Specifies optional webhooks associated with the Actor run, which can be used to receive a notification
+                                       e.g. when the Actor finished or failed. Note: if you already have a webhook set up for the Actor or task,
                                        you do not have to add it again here.
             wait_secs (int, optional): The maximum number of seconds the server waits for the task run to finish. If not provided, waits indefinitely.
 

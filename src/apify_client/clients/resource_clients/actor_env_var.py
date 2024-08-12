@@ -22,7 +22,7 @@ def get_actor_env_var_representation(
 
 
 class ActorEnvVarClient(ResourceClient):
-    """Sub-client for manipulating a single actor environment variable."""
+    """Sub-client for manipulating a single Actor environment variable."""
 
     @ignore_docs
     def __init__(self: ActorEnvVarClient, *args: Any, **kwargs: Any) -> None:
@@ -31,12 +31,12 @@ class ActorEnvVarClient(ResourceClient):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ActorEnvVarClient) -> dict | None:
-        """Return information about the actor environment variable.
+        """Return information about the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/get-environment-variable
 
         Returns:
-            dict, optional: The retrieved actor environment variable data
+            dict, optional: The retrieved Actor environment variable data
         """
         return self._get()
 
@@ -47,7 +47,7 @@ class ActorEnvVarClient(ResourceClient):
         name: str,
         value: str,
     ) -> dict:
-        """Update the actor environment variable with specified fields.
+        """Update the Actor environment variable with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/update-environment-variable
 
@@ -57,7 +57,7 @@ class ActorEnvVarClient(ResourceClient):
             value (str): The value of the environment variable
 
         Returns:
-            dict: The updated actor environment variable
+            dict: The updated Actor environment variable
         """
         actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,
@@ -68,7 +68,7 @@ class ActorEnvVarClient(ResourceClient):
         return self._update(filter_out_none_values_recursively(actor_env_var_representation))
 
     def delete(self: ActorEnvVarClient) -> None:
-        """Delete the actor environment variable.
+        """Delete the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/delete-environment-variable
         """
@@ -76,7 +76,7 @@ class ActorEnvVarClient(ResourceClient):
 
 
 class ActorEnvVarClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single actor environment variable."""
+    """Async sub-client for manipulating a single Actor environment variable."""
 
     @ignore_docs
     def __init__(self: ActorEnvVarClientAsync, *args: Any, **kwargs: Any) -> None:
@@ -85,12 +85,12 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ActorEnvVarClientAsync) -> dict | None:
-        """Return information about the actor environment variable.
+        """Return information about the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/get-environment-variable
 
         Returns:
-            dict, optional: The retrieved actor environment variable data
+            dict, optional: The retrieved Actor environment variable data
         """
         return await self._get()
 
@@ -101,7 +101,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         name: str,
         value: str,
     ) -> dict:
-        """Update the actor environment variable with specified fields.
+        """Update the Actor environment variable with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/update-environment-variable
 
@@ -111,7 +111,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             value (str): The value of the environment variable
 
         Returns:
-            dict: The updated actor environment variable
+            dict: The updated Actor environment variable
         """
         actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,
@@ -122,7 +122,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         return await self._update(filter_out_none_values_recursively(actor_env_var_representation))
 
     async def delete(self: ActorEnvVarClientAsync) -> None:
-        """Delete the actor environment variable.
+        """Delete the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/delete-environment-variable
         """

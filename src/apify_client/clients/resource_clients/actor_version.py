@@ -38,7 +38,7 @@ def _get_actor_version_representation(
 
 
 class ActorVersionClient(ResourceClient):
-    """Sub-client for manipulating a single actor version."""
+    """Sub-client for manipulating a single Actor version."""
 
     @ignore_docs
     def __init__(self: ActorVersionClient, *args: Any, **kwargs: Any) -> None:
@@ -47,12 +47,12 @@ class ActorVersionClient(ResourceClient):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ActorVersionClient) -> dict | None:
-        """Return information about the actor version.
+        """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
 
         Returns:
-            dict, optional: The retrieved actor version data
+            dict, optional: The retrieved Actor version data
         """
         return self._get()
 
@@ -68,17 +68,17 @@ class ActorVersionClient(ResourceClient):
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
     ) -> dict:
-        """Update the actor version with specified fields.
+        """Update the Actor version with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/update-version
 
         Args:
             build_tag (str, optional): Tag that is automatically set to the latest successful build of the current version.
-            env_vars (list of dict, optional): Environment variables that will be available to the actor run process,
+            env_vars (list of dict, optional): Environment variables that will be available to the Actor run process,
                 and optionally also to the build process. See the API docs for their exact structure.
-            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the actor run
-                will also be set to the actor build process.
-            source_type (ActorSourceType, optional): What source type is the actor version using.
+            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the Actor run
+                will also be set to the Actor build process.
+            source_type (ActorSourceType, optional): What source type is the Actor version using.
             source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
                 Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
             git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
@@ -89,7 +89,7 @@ class ActorVersionClient(ResourceClient):
                 Required when ``source_type`` is ``ActorSourceType.GITHUB_GIST``.
 
         Returns:
-            dict: The updated actor version
+            dict: The updated Actor version
         """
         actor_version_representation = _get_actor_version_representation(
             build_tag=build_tag,
@@ -105,30 +105,30 @@ class ActorVersionClient(ResourceClient):
         return self._update(filter_out_none_values_recursively(actor_version_representation))
 
     def delete(self: ActorVersionClient) -> None:
-        """Delete the actor version.
+        """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         return self._delete()
 
     def env_vars(self: ActorVersionClient) -> ActorEnvVarCollectionClient:
-        """Retrieve a client for the environment variables of this actor version."""
+        """Retrieve a client for the environment variables of this Actor version."""
         return ActorEnvVarCollectionClient(**self._sub_resource_init_options())
 
     def env_var(self: ActorVersionClient, env_var_name: str) -> ActorEnvVarClient:
-        """Retrieve the client for the specified environment variable of this actor version.
+        """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:
             env_var_name (str): The name of the environment variable for which to retrieve the resource client.
 
         Returns:
-            ActorEnvVarClient: The resource client for the specified actor environment variable.
+            ActorEnvVarClient: The resource client for the specified Actor environment variable.
         """
         return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
 
 
 class ActorVersionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single actor version."""
+    """Async sub-client for manipulating a single Actor version."""
 
     @ignore_docs
     def __init__(self: ActorVersionClientAsync, *args: Any, **kwargs: Any) -> None:
@@ -137,12 +137,12 @@ class ActorVersionClientAsync(ResourceClientAsync):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ActorVersionClientAsync) -> dict | None:
-        """Return information about the actor version.
+        """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
 
         Returns:
-            dict, optional: The retrieved actor version data
+            dict, optional: The retrieved Actor version data
         """
         return await self._get()
 
@@ -158,17 +158,17 @@ class ActorVersionClientAsync(ResourceClientAsync):
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
     ) -> dict:
-        """Update the actor version with specified fields.
+        """Update the Actor version with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/update-version
 
         Args:
             build_tag (str, optional): Tag that is automatically set to the latest successful build of the current version.
-            env_vars (list of dict, optional): Environment variables that will be available to the actor run process,
+            env_vars (list of dict, optional): Environment variables that will be available to the Actor run process,
                 and optionally also to the build process. See the API docs for their exact structure.
-            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the actor run
-                will also be set to the actor build process.
-            source_type (ActorSourceType, optional): What source type is the actor version using.
+            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the Actor run
+                will also be set to the Actor build process.
+            source_type (ActorSourceType, optional): What source type is the Actor version using.
             source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
                 Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
             git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
@@ -179,7 +179,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
                 Required when ``source_type`` is ``ActorSourceType.GITHUB_GIST``.
 
         Returns:
-            dict: The updated actor version
+            dict: The updated Actor version
         """
         actor_version_representation = _get_actor_version_representation(
             build_tag=build_tag,
@@ -195,23 +195,23 @@ class ActorVersionClientAsync(ResourceClientAsync):
         return await self._update(filter_out_none_values_recursively(actor_version_representation))
 
     async def delete(self: ActorVersionClientAsync) -> None:
-        """Delete the actor version.
+        """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         return await self._delete()
 
     def env_vars(self: ActorVersionClientAsync) -> ActorEnvVarCollectionClientAsync:
-        """Retrieve a client for the environment variables of this actor version."""
+        """Retrieve a client for the environment variables of this Actor version."""
         return ActorEnvVarCollectionClientAsync(**self._sub_resource_init_options())
 
     def env_var(self: ActorVersionClientAsync, env_var_name: str) -> ActorEnvVarClientAsync:
-        """Retrieve the client for the specified environment variable of this actor version.
+        """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:
             env_var_name (str): The name of the environment variable for which to retrieve the resource client.
 
         Returns:
-            ActorEnvVarClientAsync: The resource client for the specified actor environment variable.
+            ActorEnvVarClientAsync: The resource client for the specified Actor environment variable.
         """
         return ActorEnvVarClientAsync(**self._sub_resource_init_options(resource_id=env_var_name))

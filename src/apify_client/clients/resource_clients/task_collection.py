@@ -63,7 +63,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
         Args:
-            actor_id (str): Id of the actor that should be run
+            actor_id (str): Id of the Actor that should be run
             name (str): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
@@ -155,7 +155,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
         Args:
-            actor_id (str): Id of the actor that should be run
+            actor_id (str): Id of the Actor that should be run
             name (str): Name of the task
             build (str, optional): Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).

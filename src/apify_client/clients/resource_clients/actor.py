@@ -83,7 +83,7 @@ def get_actor_representation(
 
 
 class ActorClient(ResourceClient):
-    """Sub-client for manipulating a single actor."""
+    """Sub-client for manipulating a single Actor."""
 
     @ignore_docs
     def __init__(self: ActorClient, *args: Any, **kwargs: Any) -> None:
@@ -92,12 +92,12 @@ class ActorClient(ResourceClient):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: ActorClient) -> dict | None:
-        """Retrieve the actor.
+        """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
 
         Returns:
-            dict, optional: The retrieved actor
+            dict, optional: The retrieved Actor
         """
         return self._get()
 
@@ -128,28 +128,28 @@ class ActorClient(ResourceClient):
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> dict:
-        """Update the actor with the specified fields.
+        """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
 
         Args:
-            name (str, optional): The name of the actor
-            title (str, optional): The title of the actor (human-readable)
-            description (str, optional): The description for the actor
-            seo_title (str, optional): The title of the actor optimized for search engines
-            seo_description (str, optional): The description of the actor optimized for search engines
-            versions (list of dict, optional): The list of actor versions
-            restart_on_error (bool, optional): If true, the main actor run process will be restarted whenever it exits with a non-zero status code.
-            is_public (bool, optional): Whether the actor is public.
-            is_deprecated (bool, optional): Whether the actor is deprecated.
-            is_anonymously_runnable (bool, optional): Whether the actor is anonymously runnable.
-            categories (list of str, optional): The categories to which the actor belongs to.
+            name (str, optional): The name of the Actor
+            title (str, optional): The title of the Actor (human-readable)
+            description (str, optional): The description for the Actor
+            seo_title (str, optional): The title of the Actor optimized for search engines
+            seo_description (str, optional): The description of the Actor optimized for search engines
+            versions (list of dict, optional): The list of Actor versions
+            restart_on_error (bool, optional): If true, the main Actor run process will be restarted whenever it exits with a non-zero status code.
+            is_public (bool, optional): Whether the Actor is public.
+            is_deprecated (bool, optional): Whether the Actor is deprecated.
+            is_anonymously_runnable (bool, optional): Whether the Actor is anonymously runnable.
+            categories (list of str, optional): The categories to which the Actor belongs to.
             default_run_build (str, optional): Tag or number of the build that you want to run by default.
             default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
                                                    if the Actor is charged per result.
-            default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this actor, in megabytes.
-            default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
-            example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
+            default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this Actor, in megabytes.
+            default_run_timeout_secs (int, optional): Default timeout for the runs of this Actor in seconds.
+            example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type (str, optional): The content type of the example run input.
             actor_standby_is_enabled (bool, optional): Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
@@ -160,7 +160,7 @@ class ActorClient(ResourceClient):
             actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The updated actor
+            dict: The updated Actor
         """
         actor_representation = get_actor_representation(
             name=name,
@@ -191,7 +191,7 @@ class ActorClient(ResourceClient):
         return self._update(filter_out_none_values_recursively(actor_representation))
 
     def delete(self: ActorClient) -> None:
-        """Delete the actor.
+        """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
         """
@@ -209,27 +209,27 @@ class ActorClient(ResourceClient):
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
     ) -> dict:
-        """Start the actor and immediately return the Run object.
+        """Start the Actor and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input (Any, optional): The input to pass to the actor run.
+            run_input (Any, optional): The input to pass to the Actor run.
             content_type (str, optional): The content type of the input.
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
+                                   By default, the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the default run configuration for the actor.
+                                           By default, the run uses a memory limit specified in the default run configuration for the Actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
-                                          By default, the run uses timeout specified in the default run configuration for the actor.
+                                          By default, the run uses timeout specified in the default run configuration for the Actor.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-                                               associated with the actor run which can be used to receive a notification,
-                                               e.g. when the actor finished or failed.
-                                               If you already have a webhook set up for the actor or task, you do not have to add it again here.
+                                               associated with the Actor run which can be used to receive a notification,
+                                               e.g. when the Actor finished or failed.
+                                               If you already have a webhook set up for the Actor or task, you do not have to add it again here.
                                                Each webhook is represented by a dictionary containing these items:
                                                * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
                                                * ``request_url``: URL to which to send the webhook HTTP request
@@ -271,26 +271,26 @@ class ActorClient(ResourceClient):
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
     ) -> dict | None:
-        """Start the actor and wait for it to finish before returning the Run object.
+        """Start the Actor and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input (Any, optional): The input to pass to the actor run.
+            run_input (Any, optional): The input to pass to the Actor run.
             content_type (str, optional): The content type of the input.
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
+                                   By default, the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the default run configuration for the actor.
+                                           By default, the run uses a memory limit specified in the default run configuration for the Actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
-                                          By default, the run uses timeout specified in the default run configuration for the actor.
-            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
-                                       which can be used to receive a notification, e.g. when the actor finished or failed.
-                                       If you already have a webhook set up for the actor, you do not have to add it again here.
+                                          By default, the run uses timeout specified in the default run configuration for the Actor.
+            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the Actor run,
+                                       which can be used to receive a notification, e.g. when the Actor finished or failed.
+                                       If you already have a webhook set up for the Actor, you do not have to add it again here.
             wait_secs (int, optional): The maximum number of seconds the server waits for the run to finish. If not provided, waits indefinitely.
 
         Returns:
@@ -317,16 +317,16 @@ class ActorClient(ResourceClient):
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
     ) -> dict:
-        """Build the actor.
+        """Build the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor
 
         Args:
             version_number (str): Actor version number to be built.
-            beta_packages (bool, optional): If True, then the actor is built with beta versions of Apify NPM packages.
+            beta_packages (bool, optional): If True, then the Actor is built with beta versions of Apify NPM packages.
                                             By default, the build uses latest stable packages.
-            tag (str, optional): Tag to be applied to the build on success. By default, the tag is taken from the actor version's buildTag property.
-            use_cache (bool, optional): If true, the actor's Docker container will be rebuilt using layer cache
+            tag (str, optional): Tag to be applied to the build on success. By default, the tag is taken from the Actor version's buildTag property.
+            use_cache (bool, optional): If true, the Actor's Docker container will be rebuilt using layer cache
                                         (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).
                                         This is to enable quick rebuild during development.
                                         By default, the cache is not used.
@@ -353,11 +353,11 @@ class ActorClient(ResourceClient):
         return parse_date_fields(pluck_data(response.json()))
 
     def builds(self: ActorClient) -> BuildCollectionClient:
-        """Retrieve a client for the builds of this actor."""
+        """Retrieve a client for the builds of this Actor."""
         return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
 
     def runs(self: ActorClient) -> RunCollectionClient:
-        """Retrieve a client for the runs of this actor."""
+        """Retrieve a client for the runs of this Actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(
@@ -366,7 +366,7 @@ class ActorClient(ResourceClient):
         status: ActorJobStatus | None = None,
         origin: MetaOrigin | None = None,
     ) -> RunClient:
-        """Retrieve the client for the last run of this actor.
+        """Retrieve the client for the last run of this Actor.
 
         Last run is retrieved based on the start time of the runs.
 
@@ -375,7 +375,7 @@ class ActorClient(ResourceClient):
             origin (MetaOrigin, optional): Consider only runs started with this origin.
 
         Returns:
-            RunClient: The resource client for the last run of this actor.
+            RunClient: The resource client for the last run of this Actor.
         """
         return RunClient(
             **self._sub_resource_init_options(
@@ -389,27 +389,27 @@ class ActorClient(ResourceClient):
         )
 
     def versions(self: ActorClient) -> ActorVersionCollectionClient:
-        """Retrieve a client for the versions of this actor."""
+        """Retrieve a client for the versions of this Actor."""
         return ActorVersionCollectionClient(**self._sub_resource_init_options())
 
     def version(self: ActorClient, version_number: str) -> ActorVersionClient:
-        """Retrieve the client for the specified version of this actor.
+        """Retrieve the client for the specified version of this Actor.
 
         Args:
             version_number (str): The version number for which to retrieve the resource client.
 
         Returns:
-            ActorVersionClient: The resource client for the specified actor version.
+            ActorVersionClient: The resource client for the specified Actor version.
         """
         return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
 
     def webhooks(self: ActorClient) -> WebhookCollectionClient:
-        """Retrieve a client for webhooks associated with this actor."""
+        """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
 
 class ActorClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single actor."""
+    """Async sub-client for manipulating a single Actor."""
 
     @ignore_docs
     def __init__(self: ActorClientAsync, *args: Any, **kwargs: Any) -> None:
@@ -418,12 +418,12 @@ class ActorClientAsync(ResourceClientAsync):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def get(self: ActorClientAsync) -> dict | None:
-        """Retrieve the actor.
+        """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
 
         Returns:
-            dict, optional: The retrieved actor
+            dict, optional: The retrieved Actor
         """
         return await self._get()
 
@@ -459,23 +459,23 @@ class ActorClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
 
         Args:
-            name (str, optional): The name of the actor
-            title (str, optional): The title of the actor (human-readable)
-            description (str, optional): The description for the actor
-            seo_title (str, optional): The title of the actor optimized for search engines
-            seo_description (str, optional): The description of the actor optimized for search engines
-            versions (list of dict, optional): The list of actor versions
-            restart_on_error (bool, optional): If true, the main actor run process will be restarted whenever it exits with a non-zero status code.
-            is_public (bool, optional): Whether the actor is public.
-            is_deprecated (bool, optional): Whether the actor is deprecated.
-            is_anonymously_runnable (bool, optional): Whether the actor is anonymously runnable.
-            categories (list of str, optional): The categories to which the actor belongs to.
+            name (str, optional): The name of the Actor
+            title (str, optional): The title of the Actor (human-readable)
+            description (str, optional): The description for the Actor
+            seo_title (str, optional): The title of the Actor optimized for search engines
+            seo_description (str, optional): The description of the Actor optimized for search engines
+            versions (list of dict, optional): The list of Actor versions
+            restart_on_error (bool, optional): If true, the main Actor run process will be restarted whenever it exits with a non-zero status code.
+            is_public (bool, optional): Whether the Actor is public.
+            is_deprecated (bool, optional): Whether the Actor is deprecated.
+            is_anonymously_runnable (bool, optional): Whether the Actor is anonymously runnable.
+            categories (list of str, optional): The categories to which the Actor belongs to.
             default_run_build (str, optional): Tag or number of the build that you want to run by default.
             default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
                                                    if the Actor is charged per result.
-            default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this actor, in megabytes.
-            default_run_timeout_secs (int, optional): Default timeout for the runs of this actor in seconds.
-            example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this actor.
+            default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this Actor, in megabytes.
+            default_run_timeout_secs (int, optional): Default timeout for the runs of this Actor in seconds.
+            example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type (str, optional): The content type of the example run input.
             actor_standby_is_enabled (bool, optional): Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
@@ -486,7 +486,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The updated actor
+            dict: The updated Actor
         """
         actor_representation = get_actor_representation(
             name=name,
@@ -517,7 +517,7 @@ class ActorClientAsync(ResourceClientAsync):
         return await self._update(filter_out_none_values_recursively(actor_representation))
 
     async def delete(self: ActorClientAsync) -> None:
-        """Delete the actor.
+        """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
         """
@@ -535,27 +535,27 @@ class ActorClientAsync(ResourceClientAsync):
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
     ) -> dict:
-        """Start the actor and immediately return the Run object.
+        """Start the Actor and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input (Any, optional): The input to pass to the actor run.
+            run_input (Any, optional): The input to pass to the Actor run.
             content_type (str, optional): The content type of the input.
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
+                                   By default, the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the default run configuration for the actor.
+                                           By default, the run uses a memory limit specified in the default run configuration for the Actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
-                                          By default, the run uses timeout specified in the default run configuration for the actor.
+                                          By default, the run uses timeout specified in the default run configuration for the Actor.
             wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
                                                By default, it is 0, the maximum value is 60.
             webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-                                               associated with the actor run which can be used to receive a notification,
-                                               e.g. when the actor finished or failed.
-                                               If you already have a webhook set up for the actor or task, you do not have to add it again here.
+                                               associated with the Actor run which can be used to receive a notification,
+                                               e.g. when the Actor finished or failed.
+                                               If you already have a webhook set up for the Actor or task, you do not have to add it again here.
                                                Each webhook is represented by a dictionary containing these items:
                                                * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
                                                * ``request_url``: URL to which to send the webhook HTTP request
@@ -597,26 +597,26 @@ class ActorClientAsync(ResourceClientAsync):
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
     ) -> dict | None:
-        """Start the actor and wait for it to finish before returning the Run object.
+        """Start the Actor and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input (Any, optional): The input to pass to the actor run.
+            run_input (Any, optional): The input to pass to the Actor run.
             content_type (str, optional): The content type of the input.
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the default run configuration for the actor (typically latest).
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
+                                   By default, the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.
             memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the default run configuration for the actor.
+                                           By default, the run uses a memory limit specified in the default run configuration for the Actor.
             timeout_secs (int, optional): Optional timeout for the run, in seconds.
-                                          By default, the run uses timeout specified in the default run configuration for the actor.
-            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the actor run,
-                                       which can be used to receive a notification, e.g. when the actor finished or failed.
-                                       If you already have a webhook set up for the actor, you do not have to add it again here.
+                                          By default, the run uses timeout specified in the default run configuration for the Actor.
+            webhooks (list, optional): Optional webhooks (https://docs.apify.com/webhooks) associated with the Actor run,
+                                       which can be used to receive a notification, e.g. when the Actor finished or failed.
+                                       If you already have a webhook set up for the Actor, you do not have to add it again here.
             wait_secs (int, optional): The maximum number of seconds the server waits for the run to finish. If not provided, waits indefinitely.
 
         Returns:
@@ -643,16 +643,16 @@ class ActorClientAsync(ResourceClientAsync):
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
     ) -> dict:
-        """Build the actor.
+        """Build the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor
 
         Args:
             version_number (str): Actor version number to be built.
-            beta_packages (bool, optional): If True, then the actor is built with beta versions of Apify NPM packages.
+            beta_packages (bool, optional): If True, then the Actor is built with beta versions of Apify NPM packages.
                                             By default, the build uses latest stable packages.
-            tag (str, optional): Tag to be applied to the build on success. By default, the tag is taken from the actor version's buildTag property.
-            use_cache (bool, optional): If true, the actor's Docker container will be rebuilt using layer cache
+            tag (str, optional): Tag to be applied to the build on success. By default, the tag is taken from the Actor version's buildTag property.
+            use_cache (bool, optional): If true, the Actor's Docker container will be rebuilt using layer cache
                                         (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).
                                         This is to enable quick rebuild during development.
                                         By default, the cache is not used.
@@ -679,15 +679,15 @@ class ActorClientAsync(ResourceClientAsync):
         return parse_date_fields(pluck_data(response.json()))
 
     def builds(self: ActorClientAsync) -> BuildCollectionClientAsync:
-        """Retrieve a client for the builds of this actor."""
+        """Retrieve a client for the builds of this Actor."""
         return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))
 
     def runs(self: ActorClientAsync) -> RunCollectionClientAsync:
-        """Retrieve a client for the runs of this actor."""
+        """Retrieve a client for the runs of this Actor."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(self: ActorClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
-        """Retrieve the client for the last run of this actor.
+        """Retrieve the client for the last run of this Actor.
 
         Last run is retrieved based on the start time of the runs.
 
@@ -696,7 +696,7 @@ class ActorClientAsync(ResourceClientAsync):
             origin (MetaOrigin, optional): Consider only runs started with this origin.
 
         Returns:
-            RunClientAsync: The resource client for the last run of this actor.
+            RunClientAsync: The resource client for the last run of this Actor.
         """
         return RunClientAsync(
             **self._sub_resource_init_options(
@@ -710,20 +710,20 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
     def versions(self: ActorClientAsync) -> ActorVersionCollectionClientAsync:
-        """Retrieve a client for the versions of this actor."""
+        """Retrieve a client for the versions of this Actor."""
         return ActorVersionCollectionClientAsync(**self._sub_resource_init_options())
 
     def version(self: ActorClientAsync, version_number: str) -> ActorVersionClientAsync:
-        """Retrieve the client for the specified version of this actor.
+        """Retrieve the client for the specified version of this Actor.
 
         Args:
             version_number (str): The version number for which to retrieve the resource client.
 
         Returns:
-            ActorVersionClientAsync: The resource client for the specified actor version.
+            ActorVersionClientAsync: The resource client for the specified Actor version.
         """
         return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))
 
     def webhooks(self: ActorClientAsync) -> WebhookCollectionClientAsync:
-        """Retrieve a client for webhooks associated with this actor."""
+        """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())

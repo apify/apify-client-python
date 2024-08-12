@@ -20,7 +20,7 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
 
 @ignore_docs
 class ActorJobBaseClient(ResourceClient):
-    """Base sub-client class for actor runs and actor builds."""
+    """Base sub-client class for Actor runs and Actor builds."""
 
     def _wait_for_finish(self: ActorJobBaseClient, wait_secs: int | None = None) -> dict | None:
         started_at = datetime.now(timezone.utc)
@@ -73,7 +73,7 @@ class ActorJobBaseClient(ResourceClient):
 
 @ignore_docs
 class ActorJobBaseClientAsync(ResourceClientAsync):
-    """Base async sub-client class for actor runs and actor builds."""
+    """Base async sub-client class for Actor runs and Actor builds."""
 
     async def _wait_for_finish(self: ActorJobBaseClientAsync, wait_secs: int | None = None) -> dict | None:
         started_at = datetime.now(timezone.utc)

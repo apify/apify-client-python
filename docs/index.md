@@ -120,10 +120,10 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 # Collection clients do not require a parameter
 actor_collection_client = apify_client.actors()
 
-# Create an actor with the name: my-actor
+# Create an Actor with the name: my-Actor
 my_actor = actor_collection_client.create(name='my-actor')
 
-# List all of your actors
+# List all of your Actors
 actor_list = actor_collection_client.list().items
 ```
 
@@ -220,7 +220,7 @@ The package offers an asynchronous version of the client,
 [`ApifyClientAsync`](/reference/class/ApifyClientAsync),
 which allows you to work with the Apify API in an asynchronous way, using the standard `async`/`await` syntax [offered by Python](https://docs.python.org/3/library/asyncio-task.html).
 
-For example, to run an actor and asynchronously stream its log while it's running, you can use this snippet:
+For example, to run an Actor and asynchronously stream its log while it's running, you can use this snippet:
 
 ```python
 from apify_client import ApifyClientAsync
@@ -258,7 +258,7 @@ please refer to the official Python [documentation on logging](https://docs.pyth
 
 ### Convenience functions and options
 
-Some actions can't be performed by the API itself, such as indefinite waiting for an actor run to finish (because of network timeouts).
+Some actions can't be performed by the API itself, such as indefinite waiting for an Actor run to finish (because of network timeouts).
 The client provides convenient [`call()`](/reference/class/ActorClient#call)
 and [`wait_for_finish()`](/reference/class/ActorClient#wait_for_finish) methods that do that.
 
@@ -335,7 +335,7 @@ Instead of the parsed resource, they return a raw, context-managed
 which has to be consumed using the `with` keyword,
 and automatically gets closed once you exit the `with` block, preventing memory leaks and unclosed connections.
 
-For example, to consume an actor run log in a streaming fashion, you can use this snippet:
+For example, to consume an Actor run log in a streaming fashion, you can use this snippet:
 
 ```python
 with apify_client.run('MY-RUN-ID').log().stream() as log_stream:

@@ -66,7 +66,8 @@ class DatasetClient(ResourceClient):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
@@ -89,7 +90,8 @@ class DatasetClient(ResourceClient):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -145,7 +147,8 @@ class DatasetClient(ResourceClient):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
     ) -> Iterator[dict]:
@@ -166,7 +169,8 @@ class DatasetClient(ResourceClient):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -225,7 +229,8 @@ class DatasetClient(ResourceClient):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -258,7 +263,8 @@ class DatasetClient(ResourceClient):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -312,7 +318,8 @@ class DatasetClient(ResourceClient):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -343,7 +350,8 @@ class DatasetClient(ResourceClient):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -401,7 +409,8 @@ class DatasetClient(ResourceClient):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -431,7 +440,8 @@ class DatasetClient(ResourceClient):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -557,7 +567,8 @@ class DatasetClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
@@ -580,7 +591,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -636,7 +648,8 @@ class DatasetClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
     ) -> AsyncIterator[dict]:
@@ -657,7 +670,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -717,7 +731,8 @@ class DatasetClientAsync(ResourceClientAsync):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -748,7 +763,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,
@@ -806,7 +822,8 @@ class DatasetClientAsync(ResourceClientAsync):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        unwind: str | None = None,
+        unwind: str | list[str] | None = None,  # TODO: change to list[str] only when doing a breaking release
+                                                # https://github.com/apify/apify-client-python/issues/255
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -836,7 +853,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 Note that the fields in the outputted items are sorted the same way as they are specified in the fields parameter.
                 You can use this feature to effectively fix the output format.
             omit (list of str, optional): A list of fields which should be omitted from the items.
-            unwind (str, optional): Name of a field which should be unwound.
+            unwind (str or list of str, optional): A list of fields which should be unwound, in order which they should be processed.
+                Each field should be either an array or an object.
                 If the field is an array then every element of the array will become a separate record and merged with parent object.
                 If the unwound field is an object then it is merged with the parent object.
                 If the unwound field is missing or its value is neither an array nor an object and therefore cannot be merged with a parent object,

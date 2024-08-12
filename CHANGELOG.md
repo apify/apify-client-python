@@ -2,9 +2,10 @@
 
 ## [1.7.2](../../releases/tag/v1.7.2) - Unreleased
 
-### Add
+### Added
 
 - add `headers_template` kwarg to webhook create and update
+- allow passing list of fields to `unwind` parameter in dataset item listing endpoints
 
 ## [1.7.1](../../releases/tag/v1.7.1) - 2024-07-11
 

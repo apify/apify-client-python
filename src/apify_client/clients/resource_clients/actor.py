@@ -454,7 +454,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> dict:
-        """Update the actor with the specified fields.
+        """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
 

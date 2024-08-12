@@ -18,7 +18,7 @@ class BuildClient(ActorJobBaseClient):
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def get(self: BuildClient) -> dict | None:
-        """Return information about the actor build.
+        """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 

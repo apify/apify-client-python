@@ -158,7 +158,7 @@ class TaskClient(ResourceClient):
 
         Args:
             task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the actor build to run. It can be either a build tag or build number.
+            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
                                    By default, the run uses the build specified in the task settings (typically latest).
             max_items (int, optional): Maximum number of results that will be returned by this run.
                                        If the Actor is charged per result, you will not be charged for more results than the given limit.

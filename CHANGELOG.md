@@ -152,14 +152,14 @@
 - added configurable socket timeout for requests to the Apify API
 - added `py.typed` file to signal type checkers that this package is typed
 - added method to update status message for a run
-- added option to set up webhooks for actor builds
+- added option to set up webhooks for Actor builds
 - added logger with basic debugging info
 - added support for `schema` parameter in `get_or_create` method for datasets and key-value stores
 - added support for `title` parameter in task and schedule methods
 - added `x-apify-workflow-key` header support
 - added support for `flatten` and `view` parameters in dataset items methods
-- added support for `origin` parameter in actor/task run methods
-- added clients for actor version environment variables
+- added support for `origin` parameter in Actor/task run methods
+- added clients for Actor version environment variables
 
 ### Fixed
 
@@ -186,7 +186,7 @@
 
 ### Removed
 
-- Dropped support for single-file actors
+- Dropped support for single-file Actors
 
 ### Internal changes
 
@@ -248,11 +248,11 @@
 ### Changed
 
 - replaced `base_url` with `api_url` in the client constructor
-  to enable easier passing of the API server url from environment variables available to actors on the Apify platform
+  to enable easier passing of the API server url from environment variables available to Actors on the Apify platform
 
 ### Internal changes
 
-- changed tags for actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
+- changed tags for Actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
 - updated the `requests` dependency to 2.26.0
 - updated development dependencies
 
@@ -267,7 +267,7 @@
 
 - updated development dependencies
 - enforced unified use of single quotes and double quotes
-- added repository dispatch to build actor images with this client when publishing a new version
+- added repository dispatch to build Actor images with this client when publishing a new version
 
 ## [0.0.1](../../releases/tag/v0.0.1) - 2021-05-13
 

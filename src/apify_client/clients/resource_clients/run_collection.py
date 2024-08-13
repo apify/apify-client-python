@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class RunCollectionClient(ResourceCollectionClient):
-    """Sub-client for listing actor runs."""
+    """Sub-client for listing Actor runs."""
 
     @ignore_docs
     def __init__(self: RunCollectionClient, *args: Any, **kwargs: Any) -> None:
@@ -28,7 +28,7 @@ class RunCollectionClient(ResourceCollectionClient):
         desc: bool | None = None,
         status: ActorJobStatus | None = None,
     ) -> ListPage[dict]:
-        """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
+        """List all Actor runs (either of a single Actor, or all user's Actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
 
@@ -41,7 +41,7 @@ class RunCollectionClient(ResourceCollectionClient):
             status (ActorJobStatus, optional): Retrieve only runs with the provided status
 
         Returns:
-            ListPage: The retrieved actor runs
+            ListPage: The retrieved Actor runs
         """
         return self._list(
             limit=limit,
@@ -52,7 +52,7 @@ class RunCollectionClient(ResourceCollectionClient):
 
 
 class RunCollectionClientAsync(ResourceCollectionClientAsync):
-    """Async sub-client for listing actor runs."""
+    """Async sub-client for listing Actor runs."""
 
     @ignore_docs
     def __init__(self: RunCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
@@ -68,7 +68,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         desc: bool | None = None,
         status: ActorJobStatus | None = None,
     ) -> ListPage[dict]:
-        """List all actor runs (either of a single actor, or all user's actors, depending on where this client was initialized from).
+        """List all Actor runs (either of a single Actor, or all user's Actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
 
@@ -81,7 +81,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             status (ActorJobStatus, optional): Retrieve only runs with the provided status
 
         Returns:
-            ListPage: The retrieved actor runs
+            ListPage: The retrieved Actor runs
         """
         return await self._list(
             limit=limit,

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class BuildCollectionClient(ResourceCollectionClient):
-    """Sub-client for listing actor builds."""
+    """Sub-client for listing Actor builds."""
 
     @ignore_docs
     def __init__(self: BuildCollectionClient, *args: Any, **kwargs: Any) -> None:
@@ -26,7 +26,7 @@ class BuildCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
     ) -> ListPage[dict]:
-        """List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
+        """List all Actor builds (either of a single Actor, or all user's Actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
@@ -37,13 +37,13 @@ class BuildCollectionClient(ResourceCollectionClient):
             desc (bool, optional): Whether to sort the builds in descending order based on their start date
 
         Returns:
-            ListPage: The retrieved actor builds
+            ListPage: The retrieved Actor builds
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
 
 class BuildCollectionClientAsync(ResourceCollectionClientAsync):
-    """Async sub-client for listing actor builds."""
+    """Async sub-client for listing Actor builds."""
 
     @ignore_docs
     def __init__(self: BuildCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
@@ -58,7 +58,7 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
     ) -> ListPage[dict]:
-        """List all actor builds (either of a single actor, or all user's actors, depending on where this client was initialized from).
+        """List all Actor builds (either of a single Actor, or all user's Actors, depending on where this client was initialized from).
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
@@ -69,6 +69,6 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
             desc (bool, optional): Whether to sort the builds in descending order based on their start date
 
         Returns:
-            ListPage: The retrieved actor builds
+            ListPage: The retrieved Actor builds
         """
         return await self._list(limit=limit, offset=offset, desc=desc)

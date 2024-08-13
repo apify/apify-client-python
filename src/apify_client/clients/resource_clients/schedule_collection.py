@@ -60,7 +60,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Args:
             cron_expression (str): The cron expression used by this schedule
             is_enabled (bool): True if the schedule should be enabled
-            is_exclusive (bool): When set to true, don't start actor or actor task if it's still running from the previous schedule.
+            is_exclusive (bool): When set to true, don't start Actor or Actor task if it's still running from the previous schedule.
             name (str, optional): The name of the schedule to create.
             actions (list of dict, optional): Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
             description (str, optional): Description of this schedule
@@ -137,7 +137,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         Args:
             cron_expression (str): The cron expression used by this schedule
             is_enabled (bool): True if the schedule should be enabled
-            is_exclusive (bool): When set to true, don't start actor or actor task if it's still running from the previous schedule.
+            is_exclusive (bool): When set to true, don't start Actor or Actor task if it's still running from the previous schedule.
             name (str, optional): The name of the schedule to create.
             actions (list of dict, optional): Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
             description (str, optional): Description of this schedule

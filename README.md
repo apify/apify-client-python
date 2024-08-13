@@ -24,10 +24,10 @@ from apify_client import ApifyClient
 
 apify_client = ApifyClient('MY-APIFY-TOKEN')
 
-# Start an actor and wait for it to finish
+# Start an Actor and wait for it to finish
 actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
-# Fetch results from the actor's default dataset
+# Fetch results from the Actor's default dataset
 dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
 ```
 
@@ -57,7 +57,7 @@ which allows you to work with the Apify API in an asynchronous way, using the st
 
 ### Convenience functions and options
 
-Some actions can't be performed by the API itself, such as indefinite waiting for an actor run to finish
+Some actions can't be performed by the API itself, such as indefinite waiting for an Actor run to finish
 (because of network timeouts). The client provides convenient `call()` and `wait_for_finish()` functions that do that.
 Key-value store records can be retrieved as objects, buffers or streams via the respective options, dataset items
 can be fetched as individual objects or serialized data and we plan to add better stream support and async iterators.

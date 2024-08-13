@@ -134,22 +134,22 @@ class ApifyClient(_BaseApifyClient):
         )
 
     def actor(self: ApifyClient, actor_id: str) -> ActorClient:
-        """Retrieve the sub-client for manipulating a single actor.
+        """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
-            actor_id (str): ID of the actor to be manipulated
+            actor_id (str): ID of the Actor to be manipulated
         """
         return ActorClient(resource_id=actor_id, **self._options())
 
     def actors(self: ApifyClient) -> ActorCollectionClient:
-        """Retrieve the sub-client for manipulating actors."""
+        """Retrieve the sub-client for manipulating Actors."""
         return ActorCollectionClient(**self._options())
 
     def build(self: ApifyClient, build_id: str) -> BuildClient:
-        """Retrieve the sub-client for manipulating a single actor build.
+        """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
-            build_id (str): ID of the actor build to be manipulated
+            build_id (str): ID of the Actor build to be manipulated
         """
         return BuildClient(resource_id=build_id, **self._options())
 
@@ -158,15 +158,15 @@ class ApifyClient(_BaseApifyClient):
         return BuildCollectionClient(**self._options())
 
     def run(self: ApifyClient, run_id: str) -> RunClient:
-        """Retrieve the sub-client for manipulating a single actor run.
+        """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
-            run_id (str): ID of the actor run to be manipulated
+            run_id (str): ID of the Actor run to be manipulated
         """
         return RunClient(resource_id=run_id, **self._options())
 
     def runs(self: ApifyClient) -> RunCollectionClient:
-        """Retrieve the sub-client for querying multiple actor runs of a user."""
+        """Retrieve the sub-client for querying multiple Actor runs of a user."""
         return RunCollectionClient(**self._options())
 
     def dataset(self: ApifyClient, dataset_id: str) -> DatasetClient:
@@ -246,7 +246,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for retrieving logs.
 
         Args:
-            build_or_run_id (str): ID of the actor build or run for which to access the log
+            build_or_run_id (str): ID of the Actor build or run for which to access the log
         """
         return LogClient(resource_id=build_or_run_id, **self._options())
 
@@ -315,22 +315,22 @@ class ApifyClientAsync(_BaseApifyClient):
         )
 
     def actor(self: ApifyClientAsync, actor_id: str) -> ActorClientAsync:
-        """Retrieve the sub-client for manipulating a single actor.
+        """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
-            actor_id (str): ID of the actor to be manipulated
+            actor_id (str): ID of the Actor to be manipulated
         """
         return ActorClientAsync(resource_id=actor_id, **self._options())
 
     def actors(self: ApifyClientAsync) -> ActorCollectionClientAsync:
-        """Retrieve the sub-client for manipulating actors."""
+        """Retrieve the sub-client for manipulating Actors."""
         return ActorCollectionClientAsync(**self._options())
 
     def build(self: ApifyClientAsync, build_id: str) -> BuildClientAsync:
-        """Retrieve the sub-client for manipulating a single actor build.
+        """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
-            build_id (str): ID of the actor build to be manipulated
+            build_id (str): ID of the Actor build to be manipulated
         """
         return BuildClientAsync(resource_id=build_id, **self._options())
 
@@ -339,15 +339,15 @@ class ApifyClientAsync(_BaseApifyClient):
         return BuildCollectionClientAsync(**self._options())
 
     def run(self: ApifyClientAsync, run_id: str) -> RunClientAsync:
-        """Retrieve the sub-client for manipulating a single actor run.
+        """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
-            run_id (str): ID of the actor run to be manipulated
+            run_id (str): ID of the Actor run to be manipulated
         """
         return RunClientAsync(resource_id=run_id, **self._options())
 
     def runs(self: ApifyClientAsync) -> RunCollectionClientAsync:
-        """Retrieve the sub-client for querying multiple actor runs of a user."""
+        """Retrieve the sub-client for querying multiple Actor runs of a user."""
         return RunCollectionClientAsync(**self._options())
 
     def dataset(self: ApifyClientAsync, dataset_id: str) -> DatasetClientAsync:
@@ -427,7 +427,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for retrieving logs.
 
         Args:
-            build_or_run_id (str): ID of the actor build or run for which to access the log
+            build_or_run_id (str): ID of the Actor build or run for which to access the log
         """
         return LogClientAsync(resource_id=build_or_run_id, **self._options())
 

@@ -120,7 +120,7 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 # Collection clients do not require a parameter
 actor_collection_client = apify_client.actors()
 
-# Create an Actor with the name: my-Actor
+# Create an Actor with the name: my-actor
 my_actor = actor_collection_client.create(name='my-actor')
 
 # List all of your Actors

@@ -8,7 +8,7 @@ TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
 API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
 
-@pytest.fixture()
+@pytest.fixture
 def apify_client() -> ApifyClient:
     api_token = os.getenv(TOKEN_ENV_VAR)
     api_url = os.getenv(API_URL_ENV_VAR)
@@ -24,7 +24,7 @@ def apify_client() -> ApifyClient:
 # because `httpx.AsyncClient` in `ApifyClientAsync` tries to reuse the same event loop across requests,
 # but `pytest-asyncio` closes the event loop after each test,
 # and uses a new one for the next test.
-@pytest.fixture()
+@pytest.fixture
 def apify_client_async() -> ApifyClientAsync:
     api_token = os.getenv(TOKEN_ENV_VAR)
     api_url = os.getenv(API_URL_ENV_VAR)

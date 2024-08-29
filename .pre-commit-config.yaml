@@ -19,6 +19,12 @@ repos:
         language: system
         pass_filenames: false
 
+      - id: check-async-docstrings
+        name: Check whether async docstrings are aligned with sync ones
+        entry: make check-async-docstrings
+        language: system
+        pass_filenames: false
+
       - id: check-changelog-entry
         name: Check changelog entry
         entry: make check-changelog-entry

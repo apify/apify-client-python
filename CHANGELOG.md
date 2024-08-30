@@ -1,6 +1,10 @@
 # Changelog
 
-## [1.8.0](../../releases/tag/v1.8.0) - Unreleased
+## [1.8.1](../../releases/tag/v1.8.1) - Unreleased
+
+- ...
+
+## [1.8.0](../../releases/tag/v1.8.0) - 2024-08-30
 
 ### Added
 

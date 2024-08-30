@@ -1,11 +1,15 @@
 # Changelog
 
-## [1.7.2](../../releases/tag/v1.7.2) - Unreleased
+## [1.8.0](../../releases/tag/v1.8.0) - Unreleased
 
 ### Added
 
 - add `headers_template` kwarg to webhook create and update
 - allow passing list of fields to `unwind` parameter in dataset item listing endpoints
+
+### Others
+
+- drop support for Python 3.8
 
 ## [1.7.1](../../releases/tag/v1.7.1) - 2024-07-11
 

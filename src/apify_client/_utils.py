@@ -22,7 +22,7 @@ T = TypeVar('T')
 StopRetryingType = Callable[[], None]
 
 
-def to_safe_id(id: str) -> str:  # noqa: A002
+def to_safe_id(id: str) -> str:
     # Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
     # Since the `/` character has a special meaning in URL paths,
     # we replace it with `~` for proper route parsing on the API, where after parsing the URL it's replaced back to `/`.

@@ -74,7 +74,9 @@ jobs:
           python-version: 3.8
 
       - name: Install dependencies
-        run: make install-dev
+        run: |
+          pipx install poetry
+          make install-dev
 
       - # Determine if this is a prerelease or latest release
         name: Determine release type

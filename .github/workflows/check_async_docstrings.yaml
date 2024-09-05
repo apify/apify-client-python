@@ -18,7 +18,9 @@ jobs:
           python-version: 3.8
 
       - name: Install dependencies
-        run: make install-dev
+        run: |
+          pipx install poetry
+          make install-dev
 
       - name: Check async docstrings
         run: make check-async-docstrings

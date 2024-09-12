@@ -1,12 +1,20 @@
 from __future__ import annotations
 
+import asyncio
+import math
+from datetime import timedelta
 from typing import Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
+from httpx import Response
 
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
+
+_RQ_MAX_REQUESTS_PER_BATCH = 25
+_MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
+_SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
 class RequestQueueClient(ResourceClient):
@@ -244,15 +252,19 @@ class RequestQueueClient(ResourceClient):
         requests: list[dict],
         *,
         forefront: bool | None = None,
+        max_unprocessed_requests_retries: int = 3,
+        max_parallel: int = 5,
+        min_delay_between_unprocessed_requests_retries: timedelta = timedelta(milliseconds=500),
     ) -> dict:
         """Add requests to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests (list[dict]): list of the requests to add
-            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
+            requests: list of the requests to add
+            forefront: Whether to add the requests to the head or the end of the queue
         """
+        # TODO
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
         response = self.http_client.call(
@@ -540,29 +552,73 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
+    async def _batch_add_requests_inner(
+        self,
+        semaphore: asyncio.Semaphore,
+        request_params: dict,
+        batch: list[dict],
+    ) -> Response:
+        async with semaphore:
+            return await self.http_client.call(
+                url=self._url('requests/batch'),
+                method='POST',
+                params=request_params,
+                json=batch,
+            )
+
     async def batch_add_requests(
         self: RequestQueueClientAsync,
         requests: list[dict],
         *,
-        forefront: bool | None = None,
-    ) -> dict:
+        forefront: bool = False,
+        max_unprocessed_requests_retries: int = 3,
+        max_parallel: int = 5,
+        min_delay_between_unprocessed_requests_retries: timedelta = timedelta(milliseconds=500),
+    ) -> list[dict]:
         """Add requests to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests (list[dict]): list of the requests to add
-            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
+            requests: List of requests to add.
+            forefront: Whether to add the requests to the head or the end of the queue.
+            max_unprocessed_requests_retries: Number of retries for unprocessed requests.
+            max_parallel: Maximum number of parallel operations.
+            min_delay_between_unprocessed_requests_retries: Minimum delay between retries for unprocessed requests.
         """
+        payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
+
+        tasks = set[asyncio.Task]()
+
+        responses = list[dict]()
+
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
-        response = await self.http_client.call(
-            url=self._url('requests/batch'),
-            method='POST',
-            params=request_params,
-            json=requests,
-        )
-        return parse_date_fields(pluck_data(response.json()))
+        semaphore = asyncio.Semaphore(max_parallel)
+
+        number_of_iterations = math.ceil(len(requests) / _RQ_MAX_REQUESTS_PER_BATCH)
+
+        for i in range(number_of_iterations):
+            start = i * _RQ_MAX_REQUESTS_PER_BATCH
+            end = (i + 1) * _RQ_MAX_REQUESTS_PER_BATCH
+            batch = requests[start:end]
+
+            task = asyncio.create_task(
+                coro=self._batch_add_requests_inner(
+                    semaphore=semaphore,
+                    request_params=request_params,
+                    batch=batch,
+                ),
+                name=f'batch_add_requests_{i}',
+            )
+
+            tasks.add(task)
+            task.add_done_callback(lambda response: responses.append(response.result().json()))
+            task.add_done_callback(lambda _: tasks.remove(task))
+
+        asyncio.gather(*tasks)
+
+        return [parse_date_fields(pluck_data(response)) for response in responses]
 
     async def batch_delete_requests(self: RequestQueueClientAsync, requests: list[dict]) -> dict:
         """Delete given requests from the queue.

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, TypedDict
 
@@ -20,10 +21,28 @@ _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
 class BatchAddRequestsResult(TypedDict):
-    """Result of the batch add requests operation."""
+    """Result of the batch add requests operation.
+
+    Args:
+        processed_requests: List of requests that were added.
+        unprocessed_requests: List of requests that failed to be added.
+    """
 
     processed_requests: list[dict]
     unprocessed_requests: list[dict]
+
+
+@dataclass
+class AddRequestsBatch:
+    """Batch of requests to add to the request queue.
+
+    Args:
+        requests: List of requests to be added to the request queue.
+        num_of_retries: Number of retries for the batch.
+    """
+
+    requests: list[dict]
+    num_of_retries: int = 0
 
 
 class RequestQueueClient(ResourceClient):
@@ -559,15 +578,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def _batch_add_requests_worker(
         self,
-        queue: asyncio.Queue,
+        queue: asyncio.Queue[AddRequestsBatch],
         request_params: dict,
         max_unprocessed_requests_retries: int,
         min_delay_between_unprocessed_requests_retries: timedelta,
     ) -> BatchAddRequestsResult:
-        processed_requests = []
-        unprocessed_requests = []
-
-        # TODO: add retry logic
+        processed_requests = list[dict]()
+        unprocessed_requests = list[dict]()
 
         try:
             while True:
@@ -577,13 +594,23 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     url=self._url('requests/batch'),
                     method='POST',
                     params=request_params,
-                    json=batch,
+                    json=batch.requests,
                 )
 
                 response_parsed = parse_date_fields(pluck_data(response.json()))
 
+                # If the request was successful, add it to the processed requests.
                 if 200 <= response.status_code <= 299:
                     processed_requests.append(response_parsed)
+
+                # If the request was not successful and the number of retries is less than the maximum,
+                # retry the request.
+                elif batch.num_of_retries < max_unprocessed_requests_retries:
+                    batch.num_of_retries += 1
+                    await asyncio.sleep(min_delay_between_unprocessed_requests_retries.total_seconds())
+                    await queue.put(batch)
+
+                # Otherwise, add the request to the unprocessed requests.
                 else:
                     unprocessed_requests.append(response_parsed)
 
@@ -625,10 +652,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
             Result of the operation with processed and unprocessed requests.
         """
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
+        # TODO: payload size limit bytes
 
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
         tasks = set[asyncio.Task]()
-        queue: asyncio.Queue[list[dict]] = asyncio.Queue()
+        queue: asyncio.Queue[AddRequestsBatch] = asyncio.Queue()
 
         # Get the number of request batches.
         number_of_batches = math.ceil(len(requests) / _RQ_MAX_REQUESTS_PER_BATCH)
@@ -637,7 +665,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         for i in range(number_of_batches):
             start = i * _RQ_MAX_REQUESTS_PER_BATCH
             end = (i + 1) * _RQ_MAX_REQUESTS_PER_BATCH
-            batch = requests[start:end]
+            batch = AddRequestsBatch(requests[start:end])
             await queue.put(batch)
 
         # Start the worker tasks.

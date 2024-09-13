@@ -30,12 +30,12 @@ class BatchAddRequestsResult(TypedDict):
     """Result of the batch add requests operation.
 
     Args:
-        processed_requests: List of successfully added requests.
-        unprocessed_requests: List of requests that failed to be added.
+        processedRequests: List of successfully added requests.
+        unprocessedRequests: List of requests that failed to be added.
     """
 
-    processed_requests: list[dict]
-    unprocessed_requests: list[dict]
+    processedRequests: list[dict]
+    unprocessedRequests: list[dict]
 
 
 @dataclass
@@ -351,8 +351,8 @@ class RequestQueueClient(ResourceClient):
                 unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
         return {
-            'processed_requests': processed_requests,
-            'unprocessed_requests': unprocessed_requests,
+            'processedRequests': processed_requests,
+            'unprocessedRequests': unprocessed_requests,
         }
 
     def batch_delete_requests(self: RequestQueueClient, requests: list[dict]) -> dict:
@@ -685,8 +685,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 queue.task_done()
 
         return {
-            'processed_requests': processed_requests,
-            'unprocessed_requests': unprocessed_requests,
+            'processedRequests': processed_requests,
+            'unprocessedRequests': unprocessed_requests,
         }
 
     async def batch_add_requests(
@@ -756,12 +756,12 @@ class RequestQueueClientAsync(ResourceClientAsync):
         unprocessed_requests = []
 
         for result in results:
-            processed_requests.extend(result['processed_requests'])
-            unprocessed_requests.extend(result['unprocessed_requests'])
+            processed_requests.extend(result['processedRequests'])
+            unprocessed_requests.extend(result['unprocessedRequests'])
 
         return {
-            'processed_requests': processed_requests,
-            'unprocessed_requests': unprocessed_requests,
+            'processedRequests': processed_requests,
+            'unprocessedRequests': unprocessed_requests,
         }
 
     async def batch_delete_requests(self: RequestQueueClientAsync, requests: list[dict]) -> dict:

@@ -5,6 +5,8 @@ import logging
 import math
 from dataclasses import dataclass
 from datetime import timedelta
+from queue import Queue
+from time import sleep
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
@@ -280,28 +282,78 @@ class RequestQueueClient(ResourceClient):
         )
 
     def batch_add_requests(
-        self: RequestQueueClient,
+        self,
         requests: list[dict],
         *,
-        forefront: bool | None = None,
-    ) -> dict:
-        """Add requests to the queue.
+        forefront: bool = False,
+        max_unprocessed_requests_retries: int = 3,
+        min_delay_between_unprocessed_requests_retries: timedelta = timedelta(milliseconds=500),
+    ) -> BatchAddRequestsResult:
+        """Add requests to the request queue in batches.
+
+        Requests are split into batches based on size and processed sequentially.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests (list[dict]): list of the requests to add
-            forefront (bool, optional): Whether to add the requests to the head or the end of the queue
+            requests: List of requests to be added to the queue.
+            forefront: Whether to add requests to the front of the queue.
+            max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
+            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed requests.
+
+        Returns:
+            Result containing lists of processed and unprocessed requests.
         """
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
-        response = self.http_client.call(
-            url=self._url('requests/batch'),
-            method='POST',
-            params=request_params,
-            json=requests,
+        # Compute the payload size limit to ensure it doesn't exceed the maximum allowed size.
+        payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
+
+        # Split the requests into batches, constrained by the max payload size and max requests per batch.
+        batches = constrained_batches(
+            requests,
+            max_size=payload_size_limit_bytes,
+            max_count=_RQ_MAX_REQUESTS_PER_BATCH,
         )
-        return parse_date_fields(pluck_data(response.json()))
+
+        # Put the batches into the queue for processing.
+        queue = Queue[AddRequestsBatch]()
+
+        for b in batches:
+            queue.put(AddRequestsBatch(b))
+
+        processed_requests = list[dict]()
+        unprocessed_requests = list[dict]()
+
+        # Process all batches in the queue sequentially.
+        while not queue.empty():
+            batch = queue.get()
+
+            # Send the batch to the API.
+            response = self.http_client.call(
+                url=self._url('requests/batch'),
+                method='POST',
+                params=request_params,
+                json=list(batch.requests),
+            )
+
+            response_parsed = parse_date_fields(pluck_data(response.json()))
+
+            # Retry if the request failed and the retry limit has not been reached.
+            if not response.is_success and batch.num_of_retries < max_unprocessed_requests_retries:
+                batch.num_of_retries += 1
+                sleep(min_delay_between_unprocessed_requests_retries.total_seconds())
+                queue.put(batch)
+
+            # Otherwise, add the processed/unprocessed requests to their respective lists.
+            else:
+                processed_requests.extend(response_parsed.get('processedRequests', []))
+                unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
+
+        return {
+            'processed_requests': processed_requests,
+            'unprocessed_requests': unprocessed_requests,
+        }
 
     def batch_delete_requests(self: RequestQueueClient, requests: list[dict]) -> dict:
         """Delete given requests from the queue.
@@ -638,7 +690,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         }
 
     async def batch_add_requests(
-        self: RequestQueueClientAsync,
+        self,
         requests: list[dict],
         *,
         forefront: bool = False,
@@ -649,6 +701,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
             requests: List of requests to be added to the queue.

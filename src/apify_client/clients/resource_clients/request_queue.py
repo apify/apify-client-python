@@ -5,6 +5,7 @@ import logging
 import math
 from dataclasses import dataclass
 from datetime import timedelta
+from multiprocessing import process
 from typing import Any, TypedDict
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
@@ -586,10 +587,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
         processed_requests = list[dict]()
         unprocessed_requests = list[dict]()
 
-        try:
-            while True:
+        while True:
+            try:
                 batch = await queue.get()
+            except asyncio.CancelledError:
+                break
 
+            try:
                 response = await self.http_client.call(
                     url=self._url('requests/batch'),
                     method='POST',
@@ -599,29 +603,23 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
                 response_parsed = parse_date_fields(pluck_data(response.json()))
 
-                # If the request was successful, add it to the processed requests.
-                if 200 <= response.status_code <= 299:
-                    processed_requests.append(response_parsed)
-
                 # If the request was not successful and the number of retries is less than the maximum,
-                # retry the request.
-                elif batch.num_of_retries < max_unprocessed_requests_retries:
+                # put the batch back into the queue and retry the request later.
+                if (not response.is_success) and batch.num_of_retries < max_unprocessed_requests_retries:
                     batch.num_of_retries += 1
                     await asyncio.sleep(min_delay_between_unprocessed_requests_retries.total_seconds())
                     await queue.put(batch)
 
-                # Otherwise, add the request to the unprocessed requests.
+                # Otherwise, extract the processed and unprocessed requests from the response.
                 else:
-                    unprocessed_requests.append(response_parsed)
+                    processed_requests.extend(response_parsed.get('processedRequests', []))
+                    unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
-        except asyncio.CancelledError:
-            logger.debug('Worker task was cancelled.')
+            except Exception as exc:
+                logger.warning(f'Error occurred while processing a batch of requests: {exc}')
 
-        except Exception as exc:
-            logger.warning('Worker task failed with an exception.', exc_info=exc)
-
-        finally:
-            queue.task_done()
+            finally:
+                queue.task_done()
 
         return {
             'processed_requests': processed_requests,
@@ -670,31 +668,35 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         # Start the worker tasks.
         for i in range(max_parallel):
-            task = asyncio.create_task(
-                self._batch_add_requests_worker(
-                    queue,
-                    request_params,
-                    max_unprocessed_requests_retries,
-                    min_delay_between_unprocessed_requests_retries,
-                ),
-                name=f'batch_add_requests_worker_{i}',
+            coro = self._batch_add_requests_worker(
+                queue,
+                request_params,
+                max_unprocessed_requests_retries,
+                min_delay_between_unprocessed_requests_retries,
             )
+            task = asyncio.create_task(coro, name=f'batch_add_requests_worker_{i}')
             tasks.add(task)
 
         # Wait for all batches to be processed.
         await queue.join()
 
-        # Send cancel signals to all worker tasks.
+        # Send cancel signals to all worker tasks and wait for them to finish.
         for task in tasks:
             task.cancel()
 
-        # Wait for all worker tasks to finish.
         results: list[BatchAddRequestsResult] = await asyncio.gather(*tasks)
 
-        # Combine the results from all worker tasks.
+        # Combine the results from all worker tasks and return them.
+        processed_requests = []
+        unprocessed_requests = []
+
+        for result in results:
+            processed_requests.extend(result['processed_requests'])
+            unprocessed_requests.extend(result['unprocessed_requests'])
+
         return {
-            'processed_requests': [req for result in results for req in result['processed_requests']],
-            'unprocessed_requests': [req for result in results for req in result['unprocessed_requests']],
+            'processed_requests': processed_requests,
+            'unprocessed_requests': unprocessed_requests,
         }
 
     async def batch_delete_requests(self: RequestQueueClientAsync, requests: list[dict]) -> dict:

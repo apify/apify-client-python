@@ -286,24 +286,31 @@ class RequestQueueClient(ResourceClient):
         requests: list[dict],
         *,
         forefront: bool = False,
+        max_parallel: int = 1,
         max_unprocessed_requests_retries: int = 3,
         min_delay_between_unprocessed_requests_retries: timedelta = timedelta(milliseconds=500),
     ) -> BatchAddRequestsResult:
         """Add requests to the request queue in batches.
 
-        Requests are split into batches based on size and processed sequentially.
+        Requests are split into batches based on size and processed in parallel.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
             requests: List of requests to be added to the queue.
             forefront: Whether to add requests to the front of the queue.
+            max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
+                to the async client. For the sync client, this value must be set to 1, as parallel execution
+                is not supported.
             max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
             min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed requests.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
+        if max_parallel != 1:
+            raise NotImplementedError('max_parallel is only supported in async client')
+
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
         # Compute the payload size limit to ensure it doesn't exceed the maximum allowed size.
@@ -707,7 +714,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Args:
             requests: List of requests to be added to the queue.
             forefront: Whether to add requests to the front of the queue.
-            max_parallel: Maximum number of parallel tasks for API calls.
+            max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
+                to the async client. For the sync client, this value must be set to 1, as parallel execution
+                is not supported.
             max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
             min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed requests.
 

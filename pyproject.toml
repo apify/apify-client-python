@@ -45,6 +45,7 @@ keywords = [
 python = "^3.9"
 apify-shared = ">=1.1.2"
 httpx = ">=0.25.0"
+more_itertools = ">=10.0.0"
 
 [tool.poetry.group.dev.dependencies]
 build = "~1.2.0"

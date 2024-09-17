@@ -36,7 +36,7 @@ for client_source_path in clients_path.glob('**/*.py'):
                 continue
 
             # If the sync method has a docstring, check if it matches the async dostring
-            if isinstance(sync_method.value[0].value, str):
+            if sync_method and isinstance(sync_method.value[0].value, str):
                 sync_docstring = sync_method.value[0].value
                 async_docstring = async_method.value[0].value
                 expected_docstring = sync_to_async_docstring(sync_docstring)

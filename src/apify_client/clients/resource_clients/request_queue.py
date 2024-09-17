@@ -344,8 +344,6 @@ class RequestQueueClient(ResourceClient):
                 json=list(batch.requests),
             )
 
-            response_parsed = parse_date_fields(pluck_data(response.json()))
-
             # Retry if the request failed and the retry limit has not been reached.
             if not response.is_success and batch.num_of_retries < max_unprocessed_requests_retries:
                 batch.num_of_retries += 1
@@ -354,6 +352,7 @@ class RequestQueueClient(ResourceClient):
 
             # Otherwise, add the processed/unprocessed requests to their respective lists.
             else:
+                response_parsed = parse_date_fields(pluck_data(response.json()))
                 processed_requests.extend(response_parsed.get('processedRequests', []))
                 unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 

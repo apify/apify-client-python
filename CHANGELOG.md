@@ -1,8 +1,14 @@
 # Changelog
 
-## [1.8.1](../../releases/tag/v1.8.1) - Unreleased
+## [1.8.2](../../releases/tag/v1.8.2) - Unreleased
 
-- ...
+...
+
+## [1.8.1](../../releases/tag/v1.8.1) - 2024-09-17
+
+### Fixed
+
+- batch add requests can handle more than 25 requests
 
 ## [1.8.0](../../releases/tag/v1.8.0) - 2024-08-30
 

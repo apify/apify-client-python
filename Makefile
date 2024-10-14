@@ -1,4 +1,7 @@
-.PHONY: clean install-dev build publish-to-pypi lint type-check unit-tests unit-tests-cov integration-tests format check-code check-async-docstrings fix-async-docstrings check-version-availability check-changelog-entry build-api-reference run-doc
+.PHONY: clean install-dev build publish-to-pypi lint type-check unit-tests unit-tests-cov \
+        integration-tests format check-code check-async-docstrings fix-async-docstrings \
+        check-version-availability check-changelog-entry check-version-conflict build-api-reference \
+        run-doc
 
 DIRS_WITH_CODE = src tests scripts
 
@@ -40,21 +43,21 @@ format:
 	poetry run ruff check --fix $(DIRS_WITH_CODE)
 	poetry run ruff format $(DIRS_WITH_CODE)
 
-# The check-code target runs a series of checks equivalent to those performed by pre-commit hooks
-# and the run_checks.yaml GitHub Actions workflow.
-check-code: lint type-check unit-tests
-
 check-async-docstrings:
 	poetry run python scripts/check_async_docstrings.py
 
+check-changelog-entry:
+	poetry run python scripts/check_changelog_entry.py
+
+check-version-conflict:
+	poetry run python scripts/check_version_conflict.py
+
+# The check-code target runs a series of checks equivalent to those performed by pre-commit hooks
+# and the run_checks.yaml GitHub Actions workflow.
+check-code: lint type-check unit-tests check-async-docstrings check-changelog-entry check-version-conflict
+
 fix-async-docstrings:
 	poetry run python scripts/fix_async_docstrings.py
-
-check-version-availability:
-	poetry run python scripts/check_version_availability.py
-
-check-changelog-entry:
-	poetry run python scripts/check_version_in_changelog.py
 
 build-api-reference:
 	cd website && poetry run ./build_api_reference.sh

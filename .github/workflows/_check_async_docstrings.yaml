@@ -7,6 +7,8 @@ jobs:
   check_async_docstrings:
     name: Check whether doctrings for async methods are up-to-date
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: 3.12
 
     steps:
       - name: Checkout repository
@@ -15,11 +17,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
-          pipx install poetry
+          pipx install --python ${{ env.PYTHON_VERSION }} poetry
           make install-dev
 
       - name: Check async docstrings

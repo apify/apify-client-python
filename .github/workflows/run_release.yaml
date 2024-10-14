@@ -45,7 +45,7 @@ jobs:
   check_async_docstrings:
     name: Check whether async dostrings are up to date
     needs: [should_release]
-    uses: ./.github/workflows/check_async_docstrings.yaml
+    uses: ./.github/workflows/_check_async_docstrings.yaml
 
   integration_tests:
     name: Run integration tests

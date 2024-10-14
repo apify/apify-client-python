@@ -41,6 +41,5 @@ jobs:
 
   integration_tests:
     name: Run integration tests
-    needs: [lint_and_type_checks, unit_tests, check_async_docstrings]
-    uses: ./.github/workflows/integration_tests.yaml
+    uses: ./.github/workflows/_integration_tests.yaml
     secrets: inherit

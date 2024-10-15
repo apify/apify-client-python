@@ -22,7 +22,6 @@ jobs:
   unit_tests:
     name: Unit tests
     uses: apify/workflows/.github/workflows/python/unit_tests.yaml
-    secrets: inherit
 
   async_docstrings:
     name: Async dostrings check

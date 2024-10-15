@@ -1,11 +1,11 @@
-name: Check async docstrings
+name: Async docstrings check
 
 on:
   workflow_call:
 
 jobs:
-  check_async_docstrings:
-    name: Check whether doctrings for async methods are up-to-date
+  async_docstring_check:
+    name: Async docstrings check
     runs-on: ubuntu-latest
     env:
       PYTHON_VERSION: 3.12
@@ -24,5 +24,5 @@ jobs:
           pipx install --python ${{ env.PYTHON_VERSION }} poetry
           make install-dev
 
-      - name: Check async docstrings
+      - name: Execute async docstrings check
         run: make check-async-docstrings

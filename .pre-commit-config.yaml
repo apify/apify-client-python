@@ -14,7 +14,7 @@ repos:
         pass_filenames: false
 
       - id: check-async-docstrings
-        name: Check whether async docstrings are aligned with sync ones
+        name: Check async docstrings
         entry: make check-async-docstrings
         language: system
         pass_filenames: false

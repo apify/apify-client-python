@@ -39,7 +39,7 @@ jobs:
     name: Check version conflict
     uses: ./.github/workflows/_check_version_conflict.yaml
 
-  integration_tests:
+  run_integration_tests:
     name: Run integration tests
     uses: ./.github/workflows/_integration_tests.yaml
     secrets: inherit

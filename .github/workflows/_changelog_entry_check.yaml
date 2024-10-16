@@ -1,11 +1,14 @@
-name: Check package version availability
+name: Changelog entry check
 
 on:
   workflow_call:
 
+env:
+  PYTHON_VERSION: 3.12
+
 jobs:
-  check_version_availability:
-    name: Check version availability
+  check_changelog_entry:
+    name: Changelog entry check
     runs-on: ubuntu-latest
     if: (!startsWith(github.event.pull_request.title, 'docs:'))
 
@@ -16,12 +19,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
-          pipx install poetry
+          pipx install --python ${{ env.PYTHON_VERSION }} poetry
           make install-dev
 
-      - name: Check version availability
-        run: make check-version-availability
+      - name: Run changelog entry check
+        run: make check-changelog-entry

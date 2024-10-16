@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Check if async docstrings are the same as sync."""
+
 import re
 import sys
 from pathlib import Path

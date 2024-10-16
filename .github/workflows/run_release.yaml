@@ -52,6 +52,10 @@ jobs:
     needs: [should_release]
     uses: apify/workflows/.github/workflows/python_unit_tests.yaml@main
 
+  async_docstrings:
+    name: Async dostrings check
+    uses: ./.github/workflows/_async_docstrings_check.yaml
+
   # TODO: remove this once https://github.com/apify/apify-sdk-python/issues/241 is resolved
   changelog_entry_check:
     name: Changelog entry check

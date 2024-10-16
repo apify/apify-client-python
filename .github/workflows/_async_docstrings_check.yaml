@@ -3,12 +3,13 @@ name: Async docstrings check
 on:
   workflow_call:
 
+env:
+  PYTHON_VERSION: 3.12
+
 jobs:
   async_docstring_check:
     name: Async docstrings check
     runs-on: ubuntu-latest
-    env:
-      PYTHON_VERSION: 3.12
 
     steps:
       - name: Checkout repository

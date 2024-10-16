@@ -25,5 +25,5 @@ jobs:
           pipx install --python ${{ env.PYTHON_VERSION }} poetry
           make install-dev
 
-      - name: Execute async docstrings check
+      - name: Run async docstrings check
         run: make check-async-docstrings

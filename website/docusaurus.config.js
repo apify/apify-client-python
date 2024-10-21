@@ -82,6 +82,7 @@ module.exports = {
                 pathToCurrentVersionTypedocJSON: `${__dirname}/api-typedoc-generated.json`,
                 sortSidebar: groupSort,
                 routeBasePath: 'reference',
+                python: true,
             },
         ],
         ...config.plugins,

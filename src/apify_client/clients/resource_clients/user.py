@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_shared.utils import ignore_docs, parse_date_fields, filter_out_none_values_recursively
+from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
@@ -88,18 +88,19 @@ class UserClient(ResourceClient):
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
     ) -> None:
-        """
-        Updates the account's limits manageable on your account's Limits page.
-        """
+        """Updates the account's limits manageable on your account's Limits page."""
         self.http_client.call(
             url=self._url('limits'),
             method='PUT',
             params=self._params(),
-            json=filter_out_none_values_recursively({
-                'maxMonthlyUsageUsd': max_monthly_usage_usd,
-                'dataRetentionDays': data_retention_days,
-            }),
+            json=filter_out_none_values_recursively(
+                {
+                    'maxMonthlyUsageUsd': max_monthly_usage_usd,
+                    'dataRetentionDays': data_retention_days,
+                }
+            ),
         )
+
 
 class UserClientAsync(ResourceClientAsync):
     """Async sub-client for querying user data."""
@@ -180,15 +181,15 @@ class UserClientAsync(ResourceClientAsync):
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
     ) -> None:
-        """
-        Updates the account's limits manageable on your account's Limits page.
-        """
+        """Updates the account's limits manageable on your account's Limits page."""
         await self.http_client.call(
             url=self._url('limits'),
             method='PUT',
             params=self._params(),
-            json=filter_out_none_values_recursively({
-                'maxMonthlyUsageUsd': max_monthly_usage_usd,
-                'dataRetentionDays': data_retention_days,
-            }),
+            json=filter_out_none_values_recursively(
+                {
+                    'maxMonthlyUsageUsd': max_monthly_usage_usd,
+                    'dataRetentionDays': data_retention_days,
+                }
+            ),
         )

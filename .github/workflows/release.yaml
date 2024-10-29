@@ -56,6 +56,10 @@ jobs:
     name: Unit tests
     uses: apify/workflows/.github/workflows/python_unit_tests.yaml@main
 
+  async_docstrings:
+    name: Async dostrings check
+    uses: ./.github/workflows/_async_docstrings_check.yaml
+
   integration_tests:
     name: Integration tests
     uses: apify/workflows/.github/workflows/python_integration_tests.yaml@main

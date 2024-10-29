@@ -23,6 +23,7 @@ jobs:
         name: Prepare release metadata
         with:
           release_type: prerelease
+          existing_changelog_path: CHANGELOG.md
 
   lint_check:
     name: Lint check

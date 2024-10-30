@@ -127,7 +127,7 @@ make run-doc
 
 ## Release process
 
-Publishing new versions to [PyPI](https://pypi.org/project/crawlee) is automated through GitHub Actions.
+Publishing new versions to [PyPI](https://pypi.org/project/apify_client) is automated through GitHub Actions.
 
 - **Beta releases**: On each commit to the master branch, a new beta release is automatically published. The version number is determined based on the latest release and conventional commits. The beta version suffix is incremented by 1 from the last beta release on PyPI.
 - **Stable releases**: A stable version release may be created by triggering the `run_release` GitHub Actions workflow. The version number is determined based on the latest release and conventional commits (`auto` release type), or it may be overriden using the `custom` release type.

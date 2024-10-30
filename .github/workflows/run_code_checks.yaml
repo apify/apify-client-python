@@ -23,16 +23,6 @@ jobs:
     name: Async dostrings check
     uses: ./.github/workflows/_async_docstrings_check.yaml
 
-  # TODO: remove this once https://github.com/apify/apify-sdk-python/issues/241 is resolved
-  changelog_entry_check:
-    name: Changelog entry check
-    uses: ./.github/workflows/_changelog_entry_check.yaml
-
-  # TODO: remove this once https://github.com/apify/apify-sdk-python/issues/241 is resolved
-  version_conflict_check:
-    name: Version conflict check
-    uses: ./.github/workflows/_version_conflict_check.yaml
-
   docs_check:
     name: Docs check
     uses: apify/workflows/.github/workflows/python_docs_check.yaml@main

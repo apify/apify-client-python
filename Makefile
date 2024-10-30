@@ -1,7 +1,6 @@
 .PHONY: clean install-dev build publish-to-pypi lint type-check unit-tests unit-tests-cov \
-        integration-tests format check-code check-async-docstrings fix-async-docstrings \
-        check-version-availability check-changelog-entry check-version-conflict build-api-reference \
-        run-docs
+        integration-tests format check-async-docstrings check-code fix-async-docstrings \
+        build-api-reference build-docs run-docs
 
 DIRS_WITH_CODE = src tests scripts
 
@@ -46,15 +45,9 @@ format:
 check-async-docstrings:
 	poetry run python scripts/check_async_docstrings.py
 
-check-changelog-entry:
-	poetry run python scripts/check_changelog_entry.py
-
-check-version-conflict:
-	poetry run python scripts/check_version_conflict.py
-
 # The check-code target runs a series of checks equivalent to those performed by pre-commit hooks
 # and the run_checks.yaml GitHub Actions workflow.
-check-code: lint type-check unit-tests check-async-docstrings check-changelog-entry check-version-conflict
+check-code: lint type-check unit-tests check-async-docstrings
 
 fix-async-docstrings:
 	poetry run python scripts/fix_async_docstrings.py

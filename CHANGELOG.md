@@ -1,25 +1,32 @@
 # Changelog
 
-## [1.8.2](../../releases/tag/v1.8.2) - Unreleased
+All notable changes to this project will be documented in this file.
 
-...
+<!-- git-cliff-unreleased-start -->
+## 1.9.0 - **not yet released**
 
-## [1.8.1](../../releases/tag/v1.8.1) - 2024-09-17
+### 🚀 Features
 
-### Fixed
+- Add user.update_limits ([#279](https://github.com/apify/apify-client-python/pull/279)) ([7aed9c9](https://github.com/apify/apify-client-python/commit/7aed9c928958831168ac8d293538d6fd3adbc5e5)) by [@MFori](https://github.com/MFori), closes [#329](https://github.com/apify/apify-client-python/issues/329)
 
-- batch add requests can handle more than 25 requests
 
-## [1.8.0](../../releases/tag/v1.8.0) - 2024-08-30
+<!-- git-cliff-unreleased-end -->
+## [1.8.1](https://github.com/apify/apify-client-python/releases/tags/v1.8.1) (2024-09-17)
 
-### Added
+### 🐛 Bug Fixes
 
-- add `headers_template` kwarg to webhook create and update
-- allow passing list of fields to `unwind` parameter in dataset item listing endpoints
+- Batch add requests can handle more than 25 requests ([#268](https://github.com/apify/apify-client-python/pull/268)) ([9110ee0](https://github.com/apify/apify-client-python/commit/9110ee08954762aed00ac09cd042e802c1d041f7)) by [@vdusek](https://github.com/vdusek), closes [#264](https://github.com/apify/apify-client-python/issues/264)
 
-### Others
+
+## [1.8.0](https://github.com/apify/apify-client-python/releases/tags/v1.8.0) (2024-08-30)
 
 - drop support for Python 3.8
+
+### 🚀 Features
+
+- Adds headers_template to webhooks and webhooks_collection ([#239](https://github.com/apify/apify-client-python/pull/239)) ([6dbd781](https://github.com/apify/apify-client-python/commit/6dbd781d24d9deb6a7669193ce4d5a4190fe5026)) by [@jakerobers](https://github.com/jakerobers)
+- Add actor standby ([#248](https://github.com/apify/apify-client-python/pull/248)) ([dd4bf90](https://github.com/apify/apify-client-python/commit/dd4bf9072a4caa189af5f90e513e37df325dc929)) by [@jirimoravcik](https://github.com/jirimoravcik)
+- Allow passing list of fields to unwind parameter ([#256](https://github.com/apify/apify-client-python/pull/256)) ([036b455](https://github.com/apify/apify-client-python/commit/036b455c51243e0ef81cb74a44fe670abc085ce7)) by [@fnesveda](https://github.com/fnesveda)
 
 ## [1.7.1](../../releases/tag/v1.7.1) - 2024-07-11
 

@@ -1,20 +1,20 @@
 repos:
   - repo: local
     hooks:
-      - id: lint
-        name: Lint codebase
+      - id: lint-check
+        name: Lint check
         entry: make lint
         language: system
         pass_filenames: false
 
       - id: type-check
-        name: Type-check codebase
+        name: Type check
         entry: make type-check
         language: system
         pass_filenames: false
 
-      - id: check-async-docstrings
-        name: Check async docstrings
+      - id: async-docstrings-check
+        name: Async docstrings check
         entry: make check-async-docstrings
         language: system
         pass_filenames: false

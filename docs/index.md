@@ -273,7 +273,7 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 # Start an Actor and waits for it to finish
 finished_actor_run = apify_client.actor('username/actor-name').call()
 
-# Starts an Actor and waits maximum 60s (1 minute) for the finish 
+# Starts an Actor and waits maximum 60s (1 minute) for the finish
 actor_run = apify_client.actor('username/actor-name').start(wait_for_finish=60)
 ```
 
@@ -304,7 +304,7 @@ while True:
     response = dataset_client.list_items(limit=limit, offset=offset)
     items = response.items
     total = response.total
-    
+
     print(f'Fetched {len(items)} items')
 
     # Merge new items with other already loaded items

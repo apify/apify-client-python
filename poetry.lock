@@ -579,13 +579,13 @@ typing = ["typing-extensions (>=4.12.2)"]
 
 [[package]]
 name = "griffe"
-version = "1.2.0"
+version = "1.5.1"
 description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "griffe-1.2.0-py3-none-any.whl", hash = "sha256:a8b2fcb1ecdc5a412e646b0b4375eb20a5d2eac3a11dd8c10c56967a4097663c"},
-    {file = "griffe-1.2.0.tar.gz", hash = "sha256:1c9f6ef7455930f3f9b0c4145a961c90385d1e2cbc496f7796fbff560ec60d31"},
+    {file = "griffe-1.5.1-py3-none-any.whl", hash = "sha256:ad6a7980f8c424c9102160aafa3bcdf799df0e75f7829d75af9ee5aef656f860"},
+    {file = "griffe-1.5.1.tar.gz", hash = "sha256:72964f93e08c553257706d6cd2c42d1c172213feb48b2be386f243380b405d4b"},
 ]
 
 [package.dependencies]
@@ -1774,4 +1774,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "aeb7ebd8824a80742e0bcea90a7a3d33a6f8566c32b931064e0aeb03d694f14b"
+content-hash = "ab41d2cb640401ca743384ecbcf685e3ad6c9137f5d7700c370fd91d0455b15e"

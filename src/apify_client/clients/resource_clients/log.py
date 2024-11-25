@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import ignore_docs
 
@@ -10,6 +10,8 @@ from apify_client._utils import catch_not_found_or_throw
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     import httpx
 
 

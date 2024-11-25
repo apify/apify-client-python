@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
@@ -10,6 +10,8 @@ from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     import httpx
     from apify_shared.types import JSONSerializable
 

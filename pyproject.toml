@@ -61,7 +61,7 @@ pytest-only = "~2.1.0"
 pytest-timeout = "~2.3.0"
 pytest-xdist = "~3.6.0"
 redbaron = "~0.9.0"
-ruff = "~0.7.0"
+ruff = "~0.8.0"
 setuptools = "~75.0.0"     # setuptools are used by pytest but not explicitly required
 
 [tool.ruff]
@@ -70,8 +70,6 @@ line-length = 150
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "ANN101",   # Missing type annotation for `self` in method
-    "ANN102",   # Missing type annotation for `{name}` in classmethod
     "ANN401",   # Dynamically typed expressions (typing.Any) are disallowed in {filename}
     "ASYNC109", # Async function definition with a `timeout` parameter
     "BLE001",   # Do not catch blind exception
@@ -167,7 +165,7 @@ exclude = []
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
-    "assert_never()"
+    "assert_never()",
 ]
 
 [tool.basedpyright]

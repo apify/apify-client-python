@@ -6,11 +6,13 @@ import json
 import random
 import time
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from apify_shared.utils import is_file_or_bytes, maybe_extract_enum_member_value
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
+
     from apify_client._errors import ApifyApiError
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
@@ -31,14 +33,14 @@ def to_safe_id(id: str) -> str:
 
 def pluck_data(parsed_response: Any) -> dict:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast(Dict, parsed_response['data'])
+        return cast(dict, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 
 
 def pluck_data_as_list(parsed_response: Any) -> list:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast(List, parsed_response['data'])
+        return cast(list, parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 

@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any, AsyncIterator, Iterator
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, encode_key_value_store_record_value, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
 
 
 class KeyValueStoreClient(ResourceClient):

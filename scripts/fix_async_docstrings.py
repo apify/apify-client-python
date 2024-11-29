@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from redbaron import RedBaron  # type: ignore
+from redbaron import RedBaron  # type: ignore[import-untyped]
 from utils import sync_to_async_docstring
 
 # Get the directory of the source files

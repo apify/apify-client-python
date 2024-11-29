@@ -38,9 +38,6 @@ keywords = [
 "Issue Tracker" = "https://github.com/apify/apify-client-python/issues"
 "Repository" = "https://github.com/apify/apify-client-python"
 
-# We use inclusive ordered comparison clauses for external packages intentionally in order to enhance SDK's
-# compatibility with external packages. This decision was discussed in detail in the following PR:
-# https://github.com/apify/apify-sdk-python/pull/154.
 [tool.poetry.dependencies]
 python = "^3.9"
 apify-shared = ">=1.1.2"
@@ -82,7 +79,6 @@ ignore = [
     "G004",     # Logging statement uses f-string
     "ISC001",   # This rule may cause conflicts when used with the formatter
     "FIX",      # flake8-fixme
-    "PGH003",   # Use specific rule codes when ignoring type issues
     "PLR0911",  # Too many return statements
     "PLR0913",  # Too many arguments in function definition
     "PLR0915",  # Too many statements
@@ -161,15 +157,17 @@ warn_unreachable = true
 warn_unused_ignores = true
 exclude = []
 
+[tool.basedpyright]
+pythonVersion = "3.9"
+typeCheckingMode = "standard"
+include = ["scripts", "src", "tests"]
+
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
     "assert_never()",
 ]
-
-[tool.basedpyright]
-typeCheckingMode = "standard"
 
 [tool.ipdb]
 context = 7

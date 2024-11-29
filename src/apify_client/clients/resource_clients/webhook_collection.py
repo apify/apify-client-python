@@ -45,7 +45,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
     def create(
         self: WebhookCollectionClient,
         *,
-        event_types: list[WebhookEventType],  # type: ignore
+        event_types: list[WebhookEventType],  # type: ignore[valid-type]
         request_url: str,
         payload_template: str | None = None,
         headers_template: str | None = None,
@@ -132,7 +132,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
     async def create(
         self: WebhookCollectionClientAsync,
         *,
-        event_types: list[WebhookEventType],  # type: ignore
+        event_types: list[WebhookEventType],  # type: ignore[valid-type]
         request_url: str,
         payload_template: str | None = None,
         headers_template: str | None = None,

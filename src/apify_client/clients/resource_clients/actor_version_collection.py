@@ -36,10 +36,10 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         *,
         version_number: str,
         build_tag: str | None = None,
-        env_vars: list[dict] | None = None,  # type: ignore
+        env_vars: list[dict] | None = None,  # type: ignore[valid-type]
         apply_env_vars_to_build: bool | None = None,
         source_type: ActorSourceType,
-        source_files: list[dict] | None = None,  # type: ignore
+        source_files: list[dict] | None = None,  # type: ignore[valid-type]
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
@@ -107,10 +107,10 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         *,
         version_number: str,
         build_tag: str | None = None,
-        env_vars: list[dict] | None = None,  # type: ignore
+        env_vars: list[dict] | None = None,  # type: ignore[valid-type]
         apply_env_vars_to_build: bool | None = None,
         source_type: ActorSourceType,
-        source_files: list[dict] | None = None,  # type: ignore
+        source_files: list[dict] | None = None,  # type: ignore[valid-type]
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,

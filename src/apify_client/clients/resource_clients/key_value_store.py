@@ -110,7 +110,7 @@ class KeyValueStoreClient(ResourceClient):
                     DeprecationWarning,
                     stacklevel=2,
                 )
-                return self.stream_record(key)  # type: ignore
+                return self.stream_record(key)  # type: ignore[return-value]
 
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
@@ -120,7 +120,7 @@ class KeyValueStoreClient(ResourceClient):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # type: ignore  # noqa: SLF001
+                'value': response._maybe_parsed_body,  # type: ignore[attr-defined]  # noqa: SLF001
                 'content_type': response.headers['content-type'],
             }
 
@@ -323,7 +323,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # type: ignore  # noqa: SLF001
+                'value': response._maybe_parsed_body,  # type: ignore[attr-defined]  # noqa: SLF001
                 'content_type': response.headers['content-type'],
             }
 

@@ -244,7 +244,7 @@ class RunClient(ActorJobBaseClient):
         if not event_name:
             raise ValueError('eventName is required for charging an event')
 
-        return self.http_client.call(
+        response = self.http_client.call(
             url=self._url('charge'),
             method='POST',
             headers={
@@ -256,6 +256,7 @@ class RunClient(ActorJobBaseClient):
                 'count': count or 1,
             })
         )
+        return response.json()
 
 
 class RunClientAsync(ActorJobBaseClientAsync):
@@ -488,7 +489,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         if not event_name:
             raise ValueError('eventName is required for charging an event')
 
-        return await self.http_client.call(
+        response = await self.http_client.call(
             url=self._url('charge'),
             method='POST',
             headers={
@@ -500,3 +501,4 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 'count': count or 1,
             })
         )
+        return response.json()

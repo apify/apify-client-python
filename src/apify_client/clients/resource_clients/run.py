@@ -229,11 +229,11 @@ class RunClient(ActorJobBaseClient):
         )
 
     def charge(
-            self: RunClient,
-            event_name: str,
-            count: int | None = None,
-            idempotency_key: str | None = None,
-        ) -> dict:
+        self: RunClient,
+        event_name: str,
+        count: int | None = None,
+        idempotency_key: str | None = None,
+    ) -> dict:
         """Charge for an event of a Pay-Per-Event Actor run.
 
         TODO: docs url
@@ -251,10 +251,12 @@ class RunClient(ActorJobBaseClient):
                 'idempotency-key': idempotency_key or f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}',
                 'content-type': 'application/json',
             },
-            data=json.dumps({
-                'eventName': event_name,
-                'count': count or 1,
-            })
+            data=json.dumps(
+                {
+                    'eventName': event_name,
+                    'count': count or 1,
+                }
+            ),
         )
         return response.json()
 
@@ -474,11 +476,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
     async def charge(
-            self: RunClient,
-            event_name: str,
-            count: int | None = None,
-            idempotency_key: str | None = None,
-        ) -> dict:
+        self: RunClient,
+        event_name: str,
+        count: int | None = None,
+        idempotency_key: str | None = None,
+    ) -> dict:
         """Charge for an event of a Pay-Per-Event Actor run.
 
         TODO: docs url
@@ -496,9 +498,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 'idempotency-key': idempotency_key or f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}',
                 'content-type': 'application/json',
             },
-            data=json.dumps({
-                'eventName': event_name,
-                'count': count or 1,
-            })
+            data=json.dumps(
+                {
+                    'eventName': event_name,
+                    'count': count or 1,
+                }
+            ),
         )
         return response.json()

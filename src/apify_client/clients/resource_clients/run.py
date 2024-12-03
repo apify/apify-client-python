@@ -237,6 +237,7 @@ class RunClient(ActorJobBaseClient):
         """Charge for an event of a Pay-Per-Event Actor run.
 
         TODO: docs url
+        https://github.com/apify/apify-client-python/issues/305
 
         Returns:
             dict: Status and message of the charge event.
@@ -258,7 +259,7 @@ class RunClient(ActorJobBaseClient):
                 }
             ),
         )
-        return response.json()
+        return parse_date_fields(pluck_data(response.json()))
 
 
 class RunClientAsync(ActorJobBaseClientAsync):
@@ -484,6 +485,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """Charge for an event of a Pay-Per-Event Actor run.
 
         TODO: docs url
+        https://github.com/apify/apify-client-python/issues/305
 
         Returns:
             dict: Status and message of the charge event.
@@ -505,4 +507,4 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 }
             ),
         )
-        return response.json()
+        return parse_date_fields(pluck_data(response.json()))

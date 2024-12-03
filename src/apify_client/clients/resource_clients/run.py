@@ -476,7 +476,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
     async def charge(
-        self: RunClient,
+        self: RunClientAsync,
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,

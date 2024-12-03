@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+import time
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
@@ -11,6 +12,7 @@ from apify_client.clients.resource_clients.key_value_store import KeyValueStoreC
 from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
 from apify_client.clients.resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
+RUN_CHARGE_IDEMPOTENCY_HEADER = 'idempotency-key'
 
 class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor run."""
@@ -440,3 +442,37 @@ class RunClientAsync(ActorJobBaseClientAsync):
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
         )
+
+    async def charge(
+            self: RunClient,
+            eventName: str,
+            count: int | None = None,
+            idempotencyKey: str | None = None,
+        ) -> dict:
+        """Charge for an event of a Pay-Per-Event Actor run.
+
+        TODO: docs url
+
+        Returns:
+            dict: Status and message of the charge event.
+        """
+
+        if not eventName:
+            raise ValueError("eventName is required for charging an event")
+
+        idempotencyKey = idempotencyKey or "{runId}-{eventName}-{timestamp}".format(
+            runId=self.resource_id,
+            eventName=eventName,
+            timestamp=int(time.time() * 1000),
+        )
+
+        response = await self.http_client.call(
+            url=self._url('charge'),
+            method='POST',
+            headers={RUN_CHARGE_IDEMPOTENCY_HEADER: idempotencyKey},
+            data={
+                'eventName': eventName,
+                'count': count or 1,
+            }
+        )
+        return response

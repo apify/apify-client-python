@@ -242,7 +242,7 @@ class RunClient(ActorJobBaseClient):
             dict: Status and message of the charge event.
         """
         if not event_name:
-            raise ValueError('eventName is required for charging an event')
+            raise ValueError('event_name is required for charging an event')
 
         response = self.http_client.call(
             url=self._url('charge'),

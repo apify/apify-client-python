@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import random
+import string
 import time
 from typing import Any
 
@@ -491,11 +493,15 @@ class RunClientAsync(ActorJobBaseClientAsync):
         if not event_name:
             raise ValueError('event_name is required for charging an event')
 
+        idempotency_key = idempotency_key or (
+            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{''.join(random.choices(string.ascii_letters + string.digits, k=6))}'
+        )
+
         response = await self.http_client.call(
             url=self._url('charge'),
             method='POST',
             headers={
-                'idempotency-key': idempotency_key or f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}',
+                'idempotency-key': idempotency_key,
                 'content-type': 'application/json',
             },
             data=json.dumps(

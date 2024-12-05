@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import random
+import string
+import time
 from typing import Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
@@ -226,6 +230,42 @@ class RunClient(ActorJobBaseClient):
             **self._sub_resource_init_options(resource_path='log'),
         )
 
+    def charge(
+        self: RunClient,
+        event_name: str,
+        count: int | None = None,
+        idempotency_key: str | None = None,
+    ) -> dict:
+        """Charge for an event of a Pay-Per-Event Actor run.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/charge-run/charge-run
+
+        Returns:
+            dict: Status and message of the charge event.
+        """
+        if not event_name:
+            raise ValueError('event_name is required for charging an event')
+
+        idempotency_key = idempotency_key or (
+            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'
+        )
+
+        response = self.http_client.call(
+            url=self._url('charge'),
+            method='POST',
+            headers={
+                'idempotency-key': idempotency_key,
+                'content-type': 'application/json',
+            },
+            data=json.dumps(
+                {
+                    'eventName': event_name,
+                    'count': count or 1,
+                }
+            ),
+        )
+        return parse_date_fields(pluck_data(response.json()))
+
 
 class RunClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single Actor run."""
@@ -440,3 +480,39 @@ class RunClientAsync(ActorJobBaseClientAsync):
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
         )
+
+    async def charge(
+        self: RunClientAsync,
+        event_name: str,
+        count: int | None = None,
+        idempotency_key: str | None = None,
+    ) -> dict:
+        """Charge for an event of a Pay-Per-Event Actor run.
+
+        https://docs.apify.com/api/v2#/reference/actor-runs/charge-run/charge-run
+
+        Returns:
+            dict: Status and message of the charge event.
+        """
+        if not event_name:
+            raise ValueError('event_name is required for charging an event')
+
+        idempotency_key = idempotency_key or (
+            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'
+        )
+
+        response = await self.http_client.call(
+            url=self._url('charge'),
+            method='POST',
+            headers={
+                'idempotency-key': idempotency_key,
+                'content-type': 'application/json',
+            },
+            data=json.dumps(
+                {
+                    'eventName': event_name,
+                    'count': count or 1,
+                }
+            ),
+        )
+        return parse_date_fields(pluck_data(response.json()))

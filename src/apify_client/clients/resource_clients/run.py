@@ -494,7 +494,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             raise ValueError('event_name is required for charging an event')
 
         idempotency_key = idempotency_key or (
-            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{''.join(random.choices(string.ascii_letters + string.digits, k=6))}'
+            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'
         )
 
         response = await self.http_client.call(

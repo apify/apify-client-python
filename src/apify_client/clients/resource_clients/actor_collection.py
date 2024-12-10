@@ -16,7 +16,6 @@ class ActorCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -33,13 +32,13 @@ class ActorCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
         Args:
-            my (bool, optional): If True, will return only Actors which the user has created themselves.
-            limit (int, optional): How many Actors to list
-            offset (int, optional): What Actor to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the Actors in descending order based on their creation date
+            my: If True, will return only Actors which the user has created themselves.
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            desc: Whether to sort the Actors in descending order based on their creation date.
 
         Returns:
-            ListPage: The list of available Actors matching the specified filters.
+            The list of available Actors matching the specified filters.
         """
         return self._list(my=my, limit=limit, offset=offset, desc=desc)
 
@@ -75,34 +74,37 @@ class ActorCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
 
         Args:
-            name (str): The name of the Actor
-            title (str, optional): The title of the Actor (human-readable)
-            description (str, optional): The description for the Actor
-            seo_title (str, optional): The title of the Actor optimized for search engines
-            seo_description (str, optional): The description of the Actor optimized for search engines
-            versions (list of dict, optional): The list of Actor versions
-            restart_on_error (bool, optional): If true, the main Actor run process will be restarted whenever it exits with a non-zero status code.
-            is_public (bool, optional): Whether the Actor is public.
-            is_deprecated (bool, optional): Whether the Actor is deprecated.
-            is_anonymously_runnable (bool, optional): Whether the Actor is anonymously runnable.
-            categories (list of str, optional): The categories to which the Actor belongs to.
-            default_run_build (str, optional): Tag or number of the build that you want to run by default.
-            default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
-                                                   if the Actor is charged per result.
-            default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this Actor, in megabytes.
-            default_run_timeout_secs (int, optional): Default timeout for the runs of this Actor in seconds.
-            example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this Actor.
-            example_run_input_content_type (str, optional): The content type of the example run input.
-            actor_standby_is_enabled (bool, optional): Whether the Actor Standby is enabled.
-            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+            name: The name of the Actor.
+            title: The title of the Actor (human-readable).
+            description: The description for the Actor.
+            seo_title: The title of the Actor optimized for search engines.
+            seo_description: The description of the Actor optimized for search engines.
+            versions: The list of Actor versions.
+            restart_on_error: If true, the main Actor run process will be restarted whenever it exits with
+                a non-zero status code.
+            is_public: Whether the Actor is public.
+            is_deprecated: Whether the Actor is deprecated.
+            is_anonymously_runnable: Whether the Actor is anonymously runnable.
+            categories: The categories to which the Actor belongs to.
+            default_run_build: Tag or number of the build that you want to run by default.
+            default_run_max_items: Default limit of the number of results that will be returned by runs
+                of this Actor, if the Actor is charged per result.
+            default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
+            default_run_timeout_secs: Default timeout for the runs of this Actor in seconds.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_content_type: The content type of the example run input.
+            actor_standby_is_enabled: Whether the Actor Standby is enabled.
+            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
-            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
-            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+                it will be shut down.
+            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The created Actor.
+            The created Actor.
         """
         actor_representation = get_actor_representation(
             name=name,
@@ -138,7 +140,6 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -155,13 +156,13 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
         Args:
-            my (bool, optional): If True, will return only Actors which the user has created themselves.
-            limit (int, optional): How many Actors to list
-            offset (int, optional): What Actor to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the Actors in descending order based on their creation date
+            my: If True, will return only Actors which the user has created themselves.
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            desc: Whether to sort the Actors in descending order based on their creation date.
 
         Returns:
-            ListPage: The list of available Actors matching the specified filters.
+            The list of available Actors matching the specified filters.
         """
         return await self._list(my=my, limit=limit, offset=offset, desc=desc)
 
@@ -197,34 +198,37 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
 
         Args:
-            name (str): The name of the Actor
-            title (str, optional): The title of the Actor (human-readable)
-            description (str, optional): The description for the Actor
-            seo_title (str, optional): The title of the Actor optimized for search engines
-            seo_description (str, optional): The description of the Actor optimized for search engines
-            versions (list of dict, optional): The list of Actor versions
-            restart_on_error (bool, optional): If true, the main Actor run process will be restarted whenever it exits with a non-zero status code.
-            is_public (bool, optional): Whether the Actor is public.
-            is_deprecated (bool, optional): Whether the Actor is deprecated.
-            is_anonymously_runnable (bool, optional): Whether the Actor is anonymously runnable.
-            categories (list of str, optional): The categories to which the Actor belongs to.
-            default_run_build (str, optional): Tag or number of the build that you want to run by default.
-            default_run_max_items (int, optional): Default limit of the number of results that will be returned by runs of this Actor,
-                                                   if the Actor is charged per result.
-            default_run_memory_mbytes (int, optional): Default amount of memory allocated for the runs of this Actor, in megabytes.
-            default_run_timeout_secs (int, optional): Default timeout for the runs of this Actor in seconds.
-            example_run_input_body (Any, optional): Input to be prefilled as default input to new users of this Actor.
-            example_run_input_content_type (str, optional): The content type of the example run input.
-            actor_standby_is_enabled (bool, optional): Whether the Actor Standby is enabled.
-            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+            name: The name of the Actor.
+            title: The title of the Actor (human-readable).
+            description: The description for the Actor.
+            seo_title: The title of the Actor optimized for search engines.
+            seo_description: The description of the Actor optimized for search engines.
+            versions: The list of Actor versions.
+            restart_on_error: If true, the main Actor run process will be restarted whenever it exits with
+                a non-zero status code.
+            is_public: Whether the Actor is public.
+            is_deprecated: Whether the Actor is deprecated.
+            is_anonymously_runnable: Whether the Actor is anonymously runnable.
+            categories: The categories to which the Actor belongs to.
+            default_run_build: Tag or number of the build that you want to run by default.
+            default_run_max_items: Default limit of the number of results that will be returned by runs
+                of this Actor, if the Actor is charged per result.
+            default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
+            default_run_timeout_secs: Default timeout for the runs of this Actor in seconds.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_content_type: The content type of the example run input.
+            actor_standby_is_enabled: Whether the Actor Standby is enabled.
+            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
-            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
-            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+                it will be shut down.
+            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The created Actor.
+            The created Actor.
         """
         actor_representation = get_actor_representation(
             name=name,

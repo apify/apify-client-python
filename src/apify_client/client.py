@@ -69,15 +69,15 @@ class _BaseApifyClient:
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
     ) -> None:
-        """Initialize the Apify API Client.
+        """A default constructor.
 
         Args:
-            token (str, optional): The Apify API token
-            api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
-            max_retries (int, optional): How many times to retry a failed request at most
-            min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
-                (increases exponentially from this value)
-            timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
+            token: The Apify API token.
+            api_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com.
+            max_retries: How many times to retry a failed request at most.
+            min_delay_between_retries_millis: How long will the client wait between retrying requests
+                (increases exponentially from this value).
+            timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
         self.token = token
         api_url = (api_url or DEFAULT_API_URL).rstrip('/')
@@ -108,15 +108,15 @@ class ApifyClient(_BaseApifyClient):
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
     ) -> None:
-        """Initialize the ApifyClient.
+        """A default constructor.
 
         Args:
-            token (str, optional): The Apify API token
-            api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
-            max_retries (int, optional): How many times to retry a failed request at most
-            min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
-                (increases exponentially from this value)
-            timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
+            token: The Apify API token.
+            api_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com.
+            max_retries: How many times to retry a failed request at most.
+            min_delay_between_retries_millis: How long will the client wait between retrying requests
+                (increases exponentially from this value).
+            timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
         super().__init__(
             token,
@@ -137,7 +137,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
-            actor_id (str): ID of the Actor to be manipulated
+            actor_id: ID of the Actor to be manipulated.
         """
         return ActorClient(resource_id=actor_id, **self._options())
 
@@ -149,7 +149,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
-            build_id (str): ID of the Actor build to be manipulated
+            build_id: ID of the Actor build to be manipulated.
         """
         return BuildClient(resource_id=build_id, **self._options())
 
@@ -161,7 +161,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
-            run_id (str): ID of the Actor run to be manipulated
+            run_id: ID of the Actor run to be manipulated.
         """
         return RunClient(resource_id=run_id, **self._options())
 
@@ -173,7 +173,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
-            dataset_id (str): ID of the dataset to be manipulated
+            dataset_id: ID of the dataset to be manipulated.
         """
         return DatasetClient(resource_id=dataset_id, **self._options())
 
@@ -185,7 +185,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
-            key_value_store_id (str): ID of the key-value store to be manipulated
+            key_value_store_id: ID of the key-value store to be manipulated.
         """
         return KeyValueStoreClient(resource_id=key_value_store_id, **self._options())
 
@@ -197,8 +197,8 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
-            request_queue_id (str): ID of the request queue to be manipulated
-            client_key (str): A unique identifier of the client accessing the request queue
+            request_queue_id: ID of the request queue to be manipulated.
+            client_key: A unique identifier of the client accessing the request queue.
         """
         return RequestQueueClient(resource_id=request_queue_id, client_key=client_key, **self._options())
 
@@ -210,7 +210,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
-            webhook_id (str): ID of the webhook to be manipulated
+            webhook_id: ID of the webhook to be manipulated.
         """
         return WebhookClient(resource_id=webhook_id, **self._options())
 
@@ -222,7 +222,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
-            webhook_dispatch_id (str): ID of the webhook dispatch to access
+            webhook_dispatch_id: ID of the webhook dispatch to access.
         """
         return WebhookDispatchClient(resource_id=webhook_dispatch_id, **self._options())
 
@@ -234,7 +234,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
-            schedule_id (str): ID of the schedule to be manipulated
+            schedule_id: ID of the schedule to be manipulated.
         """
         return ScheduleClient(resource_id=schedule_id, **self._options())
 
@@ -246,7 +246,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for retrieving logs.
 
         Args:
-            build_or_run_id (str): ID of the Actor build or run for which to access the log
+            build_or_run_id: ID of the Actor build or run for which to access the log.
         """
         return LogClient(resource_id=build_or_run_id, **self._options())
 
@@ -254,7 +254,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
-            task_id (str): ID of the task to be manipulated
+            task_id: ID of the task to be manipulated.
         """
         return TaskClient(resource_id=task_id, **self._options())
 
@@ -266,7 +266,7 @@ class ApifyClient(_BaseApifyClient):
         """Retrieve the sub-client for querying users.
 
         Args:
-            user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
+            user_id: ID of user to be queried. If None, queries the user belonging to the token supplied to the client.
         """
         return UserClient(resource_id=user_id, **self._options())
 
@@ -289,15 +289,15 @@ class ApifyClientAsync(_BaseApifyClient):
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
     ) -> None:
-        """Initialize the ApifyClientAsync.
+        """A default constructor.
 
         Args:
-            token (str, optional): The Apify API token
-            api_url (str, optional): The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com
-            max_retries (int, optional): How many times to retry a failed request at most
-            min_delay_between_retries_millis (int, optional): How long will the client wait between retrying requests
-                (increases exponentially from this value)
-            timeout_secs (int, optional): The socket timeout of the HTTP requests sent to the Apify API
+            token: The Apify API token.
+            api_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com.
+            max_retries: How many times to retry a failed request at most.
+            min_delay_between_retries_millis: How long will the client wait between retrying requests
+                (increases exponentially from this value).
+            timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
         super().__init__(
             token,
@@ -318,7 +318,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
-            actor_id (str): ID of the Actor to be manipulated
+            actor_id: ID of the Actor to be manipulated.
         """
         return ActorClientAsync(resource_id=actor_id, **self._options())
 
@@ -330,7 +330,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
-            build_id (str): ID of the Actor build to be manipulated
+            build_id: ID of the Actor build to be manipulated.
         """
         return BuildClientAsync(resource_id=build_id, **self._options())
 
@@ -342,7 +342,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
-            run_id (str): ID of the Actor run to be manipulated
+            run_id: ID of the Actor run to be manipulated.
         """
         return RunClientAsync(resource_id=run_id, **self._options())
 
@@ -354,7 +354,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
-            dataset_id (str): ID of the dataset to be manipulated
+            dataset_id: ID of the dataset to be manipulated.
         """
         return DatasetClientAsync(resource_id=dataset_id, **self._options())
 
@@ -366,7 +366,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
-            key_value_store_id (str): ID of the key-value store to be manipulated
+            key_value_store_id: ID of the key-value store to be manipulated.
         """
         return KeyValueStoreClientAsync(resource_id=key_value_store_id, **self._options())
 
@@ -378,8 +378,8 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
-            request_queue_id (str): ID of the request queue to be manipulated
-            client_key (str): A unique identifier of the client accessing the request queue
+            request_queue_id: ID of the request queue to be manipulated.
+            client_key: A unique identifier of the client accessing the request queue.
         """
         return RequestQueueClientAsync(resource_id=request_queue_id, client_key=client_key, **self._options())
 
@@ -391,7 +391,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
-            webhook_id (str): ID of the webhook to be manipulated
+            webhook_id: ID of the webhook to be manipulated.
         """
         return WebhookClientAsync(resource_id=webhook_id, **self._options())
 
@@ -403,7 +403,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
-            webhook_dispatch_id (str): ID of the webhook dispatch to access
+            webhook_dispatch_id: ID of the webhook dispatch to access.
         """
         return WebhookDispatchClientAsync(resource_id=webhook_dispatch_id, **self._options())
 
@@ -415,7 +415,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
-            schedule_id (str): ID of the schedule to be manipulated
+            schedule_id: ID of the schedule to be manipulated.
         """
         return ScheduleClientAsync(resource_id=schedule_id, **self._options())
 
@@ -427,7 +427,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for retrieving logs.
 
         Args:
-            build_or_run_id (str): ID of the Actor build or run for which to access the log
+            build_or_run_id: ID of the Actor build or run for which to access the log.
         """
         return LogClientAsync(resource_id=build_or_run_id, **self._options())
 
@@ -435,7 +435,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
-            task_id (str): ID of the task to be manipulated
+            task_id: ID of the task to be manipulated.
         """
         return TaskClientAsync(resource_id=task_id, **self._options())
 
@@ -447,7 +447,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """Retrieve the sub-client for querying users.
 
         Args:
-            user_id (str, optional): ID of user to be queried. If None, queries the user belonging to the token supplied to the client
+            user_id: ID of user to be queried. If None, queries the user belonging to the token supplied to the client.
         """
         return UserClientAsync(resource_id=user_id, **self._options())
 

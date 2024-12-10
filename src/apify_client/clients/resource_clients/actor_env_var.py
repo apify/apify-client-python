@@ -26,7 +26,6 @@ class ActorEnvVarClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorEnvVarClient."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -36,7 +35,7 @@ class ActorEnvVarClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/get-environment-variable
 
         Returns:
-            dict, optional: The retrieved Actor environment variable data
+            The retrieved Actor environment variable data.
         """
         return self._get()
 
@@ -52,12 +51,12 @@ class ActorEnvVarClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/update-environment-variable
 
         Args:
-            is_secret (bool, optional): Whether the environment variable is secret or not
-            name (str): The name of the environment variable
-            value (str): The value of the environment variable
+            is_secret: Whether the environment variable is secret or not.
+            name: The name of the environment variable.
+            value: The value of the environment variable.
 
         Returns:
-            dict: The updated Actor environment variable
+            The updated Actor environment variable.
         """
         actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,
@@ -80,7 +79,6 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorEnvVarClientAsync."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -90,7 +88,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/get-environment-variable
 
         Returns:
-            dict, optional: The retrieved Actor environment variable data
+            The retrieved Actor environment variable data.
         """
         return await self._get()
 
@@ -106,12 +104,12 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/update-environment-variable
 
         Args:
-            is_secret (bool, optional): Whether the environment variable is secret or not
-            name (str): The name of the environment variable
-            value (str): The value of the environment variable
+            is_secret: Whether the environment variable is secret or not.
+            name: The name of the environment variable.
+            value: The value of the environment variable.
 
         Returns:
-            dict: The updated Actor environment variable
+            The updated Actor environment variable.
         """
         actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,

@@ -15,7 +15,6 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the RequestQueueCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -32,13 +31,13 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
 
         Args:
-            unnamed (bool, optional): Whether to include unnamed request queues in the list
-            limit (int, optional): How many request queues to retrieve
-            offset (int, optional): What request queue to include as first when retrieving the list
-            desc (bool, optional): Whether to sort therequest queues in descending order based on their modification date
+            unnamed: Whether to include unnamed request queues in the list.
+            limit: How many request queues to retrieve.
+            offset: What request queue to include as first when retrieving the list.
+            desc: Whether to sort therequest queues in descending order based on their modification date.
 
         Returns:
-            ListPage: The list of available request queues matching the specified filters.
+            The list of available request queues matching the specified filters.
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
@@ -48,10 +47,10 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
 
         Args:
-            name (str, optional): The name of the request queue to retrieve or create.
+            name: The name of the request queue to retrieve or create.
 
         Returns:
-            dict: The retrieved or newly-created request queue.
+            The retrieved or newly-created request queue.
         """
         return self._get_or_create(name=name)
 
@@ -61,7 +60,6 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the RequestQueueCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -78,13 +76,13 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
 
         Args:
-            unnamed (bool, optional): Whether to include unnamed request queues in the list
-            limit (int, optional): How many request queues to retrieve
-            offset (int, optional): What request queue to include as first when retrieving the list
-            desc (bool, optional): Whether to sort therequest queues in descending order based on their modification date
+            unnamed: Whether to include unnamed request queues in the list.
+            limit: How many request queues to retrieve.
+            offset: What request queue to include as first when retrieving the list.
+            desc: Whether to sort therequest queues in descending order based on their modification date.
 
         Returns:
-            ListPage: The list of available request queues matching the specified filters.
+            The list of available request queues matching the specified filters.
         """
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
@@ -94,9 +92,9 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
 
         Args:
-            name (str, optional): The name of the request queue to retrieve or create.
+            name: The name of the request queue to retrieve or create.
 
         Returns:
-            dict: The retrieved or newly-created request queue.
+            The retrieved or newly-created request queue.
         """
         return await self._get_or_create(name=name)

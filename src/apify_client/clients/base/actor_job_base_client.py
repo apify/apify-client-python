@@ -42,7 +42,9 @@ class ActorJobBaseClient(ResourceClient):
                 job = parse_date_fields(pluck_data(response.json()))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
-                if ActorJobStatus(job['status']).is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):
+                if ActorJobStatus(job['status']).is_terminal or (
+                    wait_secs is not None and seconds_elapsed >= wait_secs
+                ):
                     should_repeat = False
 
                 if not should_repeat:
@@ -52,8 +54,8 @@ class ActorJobBaseClient(ResourceClient):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up and return None
-                # In such case, the requested record probably really doesn't exist.
+                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up
+                # and return None. In such case, the requested record probably really doesn't exist.
                 if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
                     return None
 
@@ -95,7 +97,9 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 job = parse_date_fields(pluck_data(response.json()))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
-                if ActorJobStatus(job['status']).is_terminal or (wait_secs is not None and seconds_elapsed >= wait_secs):
+                if ActorJobStatus(job['status']).is_terminal or (
+                    wait_secs is not None and seconds_elapsed >= wait_secs
+                ):
                     should_repeat = False
 
                 if not should_repeat:
@@ -105,8 +109,8 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up and return None
-                # In such case, the requested record probably really doesn't exist.
+                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up
+                # and return None. In such case, the requested record probably really doesn't exist.
                 if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
                     return None
 

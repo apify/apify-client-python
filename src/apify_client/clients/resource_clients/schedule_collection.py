@@ -16,7 +16,6 @@ class ScheduleCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ScheduleCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -32,12 +31,12 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
         Args:
-            limit (int, optional): How many schedules to retrieve
-            offset (int, optional): What schedules to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the schedules in descending order based on their modification date
+            limit: How many schedules to retrieve.
+            offset: What schedules to include as first when retrieving the list.
+            desc: Whether to sort the schedules in descending order based on their modification date.
 
         Returns:
-            ListPage: The list of available schedules matching the specified filters.
+            The list of available schedules matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -58,18 +57,19 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
 
         Args:
-            cron_expression (str): The cron expression used by this schedule
-            is_enabled (bool): True if the schedule should be enabled
-            is_exclusive (bool): When set to true, don't start Actor or Actor task if it's still running from the previous schedule.
-            name (str, optional): The name of the schedule to create.
-            actions (list of dict, optional): Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-            description (str, optional): Description of this schedule
-            timezone (str, optional): Timezone in which your cron expression runs
-                (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-            title: str, optional): Title of this schedule
+            cron_expression: The cron expression used by this schedule.
+            is_enabled: True if the schedule should be enabled.
+            is_exclusive: When set to true, don't start Actor or Actor task if it's still running from the previous
+                schedule.
+            name: The name of the schedule to create.
+            actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+            description: Description of this schedule.
+            timezone: Timezone in which your cron expression runs (TZ database name from
+                https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            title: Title of this schedule.
 
         Returns:
-            dict: The created schedule.
+            The created schedule.
         """
         if not actions:
             actions = []
@@ -93,7 +93,6 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -109,12 +108,12 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
         Args:
-            limit (int, optional): How many schedules to retrieve
-            offset (int, optional): What schedules to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the schedules in descending order based on their modification date
+            limit: How many schedules to retrieve.
+            offset: What schedules to include as first when retrieving the list.
+            desc: Whether to sort the schedules in descending order based on their modification date.
 
         Returns:
-            ListPage: The list of available schedules matching the specified filters.
+            The list of available schedules matching the specified filters.
         """
         return await self._list(limit=limit, offset=offset, desc=desc)
 
@@ -135,18 +134,19 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
 
         Args:
-            cron_expression (str): The cron expression used by this schedule
-            is_enabled (bool): True if the schedule should be enabled
-            is_exclusive (bool): When set to true, don't start Actor or Actor task if it's still running from the previous schedule.
-            name (str, optional): The name of the schedule to create.
-            actions (list of dict, optional): Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-            description (str, optional): Description of this schedule
-            timezone (str, optional): Timezone in which your cron expression runs
-                (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-            title: str, optional): Title of this schedule
+            cron_expression: The cron expression used by this schedule.
+            is_enabled: True if the schedule should be enabled.
+            is_exclusive: When set to true, don't start Actor or Actor task if it's still running from the previous
+                schedule.
+            name: The name of the schedule to create.
+            actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+            description: Description of this schedule.
+            timezone: Timezone in which your cron expression runs (TZ database name from
+                https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            title: Title of this schedule.
 
         Returns:
-            dict: The created schedule.
+            The created schedule.
         """
         if not actions:
             actions = []

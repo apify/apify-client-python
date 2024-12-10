@@ -63,15 +63,15 @@ class BaseClient(_BaseBaseClient):
         resource_path: str,
         params: dict | None = None,
     ) -> None:
-        """Initialize the sub-client.
+        """A default constructor.
 
         Args:
-            base_url (str): Base URL of the API server
-            root_client (ApifyClient): The ApifyClient instance under which this resource client exists
-            http_client (HTTPClient): The HTTPClient instance to be used in this client
-            resource_id (str): ID of the manipulated resource, in case of a single-resource client
-            resource_path (str): Path to the resource's endpoint on the API server
-            params (dict): Parameters to include in all requests from this client
+            base_url: Base URL of the API server.
+            root_client: The ApifyClient instance under which this resource client exists.
+            http_client: The HTTPClient instance to be used in this client.
+            resource_id: ID of the manipulated resource, in case of a single-resource client.
+            resource_path: Path to the resource's endpoint on the API server.
+            params: Parameters to include in all requests from this client.
         """
         if resource_path.endswith('/'):
             raise ValueError('resource_path must not end with "/"')
@@ -106,15 +106,15 @@ class BaseClientAsync(_BaseBaseClient):
         resource_path: str,
         params: dict | None = None,
     ) -> None:
-        """Initialize the sub-client.
+        """A default constructor.
 
         Args:
-            base_url (str): Base URL of the API server
-            root_client (ApifyClientAsync): The ApifyClientAsync instance under which this resource client exists
-            http_client (HTTPClientAsync): The HTTPClientAsync instance to be used in this client
-            resource_id (str): ID of the manipulated resource, in case of a single-resource client
-            resource_path (str): Path to the resource's endpoint on the API server
-            params (dict): Parameters to include in all requests from this client
+            base_url: Base URL of the API server.
+            root_client: The ApifyClientAsync instance under which this resource client exists.
+            http_client: The HTTPClientAsync instance to be used in this client.
+            resource_id: ID of the manipulated resource, in case of a single-resource client.
+            resource_path: Path to the resource's endpoint on the API server.
+            params: Parameters to include in all requests from this client.
         """
         if resource_path.endswith('/'):
             raise ValueError('resource_path must not end with "/"')

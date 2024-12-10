@@ -15,7 +15,6 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookDispatchCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -31,12 +30,12 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
 
         Args:
-            limit (int, optional): How many webhook dispatches to retrieve
-            offset (int, optional): What webhook dispatch to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the webhook dispatches in descending order based on the date of their creation
+            limit: How many webhook dispatches to retrieve.
+            offset: What webhook dispatch to include as first when retrieving the list.
+            desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
 
         Returns:
-            ListPage: The retrieved webhook dispatches of a user
+            The retrieved webhook dispatches of a user.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -46,7 +45,6 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookDispatchCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -62,11 +60,11 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
 
         Args:
-            limit (int, optional): How many webhook dispatches to retrieve
-            offset (int, optional): What webhook dispatch to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the webhook dispatches in descending order based on the date of their creation
+            limit: How many webhook dispatches to retrieve.
+            offset: What webhook dispatch to include as first when retrieving the list.
+            desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
 
         Returns:
-            ListPage: The retrieved webhook dispatches of a user
+            The retrieved webhook dispatches of a user.
         """
         return await self._list(limit=limit, offset=offset, desc=desc)

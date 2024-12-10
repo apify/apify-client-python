@@ -61,10 +61,10 @@ class RequestQueueClient(ResourceClient):
         client_key: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Initialize the RequestQueueClient.
+        """A default constructor.
 
         Args:
-            client_key (str, optional): A unique identifier of the client accessing the request queue
+            client_key: A unique identifier of the client accessing the request queue.
         """
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -76,7 +76,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
 
         Returns:
-            dict, optional: The retrieved request queue, or None, if it does not exist
+            The retrieved request queue, or None, if it does not exist.
         """
         return self._get()
 
@@ -86,10 +86,10 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
 
         Args:
-            name (str, optional): The new name for the request queue
+            name: The new name for the request queue.
 
         Returns:
-            dict: The updated request queue
+            The updated request queue.
         """
         updated_fields = {
             'name': name,
@@ -110,10 +110,10 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
 
         Args:
-            limit (int, optional): How many requests to retrieve
+            limit: How many requests to retrieve.
 
         Returns:
-            dict: The desired number of requests from the beginning of the queue.
+            The desired number of requests from the beginning of the queue.
         """
         request_params = self._params(limit=limit, clientKey=self.client_key)
 
@@ -131,12 +131,11 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_secs (int): How long the requests will be locked for, in seconds
-            limit (int, optional): How many requests to retrieve
-
+            lock_secs: How long the requests will be locked for, in seconds.
+            limit: How many requests to retrieve.
 
         Returns:
-            dict: The desired number of locked requests from the beginning of the queue.
+            The desired number of locked requests from the beginning of the queue.
         """
         request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
 
@@ -154,11 +153,11 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request (dict): The request to add to the queue
-            forefront (bool, optional): Whether to add the request to the head or the end of the queue
+            request: The request to add to the queue.
+            forefront: Whether to add the request to the head or the end of the queue.
 
         Returns:
-            dict: The added request.
+            The added request.
         """
         request_params = self._params(forefront=forefront, clientKey=self.client_key)
 
@@ -177,10 +176,10 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Args:
-            request_id (str): ID of the request to retrieve
+            request_id: ID of the request to retrieve.
 
         Returns:
-            dict, optional: The retrieved request, or None, if it did not exist.
+            The retrieved request, or None, if it did not exist.
         """
         try:
             response = self.http_client.call(
@@ -201,11 +200,11 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request (dict): The updated request
-            forefront (bool, optional): Whether to put the updated request in the beginning or the end of the queue
+            request: The updated request.
+            forefront: Whether to put the updated request in the beginning or the end of the queue.
 
         Returns:
-            dict: The updated request
+            The updated request.
         """
         request_id = request['id']
 
@@ -226,7 +225,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/delete-request
 
         Args:
-            request_id (str): ID of the request to delete.
+            request_id: ID of the request to delete.
         """
         request_params = self._params(
             clientKey=self.client_key,
@@ -250,9 +249,9 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
-            request_id (str): ID of the request to prolong the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
-            lock_secs (int): By how much to prolong the lock, in seconds
+            request_id: ID of the request to prolong the lock.
+            forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
+            lock_secs: By how much to prolong the lock, in seconds.
         """
         request_params = self._params(clientKey=self.client_key, forefront=forefront, lockSecs=lock_secs)
 
@@ -270,8 +269,8 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
 
         Args:
-            request_id (str): ID of the request to delete the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
+            request_id: ID of the request to delete the lock.
+            forefront: Whether to put the request in the beginning or the end of the queue after the lock is deleted.
         """
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
@@ -303,7 +302,8 @@ class RequestQueueClient(ResourceClient):
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
             max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
-            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed requests.
+            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed
+                requests.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
@@ -367,7 +367,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests (list[dict]): list of the requests to delete
+            requests: List of the requests to delete.
         """
         request_params = self._params(clientKey=self.client_key)
 
@@ -391,8 +391,8 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
-            limit (int, optional): How many requests to retrieve
-            exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
+            limit: How many requests to retrieve.
+            exclusive_start_id: All requests up to this one (including) are skipped from the result.
         """
         request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
 
@@ -415,10 +415,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         client_key: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Initialize the RequestQueueClientAsync.
+        """A default constructor.
 
         Args:
-            client_key (str, optional): A unique identifier of the client accessing the request queue
+            client_key: A unique identifier of the client accessing the request queue.
         """
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -430,7 +430,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
 
         Returns:
-            dict, optional: The retrieved request queue, or None, if it does not exist
+            The retrieved request queue, or None, if it does not exist.
         """
         return await self._get()
 
@@ -440,10 +440,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
 
         Args:
-            name (str, optional): The new name for the request queue
+            name: The new name for the request queue.
 
         Returns:
-            dict: The updated request queue
+            The updated request queue.
         """
         updated_fields = {
             'name': name,
@@ -464,10 +464,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
 
         Args:
-            limit (int, optional): How many requests to retrieve
+            limit: How many requests to retrieve.
 
         Returns:
-            dict: The desired number of requests from the beginning of the queue.
+            The desired number of requests from the beginning of the queue.
         """
         request_params = self._params(limit=limit, clientKey=self.client_key)
 
@@ -485,12 +485,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
 
         Args:
-            lock_secs (int): How long the requests will be locked for, in seconds
-            limit (int, optional): How many requests to retrieve
-
+            lock_secs: How long the requests will be locked for, in seconds.
+            limit: How many requests to retrieve.
 
         Returns:
-            dict: The desired number of locked requests from the beginning of the queue.
+            The desired number of locked requests from the beginning of the queue.
         """
         request_params = self._params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
 
@@ -508,11 +507,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request (dict): The request to add to the queue
-            forefront (bool, optional): Whether to add the request to the head or the end of the queue
+            request: The request to add to the queue.
+            forefront: Whether to add the request to the head or the end of the queue.
 
         Returns:
-            dict: The added request.
+            The added request.
         """
         request_params = self._params(forefront=forefront, clientKey=self.client_key)
 
@@ -531,10 +530,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Args:
-            request_id (str): ID of the request to retrieve
+            request_id: ID of the request to retrieve.
 
         Returns:
-            dict, optional: The retrieved request, or None, if it did not exist.
+            The retrieved request, or None, if it did not exist.
         """
         try:
             response = await self.http_client.call(
@@ -555,11 +554,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request (dict): The updated request
-            forefront (bool, optional): Whether to put the updated request in the beginning or the end of the queue
+            request: The updated request.
+            forefront: Whether to put the updated request in the beginning or the end of the queue.
 
         Returns:
-            dict: The updated request
+            The updated request.
         """
         request_id = request['id']
 
@@ -580,7 +579,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/delete-request
 
         Args:
-            request_id (str): ID of the request to delete.
+            request_id: ID of the request to delete.
         """
         request_params = self._params(clientKey=self.client_key)
 
@@ -602,9 +601,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
-            request_id (str): ID of the request to prolong the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after lock expires
-            lock_secs (int): By how much to prolong the lock, in seconds
+            request_id: ID of the request to prolong the lock.
+            forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
+            lock_secs: By how much to prolong the lock, in seconds.
         """
         request_params = self._params(clientKey=self.client_key, forefront=forefront, lockSecs=lock_secs)
 
@@ -627,8 +626,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
 
         Args:
-            request_id (str): ID of the request to delete the lock
-            forefront (bool, optional): Whether to put the request in the beginning or the end of the queue after the lock is deleted
+            request_id: ID of the request to delete the lock.
+            forefront: Whether to put the request in the beginning or the end of the queue after the lock is deleted.
         """
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
@@ -717,7 +716,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
             max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
-            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed requests.
+            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed
+                requests.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
@@ -778,7 +778,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests (list[dict]): list of the requests to delete
+            requests: List of the requests to delete.
         """
         request_params = self._params(clientKey=self.client_key)
 
@@ -801,8 +801,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
-            limit (int, optional): How many requests to retrieve
-            exclusive_start_id (str, optional): All requests up to this one (including) are skipped from the result
+            limit: How many requests to retrieve.
+            exclusive_start_id: All requests up to this one (including) are skipped from the result.
         """
         request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
 

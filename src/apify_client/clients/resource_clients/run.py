@@ -21,7 +21,6 @@ class RunClient(ActorJobBaseClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the RunClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -31,7 +30,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
         Returns:
-            dict: The retrieved Actor run data
+            The retrieved Actor run data.
         """
         return self._get()
 
@@ -41,11 +40,11 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
 
         Args:
-            status_message (str, optional): The new status message for the run
-            is_status_message_terminal (bool, optional): Set this flag to True if this is the final status message of the Actor run.
+            status_message: The new status message for the run.
+            is_status_message_terminal: Set this flag to True if this is the final status message of the Actor run.
 
         Returns:
-            dict: The updated run
+            The updated run.
         """
         updated_fields = {
             'statusMessage': status_message,
@@ -67,12 +66,12 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
 
         Args:
-            gracefully (bool, optional): If True, the Actor run will abort gracefully.
-                It will send ``aborting`` and ``persistStates`` events into the run and force-stop the run after 30 seconds.
-                It is helpful in cases where you plan to resurrect the run later.
+            gracefully: If True, the Actor run will abort gracefully. It will send `aborting` and `persistStates`
+                events into the run and force-stop the run after 30 seconds. It is helpful in cases where you plan
+                to resurrect the run later.
 
         Returns:
-            dict: The data of the aborted Actor run
+            The data of the aborted Actor run.
         """
         return self._abort(gracefully=gracefully)
 
@@ -80,11 +79,11 @@ class RunClient(ActorJobBaseClient):
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
-            wait_secs (int, optional): how long does the client wait for run to finish. None for indefinite.
+            wait_secs: How long does the client wait for run to finish. None for indefinite.
 
         Returns:
-            dict, optional: The Actor run data. If the status on the object is not one of the terminal statuses
-                (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
+            The Actor run data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
+                TIMED_OUT, ABORTED), then the run has not yet finished.
         """
         return self._wait_for_finish(wait_secs=wait_secs)
 
@@ -101,23 +100,21 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run
 
         Args:
-            target_actor_id (str): ID of the target Actor that the run should be transformed into
-            target_actor_build (str, optional): The build of the target Actor. It can be either a build tag or build number.
-                By default, the run uses the build specified in the default run configuration for the target Actor (typically the latest build).
-            run_input (Any, optional): The input to pass to the new run.
-            content_type (str, optional): The content type of the input.
+            target_actor_id: ID of the target Actor that the run should be transformed into.
+            target_actor_build: The build of the target Actor. It can be either a build tag or build number.
+                By default, the run uses the build specified in the default run configuration for the target Actor
+                (typically the latest build).
+            run_input: The input to pass to the new run.
+            content_type: The content type of the input.
 
         Returns:
-            dict: The Actor run data.
+            The Actor run data.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
-        request_params = self._params(
-            targetActorId=safe_target_actor_id,
-            build=target_actor_build,
-        )
+        request_params = self._params(targetActorId=safe_target_actor_id, build=target_actor_build)
 
         response = self.http_client.call(
             url=self._url('metamorph'),
@@ -144,15 +141,15 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run
 
         Args:
-            build (str, optional): Which Actor build the resurrected run should use. It can be either a build tag or build number.
-                                   By default, the resurrected run uses the same build as before.
-            memory_mbytes (int, optional): New memory limit for the resurrected run, in megabytes.
-                                           By default, the resurrected run uses the same memory limit as before.
-            timeout_secs (int, optional): New timeout for the resurrected run, in seconds.
-                                           By default, the resurrected run uses the same timeout as before.
+            build: Which Actor build the resurrected run should use. It can be either a build tag or build number.
+                By default, the resurrected run uses the same build as before.
+            memory_mbytes: New memory limit for the resurrected run, in megabytes. By default, the resurrected run
+                uses the same memory limit as before.
+            timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
+                same timeout as before.
 
         Returns:
-            dict: The Actor run data.
+            The Actor run data.
         """
         request_params = self._params(
             build=build,
@@ -174,7 +171,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
 
         Returns:
-            dict: The Actor run data.
+            The Actor run data.
         """
         response = self.http_client.call(
             url=self._url('reboot'),
@@ -188,7 +185,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            DatasetClient: A client allowing access to the default dataset of this Actor run.
+            A client allowing access to the default dataset of this Actor run.
         """
         return DatasetClient(
             **self._sub_resource_init_options(resource_path='dataset'),
@@ -200,7 +197,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            KeyValueStoreClient: A client allowing access to the default key-value store of this Actor run.
+            A client allowing access to the default key-value store of this Actor run.
         """
         return KeyValueStoreClient(
             **self._sub_resource_init_options(resource_path='key-value-store'),
@@ -212,7 +209,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            RequestQueueClient: A client allowing access to the default request_queue of this Actor run.
+            A client allowing access to the default request_queue of this Actor run.
         """
         return RequestQueueClient(
             **self._sub_resource_init_options(resource_path='request-queue'),
@@ -224,7 +221,7 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            LogClient: A client allowing access to the log of this Actor run.
+            A client allowing access to the log of this Actor run.
         """
         return LogClient(
             **self._sub_resource_init_options(resource_path='log'),
@@ -241,13 +238,14 @@ class RunClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/charge-run/charge-run
 
         Returns:
-            dict: Status and message of the charge event.
+            Status and message of the charge event.
         """
         if not event_name:
             raise ValueError('event_name is required for charging an event')
 
-        idempotency_key = idempotency_key or (
-            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'
+        idempotency_key = (
+            idempotency_key
+            or f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
         )
 
         response = self.http_client.call(
@@ -272,7 +270,6 @@ class RunClientAsync(ActorJobBaseClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the RunClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -282,21 +279,23 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
         Returns:
-            dict: The retrieved Actor run data
+            The retrieved Actor run data.
         """
         return await self._get()
 
-    async def update(self, *, status_message: str | None = None, is_status_message_terminal: bool | None = None) -> dict:
+    async def update(
+        self, *, status_message: str | None = None, is_status_message_terminal: bool | None = None
+    ) -> dict:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
 
         Args:
-            status_message (str, optional): The new status message for the run
-            is_status_message_terminal (bool, optional): Set this flag to True if this is the final status message of the Actor run.
+            status_message: The new status message for the run.
+            is_status_message_terminal: Set this flag to True if this is the final status message of the Actor run.
 
         Returns:
-            dict: The updated run
+            The updated run.
         """
         updated_fields = {
             'statusMessage': status_message,
@@ -311,12 +310,12 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
 
         Args:
-            gracefully (bool, optional): If True, the Actor run will abort gracefully.
-                It will send ``aborting`` and ``persistStates`` events into the run and force-stop the run after 30 seconds.
-                It is helpful in cases where you plan to resurrect the run later.
+            gracefully: If True, the Actor run will abort gracefully. It will send `aborting` and `persistStates`
+                events into the run and force-stop the run after 30 seconds. It is helpful in cases where you plan
+                to resurrect the run later.
 
         Returns:
-            dict: The data of the aborted Actor run
+            The data of the aborted Actor run.
         """
         return await self._abort(gracefully=gracefully)
 
@@ -324,11 +323,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
-            wait_secs (int, optional): how long does the client wait for run to finish. None for indefinite.
+            wait_secs: How long does the client wait for run to finish. None for indefinite.
 
         Returns:
-            dict, optional: The Actor run data. If the status on the object is not one of the terminal statuses
-                (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished.
+            The Actor run data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
+                TIMED_OUT, ABORTED), then the run has not yet finished.
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
 
@@ -352,14 +351,15 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run
 
         Args:
-            target_actor_id (str): ID of the target Actor that the run should be transformed into
-            target_actor_build (str, optional): The build of the target Actor. It can be either a build tag or build number.
-                By default, the run uses the build specified in the default run configuration for the target Actor (typically the latest build).
-            run_input (Any, optional): The input to pass to the new run.
-            content_type (str, optional): The content type of the input.
+            target_actor_id: ID of the target Actor that the run should be transformed into.
+            target_actor_build: The build of the target Actor. It can be either a build tag or build number.
+                By default, the run uses the build specified in the default run configuration for the target Actor
+                (typically the latest build).
+            run_input: The input to pass to the new run.
+            content_type: The content type of the input.
 
         Returns:
-            dict: The Actor run data.
+            The Actor run data.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
@@ -395,15 +395,15 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run
 
         Args:
-            build (str, optional): Which Actor build the resurrected run should use. It can be either a build tag or build number.
-                                   By default, the resurrected run uses the same build as before.
-            memory_mbytes (int, optional): New memory limit for the resurrected run, in megabytes.
-                                           By default, the resurrected run uses the same memory limit as before.
-            timeout_secs (int, optional): New timeout for the resurrected run, in seconds.
-                                           By default, the resurrected run uses the same timeout as before.
+            build: Which Actor build the resurrected run should use. It can be either a build tag or build number.
+                By default, the resurrected run uses the same build as before.
+            memory_mbytes: New memory limit for the resurrected run, in megabytes. By default, the resurrected run
+                uses the same memory limit as before.
+            timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
+                same timeout as before.
 
         Returns:
-            dict: The Actor run data.
+            The Actor run data.
         """
         request_params = self._params(
             build=build,
@@ -425,7 +425,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
 
         Returns:
-            dict: The Actor run data.
+            The Actor run data.
         """
         response = await self.http_client.call(
             url=self._url('reboot'),
@@ -439,7 +439,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            DatasetClientAsync: A client allowing access to the default dataset of this Actor run.
+            A client allowing access to the default dataset of this Actor run.
         """
         return DatasetClientAsync(
             **self._sub_resource_init_options(resource_path='dataset'),
@@ -451,7 +451,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            KeyValueStoreClientAsync: A client allowing access to the default key-value store of this Actor run.
+            A client allowing access to the default key-value store of this Actor run.
         """
         return KeyValueStoreClientAsync(
             **self._sub_resource_init_options(resource_path='key-value-store'),
@@ -463,7 +463,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            RequestQueueClientAsync: A client allowing access to the default request_queue of this Actor run.
+            A client allowing access to the default request_queue of this Actor run.
         """
         return RequestQueueClientAsync(
             **self._sub_resource_init_options(resource_path='request-queue'),
@@ -475,7 +475,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/last-run-object-and-its-storages
 
         Returns:
-            LogClientAsync: A client allowing access to the log of this Actor run.
+            A client allowing access to the log of this Actor run.
         """
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
@@ -492,13 +492,13 @@ class RunClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/charge-run/charge-run
 
         Returns:
-            dict: Status and message of the charge event.
+            Status and message of the charge event.
         """
         if not event_name:
             raise ValueError('event_name is required for charging an event')
 
         idempotency_key = idempotency_key or (
-            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'
+            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
         )
 
         response = await self.http_client.call(

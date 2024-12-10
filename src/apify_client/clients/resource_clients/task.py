@@ -14,7 +14,10 @@ from apify_client._utils import catch_not_found_or_throw, encode_webhook_list_to
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.run import RunClient, RunClientAsync
 from apify_client.clients.resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
-from apify_client.clients.resource_clients.webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
+from apify_client.clients.resource_clients.webhook_collection import (
+    WebhookCollectionClient,
+    WebhookCollectionClientAsync,
+)
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorJobStatus, MetaOrigin
@@ -62,7 +65,6 @@ class TaskClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the TaskClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -72,7 +74,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
 
         Returns:
-            dict, optional: The retrieved task
+            The retrieved task.
         """
         return self._get()
 
@@ -97,25 +99,28 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
 
         Args:
-            name (str, optional): Name of the task
-            build (str, optional): Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            task_input (dict, optional): Task input dictionary
-            title (str, optional): A human-friendly equivalent of the name
-            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+            name: Name of the task.
+            build: Actor build to run. It can be either a build tag or build number. By default, the run uses
+                the build specified in the task settings (typically latest).
+            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
+                you will not be charged for more results than the given limit.
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            task_input: Task input dictionary.
+            title: A human-friendly equivalent of the name.
+            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
-            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
-            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+                it will be shut down.
+            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The updated task
+            The updated task.
         """
         task_representation = get_task_representation(
             name=name,
@@ -157,27 +162,27 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 60.
-            webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-                                               associated with the Actor run which can be used to receive a notification,
-                                               e.g. when the Actor finished or failed.
-                                               If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                                               Each webhook is represented by a dictionary containing these items:
-                                               * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
-                                               * ``request_url``: URL to which to send the webhook HTTP request
-                                               * ``payload_template`` (optional): Optional template for the request payload
+            task_input: Task input dictionary.
+            build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
+                the run uses the build specified in the task settings (typically latest).
+            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
+                per result, you will not be charged for more results than the given limit.
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
+                it is 0, the maximum value is 60.
+            webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
+                the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
+                If you already have a webhook set up for the Actor or task, you do not have to add it again here.
+                Each webhook is represented by a dictionary containing these items:
+                    * `event_types`: List of ``WebhookEventType`` values which trigger the webhook.
+                    * `request_url`: URL to which to send the webhook HTTP request.
+                    * `payload_template`: Optional template for the request payload.
 
         Returns:
-            dict: The run object
+            The run object.
         """
         request_params = self._params(
             build=build,
@@ -216,21 +221,23 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            webhooks (list, optional): Specifies optional webhooks associated with the Actor run, which can be used to receive a notification
-                                       e.g. when the Actor finished or failed. Note: if you already have a webhook set up for the Actor or task,
-                                       you do not have to add it again here.
-            wait_secs (int, optional): The maximum number of seconds the server waits for the task run to finish. If not provided, waits indefinitely.
+            task_input: Task input dictionary.
+            build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
+                the run uses the build specified in the task settings (typically latest).
+            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
+                you will not be charged for more results than the given limit.
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            webhooks: Specifies optional webhooks associated with the Actor run, which can be used to receive
+                a notification e.g. when the Actor finished or failed. Note: if you already have a webhook set up for
+                the Actor or task, you do not have to add it again here.
+            wait_secs: The maximum number of seconds the server waits for the task run to finish. If not provided,
+                waits indefinitely.
 
         Returns:
-            dict: The run object
+            The run object.
         """
         started_run = self.start(
             task_input=task_input,
@@ -249,7 +256,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
 
         Returns:
-            dict, optional: Retrieved task input
+            Retrieved task input.
         """
         try:
             response = self.http_client.call(
@@ -268,7 +275,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Returns:
-            dict, Retrieved task input
+            Retrieved task input.
         """
         response = self.http_client.call(
             url=self._url('input'),
@@ -288,11 +295,11 @@ class TaskClient(ResourceClient):
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status (ActorJobStatus, optional): Consider only runs with this status.
-            origin (MetaOrigin, optional): Consider only runs started with this origin.
+            status: Consider only runs with this status.
+            origin: Consider only runs started with this origin.
 
         Returns:
-            RunClient: The resource client for the last run of this task.
+            The resource client for the last run of this task.
         """
         return RunClient(
             **self._sub_resource_init_options(
@@ -315,7 +322,6 @@ class TaskClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the TaskClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -325,7 +331,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
 
         Returns:
-            dict, optional: The retrieved task
+            The retrieved task.
         """
         return await self._get()
 
@@ -350,25 +356,28 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
 
         Args:
-            name (str, optional): Name of the task
-            build (str, optional): Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            task_input (dict, optional): Task input dictionary
-            title (str, optional): A human-friendly equivalent of the name
-            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+            name: Name of the task.
+            build: Actor build to run. It can be either a build tag or build number. By default, the run uses
+                the build specified in the task settings (typically latest).
+            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
+                you will not be charged for more results than the given limit.
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            task_input: Task input dictionary.
+            title: A human-friendly equivalent of the name.
+            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
-            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
-            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+                it will be shut down.
+            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The updated task
+            The updated task.
         """
         task_representation = get_task_representation(
             name=name,
@@ -410,27 +419,27 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            wait_for_finish (int, optional): The maximum number of seconds the server waits for the run to finish.
-                                               By default, it is 0, the maximum value is 60.
-            webhooks (list of dict, optional): Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks)
-                                               associated with the Actor run which can be used to receive a notification,
-                                               e.g. when the Actor finished or failed.
-                                               If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                                               Each webhook is represented by a dictionary containing these items:
-                                               * ``event_types``: list of ``WebhookEventType`` values which trigger the webhook
-                                               * ``request_url``: URL to which to send the webhook HTTP request
-                                               * ``payload_template`` (optional): Optional template for the request payload
+            task_input: Task input dictionary.
+            build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
+                the run uses the build specified in the task settings (typically latest).
+            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
+                per result, you will not be charged for more results than the given limit.
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
+                it is 0, the maximum value is 60.
+            webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
+                the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
+                If you already have a webhook set up for the Actor or task, you do not have to add it again here.
+                Each webhook is represented by a dictionary containing these items:
+                    * `event_types`: List of ``WebhookEventType`` values which trigger the webhook.
+                    * `request_url`: URL to which to send the webhook HTTP request.
+                    * `payload_template`: Optional template for the request payload.
 
         Returns:
-            dict: The run object
+            The run object.
         """
         request_params = self._params(
             build=build,
@@ -469,21 +478,23 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input (dict, optional): Task input dictionary
-            build (str, optional): Specifies the Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            max_items (int, optional): Maximum number of results that will be returned by this run.
-                                       If the Actor is charged per result, you will not be charged for more results than the given limit.
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            webhooks (list, optional): Specifies optional webhooks associated with the Actor run, which can be used to receive a notification
-                                       e.g. when the Actor finished or failed. Note: if you already have a webhook set up for the Actor or task,
-                                       you do not have to add it again here.
-            wait_secs (int, optional): The maximum number of seconds the server waits for the task run to finish. If not provided, waits indefinitely.
+            task_input: Task input dictionary.
+            build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
+                the run uses the build specified in the task settings (typically latest).
+            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
+                you will not be charged for more results than the given limit.
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            webhooks: Specifies optional webhooks associated with the Actor run, which can be used to receive
+                a notification e.g. when the Actor finished or failed. Note: if you already have a webhook set up for
+                the Actor or task, you do not have to add it again here.
+            wait_secs: The maximum number of seconds the server waits for the task run to finish. If not provided,
+                waits indefinitely.
 
         Returns:
-            dict: The run object
+            The run object.
         """
         started_run = await self.start(
             task_input=task_input,
@@ -502,7 +513,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
 
         Returns:
-            dict, optional: Retrieved task input
+            Retrieved task input.
         """
         try:
             response = await self.http_client.call(
@@ -521,7 +532,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Returns:
-            dict, Retrieved task input
+            Retrieved task input.
         """
         response = await self.http_client.call(
             url=self._url('input'),
@@ -541,11 +552,11 @@ class TaskClientAsync(ResourceClientAsync):
         Last run is retrieved based on the start time of the runs.
 
         Args:
-            status (ActorJobStatus, optional): Consider only runs with this status.
-            origin (MetaOrigin, optional): Consider only runs started with this origin.
+            status: Consider only runs with this status.
+            origin: Consider only runs started with this origin.
 
         Returns:
-            RunClientAsync: The resource client for the last run of this task.
+            The resource client for the last run of this task.
         """
         return RunClientAsync(
             **self._sub_resource_init_options(

@@ -62,7 +62,9 @@ def test__retry_with_exp_backoff() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = retry_with_exp_backoff(returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0)
+    result = retry_with_exp_backoff(
+        returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0
+    )
     elapsed_time_seconds = time.time() - start
     assert result == 'SUCCESS'
     assert attempt_counter == 5
@@ -111,7 +113,9 @@ async def test__retry_with_exp_backoff_async() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = await retry_with_exp_backoff_async(returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0)
+    result = await retry_with_exp_backoff_async(
+        returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0
+    )
     elapsed_time_seconds = time.time() - start
     assert result == 'SUCCESS'
     assert attempt_counter == 5

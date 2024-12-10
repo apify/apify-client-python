@@ -113,7 +113,7 @@ Install the necessary dependencies:
 yarn
 ```
 
-Start the project in development mode with Hot Module Replacement
+Start the project in development mode with Hot Module Replacement (HMR):
 
 ```sh
 yarn start

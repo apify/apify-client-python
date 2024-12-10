@@ -18,12 +18,12 @@ class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClient."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self: KeyValueStoreClient) -> dict | None:
+    def get(self) -> dict | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
@@ -33,7 +33,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         return self._get()
 
-    def update(self: KeyValueStoreClient, *, name: str | None = None) -> dict:
+    def update(self, *, name: str | None = None) -> dict:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -50,14 +50,14 @@ class KeyValueStoreClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(updated_fields))
 
-    def delete(self: KeyValueStoreClient) -> None:
+    def delete(self) -> None:
         """Delete the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
         return self._delete()
 
-    def list_keys(self: KeyValueStoreClient, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
+    def list_keys(self, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -79,7 +79,7 @@ class KeyValueStoreClient(ResourceClient):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    def get_record(self: KeyValueStoreClient, key: str, *, as_bytes: bool = False, as_file: bool = False) -> dict | None:
+    def get_record(self, key: str, *, as_bytes: bool = False, as_file: bool = False) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -129,7 +129,7 @@ class KeyValueStoreClient(ResourceClient):
 
         return None
 
-    def get_record_as_bytes(self: KeyValueStoreClient, key: str) -> dict | None:
+    def get_record_as_bytes(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -160,7 +160,7 @@ class KeyValueStoreClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream_record(self: KeyValueStoreClient, key: str) -> Iterator[dict | None]:
+    def stream_record(self, key: str) -> Iterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -195,7 +195,7 @@ class KeyValueStoreClient(ResourceClient):
                 response.close()
 
     def set_record(
-        self: KeyValueStoreClient,
+        self,
         key: str,
         value: Any,
         content_type: str | None = None,
@@ -221,7 +221,7 @@ class KeyValueStoreClient(ResourceClient):
             headers=headers,
         )
 
-    def delete_record(self: KeyValueStoreClient, key: str) -> None:
+    def delete_record(self, key: str) -> None:
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
@@ -240,12 +240,12 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreClientAsync."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self: KeyValueStoreClientAsync) -> dict | None:
+    async def get(self) -> dict | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
@@ -255,7 +255,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         return await self._get()
 
-    async def update(self: KeyValueStoreClientAsync, *, name: str | None = None) -> dict:
+    async def update(self, *, name: str | None = None) -> dict:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -272,14 +272,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(updated_fields))
 
-    async def delete(self: KeyValueStoreClientAsync) -> None:
+    async def delete(self) -> None:
         """Delete the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
         return await self._delete()
 
-    async def list_keys(self: KeyValueStoreClientAsync, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
+    async def list_keys(self, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -301,7 +301,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    async def get_record(self: KeyValueStoreClientAsync, key: str) -> dict | None:
+    async def get_record(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -332,7 +332,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return None
 
-    async def get_record_as_bytes(self: KeyValueStoreClientAsync, key: str) -> dict | None:
+    async def get_record_as_bytes(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -363,7 +363,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream_record(self: KeyValueStoreClientAsync, key: str) -> AsyncIterator[dict | None]:
+    async def stream_record(self, key: str) -> AsyncIterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -398,7 +398,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 await response.aclose()
 
     async def set_record(
-        self: KeyValueStoreClientAsync,
+        self,
         key: str,
         value: Any,
         content_type: str | None = None,
@@ -424,7 +424,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             headers=headers,
         )
 
-    async def delete_record(self: KeyValueStoreClientAsync, key: str) -> None:
+    async def delete_record(self, key: str) -> None:
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record

@@ -15,13 +15,13 @@ class RunCollectionClient(ResourceCollectionClient):
     """Sub-client for listing Actor runs."""
 
     @ignore_docs
-    def __init__(self: RunCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: RunCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -55,13 +55,13 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing Actor runs."""
 
     @ignore_docs
-    def __init__(self: RunCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RunCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: RunCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,

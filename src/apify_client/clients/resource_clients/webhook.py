@@ -61,12 +61,12 @@ class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
     @ignore_docs
-    def __init__(self: WebhookClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self: WebhookClient) -> dict | None:
+    def get(self) -> dict | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -77,7 +77,7 @@ class WebhookClient(ResourceClient):
         return self._get()
 
     def update(
-        self: WebhookClient,
+        self,
         *,
         event_types: list[WebhookEventType] | None = None,
         request_url: str | None = None,
@@ -126,14 +126,14 @@ class WebhookClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(webhook_representation))
 
-    def delete(self: WebhookClient) -> None:
+    def delete(self) -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         return self._delete()
 
-    def test(self: WebhookClient) -> dict | None:
+    def test(self) -> dict | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -157,7 +157,7 @@ class WebhookClient(ResourceClient):
 
         return None
 
-    def dispatches(self: WebhookClient) -> WebhookDispatchCollectionClient:
+    def dispatches(self) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
@@ -174,12 +174,12 @@ class WebhookClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single webhook."""
 
     @ignore_docs
-    def __init__(self: WebhookClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self: WebhookClientAsync) -> dict | None:
+    async def get(self) -> dict | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -190,7 +190,7 @@ class WebhookClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self: WebhookClientAsync,
+        self,
         *,
         event_types: list[WebhookEventType] | None = None,
         request_url: str | None = None,
@@ -239,14 +239,14 @@ class WebhookClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(webhook_representation))
 
-    async def delete(self: WebhookClientAsync) -> None:
+    async def delete(self) -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         return await self._delete()
 
-    async def test(self: WebhookClientAsync) -> dict | None:
+    async def test(self) -> dict | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -270,7 +270,7 @@ class WebhookClientAsync(ResourceClientAsync):
 
         return None
 
-    def dispatches(self: WebhookClientAsync) -> WebhookDispatchCollectionClientAsync:
+    def dispatches(self) -> WebhookDispatchCollectionClientAsync:
         """Get dispatches of the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection

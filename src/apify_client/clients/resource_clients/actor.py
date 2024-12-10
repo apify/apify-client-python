@@ -86,12 +86,12 @@ class ActorClient(ResourceClient):
     """Sub-client for manipulating a single Actor."""
 
     @ignore_docs
-    def __init__(self: ActorClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self: ActorClient) -> dict | None:
+    def get(self) -> dict | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -102,7 +102,7 @@ class ActorClient(ResourceClient):
         return self._get()
 
     def update(
-        self: ActorClient,
+        self,
         *,
         name: str | None = None,
         title: str | None = None,
@@ -190,7 +190,7 @@ class ActorClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(actor_representation))
 
-    def delete(self: ActorClient) -> None:
+    def delete(self) -> None:
         """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
@@ -198,7 +198,7 @@ class ActorClient(ResourceClient):
         return self._delete()
 
     def start(
-        self: ActorClient,
+        self,
         *,
         run_input: Any = None,
         content_type: str | None = None,
@@ -260,7 +260,7 @@ class ActorClient(ResourceClient):
         return parse_date_fields(pluck_data(response.json()))
 
     def call(
-        self: ActorClient,
+        self,
         *,
         run_input: Any = None,
         content_type: str | None = None,
@@ -309,7 +309,7 @@ class ActorClient(ResourceClient):
         return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     def build(
-        self: ActorClient,
+        self,
         *,
         version_number: str,
         beta_packages: bool | None = None,
@@ -352,16 +352,16 @@ class ActorClient(ResourceClient):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    def builds(self: ActorClient) -> BuildCollectionClient:
+    def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
         return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
 
-    def runs(self: ActorClient) -> RunCollectionClient:
+    def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
     def last_run(
-        self: ActorClient,
+        self,
         *,
         status: ActorJobStatus | None = None,
         origin: MetaOrigin | None = None,
@@ -388,11 +388,11 @@ class ActorClient(ResourceClient):
             )
         )
 
-    def versions(self: ActorClient) -> ActorVersionCollectionClient:
+    def versions(self) -> ActorVersionCollectionClient:
         """Retrieve a client for the versions of this Actor."""
         return ActorVersionCollectionClient(**self._sub_resource_init_options())
 
-    def version(self: ActorClient, version_number: str) -> ActorVersionClient:
+    def version(self, version_number: str) -> ActorVersionClient:
         """Retrieve the client for the specified version of this Actor.
 
         Args:
@@ -403,7 +403,7 @@ class ActorClient(ResourceClient):
         """
         return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
 
-    def webhooks(self: ActorClient) -> WebhookCollectionClient:
+    def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
@@ -412,12 +412,12 @@ class ActorClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor."""
 
     @ignore_docs
-    def __init__(self: ActorClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self: ActorClientAsync) -> dict | None:
+    async def get(self) -> dict | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -428,7 +428,7 @@ class ActorClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self: ActorClientAsync,
+        self,
         *,
         name: str | None = None,
         title: str | None = None,
@@ -516,7 +516,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(actor_representation))
 
-    async def delete(self: ActorClientAsync) -> None:
+    async def delete(self) -> None:
         """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
@@ -524,7 +524,7 @@ class ActorClientAsync(ResourceClientAsync):
         return await self._delete()
 
     async def start(
-        self: ActorClientAsync,
+        self,
         *,
         run_input: Any = None,
         content_type: str | None = None,
@@ -586,7 +586,7 @@ class ActorClientAsync(ResourceClientAsync):
         return parse_date_fields(pluck_data(response.json()))
 
     async def call(
-        self: ActorClientAsync,
+        self,
         *,
         run_input: Any = None,
         content_type: str | None = None,
@@ -635,7 +635,7 @@ class ActorClientAsync(ResourceClientAsync):
         return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     async def build(
-        self: ActorClientAsync,
+        self,
         *,
         version_number: str,
         beta_packages: bool | None = None,
@@ -678,15 +678,15 @@ class ActorClientAsync(ResourceClientAsync):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    def builds(self: ActorClientAsync) -> BuildCollectionClientAsync:
+    def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""
         return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))
 
-    def runs(self: ActorClientAsync) -> RunCollectionClientAsync:
+    def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self: ActorClientAsync, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
+    def last_run(self, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this Actor.
 
         Last run is retrieved based on the start time of the runs.
@@ -709,11 +709,11 @@ class ActorClientAsync(ResourceClientAsync):
             )
         )
 
-    def versions(self: ActorClientAsync) -> ActorVersionCollectionClientAsync:
+    def versions(self) -> ActorVersionCollectionClientAsync:
         """Retrieve a client for the versions of this Actor."""
         return ActorVersionCollectionClientAsync(**self._sub_resource_init_options())
 
-    def version(self: ActorClientAsync, version_number: str) -> ActorVersionClientAsync:
+    def version(self, version_number: str) -> ActorVersionClientAsync:
         """Retrieve the client for the specified version of this Actor.
 
         Args:
@@ -724,6 +724,6 @@ class ActorClientAsync(ResourceClientAsync):
         """
         return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))
 
-    def webhooks(self: ActorClientAsync) -> WebhookCollectionClientAsync:
+    def webhooks(self) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())

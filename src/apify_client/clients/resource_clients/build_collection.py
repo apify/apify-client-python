@@ -14,13 +14,13 @@ class BuildCollectionClient(ResourceCollectionClient):
     """Sub-client for listing Actor builds."""
 
     @ignore_docs
-    def __init__(self: BuildCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: BuildCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -46,13 +46,13 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing Actor builds."""
 
     @ignore_docs
-    def __init__(self: BuildCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: BuildCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,

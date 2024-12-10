@@ -14,13 +14,13 @@ class StoreCollectionClient(ResourceCollectionClient):
     """Sub-client for Apify store."""
 
     @ignore_docs
-    def __init__(self: StoreCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the StoreCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: StoreCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -61,13 +61,13 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for Apify store."""
 
     @ignore_docs
-    def __init__(self: StoreCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the StoreCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: StoreCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,

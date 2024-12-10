@@ -15,13 +15,13 @@ class ActorCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating Actors."""
 
     @ignore_docs
-    def __init__(self: ActorCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: ActorCollectionClient,
+        self,
         *,
         my: bool | None = None,
         limit: int | None = None,
@@ -44,7 +44,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         return self._list(my=my, limit=limit, offset=offset, desc=desc)
 
     def create(
-        self: ActorCollectionClient,
+        self,
         *,
         name: str,
         title: str | None = None,
@@ -137,13 +137,13 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating Actors."""
 
     @ignore_docs
-    def __init__(self: ActorCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: ActorCollectionClientAsync,
+        self,
         *,
         my: bool | None = None,
         limit: int | None = None,
@@ -166,7 +166,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(my=my, limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self: ActorCollectionClientAsync,
+        self,
         *,
         name: str,
         title: str | None = None,

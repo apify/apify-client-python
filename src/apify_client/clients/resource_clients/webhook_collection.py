@@ -16,13 +16,13 @@ class WebhookCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating webhooks."""
 
     @ignore_docs
-    def __init__(self: WebhookCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: WebhookCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -43,7 +43,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
-        self: WebhookCollectionClient,
+        self,
         *,
         event_types: list[WebhookEventType],  # type: ignore[valid-type]
         request_url: str,
@@ -103,13 +103,13 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating webhooks."""
 
     @ignore_docs
-    def __init__(self: WebhookCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: WebhookCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -130,7 +130,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self: WebhookCollectionClientAsync,
+        self,
         *,
         event_types: list[WebhookEventType],  # type: ignore[valid-type]
         request_url: str,

@@ -5,7 +5,7 @@ import inspect
 import json
 import logging
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
@@ -39,12 +39,12 @@ log_context = LogContext(
 # Metaclass for resource clients which wraps all their public methods
 # With injection of their details to the log context vars
 class WithLogDetailsClient(type):
-    def __new__(cls: type[type], name: str, bases: tuple, attrs: dict) -> WithLogDetailsClient:
+    def __new__(cls, name: str, bases: tuple, attrs: dict) -> WithLogDetailsClient:
         for attr_name, attr_value in attrs.items():
             if not attr_name.startswith('_') and inspect.isfunction(attr_value):
                 attrs[attr_name] = _injects_client_details_to_log_context(attr_value)
 
-        return cast(WithLogDetailsClient, type.__new__(cls, name, bases, attrs))
+        return type.__new__(cls, name, bases, attrs)
 
 
 # Wraps an unbound method so that its call will inject the details
@@ -87,7 +87,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 # A filter which lets every log record through,
 # but adds the current logging context to the record
 class _ContextInjectingFilter(logging.Filter):
-    def filter(self: _ContextInjectingFilter, record: logging.LogRecord) -> bool:
+    def filter(self, record: logging.LogRecord) -> bool:
         record.client_method = log_context.client_method.get()
         record.resource_id = log_context.resource_id.get()
         record.method = log_context.method.get()
@@ -105,7 +105,7 @@ class _DebugLogFormatter(logging.Formatter):
     empty_record = logging.LogRecord('dummy', 0, 'dummy', 0, 'dummy', None, None)
 
     # Gets the extra fields from the log record which are not present on an empty record
-    def _get_extra_fields(self: _DebugLogFormatter, record: logging.LogRecord) -> dict:
+    def _get_extra_fields(self, record: logging.LogRecord) -> dict:
         extra_fields: dict = {}
         for key, value in record.__dict__.items():
             if key not in self.empty_record.__dict__:
@@ -113,7 +113,7 @@ class _DebugLogFormatter(logging.Formatter):
 
         return extra_fields
 
-    def format(self: _DebugLogFormatter, record: logging.LogRecord) -> str:
+    def format(self, record: logging.LogRecord) -> str:
         extra = self._get_extra_fields(record)
 
         log_string = super().format(record)

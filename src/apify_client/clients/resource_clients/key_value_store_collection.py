@@ -14,13 +14,13 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating key-value stores."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: KeyValueStoreCollectionClient,
+        self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
@@ -43,7 +43,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(
-        self: KeyValueStoreCollectionClient,
+        self,
         *,
         name: str | None = None,
         schema: dict | None = None,
@@ -66,13 +66,13 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
     @ignore_docs
-    def __init__(self: KeyValueStoreCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the KeyValueStoreCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: KeyValueStoreCollectionClientAsync,
+        self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
@@ -95,7 +95,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
-        self: KeyValueStoreCollectionClientAsync,
+        self,
         *,
         name: str | None = None,
         schema: dict | None = None,

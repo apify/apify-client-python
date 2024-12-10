@@ -18,7 +18,7 @@ class ApifyApiError(ApifyClientError):
     """
 
     @ignore_docs
-    def __init__(self: ApifyApiError, response: httpx.Response, attempt: int) -> None:
+    def __init__(self, response: httpx.Response, attempt: int) -> None:
         """Create the ApifyApiError instance.
 
         Args:
@@ -59,7 +59,7 @@ class InvalidResponseBodyError(ApifyClientError):
     """
 
     @ignore_docs
-    def __init__(self: InvalidResponseBodyError, response: httpx.Response) -> None:
+    def __init__(self, response: httpx.Response) -> None:
         """Create the InvalidResponseBodyError instance.
 
         Args:

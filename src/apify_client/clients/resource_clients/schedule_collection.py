@@ -15,13 +15,13 @@ class ScheduleCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating schedules."""
 
     @ignore_docs
-    def __init__(self: ScheduleCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: ScheduleCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -42,7 +42,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
-        self: ScheduleCollectionClient,
+        self,
         *,
         cron_expression: str,
         is_enabled: bool,
@@ -92,13 +92,13 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating schedules."""
 
     @ignore_docs
-    def __init__(self: ScheduleCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ScheduleCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: ScheduleCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -119,7 +119,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self: ScheduleCollectionClientAsync,
+        self,
         *,
         cron_expression: str,
         is_enabled: bool,

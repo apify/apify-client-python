@@ -41,12 +41,12 @@ class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single Actor version."""
 
     @ignore_docs
-    def __init__(self: ActorVersionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionClient."""
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self: ActorVersionClient) -> dict | None:
+    def get(self) -> dict | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
@@ -57,7 +57,7 @@ class ActorVersionClient(ResourceClient):
         return self._get()
 
     def update(
-        self: ActorVersionClient,
+        self,
         *,
         build_tag: str | None = None,
         env_vars: list[dict] | None = None,
@@ -104,18 +104,18 @@ class ActorVersionClient(ResourceClient):
 
         return self._update(filter_out_none_values_recursively(actor_version_representation))
 
-    def delete(self: ActorVersionClient) -> None:
+    def delete(self) -> None:
         """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         return self._delete()
 
-    def env_vars(self: ActorVersionClient) -> ActorEnvVarCollectionClient:
+    def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
         return ActorEnvVarCollectionClient(**self._sub_resource_init_options())
 
-    def env_var(self: ActorVersionClient, env_var_name: str) -> ActorEnvVarClient:
+    def env_var(self, env_var_name: str) -> ActorEnvVarClient:
         """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:
@@ -131,12 +131,12 @@ class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor version."""
 
     @ignore_docs
-    def __init__(self: ActorVersionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self: ActorVersionClientAsync) -> dict | None:
+    async def get(self) -> dict | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
@@ -147,7 +147,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         return await self._get()
 
     async def update(
-        self: ActorVersionClientAsync,
+        self,
         *,
         build_tag: str | None = None,
         env_vars: list[dict] | None = None,
@@ -194,18 +194,18 @@ class ActorVersionClientAsync(ResourceClientAsync):
 
         return await self._update(filter_out_none_values_recursively(actor_version_representation))
 
-    async def delete(self: ActorVersionClientAsync) -> None:
+    async def delete(self) -> None:
         """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         return await self._delete()
 
-    def env_vars(self: ActorVersionClientAsync) -> ActorEnvVarCollectionClientAsync:
+    def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""
         return ActorEnvVarCollectionClientAsync(**self._sub_resource_init_options())
 
-    def env_var(self: ActorVersionClientAsync, env_var_name: str) -> ActorEnvVarClientAsync:
+    def env_var(self, env_var_name: str) -> ActorEnvVarClientAsync:
         """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:

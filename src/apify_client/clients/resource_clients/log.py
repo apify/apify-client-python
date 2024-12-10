@@ -19,12 +19,12 @@ class LogClient(ResourceClient):
     """Sub-client for manipulating logs."""
 
     @ignore_docs
-    def __init__(self: LogClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClient."""
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self: LogClient) -> str | None:
+    def get(self) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -46,7 +46,7 @@ class LogClient(ResourceClient):
 
         return None
 
-    def get_as_bytes(self: LogClient) -> bytes | None:
+    def get_as_bytes(self) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -70,7 +70,7 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self: LogClient) -> Iterator[httpx.Response | None]:
+    def stream(self) -> Iterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -101,12 +101,12 @@ class LogClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating logs."""
 
     @ignore_docs
-    def __init__(self: LogClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the LogClientAsync."""
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self: LogClientAsync) -> str | None:
+    async def get(self) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -128,7 +128,7 @@ class LogClientAsync(ResourceClientAsync):
 
         return None
 
-    async def get_as_bytes(self: LogClientAsync) -> bytes | None:
+    async def get_as_bytes(self) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -152,7 +152,7 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self: LogClientAsync) -> AsyncIterator[httpx.Response | None]:
+    async def stream(self) -> AsyncIterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log

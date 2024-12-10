@@ -22,7 +22,7 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
 class ActorJobBaseClient(ResourceClient):
     """Base sub-client class for Actor runs and Actor builds."""
 
-    def _wait_for_finish(self: ActorJobBaseClient, wait_secs: int | None = None) -> dict | None:
+    def _wait_for_finish(self, wait_secs: int | None = None) -> dict | None:
         started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: dict | None = None
@@ -62,7 +62,7 @@ class ActorJobBaseClient(ResourceClient):
 
         return job
 
-    def _abort(self: ActorJobBaseClient, gracefully: bool | None = None) -> dict:
+    def _abort(self, gracefully: bool | None = None) -> dict:
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
@@ -75,7 +75,7 @@ class ActorJobBaseClient(ResourceClient):
 class ActorJobBaseClientAsync(ResourceClientAsync):
     """Base async sub-client class for Actor runs and Actor builds."""
 
-    async def _wait_for_finish(self: ActorJobBaseClientAsync, wait_secs: int | None = None) -> dict | None:
+    async def _wait_for_finish(self, wait_secs: int | None = None) -> dict | None:
         started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: dict | None = None
@@ -115,7 +115,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
 
         return job
 
-    async def _abort(self: ActorJobBaseClientAsync, gracefully: bool | None = None) -> dict:
+    async def _abort(self, gracefully: bool | None = None) -> dict:
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',

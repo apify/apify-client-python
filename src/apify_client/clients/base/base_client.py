@@ -20,18 +20,18 @@ class _BaseBaseClient(metaclass=WithLogDetailsClient):
     http_client: HTTPClient | HTTPClientAsync
     root_client: ApifyClient | ApifyClientAsync
 
-    def _url(self: _BaseBaseClient, path: str | None = None) -> str:
+    def _url(self, path: str | None = None) -> str:
         if path is not None:
             return f'{self.url}/{path}'
         return self.url
 
-    def _params(self: _BaseBaseClient, **kwargs: Any) -> dict:
+    def _params(self, **kwargs: Any) -> dict:
         return {
             **self.params,
             **kwargs,
         }
 
-    def _sub_resource_init_options(self: _BaseBaseClient, **kwargs: Any) -> dict:
+    def _sub_resource_init_options(self, **kwargs: Any) -> dict:
         options = {
             'base_url': self.url,
             'http_client': self.http_client,
@@ -54,7 +54,7 @@ class BaseClient(_BaseBaseClient):
 
     @ignore_docs
     def __init__(
-        self: BaseClient,
+        self,
         *,
         base_url: str,
         root_client: ApifyClient,
@@ -97,7 +97,7 @@ class BaseClientAsync(_BaseBaseClient):
 
     @ignore_docs
     def __init__(
-        self: BaseClientAsync,
+        self,
         *,
         base_url: str,
         root_client: ApifyClientAsync,

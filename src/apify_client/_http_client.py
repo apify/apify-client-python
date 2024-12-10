@@ -29,7 +29,7 @@ logger = logging.getLogger(logger_name)
 class _BaseHTTPClient:
     @ignore_docs
     def __init__(
-        self: _BaseHTTPClient,
+        self,
         *,
         token: str | None = None,
         max_retries: int = 8,
@@ -97,7 +97,7 @@ class _BaseHTTPClient:
         return parsed_params
 
     def _prepare_request_call(
-        self: _BaseHTTPClient,
+        self,
         headers: dict | None = None,
         params: dict | None = None,
         data: Any = None,
@@ -129,7 +129,7 @@ class _BaseHTTPClient:
 
 class HTTPClient(_BaseHTTPClient):
     def call(
-        self: HTTPClient,
+        self,
         *,
         method: str,
         url: str,
@@ -201,7 +201,7 @@ class HTTPClient(_BaseHTTPClient):
 
 class HTTPClientAsync(_BaseHTTPClient):
     async def call(
-        self: HTTPClientAsync,
+        self,
         *,
         method: str,
         url: str,

@@ -12,12 +12,12 @@ class BuildClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor build."""
 
     @ignore_docs
-    def __init__(self: BuildClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self: BuildClient) -> dict | None:
+    def get(self) -> dict | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
@@ -27,14 +27,14 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._get()
 
-    def delete(self: BuildClient) -> None:
+    def delete(self) -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         return self._delete()
 
-    def abort(self: BuildClient) -> dict:
+    def abort(self) -> dict:
         """Abort the Actor build which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
@@ -44,7 +44,7 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._abort()
 
-    def wait_for_finish(self: BuildClient, *, wait_secs: int | None = None) -> dict | None:
+    def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
@@ -56,7 +56,7 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._wait_for_finish(wait_secs=wait_secs)
 
-    def log(self: BuildClient) -> LogClient:
+    def log(self) -> LogClient:
         """Get the client for the log of the Actor build.
 
         https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log
@@ -73,12 +73,12 @@ class BuildClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single Actor build."""
 
     @ignore_docs
-    def __init__(self: BuildClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BuildClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self: BuildClientAsync) -> dict | None:
+    async def get(self) -> dict | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
@@ -88,7 +88,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         """
         return await self._get()
 
-    async def abort(self: BuildClientAsync) -> dict:
+    async def abort(self) -> dict:
         """Abort the Actor build which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
@@ -98,14 +98,14 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         """
         return await self._abort()
 
-    async def delete(self: BuildClientAsync) -> None:
+    async def delete(self) -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         return await self._delete()
 
-    async def wait_for_finish(self: BuildClientAsync, *, wait_secs: int | None = None) -> dict | None:
+    async def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
@@ -117,7 +117,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
 
-    def log(self: BuildClientAsync) -> LogClientAsync:
+    def log(self) -> LogClientAsync:
         """Get the client for the log of the Actor build.
 
         https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log

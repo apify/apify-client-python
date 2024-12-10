@@ -15,13 +15,13 @@ class TaskCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating tasks."""
 
     @ignore_docs
-    def __init__(self: TaskCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: TaskCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -42,7 +42,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         return self._list(limit=limit, offset=offset, desc=desc)
 
     def create(
-        self: TaskCollectionClient,
+        self,
         *,
         actor_id: str,
         name: str,
@@ -107,13 +107,13 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating tasks."""
 
     @ignore_docs
-    def __init__(self: TaskCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the TaskCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: TaskCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -134,7 +134,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(limit=limit, offset=offset, desc=desc)
 
     async def create(
-        self: TaskCollectionClientAsync,
+        self,
         *,
         actor_id: str,
         name: str,

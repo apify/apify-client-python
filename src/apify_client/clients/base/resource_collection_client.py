@@ -13,7 +13,7 @@ from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
-    def _list(self: ResourceCollectionClient, **kwargs: Any) -> ListPage:
+    def _list(self, **kwargs: Any) -> ListPage:
         response = self.http_client.call(
             url=self._url(),
             method='GET',
@@ -22,7 +22,7 @@ class ResourceCollectionClient(BaseClient):
 
         return ListPage(parse_date_fields(pluck_data(response.json())))
 
-    def _create(self: ResourceCollectionClient, resource: dict) -> dict:
+    def _create(self, resource: dict) -> dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',
@@ -32,11 +32,7 @@ class ResourceCollectionClient(BaseClient):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    def _get_or_create(
-        self: ResourceCollectionClient,
-        name: str | None = None,
-        resource: dict | None = None,
-    ) -> dict:
+    def _get_or_create(self, name: str | None = None, resource: dict | None = None) -> dict:
         response = self.http_client.call(
             url=self._url(),
             method='POST',
@@ -51,7 +47,7 @@ class ResourceCollectionClient(BaseClient):
 class ResourceCollectionClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a resource collection."""
 
-    async def _list(self: ResourceCollectionClientAsync, **kwargs: Any) -> ListPage:
+    async def _list(self, **kwargs: Any) -> ListPage:
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
@@ -60,7 +56,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
 
         return ListPage(parse_date_fields(pluck_data(response.json())))
 
-    async def _create(self: ResourceCollectionClientAsync, resource: dict) -> dict:
+    async def _create(self, resource: dict) -> dict:
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
@@ -71,7 +67,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
         return parse_date_fields(pluck_data(response.json()))
 
     async def _get_or_create(
-        self: ResourceCollectionClientAsync,
+        self,
         name: str | None = None,
         resource: dict | None = None,
     ) -> dict:

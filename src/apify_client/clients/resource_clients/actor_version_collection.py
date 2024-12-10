@@ -16,12 +16,12 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating Actor versions."""
 
     @ignore_docs
-    def __init__(self: ActorVersionCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self: ActorVersionCollectionClient) -> ListPage[dict]:
+    def list(self) -> ListPage[dict]:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -32,7 +32,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         return self._list()
 
     def create(
-        self: ActorVersionCollectionClient,
+        self,
         *,
         version_number: str,
         build_tag: str | None = None,
@@ -87,12 +87,12 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating Actor versions."""
 
     @ignore_docs
-    def __init__(self: ActorVersionCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorVersionCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self: ActorVersionCollectionClientAsync) -> ListPage[dict]:
+    async def list(self) -> ListPage[dict]:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -103,7 +103,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list()
 
     async def create(
-        self: ActorVersionCollectionClientAsync,
+        self,
         *,
         version_number: str,
         build_tag: str | None = None,

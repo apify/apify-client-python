@@ -14,13 +14,13 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating request queues."""
 
     @ignore_docs
-    def __init__(self: RequestQueueCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: RequestQueueCollectionClient,
+        self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
@@ -42,7 +42,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self: RequestQueueCollectionClient, *, name: str | None = None) -> dict:
+    def get_or_create(self, *, name: str | None = None) -> dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
@@ -60,13 +60,13 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating request queues."""
 
     @ignore_docs
-    def __init__(self: RequestQueueCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the RequestQueueCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: RequestQueueCollectionClientAsync,
+        self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
@@ -88,7 +88,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         """
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    async def get_or_create(self: RequestQueueCollectionClientAsync, *, name: str | None = None) -> dict:
+    async def get_or_create(self, *, name: str | None = None) -> dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue

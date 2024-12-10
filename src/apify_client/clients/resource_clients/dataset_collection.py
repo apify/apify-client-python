@@ -14,13 +14,13 @@ class DatasetCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating datasets."""
 
     @ignore_docs
-    def __init__(self: DatasetCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: DatasetCollectionClient,
+        self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
@@ -42,7 +42,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self: DatasetCollectionClient, *, name: str | None = None, schema: dict | None = None) -> dict:
+    def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
@@ -61,13 +61,13 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating datasets."""
 
     @ignore_docs
-    def __init__(self: DatasetCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the DatasetCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: DatasetCollectionClientAsync,
+        self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
@@ -90,7 +90,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
-        self: DatasetCollectionClientAsync,
+        self,
         *,
         name: str | None = None,
         schema: dict | None = None,

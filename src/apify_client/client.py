@@ -61,7 +61,7 @@ class _BaseApifyClient:
 
     @ignore_docs
     def __init__(
-        self: _BaseApifyClient,
+        self,
         token: str | None = None,
         *,
         api_url: str | None = None,
@@ -86,7 +86,7 @@ class _BaseApifyClient:
         self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
         self.timeout_secs = timeout_secs or 360
 
-    def _options(self: _BaseApifyClient) -> dict:
+    def _options(self) -> dict:
         return {
             'root_client': self,
             'base_url': self.base_url,
@@ -100,7 +100,7 @@ class ApifyClient(_BaseApifyClient):
     http_client: HTTPClient
 
     def __init__(
-        self: ApifyClient,
+        self,
         token: str | None = None,
         *,
         api_url: str | None = None,
@@ -133,7 +133,7 @@ class ApifyClient(_BaseApifyClient):
             timeout_secs=self.timeout_secs,
         )
 
-    def actor(self: ApifyClient, actor_id: str) -> ActorClient:
+    def actor(self, actor_id: str) -> ActorClient:
         """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
@@ -141,11 +141,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return ActorClient(resource_id=actor_id, **self._options())
 
-    def actors(self: ApifyClient) -> ActorCollectionClient:
+    def actors(self) -> ActorCollectionClient:
         """Retrieve the sub-client for manipulating Actors."""
         return ActorCollectionClient(**self._options())
 
-    def build(self: ApifyClient, build_id: str) -> BuildClient:
+    def build(self, build_id: str) -> BuildClient:
         """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
@@ -153,11 +153,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return BuildClient(resource_id=build_id, **self._options())
 
-    def builds(self: ApifyClient) -> BuildCollectionClient:
+    def builds(self) -> BuildCollectionClient:
         """Retrieve the sub-client for querying multiple builds of a user."""
         return BuildCollectionClient(**self._options())
 
-    def run(self: ApifyClient, run_id: str) -> RunClient:
+    def run(self, run_id: str) -> RunClient:
         """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
@@ -165,11 +165,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return RunClient(resource_id=run_id, **self._options())
 
-    def runs(self: ApifyClient) -> RunCollectionClient:
+    def runs(self) -> RunCollectionClient:
         """Retrieve the sub-client for querying multiple Actor runs of a user."""
         return RunCollectionClient(**self._options())
 
-    def dataset(self: ApifyClient, dataset_id: str) -> DatasetClient:
+    def dataset(self, dataset_id: str) -> DatasetClient:
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
@@ -177,11 +177,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return DatasetClient(resource_id=dataset_id, **self._options())
 
-    def datasets(self: ApifyClient) -> DatasetCollectionClient:
+    def datasets(self) -> DatasetCollectionClient:
         """Retrieve the sub-client for manipulating datasets."""
         return DatasetCollectionClient(**self._options())
 
-    def key_value_store(self: ApifyClient, key_value_store_id: str) -> KeyValueStoreClient:
+    def key_value_store(self, key_value_store_id: str) -> KeyValueStoreClient:
         """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
@@ -189,11 +189,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return KeyValueStoreClient(resource_id=key_value_store_id, **self._options())
 
-    def key_value_stores(self: ApifyClient) -> KeyValueStoreCollectionClient:
+    def key_value_stores(self) -> KeyValueStoreCollectionClient:
         """Retrieve the sub-client for manipulating key-value stores."""
         return KeyValueStoreCollectionClient(**self._options())
 
-    def request_queue(self: ApifyClient, request_queue_id: str, *, client_key: str | None = None) -> RequestQueueClient:
+    def request_queue(self, request_queue_id: str, *, client_key: str | None = None) -> RequestQueueClient:
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
@@ -202,11 +202,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return RequestQueueClient(resource_id=request_queue_id, client_key=client_key, **self._options())
 
-    def request_queues(self: ApifyClient) -> RequestQueueCollectionClient:
+    def request_queues(self) -> RequestQueueCollectionClient:
         """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClient(**self._options())
 
-    def webhook(self: ApifyClient, webhook_id: str) -> WebhookClient:
+    def webhook(self, webhook_id: str) -> WebhookClient:
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
@@ -214,11 +214,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return WebhookClient(resource_id=webhook_id, **self._options())
 
-    def webhooks(self: ApifyClient) -> WebhookCollectionClient:
+    def webhooks(self) -> WebhookCollectionClient:
         """Retrieve the sub-client for querying multiple webhooks of a user."""
         return WebhookCollectionClient(**self._options())
 
-    def webhook_dispatch(self: ApifyClient, webhook_dispatch_id: str) -> WebhookDispatchClient:
+    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClient:
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
@@ -226,11 +226,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return WebhookDispatchClient(resource_id=webhook_dispatch_id, **self._options())
 
-    def webhook_dispatches(self: ApifyClient) -> WebhookDispatchCollectionClient:
+    def webhook_dispatches(self) -> WebhookDispatchCollectionClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClient(**self._options())
 
-    def schedule(self: ApifyClient, schedule_id: str) -> ScheduleClient:
+    def schedule(self, schedule_id: str) -> ScheduleClient:
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
@@ -238,11 +238,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return ScheduleClient(resource_id=schedule_id, **self._options())
 
-    def schedules(self: ApifyClient) -> ScheduleCollectionClient:
+    def schedules(self) -> ScheduleCollectionClient:
         """Retrieve the sub-client for manipulating schedules."""
         return ScheduleCollectionClient(**self._options())
 
-    def log(self: ApifyClient, build_or_run_id: str) -> LogClient:
+    def log(self, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs.
 
         Args:
@@ -250,7 +250,7 @@ class ApifyClient(_BaseApifyClient):
         """
         return LogClient(resource_id=build_or_run_id, **self._options())
 
-    def task(self: ApifyClient, task_id: str) -> TaskClient:
+    def task(self, task_id: str) -> TaskClient:
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
@@ -258,11 +258,11 @@ class ApifyClient(_BaseApifyClient):
         """
         return TaskClient(resource_id=task_id, **self._options())
 
-    def tasks(self: ApifyClient) -> TaskCollectionClient:
+    def tasks(self) -> TaskCollectionClient:
         """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClient(**self._options())
 
-    def user(self: ApifyClient, user_id: str | None = None) -> UserClient:
+    def user(self, user_id: str | None = None) -> UserClient:
         """Retrieve the sub-client for querying users.
 
         Args:
@@ -270,7 +270,7 @@ class ApifyClient(_BaseApifyClient):
         """
         return UserClient(resource_id=user_id, **self._options())
 
-    def store(self: ApifyClient) -> StoreCollectionClient:
+    def store(self) -> StoreCollectionClient:
         """Retrieve the sub-client for Apify store."""
         return StoreCollectionClient(**self._options())
 
@@ -281,7 +281,7 @@ class ApifyClientAsync(_BaseApifyClient):
     http_client: HTTPClientAsync
 
     def __init__(
-        self: ApifyClientAsync,
+        self,
         token: str | None = None,
         *,
         api_url: str | None = None,
@@ -314,7 +314,7 @@ class ApifyClientAsync(_BaseApifyClient):
             timeout_secs=self.timeout_secs,
         )
 
-    def actor(self: ApifyClientAsync, actor_id: str) -> ActorClientAsync:
+    def actor(self, actor_id: str) -> ActorClientAsync:
         """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
@@ -322,11 +322,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return ActorClientAsync(resource_id=actor_id, **self._options())
 
-    def actors(self: ApifyClientAsync) -> ActorCollectionClientAsync:
+    def actors(self) -> ActorCollectionClientAsync:
         """Retrieve the sub-client for manipulating Actors."""
         return ActorCollectionClientAsync(**self._options())
 
-    def build(self: ApifyClientAsync, build_id: str) -> BuildClientAsync:
+    def build(self, build_id: str) -> BuildClientAsync:
         """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
@@ -334,11 +334,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return BuildClientAsync(resource_id=build_id, **self._options())
 
-    def builds(self: ApifyClientAsync) -> BuildCollectionClientAsync:
+    def builds(self) -> BuildCollectionClientAsync:
         """Retrieve the sub-client for querying multiple builds of a user."""
         return BuildCollectionClientAsync(**self._options())
 
-    def run(self: ApifyClientAsync, run_id: str) -> RunClientAsync:
+    def run(self, run_id: str) -> RunClientAsync:
         """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
@@ -346,11 +346,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return RunClientAsync(resource_id=run_id, **self._options())
 
-    def runs(self: ApifyClientAsync) -> RunCollectionClientAsync:
+    def runs(self) -> RunCollectionClientAsync:
         """Retrieve the sub-client for querying multiple Actor runs of a user."""
         return RunCollectionClientAsync(**self._options())
 
-    def dataset(self: ApifyClientAsync, dataset_id: str) -> DatasetClientAsync:
+    def dataset(self, dataset_id: str) -> DatasetClientAsync:
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
@@ -358,11 +358,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return DatasetClientAsync(resource_id=dataset_id, **self._options())
 
-    def datasets(self: ApifyClientAsync) -> DatasetCollectionClientAsync:
+    def datasets(self) -> DatasetCollectionClientAsync:
         """Retrieve the sub-client for manipulating datasets."""
         return DatasetCollectionClientAsync(**self._options())
 
-    def key_value_store(self: ApifyClientAsync, key_value_store_id: str) -> KeyValueStoreClientAsync:
+    def key_value_store(self, key_value_store_id: str) -> KeyValueStoreClientAsync:
         """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
@@ -370,11 +370,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return KeyValueStoreClientAsync(resource_id=key_value_store_id, **self._options())
 
-    def key_value_stores(self: ApifyClientAsync) -> KeyValueStoreCollectionClientAsync:
+    def key_value_stores(self) -> KeyValueStoreCollectionClientAsync:
         """Retrieve the sub-client for manipulating key-value stores."""
         return KeyValueStoreCollectionClientAsync(**self._options())
 
-    def request_queue(self: ApifyClientAsync, request_queue_id: str, *, client_key: str | None = None) -> RequestQueueClientAsync:
+    def request_queue(self, request_queue_id: str, *, client_key: str | None = None) -> RequestQueueClientAsync:
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
@@ -383,11 +383,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return RequestQueueClientAsync(resource_id=request_queue_id, client_key=client_key, **self._options())
 
-    def request_queues(self: ApifyClientAsync) -> RequestQueueCollectionClientAsync:
+    def request_queues(self) -> RequestQueueCollectionClientAsync:
         """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClientAsync(**self._options())
 
-    def webhook(self: ApifyClientAsync, webhook_id: str) -> WebhookClientAsync:
+    def webhook(self, webhook_id: str) -> WebhookClientAsync:
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
@@ -395,11 +395,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return WebhookClientAsync(resource_id=webhook_id, **self._options())
 
-    def webhooks(self: ApifyClientAsync) -> WebhookCollectionClientAsync:
+    def webhooks(self) -> WebhookCollectionClientAsync:
         """Retrieve the sub-client for querying multiple webhooks of a user."""
         return WebhookCollectionClientAsync(**self._options())
 
-    def webhook_dispatch(self: ApifyClientAsync, webhook_dispatch_id: str) -> WebhookDispatchClientAsync:
+    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClientAsync:
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
@@ -407,11 +407,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return WebhookDispatchClientAsync(resource_id=webhook_dispatch_id, **self._options())
 
-    def webhook_dispatches(self: ApifyClientAsync) -> WebhookDispatchCollectionClientAsync:
+    def webhook_dispatches(self) -> WebhookDispatchCollectionClientAsync:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClientAsync(**self._options())
 
-    def schedule(self: ApifyClientAsync, schedule_id: str) -> ScheduleClientAsync:
+    def schedule(self, schedule_id: str) -> ScheduleClientAsync:
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
@@ -419,11 +419,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return ScheduleClientAsync(resource_id=schedule_id, **self._options())
 
-    def schedules(self: ApifyClientAsync) -> ScheduleCollectionClientAsync:
+    def schedules(self) -> ScheduleCollectionClientAsync:
         """Retrieve the sub-client for manipulating schedules."""
         return ScheduleCollectionClientAsync(**self._options())
 
-    def log(self: ApifyClientAsync, build_or_run_id: str) -> LogClientAsync:
+    def log(self, build_or_run_id: str) -> LogClientAsync:
         """Retrieve the sub-client for retrieving logs.
 
         Args:
@@ -431,7 +431,7 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return LogClientAsync(resource_id=build_or_run_id, **self._options())
 
-    def task(self: ApifyClientAsync, task_id: str) -> TaskClientAsync:
+    def task(self, task_id: str) -> TaskClientAsync:
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
@@ -439,11 +439,11 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return TaskClientAsync(resource_id=task_id, **self._options())
 
-    def tasks(self: ApifyClientAsync) -> TaskCollectionClientAsync:
+    def tasks(self) -> TaskCollectionClientAsync:
         """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClientAsync(**self._options())
 
-    def user(self: ApifyClientAsync, user_id: str | None = None) -> UserClientAsync:
+    def user(self, user_id: str | None = None) -> UserClientAsync:
         """Retrieve the sub-client for querying users.
 
         Args:
@@ -451,6 +451,6 @@ class ApifyClientAsync(_BaseApifyClient):
         """
         return UserClientAsync(resource_id=user_id, **self._options())
 
-    def store(self: ApifyClientAsync) -> StoreCollectionClientAsync:
+    def store(self) -> StoreCollectionClientAsync:
         """Retrieve the sub-client for Apify store."""
         return StoreCollectionClientAsync(**self._options())

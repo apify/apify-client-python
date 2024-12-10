@@ -14,13 +14,13 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
     """Sub-client for listing webhook dispatches."""
 
     @ignore_docs
-    def __init__(self: WebhookDispatchCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     def list(
-        self: WebhookDispatchCollectionClient,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,
@@ -45,13 +45,13 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing webhook dispatches."""
 
     @ignore_docs
-    def __init__(self: WebhookDispatchCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the WebhookDispatchCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
     async def list(
-        self: WebhookDispatchCollectionClientAsync,
+        self,
         *,
         limit: int | None = None,
         offset: int | None = None,

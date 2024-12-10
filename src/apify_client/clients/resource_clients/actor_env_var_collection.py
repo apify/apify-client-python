@@ -15,12 +15,12 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating actor env vars."""
 
     @ignore_docs
-    def __init__(self: ActorEnvVarCollectionClient, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self: ActorEnvVarCollectionClient) -> ListPage[dict]:
+    def list(self) -> ListPage[dict]:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -31,7 +31,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         return self._list()
 
     def create(
-        self: ActorEnvVarCollectionClient,
+        self,
         *,
         is_secret: bool | None = None,
         name: str,
@@ -62,12 +62,12 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
     @ignore_docs
-    def __init__(self: ActorEnvVarCollectionClientAsync, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the ActorEnvVarCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self: ActorEnvVarCollectionClientAsync) -> ListPage[dict]:
+    async def list(self) -> ListPage[dict]:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -78,7 +78,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         return await self._list()
 
     async def create(
-        self: ActorEnvVarCollectionClientAsync,
+        self,
         *,
         is_secret: bool | None = None,
         name: str,

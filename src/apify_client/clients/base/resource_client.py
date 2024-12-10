@@ -11,7 +11,7 @@ from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
 class ResourceClient(BaseClient):
     """Base class for sub-clients manipulating a single resource."""
 
-    def _get(self: ResourceClient) -> dict | None:
+    def _get(self) -> dict | None:
         try:
             response = self.http_client.call(
                 url=self.url,
@@ -26,7 +26,7 @@ class ResourceClient(BaseClient):
 
         return None
 
-    def _update(self: ResourceClient, updated_fields: dict) -> dict:
+    def _update(self, updated_fields: dict) -> dict:
         response = self.http_client.call(
             url=self._url(),
             method='PUT',
@@ -36,7 +36,7 @@ class ResourceClient(BaseClient):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    def _delete(self: ResourceClient) -> None:
+    def _delete(self) -> None:
         try:
             self.http_client.call(
                 url=self._url(),
@@ -52,7 +52,7 @@ class ResourceClient(BaseClient):
 class ResourceClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a single resource."""
 
-    async def _get(self: ResourceClientAsync) -> dict | None:
+    async def _get(self) -> dict | None:
         try:
             response = await self.http_client.call(
                 url=self.url,
@@ -67,7 +67,7 @@ class ResourceClientAsync(BaseClientAsync):
 
         return None
 
-    async def _update(self: ResourceClientAsync, updated_fields: dict) -> dict:
+    async def _update(self, updated_fields: dict) -> dict:
         response = await self.http_client.call(
             url=self._url(),
             method='PUT',
@@ -77,7 +77,7 @@ class ResourceClientAsync(BaseClientAsync):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    async def _delete(self: ResourceClientAsync) -> None:
+    async def _delete(self) -> None:
         try:
             await self.http_client.call(
                 url=self._url(),

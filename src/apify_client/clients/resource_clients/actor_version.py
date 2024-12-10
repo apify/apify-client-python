@@ -6,7 +6,10 @@ from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, 
 
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
-from apify_client.clients.resource_clients.actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
+from apify_client.clients.resource_clients.actor_env_var_collection import (
+    ActorEnvVarCollectionClient,
+    ActorEnvVarCollectionClientAsync,
+)
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorSourceType
@@ -42,7 +45,6 @@ class ActorVersionClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorVersionClient."""
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -52,7 +54,7 @@ class ActorVersionClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
 
         Returns:
-            dict, optional: The retrieved Actor version data
+            The retrieved Actor version data.
         """
         return self._get()
 
@@ -73,23 +75,23 @@ class ActorVersionClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/version-object/update-version
 
         Args:
-            build_tag (str, optional): Tag that is automatically set to the latest successful build of the current version.
-            env_vars (list of dict, optional): Environment variables that will be available to the Actor run process,
-                and optionally also to the build process. See the API docs for their exact structure.
-            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the Actor run
-                will also be set to the Actor build process.
-            source_type (ActorSourceType, optional): What source type is the Actor version using.
-            source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
-                Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
-            git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
-                Required when ``source_type`` is ``ActorSourceType.GIT_REPO``.
-            tarball_url (str, optional): The URL of a tarball or a zip archive from which the source code will be downloaded.
-                Required when ``source_type`` is ``ActorSourceType.TARBALL``.
-            github_gist_url (str, optional): The URL of a GitHub Gist from which the source will be downloaded.
-                Required when ``source_type`` is ``ActorSourceType.GITHUB_GIST``.
+            build_tag: Tag that is automatically set to the latest successful build of the current version.
+            env_vars: Environment variables that will be available to the Actor run process, and optionally
+                also to the build process. See the API docs for their exact structure.
+            apply_env_vars_to_build: Whether the environment variables specified for the Actor run will also
+                be set to the Actor build process.
+            source_type: What source type is the Actor version using.
+            source_files: Source code comprised of multiple files, each an item of the array. Required when
+                `source_type` is `ActorSourceType.SOURCE_FILES`. See the API docs for the exact structure.
+            git_repo_url: The URL of a Git repository from which the source code will be cloned.
+                Required when `source_type` is `ActorSourceType.GIT_REPO`.
+            tarball_url: The URL of a tarball or a zip archive from which the source code will be downloaded.
+                Required when `source_type` is `ActorSourceType.TARBALL`.
+            github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
+                Required when `source_type` is `ActorSourceType.GITHUB_GIST`.
 
         Returns:
-            dict: The updated Actor version
+            The updated Actor version.
         """
         actor_version_representation = _get_actor_version_representation(
             build_tag=build_tag,
@@ -119,10 +121,10 @@ class ActorVersionClient(ResourceClient):
         """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:
-            env_var_name (str): The name of the environment variable for which to retrieve the resource client.
+            env_var_name: The name of the environment variable for which to retrieve the resource client.
 
         Returns:
-            ActorEnvVarClient: The resource client for the specified Actor environment variable.
+            The resource client for the specified Actor environment variable.
         """
         return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
 
@@ -132,7 +134,6 @@ class ActorVersionClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorVersionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -142,7 +143,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
 
         Returns:
-            dict, optional: The retrieved Actor version data
+            The retrieved Actor version data.
         """
         return await self._get()
 
@@ -163,23 +164,23 @@ class ActorVersionClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/version-object/update-version
 
         Args:
-            build_tag (str, optional): Tag that is automatically set to the latest successful build of the current version.
-            env_vars (list of dict, optional): Environment variables that will be available to the Actor run process,
-                and optionally also to the build process. See the API docs for their exact structure.
-            apply_env_vars_to_build (bool, optional): Whether the environment variables specified for the Actor run
-                will also be set to the Actor build process.
-            source_type (ActorSourceType, optional): What source type is the Actor version using.
-            source_files (list of dict, optional): Source code comprised of multiple files, each an item of the array.
-                Required when ``source_type`` is ``ActorSourceType.SOURCE_FILES``. See the API docs for the exact structure.
-            git_repo_url (str, optional): The URL of a Git repository from which the source code will be cloned.
-                Required when ``source_type`` is ``ActorSourceType.GIT_REPO``.
-            tarball_url (str, optional): The URL of a tarball or a zip archive from which the source code will be downloaded.
-                Required when ``source_type`` is ``ActorSourceType.TARBALL``.
-            github_gist_url (str, optional): The URL of a GitHub Gist from which the source will be downloaded.
-                Required when ``source_type`` is ``ActorSourceType.GITHUB_GIST``.
+            build_tag: Tag that is automatically set to the latest successful build of the current version.
+            env_vars: Environment variables that will be available to the Actor run process, and optionally
+                also to the build process. See the API docs for their exact structure.
+            apply_env_vars_to_build: Whether the environment variables specified for the Actor run will also
+                be set to the Actor build process.
+            source_type: What source type is the Actor version using.
+            source_files: Source code comprised of multiple files, each an item of the array. Required when
+                `source_type` is `ActorSourceType.SOURCE_FILES`. See the API docs for the exact structure.
+            git_repo_url: The URL of a Git repository from which the source code will be cloned.
+                Required when `source_type` is `ActorSourceType.GIT_REPO`.
+            tarball_url: The URL of a tarball or a zip archive from which the source code will be downloaded.
+                Required when `source_type` is `ActorSourceType.TARBALL`.
+            github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
+                Required when `source_type` is `ActorSourceType.GITHUB_GIST`.
 
         Returns:
-            dict: The updated Actor version
+            The updated Actor version.
         """
         actor_version_representation = _get_actor_version_representation(
             build_tag=build_tag,
@@ -209,9 +210,9 @@ class ActorVersionClientAsync(ResourceClientAsync):
         """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:
-            env_var_name (str): The name of the environment variable for which to retrieve the resource client.
+            env_var_name: The name of the environment variable for which to retrieve the resource client.
 
         Returns:
-            ActorEnvVarClientAsync: The resource client for the specified Actor environment variable.
+            The resource client for the specified Actor environment variable.
         """
         return ActorEnvVarClientAsync(**self._sub_resource_init_options(resource_id=env_var_name))

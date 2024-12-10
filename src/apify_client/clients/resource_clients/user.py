@@ -14,7 +14,6 @@ class UserClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the UserClient."""
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
             resource_id = 'me'
@@ -61,8 +60,8 @@ class UserClient(ResourceClient):
     def limits(self) -> dict | None:
         """Returns a complete summary of the user account's limits.
 
-        It is the same information which is available on the account's Limits page. The returned data includes the current
-        usage cycle, a summary of the account's limits, and the current usage.
+        It is the same information which is available on the account's Limits page. The returned data includes
+        the current usage cycle, a summary of the account's limits, and the current usage.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
@@ -107,7 +106,6 @@ class UserClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the UserClientAsync."""
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
             resource_id = 'me'
@@ -154,8 +152,8 @@ class UserClientAsync(ResourceClientAsync):
     async def limits(self) -> dict | None:
         """Returns a complete summary of the user account's limits.
 
-        It is the same information which is available on the account's Limits page. The returned data includes the current
-        usage cycle, a summary of the account's limits, and the current usage.
+        It is the same information which is available on the account's Limits page. The returned data includes
+        the current usage cycle, a summary of the account's limits, and the current usage.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 

@@ -170,7 +170,9 @@ class HTTPClient(_BaseHTTPClient):
                 if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
                     if not stream:
-                        _maybe_parsed_body = self._maybe_parse_response(response) if parse_response else response.content
+                        _maybe_parsed_body = (
+                            self._maybe_parse_response(response) if parse_response else response.content
+                        )
                         setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
@@ -242,7 +244,9 @@ class HTTPClientAsync(_BaseHTTPClient):
                 if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
                     if not stream:
-                        _maybe_parsed_body = self._maybe_parse_response(response) if parse_response else response.content
+                        _maybe_parsed_body = (
+                            self._maybe_parse_response(response) if parse_response else response.content
+                        )
                         setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response

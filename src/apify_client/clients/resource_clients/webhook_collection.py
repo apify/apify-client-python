@@ -17,7 +17,6 @@ class WebhookCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -33,12 +32,12 @@ class WebhookCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
 
         Args:
-            limit (int, optional): How many webhooks to retrieve
-            offset (int, optional): What webhook to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the webhooks in descending order based on their date of creation
+            limit: How many webhooks to retrieve.
+            offset: What webhook to include as first when retrieving the list.
+            desc: Whether to sort the webhooks in descending order based on their date of creation.
 
         Returns:
-            ListPage: The list of available webhooks matching the specified filters.
+            The list of available webhooks matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -64,23 +63,22 @@ class WebhookCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/create-webhook
 
         Args:
-            event_types (list of WebhookEventType): List of event types that should trigger the webhook. At least one is required.
-            request_url (str): URL that will be invoked once the webhook is triggered.
-            payload_template (str, optional): Specification of the payload that will be sent to request_url
-            headers_template (str, optional): Headers that will be sent to the request_url
-            actor_id (str, optional): Id of the Actor whose runs should trigger the webhook.
-            actor_task_id (str, optional): Id of the Actor task whose runs should trigger the webhook.
-            actor_run_id (str, optional): Id of the Actor run which should trigger the webhook.
-            ignore_ssl_errors (bool, optional): Whether the webhook should ignore SSL errors returned by request_url
-            do_not_retry (bool, optional): Whether the webhook should retry sending the payload to request_url upon
-                                           failure.
-            idempotency_key (str, optional): A unique identifier of a webhook. You can use it to ensure that you won't
-                                             create the same webhook multiple times.
-            is_ad_hoc (bool, optional): Set to True if you want the webhook to be triggered only the first time the
-                                        condition is fulfilled. Only applicable when actor_run_id is filled.
+            event_types: List of event types that should trigger the webhook. At least one is required.
+            request_url: URL that will be invoked once the webhook is triggered.
+            payload_template: Specification of the payload that will be sent to request_url.
+            headers_template: Headers that will be sent to the request_url.
+            actor_id: Id of the Actor whose runs should trigger the webhook.
+            actor_task_id: Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id: Id of the Actor run which should trigger the webhook.
+            ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
+            do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            idempotency_key: A unique identifier of a webhook. You can use it to ensure that you won't create
+                the same webhook multiple times.
+            is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
+                is fulfilled. Only applicable when actor_run_id is filled.
 
         Returns:
-            dict: The created webhook
+           The created webhook.
         """
         webhook_representation = get_webhook_representation(
             event_types=event_types,
@@ -104,7 +102,6 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -120,12 +117,12 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
 
         Args:
-            limit (int, optional): How many webhooks to retrieve
-            offset (int, optional): What webhook to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the webhooks in descending order based on their date of creation
+            limit: How many webhooks to retrieve.
+            offset: What webhook to include as first when retrieving the list.
+            desc: Whether to sort the webhooks in descending order based on their date of creation.
 
         Returns:
-            ListPage: The list of available webhooks matching the specified filters.
+            The list of available webhooks matching the specified filters.
         """
         return await self._list(limit=limit, offset=offset, desc=desc)
 
@@ -151,23 +148,22 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/create-webhook
 
         Args:
-            event_types (list of WebhookEventType): List of event types that should trigger the webhook. At least one is required.
-            request_url (str): URL that will be invoked once the webhook is triggered.
-            payload_template (str, optional): Specification of the payload that will be sent to request_url
-            headers_template (str, optional): Headers that will be sent to the request_url
-            actor_id (str, optional): Id of the Actor whose runs should trigger the webhook.
-            actor_task_id (str, optional): Id of the Actor task whose runs should trigger the webhook.
-            actor_run_id (str, optional): Id of the Actor run which should trigger the webhook.
-            ignore_ssl_errors (bool, optional): Whether the webhook should ignore SSL errors returned by request_url
-            do_not_retry (bool, optional): Whether the webhook should retry sending the payload to request_url upon
-                                           failure.
-            idempotency_key (str, optional): A unique identifier of a webhook. You can use it to ensure that you won't
-                                             create the same webhook multiple times.
-            is_ad_hoc (bool, optional): Set to True if you want the webhook to be triggered only the first time the
-                                        condition is fulfilled. Only applicable when actor_run_id is filled.
+            event_types: List of event types that should trigger the webhook. At least one is required.
+            request_url: URL that will be invoked once the webhook is triggered.
+            payload_template: Specification of the payload that will be sent to request_url.
+            headers_template: Headers that will be sent to the request_url.
+            actor_id: Id of the Actor whose runs should trigger the webhook.
+            actor_task_id: Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id: Id of the Actor run which should trigger the webhook.
+            ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
+            do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            idempotency_key: A unique identifier of a webhook. You can use it to ensure that you won't create
+                the same webhook multiple times.
+            is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
+                is fulfilled. Only applicable when actor_run_id is filled.
 
         Returns:
-            dict: The created webhook
+           The created webhook.
         """
         webhook_representation = get_webhook_representation(
             event_types=event_types,

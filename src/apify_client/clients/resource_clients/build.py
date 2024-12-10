@@ -13,7 +13,6 @@ class BuildClient(ActorJobBaseClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the BuildClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -23,7 +22,7 @@ class BuildClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Returns:
-            dict, optional: The retrieved Actor build data
+            The retrieved Actor build data.
         """
         return self._get()
 
@@ -40,7 +39,7 @@ class BuildClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
 
         Returns:
-            dict: The data of the aborted Actor build
+            The data of the aborted Actor build.
         """
         return self._abort()
 
@@ -48,11 +47,11 @@ class BuildClient(ActorJobBaseClient):
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
-            wait_secs (int, optional): how long does the client wait for build to finish. None for indefinite.
+            wait_secs: How long does the client wait for build to finish. None for indefinite.
 
         Returns:
-            dict, optional: The Actor build data. If the status on the object is not one of the terminal statuses
-                (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
+            The Actor build data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
+                TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return self._wait_for_finish(wait_secs=wait_secs)
 
@@ -62,7 +61,7 @@ class BuildClient(ActorJobBaseClient):
         https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log
 
         Returns:
-            LogClient: A client allowing access to the log of this Actor build.
+            A client allowing access to the log of this Actor build.
         """
         return LogClient(
             **self._sub_resource_init_options(resource_path='log'),
@@ -74,7 +73,6 @@ class BuildClientAsync(ActorJobBaseClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the BuildClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -84,7 +82,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
         Returns:
-            dict, optional: The retrieved Actor build data
+            The retrieved Actor build data.
         """
         return await self._get()
 
@@ -94,7 +92,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
 
         Returns:
-            dict: The data of the aborted Actor build
+            The data of the aborted Actor build.
         """
         return await self._abort()
 
@@ -109,11 +107,11 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
-            wait_secs (int, optional): how long does the client wait for build to finish. None for indefinite.
+            wait_secs: How long does the client wait for build to finish. None for indefinite.
 
         Returns:
-            dict, optional: The Actor build data. If the status on the object is not one of the terminal statuses
-                (SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished.
+            The Actor build data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
+                TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return await self._wait_for_finish(wait_secs=wait_secs)
 
@@ -123,7 +121,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2/#/reference/actor-builds/build-log/get-log
 
         Returns:
-            LogClientAsync: A client allowing access to the log of this Actor build.
+            A client allowing access to the log of this Actor build.
         """
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),

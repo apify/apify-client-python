@@ -15,7 +15,6 @@ class BuildCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the BuildCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -26,18 +25,21 @@ class BuildCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
     ) -> ListPage[dict]:
-        """List all Actor builds (either of a single Actor, or all user's Actors, depending on where this client was initialized from).
+        """List all Actor builds.
+
+        List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
+        was initialized from.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
 
         Args:
-            limit (int, optional): How many builds to retrieve
-            offset (int, optional): What build to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the builds in descending order based on their start date
+            limit: How many builds to retrieve.
+            offset: What build to include as first when retrieving the list.
+            desc: Whether to sort the builds in descending order based on their start date.
 
         Returns:
-            ListPage: The retrieved Actor builds
+            The retrieved Actor builds.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -47,7 +49,6 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the BuildCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -58,17 +59,20 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
     ) -> ListPage[dict]:
-        """List all Actor builds (either of a single Actor, or all user's Actors, depending on where this client was initialized from).
+        """List all Actor builds.
+
+        List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
+        was initialized from.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
 
         Args:
-            limit (int, optional): How many builds to retrieve
-            offset (int, optional): What build to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the builds in descending order based on their start date
+            limit: How many builds to retrieve.
+            offset: What build to include as first when retrieving the list.
+            desc: Whether to sort the builds in descending order based on their start date.
 
         Returns:
-            ListPage: The retrieved Actor builds
+            The retrieved Actor builds.
         """
         return await self._list(limit=limit, offset=offset, desc=desc)

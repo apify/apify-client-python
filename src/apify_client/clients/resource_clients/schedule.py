@@ -36,7 +36,6 @@ class ScheduleClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ScheduleClient."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -46,7 +45,7 @@ class ScheduleClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
 
         Returns:
-            dict, optional: The retrieved schedule
+            The retrieved schedule.
         """
         return self._get()
 
@@ -67,18 +66,19 @@ class ScheduleClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
 
         Args:
-            cron_expression (str, optional): The cron expression used by this schedule
-            is_enabled (bool, optional): True if the schedule should be enabled
-            is_exclusive (bool, optional): When set to true, don't start Actor or Actor task if it's still running from the previous schedule.
-            name (str, optional): The name of the schedule to create.
-            actions (list of dict, optional): Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-            description (str, optional): Description of this schedule
-            timezone (str, optional): Timezone in which your cron expression runs
-                                      (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-            title (str, optional): A human-friendly equivalent of the name
+            cron_expression: The cron expression used by this schedule.
+            is_enabled: True if the schedule should be enabled.
+            is_exclusive: When set to true, don't start Actor or Actor task if it's still running from the previous
+                schedule.
+            name: The name of the schedule to create.
+            actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+            description: Description of this schedule.
+            timezone: Timezone in which your cron expression runs (TZ database name from
+                https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            title: A human-friendly equivalent of the name.
 
         Returns:
-            dict: The updated schedule
+            The updated schedule.
         """
         schedule_representation = _get_schedule_representation(
             cron_expression=cron_expression,
@@ -106,7 +106,7 @@ class ScheduleClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
 
         Returns:
-            list, optional: Retrieved log of the given schedule
+            Retrieved log of the given schedule.
         """
         try:
             response = self.http_client.call(
@@ -126,7 +126,6 @@ class ScheduleClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ScheduleClientAsync."""
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -136,7 +135,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
 
         Returns:
-            dict, optional: The retrieved schedule
+            The retrieved schedule.
         """
         return await self._get()
 
@@ -157,18 +156,19 @@ class ScheduleClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
 
         Args:
-            cron_expression (str, optional): The cron expression used by this schedule
-            is_enabled (bool, optional): True if the schedule should be enabled
-            is_exclusive (bool, optional): When set to true, don't start Actor or Actor task if it's still running from the previous schedule.
-            name (str, optional): The name of the schedule to create.
-            actions (list of dict, optional): Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
-            description (str, optional): Description of this schedule
-            timezone (str, optional): Timezone in which your cron expression runs
-                                      (TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
-            title (str, optional): A human-friendly equivalent of the name
+            cron_expression: The cron expression used by this schedule.
+            is_enabled: True if the schedule should be enabled.
+            is_exclusive: When set to true, don't start Actor or Actor task if it's still running from the previous
+                schedule.
+            name: The name of the schedule to create.
+            actions: Actors or tasks that should be run on this schedule. See the API documentation for exact structure.
+            description: Description of this schedule.
+            timezone: Timezone in which your cron expression runs (TZ database name from
+                https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            title: A human-friendly equivalent of the name.
 
         Returns:
-            dict: The updated schedule
+            The updated schedule.
         """
         schedule_representation = _get_schedule_representation(
             cron_expression=cron_expression,
@@ -196,7 +196,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
 
         Returns:
-            list, optional: Retrieved log of the given schedule
+            Retrieved log of the given schedule.
         """
         try:
             response = await self.http_client.call(

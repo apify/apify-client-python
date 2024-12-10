@@ -41,7 +41,8 @@ for client_source_path in clients_path.glob('**/*.py'):
                 if async_docstring == correct_async_docstring:
                     continue
 
-                # Work around a bug in Red Baron, which indents docstrings too much when you insert them, so we have to un-indent it one level first
+                # Work around a bug in Red Baron, which indents docstrings too much when you insert them,
+                # so we have to un-indent it one level first.
                 correct_async_docstring = re.sub('^    ', '', correct_async_docstring, flags=re.MULTILINE)
 
                 if not isinstance(async_docstring, str):

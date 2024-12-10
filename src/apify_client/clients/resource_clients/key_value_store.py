@@ -19,7 +19,6 @@ class KeyValueStoreClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the KeyValueStoreClient."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -29,7 +28,7 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
 
         Returns:
-            dict, optional: The retrieved key-value store, or None if it does not exist
+            The retrieved key-value store, or None if it does not exist.
         """
         return self._get()
 
@@ -39,10 +38,10 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
 
         Args:
-            name (str, optional): The new name for key-value store
+            name: The new name for key-value store.
 
         Returns:
-            dict: The updated key-value store
+            The updated key-value store.
         """
         updated_fields = {
             'name': name,
@@ -63,11 +62,11 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit (int, optional): Number of keys to be returned. Maximum value is 1000
-            exclusive_start_key (str, optional): All keys up to this one (including) are skipped from the result
+            limit: Number of keys to be returned. Maximum value is 1000.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
 
         Returns:
-            dict: The list of keys in the key-value store matching the given arguments
+            The list of keys in the key-value store matching the given arguments.
         """
         request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)
 
@@ -85,12 +84,14 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
-            key (str): Key of the record to retrieve
-            as_bytes (bool, optional): Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes, default False
-            as_file (bool, optional): Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object, default False
+            key: Key of the record to retrieve.
+            as_bytes: Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes,
+                default False.
+            as_file: Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object,
+                default False.
 
         Returns:
-            dict, optional: The requested record, or None, if the record does not exist
+            The requested record, or None, if the record does not exist.
         """
         try:
             if as_bytes and as_file:
@@ -98,7 +99,8 @@ class KeyValueStoreClient(ResourceClient):
 
             if as_bytes:
                 warnings.warn(
-                    '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, use `KeyValueStoreClient.get_record_as_bytes()` instead.',
+                    '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, '
+                    'use `KeyValueStoreClient.get_record_as_bytes()` instead.',
                     DeprecationWarning,
                     stacklevel=2,
                 )
@@ -106,7 +108,8 @@ class KeyValueStoreClient(ResourceClient):
 
             if as_file:
                 warnings.warn(
-                    '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, use `KeyValueStoreClient.stream_record()` instead.',
+                    '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, '
+                    'use `KeyValueStoreClient.stream_record()` instead.',
                     DeprecationWarning,
                     stacklevel=2,
                 )
@@ -135,10 +138,10 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
-            key (str): Key of the record to retrieve
+            key: Key of the record to retrieve.
 
         Returns:
-            dict, optional: The requested record, or None, if the record does not exist
+            The requested record, or None, if the record does not exist.
         """
         try:
             response = self.http_client.call(
@@ -166,10 +169,10 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
-            key (str): Key of the record to retrieve
+            key: Key of the record to retrieve.
 
         Returns:
-            dict, optional: The requested record as a context-managed streaming Response, or None, if the record does not exist
+            The requested record as a context-managed streaming Response, or None, if the record does not exist.
         """
         response = None
         try:
@@ -205,9 +208,9 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/put-record
 
         Args:
-            key (str): The key of the record to save the value to
-            value (Any): The value to save into the record
-            content_type (str, optional): The content type of the saved value
+            key: The key of the record to save the value to.
+            value: The value to save into the record.
+            content_type: The content type of the saved value.
         """
         value, content_type = encode_key_value_store_record_value(value, content_type)
 
@@ -227,7 +230,7 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
 
         Args:
-            key (str): The key of the record which to delete
+            key: The key of the record which to delete.
         """
         self.http_client.call(
             url=self._url(f'records/{key}'),
@@ -241,7 +244,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the KeyValueStoreClientAsync."""
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -251,7 +253,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
 
         Returns:
-            dict, optional: The retrieved key-value store, or None if it does not exist
+            The retrieved key-value store, or None if it does not exist.
         """
         return await self._get()
 
@@ -261,10 +263,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
 
         Args:
-            name (str, optional): The new name for key-value store
+            name: The new name for key-value store.
 
         Returns:
-            dict: The updated key-value store
+            The updated key-value store.
         """
         updated_fields = {
             'name': name,
@@ -285,11 +287,11 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit (int, optional): Number of keys to be returned. Maximum value is 1000
-            exclusive_start_key (str, optional): All keys up to this one (including) are skipped from the result
+            limit: Number of keys to be returned. Maximum value is 1000.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
 
         Returns:
-            dict: The list of keys in the key-value store matching the given arguments
+            The list of keys in the key-value store matching the given arguments.
         """
         request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)
 
@@ -307,12 +309,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
-            key (str): Key of the record to retrieve
-            as_bytes (bool, optional): Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes, default False
-            as_file (bool, optional): Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object, default False
+            key: Key of the record to retrieve.
+            as_bytes: Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes,
+                default False.
+            as_file: Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object,
+                default False.
 
         Returns:
-            dict, optional: The requested record, or None, if the record does not exist
+            The requested record, or None, if the record does not exist.
         """
         try:
             response = await self.http_client.call(
@@ -338,10 +342,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
-            key (str): Key of the record to retrieve
+            key: Key of the record to retrieve.
 
         Returns:
-            dict, optional: The requested record, or None, if the record does not exist
+            The requested record, or None, if the record does not exist.
         """
         try:
             response = await self.http_client.call(
@@ -369,10 +373,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
-            key (str): Key of the record to retrieve
+            key: Key of the record to retrieve.
 
         Returns:
-            dict, optional: The requested record as a context-managed streaming Response, or None, if the record does not exist
+            The requested record as a context-managed streaming Response, or None, if the record does not exist.
         """
         response = None
         try:
@@ -408,9 +412,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/put-record
 
         Args:
-            key (str): The key of the record to save the value to
-            value (Any): The value to save into the record
-            content_type (str, optional): The content type of the saved value
+            key: The key of the record to save the value to.
+            value: The value to save into the record.
+            content_type: The content type of the saved value.
         """
         value, content_type = encode_key_value_store_record_value(value, content_type)
 
@@ -430,7 +434,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
 
         Args:
-            key (str): The key of the record which to delete
+            key: The key of the record which to delete.
         """
         await self.http_client.call(
             url=self._url(f'records/{key}'),

@@ -47,7 +47,9 @@ for client_source_path in clients_path.glob('**/*.py'):
                     print(f'Missing docstring for "{async_class.name}.{async_method.name}"!')
                     found_issues = True
                 elif expected_docstring != async_docstring:
-                    print(f'Docstring for "{async_class.name}.{async_method.name}" is out of sync with "{sync_class.name}.{sync_method.name}"!')
+                    print(
+                        f'Docstring for "{async_class.name}.{async_method.name}" is out of sync with "{sync_class.name}.{sync_method.name}"!'  # noqa: E501
+                    )
                     found_issues = True
 
 if found_issues:

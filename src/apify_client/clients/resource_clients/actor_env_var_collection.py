@@ -16,7 +16,6 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorEnvVarCollectionClient with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -26,7 +25,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
 
         Returns:
-            ListPage: The list of available actor environment variables.
+            The list of available actor environment variables.
         """
         return self._list()
 
@@ -42,12 +41,12 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/create-environment-variable
 
         Args:
-            is_secret (bool, optional): Whether the environment variable is secret or not
-            name (str): The name of the environment variable
-            value (str): The value of the environment variable
+            is_secret: Whether the environment variable is secret or not.
+            name: The name of the environment variable.
+            value: The value of the environment variable.
 
         Returns:
-            dict: The created actor environment variable
+            The created actor environment variable.
         """
         actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,
@@ -63,7 +62,6 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the ActorEnvVarCollectionClientAsync with the passed arguments."""
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -73,7 +71,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
 
         Returns:
-            ListPage: The list of available actor environment variables.
+            The list of available actor environment variables.
         """
         return await self._list()
 
@@ -89,12 +87,12 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/create-environment-variable
 
         Args:
-            is_secret (bool, optional): Whether the environment variable is secret or not
-            name (str): The name of the environment variable
-            value (str): The value of the environment variable
+            is_secret: Whether the environment variable is secret or not.
+            name: The name of the environment variable.
+            value: The value of the environment variable.
 
         Returns:
-            dict: The created actor environment variable
+            The created actor environment variable.
         """
         actor_env_var_representation = get_actor_env_var_representation(
             is_secret=is_secret,

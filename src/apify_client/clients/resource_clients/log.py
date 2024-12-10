@@ -20,7 +20,6 @@ class LogClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the LogClient."""
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -30,7 +29,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            str, optional: The retrieved log, or None, if it does not exist.
+            The retrieved log, or None, if it does not exist.
         """
         try:
             response = self.http_client.call(
@@ -52,7 +51,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            bytes, optional: The retrieved log as raw bytes, or None, if it does not exist.
+            The retrieved log as raw bytes, or None, if it does not exist.
         """
         try:
             response = self.http_client.call(
@@ -76,7 +75,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            httpx.Response, optional: The retrieved log as a context-managed streaming Response, or None, if it does not exist.
+            The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
         """
         response = None
         try:
@@ -102,7 +101,6 @@ class LogClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the LogClientAsync."""
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -112,7 +110,7 @@ class LogClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            str, optional: The retrieved log, or None, if it does not exist.
+            The retrieved log, or None, if it does not exist.
         """
         try:
             response = await self.http_client.call(
@@ -134,7 +132,7 @@ class LogClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            bytes, optional: The retrieved log as raw bytes, or None, if it does not exist.
+            The retrieved log as raw bytes, or None, if it does not exist.
         """
         try:
             response = await self.http_client.call(
@@ -158,7 +156,7 @@ class LogClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Returns:
-            httpx.Response, optional: The retrieved log as a context-managed streaming Response, or None, if it does not exist.
+            The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
         """
         response = None
         try:

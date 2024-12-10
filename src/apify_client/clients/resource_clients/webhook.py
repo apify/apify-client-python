@@ -12,7 +12,10 @@ from apify_shared.utils import (
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
-from apify_client.clients.resource_clients.webhook_dispatch_collection import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
+from apify_client.clients.resource_clients.webhook_dispatch_collection import (
+    WebhookDispatchCollectionClient,
+    WebhookDispatchCollectionClientAsync,
+)
 
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType
@@ -62,7 +65,6 @@ class WebhookClient(ResourceClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookClient."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -72,7 +74,7 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
 
         Returns:
-            dict, optional: The retrieved webhook, or None if it does not exist
+            The retrieved webhook, or None if it does not exist.
         """
         return self._get()
 
@@ -95,21 +97,20 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
 
         Args:
-            event_types (list of WebhookEventType, optional): List of event types that should trigger the webhook. At least one is required.
-            request_url (str, optional): URL that will be invoked once the webhook is triggered.
-            payload_template (str, optional): Specification of the payload that will be sent to request_url
-            headers_template (str, optional): Headers that will be sent to the request_url
-            actor_id (str, optional): Id of the Actor whose runs should trigger the webhook.
-            actor_task_id (str, optional): Id of the Actor task whose runs should trigger the webhook.
-            actor_run_id (str, optional): Id of the Actor run which should trigger the webhook.
-            ignore_ssl_errors (bool, optional): Whether the webhook should ignore SSL errors returned by request_url
-            do_not_retry (bool, optional): Whether the webhook should retry sending the payload to request_url upon
-                                           failure.
-            is_ad_hoc (bool, optional): Set to True if you want the webhook to be triggered only the first time the
-                                        condition is fulfilled. Only applicable when actor_run_id is filled.
+            event_types: List of event types that should trigger the webhook. At least one is required.
+            request_url: URL that will be invoked once the webhook is triggered.
+            payload_template: Specification of the payload that will be sent to request_url.
+            headers_template: Headers that will be sent to the request_url.
+            actor_id: Id of the Actor whose runs should trigger the webhook.
+            actor_task_id: Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id: Id of the Actor run which should trigger the webhook.
+            ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
+            do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
+                is fulfilled. Only applicable when actor_run_id is filled.
 
         Returns:
-            dict: The updated webhook
+            The updated webhook.
         """
         webhook_representation = get_webhook_representation(
             event_types=event_types,
@@ -141,7 +142,7 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook
 
         Returns:
-            dict, optional: The webhook dispatch created by the test
+            The webhook dispatch created by the test.
         """
         try:
             response = self.http_client.call(
@@ -163,7 +164,7 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
 
         Returns:
-            WebhookDispatchCollectionClient: A client allowing access to dispatches of this webhook using its list method
+            A client allowing access to dispatches of this webhook using its list method.
         """
         return WebhookDispatchCollectionClient(
             **self._sub_resource_init_options(resource_path='dispatches'),
@@ -175,7 +176,6 @@ class WebhookClientAsync(ResourceClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the WebhookClientAsync."""
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -185,7 +185,7 @@ class WebhookClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
 
         Returns:
-            dict, optional: The retrieved webhook, or None if it does not exist
+            The retrieved webhook, or None if it does not exist.
         """
         return await self._get()
 
@@ -208,21 +208,20 @@ class WebhookClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
 
         Args:
-            event_types (list of WebhookEventType, optional): List of event types that should trigger the webhook. At least one is required.
-            request_url (str, optional): URL that will be invoked once the webhook is triggered.
-            payload_template (str, optional): Specification of the payload that will be sent to request_url
-            headers_template (str, optional): Headers that will be sent to the request_url
-            actor_id (str, optional): Id of the Actor whose runs should trigger the webhook.
-            actor_task_id (str, optional): Id of the Actor task whose runs should trigger the webhook.
-            actor_run_id (str, optional): Id of the Actor run which should trigger the webhook.
-            ignore_ssl_errors (bool, optional): Whether the webhook should ignore SSL errors returned by request_url
-            do_not_retry (bool, optional): Whether the webhook should retry sending the payload to request_url upon
-                                           failure.
-            is_ad_hoc (bool, optional): Set to True if you want the webhook to be triggered only the first time the
-                                        condition is fulfilled. Only applicable when actor_run_id is filled.
+            event_types: List of event types that should trigger the webhook. At least one is required.
+            request_url: URL that will be invoked once the webhook is triggered.
+            payload_template: Specification of the payload that will be sent to request_url.
+            headers_template: Headers that will be sent to the request_url.
+            actor_id: Id of the Actor whose runs should trigger the webhook.
+            actor_task_id: Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id: Id of the Actor run which should trigger the webhook.
+            ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
+            do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
+                is fulfilled. Only applicable when actor_run_id is filled.
 
         Returns:
-            dict: The updated webhook
+            The updated webhook.
         """
         webhook_representation = get_webhook_representation(
             event_types=event_types,
@@ -254,7 +253,7 @@ class WebhookClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook
 
         Returns:
-            dict, optional: The webhook dispatch created by the test
+            The webhook dispatch created by the test.
         """
         try:
             response = await self.http_client.call(
@@ -276,7 +275,7 @@ class WebhookClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/dispatches-collection/get-collection
 
         Returns:
-            WebhookDispatchCollectionClientAsync: A client allowing access to dispatches of this webhook using its list method
+            A client allowing access to dispatches of this webhook using its list method.
         """
         return WebhookDispatchCollectionClientAsync(
             **self._sub_resource_init_options(resource_path='dispatches'),

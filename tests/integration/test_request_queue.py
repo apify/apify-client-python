@@ -50,7 +50,9 @@ class TestRequestQueueSync:
         queue = apify_client.request_queue(created_queue['id'])
 
         # Add requests to queue and check if they were added
-        requests_to_add = [{'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(25)]
+        requests_to_add = [
+            {'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(25)
+        ]
         added_requests = queue.batch_add_requests(requests_to_add)
         assert len(added_requests.get('processedRequests', [])) > 0
         requests_in_queue = queue.list_requests()
@@ -58,7 +60,9 @@ class TestRequestQueueSync:
 
         # Delete requests from queue and check if they were deleted
         requests_to_delete = requests_in_queue['items'][:20]
-        delete_response = queue.batch_delete_requests([{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete])
+        delete_response = queue.batch_delete_requests(
+            [{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete]
+        )
         requests_in_queue2 = queue.list_requests()
         assert len(requests_in_queue2['items']) == 25 - len(delete_response['processedRequests'])
 
@@ -100,7 +104,9 @@ class TestRequestQueueAsync:
         queue = apify_client_async.request_queue(created_queue['id'])
 
         # Add requests to queue and check if they were added
-        requests_to_add = [{'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(25)]
+        requests_to_add = [
+            {'url': f'http://test-batch.com/{i}', 'uniqueKey': f'http://test-batch.com/{i}'} for i in range(25)
+        ]
         added_requests = await queue.batch_add_requests(requests_to_add)
         assert len(added_requests.get('processedRequests', [])) > 0
         requests_in_queue = await queue.list_requests()
@@ -108,7 +114,9 @@ class TestRequestQueueAsync:
 
         # Delete requests from queue and check if they were deleted
         requests_to_delete = requests_in_queue['items'][:20]
-        delete_response = await queue.batch_delete_requests([{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete])
+        delete_response = await queue.batch_delete_requests(
+            [{'uniqueKey': req.get('uniqueKey')} for req in requests_to_delete]
+        )
         requests_in_queue2 = await queue.list_requests()
         assert len(requests_in_queue2['items']) == 25 - len(delete_response['processedRequests'])
 

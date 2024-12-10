@@ -62,7 +62,7 @@ ruff = "~0.8.0"
 setuptools = "~75.6.0"     # setuptools are used by pytest but not explicitly required
 
 [tool.ruff]
-line-length = 150
+line-length = 120
 
 [tool.ruff.lint]
 select = ["ALL"]

@@ -11,19 +11,18 @@ class ApifyClientError(Exception):
 class ApifyApiError(ApifyClientError):
     """Error specific to requests to the Apify API.
 
-    An `ApifyApiError` is thrown for successful HTTP requests that reach the API,
-    but the API responds with an error response. Typically, those are rate limit
-    errors and internal errors, which are automatically retried, or validation
-    errors, which are thrown immediately, because a correction by the user is needed.
+    An `ApifyApiError` is thrown for successful HTTP requests that reach the API, but the API responds with
+    an error response. Typically, those are rate limit errors and internal errors, which are automatically retried,
+    or validation errors, which are thrown immediately, because a correction by the user is needed.
     """
 
     @ignore_docs
     def __init__(self, response: httpx.Response, attempt: int) -> None:
-        """Create the ApifyApiError instance.
+        """A default constructor.
 
         Args:
-            response (httpx.Response): The response to the failed API call
-            attempt (int): Which attempt was the request that failed
+            response: The response to the failed API call.
+            attempt: Which attempt was the request that failed.
         """
         self.message: str | None = None
         self.type: str | None = None
@@ -53,17 +52,17 @@ class ApifyApiError(ApifyClientError):
 class InvalidResponseBodyError(ApifyClientError):
     """Error caused by the response body failing to be parsed.
 
-    This error exists for the quite common situation, where only a partial JSON response is received and
-    an attempt to parse the JSON throws an error. In most cases this can be resolved by retrying the
-    request. We do that by identifying this error in the HTTPClient.
+    This error exists for the quite common situation, where only a partial JSON response is received and an attempt
+    to parse the JSON throws an error. In most cases this can be resolved by retrying the request. We do that by
+    identifying this error in the HTTPClient.
     """
 
     @ignore_docs
     def __init__(self, response: httpx.Response) -> None:
-        """Create the InvalidResponseBodyError instance.
+        """A default constructor.
 
         Args:
-            response: The response which failed to be parsed
+            response: The response which failed to be parsed.
         """
         super().__init__('Response body could not be parsed')
 

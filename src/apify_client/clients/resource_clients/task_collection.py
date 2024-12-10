@@ -16,7 +16,6 @@ class TaskCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the TaskCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -32,12 +31,12 @@ class TaskCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
         Args:
-            limit (int, optional): How many tasks to list
-            offset (int, optional): What task to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the tasks in descending order based on their creation date
+            limit: How many tasks to list.
+            offset: What task to include as first when retrieving the list.
+            desc: Whether to sort the tasks in descending order based on their creation date.
 
         Returns:
-            ListPage: The list of available tasks matching the specified filters.
+            The list of available tasks matching the specified filters.
         """
         return self._list(limit=limit, offset=offset, desc=desc)
 
@@ -63,26 +62,29 @@ class TaskCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
         Args:
-            actor_id (str): Id of the Actor that should be run
-            name (str): Name of the task
-            build (str, optional): Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            max_items (int, optional): Maximum number of results that will be returned by runs of this task.
-                                       If the Actor of this task is charged per result, you will not be charged for more results than the given limit.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            task_input (dict, optional): Task input object.
-            title (str, optional): A human-friendly equivalent of the name
-            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+            actor_id: Id of the Actor that should be run.
+            name: Name of the task.
+            build: Actor build to run. It can be either a build tag or build number. By default, the run uses
+                the build specified in the task settings (typically latest).
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
+                is charged per result, you will not be charged for more results than the given limit.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            task_input: Task input object.
+            title: A human-friendly equivalent of the name.
+            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
-            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
-            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+                it will be shut down.
+            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The created task.
+            The created task.
         """
         task_representation = get_task_representation(
             actor_id=actor_id,
@@ -108,7 +110,6 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the TaskCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -124,12 +125,12 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
         Args:
-            limit (int, optional): How many tasks to list
-            offset (int, optional): What task to include as first when retrieving the list
-            desc (bool, optional): Whether to sort the tasks in descending order based on their creation date
+            limit: How many tasks to list.
+            offset: What task to include as first when retrieving the list.
+            desc: Whether to sort the tasks in descending order based on their creation date.
 
         Returns:
-            ListPage: The list of available tasks matching the specified filters.
+            The list of available tasks matching the specified filters.
         """
         return await self._list(limit=limit, offset=offset, desc=desc)
 
@@ -155,26 +156,29 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
         Args:
-            actor_id (str): Id of the Actor that should be run
-            name (str): Name of the task
-            build (str, optional): Actor build to run. It can be either a build tag or build number.
-                                   By default, the run uses the build specified in the task settings (typically latest).
-            memory_mbytes (int, optional): Memory limit for the run, in megabytes.
-                                           By default, the run uses a memory limit specified in the task settings.
-            max_items (int, optional): Maximum number of results that will be returned by runs of this task.
-                                       If the Actor of this task is charged per result, you will not be charged for more results than the given limit.
-            timeout_secs (int, optional): Optional timeout for the run, in seconds. By default, the run uses timeout specified in the task settings.
-            task_input (dict, optional): Task input object.
-            title (str, optional): A human-friendly equivalent of the name
-            actor_standby_desired_requests_per_actor_run (int, optional): The desired number of concurrent HTTP requests for
+            actor_id: Id of the Actor that should be run.
+            name: Name of the task.
+            build: Actor build to run. It can be either a build tag or build number. By default, the run uses
+                the build specified in the task settings (typically latest).
+            memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
+                in the task settings.
+            max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
+                is charged per result, you will not be charged for more results than the given limit.
+            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+                in the task settings.
+            task_input: Task input object.
+            title: A human-friendly equivalent of the name.
+            actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_max_requests_per_actor_run (int, optional): The maximum number of concurrent HTTP requests for a single Actor Standby run.
-            actor_standby_idle_timeout_secs (int, optional): If the Actor run does not receive any requests for this time, it will be shut down.
-            actor_standby_build (str, optional): The build tag or number to run when the Actor is in Standby mode.
-            actor_standby_memory_mbytes (int, optional): The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
+                a single Actor Standby run.
+            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+                it will be shut down.
+            actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
+            actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
 
         Returns:
-            dict: The created task.
+            The created task.
         """
         task_representation = get_task_representation(
             actor_id=actor_id,

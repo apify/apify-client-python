@@ -15,7 +15,6 @@ class StoreCollectionClient(ResourceCollectionClient):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the StoreCollectionClient."""
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -35,16 +34,17 @@ class StoreCollectionClient(ResourceCollectionClient):
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
 
         Args:
-            limit (int, optional): How many Actors to list
-            offset (int, optional): What Actor to include as first when retrieving the list
-            search (str, optional): String to search by. The search runs on the following fields: title, name, description, username, readme.
-            sort_by (str, optional): Specifies the field by which to sort the results.
-            category (str, optional): Filter by this category
-            username (str, optional): Filter by this username
-            pricing_model (str, optional): Filter by this pricing model
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            search: String to search by. The search runs on the following fields: title, name, description, username,
+                readme.
+            sort_by: Specifies the field by which to sort the results.
+            category: Filter by this category.
+            username: Filter by this username.
+            pricing_model: Filter by this pricing model.
 
         Returns:
-            ListPage: The list of available tasks matching the specified filters.
+            The list of available tasks matching the specified filters.
         """
         return self._list(
             limit=limit,
@@ -62,7 +62,6 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
 
     @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Initialize the StoreCollectionClientAsync."""
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
@@ -82,16 +81,17 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
 
         Args:
-            limit (int, optional): How many Actors to list
-            offset (int, optional): What Actor to include as first when retrieving the list
-            search (str, optional): String to search by. The search runs on the following fields: title, name, description, username, readme.
-            sort_by (str, optional): Specifies the field by which to sort the results.
-            category (str, optional): Filter by this category
-            username (str, optional): Filter by this username
-            pricing_model (str, optional): Filter by this pricing model
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            search: String to search by. The search runs on the following fields: title, name, description, username,
+                readme.
+            sort_by: Specifies the field by which to sort the results.
+            category: Filter by this category.
+            username: Filter by this username.
+            pricing_model: Filter by this pricing model.
 
         Returns:
-            ListPage: The list of available tasks matching the specified filters.
+            The list of available tasks matching the specified filters.
         """
         return await self._list(
             limit=limit,

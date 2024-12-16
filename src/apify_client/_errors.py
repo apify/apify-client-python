@@ -26,6 +26,7 @@ class ApifyApiError(ApifyClientError):
         """
         self.message: str | None = None
         self.type: str | None = None
+        self.data = dict[str, str]()
 
         self.message = f'Unexpected error: {response.text}'
         try:
@@ -33,6 +34,8 @@ class ApifyApiError(ApifyClientError):
             if 'error' in response_data:
                 self.message = response_data['error']['message']
                 self.type = response_data['error']['type']
+                if 'data' in response_data['error']:
+                    self.data = response_data['error']['data']
         except ValueError:
             pass
 

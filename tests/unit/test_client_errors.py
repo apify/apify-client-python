@@ -17,7 +17,7 @@ _EXPECTED_DATA = {
 
 
 @respx.mock
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mocked_response(respx_mock: MockRouter) -> None:
     response_content = json.dumps(
         {'error': {'message': _EXPECTED_MESSAGE, 'type': _EXPECTED_TYPE, 'data': _EXPECTED_DATA}}
@@ -25,7 +25,6 @@ def mocked_response(respx_mock: MockRouter) -> None:
     respx_mock.get(_TEST_URL).mock(return_value=httpx.Response(400, content=response_content))
 
 
-@pytest.mark.usefixtures('mocked_response')
 def test_client_apify_api_error_with_data() -> None:
     """Test that client correctly throws ApifyApiError with error data from response."""
     client = HTTPClient()
@@ -38,12 +37,13 @@ def test_client_apify_api_error_with_data() -> None:
     assert e.value.data == _EXPECTED_DATA
 
 
-@pytest.mark.usefixtures('mocked_response')
 async def test_async_client_apify_api_error_with_data() -> None:
     """Test that async client correctly throws ApifyApiError with error data from response."""
     client = HTTPClientAsync()
+
     with pytest.raises(ApifyApiError) as e:
         await client.call(method='GET', url=_TEST_URL)
+
     assert e.value.message == _EXPECTED_MESSAGE
     assert e.value.type == _EXPECTED_TYPE
     assert e.value.data == _EXPECTED_DATA

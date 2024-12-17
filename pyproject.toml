@@ -43,7 +43,7 @@ python = "^3.9"
 apify-shared = ">=1.1.2"
 # TODO: relax the upper bound once the issue is resolved:
 # https://github.com/apify/apify-client-python/issues/313
-httpx = ">=0.25 <0.28.0"
+httpx = "<0.28.2"
 more_itertools = ">=10.0.0"
 
 [tool.poetry.group.dev.dependencies]

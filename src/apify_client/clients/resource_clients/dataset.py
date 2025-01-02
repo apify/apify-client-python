@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any
 from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
+from apify_client._errors import ApifyApiError
+from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -539,6 +541,26 @@ class DatasetClient(ResourceClient):
             json=json,
         )
 
+    def get_statistics(self) -> dict | None:
+        """Get the dataset statistics.
+
+        https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
+
+        Returns:
+            The dataset statistics or None if the dataset does not exist.
+        """
+        try:
+            response = self.http_client.call(
+                url=self._url('statistics'),
+                method='GET',
+                params=self._params(),
+            )
+            return pluck_data(response.json())
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+
+        return None
+
 
 class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
@@ -969,3 +991,23 @@ class DatasetClientAsync(ResourceClientAsync):
             data=data,
             json=json,
         )
+
+    async def get_statistics(self) -> dict | None:
+        """Get the dataset statistics.
+
+        https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
+
+        Returns:
+            The dataset statistics or None if the dataset does not exist.
+        """
+        try:
+            response = await self.http_client.call(
+                url=self._url('statistics'),
+                method='GET',
+                params=self._params(),
+            )
+            return pluck_data(response.json())
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+
+        return None

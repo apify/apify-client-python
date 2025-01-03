@@ -235,7 +235,7 @@ class RunClient(ActorJobBaseClient):
     ) -> dict:
         """Charge for an event of a Pay-Per-Event Actor run.
 
-        https://docs.apify.com/api/v2#/reference/actor-runs/charge-run/charge-run
+        https://docs.apify.com/api/v2#/reference/actor-runs/charge-events-in-run
 
         Returns:
             Status and message of the charge event.
@@ -489,7 +489,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
     ) -> dict:
         """Charge for an event of a Pay-Per-Event Actor run.
 
-        https://docs.apify.com/api/v2#/reference/actor-runs/charge-run/charge-run
+        https://docs.apify.com/api/v2#/reference/actor-runs/charge-events-in-run
 
         Returns:
             Status and message of the charge event.

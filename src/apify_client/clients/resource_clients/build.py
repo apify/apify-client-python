@@ -43,6 +43,23 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._abort()
 
+    def get_open_api_specification(self) -> dict | None:
+        """Return OpenAPI specification of the Actor's build.
+
+        https://docs.apify.com/api/v2/actor-build-openapi-specification-get
+
+        Returns:
+            OpenAPI specification of the Actor's build.
+        """
+        response = self.http_client.call(
+            url=self._url('openapi-specification'),
+            method='GET',
+        )
+
+        response_data: dict = response.json()
+
+        return response_data
+
     def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
         """Wait synchronously until the build finishes or the server times out.
 
@@ -102,6 +119,23 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         return await self._delete()
+
+    async def get_open_api_specification(self) -> dict | None:
+        """Return OpenAPI specification of the Actor's build.
+
+        https://docs.apify.com/api/v2/actor-build-openapi-specification-get
+
+        Returns:
+            OpenAPI specification of the Actor's build.
+        """
+        response = await self.http_client.call(
+            url=self._url('openapi-specification'),
+            method='GET',
+        )
+
+        response_data: dict = response.json()
+
+        return response_data
 
     async def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
         """Wait synchronously until the build finishes or the server times out.

@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add charge method to the run client for &quot;pay per event&quot; ([#304](https://github.com/apify/apify-client-python/pull/304)) ([3bd6bbb](https://github.com/apify/apify-client-python/commit/3bd6bbb86d2b777863f0c3d0459b61da9a7f15ff)) by [@Jkuzz](https://github.com/Jkuzz)
 - Add error data to ApifyApiError ([#314](https://github.com/apify/apify-client-python/pull/314)) ([df2398b](https://github.com/apify/apify-client-python/commit/df2398b51d774c5f8653a80f83b320d0f5394dde)) by [@Pijukatel](https://github.com/Pijukatel), closes [#306](https://github.com/apify/apify-client-python/issues/306)
 - Add GET: dataset.statistics ([#324](https://github.com/apify/apify-client-python/pull/324)) ([19ea4ad](https://github.com/apify/apify-client-python/commit/19ea4ad46068520885bd098739a9b64d1f17e1fc)) by [@MFori](https://github.com/MFori)
+- Add `get_open_api_specification` method to `BuildClient` ([#336](https://github.com/apify/apify-client-python/pull/336)) ([9ebcedb](https://github.com/apify/apify-client-python/commit/9ebcedbaede53add167f1c51ec6196e793e67917)) by [@danpoletaev](https://github.com/danpoletaev)
 
 
 <!-- git-cliff-unreleased-end -->

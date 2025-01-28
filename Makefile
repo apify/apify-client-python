@@ -2,8 +2,6 @@
         integration-tests format check-async-docstrings check-code fix-async-docstrings \
         build-api-reference build-docs run-docs
 
-DIRS_WITH_CODE = src tests scripts
-
 # This is default for local testing, but GitHub workflows override it to a higher value in CI
 INTEGRATION_TESTS_CONCURRENCY = 1
 
@@ -23,11 +21,11 @@ publish-to-pypi:
 	poetry publish --no-interaction -vv
 
 lint:
-	poetry run ruff format --check $(DIRS_WITH_CODE)
-	poetry run ruff check $(DIRS_WITH_CODE)
+	poetry run ruff format --check
+	poetry run ruff check
 
 type-check:
-	poetry run mypy $(DIRS_WITH_CODE)
+	poetry run mypy
 
 unit-tests:
 	poetry run pytest --numprocesses=auto --verbose --cov=src/apify_client tests/unit
@@ -39,8 +37,8 @@ integration-tests:
 	poetry run pytest --numprocesses=$(INTEGRATION_TESTS_CONCURRENCY) tests/integration
 
 format:
-	poetry run ruff check --fix $(DIRS_WITH_CODE)
-	poetry run ruff format $(DIRS_WITH_CODE)
+	poetry run ruff check --fix
+	poetry run ruff format
 
 check-async-docstrings:
 	poetry run python scripts/check_async_docstrings.py

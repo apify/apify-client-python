@@ -7,6 +7,8 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './index.module.css';
 
+import HomePageExample from '!!raw-loader!./home_page_example.py';
+
 function Hero() {
     return (
         <header className={clsx('container', styles.heroBanner)}>
@@ -72,15 +74,7 @@ export default function Home() {
                             </p>
                         </div>
                         <div className="col col--8">
-                            <CodeBlock language='python'>{`from apify_client import ApifyClient
-
-apify_client = ApifyClient('MY-APIFY-TOKEN')
-
-# Start an Actor and wait for it to finish
-actor_call = apify_client.actor('john-doe/my-cool-actor').call()
-
-# Fetch results from the Actor run's default dataset
-dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items`}</CodeBlock>
+                            <CodeBlock className="language-python">{HomePageExample}</CodeBlock>
                         </div>
                     </div>
                 </div>

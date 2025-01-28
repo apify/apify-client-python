@@ -1,0 +1,34 @@
+---
+id: convenience-methods
+title: Convenience methods
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import CallAsyncExample from '!!raw-loader!./code/07_call_async.py';
+import CallSyncExample from '!!raw-loader!./code/07_call_sync.py';
+
+The Apify client provides several convenience methods to handle actions that the API alone cannot perform efficiently, such as waiting for an Actor run to finish without running into network timeouts. These methods simplify common tasks and enhance the usability of the client.
+
+- [`ActorClient.call`](/reference/class/ActorClient#call) - Starts an Actor and waits for it to finish, handling network timeouts internally.
+- [`ActorClient.start`](/reference/class/ActorClient#start) - Explicitly waits for an Actor run to finish with customizable timeouts.
+
+Additionally, storage-related resources offer flexible options for data retrieval:
+
+- [Key-value store](https://docs.apify.com/platform/storage/key-value-store) records can be retrieved as objects, buffers, or streams.
+- [Dataset](https://docs.apify.com/platform/storage/dataset) items can be fetched as individual objects, serialized data, or iterated asynchronously.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {CallAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {CallSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

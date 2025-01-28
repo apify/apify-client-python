@@ -43,16 +43,16 @@ class BuildClient(ActorJobBaseClient):
         """
         return self._abort()
 
-    def get_open_api_specification(self) -> dict | None:
-        """Return OpenAPI specification of the Actor's build.
+    def get_open_api_definition(self) -> dict | None:
+        """Return OpenAPI definition of the Actor's build.
 
-        https://docs.apify.com/api/v2/actor-build-openapi-specification-get
+        https://docs.apify.com/api/v2/actor-build-openapi-json-get
 
         Returns:
-            OpenAPI specification of the Actor's build.
+            OpenAPI definition of the Actor's build.
         """
         response = self.http_client.call(
-            url=self._url('openapi-specification'),
+            url=self._url('openapi.json'),
             method='GET',
         )
 
@@ -120,16 +120,16 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         """
         return await self._delete()
 
-    async def get_open_api_specification(self) -> dict | None:
-        """Return OpenAPI specification of the Actor's build.
+    async def get_open_api_definition(self) -> dict | None:
+        """Return OpenAPI definition of the Actor's build.
 
-        https://docs.apify.com/api/v2/actor-build-openapi-specification-get
+        https://docs.apify.com/api/v2/actor-build-openapi-json-get
 
         Returns:
-            OpenAPI specification of the Actor's build.
+            OpenAPI definition of the Actor's build.
         """
         response = await self.http_client.call(
-            url=self._url('openapi-specification'),
+            url=self._url('openapi.json'),
             method='GET',
         )
 

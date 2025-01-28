@@ -16,7 +16,7 @@ _EXPECTED_DATA = {
 }
 
 
-@respx.mock
+@respx.mock  # type: ignore[misc]
 @pytest.fixture(autouse=True)
 def mocked_response(respx_mock: MockRouter) -> None:
     response_content = json.dumps(

@@ -1,0 +1,26 @@
+---
+id: error-handling
+title: Error handling
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import ErrorAsyncExample from '!!raw-loader!./code/04_error_async.py';
+import ErrorSyncExample from '!!raw-loader!./code/04_error_sync.py';
+
+Based on the endpoint, the client automatically extracts the relevant data and returns it in the expected format. Date strings are automatically converted to `datetime.datetime` objects. For exceptions, we throw an [`ApifyApiError`](/reference/class/ApifyApiError), which wraps the plain JSON errors returned by API and enriches them with other context for easier debugging.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {ErrorAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {ErrorSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

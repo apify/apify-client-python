@@ -1,0 +1,105 @@
+---
+id: features
+title: Features
+---
+
+## Retries with exponential backoff
+
+Network communication sometimes fails. The client will automatically retry requests that failed due to a network error, an internal error of the Apify API (HTTP 500+) or rate limit error (HTTP 429). By default, it will retry up to 8 times. First retry will be attempted after ~500ms, second after ~1000ms and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries_millis` options of the [`ApifyClient`](/reference/class/ApifyClient) constructor.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient(
+    token='MY-APIFY-TOKEN',
+    max_retries=8,
+    min_delay_between_retries_millis=500, # 0.5s
+    timeout_secs=360, # 6 mins
+)
+```
+
+## Logging
+
+The library logs some useful debug information to the `apify_client` logger when sending requests to the Apify API. To have them printed out to the standard output, you need to add a handler to the logger:
+
+```python
+import logging
+apify_client_logger = logging.getLogger('apify_client')
+apify_client_logger.setLevel(logging.DEBUG)
+apify_client_logger.addHandler(logging.StreamHandler())
+```
+
+The log records have useful properties added with the `extra` argument, like `attempt`, `status_code`, `url`, `client_method` and `resource_id`. To print those out, you'll need to use a custom log formatter. To learn more about log formatters and how to use them, please refer to the official Python [documentation on logging](https://docs.python.org/3/howto/logging.html#formatters).
+
+## Convenience functions and options
+
+Some actions can't be performed by the API itself, such as indefinite waiting for an Actor run to finish (because of network timeouts). The client provides convenient [`call()`](/reference/class/ActorClient#call) and [`wait_for_finish()`](/reference/class/ActorClient#wait_for_finish) methods that do that.
+
+[Key-value store](https://docs.apify.com/platform/storage/key-value-store) records can be retrieved as objects, buffers or streams via the respective options, dataset items can be fetched as individual objects or serialized data, or iterated asynchronously.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+# Start an Actor and waits for it to finish
+finished_actor_run = apify_client.actor('username/actor-name').call()
+
+# Starts an Actor and waits maximum 60s (1 minute) for the finish
+actor_run = apify_client.actor('username/actor-name').start(wait_for_finish=60)
+```
+
+## Pagination
+
+Most methods named `list` or `list_something` return a [`ListPage`](/reference/class/ListPage) object, containing properties `items`, `total`, `offset`, `count` and `limit`. There are some exceptions though, like `list_keys` or `list_head` which paginate differently. The results you're looking for are always stored under `items` and you can use the `limit` property to get only a subset of results. Other properties can be available depending on the method.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+# Resource clients accept an ID of the resource
+dataset_client = apify_client.dataset('dataset-id')
+
+# Number of items per page
+limit = 1000
+# Initial offset
+offset = 0
+# List to store all items
+all_items = []
+
+while True:
+    response = dataset_client.list_items(limit=limit, offset=offset)
+    items = response.items
+    total = response.total
+
+    print(f'Fetched {len(items)} items')
+
+    # Merge new items with other already loaded items
+    all_items.extend(items)
+
+    # If there are no more items to fetch, exit the loading
+    if offset + limit >= total:
+        break
+
+    offset += limit
+
+print(f'Overall fetched {len(all_items)} items')
+```
+
+## Streaming resources
+
+Some resources (dataset items, key-value store records and logs) support streaming the resource from the Apify API in parts, without having to download the whole (potentially huge) resource to memory before processing it.
+
+The methods to stream these resources are [`DatasetClient.stream_items()`](/reference/class/DatasetClient#stream_items), [`KeyValueStoreClient.stream_record()`](/reference/class/KeyValueStoreClient#stream_record), and [`LogClient.stream()`](/reference/class/LogClient#stream).
+
+Instead of the parsed resource, they return a raw, context-managed [`httpx.Response`](https://www.python-httpx.org/quickstart/#streaming-responses) object, which has to be consumed using the `with` keyword, and automatically gets closed once you exit the `with` block, preventing memory leaks and unclosed connections.
+
+For example, to consume an Actor run log in a streaming fashion, you can use this snippet:
+
+```python
+with apify_client.run('MY-RUN-ID').log().stream() as log_stream:
+    if log_stream:
+        for line in log_stream.iter_lines():
+            print(line)
+```

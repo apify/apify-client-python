@@ -64,6 +64,7 @@ setuptools = "~75.8.0"     # setuptools are used by pytest but not explicitly re
 
 [tool.ruff]
 line-length = 120
+include = ["src/**/*.py", "tests/**/*.py", "scripts/**/*.py", "docs/**/*.py", "website/**/*.py"]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -120,6 +121,13 @@ indent-style = "space"
     "TRY301",  # Abstract `raise` to an inner function
     "TID252",  # Prefer absolute imports over relative imports from parent modules
 ]
+"**/{docs,website}/**" = [
+    "D",      # Everything from the pydocstyle
+    "INP001", # File {filename} is part of an implicit namespace package, add an __init__.py
+    "F841",   # Local variable {variable} is assigned to but never used
+    "N999",   # Invalid module name
+    "T201",   # print found
+]
 
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
@@ -145,7 +153,7 @@ timeout = 1200
 
 [tool.mypy]
 python_version = "3.9"
-files = ["scripts", "src", "tests"]
+files = ["src", "tests", "scripts", "docs", "website"]
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
@@ -158,10 +166,17 @@ warn_unreachable = true
 warn_unused_ignores = true
 exclude = []
 
+[[tool.mypy.overrides]]
+module = [
+    "pandas",
+    "respx",
+]
+ignore_missing_imports = true
+
 [tool.basedpyright]
 pythonVersion = "3.9"
 typeCheckingMode = "standard"
-include = ["scripts", "src", "tests"]
+include = ["src", "tests", "scripts", "docs", "website"]
 
 [tool.coverage.report]
 exclude_lines = [

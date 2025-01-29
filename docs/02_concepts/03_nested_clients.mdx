@@ -1,0 +1,28 @@
+---
+id: nested-clients
+title: Nested clients
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import NestedAsyncExample from '!!raw-loader!./code/03_nested_async.py';
+import NestedSyncExample from '!!raw-loader!./code/03_nested_sync.py';
+
+In some cases, the Apify client provides nested clients to simplify working with related collections. For example, you can easily manage the runs of a specific Actor without having to construct multiple endpoints or client instances manually.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {NestedAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {NestedSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+This direct access to [Dataset](https://docs.apify.com/platform/storage/dataset) (and other storage resources) from the [`RunClient`](/reference/class/RunClient) is especially convenient when used alongside the [`ActorClient.last_run`](/reference/class/ActorClient#last_run) method.

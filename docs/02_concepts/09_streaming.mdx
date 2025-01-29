@@ -1,0 +1,38 @@
+---
+id: streaming-resources
+title: Streaming resources
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import StreamingAsyncExample from '!!raw-loader!./code/09_streaming_async.py';
+import StreamingSyncExample from '!!raw-loader!./code/09_streaming_sync.py';
+
+Certain resources, such as dataset items, key-value store records, and logs, support streaming directly from the Apify API. This allows you to process large resources incrementally without downloading them entirely into memory, making it ideal for handling large or continuously updated data.
+
+Supported streaming methods:
+
+- [`DatasetClient.stream_items`](/reference/class/DatasetClient#stream_items) - Stream dataset items incrementally.
+- [`KeyValueStoreClient.stream_record`](/reference/class/KeyValueStoreClient#stream_record) - Stream key-value store records as raw data.
+- [`LogClient.stream`](/reference/class/LogClient#stream) - Stream logs in real time.
+
+These methods return a raw, context-managed `httpx.Response` object. The response must be consumed within a with block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
+
+The following example demonstrates how to stream the logs of an Actor run incrementally:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {StreamingAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {StreamingSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+Streaming offers several key benefits. It ensures memory efficiency by loading only a small portion of the resource into memory at any given time, making it ideal for handling large data. It enables real-time processing, allowing you to start working with data immediately as it is received. With automatic resource management, using the `with` statement ensures that connections are properly closed, preventing memory leaks or unclosed connections. This approach is valuable for processing large logs, datasets, or files on the fly without the need to download them entirely.

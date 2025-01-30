@@ -3,6 +3,7 @@ from __future__ import annotations
 from apify_shared.utils import ignore_docs
 
 from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client._statistics import Statistics
 from apify_client.clients import (
     ActorClient,
     ActorClientAsync,
@@ -126,11 +127,13 @@ class ApifyClient(_BaseApifyClient):
             timeout_secs=timeout_secs,
         )
 
+        self.stats = Statistics()
         self.http_client = HTTPClient(
             token=token,
             max_retries=self.max_retries,
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
+            stats=self.stats,
         )
 
     def actor(self, actor_id: str) -> ActorClient:

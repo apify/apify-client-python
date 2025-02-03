@@ -13,7 +13,7 @@ class Statistics:
         """Add rate limit error for specific attempt.
 
         Args:
-            attempt: The attempt number (1-based indexing)
+            attempt: The attempt number (1-based indexing).
         """
         if attempt < 1:
             raise ValueError('Attempt must be greater than 0')

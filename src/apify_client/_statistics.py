@@ -6,8 +6,13 @@ class Statistics:
     """Statistics about API client usage and rate limit errors."""
 
     calls: int = 0
+    """Total number of API method calls made by the client."""
+
     requests: int = 0
+    """Total number of HTTP requests sent, including retries."""
+
     rate_limit_errors: list[int] = field(default_factory=list)
+    """List tracking which retry attempts encountered rate limit (429) errors."""
 
     def add_rate_limit_error(self, attempt: int) -> None:
         """Add rate limit error for specific attempt.

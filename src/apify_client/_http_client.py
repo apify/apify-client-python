@@ -229,6 +229,8 @@ class HTTPClientAsync(_BaseHTTPClient):
         log_context.method.set(method)
         log_context.url.set(url)
 
+        self.stats.calls += 1
+
         if stream and parse_response:
             raise ValueError('Cannot stream response and parse it at the same time!')
 

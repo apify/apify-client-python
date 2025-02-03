@@ -13,6 +13,14 @@ from apify_client._statistics import Statistics
         ([1, 5, 3], [1, 0, 1, 0, 1]),
         ([2, 1, 2, 1, 5, 2, 1], [3, 3, 0, 0, 1]),
     ],
+    ids=[
+        'single_error',
+        'two_single_errors',
+        'two_single_errors_reversed',
+        'three_single_errors',
+        'three_single_errors_reordered',
+        'multiple_errors_per_attempt',
+    ],
 )
 def test_add_rate_limit_error(attempts: list[int], expected_errors: list[int]) -> None:
     """Test that add_rate_limit_error correctly tracks errors for different attempt sequences."""

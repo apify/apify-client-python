@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.9.0 - **not yet released**
+## [1.9.0](https://github.com/apify/apify-client-python/releases/tag/v1.9.0) (2025-02-04)
 
 ### 🚀 Features
 
@@ -15,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - Add rate limit statistics ([#343](https://github.com/apify/apify-client-python/pull/343)) ([f35c68f](https://github.com/apify/apify-client-python/commit/f35c68ff824ce83bf9aca893589381782a1a48c7)) by [@Mantisus](https://github.com/Mantisus)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.8.1](https://github.com/apify/apify-client-python/releases/tags/v1.8.1) (2024-09-17)
 
 ### 🐛 Bug Fixes

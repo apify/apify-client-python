@@ -310,11 +310,13 @@ class ApifyClientAsync(_BaseApifyClient):
             timeout_secs=timeout_secs,
         )
 
+        self.stats = Statistics()
         self.http_client = HTTPClientAsync(
             token=token,
             max_retries=self.max_retries,
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
+            stats=self.stats,
         )
 
     def actor(self, actor_id: str) -> ActorClientAsync:

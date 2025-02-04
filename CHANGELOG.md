@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 1.9.1 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Add `stats` attribute for `ApifyClientAsync` ([#348](https://github.com/apify/apify-client-python/pull/348)) ([6631f8c](https://github.com/apify/apify-client-python/commit/6631f8ccbd56107647a6b886ddcd5cbae378069d)) by [@Mantisus](https://github.com/Mantisus)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [1.9.0](https://github.com/apify/apify-client-python/releases/tag/v1.9.0) (2025-02-04)
 
 ### 🚀 Features

@@ -14,6 +14,7 @@ from apify_shared.utils import ignore_docs, is_content_type_json, is_content_typ
 
 from apify_client._errors import ApifyApiError, InvalidResponseBodyError, is_retryable_error
 from apify_client._logging import log_context, logger_name
+from apify_client._statistics import Statistics
 from apify_client._utils import retry_with_exp_backoff, retry_with_exp_backoff_async
 
 if TYPE_CHECKING:
@@ -35,6 +36,7 @@ class _BaseHTTPClient:
         max_retries: int = 8,
         min_delay_between_retries_millis: int = 500,
         timeout_secs: int = 360,
+        stats: Statistics | None = None,
     ) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
@@ -58,6 +60,8 @@ class _BaseHTTPClient:
 
         self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
         self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
+
+        self.stats = stats or Statistics()
 
     @staticmethod
     def _maybe_parse_response(response: httpx.Response) -> Any:
@@ -143,6 +147,8 @@ class HTTPClient(_BaseHTTPClient):
         log_context.method.set(method)
         log_context.url.set(url)
 
+        self.stats.calls += 1
+
         if stream and parse_response:
             raise ValueError('Cannot stream response and parse it at the same time!')
 
@@ -153,6 +159,9 @@ class HTTPClient(_BaseHTTPClient):
         def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
             log_context.attempt.set(attempt)
             logger.debug('Sending request')
+
+            self.stats.requests += 1
+
             try:
                 request = httpx_client.build_request(
                     method=method,
@@ -176,6 +185,9 @@ class HTTPClient(_BaseHTTPClient):
                         setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
+
+                if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+                    self.stats.add_rate_limit_error(attempt)
 
             except Exception as e:
                 logger.debug('Request threw exception', exc_info=e)
@@ -217,6 +229,8 @@ class HTTPClientAsync(_BaseHTTPClient):
         log_context.method.set(method)
         log_context.url.set(url)
 
+        self.stats.calls += 1
+
         if stream and parse_response:
             raise ValueError('Cannot stream response and parse it at the same time!')
 
@@ -250,6 +264,9 @@ class HTTPClientAsync(_BaseHTTPClient):
                         setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
+
+                if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+                    self.stats.add_rate_limit_error(attempt)
 
             except Exception as e:
                 logger.debug('Request threw exception', exc_info=e)

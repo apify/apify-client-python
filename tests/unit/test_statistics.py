@@ -6,20 +6,12 @@ from apify_client._statistics import Statistics
 @pytest.mark.parametrize(
     ('attempts', 'expected_errors'),
     [
-        ([1], {0: 1}),
-        ([1, 5], {0: 1, 4: 1}),
-        ([5, 1], {0: 1, 4: 1}),
-        ([3, 5, 1], {0: 1, 2: 1, 4: 1}),
-        ([1, 5, 3], {0: 1, 2: 1, 4: 1}),
-        ([2, 1, 2, 1, 5, 2, 1], {0: 3, 1: 3, 4: 1}),
-    ],
-    ids=[
-        'single_error',
-        'two_single_errors',
-        'two_single_errors_reversed',
-        'three_single_errors',
-        'three_single_errors_reordered',
-        'multiple_errors_per_attempt',
+        pytest.param([1], {0: 1}, id='single error'),
+        pytest.param([1, 5], {0: 1, 4: 1}, id='two single errors'),
+        pytest.param([5, 1], {0: 1, 4: 1}, id='two single errors reversed'),
+        pytest.param([3, 5, 1], {0: 1, 2: 1, 4: 1}, id='three single errors'),
+        pytest.param([1, 5, 3], {0: 1, 2: 1, 4: 1}, id='three single errors reordered'),
+        pytest.param([2, 1, 2, 1, 5, 2, 1], {0: 3, 1: 3, 4: 1}, id='multiple errors per attempt'),
     ],
 )
 def test_add_rate_limit_error(attempts: list[int], expected_errors: list[int]) -> None:

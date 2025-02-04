@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 
@@ -11,7 +12,7 @@ class Statistics:
     requests: int = 0
     """Total number of HTTP requests sent, including retries."""
 
-    rate_limit_errors: list[int] = field(default_factory=list)
+    rate_limit_errors: defaultdict[int, int] = field(default_factory=lambda: defaultdict(int))
     """List tracking which retry attempts encountered rate limit (429) errors."""
 
     def add_rate_limit_error(self, attempt: int) -> None:
@@ -23,15 +24,4 @@ class Statistics:
         if attempt < 1:
             raise ValueError('Attempt must be greater than 0')
 
-        index = attempt - 1
-        self._ensure_list_capacity(index)
-        self.rate_limit_errors[index] += 1
-
-    def _ensure_list_capacity(self, index: int) -> None:
-        """Ensure rate_limit_errors list has enough capacity.
-
-        Args:
-            index: Required index to access
-        """
-        if len(self.rate_limit_errors) <= index:
-            self.rate_limit_errors.extend([0] * (index - len(self.rate_limit_errors) + 1))
+        self.rate_limit_errors[attempt - 1] += 1

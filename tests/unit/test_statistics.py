@@ -6,12 +6,12 @@ from apify_client._statistics import Statistics
 @pytest.mark.parametrize(
     ('attempts', 'expected_errors'),
     [
-        ([1], [1]),
-        ([1, 5], [1, 0, 0, 0, 1]),
-        ([5, 1], [1, 0, 0, 0, 1]),
-        ([3, 5, 1], [1, 0, 1, 0, 1]),
-        ([1, 5, 3], [1, 0, 1, 0, 1]),
-        ([2, 1, 2, 1, 5, 2, 1], [3, 3, 0, 0, 1]),
+        ([1], {0: 1}),
+        ([1, 5], {0: 1, 4: 1}),
+        ([5, 1], {0: 1, 4: 1}),
+        ([3, 5, 1], {0: 1, 2: 1, 4: 1}),
+        ([1, 5, 3], {0: 1, 2: 1, 4: 1}),
+        ([2, 1, 2, 1, 5, 2, 1], {0: 3, 1: 3, 4: 1}),
     ],
     ids=[
         'single_error',
@@ -42,7 +42,7 @@ def test_statistics_initial_state() -> None:
     stats = Statistics()
     assert stats.calls == 0
     assert stats.requests == 0
-    assert stats.rate_limit_errors == []
+    assert stats.rate_limit_errors == {}
 
 
 def test_add_rate_limit_error_type_validation() -> None:

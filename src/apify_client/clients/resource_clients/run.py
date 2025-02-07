@@ -232,7 +232,7 @@ class RunClient(ActorJobBaseClient):
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
-    ) -> dict:
+    ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/charge-events-in-run
@@ -248,7 +248,7 @@ class RunClient(ActorJobBaseClient):
             or f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
         )
 
-        response = self.http_client.call(
+        self.http_client.call(
             url=self._url('charge'),
             method='POST',
             headers={
@@ -262,7 +262,6 @@ class RunClient(ActorJobBaseClient):
                 }
             ),
         )
-        return parse_date_fields(pluck_data(response.json()))
 
 
 class RunClientAsync(ActorJobBaseClientAsync):
@@ -486,7 +485,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
-    ) -> dict:
+    ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/charge-events-in-run
@@ -501,7 +500,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
         )
 
-        response = await self.http_client.call(
+        await self.http_client.call(
             url=self._url('charge'),
             method='POST',
             headers={
@@ -515,4 +514,3 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 }
             ),
         )
-        return parse_date_fields(pluck_data(response.json()))

@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.9.1 - **not yet released**
+## [1.9.1](https://github.com/apify/apify-client-python/releases/tag/v1.9.1) (2025-02-07)
 
 ### 🐛 Bug Fixes
 
@@ -11,7 +10,6 @@ All notable changes to this project will be documented in this file.
 - Fix return type of charge API call ([#350](https://github.com/apify/apify-client-python/pull/350)) ([28102fe](https://github.com/apify/apify-client-python/commit/28102fe42039df2f1f2bb3c4e4aa652e37933456)) by [@janbuchar](https://github.com/janbuchar)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.9.0](https://github.com/apify/apify-client-python/releases/tag/v1.9.0) (2025-02-04)
 
 ### 🚀 Features

@@ -25,6 +25,8 @@ from apify_client.clients.resource_clients.webhook_collection import (
 )
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from apify_shared.consts import ActorJobStatus, MetaOrigin
 
 
@@ -53,6 +55,7 @@ def get_actor_representation(
     actor_standby_idle_timeout_secs: int | None = None,
     actor_standby_build: str | None = None,
     actor_standby_memory_mbytes: int | None = None,
+    pricing_infos: list[dict] | None = None,
 ) -> dict:
     """Get dictionary representation of the Actor."""
     return {
@@ -85,6 +88,7 @@ def get_actor_representation(
             'build': actor_standby_build,
             'memoryMbytes': actor_standby_memory_mbytes,
         },
+        'pricingInfos': pricing_infos,
     }
 
 
@@ -132,6 +136,7 @@ class ActorClient(ResourceClient):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        pricing_infos: list[dict] | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 
@@ -166,6 +171,7 @@ class ActorClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            pricing_infos: A list of objects that describes the pricing of the Actor.
 
         Returns:
             The updated Actor.
@@ -194,6 +200,7 @@ class ActorClient(ResourceClient):
             actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            pricing_infos=pricing_infos,
         )
 
         return self._update(filter_out_none_values_recursively(actor_representation))
@@ -212,6 +219,7 @@ class ActorClient(ResourceClient):
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         wait_for_finish: int | None = None,
@@ -228,6 +236,7 @@ class ActorClient(ResourceClient):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -250,6 +259,7 @@ class ActorClient(ResourceClient):
         request_params = self._params(
             build=build,
             maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
@@ -273,6 +283,7 @@ class ActorClient(ResourceClient):
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         webhooks: list[dict] | None = None,
@@ -291,6 +302,7 @@ class ActorClient(ResourceClient):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -309,6 +321,7 @@ class ActorClient(ResourceClient):
             content_type=content_type,
             build=build,
             max_items=max_items,
+            max_total_charge_usd=max_total_charge_usd,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,
@@ -460,6 +473,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        pricing_infos: list[dict] | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 
@@ -494,6 +508,7 @@ class ActorClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            pricing_infos: A list of objects that describes the pricing of the Actor.
 
         Returns:
             The updated Actor.
@@ -522,6 +537,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            pricing_infos=pricing_infos,
         )
 
         return await self._update(filter_out_none_values_recursively(actor_representation))
@@ -540,6 +556,7 @@ class ActorClientAsync(ResourceClientAsync):
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         wait_for_finish: int | None = None,
@@ -556,6 +573,7 @@ class ActorClientAsync(ResourceClientAsync):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -578,6 +596,7 @@ class ActorClientAsync(ResourceClientAsync):
         request_params = self._params(
             build=build,
             maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
@@ -601,6 +620,7 @@ class ActorClientAsync(ResourceClientAsync):
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         webhooks: list[dict] | None = None,
@@ -619,6 +639,7 @@ class ActorClientAsync(ResourceClientAsync):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -637,6 +658,7 @@ class ActorClientAsync(ResourceClientAsync):
             content_type=content_type,
             build=build,
             max_items=max_items,
+            max_total_charge_usd=max_total_charge_usd,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,

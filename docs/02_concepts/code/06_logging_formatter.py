@@ -7,7 +7,8 @@ apify_client_logger.addHandler(logging.StreamHandler())
 
 # Create a custom logging formatter
 formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(attempt)s - %(status_code)s - %(url)s'
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s - '
+    '%(attempt)s - %(status_code)s - %(url)s'
 )
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)

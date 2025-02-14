@@ -2,15 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.9.2 - **not yet released**
+## [1.9.2](https://github.com/apify/apify-client-python/releases/tag/v1.9.2) (2025-02-14)
 
 ### 🐛 Bug Fixes
 
 - Add missing PPE-related Actor parameters ([#351](https://github.com/apify/apify-client-python/pull/351)) ([75b1c6c](https://github.com/apify/apify-client-python/commit/75b1c6c4d26c21d69ce10ef4424c6ba458bd5a33)) by [@janbuchar](https://github.com/janbuchar)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.9.1](https://github.com/apify/apify-client-python/releases/tag/v1.9.1) (2025-02-07)
 
 ### 🐛 Bug Fixes

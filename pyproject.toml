@@ -29,6 +29,14 @@ dependencies = [
     "more_itertools>=10.0.0",
 ]
 
+[project.urls]
+"Homepage" = "https://docs.apify.com/api/client/python/"
+"Apify homepage" = "https://apify.com"
+"Changelog" = "https://github.com/apify/apify-client-python/blob/master/CHANGELOG.md"
+"Documentation" = "https://docs.apify.com/api/client/python/"
+"Issue tracker" = "https://github.com/apify/apify-client-python/issues"
+"Repository" = "https://github.com/apify/apify-client-python"
+
 [dependency-groups]
 dev = [
     "build~=1.2.0",
@@ -48,14 +56,6 @@ dev = [
     "ruff~=0.9.0",
     "setuptools~=75.8.0",     # setuptools are used by pytest but not explicitly required
 ]
-
-[project.urls]
-"Homepage" = "https://docs.apify.com/api/client/python/"
-"Apify homepage" = "https://apify.com"
-"Changelog" = "https://github.com/apify/apify-client-python/blob/master/CHANGELOG.md"
-"Documentation" = "https://docs.apify.com/api/client/python/"
-"Issue tracker" = "https://github.com/apify/apify-client-python/issues"
-"Repository" = "https://github.com/apify/apify-client-python"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/apify_client"]

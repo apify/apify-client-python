@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  PYTHON_VERSION: 3.12
+  PYTHON_VERSION: 3.13
 
 jobs:
   async_docstring_check:
@@ -20,10 +20,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Set up uv package manager
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Install dependencies
-        run: |
-          pipx install --python ${{ env.PYTHON_VERSION }} poetry
-          make install-dev
+        run: make install-dev
 
       - name: Run async docstrings check
         run: make check-async-docstrings

@@ -9,52 +9,51 @@ clean:
 	rm -rf .mypy_cache .pytest_cache .ruff_cache build dist htmlcov .coverage
 
 install-dev:
-	poetry install --all-extras
-	poetry run pre-commit install
+	uv sync --all-extras
+	uv run pre-commit install
 
 build:
-	poetry build --no-interaction -vv
+	uv build --verbose
 
 # APIFY_PYPI_TOKEN_CRAWLEE is expected to be set in the environment
 publish-to-pypi:
-	poetry config pypi-token.pypi "${APIFY_PYPI_TOKEN_CRAWLEE}"
-	poetry publish --no-interaction -vv
+	uv publish --verbose --token "${APIFY_PYPI_TOKEN_CRAWLEE}"
 
 lint:
-	poetry run ruff format --check
-	poetry run ruff check
+	uv run ruff format --check
+	uv run ruff check
 
 type-check:
-	poetry run mypy
+	uv run mypy
 
 unit-tests:
-	poetry run pytest --numprocesses=auto --verbose --cov=src/apify_client tests/unit
+	uv run pytest --numprocesses=auto --verbose --cov=src/apify_client tests/unit
 
 unit-tests-cov:
-	poetry run pytest --numprocesses=auto --verbose --cov=src/apify_client --cov-report=html tests/unit
+	uv run pytest --numprocesses=auto --verbose --cov=src/apify_client --cov-report=html tests/unit
 
 integration-tests:
-	poetry run pytest --numprocesses=$(INTEGRATION_TESTS_CONCURRENCY) tests/integration
+	uv run pytest --numprocesses=$(INTEGRATION_TESTS_CONCURRENCY) --verbose tests/integration
 
 format:
-	poetry run ruff check --fix
-	poetry run ruff format
+	uv run ruff check --fix
+	uv run ruff format
 
 check-async-docstrings:
-	poetry run python scripts/check_async_docstrings.py
+	uv run python scripts/check_async_docstrings.py
 
 # The check-code target runs a series of checks equivalent to those performed by pre-commit hooks
 # and the run_checks.yaml GitHub Actions workflow.
 check-code: lint type-check unit-tests check-async-docstrings
 
 fix-async-docstrings:
-	poetry run python scripts/fix_async_docstrings.py
+	uv run python scripts/fix_async_docstrings.py
 
 build-api-reference:
-	cd website && poetry run ./build_api_reference.sh
+	cd website && uv run ./build_api_reference.sh
 
 build-docs:
-	cd website && npm clean-install && npm run build
+	cd website && uv run npm clean-install && uv run npm run build
 
 run-docs: build-api-reference
-	cd website && npm clean-install && npm run start
+	cd website && uv run npm clean-install && uv run npm run start

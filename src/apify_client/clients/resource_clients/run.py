@@ -396,6 +396,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         build: str | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
     ) -> dict:
         """Resurrect a finished Actor run.
 
@@ -411,6 +413,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 uses the same memory limit as before.
             timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
                 same timeout as before.
+            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
+            max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
 
         Returns:
             The Actor run data.
@@ -419,6 +425,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             build=build,
             memory=memory_mbytes,
             timeout=timeout_secs,
+            maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
         )
 
         response = await self.http_client.call(

@@ -18,6 +18,7 @@ from apify_client.clients.resource_clients.request_queue import RequestQueueClie
 if TYPE_CHECKING:
     from decimal import Decimal
 
+
 class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor run."""
 
@@ -151,10 +152,10 @@ class RunClient(ActorJobBaseClient):
                 uses the same memory limit as before.
             timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
                 same timeout as before.
-            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the resurrected run
-                uses the same limit as before. Limit can be only increased.
-            max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the resurrected run
-                uses the same limit as before. Limit can be only increased.
+            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
+            max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
 
         Returns:
             The Actor run data.

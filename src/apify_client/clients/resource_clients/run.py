@@ -4,7 +4,7 @@ import json
 import random
 import string
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
@@ -14,6 +14,9 @@ from apify_client.clients.resource_clients.dataset import DatasetClient, Dataset
 from apify_client.clients.resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
 from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
 from apify_client.clients.resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
+
+if TYPE_CHECKING:
+    from decimal import Decimal
 
 
 class RunClient(ActorJobBaseClient):
@@ -132,6 +135,8 @@ class RunClient(ActorJobBaseClient):
         build: str | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
     ) -> dict:
         """Resurrect a finished Actor run.
 
@@ -147,6 +152,10 @@ class RunClient(ActorJobBaseClient):
                 uses the same memory limit as before.
             timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
                 same timeout as before.
+            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
+            max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
 
         Returns:
             The Actor run data.
@@ -155,6 +164,8 @@ class RunClient(ActorJobBaseClient):
             build=build,
             memory=memory_mbytes,
             timeout=timeout_secs,
+            maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
         )
 
         response = self.http_client.call(
@@ -385,6 +396,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         build: str | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
     ) -> dict:
         """Resurrect a finished Actor run.
 
@@ -400,6 +413,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 uses the same memory limit as before.
             timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
                 same timeout as before.
+            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
+            max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
+                resurrected run uses the same limit as before. Limit can be only increased.
 
         Returns:
             The Actor run data.
@@ -408,6 +425,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             build=build,
             memory=memory_mbytes,
             timeout=timeout_secs,
+            maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
         )
 
         response = await self.http_client.call(

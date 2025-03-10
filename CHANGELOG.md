@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 1.10.0 - **not yet released**
+
+### 🚀 Features
+
+- Add maxItems and maxTotalChargeUsd to resurrect ([#360](https://github.com/apify/apify-client-python/pull/360)) ([a020807](https://github.com/apify/apify-client-python/commit/a0208073ef93804358e4377959a56d8342f83447)) by [@novotnyj](https://github.com/novotnyj)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [1.9.2](https://github.com/apify/apify-client-python/releases/tag/v1.9.2) (2025-02-14)
 
 ### 🐛 Bug Fixes

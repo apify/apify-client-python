@@ -33,14 +33,14 @@ def to_safe_id(id: str) -> str:
 
 def pluck_data(parsed_response: Any) -> dict:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast(dict, parsed_response['data'])
+        return cast('dict', parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 
 
 def pluck_data_as_list(parsed_response: Any) -> list:
     if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast(list, parsed_response['data'])
+        return cast('list', parsed_response['data'])
 
     raise ValueError('The "data" property is missing in the response.')
 

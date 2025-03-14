@@ -264,7 +264,7 @@ class TaskClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return cast(dict, response.json())
+            return cast('dict', response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -283,7 +283,7 @@ class TaskClient(ResourceClient):
             params=self._params(),
             json=task_input,
         )
-        return cast(dict, response.json())
+        return cast('dict', response.json())
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
@@ -521,7 +521,7 @@ class TaskClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return cast(dict, response.json())
+            return cast('dict', response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -540,7 +540,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=self._params(),
             json=task_input,
         )
-        return cast(dict, response.json())
+        return cast('dict', response.json())
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""

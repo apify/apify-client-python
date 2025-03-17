@@ -39,16 +39,13 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "build~=1.2.0",
     "griffe~=1.6.0",
-    "ipdb~=0.13.0",
     "mypy~=1.15.0",
     "pre-commit~=4.1.0",
     "pydoc-markdown~=4.8.0",
     "pytest-asyncio~=0.25.0",
     "pytest-cov~=6.0.0",
     "pytest-only~=2.1.0",
-    "pytest-timeout~=2.3.0",
     "pytest-xdist~=3.6.0",
     "pytest~=8.3.0",
     "redbaron~=0.9.0",

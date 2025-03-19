@@ -13,7 +13,7 @@ def get_actor_env_var_representation(
     name: str | None = None,
     value: str | None = None,
 ) -> dict:
-    """Returns an environment variable representation of the Actor in a dictionary."""
+    """Return an environment variable representation of the Actor in a dictionary."""
     return {
         'isSecret': is_secret,
         'name': name,

@@ -18,7 +18,7 @@ class ApifyApiError(ApifyClientError):
 
     @ignore_docs
     def __init__(self, response: httpx.Response, attempt: int) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             response: The response to the failed API call.
@@ -62,7 +62,7 @@ class InvalidResponseBodyError(ApifyClientError):
 
     @ignore_docs
     def __init__(self, response: httpx.Response) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             response: The response which failed to be parsed.

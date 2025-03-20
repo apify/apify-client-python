@@ -58,7 +58,7 @@ class UserClient(ResourceClient):
         return None
 
     def limits(self) -> dict | None:
-        """Returns a complete summary of the user account's limits.
+        """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
         the current usage cycle, a summary of the account's limits, and the current usage.
@@ -87,7 +87,7 @@ class UserClient(ResourceClient):
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
     ) -> None:
-        """Updates the account's limits manageable on your account's Limits page."""
+        """Update the account's limits manageable on your account's Limits page."""
         self.http_client.call(
             url=self._url('limits'),
             method='PUT',
@@ -150,7 +150,7 @@ class UserClientAsync(ResourceClientAsync):
         return None
 
     async def limits(self) -> dict | None:
-        """Returns a complete summary of the user account's limits.
+        """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
         the current usage cycle, a summary of the account's limits, and the current usage.
@@ -179,7 +179,7 @@ class UserClientAsync(ResourceClientAsync):
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
     ) -> None:
-        """Updates the account's limits manageable on your account's Limits page."""
+        """Update the account's limits manageable on your account's Limits page."""
         await self.http_client.call(
             url=self._url('limits'),
             method='PUT',

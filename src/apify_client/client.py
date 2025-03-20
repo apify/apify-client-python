@@ -70,7 +70,7 @@ class _BaseApifyClient:
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             token: The Apify API token.
@@ -109,7 +109,7 @@ class ApifyClient(_BaseApifyClient):
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             token: The Apify API token.
@@ -292,7 +292,7 @@ class ApifyClientAsync(_BaseApifyClient):
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             token: The Apify API token.

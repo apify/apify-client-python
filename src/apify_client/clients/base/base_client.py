@@ -63,7 +63,7 @@ class BaseClient(_BaseBaseClient):
         resource_path: str,
         params: dict | None = None,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             base_url: Base URL of the API server.
@@ -106,7 +106,7 @@ class BaseClientAsync(_BaseBaseClient):
         resource_path: str,
         params: dict | None = None,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             base_url: Base URL of the API server.

@@ -61,7 +61,7 @@ class RequestQueueClient(ResourceClient):
         client_key: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             client_key: A unique identifier of the client accessing the request queue.
@@ -415,7 +415,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         client_key: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """A default constructor.
+        """Initialize a new instance.
 
         Args:
             client_key: A unique identifier of the client accessing the request queue.
@@ -648,7 +648,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         This worker will process batches from the queue, retrying requests that fail until the retry limit is reached.
 
-        Returns result containing lists of processed and unprocessed requests by the worker.
+        Return result containing lists of processed and unprocessed requests by the worker.
         """
         processed_requests = list[dict]()
         unprocessed_requests = list[dict]()

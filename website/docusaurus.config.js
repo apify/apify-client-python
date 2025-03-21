@@ -2,6 +2,7 @@
 const { config } = require('@apify/docs-theme');
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
 const { groupSort } = require('./transformDocs.js');
+const path = require('path');
 
 const { absoluteUrl } = config;
 
@@ -83,6 +84,10 @@ module.exports = {
                 sortSidebar: groupSort,
                 routeBasePath: 'reference',
                 python: true,
+                pythonOptions: {
+                    pythonModulePath: path.join(__dirname, '../src/apify_client'),
+                    moduleShortcutsPath: path.join(__dirname, 'module_shortcuts.json'),
+                },
             },
         ],
         ...config.plugins,

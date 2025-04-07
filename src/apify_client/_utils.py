@@ -3,13 +3,15 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 import random
 import time
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from apify_shared.utils import is_file_or_bytes, maybe_extract_enum_member_value
-
+from apify_client._logging import log_context, logger_name
+logger = logging.getLogger(logger_name)
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
@@ -73,6 +75,7 @@ def retry_with_exp_backoff(
         backoff_exp_factor = backoff_factor ** (attempt - 1)
 
         sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
+        logger.warning(f'Backoff sleep {sleep_time_secs}. for attempt {attempt}')
         time.sleep(sleep_time_secs)
 
     return func(stop_retrying, max_retries + 1)
@@ -96,7 +99,11 @@ async def retry_with_exp_backoff_async(
 
     for attempt in range(1, max_retries + 1):
         try:
-            return await async_func(stop_retrying, attempt)
+            response = await async_func(stop_retrying, attempt)
+            if attempt > 1 :
+                logger.warning(response)
+                logger.warning(response.text)
+            return response
         except Exception:
             if not swallow:
                 raise
@@ -106,6 +113,7 @@ async def retry_with_exp_backoff_async(
         backoff_exp_factor = backoff_factor ** (attempt - 1)
 
         sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
+        logger.warning(f'Backoff sleep {sleep_time_secs}. for attempt {attempt}. Max retries: {max_retries}')
         await asyncio.sleep(sleep_time_secs)
 
     return await async_func(stop_retrying, max_retries + 1)

@@ -190,17 +190,17 @@ class HTTPClient(_BaseHTTPClient):
                     self.stats.add_rate_limit_error(attempt)
 
             except Exception as e:
-                logger.debug('Request threw exception', exc_info=e)
+                logger.warning('Request threw exception', exc_info=e)
                 if not is_retryable_error(e):
-                    logger.debug('Exception is not retryable', exc_info=e)
+                    logger.warning('Exception is not retryable', exc_info=e)
                     stop_retrying()
                 raise
 
             # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
             # and also retry rate limited requests that throw 429 Too Many Requests errors
-            logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
+            logger.warning('Request unsuccessful', extra={'status_code': response.status_code})
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
-                logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
+                logger.warning('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
             raise ApifyApiError(response, attempt)
 
@@ -269,17 +269,17 @@ class HTTPClientAsync(_BaseHTTPClient):
                     self.stats.add_rate_limit_error(attempt)
 
             except Exception as e:
-                logger.debug('Request threw exception', exc_info=e)
+                logger.warning('Request threw exception', exc_info=e)
                 if not is_retryable_error(e):
-                    logger.debug('Exception is not retryable', exc_info=e)
+                    logger.warning('Exception is not retryable', exc_info=e)
                     stop_retrying()
                 raise
 
             # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
             # and also retry rate limited requests that throw 429 Too Many Requests errors
-            logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
+            logger.warning('Request unsuccessful', extra={'status_code': response.status_code})
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
-                logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
+                logger.warning('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
             raise ApifyApiError(response, attempt)
 

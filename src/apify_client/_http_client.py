@@ -20,6 +20,8 @@ from apify_client._utils import retry_with_exp_backoff, retry_with_exp_backoff_a
 if TYPE_CHECKING:
     from apify_shared.types import JSONSerializable
 
+    from apify_client._dynamic_timeout import DynamicTimeoutFunction
+
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -36,11 +38,13 @@ class _BaseHTTPClient:
         max_retries: int = 8,
         min_delay_between_retries_millis: int = 500,
         timeout_secs: int = 360,
+        get_dynamic_timeout: DynamicTimeoutFunction | None = None,
         stats: Statistics | None = None,
     ) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.timeout_secs = timeout_secs
+        self._get_dynamic_timeout = get_dynamic_timeout
 
         headers = {'Accept': 'application/json, */*'}
 
@@ -170,6 +174,16 @@ class HTTPClient(_BaseHTTPClient):
                     params=params,
                     content=content,
                 )
+
+                if self._get_dynamic_timeout:
+                    timeout = self._get_dynamic_timeout(method, url, content) or self.timeout_secs
+                    request.extensions['timeout'] = {
+                        'connect': timeout,
+                        'pool': timeout,
+                        'read': timeout,
+                        'write': timeout,
+                    }
+
                 response = httpx_client.send(
                     request=request,
                     stream=stream or False,
@@ -249,6 +263,16 @@ class HTTPClientAsync(_BaseHTTPClient):
                     params=params,
                     content=content,
                 )
+
+                if self._get_dynamic_timeout:
+                    timeout = self._get_dynamic_timeout(method, url, content) or self.timeout_secs
+                    request.extensions['timeout'] = {
+                        'connect': timeout,
+                        'pool': timeout,
+                        'read': timeout,
+                        'write': timeout,
+                    }
+
                 response = await httpx_async_client.send(
                     request=request,
                     stream=stream or False,

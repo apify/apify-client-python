@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import ignore_docs
 
 from apify_client._http_client import HTTPClient, HTTPClientAsync
@@ -52,6 +54,9 @@ from apify_client.clients import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
 )
+
+if TYPE_CHECKING:
+    from apify_client._dynamic_timeout import DynamicTimeoutFunction
 
 DEFAULT_API_URL = 'https://api.apify.com'
 API_VERSION = 'v2'
@@ -108,6 +113,7 @@ class ApifyClient(_BaseApifyClient):
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
+        get_dynamic_timeout: DynamicTimeoutFunction | None = None,
     ) -> None:
         """Initialize a new instance.
 
@@ -118,6 +124,7 @@ class ApifyClient(_BaseApifyClient):
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
+            get_dynamic_timeout: A function that can be called for each request to get suitable custom timeout for it.
         """
         super().__init__(
             token,
@@ -133,6 +140,7 @@ class ApifyClient(_BaseApifyClient):
             max_retries=self.max_retries,
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
+            get_dynamic_timeout=get_dynamic_timeout,
             stats=self.stats,
         )
 
@@ -291,6 +299,7 @@ class ApifyClientAsync(_BaseApifyClient):
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = 360,
+        get_dynamic_timeout: DynamicTimeoutFunction | None = None,
     ) -> None:
         """Initialize a new instance.
 
@@ -301,6 +310,7 @@ class ApifyClientAsync(_BaseApifyClient):
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
+            get_dynamic_timeout: A function that can be called for each request to get suitable custom timeout for it.
         """
         super().__init__(
             token,
@@ -316,6 +326,7 @@ class ApifyClientAsync(_BaseApifyClient):
             max_retries=self.max_retries,
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
+            get_dynamic_timeout=get_dynamic_timeout,
             stats=self.stats,
         )
 

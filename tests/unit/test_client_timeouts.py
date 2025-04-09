@@ -83,44 +83,47 @@ def test_dynamic_timeout_sync_client() -> None:
     HTTPClient(timeout_secs=client_timeout).call(method='GET', url='https://example.com', timeout_secs=call_timeout)
 
 
+_timeout_params = [
+    (DatasetClient, 'get', dataset._SMALL_TIMEOUT, {}),
+    (DatasetClient, 'update', dataset._SMALL_TIMEOUT, {}),
+    (DatasetClient, 'delete', dataset._SMALL_TIMEOUT, {}),
+    (DatasetClient, 'list_items', 360, {}),
+    (DatasetClient, 'download_items', 360, {}),
+    (DatasetClient, 'get_items_as_bytes', 360, {}),
+    (DatasetClient, 'push_items', dataset._MEDIUM_TIMEOUT, {'items': {}}),
+    (DatasetClient, 'get_statistics', dataset._SMALL_TIMEOUT, {}),
+    (KeyValueStoreClient, 'get', kvs._SMALL_TIMEOUT, {}),
+    (KeyValueStoreClient, 'update', 360, {}),
+    (KeyValueStoreClient, 'delete', kvs._SMALL_TIMEOUT, {}),
+    (KeyValueStoreClient, 'list_keys', kvs._MEDIUM_TIMEOUT, {}),
+    (KeyValueStoreClient, 'get_record', 360, {'key': 'some_key'}),
+    (KeyValueStoreClient, 'get_record_as_bytes', 360, {'key': 'some_key'}),
+    (KeyValueStoreClient, 'set_record', 360, {'key': 'some_key', 'value': 'some_value'}),
+    (KeyValueStoreClient, 'delete_record', kvs._SMALL_TIMEOUT, {'key': 'some_key'}),
+    (RequestQueueClient, 'get', request_queue._SMALL_TIMEOUT, {}),
+    (RequestQueueClient, 'update', kvs._SMALL_TIMEOUT, {}),
+    (RequestQueueClient, 'delete', kvs._SMALL_TIMEOUT, {}),
+    (RequestQueueClient, 'list_head', kvs._SMALL_TIMEOUT, {}),
+    (RequestQueueClient, 'list_and_lock_head', kvs._MEDIUM_TIMEOUT, {'lock_secs': 1}),
+    (RequestQueueClient, 'add_request', kvs._SMALL_TIMEOUT, {'request': {}}),
+    (RequestQueueClient, 'get_request', kvs._SMALL_TIMEOUT, {'request_id': 'some_id'}),
+    (RequestQueueClient, 'update_request', kvs._MEDIUM_TIMEOUT, {'request': {'id': 123}}),
+    (RequestQueueClient, 'delete_request', kvs._SMALL_TIMEOUT, {'request_id': 123}),
+    (RequestQueueClient, 'prolong_request_lock', kvs._MEDIUM_TIMEOUT, {'request_id': 123, 'lock_secs': 1}),
+    (RequestQueueClient, 'delete_request_lock', kvs._SMALL_TIMEOUT, {'request_id': 123}),
+    (RequestQueueClient, 'batch_add_requests', kvs._MEDIUM_TIMEOUT, {'requests': [{}]}),
+    (RequestQueueClient, 'batch_delete_requests', kvs._SMALL_TIMEOUT, {'requests': [{}]}),
+    (RequestQueueClient, 'list_requests', kvs._MEDIUM_TIMEOUT, {}),
+]
+
+
 @pytest.mark.parametrize(
     ('client_type', 'method', 'expected_timeout', 'kwargs'),
-    [
-        (DatasetClient, 'get', dataset._SMALL_TIMEOUT, {}),
-        (DatasetClient, 'update', dataset._SMALL_TIMEOUT, {}),
-        (DatasetClient, 'delete', dataset._SMALL_TIMEOUT, {}),
-        (DatasetClient, 'list_items', 360, {}),
-        (DatasetClient, 'download_items', 360, {}),
-        (DatasetClient, 'get_items_as_bytes', 360, {}),
-        (DatasetClient, 'push_items', dataset._MEDIUM_TIMEOUT, {'items': {}}),
-        (DatasetClient, 'get_statistics', dataset._SMALL_TIMEOUT, {}),
-        (KeyValueStoreClient, 'get', kvs._SMALL_TIMEOUT, {}),
-        (KeyValueStoreClient, 'update', 360, {}),
-        (KeyValueStoreClient, 'delete', kvs._SMALL_TIMEOUT, {}),
-        (KeyValueStoreClient, 'list_keys', kvs._MEDIUM_TIMEOUT, {}),
-        (KeyValueStoreClient, 'get_record', 360, {'key': 'some_key'}),
-        (KeyValueStoreClient, 'get_record_as_bytes', 360, {'key': 'some_key'}),
-        (KeyValueStoreClient, 'set_record', 360, {'key': 'some_key', 'value': 'some_value'}),
-        (KeyValueStoreClient, 'delete_record', kvs._SMALL_TIMEOUT, {'key': 'some_key'}),
-        (RequestQueueClient, 'get', request_queue._SMALL_TIMEOUT, {}),
-        (RequestQueueClient, 'update', kvs._SMALL_TIMEOUT, {}),
-        (RequestQueueClient, 'delete', kvs._SMALL_TIMEOUT, {}),
-        (RequestQueueClient, 'list_head', kvs._SMALL_TIMEOUT, {}),
-        (RequestQueueClient, 'list_and_lock_head', kvs._MEDIUM_TIMEOUT, {'lock_secs': 1}),
-        (RequestQueueClient, 'add_request', kvs._SMALL_TIMEOUT, {'request': {}}),
-        (RequestQueueClient, 'get_request', kvs._SMALL_TIMEOUT, {'request_id': 'some_id'}),
-        (RequestQueueClient, 'update_request', kvs._MEDIUM_TIMEOUT, {'request': {'id': 123}}),
-        (RequestQueueClient, 'delete_request', kvs._SMALL_TIMEOUT, {'request_id': 123}),
-        (RequestQueueClient, 'prolong_request_lock', kvs._MEDIUM_TIMEOUT, {'request_id': 123, 'lock_secs': 1}),
-        (RequestQueueClient, 'delete_request_lock', kvs._SMALL_TIMEOUT, {'request_id': 123}),
-        (RequestQueueClient, 'batch_add_requests', kvs._MEDIUM_TIMEOUT, {'requests': [{}]}),
-        (RequestQueueClient, 'batch_delete_requests', kvs._SMALL_TIMEOUT, {'requests': [{}]}),
-        (RequestQueueClient, 'list_requests', kvs._MEDIUM_TIMEOUT, {}),
-    ],
+    _timeout_params,
 )
 @respx.mock
 def test_specific_timeouts_for_specific_endpoints_sync(
-    client_type: type[DatasetClient, KeyValueStoreClient, RequestQueueClient],
+    client_type: type[DatasetClient | KeyValueStoreClient | RequestQueueClient],
     method: str,
     kwargs: dict,
     expected_timeout: int,
@@ -129,3 +132,20 @@ def test_specific_timeouts_for_specific_endpoints_sync(
     client = client_type(base_url='https://example.com', root_client=ApifyClient(), http_client=HTTPClient())
     with pytest.raises(EndOfTestError):
         getattr(client, method)(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ('client_type', 'method', 'expected_timeout', 'kwargs'),
+    _timeout_params,
+)
+@respx.mock
+async def test_specific_timeouts_for_specific_endpoints_async(
+    client_type: type[DatasetClient | KeyValueStoreClient | RequestQueueClient],
+    method: str,
+    kwargs: dict,
+    expected_timeout: int,
+) -> None:
+    respx.route(host='example.com').mock(side_effect=partial(assert_timeout, expected_timeout))
+    client = client_type(base_url='https://example.com', root_client=ApifyClient(), http_client=HTTPClient())
+    with pytest.raises(EndOfTestError):
+        await getattr(client, method)(**kwargs)

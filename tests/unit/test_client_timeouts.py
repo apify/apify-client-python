@@ -8,6 +8,7 @@ from httpx import Request, Response, TimeoutException
 
 from apify_client import ApifyClient
 from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client.client import DEFAULT_TIMEOUT
 from apify_client.clients import DatasetClient, KeyValueStoreClient, RequestQueueClient
 from apify_client.clients.resource_clients import dataset, request_queue
 from apify_client.clients.resource_clients import key_value_store as kvs
@@ -15,16 +16,6 @@ from apify_client.clients.resource_clients import key_value_store as kvs
 
 class EndOfTestError(Exception):
     """Custom exception that is raised after the relevant part of the code is executed to stop the test."""
-
-
-def assert_timeout(expected_timeout: int, request: Request) -> Response:
-    assert request.extensions['timeout'] == {
-        'connect': expected_timeout,
-        'pool': expected_timeout,
-        'read': expected_timeout,
-        'write': expected_timeout,
-    }
-    raise EndOfTestError
 
 
 @respx.mock
@@ -83,22 +74,36 @@ def test_dynamic_timeout_sync_client() -> None:
     HTTPClient(timeout_secs=client_timeout).call(method='GET', url='https://example.com', timeout_secs=call_timeout)
 
 
+def assert_timeout(expected_timeout: int, request: Request) -> Response:
+    """Assert that correct timeouts are set on the request and raise `EndOfTestError`.
+
+    This is intended for tests that are only testing timeout value and further execution of the code is not desired.
+    """
+    assert request.extensions['timeout'] == {
+        'connect': expected_timeout,
+        'pool': expected_timeout,
+        'read': expected_timeout,
+        'write': expected_timeout,
+    }
+    raise EndOfTestError
+
+
 _timeout_params = [
     (DatasetClient, 'get', dataset._SMALL_TIMEOUT, {}),
     (DatasetClient, 'update', dataset._SMALL_TIMEOUT, {}),
     (DatasetClient, 'delete', dataset._SMALL_TIMEOUT, {}),
-    (DatasetClient, 'list_items', 360, {}),
-    (DatasetClient, 'download_items', 360, {}),
-    (DatasetClient, 'get_items_as_bytes', 360, {}),
+    (DatasetClient, 'list_items', DEFAULT_TIMEOUT, {}),
+    (DatasetClient, 'download_items', DEFAULT_TIMEOUT, {}),
+    (DatasetClient, 'get_items_as_bytes', DEFAULT_TIMEOUT, {}),
     (DatasetClient, 'push_items', dataset._MEDIUM_TIMEOUT, {'items': {}}),
     (DatasetClient, 'get_statistics', dataset._SMALL_TIMEOUT, {}),
     (KeyValueStoreClient, 'get', kvs._SMALL_TIMEOUT, {}),
-    (KeyValueStoreClient, 'update', 360, {}),
+    (KeyValueStoreClient, 'update', DEFAULT_TIMEOUT, {}),
     (KeyValueStoreClient, 'delete', kvs._SMALL_TIMEOUT, {}),
     (KeyValueStoreClient, 'list_keys', kvs._MEDIUM_TIMEOUT, {}),
-    (KeyValueStoreClient, 'get_record', 360, {'key': 'some_key'}),
-    (KeyValueStoreClient, 'get_record_as_bytes', 360, {'key': 'some_key'}),
-    (KeyValueStoreClient, 'set_record', 360, {'key': 'some_key', 'value': 'some_value'}),
+    (KeyValueStoreClient, 'get_record', DEFAULT_TIMEOUT, {'key': 'some_key'}),
+    (KeyValueStoreClient, 'get_record_as_bytes', DEFAULT_TIMEOUT, {'key': 'some_key'}),
+    (KeyValueStoreClient, 'set_record', DEFAULT_TIMEOUT, {'key': 'some_key', 'value': 'some_value'}),
     (KeyValueStoreClient, 'delete_record', kvs._SMALL_TIMEOUT, {'key': 'some_key'}),
     (RequestQueueClient, 'get', request_queue._SMALL_TIMEOUT, {}),
     (RequestQueueClient, 'update', kvs._SMALL_TIMEOUT, {}),

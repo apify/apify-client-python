@@ -25,6 +25,9 @@ _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
+_SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
+_MEDIUM_TIMEOUT = 30  # For actions that may take longer.
+
 
 class BatchAddRequestsResult(TypedDict):
     """Result of the batch add requests operation.
@@ -78,7 +81,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        return self._get()
+        return self._get(timeout_secs=_SMALL_TIMEOUT)
 
     def update(self, *, name: str | None = None) -> dict:
         """Update the request queue with specified fields.
@@ -95,14 +98,14 @@ class RequestQueueClient(ResourceClient):
             'name': name,
         }
 
-        return self._update(filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
 
     def delete(self) -> None:
         """Delete the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        return self._delete()
+        return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
     def list_head(self, *, limit: int | None = None) -> dict:
         """Retrieve a given number of requests from the beginning of the queue.
@@ -121,6 +124,7 @@ class RequestQueueClient(ResourceClient):
             url=self._url('head'),
             method='GET',
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -143,6 +147,7 @@ class RequestQueueClient(ResourceClient):
             url=self._url('head/lock'),
             method='POST',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -166,6 +171,7 @@ class RequestQueueClient(ResourceClient):
             method='POST',
             json=request,
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -186,6 +192,7 @@ class RequestQueueClient(ResourceClient):
                 url=self._url(f'requests/{request_id}'),
                 method='GET',
                 params=self._params(),
+                timeout_secs=_SMALL_TIMEOUT,
             )
             return parse_date_fields(pluck_data(response.json()))
 
@@ -215,6 +222,7 @@ class RequestQueueClient(ResourceClient):
             method='PUT',
             json=request,
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -235,6 +243,7 @@ class RequestQueueClient(ResourceClient):
             url=self._url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
     def prolong_request_lock(
@@ -259,6 +268,7 @@ class RequestQueueClient(ResourceClient):
             url=self._url(f'requests/{request_id}/lock'),
             method='PUT',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -278,6 +288,7 @@ class RequestQueueClient(ResourceClient):
             url=self._url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
     def batch_add_requests(
@@ -342,6 +353,7 @@ class RequestQueueClient(ResourceClient):
                 method='POST',
                 params=request_params,
                 json=list(batch.requests),
+                timeout_secs=_MEDIUM_TIMEOUT,
             )
 
             # Retry if the request failed and the retry limit has not been reached.
@@ -376,6 +388,7 @@ class RequestQueueClient(ResourceClient):
             method='DELETE',
             params=request_params,
             json=requests,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -400,6 +413,7 @@ class RequestQueueClient(ResourceClient):
             url=self._url('requests'),
             method='GET',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -432,7 +446,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        return await self._get()
+        return await self._get(timeout_secs=_SMALL_TIMEOUT)
 
     async def update(self, *, name: str | None = None) -> dict:
         """Update the request queue with specified fields.
@@ -449,14 +463,14 @@ class RequestQueueClientAsync(ResourceClientAsync):
             'name': name,
         }
 
-        return await self._update(filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
 
     async def delete(self) -> None:
         """Delete the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        return await self._delete()
+        return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
     async def list_head(self, *, limit: int | None = None) -> dict:
         """Retrieve a given number of requests from the beginning of the queue.
@@ -475,6 +489,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             url=self._url('head'),
             method='GET',
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -497,6 +512,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             url=self._url('head/lock'),
             method='POST',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -520,6 +536,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             method='POST',
             json=request,
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -540,6 +557,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 url=self._url(f'requests/{request_id}'),
                 method='GET',
                 params=self._params(),
+                timeout_secs=_SMALL_TIMEOUT,
             )
             return parse_date_fields(pluck_data(response.json()))
 
@@ -569,6 +587,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             method='PUT',
             json=request,
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -587,6 +606,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             url=self._url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
     async def prolong_request_lock(
@@ -611,6 +631,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             url=self._url(f'requests/{request_id}/lock'),
             method='PUT',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -635,6 +656,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             url=self._url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
     async def _batch_add_requests_worker(
@@ -667,6 +689,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     method='POST',
                     params=request_params,
                     json=list(batch.requests),
+                    timeout_secs=_MEDIUM_TIMEOUT,
                 )
 
                 response_parsed = parse_date_fields(pluck_data(response.json()))
@@ -787,6 +810,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             method='DELETE',
             params=request_params,
             json=requests,
+            timeout_secs=_SMALL_TIMEOUT,
         )
         return parse_date_fields(pluck_data(response.json()))
 
@@ -810,6 +834,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             url=self._url('requests'),
             method='GET',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))

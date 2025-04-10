@@ -381,6 +381,30 @@ class ActorClient(ResourceClient):
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
+    async def default_build(
+        self,
+        *,
+        wait_for_finish: int | None = None,
+    ) -> dict:
+        """Retrieve Actor's default build.
+
+        https://docs.apify.com/api/v2/act-build-default-get
+
+        Args:
+            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
+                By default it is 0, the maximum value is 60.
+
+        Returns:
+            The build object.
+        """
+        request_params = self._params(
+            waitForFinish=wait_for_finish,
+        )
+
+        response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
+
+        return parse_date_fields(pluck_data(response.json()))
+
     def last_run(
         self,
         *,
@@ -717,6 +741,34 @@ class ActorClientAsync(ResourceClientAsync):
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
+
+    async def default_build(
+        self,
+        *,
+        wait_for_finish: int | None = None,
+    ) -> dict:
+        """Retrieve Actor's default build.
+
+        https://docs.apify.com/api/v2/act-build-default-get
+
+        Args:
+            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
+                By default it is 0, the maximum value is 60.
+
+        Returns:
+            The build object.
+        """
+        request_params = self._params(
+            waitForFinish=wait_for_finish,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('builds/default'),
+            method='GET',
+            params=request_params,
+        )
+
+        return parse_date_fields(pluck_data(response.json()))
 
     def last_run(
         self,

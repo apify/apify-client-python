@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Add maxItems and maxTotalChargeUsd to resurrect ([#360](https://github.com/apify/apify-client-python/pull/360)) ([a020807](https://github.com/apify/apify-client-python/commit/a0208073ef93804358e4377959a56d8342f83447)) by [@novotnyj](https://github.com/novotnyj)
+- Add get default build method ([#385](https://github.com/apify/apify-client-python/pull/385)) ([f818b95](https://github.com/apify/apify-client-python/commit/f818b95fec1c4e57e98b28ad0b2b346ee2f64602)) by [@danpoletaev](https://github.com/danpoletaev)
 
 
 <!-- git-cliff-unreleased-end -->

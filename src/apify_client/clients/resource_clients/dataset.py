@@ -17,6 +17,9 @@ if TYPE_CHECKING:
     import httpx
     from apify_shared.types import JSONSerializable
 
+_SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
+_MEDIUM_TIMEOUT = 30  # For actions that may take longer.
+
 
 class DatasetClient(ResourceClient):
     """Sub-client for manipulating a single dataset."""
@@ -34,7 +37,7 @@ class DatasetClient(ResourceClient):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        return self._get()
+        return self._get(timeout_secs=_SMALL_TIMEOUT)
 
     def update(self, *, name: str | None = None) -> dict:
         """Update the dataset with specified fields.
@@ -49,14 +52,14 @@ class DatasetClient(ResourceClient):
         """
         updated_fields = {'name': name}
 
-        return self._update(filter_out_none_values_recursively(updated_fields))
+        return self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
 
     def delete(self) -> None:
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        return self._delete()
+        return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
     def list_items(
         self,
@@ -539,6 +542,7 @@ class DatasetClient(ResourceClient):
             params=self._params(),
             data=data,
             json=json,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
     def get_statistics(self) -> dict | None:
@@ -554,6 +558,7 @@ class DatasetClient(ResourceClient):
                 url=self._url('statistics'),
                 method='GET',
                 params=self._params(),
+                timeout_secs=_SMALL_TIMEOUT,
             )
             return pluck_data(response.json())
         except ApifyApiError as exc:
@@ -578,7 +583,7 @@ class DatasetClientAsync(ResourceClientAsync):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        return await self._get()
+        return await self._get(timeout_secs=_SMALL_TIMEOUT)
 
     async def update(self, *, name: str | None = None) -> dict:
         """Update the dataset with specified fields.
@@ -593,14 +598,14 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         updated_fields = {'name': name}
 
-        return await self._update(filter_out_none_values_recursively(updated_fields))
+        return await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
 
     async def delete(self) -> None:
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        return await self._delete()
+        return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
     async def list_items(
         self,
@@ -990,6 +995,7 @@ class DatasetClientAsync(ResourceClientAsync):
             params=self._params(),
             data=data,
             json=json,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
     async def get_statistics(self) -> dict | None:
@@ -1005,6 +1011,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 url=self._url('statistics'),
                 method='GET',
                 params=self._params(),
+                timeout_secs=_SMALL_TIMEOUT,
             )
             return pluck_data(response.json())
         except ApifyApiError as exc:

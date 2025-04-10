@@ -13,6 +13,9 @@ from apify_client.clients.base import ResourceClient, ResourceClientAsync
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
+_SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
+_MEDIUM_TIMEOUT = 30  # For actions that may take longer.
+
 
 class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
@@ -30,7 +33,7 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        return self._get()
+        return self._get(timeout_secs=_SMALL_TIMEOUT)
 
     def update(self, *, name: str | None = None) -> dict:
         """Update the key-value store with specified fields.
@@ -54,7 +57,7 @@ class KeyValueStoreClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        return self._delete()
+        return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
     def list_keys(self, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
         """List the keys in the key-value store.
@@ -74,6 +77,7 @@ class KeyValueStoreClient(ResourceClient):
             url=self._url('keys'),
             method='GET',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -236,6 +240,7 @@ class KeyValueStoreClient(ResourceClient):
             url=self._url(f'records/{key}'),
             method='DELETE',
             params=self._params(),
+            timeout_secs=_SMALL_TIMEOUT,
         )
 
 
@@ -255,7 +260,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        return await self._get()
+        return await self._get(timeout_secs=_SMALL_TIMEOUT)
 
     async def update(self, *, name: str | None = None) -> dict:
         """Update the key-value store with specified fields.
@@ -279,7 +284,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        return await self._delete()
+        return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
     async def list_keys(self, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
         """List the keys in the key-value store.
@@ -299,6 +304,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             url=self._url('keys'),
             method='GET',
             params=request_params,
+            timeout_secs=_MEDIUM_TIMEOUT,
         )
 
         return parse_date_fields(pluck_data(response.json()))
@@ -440,4 +446,5 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             url=self._url(f'records/{key}'),
             method='DELETE',
             params=self._params(),
+            timeout_secs=_SMALL_TIMEOUT,
         )

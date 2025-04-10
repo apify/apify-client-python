@@ -381,7 +381,11 @@ class ActorClient(ResourceClient):
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    async def default_build(self) -> dict:
+    async def default_build(
+        self,
+        *,
+        wait_for_finish: int | None = None,
+    ) -> dict:
         """Retrieve Actor's default build.
 
         https://docs.apify.com/api/v2/act-build-default-get
@@ -389,7 +393,11 @@ class ActorClient(ResourceClient):
         Returns:
             The build object.
         """
-        response = self.http_client.call(url=self._url('builds/default'), method='GET')
+        request_params = self._params(
+            waitForFinish=wait_for_finish,
+        )
+
+        response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
 
         return parse_date_fields(pluck_data(response.json()))
 
@@ -730,7 +738,11 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
-    async def default_build(self) -> dict:
+    async def default_build(
+        self,
+        *,
+        wait_for_finish: int | None = None,
+    ) -> dict:
         """Retrieve Actor's default build.
 
         https://docs.apify.com/api/v2/act-build-default-get
@@ -738,7 +750,15 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The build object.
         """
-        response = await self.http_client.call(url=self._url('builds/default'), method='GET')
+        request_params = self._params(
+            waitForFinish=wait_for_finish,
+        )
+
+        response = await self.http_client.call(
+            url=self._url('builds/default'),
+            method='GET',
+            params=request_params,
+        )
 
         return parse_date_fields(pluck_data(response.json()))
 

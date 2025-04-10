@@ -390,6 +390,10 @@ class ActorClient(ResourceClient):
 
         https://docs.apify.com/api/v2/act-build-default-get
 
+        Args:
+            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
+                By default it is 0, the maximum value is 60.
+
         Returns:
             The build object.
         """
@@ -746,6 +750,10 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve Actor's default build.
 
         https://docs.apify.com/api/v2/act-build-default-get
+
+        Args:
+            wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
+                By default it is 0, the maximum value is 60.
 
         Returns:
             The build object.

@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.10.0 - **not yet released**
+## [1.9.3](https://github.com/apify/apify-client-python/releases/tag/v1.9.3) (2025-04-14)
 
 ### 🚀 Features
 
@@ -11,7 +10,6 @@ All notable changes to this project will be documented in this file.
 - Add get default build method ([#385](https://github.com/apify/apify-client-python/pull/385)) ([f818b95](https://github.com/apify/apify-client-python/commit/f818b95fec1c4e57e98b28ad0b2b346ee2f64602)) by [@danpoletaev](https://github.com/danpoletaev)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.9.2](https://github.com/apify/apify-client-python/releases/tag/v1.9.2) (2025-02-14)
 
 ### 🐛 Bug Fixes

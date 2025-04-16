@@ -54,6 +54,7 @@ from apify_client.clients import (
 )
 
 DEFAULT_API_URL = 'https://api.apify.com'
+DEFAULT_TIMEOUT = 360
 API_VERSION = 'v2'
 
 
@@ -68,7 +69,7 @@ class _BaseApifyClient:
         api_url: str | None = None,
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = 360,
+        timeout_secs: int | None = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize a new instance.
 
@@ -85,7 +86,7 @@ class _BaseApifyClient:
         self.base_url = f'{api_url}/{API_VERSION}'
         self.max_retries = max_retries or 8
         self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
-        self.timeout_secs = timeout_secs or 360
+        self.timeout_secs = timeout_secs or DEFAULT_TIMEOUT
 
     def _options(self) -> dict:
         return {
@@ -107,7 +108,7 @@ class ApifyClient(_BaseApifyClient):
         api_url: str | None = None,
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = 360,
+        timeout_secs: int | None = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize a new instance.
 
@@ -290,7 +291,7 @@ class ApifyClientAsync(_BaseApifyClient):
         api_url: str | None = None,
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = 360,
+        timeout_secs: int | None = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize a new instance.
 

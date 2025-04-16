@@ -143,6 +143,7 @@ class HTTPClient(_BaseHTTPClient):
         json: JSONSerializable | None = None,
         stream: bool | None = None,
         parse_response: bool | None = True,
+        timeout_secs: int | None = None,
     ) -> httpx.Response:
         log_context.method.set(method)
         log_context.url.set(url)
@@ -170,6 +171,16 @@ class HTTPClient(_BaseHTTPClient):
                     params=params,
                     content=content,
                 )
+
+                # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
+                timeout = min(self.timeout_secs, (timeout_secs or self.timeout_secs) * 2 ** (attempt - 1))
+                request.extensions['timeout'] = {
+                    'connect': timeout,
+                    'pool': timeout,
+                    'read': timeout,
+                    'write': timeout,
+                }
+
                 response = httpx_client.send(
                     request=request,
                     stream=stream or False,
@@ -225,6 +236,7 @@ class HTTPClientAsync(_BaseHTTPClient):
         json: JSONSerializable | None = None,
         stream: bool | None = None,
         parse_response: bool | None = True,
+        timeout_secs: int | None = None,
     ) -> httpx.Response:
         log_context.method.set(method)
         log_context.url.set(url)
@@ -249,6 +261,16 @@ class HTTPClientAsync(_BaseHTTPClient):
                     params=params,
                     content=content,
                 )
+
+                # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
+                timeout = min(self.timeout_secs, (timeout_secs or self.timeout_secs) * 2 ** (attempt - 1))
+                request.extensions['timeout'] = {
+                    'connect': timeout,
+                    'pool': timeout,
+                    'read': timeout,
+                    'write': timeout,
+                }
+
                 response = await httpx_async_client.send(
                     request=request,
                     stream=stream or False,

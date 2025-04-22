@@ -38,7 +38,7 @@ async def test_dynamic_timeout_async_client() -> None:
             'write': expected_timeout,
         }
         if next(should_raise_error):
-            raise TimeoutException('This error can be retired')
+            raise TimeoutException('This error can be retried')
         return Response(200)
 
     respx.get('https://example.com').mock(side_effect=check_timeout)

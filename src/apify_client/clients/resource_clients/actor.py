@@ -16,6 +16,7 @@ from apify_client.clients.resource_clients.actor_version_collection import (
     ActorVersionCollectionClient,
     ActorVersionCollectionClientAsync,
 )
+from apify_client.clients.resource_clients.build import BuildClient, BuildClientAsync
 from apify_client.clients.resource_clients.build_collection import BuildCollectionClient, BuildCollectionClientAsync
 from apify_client.clients.resource_clients.run import RunClient, RunClientAsync
 from apify_client.clients.resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -385,7 +386,7 @@ class ActorClient(ResourceClient):
         self,
         *,
         wait_for_finish: int | None = None,
-    ) -> dict:
+    ) -> BuildClient:
         """Retrieve Actor's default build.
 
         https://docs.apify.com/api/v2/act-build-default-get
@@ -395,15 +396,21 @@ class ActorClient(ResourceClient):
                 By default it is 0, the maximum value is 60.
 
         Returns:
-            The build object.
+            The resource client for the default build of this Actor.
         """
         request_params = self._params(
             waitForFinish=wait_for_finish,
         )
 
         response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
+        data = pluck_data(response.json())
 
-        return parse_date_fields(pluck_data(response.json()))
+        return BuildClient(
+            base_url=self.base_url,
+            http_client=self.http_client,
+            root_client=self.root_client,
+            resource_id=data['id'],
+        )
 
     def last_run(
         self,
@@ -746,7 +753,7 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         *,
         wait_for_finish: int | None = None,
-    ) -> dict:
+    ) -> BuildClientAsync:
         """Retrieve Actor's default build.
 
         https://docs.apify.com/api/v2/act-build-default-get
@@ -756,7 +763,7 @@ class ActorClientAsync(ResourceClientAsync):
                 By default it is 0, the maximum value is 60.
 
         Returns:
-            The build object.
+            The resource client for the default build of this Actor.
         """
         request_params = self._params(
             waitForFinish=wait_for_finish,
@@ -767,8 +774,14 @@ class ActorClientAsync(ResourceClientAsync):
             method='GET',
             params=request_params,
         )
+        data = pluck_data(response.json())
 
-        return parse_date_fields(pluck_data(response.json()))
+        return BuildClientAsync(
+            base_url=self.base_url,
+            http_client=self.http_client,
+            root_client=self.root_client,
+            resource_id=data['id'],
+        )
 
     def last_run(
         self,

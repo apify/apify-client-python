@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 1.9.4 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Default_build() returns BuildClient ([#389](https://github.com/apify/apify-client-python/pull/389)) ([8149052](https://github.com/apify/apify-client-python/commit/8149052a97032f1336147a48c8a8f6cd5e076b95)) by [@danpoletaev](https://github.com/danpoletaev)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [1.9.3](https://github.com/apify/apify-client-python/releases/tag/v1.9.3) (2025-04-14)
 
 ### 🚀 Features

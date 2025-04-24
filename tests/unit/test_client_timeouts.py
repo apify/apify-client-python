@@ -116,7 +116,7 @@ _timeout_params = [
     (RequestQueueClient, 'delete_request', request_queue._SMALL_TIMEOUT, {'request_id': 123}),
     (RequestQueueClient, 'prolong_request_lock', request_queue._MEDIUM_TIMEOUT, {'request_id': 123, 'lock_secs': 1}),
     (RequestQueueClient, 'delete_request_lock', request_queue._SMALL_TIMEOUT, {'request_id': 123}),
-    (RequestQueueClient, 'batch_add_requests', request_queue._MEDIUM_TIMEOUT, {'requests': [{}]}),
+    (RequestQueueClient, 'batch_add_requests', request_queue._MEDIUM_TIMEOUT, {'requests': [{'uniqueKey': '123'}]}),
     (RequestQueueClient, 'batch_delete_requests', request_queue._SMALL_TIMEOUT, {'requests': [{}]}),
     (RequestQueueClient, 'list_requests', request_queue._MEDIUM_TIMEOUT, {}),
 ]

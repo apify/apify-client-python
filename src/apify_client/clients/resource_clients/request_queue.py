@@ -332,24 +332,20 @@ class RequestQueueClient(ResourceClient):
             for request in request_batch:
                 unprocessed_requests[request['uniqueKey']] = _get_unprocessed_request_from_request(request)
 
-            try:
-                # Send the batch to the API.
-                response = self.http_client.call(
-                    url=self._url('requests/batch'),
-                    method='POST',
-                    params=request_params,
-                    json=list(request_batch),
-                    timeout_secs=_MEDIUM_TIMEOUT,
-                )
+            # Send the batch to the API.
+            response = self.http_client.call(
+                url=self._url('requests/batch'),
+                method='POST',
+                params=request_params,
+                json=list(request_batch),
+                timeout_secs=_MEDIUM_TIMEOUT,
+            )
 
-                response_parsed = parse_date_fields(pluck_data(response.json()))
-                processed_requests.extend(response_parsed.get('processedRequests', []))
+            response_parsed = parse_date_fields(pluck_data(response.json()))
+            processed_requests.extend(response_parsed.get('processedRequests', []))
 
-                for processed_request in response_parsed.get('processedRequests', []):
-                    unprocessed_requests.pop(processed_request['uniqueKey'], None)
-
-            except Exception as exc:
-                logger.warning(f'Error occurred while processing a batch of requests: {exc}')
+            for processed_request in response_parsed.get('processedRequests', []):
+                unprocessed_requests.pop(processed_request['uniqueKey'], None)
 
         return {
             'processedRequests': processed_requests,
@@ -667,28 +663,22 @@ class RequestQueueClientAsync(ResourceClientAsync):
             except asyncio.CancelledError:
                 break
 
-            try:
-                # Send the batch to the API.
-                response = await self.http_client.call(
-                    url=self._url('requests/batch'),
-                    method='POST',
-                    params=request_params,
-                    json=list(request_batch),
-                    timeout_secs=_MEDIUM_TIMEOUT,
-                )
+            # Send the batch to the API.
+            response = await self.http_client.call(
+                url=self._url('requests/batch'),
+                method='POST',
+                params=request_params,
+                json=list(request_batch),
+                timeout_secs=_MEDIUM_TIMEOUT,
+            )
 
-                response_parsed = parse_date_fields(pluck_data(response.json()))
-                processed_requests.extend(response_parsed.get('processedRequests', []))
+            response_parsed = parse_date_fields(pluck_data(response.json()))
+            processed_requests.extend(response_parsed.get('processedRequests', []))
 
-                for processed_request in response_parsed.get('processedRequests', []):
-                    unprocessed_requests.pop(processed_request['uniqueKey'], None)
+            for processed_request in response_parsed.get('processedRequests', []):
+                unprocessed_requests.pop(processed_request['uniqueKey'], None)
 
-            except Exception as exc:
-                logger.warning(f'Error occurred while processing a batch of requests: {exc}')
-
-            finally:
-                # Mark the batch as done whether it succeeded or failed.
-                queue.task_done()
+            queue.task_done()
 
         return {
             'processedRequests': processed_requests,

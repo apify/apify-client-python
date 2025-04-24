@@ -3,11 +3,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
-from dataclasses import dataclass
-from datetime import timedelta
+from collections.abc import Iterable
 from queue import Queue
-from time import sleep
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import Any, TypedDict
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 from more_itertools import constrained_batches
@@ -15,9 +13,6 @@ from more_itertools import constrained_batches
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -41,17 +36,9 @@ class BatchAddRequestsResult(TypedDict):
     unprocessedRequests: list[dict]
 
 
-@dataclass
-class AddRequestsBatch:
-    """Batch of requests to add to the request queue.
-
-    Args:
-        requests: List of requests to be added to the request queue.
-        num_of_retries: Number of times this batch has been retried.
-    """
-
-    requests: Iterable[dict]
-    num_of_retries: int = 0
+def _get_unprocessed_request_from_request(request: dict[str, str]) -> dict[str, str]:
+    relevant_keys = {'url', 'uniqueKey', 'method'}
+    return {key: value for key, value in request.items() if key in relevant_keys}
 
 
 class RequestQueueClient(ResourceClient):
@@ -297,8 +284,6 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool = False,
         max_parallel: int = 1,
-        max_unprocessed_requests_retries: int = 3,
-        min_delay_between_unprocessed_requests_retries: timedelta = timedelta(milliseconds=500),
     ) -> BatchAddRequestsResult:
         """Add requests to the request queue in batches.
 
@@ -312,9 +297,6 @@ class RequestQueueClient(ResourceClient):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
-            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed
-                requests.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
@@ -335,42 +317,43 @@ class RequestQueueClient(ResourceClient):
         )
 
         # Put the batches into the queue for processing.
-        queue = Queue[AddRequestsBatch]()
+        queue = Queue[Iterable[dict]]()
 
-        for b in batches:
-            queue.put(AddRequestsBatch(b))
+        for batch in batches:
+            queue.put(batch)
 
         processed_requests = list[dict]()
-        unprocessed_requests = list[dict]()
+        unprocessed_requests = dict[str, dict]()
 
         # Process all batches in the queue sequentially.
         while not queue.empty():
-            batch = queue.get()
+            request_batch = queue.get()
+            # All requests are considered unprocessed unless explicitly mentioned in `processedRequests` response.
+            for request in request_batch:
+                unprocessed_requests[request['uniqueKey']] = _get_unprocessed_request_from_request(request)
 
-            # Send the batch to the API.
-            response = self.http_client.call(
-                url=self._url('requests/batch'),
-                method='POST',
-                params=request_params,
-                json=list(batch.requests),
-                timeout_secs=_MEDIUM_TIMEOUT,
-            )
+            try:
+                # Send the batch to the API.
+                response = self.http_client.call(
+                    url=self._url('requests/batch'),
+                    method='POST',
+                    params=request_params,
+                    json=list(request_batch),
+                    timeout_secs=_MEDIUM_TIMEOUT,
+                )
 
-            # Retry if the request failed and the retry limit has not been reached.
-            if not response.is_success and batch.num_of_retries < max_unprocessed_requests_retries:
-                batch.num_of_retries += 1
-                sleep(min_delay_between_unprocessed_requests_retries.total_seconds())
-                queue.put(batch)
-
-            # Otherwise, add the processed/unprocessed requests to their respective lists.
-            else:
                 response_parsed = parse_date_fields(pluck_data(response.json()))
                 processed_requests.extend(response_parsed.get('processedRequests', []))
-                unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
+
+                for processed_request in response_parsed.get('processedRequests', []):
+                    unprocessed_requests.pop(processed_request['uniqueKey'], None)
+
+            except Exception as exc:
+                logger.warning(f'Error occurred while processing a batch of requests: {exc}')
 
         return {
             'processedRequests': processed_requests,
-            'unprocessedRequests': unprocessed_requests,
+            'unprocessedRequests': list(unprocessed_requests.values()),
         }
 
     def batch_delete_requests(self, requests: list[dict]) -> dict:
@@ -661,24 +644,26 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def _batch_add_requests_worker(
         self,
-        queue: asyncio.Queue[AddRequestsBatch],
+        queue: asyncio.Queue[Iterable[dict]],
         request_params: dict,
-        max_unprocessed_requests_retries: int,
-        min_delay_between_unprocessed_requests_retries: timedelta,
     ) -> BatchAddRequestsResult:
         """Worker function to process a batch of requests.
 
-        This worker will process batches from the queue, retrying requests that fail until the retry limit is reached.
+        This worker will process batches from the queue.
 
         Return result containing lists of processed and unprocessed requests by the worker.
         """
         processed_requests = list[dict]()
-        unprocessed_requests = list[dict]()
+        unprocessed_requests = dict[str, dict]()
 
         while True:
             # Get the next batch from the queue.
             try:
-                batch = await queue.get()
+                request_batch = await queue.get()
+                # All requests are considered unprocessed unless explicitly mentioned in `processedRequests` response.
+                for request in request_batch:
+                    unprocessed_requests[request['uniqueKey']] = _get_unprocessed_request_from_request(request)
+
             except asyncio.CancelledError:
                 break
 
@@ -688,22 +673,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     url=self._url('requests/batch'),
                     method='POST',
                     params=request_params,
-                    json=list(batch.requests),
+                    json=list(request_batch),
                     timeout_secs=_MEDIUM_TIMEOUT,
                 )
 
                 response_parsed = parse_date_fields(pluck_data(response.json()))
+                processed_requests.extend(response_parsed.get('processedRequests', []))
 
-                # Retry if the request failed and the retry limit has not been reached.
-                if not response.is_success and batch.num_of_retries < max_unprocessed_requests_retries:
-                    batch.num_of_retries += 1
-                    await asyncio.sleep(min_delay_between_unprocessed_requests_retries.total_seconds())
-                    await queue.put(batch)
-
-                # Otherwise, add the processed/unprocessed requests to their respective lists.
-                else:
-                    processed_requests.extend(response_parsed.get('processedRequests', []))
-                    unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
+                for processed_request in response_parsed.get('processedRequests', []):
+                    unprocessed_requests.pop(processed_request['uniqueKey'], None)
 
             except Exception as exc:
                 logger.warning(f'Error occurred while processing a batch of requests: {exc}')
@@ -714,7 +692,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         return {
             'processedRequests': processed_requests,
-            'unprocessedRequests': unprocessed_requests,
+            'unprocessedRequests': list(unprocessed_requests.values()),
         }
 
     async def batch_add_requests(
@@ -723,8 +701,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool = False,
         max_parallel: int = 5,
-        max_unprocessed_requests_retries: int = 3,
-        min_delay_between_unprocessed_requests_retries: timedelta = timedelta(milliseconds=500),
     ) -> BatchAddRequestsResult:
         """Add requests to the request queue in batches.
 
@@ -738,15 +714,12 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Number of retry attempts for unprocessed requests.
-            min_delay_between_unprocessed_requests_retries: Minimum delay between retry attempts for unprocessed
-                requests.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
         tasks = set[asyncio.Task]()
-        queue: asyncio.Queue[AddRequestsBatch] = asyncio.Queue()
+        queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
         request_params = self._params(clientKey=self.client_key, forefront=forefront)
 
         # Compute the payload size limit to ensure it doesn't exceed the maximum allowed size.
@@ -760,15 +733,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         for batch in batches:
-            await queue.put(AddRequestsBatch(batch))
+            await queue.put(batch)
 
         # Start a required number of worker tasks to process the batches.
         for i in range(max_parallel):
             coro = self._batch_add_requests_worker(
                 queue,
                 request_params,
-                max_unprocessed_requests_retries,
-                min_delay_between_unprocessed_requests_retries,
             )
             task = asyncio.create_task(coro, name=f'batch_add_requests_worker_{i}')
             tasks.add(task)

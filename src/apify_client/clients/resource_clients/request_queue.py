@@ -36,11 +36,6 @@ class BatchAddRequestsResult(TypedDict):
     unprocessedRequests: list[dict]
 
 
-def _get_unprocessed_request_from_request(request: dict[str, str]) -> dict[str, str]:
-    relevant_keys = {'url', 'uniqueKey', 'method'}
-    return {key: value for key, value in request.items() if key in relevant_keys}
-
-
 class RequestQueueClient(ResourceClient):
     """Sub-client for manipulating a single request queue."""
 
@@ -323,14 +318,11 @@ class RequestQueueClient(ResourceClient):
             queue.put(batch)
 
         processed_requests = list[dict]()
-        unprocessed_requests = dict[str, dict]()
+        unprocessed_requests = list[dict]()
 
         # Process all batches in the queue sequentially.
         while not queue.empty():
             request_batch = queue.get()
-            # All requests are considered unprocessed unless explicitly mentioned in `processedRequests` response.
-            for request in request_batch:
-                unprocessed_requests[request['uniqueKey']] = _get_unprocessed_request_from_request(request)
 
             # Send the batch to the API.
             response = self.http_client.call(
@@ -343,13 +335,11 @@ class RequestQueueClient(ResourceClient):
 
             response_parsed = parse_date_fields(pluck_data(response.json()))
             processed_requests.extend(response_parsed.get('processedRequests', []))
-
-            for processed_request in response_parsed.get('processedRequests', []):
-                unprocessed_requests.pop(processed_request['uniqueKey'], None)
+            unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
         return {
             'processedRequests': processed_requests,
-            'unprocessedRequests': list(unprocessed_requests.values()),
+            'unprocessedRequests': unprocessed_requests,
         }
 
     def batch_delete_requests(self, requests: list[dict]) -> dict:
@@ -650,39 +640,36 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Return result containing lists of processed and unprocessed requests by the worker.
         """
         processed_requests = list[dict]()
-        unprocessed_requests = dict[str, dict]()
+        unprocessed_requests = list[dict]()
 
         while True:
             # Get the next batch from the queue.
             try:
                 request_batch = await queue.get()
-                # All requests are considered unprocessed unless explicitly mentioned in `processedRequests` response.
-                for request in request_batch:
-                    unprocessed_requests[request['uniqueKey']] = _get_unprocessed_request_from_request(request)
-
             except asyncio.CancelledError:
                 break
 
-            # Send the batch to the API.
-            response = await self.http_client.call(
-                url=self._url('requests/batch'),
-                method='POST',
-                params=request_params,
-                json=list(request_batch),
-                timeout_secs=_MEDIUM_TIMEOUT,
-            )
+            try:
+                # Send the batch to the API.
+                response = await self.http_client.call(
+                    url=self._url('requests/batch'),
+                    method='POST',
+                    params=request_params,
+                    json=list(request_batch),
+                    timeout_secs=_MEDIUM_TIMEOUT,
+                )
 
-            response_parsed = parse_date_fields(pluck_data(response.json()))
-            processed_requests.extend(response_parsed.get('processedRequests', []))
+                response_parsed = parse_date_fields(pluck_data(response.json()))
+                processed_requests.extend(response_parsed.get('processedRequests', []))
+                unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
-            for processed_request in response_parsed.get('processedRequests', []):
-                unprocessed_requests.pop(processed_request['uniqueKey'], None)
-
-            queue.task_done()
+            finally:
+                # Mark the batch as done whether it succeeded or failed.
+                queue.task_done()
 
         return {
             'processedRequests': processed_requests,
-            'unprocessedRequests': list(unprocessed_requests.values()),
+            'unprocessedRequests': unprocessed_requests,
         }
 
     async def batch_add_requests(

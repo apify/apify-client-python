@@ -1,5 +1,7 @@
+import pytest
 import respx
 
+import apify_client
 from apify_client import ApifyClient, ApifyClientAsync
 
 _PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT = """{
@@ -24,8 +26,8 @@ _PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT = """{
 
 
 @respx.mock
-async def test_batch_not_processed_due_to_exception_async() -> None:
-    """Test that all requests are unprocessed unless explicitly stated by the server that they have been processed."""
+async def test_batch_not_processed_raises_exception_async() -> None:
+    """Test that client exceptions are not silently ignored"""
     client = ApifyClientAsync(token='')
 
     respx.route(method='POST', host='api.apify.com').mock(return_value=respx.MockResponse(401))
@@ -35,8 +37,8 @@ async def test_batch_not_processed_due_to_exception_async() -> None:
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    response = await rq_client.batch_add_requests(requests=requests)
-    assert response['unprocessedRequests'] == requests
+    with pytest.raises(apify_client._errors.ApifyApiError):
+        await rq_client.batch_add_requests(requests=requests)
 
 
 @respx.mock
@@ -58,8 +60,8 @@ async def test_batch_processed_partially_async() -> None:
 
 
 @respx.mock
-def test_batch_not_processed_due_to_exception_sync() -> None:
-    """Test that all requests are unprocessed unless explicitly stated by the server that they have been processed."""
+def test_batch_not_processed_raises_exception_sync() -> None:
+    """Test that client exceptions are not silently ignored"""
     client = ApifyClient(token='')
 
     respx.route(method='POST', host='api.apify.com').mock(return_value=respx.MockResponse(401))
@@ -69,8 +71,8 @@ def test_batch_not_processed_due_to_exception_sync() -> None:
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    response = rq_client.batch_add_requests(requests=requests)
-    assert response['unprocessedRequests'] == requests
+    with pytest.raises(apify_client._errors.ApifyApiError):
+        rq_client.batch_add_requests(requests=requests)
 
 
 @respx.mock

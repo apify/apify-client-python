@@ -5,7 +5,7 @@ import logging
 import math
 from collections.abc import Iterable
 from queue import Queue
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 from more_itertools import constrained_batches
@@ -13,6 +13,9 @@ from more_itertools import constrained_batches
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -279,6 +282,8 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool = False,
         max_parallel: int = 1,
+        max_unprocessed_requests_retries: int | None = None,
+        min_delay_between_unprocessed_requests_retries: timedelta | None = None,
     ) -> BatchAddRequestsResult:
         """Add requests to the request queue in batches.
 
@@ -292,10 +297,17 @@ class RequestQueueClient(ResourceClient):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
+            max_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
+            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
+        if max_unprocessed_requests_retries:
+            logger.warning('`max_unprocessed_requests_retries` is deprecated and not used anymore.')
+        if min_delay_between_unprocessed_requests_retries:
+            logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
+
         if max_parallel != 1:
             raise NotImplementedError('max_parallel is only supported in async client')
 
@@ -678,6 +690,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool = False,
         max_parallel: int = 5,
+        max_unprocessed_requests_retries: int | None = None,
+        min_delay_between_unprocessed_requests_retries: timedelta | None = None,
     ) -> BatchAddRequestsResult:
         """Add requests to the request queue in batches.
 
@@ -691,10 +705,17 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
+            max_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
+            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
+        if max_unprocessed_requests_retries:
+            logger.warning('`max_unprocessed_requests_retries` is deprecated and not used anymore.')
+        if min_delay_between_unprocessed_requests_retries:
+            logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
+
         tasks = set[asyncio.Task]()
         queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
         request_params = self._params(clientKey=self.client_key, forefront=forefront)

@@ -13,6 +13,8 @@ from apify_client.clients.base import ResourceClient, ResourceClientAsync
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
+    from apify_shared.consts import StorageGeneralAccess
+
 _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
 _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
 
@@ -35,19 +37,21 @@ class KeyValueStoreClient(ResourceClient):
         """
         return self._get(timeout_secs=_SMALL_TIMEOUT)
 
-    def update(self, *, name: str | None = None) -> dict:
+    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
 
         Args:
             name: The new name for key-value store.
+            general_access: Determines how others can access the key-value store.
 
         Returns:
             The updated key-value store.
         """
         updated_fields = {
             'name': name,
+            'generalAccess': general_access,
         }
 
         return self._update(filter_out_none_values_recursively(updated_fields))
@@ -262,19 +266,21 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         return await self._get(timeout_secs=_SMALL_TIMEOUT)
 
-    async def update(self, *, name: str | None = None) -> dict:
+    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
 
         Args:
             name: The new name for key-value store.
+            general_access: Determines how others can access the key-value store.
 
         Returns:
             The updated key-value store.
         """
         updated_fields = {
             'name': name,
+            'generalAccess': general_access,
         }
 
         return await self._update(filter_out_none_values_recursively(updated_fields))

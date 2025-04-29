@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     import httpx
+    from apify_shared.consts import StorageGeneralAccess
     from apify_shared.types import JSONSerializable
 
 _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
@@ -39,18 +40,22 @@ class DatasetClient(ResourceClient):
         """
         return self._get(timeout_secs=_SMALL_TIMEOUT)
 
-    def update(self, *, name: str | None = None) -> dict:
+    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
 
         Args:
             name: The new name for the dataset.
+            general_access: Determines how others can access the dataset.
 
         Returns:
             The updated dataset.
         """
-        updated_fields = {'name': name}
+        updated_fields = {
+            'name': name,
+            'generalAccess': general_access,
+        }
 
         return self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
 
@@ -585,18 +590,22 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         return await self._get(timeout_secs=_SMALL_TIMEOUT)
 
-    async def update(self, *, name: str | None = None) -> dict:
+    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
 
         Args:
             name: The new name for the dataset.
+            general_access: Determines how others can access the dataset.
 
         Returns:
             The updated dataset.
         """
-        updated_fields = {'name': name}
+        updated_fields = {
+            'name': name,
+            'generalAccess': general_access,
+        }
 
         return await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
 

@@ -19,6 +19,8 @@ from apify_client.clients.base import ResourceClient, ResourceClientAsync
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from apify_shared.consts import StorageGeneralAccess
+
 logger = logging.getLogger(__name__)
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
@@ -83,19 +85,21 @@ class RequestQueueClient(ResourceClient):
         """
         return self._get(timeout_secs=_SMALL_TIMEOUT)
 
-    def update(self, *, name: str | None = None) -> dict:
+    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
 
         Args:
             name: The new name for the request queue.
+            general_access: Determines how others can access the request queue.
 
         Returns:
             The updated request queue.
         """
         updated_fields = {
             'name': name,
+            'generalAccess': general_access,
         }
 
         return self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
@@ -448,19 +452,21 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         return await self._get(timeout_secs=_SMALL_TIMEOUT)
 
-    async def update(self, *, name: str | None = None) -> dict:
+    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
 
         Args:
             name: The new name for the request queue.
+            general_access: Determines how others can access the request queue.
 
         Returns:
             The updated request queue.
         """
         updated_fields = {
             'name': name,
+            'generalAccess': general_access,
         }
 
         return await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)

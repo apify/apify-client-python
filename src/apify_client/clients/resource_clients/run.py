@@ -18,6 +18,8 @@ from apify_client.clients.resource_clients.request_queue import RequestQueueClie
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from apify_shared.consts import RunGeneralAccess
+
 
 class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor run."""
@@ -37,7 +39,13 @@ class RunClient(ActorJobBaseClient):
         """
         return self._get()
 
-    def update(self, *, status_message: str | None = None, is_status_message_terminal: bool | None = None) -> dict:
+    def update(
+        self,
+        *,
+        status_message: str | None = None,
+        is_status_message_terminal: bool | None = None,
+        general_access: RunGeneralAccess | None = None,
+    ) -> dict:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -45,6 +53,7 @@ class RunClient(ActorJobBaseClient):
         Args:
             status_message: The new status message for the run.
             is_status_message_terminal: Set this flag to True if this is the final status message of the Actor run.
+            general_access: Determines how others can access the run and its storages.
 
         Returns:
             The updated run.
@@ -52,6 +61,7 @@ class RunClient(ActorJobBaseClient):
         updated_fields = {
             'statusMessage': status_message,
             'isStatusMessageTerminal': is_status_message_terminal,
+            'generalAccess': general_access,
         }
 
         return self._update(filter_out_none_values_recursively(updated_fields))
@@ -294,7 +304,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
         return await self._get()
 
     async def update(
-        self, *, status_message: str | None = None, is_status_message_terminal: bool | None = None
+        self,
+        *,
+        status_message: str | None = None,
+        is_status_message_terminal: bool | None = None,
+        general_access: RunGeneralAccess | None = None,
     ) -> dict:
         """Update the run with the specified fields.
 
@@ -303,6 +317,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Args:
             status_message: The new status message for the run.
             is_status_message_terminal: Set this flag to True if this is the final status message of the Actor run.
+            general_access: Determines how others can access the run and its storages.
 
         Returns:
             The updated run.
@@ -310,6 +325,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         updated_fields = {
             'statusMessage': status_message,
             'isStatusMessageTerminal': is_status_message_terminal,
+            'generalAccess': general_access,
         }
 
         return await self._update(filter_out_none_values_recursively(updated_fields))

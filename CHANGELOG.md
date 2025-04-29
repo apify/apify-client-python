@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 1.9.5 - **not yet released**
+
+### 🚀 Features
+
+- Add support for general resource access ([#394](https://github.com/apify/apify-client-python/pull/394)) ([cc79c30](https://github.com/apify/apify-client-python/commit/cc79c30a7d0b57d21a5fc7efb94c08cc4035c8b4)) by [@tobice](https://github.com/tobice)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [1.9.4](https://github.com/apify/apify-client-python/releases/tag/v1.9.4) (2025-04-24)
 
 ### 🐛 Bug Fixes

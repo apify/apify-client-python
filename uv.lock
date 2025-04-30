@@ -19,7 +19,7 @@ wheels = [
 
 [[package]]
 name = "apify-client"
-version = "1.9.4"
+version = "1.10.0"
 source = { editable = "." }
 dependencies = [
     { name = "apify-shared" },

@@ -143,10 +143,6 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
             content_type = 'application/json; charset=utf-8'
 
     if 'application/json' in content_type and not is_file_or_bytes(value) and not isinstance(value, str):
-        value = _to_json(value).encode('utf-8')
+        value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
 
-    return value, content_type
-
-
-def _to_json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str)
+    return (value, content_type)

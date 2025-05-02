@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import (
@@ -10,7 +9,7 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from apify_client._utils import _to_json, encode_webhook_list_to_base64, pluck_data
+from apify_client._utils import encode_key_value_store_record_value, encode_webhook_list_to_base64, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.actor_version import ActorVersionClient, ActorVersionClientAsync
 from apify_client.clients.resource_clients.actor_version_collection import (
@@ -30,8 +29,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from apify_shared.consts import ActorJobStatus, MetaOrigin
-
-logger = logging.getLogger(__name__)
 
 
 def get_actor_representation(
@@ -219,7 +216,7 @@ class ActorClient(ResourceClient):
     def start(
         self,
         *,
-        run_input: str | dict | None = None,
+        run_input: Any = None,
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
@@ -235,7 +232,7 @@ class ActorClient(ResourceClient):
 
         Args:
             run_input: The input to pass to the Actor run.
-            content_type: Deprecated.
+            content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
@@ -258,11 +255,7 @@ class ActorClient(ResourceClient):
         Returns:
             The run object.
         """
-        if content_type:
-            logger.warning('`content_type` is deprecated and not used anymore.')
-
-        if not isinstance(run_input, str):
-            run_input = _to_json(run_input)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         request_params = self._params(
             build=build,
@@ -277,7 +270,7 @@ class ActorClient(ResourceClient):
         response = self.http_client.call(
             url=self._url('runs'),
             method='POST',
-            headers={'content-type': 'application/json'},
+            headers={'content-type': content_type},
             data=run_input,
             params=request_params,
         )
@@ -466,22 +459,22 @@ class ActorClient(ResourceClient):
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
-    def validate_input(self, run_input: str | bytes | dict | None = None) -> bool:
+    def validate_input(self, run_input: Any = None, content_type: str | None = None) -> bool:
         """Validate the input for the Actor.
 
         Args:
-            run_input: The input to validate. Either json string or a dictionary.
+            run_input: The input to validate.
+            content_type: The content type of the input.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
-        if not isinstance(run_input, str):
-            run_input = _to_json(run_input)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         self.http_client.call(
             url=self._url('validate-input'),
             method='POST',
-            headers={'content-type': 'application/json'},
+            headers={'content-type': content_type},
             data=run_input,
         )
 
@@ -611,7 +604,7 @@ class ActorClientAsync(ResourceClientAsync):
     async def start(
         self,
         *,
-        run_input: str | dict | None = None,
+        run_input: Any = None,
         content_type: str | None = None,
         build: str | None = None,
         max_items: int | None = None,
@@ -627,7 +620,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         Args:
             run_input: The input to pass to the Actor run.
-            content_type: Deprecated.
+            content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
@@ -650,11 +643,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The run object.
         """
-        if content_type:
-            logger.warning('`content_type` is deprecated and not used anymore.')
-
-        if not isinstance(run_input, str):
-            run_input = _to_json(run_input)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         request_params = self._params(
             build=build,
@@ -669,7 +658,7 @@ class ActorClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('runs'),
             method='POST',
-            headers={'content-type': 'application/json'},
+            headers={'content-type': content_type},
             data=run_input,
             params=request_params,
         )
@@ -862,22 +851,22 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())
 
-    async def validate_input(self, run_input: str | dict | None = None) -> bool:
+    async def validate_input(self, run_input: Any = None, content_type: str | None = None) -> bool:
         """Validate the input for the Actor.
 
         Args:
-            run_input: The input to validate. Either json string or a dictionary.
+            run_input: The input to validate.
+            content_type: The content type of the input.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
-        if not isinstance(run_input, str):
-            run_input = _to_json(run_input)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
         await self.http_client.call(
             url=self._url('validate-input'),
             method='POST',
-            headers={'content-type': 'application/json'},
+            headers={'content-type': content_type},
             data=run_input,
         )
 

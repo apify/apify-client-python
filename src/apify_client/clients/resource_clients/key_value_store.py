@@ -63,7 +63,14 @@ class KeyValueStoreClient(ResourceClient):
         """
         return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    def list_keys(self, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
+    def list_keys(
+        self,
+        *,
+        limit: int | None = None,
+        exclusive_start_key: str | None = None,
+        collection: str | None = None,
+        prefix: str | None = None,
+    ) -> dict:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -71,11 +78,18 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             limit: Number of keys to be returned. Maximum value is 1000.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
+            collection: The name of the collection in store schema to list keys from.
+            prefix: The prefix of the keys to be listed.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)
+        request_params = self._params(
+            limit=limit,
+            exclusiveStartKey=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+        )
 
         response = self.http_client.call(
             url=self._url('keys'),
@@ -292,7 +306,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    async def list_keys(self, *, limit: int | None = None, exclusive_start_key: str | None = None) -> dict:
+    async def list_keys(
+        self,
+        *,
+        limit: int | None = None,
+        exclusive_start_key: str | None = None,
+        collection: str | None = None,
+        prefix: str | None = None,
+    ) -> dict:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -300,11 +321,18 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Args:
             limit: Number of keys to be returned. Maximum value is 1000.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
+            collection: The name of the collection in store schema to list keys from.
+            prefix: The prefix of the keys to be listed.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._params(limit=limit, exclusiveStartKey=exclusive_start_key)
+        request_params = self._params(
+            limit=limit,
+            exclusiveStartKey=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+        )
 
         response = await self.http_client.call(
             url=self._url('keys'),

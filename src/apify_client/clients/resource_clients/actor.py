@@ -459,6 +459,31 @@ class ActorClient(ResourceClient):
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
+    def validate_input(
+        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+    ) -> bool:
+        """Validate an input for the Actor that defines an input schema.
+
+        Args:
+            run_input: The input to validate.
+            build_tag: The actor's build tag.
+            content_type: The content type of the input.
+
+        Returns:
+            True if the input is valid, else raise an exception with validation error details.
+        """
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+
+        self.http_client.call(
+            url=self._url('validate-input'),
+            method='POST',
+            headers={'content-type': content_type},
+            data=run_input,
+            params=self._params(build=build_tag),
+        )
+
+        return True
+
 
 class ActorClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor."""
@@ -829,3 +854,28 @@ class ActorClientAsync(ResourceClientAsync):
     def webhooks(self) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())
+
+    async def validate_input(
+        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+    ) -> bool:
+        """Validate an input for the Actor that defines an input schema.
+
+        Args:
+            run_input: The input to validate.
+            build_tag: The actor's build tag.
+            content_type: The content type of the input.
+
+        Returns:
+            True if the input is valid, else raise an exception with validation error details.
+        """
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+
+        await self.http_client.call(
+            url=self._url('validate-input'),
+            method='POST',
+            headers={'content-type': content_type},
+            data=run_input,
+            params=self._params(build=build_tag),
+        )
+
+        return True

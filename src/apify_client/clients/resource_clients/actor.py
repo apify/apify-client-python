@@ -459,11 +459,14 @@ class ActorClient(ResourceClient):
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
-    def validate_input(self, run_input: Any = None, content_type: str | None = None) -> bool:
+    def validate_input(
+        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+    ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
         Args:
             run_input: The input to validate.
+            build_tag: The actor's build tag.
             content_type: The content type of the input.
 
         Returns:
@@ -476,6 +479,7 @@ class ActorClient(ResourceClient):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
+            params=self._params(build=build_tag),
         )
 
         return True
@@ -851,11 +855,14 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve a client for webhooks associated with this Actor."""
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())
 
-    async def validate_input(self, run_input: Any = None, content_type: str | None = None) -> bool:
+    async def validate_input(
+        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+    ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
         Args:
             run_input: The input to validate.
+            build_tag: The actor's build tag.
             content_type: The content type of the input.
 
         Returns:
@@ -868,6 +875,7 @@ class ActorClientAsync(ResourceClientAsync):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
+            params=self._params(build=build_tag),
         )
 
         return True

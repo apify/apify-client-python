@@ -460,7 +460,7 @@ class ActorClient(ResourceClient):
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
     def validate_input(self, run_input: Any = None, content_type: str | None = None) -> bool:
-        """Validate the input for the Actor.
+        """Validate an input for the Actor that defines an input schema.
 
         Args:
             run_input: The input to validate.
@@ -852,7 +852,7 @@ class ActorClientAsync(ResourceClientAsync):
         return WebhookCollectionClientAsync(**self._sub_resource_init_options())
 
     async def validate_input(self, run_input: Any = None, content_type: str | None = None) -> bool:
-        """Validate the input for the Actor.
+        """Validate an input for the Actor that defines an input schema.
 
         Args:
             run_input: The input to validate.

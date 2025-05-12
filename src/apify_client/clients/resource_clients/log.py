@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+import logging
+from asyncio import Task
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any
 
@@ -11,8 +14,10 @@ from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from types import TracebackType
 
     import httpx
+    from mypy.types import Self
 
 
 class LogClient(ResourceClient):
@@ -175,3 +180,50 @@ class LogClientAsync(ResourceClientAsync):
         finally:
             if response:
                 await response.aclose()
+
+
+class StreamedLogSync:
+    """Utility class for streaming logs from another actor."""
+
+
+class StreamedLogAsync:
+    """Utility class for streaming logs from another actor."""
+
+    def __init__(self, log_client: LogClientAsync, to_logger: logging.Logger) -> None:
+        self._log_client = log_client
+        self._to_logger = to_logger
+        self._streaming_task: Task | None = None
+
+    def __call__(self) -> Task:
+        """Start the streaming task. The called has to handle any cleanup."""
+        return asyncio.create_task(self._stream_log(self._to_logger))
+
+    async def __aenter__(self) -> Self:
+        """Start the streaming task within the context. Exiting the context will cancel the streaming task."""
+        if self._streaming_task:
+            raise RuntimeError('Streaming task already active')
+        self._streaming_task = self()
+
+        return self
+
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
+    ) -> None:
+        """Cancel the streaming task."""
+        if not self._streaming_task:
+            raise RuntimeError('Streaming task is not active')
+
+        self._streaming_task.cancel()
+
+        self._streaming_task = None
+
+    async def _stream_log(self, to_logger: logging.Logger) -> None:
+        async with self._log_client.stream() as log_stream:
+            if not log_stream:
+                return
+            async for data in log_stream.aiter_bytes():
+                log_level = logging.INFO  # The Original log level is not known unless the message is inspected.
+                # Adjust the log level in custom logger filter if needed.
+                to_logger.log(level=log_level, msg=data)
+        # Cleanup in the end
+        #log_stream.close()

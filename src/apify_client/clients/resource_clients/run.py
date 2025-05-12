@@ -8,14 +8,16 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
+from apify_client._logging import create_redirect_logger
 from apify_client._utils import encode_key_value_store_record_value, pluck_data, to_safe_id
 from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 from apify_client.clients.resource_clients.dataset import DatasetClient, DatasetClientAsync
 from apify_client.clients.resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
+from apify_client.clients.resource_clients.log import LogClient, LogClientAsync, StreamedLogAsync
 from apify_client.clients.resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
 if TYPE_CHECKING:
+    import logging
     from decimal import Decimal
 
     from apify_shared.consts import RunGeneralAccess
@@ -514,6 +516,26 @@ class RunClientAsync(ActorJobBaseClientAsync):
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
         )
+
+    async def get_streamed_log(self, to_logger: logging.Logger | None = None, actor_name: str = '') -> StreamedLogAsync:
+        """Get `StreamedLogAsync` instance that can be used to redirect logs.
+
+         `StreamedLogAsync` can be directly called or used as a context manager.
+
+        Args:
+            to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
+            actor_name: Optional component of default logger name.
+
+        Returns:
+            `StreamedLogAsync` instance for redirected logs.
+        """
+        run_data = await self.get()
+        run_id = run_data.get('id', '') if run_data else ''
+
+        if not to_logger:
+            to_logger = create_redirect_logger(f'apify.{f"{actor_name}-{run_id}"}')
+
+        return StreamedLogAsync(self.log(), to_logger)
 
     async def charge(
         self,

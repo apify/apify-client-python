@@ -533,7 +533,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         run_id = run_data.get('id', '') if run_data else ''
 
         if not to_logger:
-            to_logger = create_redirect_logger(f'apify.{f"{actor_name}-{run_id}"}')
+            name = "-".join(part for part in (actor_name, run_id) if part)
+            to_logger = create_redirect_logger(f'apify.{name}')
 
         return StreamedLogAsync(self.log(), to_logger)
 

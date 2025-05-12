@@ -224,6 +224,11 @@ class StreamedLogAsync:
             async for data in log_stream.aiter_bytes():
                 log_level = logging.INFO  # The Original log level is not known unless the message is inspected.
                 # Adjust the log level in custom logger filter if needed.
-                to_logger.log(level=log_level, msg=data)
+
+                # Split by lines for each line that does start with standard format, try to guess the log level
+                # example split marker: \n2025-05-12T15:35:59.429Z
+
+                to_logger.log(level=log_level, msg=data.decode('utf-8'))
+                #logging.getLogger("apify_client").info(data)
         # Cleanup in the end
         #log_stream.close()

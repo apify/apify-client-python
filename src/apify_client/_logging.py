@@ -7,6 +7,8 @@ import logging
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple, cast
 
+from colorama import Style, Fore
+
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
     from apify_client.clients.base.base_client import _BaseBaseClient
@@ -121,7 +123,6 @@ class _DebugLogFormatter(logging.Formatter):
             log_string = f'{log_string} ({json.dumps(extra)})'
         return log_string
 
-
 def create_redirect_logger(
     name: str,
     *,
@@ -141,7 +142,7 @@ def create_redirect_logger(
         The created logger.
     """
     to_logger = logging.getLogger(name)
-    to_logger.propagate = True
+
     if respect_original_log_level:
         to_logger.addFilter(
             _RedirectLogLevelFilter(
@@ -151,6 +152,11 @@ def create_redirect_logger(
     else:
         to_logger.addFilter(_FixedLevelFilter(default_level=default_level))
 
+    to_logger.propagate = False
+    handler = logging.StreamHandler()
+    handler.setFormatter(RedirectLogFormatter())
+    to_logger.addHandler(handler)
+    to_logger.setLevel(logging.INFO)
     return to_logger
 
 
@@ -187,3 +193,17 @@ class _RedirectLogLevelFilter(logging.Filter):
         record.levelno = self._guess_log_level_from_message(record.msg)
         record.levelname = logging.getLevelName(record.levelno)
         return True
+
+class RedirectLogFormatter:
+    """Formater applied to default redirect logger."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format the log by prepending logger name to the original message.
+
+        TODO: Make advanced coloring later.
+        Ideally it should respect the color of the original log, but that information is not available in the API.
+        Inspecting logs and coloring their parts during runtime could be quite heavy. Keep it simple for now.
+        """
+        logger_name_string = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL} '
+
+        return f'{logger_name_string}-> {record.msg}'

@@ -190,10 +190,15 @@ class StreamedLogSync:
 class StreamedLogAsync:
     """Utility class for streaming logs from another actor."""
 
+    # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
+    _force_propagate = False
+
     def __init__(self, log_client: LogClientAsync, to_logger: logging.Logger) -> None:
         self._log_client = log_client
         self._to_logger = to_logger
         self._streaming_task: Task | None = None
+        if self._force_propagate:
+            to_logger.propagate = True
 
     def __call__(self) -> Task:
         """Start the streaming task. The caller has to handle any cleanup."""
@@ -223,12 +228,12 @@ class StreamedLogAsync:
                 return
             async for data in log_stream.aiter_bytes():
                 # Example split marker: \n2025-05-12T15:35:59.429Z
-                date_time_marker_pattern = r"(\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)"
+                date_time_marker_pattern = r'(\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)'
                 splits = re.split(date_time_marker_pattern, data.decode('utf-8'))
-                messages=splits[:1]
+                messages = splits[:1]
 
-                for split_marker, message_without_split_marker in zip(splits[1:-1:2],splits[2::2]):
-                    messages.append(split_marker+message_without_split_marker)
+                for split_marker, message_without_split_marker in zip(splits[1:-1:2], splits[2::2]):
+                    messages.append(split_marker + message_without_split_marker)
 
                 for message in messages:
                     to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())

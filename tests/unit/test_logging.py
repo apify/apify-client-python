@@ -1,67 +1,174 @@
 import asyncio
 import json
 import logging
-import time
 from collections.abc import AsyncIterator
 
 import httpx
+import pytest
 import respx
-
+from _pytest.logging import LogCaptureFixture
+from apify_shared.consts import ActorJobStatus
 
 from apify_client import ApifyClientAsync
-from apify_client.clients import RunClientAsync
+from apify_client._logging import RedirectLogFormatter
+from apify_client.clients.resource_clients.log import StreamedLogAsync
+
+_MOCKED_API_URL = 'https://example.com'
+_MOCKED_RUN_ID = 'mocked_run_id'
+_MOCKED_ACTOR_NAME = 'mocked_actor_name'
+_MOCKED_ACTOR_ID = 'mocked_actor_id'
+_MOCKED_ACTOR_LOGS = (
+    b'2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.\n'
+    b'2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.\n'
+    b'2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.',  # Several logs merged into one message
+    b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log',
+    b'2025-05-13T07:25:14.132Z [apify] WARNING some warning',
+    b'2025-05-13T07:26:14.132Z [apify] DEBUG c',
+)
+
+_EXPECTED_MESSAGES_AND_LEVELS = (
+    ('2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.', logging.INFO),
+    ('2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.', logging.INFO),
+    ('2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.', logging.INFO),
+    ('2025-05-13T07:24:14.132Z [apify] INFO multiline \n log', logging.INFO),
+    ('2025-05-13T07:25:14.132Z [apify] WARNING some warning', logging.WARNING),
+    ('2025-05-13T07:26:14.132Z [apify] DEBUG c', logging.DEBUG),
+)
 
 
-@respx.mock
-async def test_redirected_logs(caplog) -> None:
-    """Test that redirected logs are formatted correctly."""
-    mocked_actor_logs_logs = (
-        b"2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.\n"
-        b"2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.\n"
-        b"2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.", # Several logs merged into one message
-        b"2025-05-13T07:24:14.132Z [apify] INFO multiline \n log",
-        b"2025-05-13T07:25:14.132Z [apify] WARNING some warning",
-        b"2025-05-13T07:26:14.132Z [apify] DEBUG c")
-    mocked_actor_name = "mocked_actor"
-    mocked_run_id = "mocked_run_id"
-
-    expected_logs_and_levels = [
-        ("2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.", logging.INFO),
-        ("2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.", logging.INFO),
-        ("2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.", logging.INFO),
-        ("2025-05-13T07:24:14.132Z [apify] INFO multiline \n log", logging.INFO),
-        ("2025-05-13T07:25:14.132Z [apify] WARNING some warning", logging.WARNING),
-        ("2025-05-13T07:26:14.132Z [apify] DEBUG c", logging.DEBUG),
-    ]
-
-    class AsyncByteStream:
+@pytest.fixture
+def mock_api() -> None:
+    class AsyncByteStream(httpx._types.AsyncByteStream):
         async def __aiter__(self) -> AsyncIterator[bytes]:
-            for i in mocked_actor_logs_logs:
+            for i in _MOCKED_ACTOR_LOGS:
                 yield i
                 await asyncio.sleep(0.1)
 
         async def aclose(self) -> None:
             pass
 
-    respx.get(url=f'https://example.com/v2/actor-runs/{mocked_run_id}').mock(
-        return_value=httpx.Response(content=json.dumps({"data":{'id': mocked_run_id}}),status_code=200))
-    respx.get(url=f'https://example.com/v2/actor-runs/{mocked_run_id}/log?stream=1').mock(
-        return_value=httpx.Response(stream=AsyncByteStream(), status_code=200))
+    actor_runs_responses = iter(
+        (
+            httpx.Response(
+                content=json.dumps({'data': {'id': _MOCKED_RUN_ID, 'status': ActorJobStatus.RUNNING}}), status_code=200
+            ),
+            httpx.Response(
+                content=json.dumps({'data': {'id': _MOCKED_RUN_ID, 'status': ActorJobStatus.RUNNING}}), status_code=200
+            ),
+            httpx.Response(
+                content=json.dumps({'data': {'id': _MOCKED_RUN_ID, 'status': ActorJobStatus.SUCCEEDED}}),
+                status_code=200,
+            ),
+        )
+    )
 
-    run_client = ApifyClientAsync(token="mocked_token", api_url='https://example.com').run(run_id=mocked_run_id)
-    streamed_log = await run_client.get_streamed_log(actor_name=mocked_actor_name)
+    async def actor_runs_side_effect(_: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(0.5)
+        return next(actor_runs_responses)
+
+    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}').mock(side_effect=actor_runs_side_effect)
+
+    respx.get(url=f'{_MOCKED_API_URL}/v2/acts/{_MOCKED_ACTOR_ID}').mock(
+        return_value=httpx.Response(content=json.dumps({'data': {'name': _MOCKED_ACTOR_NAME}}), status_code=200)
+    )
+
+    respx.post(url=f'{_MOCKED_API_URL}/v2/acts/{_MOCKED_ACTOR_ID}/runs').mock(
+        return_value=httpx.Response(content=json.dumps({'data': {'id': _MOCKED_RUN_ID}}), status_code=200)
+    )
+
+    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}/log?stream=1').mock(
+        return_value=httpx.Response(stream=AsyncByteStream(), status_code=200)
+    )
+
+
+@pytest.fixture
+def propagate_stream_logs() -> None:
+    StreamedLogAsync._force_propagate = True  # Enable propagation of logs to the caplog fixture
+    logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
+
+
+@respx.mock
+async def test_redirected_logs(
+    caplog: LogCaptureFixture,
+    mock_api: None,  # noqa: ARG001, fixture
+    propagate_stream_logs: None,  # noqa: ARG001, fixture
+) -> None:
+    """Test that redirected logs are formatted correctly."""
+
+    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = await run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
-    logger_name = f"apify.{mocked_actor_name}-{mocked_run_id}"
-    logging.getLogger(logger_name).propagate = True
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
             # Do stuff while the log from the other actor is being redirected to the logs.
             await asyncio.sleep(1)
 
-    records = caplog.records
-    assert len(records) == 6
-    for expected_log_and_level, record in zip(expected_logs_and_levels, records):
-        assert expected_log_and_level[0] == record.message
-        assert expected_log_and_level[1] == record.levelno
+    assert len(caplog.records) == 6
+    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
+        assert expected_message_and_level[0] == record.message
+        assert expected_message_and_level[1] == record.levelno
+
+
+@respx.mock
+async def test_actor_call_redirect_logs_to_default_logger(
+    caplog: LogCaptureFixture,
+    mock_api: None,  # noqa: ARG001, fixture
+    propagate_stream_logs: None,  # noqa: ARG001, fixture
+) -> None:
+    """Test that logs are redirected correctly to the default logger.
+
+    Caplog contains logs before formatting, so formatting is not included in the test expectations."""
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+    logger = logging.getLogger(logger_name)
+    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        await run_client.call()
+
+    # Ensure expected handler and formater
+    assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
+    assert isinstance(logger.handlers[0], logging.StreamHandler)
+
+    # Ensure logs are propagated
+    assert len(caplog.records) == 6
+    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
+        assert expected_message_and_level[0] == record.message
+        assert expected_message_and_level[1] == record.levelno
+
+
+@respx.mock
+async def test_actor_call_no_redirect_logs(
+    caplog: LogCaptureFixture,
+    mock_api: None,  # noqa: ARG001, fixture
+    propagate_stream_logs: None,  # noqa: ARG001, fixture
+) -> None:
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        await run_client.call(logger=None)
+
+    assert len(caplog.records) == 0
+
+
+@respx.mock
+async def test_actor_call_redirect_logs_to_custom_logger(
+    caplog: LogCaptureFixture,
+    mock_api: None,  # noqa: ARG001, fixture
+    propagate_stream_logs: None,  # noqa: ARG001, fixture
+) -> None:
+    """Test that logs are redirected correctly to the custom logger."""
+    logger_name = 'custom_logger'
+    logger = logging.getLogger(logger_name)
+    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        await run_client.call(logger=logger)
+
+    assert len(caplog.records) == 6
+    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
+        assert expected_message_and_level[0] == record.message
+        assert expected_message_and_level[1] == record.levelno

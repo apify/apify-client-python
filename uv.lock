@@ -23,6 +23,7 @@ version = "1.10.1"
 source = { editable = "." }
 dependencies = [
     { name = "apify-shared" },
+    { name = "colorama" },
     { name = "httpx" },
     { name = "more-itertools" },
 ]
@@ -42,11 +43,13 @@ dev = [
     { name = "respx" },
     { name = "ruff" },
     { name = "setuptools" },
+    { name = "types-colorama" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "apify-shared", specifier = ">=1.4.1" },
+    { name = "colorama", specifier = "~=0.4.0" },
     { name = "httpx", specifier = ">=0.25" },
     { name = "more-itertools", specifier = ">=10.0.0" },
 ]
@@ -66,6 +69,7 @@ dev = [
     { name = "respx", specifier = "~=0.22.0" },
     { name = "ruff", specifier = "~=0.11.0" },
     { name = "setuptools" },
+    { name = "types-colorama", specifier = "~=0.4.15.20240106" },
 ]
 
 [[package]]
@@ -1051,6 +1055,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e6/4c/6c35c2d97e6292d715bd93953a4a6114fc091492bd58cad1fdaebbc4ee12/typeapi-2.2.4.tar.gz", hash = "sha256:daa80767520c0957a320577e4f729c0ba6921c708def31f4c6fd8d611908fd7b", size = 121923, upload_time = "2025-01-29T11:40:14.68Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b6/33/38da585b06978d262cc2b2b45bc57ee75f0ce5e0b4ef1cab1b86461e9298/typeapi-2.2.4-py3-none-any.whl", hash = "sha256:bd6d5e5907fa47e0303bf254e7cc8712d4be4eb26d7ffaedb67c9e7844c53bb8", size = 26387, upload_time = "2025-01-29T11:40:12.328Z" },
+]
+
+[[package]]
+name = "types-colorama"
+version = "0.4.15.20240311"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/73/0fb0b9fe4964b45b2a06ed41b60c352752626db46aa0fb70a49a9e283a75/types-colorama-0.4.15.20240311.tar.gz", hash = "sha256:a28e7f98d17d2b14fb9565d32388e419f4108f557a7d939a66319969b2b99c7a", size = 5608, upload_time = "2024-03-11T02:15:51.557Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/83/6944b4fa01efb2e63ac62b791a8ddf0fee358f93be9f64b8f152648ad9d3/types_colorama-0.4.15.20240311-py3-none-any.whl", hash = "sha256:6391de60ddc0db3f147e31ecb230006a6823e81e380862ffca1e4695c13a0b8e", size = 5840, upload_time = "2024-03-11T02:15:50.43Z" },
 ]
 
 [[package]]

@@ -5,9 +5,9 @@ import inspect
 import json
 import logging
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 
-from colorama import Style, Fore
+from colorama import Fore, Style
 
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
@@ -123,6 +123,7 @@ class _DebugLogFormatter(logging.Formatter):
             log_string = f'{log_string} ({json.dumps(extra)})'
         return log_string
 
+
 def create_redirect_logger(
     name: str,
 ) -> logging.Logger:
@@ -141,11 +142,11 @@ def create_redirect_logger(
     handler = logging.StreamHandler()
     handler.setFormatter(RedirectLogFormatter())
     to_logger.addHandler(handler)
-    to_logger.setLevel(logging.INFO)
+    to_logger.setLevel(logging.DEBUG)
     return to_logger
 
 
-class RedirectLogFormatter:
+class RedirectLogFormatter(logging.Formatter):
     """Formater applied to default redirect logger."""
 
     def format(self, record: logging.LogRecord) -> str:

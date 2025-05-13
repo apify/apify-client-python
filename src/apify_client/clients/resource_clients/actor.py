@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from apify_shared.utils import (
     filter_out_none_values_recursively,
@@ -27,6 +27,7 @@ from apify_client.clients.resource_clients.webhook_collection import (
 
 if TYPE_CHECKING:
     from decimal import Decimal
+    from logging import Logger
 
     from apify_shared.consts import ActorJobStatus, MetaOrigin
 
@@ -681,6 +682,7 @@ class ActorClientAsync(ResourceClientAsync):
         timeout_secs: int | None = None,
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
+        logger: Logger | None | Literal['default'] = 'default',
     ) -> dict | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
@@ -705,6 +707,9 @@ class ActorClientAsync(ResourceClientAsync):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_secs: The maximum number of seconds the server waits for the run to finish. If not provided,
                 waits indefinitely.
+            logger: Loger used to redirect logs from the Actor run. By default, it is set to "default" which means that
+                the default logger will be created and used. Setting `None` will disable any log propagation. Passing
+                custom logger will redirect logs to the provided logger.
 
         Returns:
             The run object.
@@ -720,7 +725,18 @@ class ActorClientAsync(ResourceClientAsync):
             webhooks=webhooks,
         )
 
-        return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+        if not logger:
+            return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+
+        run_client = self.root_client.run(run_id=started_run['id'])
+        if logger == 'default':
+            actor_name = actor_data.get('name', '') if (actor_data := await self.get()) else ''
+            log_context = await run_client.get_streamed_log(actor_name=actor_name)
+        else:
+            log_context = await run_client.get_streamed_log(to_logger=logger)
+
+        async with log_context:
+            return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     async def build(
         self,

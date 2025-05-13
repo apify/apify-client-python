@@ -125,32 +125,17 @@ class _DebugLogFormatter(logging.Formatter):
 
 def create_redirect_logger(
     name: str,
-    *,
-    default_level: int = logging.INFO,
-    respect_original_log_level: bool = True,
 ) -> logging.Logger:
     """Create a logger for redirecting logs from another Actor.
 
     Args:
         name: The name of the logger. It can be used to inherit from other loggers. Example: `apify.xyz` will use logger
          named `xyz` and make it a children of `apify` logger.
-        default_level: All logs will be emitted on this level, regardless of the original level.
-        respect_original_log_level: Try to use the original log level of the other actor logger and use `default_level`
-         only if the original level is not determined.
 
     Returns:
         The created logger.
     """
     to_logger = logging.getLogger(name)
-
-    if respect_original_log_level:
-        to_logger.addFilter(
-            _RedirectLogLevelFilter(
-                default_level=default_level,
-            )
-        )
-    else:
-        to_logger.addFilter(_FixedLevelFilter(default_level=default_level))
 
     to_logger.propagate = False
     handler = logging.StreamHandler()
@@ -159,40 +144,6 @@ def create_redirect_logger(
     to_logger.setLevel(logging.INFO)
     return to_logger
 
-
-class _FixedLevelFilter(logging.Filter):
-    def __init__(self, name: str = '', default_level: int = logging.INFO) -> None:
-        super().__init__(name)
-        self._default_level = default_level
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Try to extract log level from the message content and set it accordingly."""
-        record.levelno = self._default_level
-        record.levelname = logging.getLevelName(record.levelno)
-        return True
-
-
-class _RedirectLogLevelFilter(logging.Filter):
-    def __init__(self, name: str = '', default_level: int = logging.INFO) -> None:
-        super().__init__(name)
-        self._default_level = default_level
-
-    def _guess_log_level_from_message(self, message: str) -> int:
-        """Guess the log level from the message."""
-        # Using only levels explicitly mentioned in logging module
-        known_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
-        for level in known_levels:
-            if level in message:
-                # `getLevelName` returns an `int` when string is passed as input.
-                return cast('int', logging.getLevelName(level))
-        # Unknown log level. Fall back to the default.
-        return self._default_level
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Try to extract log level from the message content and set it accordingly."""
-        record.levelno = self._guess_log_level_from_message(record.msg)
-        record.levelname = logging.getLevelName(record.levelno)
-        return True
 
 class RedirectLogFormatter:
     """Formater applied to default redirect logger."""

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from asyncio import Task
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from apify_shared.utils import ignore_docs
 
@@ -195,7 +196,7 @@ class StreamedLogAsync:
         self._streaming_task: Task | None = None
 
     def __call__(self) -> Task:
-        """Start the streaming task. The called has to handle any cleanup."""
+        """Start the streaming task. The caller has to handle any cleanup."""
         return asyncio.create_task(self._stream_log(self._to_logger))
 
     async def __aenter__(self) -> Self:
@@ -214,7 +215,6 @@ class StreamedLogAsync:
             raise RuntimeError('Streaming task is not active')
 
         self._streaming_task.cancel()
-
         self._streaming_task = None
 
     async def _stream_log(self, to_logger: logging.Logger) -> None:
@@ -222,13 +222,26 @@ class StreamedLogAsync:
             if not log_stream:
                 return
             async for data in log_stream.aiter_bytes():
-                log_level = logging.INFO  # The Original log level is not known unless the message is inspected.
-                # Adjust the log level in custom logger filter if needed.
+                # Example split marker: \n2025-05-12T15:35:59.429Z
+                date_time_marker_pattern = r"(\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)"
+                splits = re.split(date_time_marker_pattern, data.decode('utf-8'))
+                messages=splits[:1]
 
-                # Split by lines for each line that does start with standard format, try to guess the log level
-                # example split marker: \n2025-05-12T15:35:59.429Z
+                for split_marker, message_without_split_marker in zip(splits[1:-1:2],splits[2::2]):
+                    messages.append(split_marker+message_without_split_marker)
 
-                to_logger.log(level=log_level, msg=data.decode('utf-8'))
-                #logging.getLogger("apify_client").info(data)
-        # Cleanup in the end
-        #log_stream.close()
+                for message in messages:
+                    to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
+        log_stream.close()
+
+    @staticmethod
+    def _guess_log_level_from_message(message: str) -> int:
+        """Guess the log level from the message."""
+        # Using only levels explicitly mentioned in the logging module
+        known_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
+        for level in known_levels:
+            if level in message:
+                # `getLevelName` returns an `int` when string is passed as input.
+                return cast('int', logging.getLevelName(level))
+        # Unknown log level. Fall back to the default.
+        return logging.INFO

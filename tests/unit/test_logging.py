@@ -15,8 +15,24 @@ from apify_client.clients import RunClientAsync
 @respx.mock
 async def test_redirected_logs(caplog) -> None:
     """Test that redirected logs are formatted correctly."""
-    mocked_actor_logs_logs = (b"INFO a", b"WARNING b", b"DEBUG c")
+    mocked_actor_logs_logs = (
+        b"2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.\n"
+        b"2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.\n"
+        b"2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.", # Several logs merged into one message
+        b"2025-05-13T07:24:14.132Z [apify] INFO multiline \n log",
+        b"2025-05-13T07:25:14.132Z [apify] WARNING some warning",
+        b"2025-05-13T07:26:14.132Z [apify] DEBUG c")
     mocked_actor_name = "mocked_actor"
+    mocked_run_id = "mocked_run_id"
+
+    expected_logs_and_levels = [
+        ("2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.", logging.INFO),
+        ("2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.", logging.INFO),
+        ("2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.", logging.INFO),
+        ("2025-05-13T07:24:14.132Z [apify] INFO multiline \n log", logging.INFO),
+        ("2025-05-13T07:25:14.132Z [apify] WARNING some warning", logging.WARNING),
+        ("2025-05-13T07:26:14.132Z [apify] DEBUG c", logging.DEBUG),
+    ]
 
     class AsyncByteStream:
         async def __aiter__(self) -> AsyncIterator[bytes]:
@@ -27,27 +43,25 @@ async def test_redirected_logs(caplog) -> None:
         async def aclose(self) -> None:
             pass
 
-    run_client = ApifyClientAsync(token="mocked_token", api_url='https://example.com').run(run_id="run_is_mocked")
-    respx.get(url='https://example.com/v2/actor-runs/run_is_mocked').mock(
-        return_value=httpx.Response(content=json.dumps({"data":{'actId': 'SbjD4JEucMevUdQAH'}}),status_code=200))
-    respx.get(url='https://example.com/v2/actor-runs/run_is_mocked/log?stream=1').mock(
+    respx.get(url=f'https://example.com/v2/actor-runs/{mocked_run_id}').mock(
+        return_value=httpx.Response(content=json.dumps({"data":{'id': mocked_run_id}}),status_code=200))
+    respx.get(url=f'https://example.com/v2/actor-runs/{mocked_run_id}/log?stream=1').mock(
         return_value=httpx.Response(stream=AsyncByteStream(), status_code=200))
-        # {'http_version': b'HTTP/1.1', 'network_stream': <httpcore._backends.anyio.AnyIOStream object at 0x7fc82543db70>, 'reason_phrase': b'OK'}
-        # [(b'Date', b'Mon, 12 May 2025 13:24:41 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Cache-Control', b'no-cache, no-store, must-revalidate'), (b'Pragma', b'no-cache'), (b'Expires', b'0'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Allow-Headers', b'User-Agent, Content-Type, Authorization, X-Apify-Request-Origin, openai-conversation-id, openai-ephemeral-user-id'), (b'Access-Control-Allow-Methods', b'GET, POST'), (b'Access-Control-Expose-Headers', b'X-Apify-Pagination-Total, X-Apify-Pagination-Offset, X-Apify-Pagination-Desc, X-Apify-Pagination-Count, X-Apify-Pagination-Limit'), (b'Referrer-Policy', b'no-referrer'), (b'X-Robots-Tag', b'none'), (b'X-RateLimit-Limit', b'200'), (b'Location', b'https://api.apify.com/v2/actor-runs/ywNUnFFbOksQLa4mH'), (b'Vary', b'Accept-Encoding'), (b'Content-Encoding', b'gzip')]
+
+    run_client = ApifyClientAsync(token="mocked_token", api_url='https://example.com').run(run_id=mocked_run_id)
     streamed_log = await run_client.get_streamed_log(actor_name=mocked_actor_name)
 
-    with caplog.at_level(logging.DEBUG):
+    # Set `propagate=True` during the tests, so that caplog can see the logs..
+    logger_name = f"apify.{mocked_actor_name}-{mocked_run_id}"
+    logging.getLogger(logger_name).propagate = True
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
+            # Do stuff while the log from the other actor is being redirected to the logs.
             await asyncio.sleep(1)
-            # do some stuff
-            pass
 
     records = caplog.records
-    assert len(records) == 2
-
-
-
-"""
-
-{'actId': 'SbjD4JEucMevUdQAH', 'buildId': 'Jv7iIjo1JV0gEXQEm', 'buildNumber': '0.0.5', 'containerUrl': 'https://tlo2axp6qbc7.runs.apify.net', 'defaultDatasetId': 'DZq6uDwZ4gSXev8h2', 'defaultKeyValueStoreId': '7UswAGyvNKFGlddHS', 'defaultRequestQueueId': 'Gk4ye89GRCoqFNdsM', 'finishedAt': None, 'generalAccess': 'FOLLOW_USER_SETTING', 'id': 'u6Q52apBHWO09NjDP', 'meta': {'origin': 'API', 'userAgent': 'ApifyClient/1.9.0 (linux; Python/3.10.12); isAtHome/False'}, 'options': {'build': 'latest', 'diskMbytes': 2048, 'memoryMbytes': 1024, 'timeoutSecs': 3600}, 'startedAt': '2025-05-12T13:54:23.028Z', 'stats': {'computeUnits': 0, 'inputBodyLen': 15, 'migrationCount': 0, 'rebootCount': 0, 'restartCount': 0, 'resurrectCount': 0}, 'status': 'READY', 'usage': {'ACTOR_COMPUTE_UNITS': 0, 'DATASET_READS': 0, 'DATASET_WRITES': 0, 'DATA_TRANSFER_EXTERNAL_GBYTES': 0, 'DATA_TRANSFER_INTERNAL_GBYTES': 0, 'KEY_VALUE_STORE_LISTS': 0, 'KEY_VALUE_STORE_READS': 0, 'KEY_VALUE_STORE_WRITES': 1, 'PROXY_RESIDENTIAL_TRANSFER_GBYTES': 0, 'PROXY_SERPS': 0, 'REQUEST_QUEUE_READS': 0, 'REQUEST_QUEUE_WRITES': 0}, 'usageTotalUsd': 5e-05, 'usageUsd': {'ACTOR_COMPUTE_UNITS': 0, 'DATASET_READS': 0, 'DATASET_WRITES': 0, 'DATA_TRANSFER_EXTERNAL_GBYTES': 0, 'DATA_TRANSFER_INTERNAL_GBYTES': 0, 'KEY_VALUE_STORE_LISTS': 0, 'KEY_VALUE_STORE_READS': 0, 'KEY_VALUE_STORE_WRITES': 5e-05, 'PROXY_RESIDENTIAL_TRANSFER_GBYTES': 0, 'PROXY_SERPS': 0, 'REQUEST_QUEUE_READS': 0, 'REQUEST_QUEUE_WRITES': 0}, 'userId': 'LjAzEG1CadliECnrn'}
-"""
+    assert len(records) == 6
+    for expected_log_and_level, record in zip(expected_logs_and_levels, records):
+        assert expected_log_and_level[0] == record.message
+        assert expected_log_and_level[1] == record.levelno

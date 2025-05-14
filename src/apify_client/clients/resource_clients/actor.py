@@ -290,6 +290,7 @@ class ActorClient(ResourceClient):
         timeout_secs: int | None = None,
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
+        logger: Logger | None | Literal['default'] = 'default',
     ) -> dict | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
@@ -314,6 +315,9 @@ class ActorClient(ResourceClient):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_secs: The maximum number of seconds the server waits for the run to finish. If not provided,
                 waits indefinitely.
+            logger: Loger used to redirect logs from the Actor run. By default, it is set to "default" which means that
+                the default logger will be created and used. Setting `None` will disable any log propagation. Passing
+                custom logger will redirect logs to the provided logger.
 
         Returns:
             The run object.
@@ -730,7 +734,8 @@ class ActorClientAsync(ResourceClientAsync):
 
         run_client = self.root_client.run(run_id=started_run['id'])
         if logger == 'default':
-            actor_name = actor_data.get('name', '') if (actor_data := await self.get()) else ''
+            actor_data = await self.get()
+            actor_name = actor_data.get('name', '') if actor_data else ''
             log_context = await run_client.get_streamed_log(actor_name=actor_name)
         else:
             log_context = await run_client.get_streamed_log(to_logger=logger)

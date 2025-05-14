@@ -24,10 +24,10 @@ _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log',
     b'2025-05-13T07:25:14.132Z [apify] WARNING some warning',
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c',
-    b'2025-05-13T0', # Chunked log that got split in the marker, part 1
-    b'7:26:14.132Z [apify] DEBUG d' # Chunked log that got split in the marker, part 2
-    b'2025-05-13T07:26:14.132Z [apify] DEB', # Chunked log that got split outside of marker, part 1
-    b'UG e', # Chunked log that got split outside of marker, part 1
+    b'2025-05-13T0',  # Chunked log that got split in the marker, part 1
+    b'7:26:14.132Z [apify] DEBUG d'  # Chunked log that got split in the marker, part 2
+    b'2025-05-13T07:26:14.132Z [apify] DEB',  # Chunked log that got split outside of marker, part 1
+    b'UG e',  # Chunked log that got split outside of marker, part 1
 )
 
 _EXPECTED_MESSAGES_AND_LEVELS = (

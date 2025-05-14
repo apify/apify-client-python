@@ -29,10 +29,13 @@ class LogClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self, raw: str = False) -> str | None:
+    def get(self, *, raw: bool = False) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Args:
+            raw: If true, the log will include formating. For example, coloring character sequences.
 
         Returns:
             The retrieved log, or None, if it does not exist.
@@ -51,10 +54,13 @@ class LogClient(ResourceClient):
 
         return None
 
-    def get_as_bytes(self, raw: str = False) -> bytes | None:
+    def get_as_bytes(self, *, raw: bool = False) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Args:
+            raw: If true, the log will include formating. For example, coloring character sequences.
 
         Returns:
             The retrieved log as raw bytes, or None, if it does not exist.
@@ -75,10 +81,13 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self, raw: str = False) -> Iterator[httpx.Response | None]:
+    def stream(self, *, raw: bool = False) -> Iterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Args:
+            raw: If true, the log will include formating. For example, coloring character sequences.
 
         Returns:
             The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
@@ -110,10 +119,13 @@ class LogClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self, raw: str = False) -> str | None:
+    async def get(self, *, raw: bool = False) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Args:
+            raw: If true, the log will include formating. For example, coloring character sequences.
 
         Returns:
             The retrieved log, or None, if it does not exist.
@@ -132,10 +144,13 @@ class LogClientAsync(ResourceClientAsync):
 
         return None
 
-    async def get_as_bytes(self, raw: str = False) -> bytes | None:
+    async def get_as_bytes(self, *, raw: bool = False) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Args:
+            raw: If true, the log will include formating. For example, coloring character sequences.
 
         Returns:
             The retrieved log as raw bytes, or None, if it does not exist.
@@ -156,10 +171,13 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self, raw: str = False) -> AsyncIterator[httpx.Response | None]:
+    async def stream(self, *, raw: bool = False) -> AsyncIterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        Args:
+            raw: If true, the log will include formating. For example, coloring character sequences.
 
         Returns:
             The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
@@ -175,7 +193,7 @@ class LogClientAsync(ResourceClientAsync):
             )
 
             yield response
-        except Exception as exc:
+        except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             yield None
         finally:
@@ -199,10 +217,14 @@ class StreamedLogAsync:
         self._streaming_task: Task | None = None
         if self._force_propagate:
             to_logger.propagate = True
+        self._stream_buffer = list[str]()
+        # Redirected logs are forwarded to logger as soon as there are at least two split markers present in the buffer.
+        # For example, 2025-05-12T15:35:59.429Z
+        self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
 
     def __call__(self) -> Task:
         """Start the streaming task. The caller has to handle any cleanup."""
-        return asyncio.create_task(self._stream_log(self._to_logger))
+        return asyncio.create_task(self._stream_log())
 
     async def __aenter__(self) -> Self:
         """Start the streaming task within the context. Exiting the context will cancel the streaming task."""
@@ -222,22 +244,40 @@ class StreamedLogAsync:
         self._streaming_task.cancel()
         self._streaming_task = None
 
-    async def _stream_log(self, to_logger: logging.Logger) -> None:
+    async def _stream_log(self) -> None:
         async with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
             async for data in log_stream.aiter_bytes():
-                # Example split marker: \n2025-05-12T15:35:59.429Z
-                date_time_marker_pattern = r'(\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)'
-                splits = re.split(date_time_marker_pattern, data.decode('utf-8'))
-                messages = splits[:1]
+                new_chunk = data.decode('utf-8')
+                self._stream_buffer.append(new_chunk)
+                if re.findall(self._split_marker, new_chunk):
+                    # If complete split marker was found in new chunk, then process the buffer.
+                    self._log_buffer_content(include_last_part=False)
 
-                for split_marker, message_without_split_marker in zip(splits[1:-1:2], splits[2::2]):
-                    messages.append(split_marker + message_without_split_marker)
+            # If the stream is finished, then the last part will be also processed.
+            self._log_buffer_content(include_last_part=True)
 
-                for message in messages:
-                    to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
-        log_stream.close()
+    def _log_buffer_content(self, *, include_last_part: bool = False) -> None:
+        """Merge the whole buffer and plit it into parts based on the marker.
+
+        The last part could be incomplete, and so it can be left unprocessed and in the buffer.
+        """
+        all_parts = re.split(self._split_marker, ''.join(self._stream_buffer))
+        # First split is empty string
+        if include_last_part:
+            message_markers = all_parts[1::2]
+            message_contents = all_parts[2::2]
+            self._stream_buffer = []
+        else:
+            message_markers = all_parts[1:-2:2]
+            message_contents = all_parts[2:-2:2]
+            # The last two parts (marker and message) are possibly not complete and will be left in the buffer
+            self._stream_buffer = all_parts[-2:]
+
+        for marker, content in zip(message_markers, message_contents):
+            message = marker + content
+            self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
 
     @staticmethod
     def _guess_log_level_from_message(message: str) -> int:

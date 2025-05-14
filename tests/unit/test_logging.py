@@ -24,6 +24,10 @@ _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log',
     b'2025-05-13T07:25:14.132Z [apify] WARNING some warning',
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c',
+    b'2025-05-13T0', # Chunked log that got split in the marker, part 1
+    b'7:26:14.132Z [apify] DEBUG d' # Chunked log that got split in the marker, part 2
+    b'2025-05-13T07:26:14.132Z [apify] DEB', # Chunked log that got split outside of marker, part 1
+    b'UG e', # Chunked log that got split outside of marker, part 1
 )
 
 _EXPECTED_MESSAGES_AND_LEVELS = (
@@ -33,6 +37,8 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:24:14.132Z [apify] INFO multiline \n log', logging.INFO),
     ('2025-05-13T07:25:14.132Z [apify] WARNING some warning', logging.WARNING),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG c', logging.DEBUG),
+    ('2025-05-13T07:26:14.132Z [apify] DEBUG d', logging.DEBUG),
+    ('2025-05-13T07:26:14.132Z [apify] DEBUG e', logging.DEBUG),
 )
 
 
@@ -42,7 +48,7 @@ def mock_api() -> None:
         async def __aiter__(self) -> AsyncIterator[bytes]:
             for i in _MOCKED_ACTOR_LOGS:
                 yield i
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.01)
 
         async def aclose(self) -> None:
             pass
@@ -63,7 +69,7 @@ def mock_api() -> None:
     )
 
     async def actor_runs_side_effect(_: httpx.Request) -> httpx.Response:
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
         return next(actor_runs_responses)
 
     respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}').mock(side_effect=actor_runs_side_effect)
@@ -76,7 +82,7 @@ def mock_api() -> None:
         return_value=httpx.Response(content=json.dumps({'data': {'id': _MOCKED_RUN_ID}}), status_code=200)
     )
 
-    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}/log?stream=1').mock(
+    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}/log?stream=1&raw=1').mock(
         return_value=httpx.Response(stream=AsyncByteStream(), status_code=200)
     )
 
@@ -106,7 +112,7 @@ async def test_redirected_logs(
             # Do stuff while the log from the other actor is being redirected to the logs.
             await asyncio.sleep(1)
 
-    assert len(caplog.records) == 6
+    assert len(caplog.records) == 8
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
@@ -133,7 +139,7 @@ async def test_actor_call_redirect_logs_to_default_logger(
     assert isinstance(logger.handlers[0], logging.StreamHandler)
 
     # Ensure logs are propagated
-    assert len(caplog.records) == 6
+    assert len(caplog.records) == 8
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
@@ -168,7 +174,7 @@ async def test_actor_call_redirect_logs_to_custom_logger(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         await run_client.call(logger=logger)
 
-    assert len(caplog.records) == 6
+    assert len(caplog.records) == 8
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno

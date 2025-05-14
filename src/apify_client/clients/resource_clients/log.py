@@ -29,7 +29,7 @@ class LogClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> str | None:
+    def get(self, raw: str = False) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -41,7 +41,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(),
+                params=self._params(raw=raw),
             )
 
             return response.text  # noqa: TRY300
@@ -51,7 +51,7 @@ class LogClient(ResourceClient):
 
         return None
 
-    def get_as_bytes(self) -> bytes | None:
+    def get_as_bytes(self, raw: str = False) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -63,7 +63,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(),
+                params=self._params(raw=raw),
                 parse_response=False,
             )
 
@@ -75,7 +75,7 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self) -> Iterator[httpx.Response | None]:
+    def stream(self, raw: str = False) -> Iterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -88,7 +88,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True),
+                params=self._params(stream=True, raw=raw),
                 stream=True,
                 parse_response=False,
             )
@@ -110,7 +110,7 @@ class LogClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'logs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> str | None:
+    async def get(self, raw: str = False) -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -122,7 +122,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(),
+                params=self._params(raw=raw),
             )
 
             return response.text  # noqa: TRY300
@@ -132,7 +132,7 @@ class LogClientAsync(ResourceClientAsync):
 
         return None
 
-    async def get_as_bytes(self) -> bytes | None:
+    async def get_as_bytes(self, raw: str = False) -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -144,7 +144,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(),
+                params=self._params(raw=raw),
                 parse_response=False,
             )
 
@@ -156,7 +156,7 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self) -> AsyncIterator[httpx.Response | None]:
+    async def stream(self, raw: str = False) -> AsyncIterator[httpx.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -169,13 +169,13 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True),
+                params=self._params(stream=True, raw=raw),
                 stream=True,
                 parse_response=False,
             )
 
             yield response
-        except ApifyApiError as exc:
+        except Exception as exc:
             catch_not_found_or_throw(exc)
             yield None
         finally:
@@ -223,7 +223,7 @@ class StreamedLogAsync:
         self._streaming_task = None
 
     async def _stream_log(self, to_logger: logging.Logger) -> None:
-        async with self._log_client.stream() as log_stream:
+        async with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
             async for data in log_stream.aiter_bytes():

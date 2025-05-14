@@ -204,7 +204,12 @@ class LogClientAsync(ResourceClientAsync):
 
 
 class StreamedLog:
-    """Utility class for streaming logs from another actor."""
+    """Utility class for streaming logs from another actor.
+
+    It uses buffer to deal with possibly chunked logs. Chunked logs are stored in buffer. Chunks are expected to contain
+    specific markers that indicate the start of the log message. Each time a new chunk with complete split marker
+    arrives, the buffer is processed, logged and emptied.
+    """
 
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
     _force_propagate = False
@@ -214,15 +219,13 @@ class StreamedLog:
         if self._force_propagate:
             to_logger.propagate = True
         self._stream_buffer = list[str]()
-        # Redirected logs are forwarded to logger as soon as there are at least two split markers present in the buffer.
-        # For example, 2025-05-12T15:35:59.429Z
-        self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
+        self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')  # Ex:2025-05-12T15:35:59.429Z
 
     def _process_new_data(self, data: bytes) -> None:
         new_chunk = data.decode('utf-8')
         self._stream_buffer.append(new_chunk)
         if re.findall(self._split_marker, new_chunk):
-            # If complete split marker was found in new chunk, then process the buffer.
+            # If complete split marker was found in new chunk, then log the buffer.
             self._log_buffer_content(include_last_part=False)
 
     def _log_buffer_content(self, *, include_last_part: bool = False) -> None:
@@ -231,15 +234,14 @@ class StreamedLog:
         Log the messages created from the split parts and remove them from buffer.
         The last part could be incomplete, and so it can be left unprocessed and in the buffer until later.
         """
-        all_parts = re.split(self._split_marker, ''.join(self._stream_buffer))
-        # First split is empty string
+        all_parts = re.split(self._split_marker, ''.join(self._stream_buffer))[1:]  # First split is empty string
         if include_last_part:
-            message_markers = all_parts[1::2]
-            message_contents = all_parts[2::2]
+            message_markers = all_parts[0::2]
+            message_contents = all_parts[1::2]
             self._stream_buffer = []
         else:
-            message_markers = all_parts[1:-2:2]
-            message_contents = all_parts[2:-2:2]
+            message_markers = all_parts[0:-2:2]
+            message_contents = all_parts[1:-2:2]
             # The last two parts (marker and message) are possibly not complete and will be left in the buffer
             self._stream_buffer = all_parts[-2:]
 
@@ -301,11 +303,7 @@ class StreamedLogSync(StreamedLog):
             if not log_stream:
                 return
             for data in log_stream.iter_bytes():
-                new_chunk = data.decode('utf-8')
-                self._stream_buffer.append(new_chunk)
-                if re.findall(self._split_marker, new_chunk):
-                    # If complete split marker was found in new chunk, then process the buffer.
-                    self._log_buffer_content(include_last_part=False)
+                self._process_new_data(data)
                 if self._stop_logging:
                     break
 

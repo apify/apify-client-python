@@ -332,8 +332,19 @@ class ActorClient(ResourceClient):
             timeout_secs=timeout_secs,
             webhooks=webhooks,
         )
+        if not logger:
+            return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
-        return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+        run_client = self.root_client.run(run_id=started_run['id'])
+        if logger == 'default':
+            actor_data = self.get()
+            actor_name = actor_data.get('name', '') if actor_data else ''
+            log_context = run_client.get_streamed_log(actor_name=actor_name)
+        else:
+            log_context = run_client.get_streamed_log(to_logger=logger)
+
+        with log_context:
+            return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     def build(
         self,

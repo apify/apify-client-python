@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from types import TracebackType
 
     import httpx
-    from mypy.types import Self
+    from typing_extensions import Self
 
 
 class LogClient(ResourceClient):

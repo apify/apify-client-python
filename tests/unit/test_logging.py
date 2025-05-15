@@ -113,16 +113,20 @@ def propagate_stream_logs() -> None:
     logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
 
 
+@pytest.mark.parametrize(('log_from_start', 'expected_log_count'), [(True, 8), (False, 5)])
 @respx.mock
 async def test_redirected_logs_async(
+    *,
     caplog: LogCaptureFixture,
     mock_api_async: None,  # noqa: ARG001, fixture
     propagate_stream_logs: None,  # noqa: ARG001, fixture
+    log_from_start: bool,
+    expected_log_count: int,
 ) -> None:
     """Test that redirected logs are formatted correctly."""
 
     run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
-    streamed_log = await run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME)
+    streamed_log = await run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
@@ -132,22 +136,26 @@ async def test_redirected_logs_async(
             # Do stuff while the log from the other actor is being redirected to the logs.
             await asyncio.sleep(1)
 
-    assert len(caplog.records) == 8
-    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
+    assert len(caplog.records) == expected_log_count
+    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS[-expected_log_count:], caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
 
 
+@pytest.mark.parametrize(('log_from_start', 'expected_log_count'), [(True, 8), (False, 5)])
 @respx.mock
 def test_redirected_logs_sync(
+    *,
     caplog: LogCaptureFixture,
     mock_api_sync: None,  # noqa: ARG001, fixture
     propagate_stream_logs: None,  # noqa: ARG001, fixture
+    log_from_start: bool,
+    expected_log_count: int,
 ) -> None:
     """Test that redirected logs are formatted correctly."""
 
     run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
-    streamed_log = run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME)
+    streamed_log = run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
@@ -156,8 +164,8 @@ def test_redirected_logs_sync(
         # Do stuff while the log from the other actor is being redirected to the logs.
         time.sleep(1)
 
-    assert len(caplog.records) == 8
-    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
+    assert len(caplog.records) == expected_log_count
+    for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS[-expected_log_count:], caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
 

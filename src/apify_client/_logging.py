@@ -137,8 +137,14 @@ def create_redirect_logger(
         The created logger.
     """
     to_logger = logging.getLogger(name)
-
     to_logger.propagate = False
+
+    # Remove filters and handlers in case this logger already exists and was set up in some way.
+    for handler in to_logger.handlers:
+        to_logger.removeHandler(handler)
+    for log_filter in to_logger.filters:
+        to_logger.removeFilter(log_filter)
+
     handler = logging.StreamHandler()
     handler.setFormatter(RedirectLogFormatter())
     to_logger.addHandler(handler)

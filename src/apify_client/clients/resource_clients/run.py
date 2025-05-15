@@ -255,7 +255,9 @@ class RunClient(ActorJobBaseClient):
             **self._sub_resource_init_options(resource_path='log'),
         )
 
-    def get_streamed_log(self, to_logger: logging.Logger | None = None, actor_name: str = '') -> StreamedLogSync:
+    def get_streamed_log(
+        self, to_logger: logging.Logger | None = None, *, actor_name: str = '', from_start: bool = True
+    ) -> StreamedLogSync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
          `StreamedLog` can be directly called or used as a context manager.
@@ -263,6 +265,9 @@ class RunClient(ActorJobBaseClient):
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
             actor_name: Optional component of default logger name.
+            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
+                logs for long-running actors in stand-by.
 
         Returns:
             `StreamedLog` instance for redirected logs.
@@ -274,7 +279,7 @@ class RunClient(ActorJobBaseClient):
             name = '-'.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StreamedLogSync(log_client=self.log(), to_logger=to_logger)
+        return StreamedLogSync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     def charge(
         self,
@@ -543,7 +548,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
             **self._sub_resource_init_options(resource_path='log'),
         )
 
-    async def get_streamed_log(self, to_logger: logging.Logger | None = None, actor_name: str = '') -> StreamedLogAsync:
+    async def get_streamed_log(
+        self, to_logger: logging.Logger | None = None, *, actor_name: str = '', from_start: bool = True
+    ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
          `StreamedLog` can be directly called or used as a context manager.
@@ -551,6 +558,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
             actor_name: Optional component of default logger name.
+            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
+                logs for long-running actors in stand-by.
 
         Returns:
             `StreamedLog` instance for redirected logs.
@@ -562,7 +572,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             name = '-'.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger)
+        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     async def charge(
         self,

@@ -214,12 +214,24 @@ class StreamedLog:
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
     _force_propagate = False
 
-    def __init__(self, to_logger: logging.Logger) -> None:
+    def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
+        """Initialize `StreamedLog`.
+
+        Args:
+            to_logger: The logger to which the logs will be redirected
+            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
+                logs for long-running actors in stand-by.
+
+        Returns:
+            The created logger.
+        """
         self._to_logger = to_logger
         if self._force_propagate:
             to_logger.propagate = True
         self._stream_buffer = list[str]()
         self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')  # Ex:2025-05-12T15:35:59.429Z
+        self._from_start = from_start
 
     def _process_new_data(self, data: bytes) -> None:
         new_chunk = data.decode('utf-8')
@@ -265,8 +277,8 @@ class StreamedLog:
 class StreamedLogSync(StreamedLog):
     """Sync variant of `StreamedLog` that is logging in threads."""
 
-    def __init__(self, log_client: LogClient, to_logger: logging.Logger) -> None:
-        super().__init__(to_logger=to_logger)
+    def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+        super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_thread: Thread | None = None
         self._stop_logging = False
@@ -302,7 +314,12 @@ class StreamedLogSync(StreamedLog):
         with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
+            # The first chunk contains all older logs from the start of the actor run until now.
+            skip_first_chunk = not self._from_start
             for data in log_stream.iter_bytes():
+                if skip_first_chunk:
+                    skip_first_chunk = False
+                    continue
                 self._process_new_data(data)
                 if self._stop_logging:
                     break
@@ -315,8 +332,8 @@ class StreamedLogSync(StreamedLog):
 class StreamedLogAsync(StreamedLog):
     """Async variant of `StreamedLog` that is logging in tasks."""
 
-    def __init__(self, log_client: LogClientAsync, to_logger: logging.Logger) -> None:
-        super().__init__(to_logger=to_logger)
+    def __init__(self, log_client: LogClientAsync, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+        super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_task: Task | None = None
 
@@ -346,7 +363,12 @@ class StreamedLogAsync(StreamedLog):
         async with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
+            # The first chunk contains all older logs from the start of the actor run until now.
+            skip_first_chunk = not self._from_start
             async for data in log_stream.aiter_bytes():
+                if skip_first_chunk:
+                    skip_first_chunk = False
+                    continue
                 self._process_new_data(data)
 
             # If the stream is finished, then the last part will be also processed.

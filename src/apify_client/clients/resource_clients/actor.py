@@ -315,7 +315,7 @@ class ActorClient(ResourceClient):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_secs: The maximum number of seconds the server waits for the run to finish. If not provided,
                 waits indefinitely.
-            logger: Loger used to redirect logs from the Actor run. By default, it is set to "default" which means that
+            logger: Logger used to redirect logs from the Actor run. By default, it is set to "default" which means that
                 the default logger will be created and used. Setting `None` will disable any log propagation. Passing
                 custom logger will redirect logs to the provided logger.
 
@@ -722,7 +722,7 @@ class ActorClientAsync(ResourceClientAsync):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_secs: The maximum number of seconds the server waits for the run to finish. If not provided,
                 waits indefinitely.
-            logger: Loger used to redirect logs from the Actor run. By default, it is set to "default" which means that
+            logger: Logger used to redirect logs from the Actor run. By default, it is set to "default" which means that
                 the default logger will be created and used. Setting `None` will disable any log propagation. Passing
                 custom logger will redirect logs to the provided logger.
 

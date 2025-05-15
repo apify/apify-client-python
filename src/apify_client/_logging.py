@@ -158,10 +158,11 @@ class RedirectLogFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """Format the log by prepending logger name to the original message.
 
-        TODO: Make advanced coloring later.
-        Ideally it should respect the color of the original log, but that information is not available in the API.
-        Inspecting logs and coloring their parts during runtime could be quite heavy. Keep it simple for now.
-        """
-        logger_name_string = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL} '
+        Args:
+            record: Log record to be formated.
 
-        return f'{logger_name_string}-> {record.msg}'
+        Returns:
+            Formated log message.
+        """
+        formated_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL} '
+        return f'{formated_logger_name}-> {record.msg}'

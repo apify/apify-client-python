@@ -222,13 +222,11 @@ class StreamedLog:
         """Initialize `StreamedLog`.
 
         Args:
-            to_logger: The logger to which the logs will be redirected
+            to_logger: The logger to which the logs will be redirected.
             from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
                 logs for long-running actors in stand-by.
 
-        Returns:
-            The created logger.
         """
         self._to_logger = to_logger
         if self._force_propagate:
@@ -248,7 +246,7 @@ class StreamedLog:
         """Merge the whole buffer and split it into parts based on the marker.
 
         Log the messages created from the split parts and remove them from buffer.
-        The last part could be incomplete, and so it can be left unprocessed and in the buffer until later.
+        The last part could be incomplete, and so it can be left unprocessed in the buffer until later.
         """
         all_parts = re.split(self._split_marker, ''.join(self._stream_buffer))[1:]  # First split is empty string
         if include_last_part:
@@ -292,8 +290,8 @@ class StreamedLogSync(StreamedLog):
         self._streaming_thread: Thread | None = None
         self._stop_logging = False
 
-    def __call__(self) -> Thread:
-        """Start the streaming thread. The caller has to handle any cleanup."""
+    def start(self) -> Thread:
+        """Start the streaming thread. The caller has to handle any cleanup by manually calling the `stop` method."""
         if self._streaming_thread:
             raise RuntimeError('Streaming thread already active')
         self._stop_logging = False
@@ -301,23 +299,25 @@ class StreamedLogSync(StreamedLog):
         self._streaming_thread.start()
         return self._streaming_thread
 
+    def stop(self) -> None:
+        """Signal the streaming thread to stop logging and wait for it to finish."""
+        if not self._streaming_thread:
+            raise RuntimeError('Streaming thread is not active')
+        self._stop_logging = True
+        self._streaming_thread.join()
+        self._streaming_thread = None
+        self._stop_logging = False
+
     def __enter__(self) -> Self:
         """Start the streaming thread within the context. Exiting the context will finish the streaming thread."""
-        self()
+        self.start()
         return self
 
     def __exit__(
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         """Stop the streaming thread."""
-        if not self._streaming_thread:
-            raise RuntimeError('Streaming thread is not active')
-
-        # Signal the thread to stop logging and wait for it to finish.
-        self._stop_logging = True
-        self._streaming_thread.join()
-        self._streaming_thread = None
-        self._stop_logging = False
+        self.stop()
 
     def _stream_log(self) -> None:
         with self._log_client.stream(raw=True) as log_stream:
@@ -341,27 +341,31 @@ class StreamedLogAsync(StreamedLog):
         self._log_client = log_client
         self._streaming_task: Task | None = None
 
-    def __call__(self) -> Task:
-        """Start the streaming task. The caller has to handle any cleanup."""
+    def start(self) -> Task:
+        """Start the streaming task. The caller has to handle any cleanup by manually calling the `stop` method."""
         if self._streaming_task:
             raise RuntimeError('Streaming task already active')
         self._streaming_task = asyncio.create_task(self._stream_log())
         return self._streaming_task
 
+    def stop(self) -> None:
+        """Stop the streaming task."""
+        if not self._streaming_task:
+            raise RuntimeError('Streaming task is not active')
+
+        self._streaming_task.cancel()
+        self._streaming_task = None
+
     async def __aenter__(self) -> Self:
         """Start the streaming task within the context. Exiting the context will cancel the streaming task."""
-        self()
+        self.start()
         return self
 
     async def __aexit__(
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         """Cancel the streaming task."""
-        if not self._streaming_task:
-            raise RuntimeError('Streaming task is not active')
-
-        self._streaming_task.cancel()
-        self._streaming_task = None
+        self.stop()
 
     async def _stream_log(self) -> None:
         async with self._log_client.stream(raw=True) as log_stream:

@@ -6,6 +6,7 @@ import re
 import threading
 from asyncio import Task
 from contextlib import asynccontextmanager, contextmanager
+from datetime import datetime, timezone
 from threading import Thread
 from typing import TYPE_CHECKING, Any, cast
 
@@ -209,6 +210,9 @@ class StreamedLog:
     It uses buffer to deal with possibly chunked logs. Chunked logs are stored in buffer. Chunks are expected to contain
     specific markers that indicate the start of the log message. Each time a new chunk with complete split marker
     arrives, the buffer is processed, logged and emptied.
+
+    This works only if the logs have datetime marker in ISO format. For example, `2025-05-12T15:35:59.429Z` This is the
+    default log standard for the actors.
     """
 
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
@@ -230,8 +234,8 @@ class StreamedLog:
         if self._force_propagate:
             to_logger.propagate = True
         self._stream_buffer = list[str]()
-        self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')  # Ex:2025-05-12T15:35:59.429Z
-        self._from_start = from_start
+        self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
+        self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=timezone.utc)
 
     def _process_new_data(self, data: bytes) -> None:
         new_chunk = data.decode('utf-8')
@@ -258,6 +262,11 @@ class StreamedLog:
             self._stream_buffer = all_parts[-2:]
 
         for marker, content in zip(message_markers, message_contents):
+            if self._relevancy_time_limit:
+                log_time = datetime.fromisoformat(marker.replace('Z', '+00:00'))
+                if log_time < self._relevancy_time_limit:
+                    # Skip irrelevant logs
+                    continue
             message = marker + content
             self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
 
@@ -314,12 +323,7 @@ class StreamedLogSync(StreamedLog):
         with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
-            # The first chunk contains all older logs from the start of the actor run until now.
-            skip_first_chunk = not self._from_start
             for data in log_stream.iter_bytes():
-                if skip_first_chunk:
-                    skip_first_chunk = False
-                    continue
                 self._process_new_data(data)
                 if self._stop_logging:
                     break
@@ -363,12 +367,7 @@ class StreamedLogAsync(StreamedLog):
         async with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
-            # The first chunk contains all older logs from the start of the actor run until now.
-            skip_first_chunk = not self._from_start
             async for data in log_stream.aiter_bytes():
-                if skip_first_chunk:
-                    skip_first_chunk = False
-                    continue
                 self._process_new_data(data)
 
             # If the stream is finished, then the last part will be also processed.

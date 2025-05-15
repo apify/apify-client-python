@@ -3,6 +3,8 @@ import json
 import logging
 import time
 from collections.abc import AsyncIterator, Iterator
+from datetime import datetime
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -126,7 +128,11 @@ async def test_redirected_logs_async(
     """Test that redirected logs are formatted correctly."""
 
     run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
-    streamed_log = await run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
+
+    with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
+        # Mock `now()` so that it has timestamp bigger than the first 3 logs
+        mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
+        streamed_log = await run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
@@ -155,7 +161,11 @@ def test_redirected_logs_sync(
     """Test that redirected logs are formatted correctly."""
 
     run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
-    streamed_log = run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
+
+    with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
+        # Mock `now()` so that it has timestamp bigger than the first 3 logs
+        mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
+        streamed_log = run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'

@@ -231,12 +231,12 @@ class StreamedLog:
         self._to_logger = to_logger
         if self._force_propagate:
             to_logger.propagate = True
-        self._stream_buffer = list[str]()
-        self._split_marker = re.compile(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
+        self._stream_buffer = list[bytes]()
+        self._split_marker = re.compile(rb'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
         self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=timezone.utc)
 
     def _process_new_data(self, data: bytes) -> None:
-        new_chunk = data.decode('utf-8')
+        new_chunk = data
         self._stream_buffer.append(new_chunk)
         if re.findall(self._split_marker, new_chunk):
             # If complete split marker was found in new chunk, then log the buffer.
@@ -248,7 +248,7 @@ class StreamedLog:
         Log the messages created from the split parts and remove them from buffer.
         The last part could be incomplete, and so it can be left unprocessed in the buffer until later.
         """
-        all_parts = re.split(self._split_marker, ''.join(self._stream_buffer))[1:]  # First split is empty string
+        all_parts = re.split(self._split_marker, b''.join(self._stream_buffer))[1:]  # The First split is empty
         if include_last_part:
             message_markers = all_parts[0::2]
             message_contents = all_parts[1::2]
@@ -260,12 +260,14 @@ class StreamedLog:
             self._stream_buffer = all_parts[-2:]
 
         for marker, content in zip(message_markers, message_contents):
+            decoded_marker = marker.decode('utf-8')
+            decoded_content = content.decode('utf-8')
             if self._relevancy_time_limit:
-                log_time = datetime.fromisoformat(marker.replace('Z', '+00:00'))
+                log_time = datetime.fromisoformat(decoded_marker.replace('Z', '+00:00'))
                 if log_time < self._relevancy_time_limit:
                     # Skip irrelevant logs
                     continue
-            message = marker + content
+            message = decoded_marker + decoded_content
             self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
 
     @staticmethod

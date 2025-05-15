@@ -23,20 +23,23 @@ _MOCKED_ACTOR_ID = 'mocked_actor_id'
 _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.\n'
     b'2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.\n'
-    b'2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.',  # Several logs merged into one message
+    b'2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.',  # Several logs merged into one chunk
+    b'2025-05-13T07:26:14.132Z [apify] DEBUG \xc3',  # Chunked log split in the middle of the multibyte character
+    b'\xa1',  # part 2
     b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log',
     b'2025-05-13T07:25:14.132Z [apify] WARNING some warning',
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c',
-    b'2025-05-13T0',  # Chunked log that got split in the marker, part 1
-    b'7:26:14.132Z [apify] DEBUG d'  # Chunked log that got split in the marker, part 2
-    b'2025-05-13T07:26:14.132Z [apify] DEB',  # Chunked log that got split outside of marker, part 1
-    b'UG e',  # Chunked log that got split outside of marker, part 1
+    b'2025-05-13T0',  # Chunked log that got split in the marker
+    b'7:26:14.132Z [apify] DEBUG d'  # part 2
+    b'2025-05-13T07:26:14.132Z [apify] DEB',  # Chunked log that got split outside of marker
+    b'UG e',  # part 2
 )
 
 _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.', logging.INFO),
     ('2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.', logging.INFO),
     ('2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.', logging.INFO),
+    ('2025-05-13T07:26:14.132Z [apify] DEBUG á', logging.DEBUG),
     ('2025-05-13T07:24:14.132Z [apify] INFO multiline \n log', logging.INFO),
     ('2025-05-13T07:25:14.132Z [apify] WARNING some warning', logging.WARNING),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG c', logging.DEBUG),
@@ -115,7 +118,9 @@ def propagate_stream_logs() -> None:
     logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
 
 
-@pytest.mark.parametrize(('log_from_start', 'expected_log_count'), [(True, 8), (False, 5)])
+@pytest.mark.parametrize(
+    ('log_from_start', 'expected_log_count'), [(True, len(_EXPECTED_MESSAGES_AND_LEVELS)), (False, 6)]
+)
 @respx.mock
 async def test_redirected_logs_async(
     *,
@@ -148,7 +153,9 @@ async def test_redirected_logs_async(
         assert expected_message_and_level[1] == record.levelno
 
 
-@pytest.mark.parametrize(('log_from_start', 'expected_log_count'), [(True, 8), (False, 5)])
+@pytest.mark.parametrize(
+    ('log_from_start', 'expected_log_count'), [(True, len(_EXPECTED_MESSAGES_AND_LEVELS)), (False, 6)]
+)
 @respx.mock
 def test_redirected_logs_sync(
     *,
@@ -201,7 +208,7 @@ async def test_actor_call_redirect_logs_to_default_logger_async(
     assert isinstance(logger.handlers[0], logging.StreamHandler)
 
     # Ensure logs are propagated
-    assert len(caplog.records) == 8
+    assert len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS)
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
@@ -228,7 +235,7 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     assert isinstance(logger.handlers[0], logging.StreamHandler)
 
     # Ensure logs are propagated
-    assert len(caplog.records) == 8
+    assert len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS)
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
@@ -278,7 +285,7 @@ async def test_actor_call_redirect_logs_to_custom_logger_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         await run_client.call(logger=logger)
 
-    assert len(caplog.records) == 8
+    assert len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS)
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
@@ -298,7 +305,7 @@ def test_actor_call_redirect_logs_to_custom_logger_sync(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         run_client.call(logger=logger)
 
-    assert len(caplog.records) == 8
+    assert len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS)
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno

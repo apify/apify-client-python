@@ -7,6 +7,8 @@ import logging
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 
+from colorama import Fore, Style
+
 # Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
     from apify_client.clients.base.base_client import _BaseBaseClient
@@ -120,3 +122,47 @@ class _DebugLogFormatter(logging.Formatter):
         if extra:
             log_string = f'{log_string} ({json.dumps(extra)})'
         return log_string
+
+
+def create_redirect_logger(
+    name: str,
+) -> logging.Logger:
+    """Create a logger for redirecting logs from another Actor.
+
+    Args:
+        name: The name of the logger. It can be used to inherit from other loggers. Example: `apify.xyz` will use logger
+         named `xyz` and make it a children of `apify` logger.
+
+    Returns:
+        The created logger.
+    """
+    to_logger = logging.getLogger(name)
+    to_logger.propagate = False
+
+    # Remove filters and handlers in case this logger already exists and was set up in some way.
+    for handler in to_logger.handlers:
+        to_logger.removeHandler(handler)
+    for log_filter in to_logger.filters:
+        to_logger.removeFilter(log_filter)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(RedirectLogFormatter())
+    to_logger.addHandler(handler)
+    to_logger.setLevel(logging.DEBUG)
+    return to_logger
+
+
+class RedirectLogFormatter(logging.Formatter):
+    """Formater applied to default redirect logger."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format the log by prepending logger name to the original message.
+
+        Args:
+            record: Log record to be formated.
+
+        Returns:
+            Formated log message.
+        """
+        formated_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL} '
+        return f'{formated_logger_name}-> {record.msg}'

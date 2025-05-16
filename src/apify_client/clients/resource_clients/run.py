@@ -8,14 +8,21 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
+from apify_client._logging import create_redirect_logger
 from apify_client._utils import encode_key_value_store_record_value, pluck_data, to_safe_id
 from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 from apify_client.clients.resource_clients.dataset import DatasetClient, DatasetClientAsync
 from apify_client.clients.resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
+from apify_client.clients.resource_clients.log import (
+    LogClient,
+    LogClientAsync,
+    StreamedLogAsync,
+    StreamedLogSync,
+)
 from apify_client.clients.resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
 if TYPE_CHECKING:
+    import logging
     from decimal import Decimal
 
     from apify_shared.consts import RunGeneralAccess
@@ -247,6 +254,33 @@ class RunClient(ActorJobBaseClient):
         return LogClient(
             **self._sub_resource_init_options(resource_path='log'),
         )
+
+    def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
+        """Get `StreamedLog` instance that can be used to redirect logs.
+
+         `StreamedLog` can be directly called or used as a context manager.
+
+        Args:
+            to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
+            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
+                logs for long-running actors in stand-by.
+
+        Returns:
+            `StreamedLog` instance for redirected logs.
+        """
+        run_data = self.get()
+        run_id = run_data.get('id', '') if run_data else ''
+
+        actor_id = run_data.get('actId', '') if run_data else ''
+        actor_data = self.root_client.actor(actor_id=actor_id).get() or {}
+        actor_name = actor_data.get('name', '') if run_data else ''
+
+        if not to_logger:
+            name = '-'.join(part for part in (actor_name, run_id) if part)
+            to_logger = create_redirect_logger(f'apify.{name}')
+
+        return StreamedLogSync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     def charge(
         self,
@@ -514,6 +548,35 @@ class RunClientAsync(ActorJobBaseClientAsync):
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
         )
+
+    async def get_streamed_log(
+        self, to_logger: logging.Logger | None = None, *, from_start: bool = True
+    ) -> StreamedLogAsync:
+        """Get `StreamedLog` instance that can be used to redirect logs.
+
+         `StreamedLog` can be directly called or used as a context manager.
+
+        Args:
+            to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
+            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
+                logs for long-running actors in stand-by.
+
+        Returns:
+            `StreamedLog` instance for redirected logs.
+        """
+        run_data = await self.get()
+        run_id = run_data.get('id', '') if run_data else ''
+
+        actor_id = run_data.get('actId', '') if run_data else ''
+        actor_data = await self.root_client.actor(actor_id=actor_id).get() or {}
+        actor_name = actor_data.get('name', '') if run_data else ''
+
+        if not to_logger:
+            name = '-'.join(part for part in (actor_name, run_id) if part)
+            to_logger = create_redirect_logger(f'apify.{name}')
+
+        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     async def charge(
         self,

@@ -255,16 +255,13 @@ class RunClient(ActorJobBaseClient):
             **self._sub_resource_init_options(resource_path='log'),
         )
 
-    def get_streamed_log(
-        self, to_logger: logging.Logger | None = None, *, actor_name: str = '', from_start: bool = True
-    ) -> StreamedLogSync:
+    def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
          `StreamedLog` can be directly called or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
-            actor_name: Optional component of default logger name.
             from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
                 logs for long-running actors in stand-by.
@@ -274,6 +271,10 @@ class RunClient(ActorJobBaseClient):
         """
         run_data = self.get()
         run_id = run_data.get('id', '') if run_data else ''
+
+        actor_id = run_data.get('actId', '') if run_data else ''
+        actor_data = self.root_client.actor(actor_id=actor_id).get() or {}
+        actor_name = actor_data.get('name', '') if run_data else ''
 
         if not to_logger:
             name = '-'.join(part for part in (actor_name, run_id) if part)
@@ -549,7 +550,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
     async def get_streamed_log(
-        self, to_logger: logging.Logger | None = None, *, actor_name: str = '', from_start: bool = True
+        self, to_logger: logging.Logger | None = None, *, from_start: bool = True
     ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
@@ -557,7 +558,6 @@ class RunClientAsync(ActorJobBaseClientAsync):
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
-            actor_name: Optional component of default logger name.
             from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
                 logs for long-running actors in stand-by.
@@ -567,6 +567,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         run_data = await self.get()
         run_id = run_data.get('id', '') if run_data else ''
+
+        actor_id = run_data.get('actId', '') if run_data else ''
+        actor_data = await self.root_client.actor(actor_id=actor_id).get() or {}
+        actor_name = actor_data.get('name', '') if run_data else ''
 
         if not to_logger:
             name = '-'.join(part for part in (actor_name, run_id) if part)

@@ -53,13 +53,21 @@ def mock_api() -> None:
     actor_runs_responses = iter(
         (
             httpx.Response(
-                content=json.dumps({'data': {'id': _MOCKED_RUN_ID, 'status': ActorJobStatus.RUNNING}}), status_code=200
+                content=json.dumps(
+                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.RUNNING}}
+                ),
+                status_code=200,
             ),
             httpx.Response(
-                content=json.dumps({'data': {'id': _MOCKED_RUN_ID, 'status': ActorJobStatus.RUNNING}}), status_code=200
+                content=json.dumps(
+                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.RUNNING}}
+                ),
+                status_code=200,
             ),
             httpx.Response(
-                content=json.dumps({'data': {'id': _MOCKED_RUN_ID, 'status': ActorJobStatus.SUCCEEDED}}),
+                content=json.dumps(
+                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.SUCCEEDED}}
+                ),
                 status_code=200,
             ),
         )
@@ -137,7 +145,7 @@ async def test_redirected_logs_async(
     with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
-        streamed_log = await run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
+        streamed_log = await run_client.get_streamed_log(from_start=log_from_start)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
@@ -145,7 +153,7 @@ async def test_redirected_logs_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
             # Do stuff while the log from the other actor is being redirected to the logs.
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
     assert len(caplog.records) == expected_log_count
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS[-expected_log_count:], caplog.records):
@@ -172,14 +180,14 @@ def test_redirected_logs_sync(
     with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
-        streamed_log = run_client.get_streamed_log(actor_name=_MOCKED_ACTOR_NAME, from_start=log_from_start)
+        streamed_log = run_client.get_streamed_log(from_start=log_from_start)
 
     # Set `propagate=True` during the tests, so that caplog can see the logs..
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other actor is being redirected to the logs.
-        time.sleep(1)
+        time.sleep(2)
 
     assert len(caplog.records) == expected_log_count
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS[-expected_log_count:], caplog.records):

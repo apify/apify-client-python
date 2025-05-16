@@ -1,4 +1,5 @@
 from __future__ import annotations
+from ssl import SSLContext
 
 from apify_shared.utils import ignore_docs
 
@@ -58,6 +59,7 @@ DEFAULT_TIMEOUT = 360
 API_VERSION = 'v2'
 
 
+
 class _BaseApifyClient:
     http_client: HTTPClient | HTTPClientAsync
 
@@ -70,6 +72,7 @@ class _BaseApifyClient:
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = DEFAULT_TIMEOUT,
+        ssl_ctx: SSLContext | str | bool = True
     ) -> None:
         """Initialize a new instance.
 
@@ -87,6 +90,7 @@ class _BaseApifyClient:
         self.max_retries = max_retries or 8
         self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
         self.timeout_secs = timeout_secs or DEFAULT_TIMEOUT
+        self.ssl_ctx = ssl_ctx
 
     def _options(self) -> dict:
         return {
@@ -109,6 +113,7 @@ class ApifyClient(_BaseApifyClient):
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = DEFAULT_TIMEOUT,
+        ssl_ctx: SSLContext | str | bool = True
     ) -> None:
         """Initialize a new instance.
 
@@ -126,6 +131,7 @@ class ApifyClient(_BaseApifyClient):
             max_retries=max_retries,
             min_delay_between_retries_millis=min_delay_between_retries_millis,
             timeout_secs=timeout_secs,
+            ssl_ctx=ssl_ctx,
         )
 
         self.stats = Statistics()
@@ -135,6 +141,7 @@ class ApifyClient(_BaseApifyClient):
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
             stats=self.stats,
+            ssl_ctx=self.ssl_ctx,
         )
 
     def actor(self, actor_id: str) -> ActorClient:

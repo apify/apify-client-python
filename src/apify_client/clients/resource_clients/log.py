@@ -205,7 +205,7 @@ class LogClientAsync(ResourceClientAsync):
 
 
 class StreamedLog:
-    """Utility class for streaming logs from another actor.
+    """Utility class for streaming logs from another Actor.
 
     It uses buffer to deal with possibly chunked logs. Chunked logs are stored in buffer. Chunks are expected to contain
     specific markers that indicate the start of the log message. Each time a new chunk with complete split marker

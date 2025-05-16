@@ -31,12 +31,12 @@ _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c\n',
     b'2025-05-13T0',  # Chunked log that got split in the marker
     b'7:26:14.132Z [apify] DEBUG d\n'  # part 2
-    b'2025-05-13T07:26:14.132Z [apify] DEB',  # Chunked log that got split outside of marker
+    b'2025-05-13T07:27:14.132Z [apify] DEB',  # Chunked log that got split outside of marker
     b'UG e\n',  # part 2
     # Already redirected message
-    b'2025-05-16T12:08:50.123Z [apify.redirect-logger-4U1oAnKau6jpzjUuA] -> 2025-05-16T12:08:49.840Z ACTOR: Pulling\n',
+    b'2025-05-13T07:28:14.132Z [apify.redirect-logger-4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR: Pulling\n',
 )
-_CHUNKED_MESSAGES_COUNT = 3
+_EXISTING_LOGS_BEFORE_REDIRECT_ATTACH = 3
 
 _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.', logging.INFO),
@@ -47,9 +47,9 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:25:14.132Z [apify] WARNING some warning', logging.WARNING),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG c', logging.DEBUG),
     ('2025-05-13T07:26:14.132Z [apify] DEBUG d', logging.DEBUG),
-    ('2025-05-13T07:26:14.132Z [apify] DEBUG e', logging.DEBUG),
+    ('2025-05-13T07:27:14.132Z [apify] DEBUG e', logging.DEBUG),
     (
-        '2025-05-16T12:08:50.123Z [apify.redirect-logger-4U1oAnKau6jpzjUuA] -> 2025-05-16T12:08:49.840Z ACTOR: Pulling',
+        '2025-05-13T07:28:14.132Z [apify.redirect-logger-4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR: Pulling',
         logging.INFO,
     ),
 )
@@ -135,7 +135,10 @@ def propagate_stream_logs() -> None:
 
 @pytest.mark.parametrize(
     ('log_from_start', 'expected_log_count'),
-    [(True, len(_EXPECTED_MESSAGES_AND_LEVELS)), (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _CHUNKED_MESSAGES_COUNT)],
+    [
+        (True, len(_EXPECTED_MESSAGES_AND_LEVELS)),
+        (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH),
+    ],
 )
 @respx.mock
 async def test_redirected_logs_async(
@@ -171,7 +174,10 @@ async def test_redirected_logs_async(
 
 @pytest.mark.parametrize(
     ('log_from_start', 'expected_log_count'),
-    [(True, len(_EXPECTED_MESSAGES_AND_LEVELS)), (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _CHUNKED_MESSAGES_COUNT)],
+    [
+        (True, len(_EXPECTED_MESSAGES_AND_LEVELS)),
+        (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH),
+    ],
 )
 @respx.mock
 def test_redirected_logs_sync(

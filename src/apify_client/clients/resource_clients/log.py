@@ -232,7 +232,7 @@ class StreamedLog:
         if self._force_propagate:
             to_logger.propagate = True
         self._stream_buffer = list[bytes]()
-        self._split_marker = re.compile(rb'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
+        self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
         self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=timezone.utc)
 
     def _process_new_data(self, data: bytes) -> None:

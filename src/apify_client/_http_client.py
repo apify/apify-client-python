@@ -61,7 +61,9 @@ class _BaseHTTPClient:
             headers['Authorization'] = f'Bearer {token}'
 
         self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs, verify=ssl_ctx)
-        self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs, verify=ssl_ctx)
+        self.httpx_async_client = httpx.AsyncClient(
+            headers=headers, follow_redirects=True, timeout=timeout_secs, verify=ssl_ctx
+        )
 
         self.stats = stats or Statistics()
 

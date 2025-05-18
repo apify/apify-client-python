@@ -59,7 +59,6 @@ DEFAULT_TIMEOUT = 360
 API_VERSION = 'v2'
 
 
-
 class _BaseApifyClient:
     http_client: HTTPClient | HTTPClientAsync
 
@@ -72,7 +71,7 @@ class _BaseApifyClient:
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = DEFAULT_TIMEOUT,
-        ssl_ctx: SSLContext | str | bool = True
+        ssl_ctx: SSLContext | str | bool = True,
     ) -> None:
         """Initialize a new instance.
 
@@ -113,7 +112,7 @@ class ApifyClient(_BaseApifyClient):
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = DEFAULT_TIMEOUT,
-        ssl_ctx: SSLContext | str | bool = True
+        ssl_ctx: SSLContext | str | bool = True,
     ) -> None:
         """Initialize a new instance.
 

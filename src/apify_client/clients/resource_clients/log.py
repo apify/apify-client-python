@@ -390,6 +390,7 @@ class StatusMessageRedirector:
     Status message is logged at fixed time intervals, and there is no guarantee that all messages will be logged,
     especially in cases of frequent status message changes.
     """
+    _force_propagate = False
 
     def __init__(self, *, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=5)) -> None:
         """Initialize `StatusMessageRedirector`.
@@ -399,8 +400,10 @@ class StatusMessageRedirector:
             check_period: The period with which the status message will be polled.
         """
         self._to_logger = to_logger
+        self._to_logger.propagate = self._force_propagate
         self._check_period = check_period.total_seconds()
         self._last_status_message = ''
+
 
     def _log_run_data(self, run_data: dict[str, Any] | None) -> bool:
         """Get relevant run data, log them if changed and return `True` if more data is expected.
@@ -420,7 +423,7 @@ class StatusMessageRedirector:
                 self._last_status_message = new_status_message
                 self._to_logger.info(new_status_message)
 
-            return run_data.get('isStatusMessageTerminal', True)
+            return not(run_data.get('isStatusMessageTerminal', False))
         return True
 
 
@@ -428,7 +431,7 @@ class StatusMessageRedirectorAsync(StatusMessageRedirector):
     """Async variant of `StatusMessageRedirector` that is logging in task."""
 
     def __init__(
-        self, *, run_client: RunClientAsync, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=5)
+        self, *, run_client: RunClientAsync, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
     ) -> None:
         """Initialize `StatusMessageRedirectorAsync`.
 
@@ -478,7 +481,7 @@ class StatusMessageRedirectorSync(StatusMessageRedirector):
     """Sync variant of `StatusMessageRedirector` that is logging in thread."""
 
     def __init__(
-        self, *, run_client: RunClient, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=5)
+        self, *, run_client: RunClient, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
     ) -> None:
         """Initialize `StatusMessageRedirectorSync`.
 

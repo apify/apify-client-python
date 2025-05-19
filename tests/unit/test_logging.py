@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from collections.abc import AsyncIterator, Iterator
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import httpx
@@ -14,7 +14,7 @@ from apify_shared.consts import ActorJobStatus
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client.clients.resource_clients.log import StreamedLog
+from apify_client.clients.resource_clients.log import StreamedLog, StatusMessageRedirector
 
 _MOCKED_API_URL = 'https://example.com'
 _MOCKED_RUN_ID = 'mocked_run_id'
@@ -57,32 +57,30 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
 
 @pytest.fixture
 def mock_api() -> None:
-    actor_runs_responses = iter(
-        (
-            httpx.Response(
+
+    def create_status_responses_generator():
+        for i in range(10):
+            yield httpx.Response(
                 content=json.dumps(
-                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.RUNNING}}
+                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.RUNNING,
+                              'statusMessage': f'Status {i}', 'isStatusMessageTerminal': False}}
                 ),
                 status_code=200,
-            ),
-            httpx.Response(
+            )
+        while True:
+            yield httpx.Response(
                 content=json.dumps(
-                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.RUNNING}}
+                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.SUCCEEDED,
+                              'statusMessage': f'Status 101', 'isStatusMessageTerminal': True}}
                 ),
                 status_code=200,
-            ),
-            httpx.Response(
-                content=json.dumps(
-                    {'data': {'id': _MOCKED_RUN_ID, 'actId': _MOCKED_ACTOR_ID, 'status': ActorJobStatus.SUCCEEDED}}
-                ),
-                status_code=200,
-            ),
-        )
-    )
+            )
+
+    response_generator = create_status_responses_generator()
 
     def actor_runs_side_effect(_: httpx.Request) -> httpx.Response:
         time.sleep(0.1)
-        return next(actor_runs_responses)
+        return next(response_generator)
 
     respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}').mock(side_effect=actor_runs_side_effect)
 
@@ -129,7 +127,9 @@ def mock_api_sync(mock_api: None) -> None:  # noqa: ARG001, fixture
 
 @pytest.fixture
 def propagate_stream_logs() -> None:
-    StreamedLog._force_propagate = True  # Enable propagation of logs to the caplog fixture
+    # Enable propagation of logs to the caplog fixture
+    StreamedLog._force_propagate = True
+    StatusMessageRedirector._force_propagate = True
     logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
 
 
@@ -332,3 +332,47 @@ def test_actor_call_redirect_logs_to_custom_logger_sync(
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS, caplog.records):
         assert expected_message_and_level[0] == record.message
         assert expected_message_and_level[1] == record.levelno
+
+@respx.mock
+async def test_redirect_status_message_async(
+    *,
+    caplog: LogCaptureFixture,
+    mock_api: None,  # noqa: ARG001, fixture
+    propagate_stream_logs: None,  # noqa: ARG001, fixture
+) -> None:
+    """Test redirected status and status messages."""
+
+    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+
+    status_message_redirector = await run_client.get_status_message_redirector(check_period=timedelta(seconds =0.1))
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        async with status_message_redirector:
+            # Do stuff while the status from the other actor is being redirected to the logs.
+            await asyncio.sleep(2)
+
+    assert caplog.records[0].message == 'Status: RUNNING, Message: Status 1'
+    assert caplog.records[1].message == 'Status: SUCCEEDED, Message: Status 2'
+
+@respx.mock
+def test_redirect_status_message_sync(
+    *,
+    caplog: LogCaptureFixture,
+    mock_api: None,  # noqa: ARG001, fixture
+    propagate_stream_logs: None,  # noqa: ARG001, fixture
+) -> None:
+    """Test redirected status and status messages."""
+
+    run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+
+    status_message_redirector = run_client.get_status_message_redirector(check_period=timedelta(seconds =0.1))
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        with status_message_redirector:
+            # Do stuff while the status from the other actor is being redirected to the logs.
+            time.sleep(2)
+
+    assert caplog.records[0].message == 'Status: RUNNING, Message: Status 1'
+    assert caplog.records[1].message == 'Status: SUCCEEDED, Message: Status 2'

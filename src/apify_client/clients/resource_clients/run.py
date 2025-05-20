@@ -21,7 +21,7 @@ from apify_client.clients.resource_clients.log import (
     StatusMessageRedirectorAsync,
     StatusMessageRedirectorSync,
     StreamedLogAsync,
-    StreamedLogSync, StatusMessageRedirector,
+    StreamedLogSync,
 )
 from apify_client.clients.resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
@@ -322,7 +322,6 @@ class RunClient(ActorJobBaseClient):
             ),
         )
 
-
     def get_status_message_redirector(
         self, to_logger: logging.Logger | None = None, check_period: timedelta = timedelta(seconds=1)
     ) -> StatusMessageRedirectorSync:
@@ -350,7 +349,6 @@ class RunClient(ActorJobBaseClient):
             to_logger = create_redirect_logger(f'apify.{name}')
 
         return StatusMessageRedirectorSync(run_client=self, to_logger=to_logger, check_period=check_period)
-
 
 
 class RunClientAsync(ActorJobBaseClientAsync):
@@ -648,7 +646,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
     async def get_status_message_redirector(
-        self, to_logger: logging.Logger | None = None, check_period: timedelta = timedelta(seconds=1),
+        self,
+        to_logger: logging.Logger | None = None,
+        check_period: timedelta = timedelta(seconds=1),
     ) -> StatusMessageRedirectorAsync:
         """Get `StatusMessageRedirector` instance that can be used to redirect logs.
 

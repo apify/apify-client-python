@@ -390,7 +390,12 @@ class StatusMessageRedirector:
     Status message is logged at fixed time intervals, and there is no guarantee that all messages will be logged,
     especially in cases of frequent status message changes.
     """
+
     _force_propagate = False
+    # This is final sleep time to try to get the last status and status message of finished Actor run.
+    # The status and status message can get set on the Actor run with a delay. Sleep time does not guarantee that the
+    # final message will be captured, but increases the chances of that.
+    _final_sleep_time_s = 6
 
     def __init__(self, *, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=5)) -> None:
         """Initialize `StatusMessageRedirector`.
@@ -403,7 +408,6 @@ class StatusMessageRedirector:
         self._to_logger.propagate = self._force_propagate
         self._check_period = check_period.total_seconds()
         self._last_status_message = ''
-
 
     def _log_run_data(self, run_data: dict[str, Any] | None) -> bool:
         """Get relevant run data, log them if changed and return `True` if more data is expected.
@@ -423,7 +427,7 @@ class StatusMessageRedirector:
                 self._last_status_message = new_status_message
                 self._to_logger.info(new_status_message)
 
-            return not(run_data.get('isStatusMessageTerminal', False))
+            return not (run_data.get('isStatusMessageTerminal', False))
         return True
 
 
@@ -468,6 +472,7 @@ class StatusMessageRedirectorAsync(StatusMessageRedirector):
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         """Cancel the logging task."""
+        await asyncio.sleep(self._final_sleep_time_s)
         self.stop()
 
     async def _log_changed_status_message(self) -> None:
@@ -508,6 +513,7 @@ class StatusMessageRedirectorSync(StatusMessageRedirector):
         """Signal the _logging_thread thread to stop logging and wait for it to finish."""
         if not self._logging_thread:
             raise RuntimeError('Logging thread is not active')
+        time.sleep(self._final_sleep_time_s)
         self._stop_logging = True
         self._logging_thread.join()
         self._logging_thread = None

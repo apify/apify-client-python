@@ -208,7 +208,7 @@ async def test_redirected_logs_async(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
-            # Do stuff while the log from the other actor is being redirected to the logs.
+            # Do stuff while the log from the other Actor is being redirected to the logs.
             await asyncio.sleep(2)
 
     assert len(caplog.records) == expected_log_count
@@ -246,7 +246,7 @@ def test_redirected_logs_sync(
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
-        # Do stuff while the log from the other actor is being redirected to the logs.
+        # Do stuff while the log from the other Actor is being redirected to the logs.
         time.sleep(2)
 
     assert len(caplog.records) == expected_log_count
@@ -267,10 +267,10 @@ async def test_actor_call_redirect_logs_to_default_logger_async(
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
-    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
-        await run_client.call()
+        await actor_client.call()
 
     # Ensure expected handler and formater
     assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
@@ -295,10 +295,10 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
-    run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
-        run_client.call()
+        actor_client.call()
 
     # Ensure expected handler and formater
     assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
@@ -318,10 +318,10 @@ async def test_actor_call_no_redirect_logs_async(
     propagate_stream_logs: None,  # noqa: ARG001, fixture
 ) -> None:
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
-    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
-        await run_client.call(logger=None)
+        await actor_client.call(logger=None)
 
     assert len(caplog.records) == 0
 
@@ -333,10 +333,10 @@ def test_actor_call_no_redirect_logs_sync(
     propagate_stream_logs: None,  # noqa: ARG001, fixture
 ) -> None:
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
-    run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
-        run_client.call(logger=None)
+        actor_client.call(logger=None)
 
     assert len(caplog.records) == 0
 
@@ -351,10 +351,10 @@ async def test_actor_call_redirect_logs_to_custom_logger_async(
     """Test that logs are redirected correctly to the custom logger."""
     logger_name = 'custom_logger'
     logger = logging.getLogger(logger_name)
-    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
-        await run_client.call(logger=logger)
+        await actor_client.call(logger=logger)
 
     assert len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES)
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES, caplog.records):
@@ -372,10 +372,10 @@ def test_actor_call_redirect_logs_to_custom_logger_sync(
     """Test that logs are redirected correctly to the custom logger."""
     logger_name = 'custom_logger'
     logger = logging.getLogger(logger_name)
-    run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
-        run_client.call(logger=logger)
+        actor_client.call(logger=logger)
 
     assert len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES)
     for expected_message_and_level, record in zip(_EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES, caplog.records):
@@ -400,7 +400,7 @@ async def test_redirect_status_message_async(
     status_message_redirector = await run_client.get_status_message_redirector(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with status_message_redirector:
-            # Do stuff while the status from the other actor is being redirected to the logs.
+            # Do stuff while the status from the other Actor is being redirected to the logs.
             await asyncio.sleep(3)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
@@ -424,7 +424,7 @@ def test_redirect_status_message_sync(
 
     status_message_redirector = run_client.get_status_message_redirector(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name), status_message_redirector:
-        # Do stuff while the status from the other actor is being redirected to the logs.
+        # Do stuff while the status from the other Actor is being redirected to the logs.
         time.sleep(3)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'

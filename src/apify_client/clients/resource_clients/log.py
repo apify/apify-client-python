@@ -477,7 +477,8 @@ class StatusMessageRedirectorAsync(StatusMessageRedirector):
 
     async def _log_changed_status_message(self) -> None:
         while True:
-            if not self._log_run_data(await self._run_client.get()):
+            run_data = await self._run_client.get()
+            if not self._log_run_data(run_data):
                 break
             await asyncio.sleep(self._check_period)
 

@@ -403,6 +403,24 @@ class RequestQueueClient(ResourceClient):
 
         return parse_date_fields(pluck_data(response.json()))
 
+    def unlock_requests(self: RequestQueueClient) -> dict:
+        """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
+
+        Returns:
+            dict: Result of the unlock operation
+        """
+        request_params = self._params(clientKey=self.client_key)
+
+        response = self.http_client.call(
+            url=self._url('requests/unlock'),
+            method='POST',
+            params=request_params,
+        )
+
+        return parse_date_fields(pluck_data(response.json()))
+
 
 class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
@@ -810,6 +828,24 @@ class RequestQueueClientAsync(ResourceClientAsync):
             method='GET',
             params=request_params,
             timeout_secs=_MEDIUM_TIMEOUT,
+        )
+
+        return parse_date_fields(pluck_data(response.json()))
+
+    async def unlock_requests(self: RequestQueueClientAsync) -> dict:
+        """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
+
+        Returns:
+            dict: Result of the unlock operation
+        """
+        request_params = self._params(clientKey=self.client_key)
+
+        response = await self.http_client.call(
+            url=self._url('requests/unlock'),
+            method='POST',
+            params=request_params,
         )
 
         return parse_date_fields(pluck_data(response.json()))

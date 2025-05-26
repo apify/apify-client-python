@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add `validate_input` endpoint ([#396](https://github.com/apify/apify-client-python/pull/396)) ([1c5bf85](https://github.com/apify/apify-client-python/commit/1c5bf8550ffd91b94ea83694f7c933cf2767fadc)) by [@Pijukatel](https://github.com/Pijukatel), closes [#151](https://github.com/apify/apify-client-python/issues/151)
 - Add list kv store keys by collection or prefix ([#397](https://github.com/apify/apify-client-python/pull/397)) ([6747c20](https://github.com/apify/apify-client-python/commit/6747c201cd654953a97a4c3fe8256756eb7568c7)) by [@MFori](https://github.com/MFori)
 - Add redirected actor logs ([#403](https://github.com/apify/apify-client-python/pull/403)) ([fd02cd8](https://github.com/apify/apify-client-python/commit/fd02cd8726f1664677a47dcb946a0186080d7839)) by [@Pijukatel](https://github.com/Pijukatel), closes [#402](https://github.com/apify/apify-client-python/issues/402)
+- Add `unlock_requests` method to RequestQueue clients ([#408](https://github.com/apify/apify-client-python/pull/408)) ([d4f0018](https://github.com/apify/apify-client-python/commit/d4f00186016fab4e909a7886467e619b23e627e5)) by [@drobnikj](https://github.com/drobnikj)
 
 
 <!-- git-cliff-unreleased-end -->

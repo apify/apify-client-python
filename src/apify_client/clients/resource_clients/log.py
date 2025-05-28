@@ -407,7 +407,6 @@ class StatusMessageWatcher:
         if self._force_propagate:
             to_logger.propagate = True
         self._to_logger = to_logger
-        self._to_logger.propagate = self._force_propagate
         self._check_period = check_period.total_seconds()
         self._last_status_message = ''
 

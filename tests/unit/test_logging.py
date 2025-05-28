@@ -14,7 +14,7 @@ from apify_shared.consts import ActorJobStatus
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client.clients.resource_clients.log import StatusMessageRedirector, StreamedLog
+from apify_client.clients.resource_clients.log import StatusMessageWatcher, StreamedLog
 
 _MOCKED_API_URL = 'https://example.com'
 _MOCKED_RUN_ID = 'mocked_run_id'
@@ -165,17 +165,17 @@ def mock_api_sync(mock_api: None) -> None:  # noqa: ARG001, fixture
 def propagate_stream_logs() -> None:
     # Enable propagation of logs to the caplog fixture
     StreamedLog._force_propagate = True
-    StatusMessageRedirector._force_propagate = True
+    StatusMessageWatcher._force_propagate = True
     logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
 
 
 @pytest.fixture
 def reduce_final_timeout_for_status_message_redirector() -> None:
-    """Reduce timeout used by the `StatusMessageRedirector`
+    """Reduce timeout used by the `StatusMessageWatcher`
 
     This timeout makes sense on the platform, but in tests it is better to reduce it to speed up the tests.
     """
-    StatusMessageRedirector._final_sleep_time_s = 2
+    StatusMessageWatcher._final_sleep_time_s = 2
 
 
 @pytest.mark.parametrize(
@@ -265,7 +265,7 @@ async def test_actor_call_redirect_logs_to_default_logger_async(
     """Test that logs are redirected correctly to the default logger.
 
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
-    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-runId:{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
     actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
@@ -293,7 +293,7 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     """Test that logs are redirected correctly to the default logger.
 
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
-    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-runId:{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
     actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
@@ -397,7 +397,7 @@ async def test_redirect_status_message_async(
 
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
-    status_message_redirector = await run_client.get_status_message_redirector(check_period=timedelta(seconds=0))
+    status_message_redirector = await run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with status_message_redirector:
             # Do stuff while the status from the other Actor is being redirected to the logs.
@@ -422,7 +422,7 @@ def test_redirect_status_message_sync(
 
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
-    status_message_redirector = run_client.get_status_message_redirector(check_period=timedelta(seconds=0))
+    status_message_redirector = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name), status_message_redirector:
         # Do stuff while the status from the other Actor is being redirected to the logs.
         time.sleep(3)

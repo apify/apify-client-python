@@ -18,8 +18,8 @@ from apify_client.clients.resource_clients.key_value_store import KeyValueStoreC
 from apify_client.clients.resource_clients.log import (
     LogClient,
     LogClientAsync,
-    StatusMessageRedirectorAsync,
-    StatusMessageRedirectorSync,
+    StatusMessageWatcherAsync,
+    StatusMessageWatcherSync,
     StreamedLogAsync,
     StreamedLogSync,
 )
@@ -274,7 +274,7 @@ class RunClient(ActorJobBaseClient):
             `StreamedLog` instance for redirected logs.
         """
         run_data = self.get()
-        run_id = run_data.get('id', '') if run_data else ''
+        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
 
         actor_id = run_data.get('actId', '') if run_data else ''
         actor_data = self.root_client.actor(actor_id=actor_id).get() or {}
@@ -322,12 +322,12 @@ class RunClient(ActorJobBaseClient):
             ),
         )
 
-    def get_status_message_redirector(
+    def get_status_message_watcher(
         self, to_logger: logging.Logger | None = None, check_period: timedelta = timedelta(seconds=1)
-    ) -> StatusMessageRedirectorSync:
-        """Get `StatusMessageRedirector` instance that can be used to redirect logs.
+    ) -> StatusMessageWatcherSync:
+        """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
-        `StatusMessageRedirector` can be directly called or used as a context manager.
+        `StatusMessageWatcher` can be directly called or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the status and status messages. If not provided, a new logger is
@@ -335,10 +335,10 @@ class RunClient(ActorJobBaseClient):
             check_period: The period with which the status message will be polled.
 
         Returns:
-            `StatusMessageRedirector` instance for redirected logs.
+            `StatusMessageWatcher` instance.
         """
         run_data = self.get()
-        run_id = run_data.get('id', '') if run_data else ''
+        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
 
         actor_id = run_data.get('actId', '') if run_data else ''
         actor_data = self.root_client.actor(actor_id=actor_id).get() or {}
@@ -348,7 +348,7 @@ class RunClient(ActorJobBaseClient):
             name = '-'.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StatusMessageRedirectorSync(run_client=self, to_logger=to_logger, check_period=check_period)
+        return StatusMessageWatcherSync(run_client=self, to_logger=to_logger, check_period=check_period)
 
 
 class RunClientAsync(ActorJobBaseClientAsync):
@@ -598,7 +598,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             `StreamedLog` instance for redirected logs.
         """
         run_data = await self.get()
-        run_id = run_data.get('id', '') if run_data else ''
+        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
 
         actor_id = run_data.get('actId', '') if run_data else ''
         actor_data = await self.root_client.actor(actor_id=actor_id).get() or {}
@@ -645,14 +645,14 @@ class RunClientAsync(ActorJobBaseClientAsync):
             ),
         )
 
-    async def get_status_message_redirector(
+    async def get_status_message_watcher(
         self,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
-    ) -> StatusMessageRedirectorAsync:
-        """Get `StatusMessageRedirector` instance that can be used to redirect logs.
+    ) -> StatusMessageWatcherAsync:
+        """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
-        `StatusMessageRedirector` can be directly called or used as a context manager.
+        `StatusMessageWatcher` can be directly called or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the status and status messages. If not provided, a new logger is
@@ -660,10 +660,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
             check_period: The period with which the status message will be polled.
 
         Returns:
-            `StatusMessageRedirector` instance for redirected logs.
+            `StatusMessageWatcher` instance.
         """
         run_data = await self.get()
-        run_id = run_data.get('id', '') if run_data else ''
+        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
 
         actor_id = run_data.get('actId', '') if run_data else ''
         actor_data = await self.root_client.actor(actor_id=actor_id).get() or {}
@@ -673,4 +673,4 @@ class RunClientAsync(ActorJobBaseClientAsync):
             name = '-'.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return StatusMessageRedirectorAsync(run_client=self, to_logger=to_logger, check_period=check_period)
+        return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)

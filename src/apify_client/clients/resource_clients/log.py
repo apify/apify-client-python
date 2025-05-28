@@ -232,9 +232,9 @@ class StreamedLog:
                 logs for long-running actors in stand-by.
 
         """
-        self._to_logger = to_logger
         if self._force_propagate:
             to_logger.propagate = True
+        self._to_logger = to_logger
         self._stream_buffer = list[bytes]()
         self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
         self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=timezone.utc)
@@ -384,7 +384,7 @@ class StreamedLogAsync(StreamedLog):
             self._log_buffer_content(include_last_part=True)
 
 
-class StatusMessageRedirector:
+class StatusMessageWatcher:
     """Utility class for logging status messages from another Actor run.
 
     Status message is logged at fixed time intervals, and there is no guarantee that all messages will be logged,
@@ -398,12 +398,14 @@ class StatusMessageRedirector:
     _final_sleep_time_s = 6
 
     def __init__(self, *, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=5)) -> None:
-        """Initialize `StatusMessageRedirector`.
+        """Initialize `StatusMessageWatcher`.
 
         Args:
             to_logger: The logger to which the status message will be redirected.
             check_period: The period with which the status message will be polled.
         """
+        if self._force_propagate:
+            to_logger.propagate = True
         self._to_logger = to_logger
         self._to_logger.propagate = self._force_propagate
         self._check_period = check_period.total_seconds()
@@ -431,13 +433,13 @@ class StatusMessageRedirector:
         return True
 
 
-class StatusMessageRedirectorAsync(StatusMessageRedirector):
-    """Async variant of `StatusMessageRedirector` that is logging in task."""
+class StatusMessageWatcherAsync(StatusMessageWatcher):
+    """Async variant of `StatusMessageWatcher` that is logging in task."""
 
     def __init__(
         self, *, run_client: RunClientAsync, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
     ) -> None:
-        """Initialize `StatusMessageRedirectorAsync`.
+        """Initialize `StatusMessageWatcherAsync`.
 
         Args:
             run_client: The client for run that will be used to get a status and message.
@@ -483,13 +485,13 @@ class StatusMessageRedirectorAsync(StatusMessageRedirector):
             await asyncio.sleep(self._check_period)
 
 
-class StatusMessageRedirectorSync(StatusMessageRedirector):
-    """Sync variant of `StatusMessageRedirector` that is logging in thread."""
+class StatusMessageWatcherSync(StatusMessageWatcher):
+    """Sync variant of `StatusMessageWatcher` that is logging in thread."""
 
     def __init__(
         self, *, run_client: RunClient, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
     ) -> None:
-        """Initialize `StatusMessageRedirectorSync`.
+        """Initialize `StatusMessageWatcherSync`.
 
         Args:
             run_client: The client for run that will be used to get a status and message.

@@ -341,7 +341,7 @@ class ActorClient(ResourceClient):
         if logger == 'default':
             logger = None
 
-        with run_client.get_status_message_redirector(to_logger=logger), run_client.get_streamed_log(to_logger=logger):
+        with run_client.get_status_message_watcher(to_logger=logger), run_client.get_streamed_log(to_logger=logger):
             return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     def build(
@@ -747,7 +747,7 @@ class ActorClientAsync(ResourceClientAsync):
         if logger == 'default':
             logger = None
 
-        status_redirector = await run_client.get_status_message_redirector(to_logger=logger)
+        status_redirector = await run_client.get_status_message_watcher(to_logger=logger)
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 
         async with status_redirector, streamed_log:

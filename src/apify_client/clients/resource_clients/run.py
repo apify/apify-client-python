@@ -281,7 +281,7 @@ class RunClient(ActorJobBaseClient):
         actor_name = actor_data.get('name', '') if run_data else ''
 
         if not to_logger:
-            name = '-'.join(part for part in (actor_name, run_id) if part)
+            name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
         return StreamedLogSync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
@@ -345,7 +345,7 @@ class RunClient(ActorJobBaseClient):
         actor_name = actor_data.get('name', '') if run_data else ''
 
         if not to_logger:
-            name = '-'.join(part for part in (actor_name, run_id) if part)
+            name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
         return StatusMessageWatcherSync(run_client=self, to_logger=to_logger, check_period=check_period)
@@ -605,7 +605,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         actor_name = actor_data.get('name', '') if run_data else ''
 
         if not to_logger:
-            name = '-'.join(part for part in (actor_name, run_id) if part)
+            name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
         return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
@@ -670,7 +670,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         actor_name = actor_data.get('name', '') if run_data else ''
 
         if not to_logger:
-            name = '-'.join(part for part in (actor_name, run_id) if part)
+            name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
         return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)

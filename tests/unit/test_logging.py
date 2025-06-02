@@ -34,7 +34,7 @@ _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:27:14.132Z [apify] DEB',  # Chunked log that got split outside of marker
     b'UG e\n',  # part 2
     # Already redirected message
-    b'2025-05-13T07:28:14.132Z [apify.redirect-logger-4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR: Pulling\n',
+    b'2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR:...\n',
 )
 _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH = 3
 
@@ -49,7 +49,8 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:26:14.132Z [apify] DEBUG d', logging.DEBUG),
     ('2025-05-13T07:27:14.132Z [apify] DEBUG e', logging.DEBUG),
     (
-        '2025-05-13T07:28:14.132Z [apify.redirect-logger-4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR: Pulling',
+        '2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> '
+        '2025-05-13T07:27:14.132Z ACTOR:...',
         logging.INFO,
     ),
 )
@@ -265,7 +266,7 @@ async def test_actor_call_redirect_logs_to_default_logger_async(
     """Test that logs are redirected correctly to the default logger.
 
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
-    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-runId:{_MOCKED_RUN_ID}'
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
     actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 
@@ -293,7 +294,7 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     """Test that logs are redirected correctly to the default logger.
 
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
-    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-runId:{_MOCKED_RUN_ID}'
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
     actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
 

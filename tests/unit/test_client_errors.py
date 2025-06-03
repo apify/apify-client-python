@@ -1,9 +1,9 @@
 import json
+from collections.abc import Generator
 
 import httpx
 import pytest
 import respx
-from respx import MockRouter
 
 from apify_client._errors import ApifyApiError
 from apify_client._http_client import HTTPClient, HTTPClientAsync
@@ -16,13 +16,14 @@ _EXPECTED_DATA = {
 }
 
 
-@respx.mock
 @pytest.fixture(autouse=True)
-def mocked_response(respx_mock: MockRouter) -> None:
+def mocked_response() -> Generator[respx.router.MockRouter]:
     response_content = json.dumps(
         {'error': {'message': _EXPECTED_MESSAGE, 'type': _EXPECTED_TYPE, 'data': _EXPECTED_DATA}}
     )
-    respx_mock.get(_TEST_URL).mock(return_value=httpx.Response(400, content=response_content))
+    with respx.mock() as respx_mock:
+        respx_mock.get(_TEST_URL).mock(return_value=httpx.Response(400, content=response_content))
+        yield respx_mock
 
 
 def test_client_apify_api_error_with_data() -> None:

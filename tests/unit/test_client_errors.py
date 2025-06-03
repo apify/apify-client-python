@@ -17,7 +17,7 @@ _EXPECTED_DATA = {
 
 
 @pytest.fixture(autouse=True)
-def mocked_response() -> Generator[respx.router.MockRouter]:
+def mocked_response() -> Generator[respx.MockRouter]:
     response_content = json.dumps(
         {'error': {'message': _EXPECTED_MESSAGE, 'type': _EXPECTED_TYPE, 'data': _EXPECTED_DATA}}
     )

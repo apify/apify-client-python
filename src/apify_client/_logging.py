@@ -164,5 +164,5 @@ class RedirectLogFormatter(logging.Formatter):
         Returns:
             Formated log message.
         """
-        formated_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL} '
-        return f'{formated_logger_name}-> {record.msg}'
+        formated_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL}'
+        return f'{formated_logger_name} -> {record.msg}'

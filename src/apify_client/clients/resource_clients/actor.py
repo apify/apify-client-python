@@ -317,7 +317,8 @@ class ActorClient(ResourceClient):
                 waits indefinitely.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
-                will redirect logs to the provided logger.
+                will redirect logs to the provided logger. The logger is also used to capture status and status message
+                of the other Actor run.
 
         Returns:
             The run object.
@@ -336,12 +337,11 @@ class ActorClient(ResourceClient):
             return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
         run_client = self.root_client.run(run_id=started_run['id'])
-        if logger == 'default':
-            log_context = run_client.get_streamed_log()
-        else:
-            log_context = run_client.get_streamed_log(to_logger=logger)
 
-        with log_context:
+        if logger == 'default':
+            logger = None
+
+        with run_client.get_status_message_watcher(to_logger=logger), run_client.get_streamed_log(to_logger=logger):
             return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     def build(
@@ -722,7 +722,8 @@ class ActorClientAsync(ResourceClientAsync):
                 waits indefinitely.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
-                will redirect logs to the provided logger.
+                will redirect logs to the provided logger. The logger is also used to capture status and status message
+                of the other Actor run.
 
         Returns:
             The run object.
@@ -742,12 +743,14 @@ class ActorClientAsync(ResourceClientAsync):
             return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
         run_client = self.root_client.run(run_id=started_run['id'])
-        if logger == 'default':
-            log_context = await run_client.get_streamed_log()
-        else:
-            log_context = await run_client.get_streamed_log(to_logger=logger)
 
-        async with log_context:
+        if logger == 'default':
+            logger = None
+
+        status_redirector = await run_client.get_status_message_watcher(to_logger=logger)
+        streamed_log = await run_client.get_streamed_log(to_logger=logger)
+
+        async with status_redirector, streamed_log:
             return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
 
     async def build(

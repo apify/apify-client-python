@@ -10,6 +10,7 @@ from importlib import metadata
 from typing import TYPE_CHECKING, Any, Callable
 
 import httpx
+from ssl import SSLContext
 from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
 
 from apify_client._errors import ApifyApiError, InvalidResponseBodyError, is_retryable_error
@@ -37,6 +38,7 @@ class _BaseHTTPClient:
         min_delay_between_retries_millis: int = 500,
         timeout_secs: int = 360,
         stats: Statistics | None = None,
+        ssl_ctx: SSLContext | str | bool = True,
     ) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
@@ -58,8 +60,10 @@ class _BaseHTTPClient:
         if token is not None:
             headers['Authorization'] = f'Bearer {token}'
 
-        self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
-        self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
+        self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs, verify=ssl_ctx)
+        self.httpx_async_client = httpx.AsyncClient(
+            headers=headers, follow_redirects=True, timeout=timeout_secs, verify=ssl_ctx
+        )
 
         self.stats = stats or Statistics()
 

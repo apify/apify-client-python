@@ -26,6 +26,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        sort_by: str | None = None,
     ) -> ListPage[dict]:
         """List the Actors the user has created or used.
 
@@ -40,7 +41,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return self._list(my=my, limit=limit, offset=offset, desc=desc)
+        return self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
 
     def create(
         self,

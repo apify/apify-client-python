@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.10.1 - **not yet released**
+## [1.11.0](https://github.com/apify/apify-client-python/releases/tag/v1.11.0) (2025-06-13)
 
 ### 🚀 Features
 
@@ -14,7 +13,6 @@ All notable changes to this project will be documented in this file.
 - Add `StatusMessageWatcher` ([#407](https://github.com/apify/apify-client-python/pull/407)) ([a535512](https://github.com/apify/apify-client-python/commit/a53551217b62a2a6ca2ccbc81130043560fbc475)) by [@Pijukatel](https://github.com/Pijukatel), closes [#404](https://github.com/apify/apify-client-python/issues/404)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.10.0](https://github.com/apify/apify-client-python/releases/tag/v1.10.0) (2025-04-29)
 
 ### 🚀 Features

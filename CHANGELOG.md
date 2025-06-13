@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 1.11.1 - **not yet released**
+
+
+<!-- git-cliff-unreleased-end -->
 ## [1.11.0](https://github.com/apify/apify-client-python/releases/tag/v1.11.0) (2025-06-13)
 
 ### 🚀 Features

@@ -262,7 +262,7 @@ class RunClient(ActorJobBaseClient):
     def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
-         `StreamedLog` can be directly called or used as a context manager.
+         `StreamedLog` can be explicitly started and stopped or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
@@ -327,7 +327,7 @@ class RunClient(ActorJobBaseClient):
     ) -> StatusMessageWatcherSync:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
-        `StatusMessageWatcher` can be directly called or used as a context manager.
+        `StatusMessageWatcher` can be explicitly started and stopped or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the status and status messages. If not provided, a new logger is
@@ -586,7 +586,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
     ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
-         `StreamedLog` can be directly called or used as a context manager.
+         `StreamedLog` can be explicitly started and stopped or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
@@ -652,7 +652,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
     ) -> StatusMessageWatcherAsync:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
-        `StatusMessageWatcher` can be directly called or used as a context manager.
+        `StatusMessageWatcher` can be explicitly started and stopped or used as a context manager.
 
         Args:
             to_logger: `Logger` used for logging the status and status messages. If not provided, a new logger is

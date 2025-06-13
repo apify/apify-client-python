@@ -12,7 +12,6 @@ from threading import Thread
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_shared.utils import ignore_docs
-from typing_extensions import Self
 
 from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw
@@ -354,13 +353,16 @@ class StreamedLogAsync(StreamedLog):
         self._streaming_task = asyncio.create_task(self._stream_log())
         return self._streaming_task
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop the streaming task."""
         if not self._streaming_task:
             raise RuntimeError('Streaming task is not active')
 
         self._streaming_task.cancel()
-        self._streaming_task = None
+        try:
+            await self._streaming_task
+        except asyncio.CancelledError:
+            self._streaming_task = None
 
     async def __aenter__(self) -> Self:
         """Start the streaming task within the context. Exiting the context will cancel the streaming task."""
@@ -371,7 +373,7 @@ class StreamedLogAsync(StreamedLog):
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         """Cancel the streaming task."""
-        self.stop()
+        await self.stop()
 
     async def _stream_log(self) -> None:
         async with self._log_client.stream(raw=True) as log_stream:
@@ -456,13 +458,16 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
         self._logging_task = asyncio.create_task(self._log_changed_status_message())
         return self._logging_task
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop the logging task."""
         if not self._logging_task:
             raise RuntimeError('Logging task is not active')
 
         self._logging_task.cancel()
-        self._logging_task = None
+        try:
+            await self._logging_task
+        except asyncio.CancelledError:
+            self._logging_task = None
 
     async def __aenter__(self) -> Self:
         """Start the logging task within the context. Exiting the context will cancel the logging task."""
@@ -474,7 +479,7 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
     ) -> None:
         """Cancel the logging task."""
         await asyncio.sleep(self._final_sleep_time_s)
-        self.stop()
+        await self.stop()
 
     async def _log_changed_status_message(self) -> None:
         while True:

@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Generator, Iterator
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -65,7 +65,7 @@ _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES = (
 
 @pytest.fixture
 def mock_api() -> None:
-    def create_status_responses_generator() -> Iterator[httpx.Response]:
+    def get_responses() -> Generator[httpx.Response, None, None]:
         """Simulate actor run that changes status 3 times."""
         for _ in range(5):
             yield httpx.Response(
@@ -113,11 +113,11 @@ def mock_api() -> None:
                 status_code=200,
             )
 
-    response_generator = create_status_responses_generator()
+    responses = get_responses()
 
     def actor_runs_side_effect(_: httpx.Request) -> httpx.Response:
         time.sleep(0.1)
-        return next(response_generator)
+        return next(responses)
 
     respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}').mock(side_effect=actor_runs_side_effect)
 

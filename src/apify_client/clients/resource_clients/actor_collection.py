@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
@@ -26,7 +26,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: str | None = None,
+        sort_by:  Literal["createdAt", "lastRunStartedAt"] | None = "createdAt",
     ) -> ListPage[dict]:
         """List the Actors the user has created or used.
 
@@ -37,6 +37,7 @@ class ActorCollectionClient(ResourceCollectionClient):
             limit: How many Actors to list.
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
+            sort_by: Field to sort the results by. Allowed values are "createdAt" and "lastRunStartedAt".
 
         Returns:
             The list of available Actors matching the specified filters.

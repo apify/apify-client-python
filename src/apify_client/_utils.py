@@ -128,6 +128,8 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
         }
         if 'payload_template' in webhook:
             webhook_representation['payloadTemplate'] = webhook['payload_template']
+        if 'headers_template' in webhook:
+            webhook_representation['headersTemplate'] = webhook['headers_template']
         data.append(webhook_representation)
 
     return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')

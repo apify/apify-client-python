@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 1.11.1 - **not yet released**
 
+### 🐛 Bug Fixes
+
+- Enable to add headers template in webhooks created dynamically ([#419](https://github.com/apify/apify-client-python/pull/419)) ([b84d1ec](https://github.com/apify/apify-client-python/commit/b84d1ec0491ad2623defcfba5fe1aa06274cf533)) by [@gaelloyoly](https://github.com/gaelloyoly)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [1.11.0](https://github.com/apify/apify-client-python/releases/tag/v1.11.0) (2025-06-13)

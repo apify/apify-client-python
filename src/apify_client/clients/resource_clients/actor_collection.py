@@ -37,7 +37,7 @@ class ActorCollectionClient(ResourceCollectionClient):
             limit: How many Actors to list.
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
-            sort_by: Field to sort the results by. Allowed values are "createdAt" and "lastRunStartedAt".
+            sort_by: Field to sort the results by.
 
         Returns:
             The list of available Actors matching the specified filters.
@@ -163,7 +163,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             limit: How many Actors to list.
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
-            sort_by: Field to sort the results by. Allowed values are "createdAt" and "lastRunStartedAt".
+            sort_by: Field to sort the results by.
 
         Returns:
             The list of available Actors matching the specified filters.

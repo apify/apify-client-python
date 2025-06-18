@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 1.11.1 - **not yet released**
 
+### 🚀 Features
+
+- Allow sorting of Actors collection ([#422](https://github.com/apify/apify-client-python/pull/422)) ([df6e47d](https://github.com/apify/apify-client-python/commit/df6e47d3b72e0aa5563f1ece7abc9d9da50b77a2)) by [@protoss70](https://github.com/protoss70)
+
 ### 🐛 Bug Fixes
 
 - Enable to add headers template in webhooks created dynamically ([#419](https://github.com/apify/apify-client-python/pull/419)) ([b84d1ec](https://github.com/apify/apify-client-python/commit/b84d1ec0491ad2623defcfba5fe1aa06274cf533)) by [@gaelloyoly](https://github.com/gaelloyoly)

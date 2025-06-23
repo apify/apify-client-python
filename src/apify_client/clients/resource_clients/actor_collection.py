@@ -26,7 +26,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: Literal['createdAt', 'lastRunStartedAt'] | None = 'createdAt',
+        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
     ) -> ListPage[dict]:
         """List the Actors the user has created or used.
 
@@ -152,7 +152,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: Literal['createdAt', 'lastRunStartedAt'] | None = 'createdAt',
+        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
     ) -> ListPage[dict]:
         """List the Actors the user has created or used.
 

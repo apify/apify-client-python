@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Enable to add headers template in webhooks created dynamically ([#419](https://github.com/apify/apify-client-python/pull/419)) ([b84d1ec](https://github.com/apify/apify-client-python/commit/b84d1ec0491ad2623defcfba5fe1aa06274cf533)) by [@gaelloyoly](https://github.com/gaelloyoly)
+- Rename sortBy parameters option ([#426](https://github.com/apify/apify-client-python/pull/426)) ([a270409](https://github.com/apify/apify-client-python/commit/a2704095928651bf183743bf85fb365c65480d80)) by [@protoss70](https://github.com/protoss70)
 
 
 <!-- git-cliff-unreleased-end -->

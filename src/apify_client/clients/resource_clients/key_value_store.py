@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
@@ -153,6 +154,31 @@ class KeyValueStoreClient(ResourceClient):
             catch_not_found_or_throw(exc)
 
         return None
+
+    def record_exists(self, key: str) -> bool:
+        """Check if given record is present in the key-value store.
+
+        https://docs.apify.com/api/v2/key-value-store-record-head
+
+        Args:
+            key: Key of the record to check.
+
+        Returns:
+            True if the record exists, False otherwise.
+        """
+        try:
+            response = self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='HEAD',
+                params=self._params(),
+            )
+        except ApifyApiError as exc:
+            if exc.status_code == HTTPStatus.NOT_FOUND:
+                return False
+
+            raise
+
+        return response.status_code == HTTPStatus.OK
 
     def get_record_as_bytes(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
@@ -375,6 +401,31 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
 
         return None
+
+    async def record_exists(self, key: str) -> bool:
+        """Check if given record is present in the key-value store.
+
+        https://docs.apify.com/api/v2/key-value-store-record-head
+
+        Args:
+            key: Key of the record to check.
+
+        Returns:
+            True if the record exists, False otherwise.
+        """
+        try:
+            response = await self.http_client.call(
+                url=self._url(f'records/{key}'),
+                method='HEAD',
+                params=self._params(),
+            )
+        except ApifyApiError as exc:
+            if exc.status_code == HTTPStatus.NOT_FOUND:
+                return False
+
+            raise
+
+        return response.status_code == HTTPStatus.OK
 
     async def get_record_as_bytes(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.

@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.11.1 - **not yet released**
+## [1.12.0](https://github.com/apify/apify-client-python/releases/tag/v1.12.0) (2025-06-26)
 
 ### 🚀 Features
 
@@ -16,7 +15,6 @@ All notable changes to this project will be documented in this file.
 - Rename sortBy parameters option ([#426](https://github.com/apify/apify-client-python/pull/426)) ([a270409](https://github.com/apify/apify-client-python/commit/a2704095928651bf183743bf85fb365c65480d80)) by [@protoss70](https://github.com/protoss70)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.11.0](https://github.com/apify/apify-client-python/releases/tag/v1.11.0) (2025-06-13)
 
 ### 🚀 Features

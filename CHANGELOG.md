@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Allow sorting of Actors collection ([#422](https://github.com/apify/apify-client-python/pull/422)) ([df6e47d](https://github.com/apify/apify-client-python/commit/df6e47d3b72e0aa5563f1ece7abc9d9da50b77a2)) by [@protoss70](https://github.com/protoss70)
+- Add `KeyValueStoreClient.record_exists` ([#427](https://github.com/apify/apify-client-python/pull/427)) ([519529b](https://github.com/apify/apify-client-python/commit/519529b01895958aa33516d8ec4853290c388d05)) by [@janbuchar](https://github.com/janbuchar)
 
 ### 🐛 Bug Fixes
 

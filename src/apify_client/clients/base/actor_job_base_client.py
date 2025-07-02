@@ -64,7 +64,7 @@ class ActorJobBaseClient(ResourceClient):
 
         return job
 
-    def _abort(self, gracefully: bool | None = None) -> dict:
+    def _abort(self, *, gracefully: bool | None = None) -> dict:
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
@@ -119,7 +119,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
 
         return job
 
-    async def _abort(self, gracefully: bool | None = None) -> dict:
+    async def _abort(self, *, gracefully: bool | None = None) -> dict:
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',

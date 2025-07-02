@@ -7,7 +7,7 @@ import os
 import sys
 from http import HTTPStatus
 from importlib import metadata
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
@@ -18,8 +18,9 @@ from apify_client._statistics import Statistics
 from apify_client._utils import retry_with_exp_backoff, retry_with_exp_backoff_async
 
 if TYPE_CHECKING:
-    from apify_shared.types import JSONSerializable
+    from collections.abc import Callable
 
+    from apify_shared.types import JSONSerializable
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1

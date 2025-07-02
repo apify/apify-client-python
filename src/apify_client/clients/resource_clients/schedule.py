@@ -11,13 +11,14 @@ from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 def _get_schedule_representation(
     cron_expression: str | None = None,
-    is_enabled: bool | None = None,
-    is_exclusive: bool | None = None,
     name: str | None = None,
     actions: list[dict] | None = None,
     description: str | None = None,
     timezone: str | None = None,
     title: str | None = None,
+    *,
+    is_enabled: bool | None = None,
+    is_exclusive: bool | None = None,
 ) -> dict:
     return {
         'cronExpression': cron_expression,

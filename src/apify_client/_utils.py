@@ -5,8 +5,9 @@ import base64
 import json
 import random
 import time
+from collections.abc import Callable
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from apify_shared.utils import is_file_or_bytes, maybe_extract_enum_member_value
 

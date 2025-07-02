@@ -5,13 +5,15 @@ import inspect
 import json
 import logging
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from colorama import Fore, Style
 
-# Conditional import only executed when type checking, otherwise we'd get circular dependency issues
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from apify_client.clients.base.base_client import _BaseBaseClient
+
 
 # Name of the logger used throughout the library
 logger_name = __name__.split('.')[0]

@@ -6,27 +6,24 @@ on:
   # step required for PRs from forks. This prevents their potential exposure.
   pull_request:
 
-env:
-  PYTHON_VERSIONS: '["3.10", "3.11", "3.12", "3.13"]'
-
 jobs:
   lint_check:
     name: Lint check
     uses: apify/workflows/.github/workflows/python_lint_check.yaml@main
     with:
-      python-version: ${{ env.PYTHON_VERSIONS }}
+      python-version: '["3.10", "3.11", "3.12", "3.13"]'
 
   type_check:
     name: Type check
     uses: apify/workflows/.github/workflows/python_type_check.yaml@main
     with:
-      python-version: ${{ env.PYTHON_VERSIONS }}
+      python-version: '["3.10", "3.11", "3.12", "3.13"]'
 
   unit_tests:
     name: Unit tests
     uses: apify/workflows/.github/workflows/python_unit_tests.yaml@main
     with:
-      python-version: ${{ env.PYTHON_VERSIONS }}
+      python-version: '["3.10", "3.11", "3.12", "3.13"]'
 
   async_docstrings:
     name: Async dostrings check
@@ -41,5 +38,5 @@ jobs:
     needs: [lint_check, type_check, unit_tests]
     uses: apify/workflows/.github/workflows/python_integration_tests.yaml@main
     with:
-      python-version: ${{ env.PYTHON_VERSIONS }}
+      python-version: '["3.10", "3.11", "3.12", "3.13"]'
     secrets: inherit

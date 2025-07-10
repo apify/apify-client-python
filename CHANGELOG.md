@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 1.12.1 - **not yet released**
 
+### 🐛 Bug Fixes
+
+- Sync `@docusaurus` theme version [internal] ([#435](https://github.com/apify/apify-client-python/pull/435)) ([a389dba](https://github.com/apify/apify-client-python/commit/a389dba1f21d51a1f4b634b3ccd76cd74c64d526)) by [@katzino](https://github.com/katzino)
+- Sync `@docusaurus` dependencies version [internal] ([#436](https://github.com/apify/apify-client-python/pull/436)) ([7331fdc](https://github.com/apify/apify-client-python/commit/7331fdc429453093f26d1bd98735cd395cdd561f)) by [@katzino](https://github.com/katzino)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [1.12.0](https://github.com/apify/apify-client-python/releases/tag/v1.12.0) (2025-06-26)

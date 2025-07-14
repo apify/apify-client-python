@@ -8,6 +8,21 @@ const { absoluteUrl } = config;
 
 /** @type {Partial<import('@docusaurus/types').DocusaurusConfig>} */
 module.exports = {
+        future: {
+                experimental_faster: {
+                        swcJsLoader: true,
+                        swcJsMinimizer: true,
+                        swcHtmlMinimizer: true,
+                        lightningCssMinimizer: true,
+                        rspackBundler: true,
+                        mdxCrossCompilerCache: true,
+                        rspackPersistentCache: true,
+                },
+                v4: {
+                        removeLegacyPostBuildHeadAttribute: true,
+                        useCssCascadeLayers: false,
+                },
+        },
     title: 'API client for Python | Apify Documentation',
     url: absoluteUrl,
     baseUrl: '/api/client/python',

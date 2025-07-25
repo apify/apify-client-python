@@ -1,12 +1,40 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Generic, TypeVar
 
-from apify_shared.models import ListPage
 from apify_shared.utils import ignore_docs, parse_date_fields
 
 from apify_client._utils import pluck_data
 from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
+
+T = TypeVar('T')
+
+
+class ListPage(Generic[T]):
+    """A single page of items returned from a list() method."""
+
+    #: list: List of returned objects on this page
+    items: list[T]
+    #: int: Count of the returned objects on this page
+    count: int
+    #: int: The limit on the number of returned objects offset specified in the API call
+    offset: int
+    #: int: The offset of the first object specified in the API call
+    limit: int
+    #: int: Total number of objects matching the API call criteria
+    total: int
+    #: bool: Whether the listing is descending or not
+    desc: bool
+
+    @ignore_docs
+    def __init__(self, data: dict) -> None:
+        """Initialize a ListPage instance from the API response data."""
+        self.items = data.get('items', [])
+        self.offset = data.get('offset', 0)
+        self.limit = data.get('limit', 0)
+        self.count = data['count'] if 'count' in data else len(self.items)
+        self.total = data['total'] if 'total' in data else self.offset + self.count
+        self.desc = data.get('desc', False)
 
 
 @ignore_docs

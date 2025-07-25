@@ -8,7 +8,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.task import get_task_representation
 
 if TYPE_CHECKING:
-    from apify_shared.models import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage
 
 
 class TaskCollectionClient(ResourceCollectionClient):

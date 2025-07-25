@@ -9,7 +9,8 @@ from apify_client.clients.resource_clients.actor_version import _get_actor_versi
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorSourceType
-    from apify_shared.models import ListPage
+
+    from apify_client.clients.base.resource_collection_client import ListPage
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):

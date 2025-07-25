@@ -8,7 +8,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.schedule import _get_schedule_representation
 
 if TYPE_CHECKING:
-    from apify_shared.models import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage
 
 
 class ScheduleCollectionClient(ResourceCollectionClient):

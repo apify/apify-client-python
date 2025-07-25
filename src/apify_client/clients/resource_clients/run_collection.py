@@ -8,7 +8,8 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorJobStatus
-    from apify_shared.models import ListPage
+
+    from apify_client.clients.base.resource_collection_client import ListPage
 
 
 class RunCollectionClient(ResourceCollectionClient):

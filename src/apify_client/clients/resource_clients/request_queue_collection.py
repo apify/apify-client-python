@@ -7,7 +7,7 @@ from apify_shared.utils import ignore_docs
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_shared.models import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):

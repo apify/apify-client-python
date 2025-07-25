@@ -9,7 +9,8 @@ from apify_client.clients.resource_clients.webhook import get_webhook_representa
 
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType
-    from apify_shared.models import ListPage
+
+    from apify_client.clients.base.resource_collection_client import ListPage
 
 
 class WebhookCollectionClient(ResourceCollectionClient):

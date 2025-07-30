@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 - Sync `@docusaurus` theme version [internal] ([#435](https://github.com/apify/apify-client-python/pull/435)) ([a389dba](https://github.com/apify/apify-client-python/commit/a389dba1f21d51a1f4b634b3ccd76cd74c64d526)) by [@katzino](https://github.com/katzino)
 - Sync `@docusaurus` dependencies version [internal] ([#436](https://github.com/apify/apify-client-python/pull/436)) ([7331fdc](https://github.com/apify/apify-client-python/commit/7331fdc429453093f26d1bd98735cd395cdd561f)) by [@katzino](https://github.com/katzino)
+- Restrict apify-shared version ([#447](https://github.com/apify/apify-client-python/pull/447)) ([22cd220](https://github.com/apify/apify-client-python/commit/22cd220e8f22af01f5fdfcedc684015c006b6fe6)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

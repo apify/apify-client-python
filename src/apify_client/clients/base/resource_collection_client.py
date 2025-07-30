@@ -13,18 +13,23 @@ T = TypeVar('T')
 class ListPage(Generic[T]):
     """A single page of items returned from a list() method."""
 
-    #: list: List of returned objects on this page
     items: list[T]
-    #: int: Count of the returned objects on this page
+    """List of returned objects on this page"""
+
     count: int
-    #: int: The limit on the number of returned objects offset specified in the API call
+    """Count of the returned objects on this page"""
+
     offset: int
-    #: int: The offset of the first object specified in the API call
+    """The limit on the number of returned objects offset specified in the API call"""
+
     limit: int
-    #: int: Total number of objects matching the API call criteria
+    """The offset of the first object specified in the API call"""
+
     total: int
-    #: bool: Whether the listing is descending or not
+    """Total number of objects matching the API call criteria"""
+
     desc: bool
+    """Whether the listing is descending or not"""
 
     @ignore_docs
     def __init__(self, data: dict) -> None:

@@ -31,9 +31,7 @@ module.exports = {
     projectName: 'apify-client-python',
     scripts: ['/js/custom.js'],
     favicon: 'img/favicon.ico',
-    scripts: [
-        ...config.scripts ?? [],
-    ],
+    scripts: [...(config.scripts ?? [])],
     onBrokenLinks:
     /** @type {import('@docusaurus/types').ReportingSeverity} */ ('warn'),
     onBrokenMarkdownLinks:
@@ -119,6 +117,6 @@ module.exports = {
     },
     staticDirectories: ['node_modules/@apify/docs-theme/static', 'static'],
     customFields: {
-        ...config.customFields ?? [],
+        ...(config.customFields ?? []),
     },
 };

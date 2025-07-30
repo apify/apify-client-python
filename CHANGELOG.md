@@ -6,8 +6,6 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
-- Sync `@docusaurus` theme version [internal] ([#435](https://github.com/apify/apify-client-python/pull/435)) ([a389dba](https://github.com/apify/apify-client-python/commit/a389dba1f21d51a1f4b634b3ccd76cd74c64d526)) by [@katzino](https://github.com/katzino)
-- Sync `@docusaurus` dependencies version [internal] ([#436](https://github.com/apify/apify-client-python/pull/436)) ([7331fdc](https://github.com/apify/apify-client-python/commit/7331fdc429453093f26d1bd98735cd395cdd561f)) by [@katzino](https://github.com/katzino)
 - Restrict apify-shared version ([#447](https://github.com/apify/apify-client-python/pull/447)) ([22cd220](https://github.com/apify/apify-client-python/commit/22cd220e8f22af01f5fdfcedc684015c006b6fe6)) by [@vdusek](https://github.com/vdusek)
 
 
@@ -101,269 +99,293 @@ All notable changes to this project will be documented in this file.
 - Add actor standby ([#248](https://github.com/apify/apify-client-python/pull/248)) ([dd4bf90](https://github.com/apify/apify-client-python/commit/dd4bf9072a4caa189af5f90e513e37df325dc929)) by [@jirimoravcik](https://github.com/jirimoravcik)
 - Allow passing list of fields to unwind parameter ([#256](https://github.com/apify/apify-client-python/pull/256)) ([036b455](https://github.com/apify/apify-client-python/commit/036b455c51243e0ef81cb74a44fe670abc085ce7)) by [@fnesveda](https://github.com/fnesveda)
 
-## [1.7.1](../../releases/tag/v1.7.1) - 2024-07-11
 
-### Fixed
+## [1.7.1](https://github.com/apify/apify-client-python/releases/tag/v1.7.1) (2024-07-11)
 
-- fix breaking change (sync -> async) in 1.7.0
-- fix getting storages of last run
+### 🐛 Bug Fixes
 
-## [1.7.0](../../releases/tag/v1.7.0) - 2024-05-20
+- Fix breaking change (sync -> async) in 1.7.0
+- Fix getting storages of last run
 
-### Fixed
 
-- fix abort of last task run
-- fix abort of last Actor run
+## [1.7.0](https://github.com/apify/apify-client-python/releases/tag/v1.7.0) (2024-05-20)
+
+### 🐛 Bug Fixes
+
+- Fix abort of last task run
+- Fix abort of last Actor run
 - `ActorClient`'s and `TaskClient`'s `last_run` methods are asynchronous
 
-## [1.6.4](../../releases/tag/v1.6.4) - 2024-02-27
 
-### Added
+## [1.6.4](https://github.com/apify/apify-client-python/releases/tag/v1.6.4) (2024-02-27)
 
-- added `monthlyUsage()` and `limits()` methods to `UserClient`
+### 🚀 Features
 
-## [1.6.3](../../releases/tag/v1.6.3) - 2023-02-16
+- Add `monthlyUsage()` and `limits()` methods to `UserClient`
 
-### Added
 
-- added `log()` method to `BuildClient`
+## [1.6.3](https://github.com/apify/apify-client-python/releases/tag/v1.6.3) (2023-02-16)
 
-## [1.6.2](../../releases/tag/v1.6.2) - 2023-01-08
+### 🚀 Features
 
-### Internal changes
+- Add `log()` method to `BuildClient`
+
+
+## [1.6.2](https://github.com/apify/apify-client-python/releases/tag/v1.6.2) (2023-01-08)
+
+### Chore
 
 - Relative imports were replaced for absolute imports
 
-## [1.6.1](../../releases/tag/v1.6.1) - 2023-12-11
 
-### Fixed
+## [1.6.1](https://github.com/apify/apify-client-python/releases/tag/v1.6.1) (2023-12-11)
 
-- Fixed `_BaseHTTPClient._parse_params()` method to ensure correct conversion of API list parameters
+### 🐛 Bug Fixes
 
-## [1.6.0](../../releases/tag/v1.6.0) - 2023-11-16
+- Fix `_BaseHTTPClient._parse_params()` method to ensure correct conversion of API list parameters
 
-### Internal changes
+
+## [1.6.0](https://github.com/apify/apify-client-python/releases/tag/v1.6.0) (2023-11-16)
+
+### Chore
 
 - Migrate from Autopep8 and Flake8 to Ruff
 
-## [1.5.0](../../releases/tag/v1.5.0) - 2023-10-18
 
-### Added
+## [1.5.0](https://github.com/apify/apify-client-python/releases/tag/v1.5.0) (2023-10-18)
 
-- added support for Python 3.12
-- added DELETE to Actor runs
-- added DELETE to Actor builds
+### 🚀 Features
 
-### Internal changes
+- Add support for Python 3.12
+- Add DELETE to Actor runs
+- Add DELETE to Actor builds
 
-- rewrote documentation publication to use Docusaurus
-- removed PR Toolkit workflow
+### Chore
 
-## [1.4.1](../../releases/tag/v1.4.1) - 2023-09-06
+- Rewrite documentation publication to use Docusaurus
+- Remove PR Toolkit workflow
 
-### Added
 
-- added `StoreCollectionClient` for listing Actors in the Apify Store
-- added support for specifying the `max_items` parameter for pay-per result Actors and their runs
+## [1.4.1](https://github.com/apify/apify-client-python/releases/tag/v1.4.1) (2023-09-06)
 
-### Internal changes
+### 🚀 Features
 
-- improved logging of HTTP requests
-- removed `pytest-randomly` Pytest plugin
+- Add `StoreCollectionClient` for listing Actors in the Apify Store
+- Add support for specifying the `max_items` parameter for pay-per result Actors and their runs
 
-## [1.4.0](../../releases/tag/v1.4.0) - 2023-08-23
+### Chore
 
-### Added
+- Improve logging of HTTP requests
+- Remove `pytest-randomly` Pytest plugin
 
-- added `RunClient.reboot` method to reboot Actor runs
 
-### Internal changes
+## [1.4.0](https://github.com/apify/apify-client-python/releases/tag/v1.4.0) (2023-08-23)
 
-- simplified code via `flake8-simplify`
-- unified indentation in configuration files
+### 🚀 Features
 
-## [1.3.1](../../releases/tag/v1.3.1) - 2023-07-28
+- Add `RunClient.reboot` method to reboot Actor runs
 
-### Internal changes
+### Chore
 
-- started importing general constants and utilities from the `apify-shared` library
+- Simplify code via `flake8-simplify`
+- Unify indentation in configuration files
 
-## [1.3.0](../../releases/tag/v1.3.0) - 2023-07-24
 
-### Added
+## [1.3.1](https://github.com/apify/apify-client-python/releases/tag/v1.3.1) (2023-07-28)
 
-- added `list_and_lock_head`, `delete_request_lock`, `prolong_request_lock` methods to `RequestQueueClient`
-- added `batch_add_requests`, `batch_delete_requests`, `list_requests` methods `RequestQueueClient`
+### Chore
 
-## [1.2.2](../../releases/tag/v1.2.2) - 2023-05-31
+- Start importing general constants and utilities from the `apify-shared` library
 
-### Fixed
 
-- fixed encoding webhook lists in request parameters
+## [1.3.0](https://github.com/apify/apify-client-python/releases/tag/v1.3.0) (2023-07-24)
 
-## [1.2.1](../../releases/tag/v1.2.1) - 2023-05-23
+### 🚀 Features
 
-### Fixed
+- Add `list_and_lock_head`, `delete_request_lock`, `prolong_request_lock` methods to `RequestQueueClient`
+- Add `batch_add_requests`, `batch_delete_requests`, `list_requests` methods `RequestQueueClient`
 
-- relaxed dependency requirements to improve compatibility with other libraries
 
-## [1.2.0](../../releases/tag/v1.2.0) - 2023-05-23
+## [1.2.2](https://github.com/apify/apify-client-python/releases/tag/v1.2.2) (2023-05-31)
 
-### Added
+### 🐛 Bug Fixes
 
-- added option to change the build, memory limit and timeout when resurrecting a run
+- Fix encoding webhook lists in request parameters
 
-### Internal changes
 
-- updated dependencies
+## [1.2.1](https://github.com/apify/apify-client-python/releases/tag/v1.2.1) (2023-05-23)
 
-## [1.1.1](../../releases/tag/v1.1.1) - 2023-05-05
+### 🐛 Bug Fixes
 
-### Internal changes
+- Relax dependency requirements to improve compatibility with other libraries
 
-- changed GitHub workflows to use new secrets
 
-## [1.1.0](../../releases/tag/v1.1.0) - 2023-05-05
+## [1.2.0](https://github.com/apify/apify-client-python/releases/tag/v1.2.0) (2023-05-23)
 
-### Added
+### 🚀 Features
 
-- added support for `is_status_message_terminal` flag in Actor run status message update
+- Add option to change the build, memory limit and timeout when resurrecting a run
 
-### Internal changes
+### Chore
 
-- switched from `setup.py` to `pyproject.toml` for specifying project setup
+- Update dependencies
 
-## [1.0.0](../../releases/tag/v1.0.0) - 2023-03-13
+
+## [1.1.1](https://github.com/apify/apify-client-python/releases/tag/v1.1.1) (2023-05-05)
+
+### Chore
+
+- Change GitHub workflows to use new secrets
+
+
+## [1.1.0](https://github.com/apify/apify-client-python/releases/tag/v1.1.0) (2023-05-05)
+
+### 🚀 Features
+
+- Add support for `is_status_message_terminal` flag in Actor run status message update
+
+### Chore
+
+- Switch from `setup.py` to `pyproject.toml` for specifying project setup
+
+
+## [1.0.0](https://github.com/apify/apify-client-python/releases/tag/v1.0.0) (2023-03-13)
 
 ### Breaking changes
 
-- dropped support for Python 3.7, added support for Python 3.11
-- unified methods for streaming resources
-- switched underlying HTTP library from `requests` to `httpx`
+- Drop support for Python 3.7, add support for Python 3.11
+- Unify methods for streaming resources
+- Switch underlying HTTP library from `requests` to `httpx`
 
-### Added
+### 🚀 Features
 
-- added support for asynchronous usage via `ApifyClientAsync`
-- added configurable socket timeout for requests to the Apify API
-- added `py.typed` file to signal type checkers that this package is typed
-- added method to update status message for a run
-- added option to set up webhooks for Actor builds
-- added logger with basic debugging info
-- added support for `schema` parameter in `get_or_create` method for datasets and key-value stores
-- added support for `title` parameter in task and schedule methods
-- added `x-apify-workflow-key` header support
-- added support for `flatten` and `view` parameters in dataset items methods
-- added support for `origin` parameter in Actor/task run methods
-- added clients for Actor version environment variables
+- Add support for asynchronous usage via `ApifyClientAsync`
+- Add configurable socket timeout for requests to the Apify API
+- Add `py.typed` file to signal type checkers that this package is typed
+- Add method to update status message for a run
+- Add option to set up webhooks for Actor builds
+- Add logger with basic debugging info
+- Add support for `schema` parameter in `get_or_create` method for datasets and key-value stores
+- Add support for `title` parameter in task and schedule methods
+- Add `x-apify-workflow-key` header support
+- Add support for `flatten` and `view` parameters in dataset items methods
+- Add support for `origin` parameter in Actor/task run methods
+- Add clients for Actor version environment variables
 
-### Fixed
+### 🐛 Bug Fixes
 
-- disallowed `NaN` and `Infinity` values in JSONs sent to the Apify API
+- Disallow `NaN` and `Infinity` values in JSONs sent to the Apify API
 
-### Internal changes
+### Chore
 
-- simplified retrying with exponential backoff
-- improved checks for "not found" errors
-- simplified flake8 config
-- updated development dependencies
-- simplified development scripts
-- updated GitHub Actions versions to fix deprecations
-- unified unit test style
-- unified preparing resource representation
-- updated output management in GitHub Workflows to fix deprecations
-- improved type hints across codebase
-- added option to manually publish the package with a workflow dispatch
-- added `pre-commit` to run code quality checks before committing
-- converted `unittest`-style tests to `pytest`-style tests
-- backported project setup improvements from `apify-sdk-python`
+- Simplify retrying with exponential backoff
+- Improve checks for "not found" errors
+- Simplify flake8 config
+- Update development dependencies
+- Simplify development scripts
+- Update GitHub Actions versions to fix deprecations
+- Unify unit test style
+- Unify preparing resource representation
+- Update output management in GitHub Workflows to fix deprecations
+- Improve type hints across codebase
+- Add option to manually publish the package with a workflow dispatch
+- Add `pre-commit` to run code quality checks before committing
+- Convert `unittest`-style tests to `pytest`-style tests
+- Backport project setup improvements from `apify-sdk-python`
 
-## [0.6.0](../../releases/tag/v0.6.0) - 2022-06-27
+
+## [0.6.0](https://github.com/apify/apify-client-python/releases/tag/v0.6.0) (2022-06-27)
 
 ### Removed
 
-- Dropped support for single-file Actors
+- Drop support for single-file Actors
 
-### Internal changes
+### Chore
 
-- updated dependencies
-- fixed some lint issues in shell scripts and `setup.py`
-- added Python 3.10 to unit test roster
+- Update dependencies
+- Fix some lint issues in shell scripts and `setup.py`
+- Add Python 3.10 to unit test roster
 
-## [0.5.0](../../releases/tag/v0.5.0) - 2021-09-16
 
-### Changed
-
-- improved retrying broken API server connections
-
-### Fixed
-
-- fixed timeout value in actively waiting for a run to finish
-
-### Internal changes
-
-- updated development dependencies
-
-## [0.4.0](../../releases/tag/v0.4.0) - 2021-09-07
+## [0.5.0](https://github.com/apify/apify-client-python/releases/tag/v0.5.0) (2021-09-16)
 
 ### Changed
 
-- improved handling of `Enum` arguments
-- improved support for storing more data types in key-value stores
+- Improve retrying broken API server connections
 
-### Fixed
+### 🐛 Bug Fixes
 
-- fixed values of some `ActorJobStatus` `Enum` members
+- Fix timeout value in actively waiting for a run to finish
 
-## [0.3.0](../../releases/tag/v0.3.0) - 2021-08-26
+### Chore
 
-### Added
+- Update development dependencies
 
-- added the `test()` method to the webhook client
-- added support for indicating the pagination direction in the `ListPage` objects
 
-### Changed
-
-- improved support for storing more data types in datasets
-
-### Fixed
-
-- fixed return type in the `DatasetClient.list_items()` method docs
-
-### Internal changes
-
-- added human-friendly names to the jobs in Github Action workflows
-- updated development dependencies
-
-## [0.2.0](../../releases/tag/v0.2.0) - 2021-08-09
-
-### Added
-
-- added the `gracefully` parameter to the "Abort run" method
+## [0.4.0](https://github.com/apify/apify-client-python/releases/tag/v0.4.0) (2021-09-07)
 
 ### Changed
 
-- replaced `base_url` with `api_url` in the client constructor
-  to enable easier passing of the API server url from environment variables available to Actors on the Apify platform
+- Improve handling of `Enum` arguments
+- Improve support for storing more data types in key-value stores
 
-### Internal changes
+### 🐛 Bug Fixes
 
-- changed tags for Actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
-- updated the `requests` dependency to 2.26.0
-- updated development dependencies
+- Fix values of some `ActorJobStatus` `Enum` members
 
-## [0.1.0](../../releases/tag/v0.1.0) - 2021-08-02
+
+## [0.3.0](https://github.com/apify/apify-client-python/releases/tag/v0.3.0) (2021-08-26)
+
+### 🚀 Features
+
+- Add the `test()` method to the webhook client
+- Add support for indicating the pagination direction in the `ListPage` objects
 
 ### Changed
 
-- methods using specific option values for arguments now use well-defined and documented `Enum`s for those arguments instead of generic strings
-- made the submodule `apify_client.consts` containing those `Enum`s available
+- Improve support for storing more data types in datasets
 
-### Internal changes
+### 🐛 Bug Fixes
 
-- updated development dependencies
-- enforced unified use of single quotes and double quotes
-- added repository dispatch to build Actor images with this client when publishing a new version
+- Fix return type in the `DatasetClient.list_items()` method docs
 
-## [0.0.1](../../releases/tag/v0.0.1) - 2021-05-13
+### Chore
 
-Initial release of the package.
+- Add human-friendly names to the jobs in Github Action workflows
+- Update development dependencies
+
+
+## [0.2.0](https://github.com/apify/apify-client-python/releases/tag/v0.2.0) (2021-08-09)
+
+### 🚀 Features
+
+- Add the `gracefully` parameter to the "Abort run" method
+
+### Changed
+
+- Replace `base_url` with `api_url` in the client constructor to enable easier passing of the API server url from environment variables available to Actors on the Apify platform
+
+### Chore
+
+- Change tags for Actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
+- Update the `requests` dependency to 2.26.0
+- Update development dependencies
+
+
+## [0.1.0](https://github.com/apify/apify-client-python/releases/tag/v0.1.0) (2021-08-02)
+
+### Changed
+
+- Methods using specific option values for arguments now use well-defined and documented `Enum`s for those arguments instead of generic strings
+- Make the submodule `apify_client.consts` containing those `Enum`s available
+
+### Chore
+
+- Update development dependencies
+- Enforce unified use of single quotes and double quotes
+- Add repository dispatch to build Actor images with this client when publishing a new version
+
+
+## [0.0.1](https://github.com/apify/apify-client-python/releases/tag/v0.0.1) (2021-05-13)
+
+- Initial release of the package.

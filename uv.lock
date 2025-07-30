@@ -49,8 +49,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "apify-shared", specifier = ">=1.4.1" },
-    { name = "colorama", specifier = "~=0.4.0" },
+    { name = "apify-shared", specifier = "<2.0.0" },
+    { name = "colorama", specifier = ">=0.4.0" },
     { name = "httpx", specifier = ">=0.25" },
     { name = "more-itertools", specifier = ">=10.0.0" },
 ]

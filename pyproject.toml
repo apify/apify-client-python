@@ -24,8 +24,8 @@ classifiers = [
 ]
 keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]
 dependencies = [
-    "apify-shared>=1.4.1",
-    "colorama~=0.4.0",
+    "apify-shared<2.0.0",
+    "colorama>=0.4.0",
     "httpx>=0.25",
     "more_itertools>=10.0.0",
 ]

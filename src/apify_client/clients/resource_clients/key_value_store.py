@@ -4,11 +4,17 @@ import warnings
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
 from apify_client._errors import ApifyApiError
-from apify_client._utils import catch_not_found_or_throw, encode_key_value_store_record_value, pluck_data
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    create_storage_signature,
+    encode_key_value_store_record_value,
+    pluck_data,
+)
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -287,6 +293,54 @@ class KeyValueStoreClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
+    def create_keys_public_url(
+        self,
+        *,
+        limit: int | None = None,
+        exclusive_start_key: str | None = None,
+        collection: str | None = None,
+        prefix: str | None = None,
+        expires_in_millis: int | None = None,
+    ) -> str:
+        """Generate a URL that can be used to access key-value store keys.
+
+        If the client has permission to access the key-value store's URL signing key,
+        the URL will include a signature to verify its authenticity.
+
+        You can optionally control how long the signed URL should be valid using the `expires_in_millis` option.
+        This value sets the expiration duration in milliseconds from the time the URL is generated.
+        If not provided, the URL will not expire.
+
+        Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
+
+        Returns:
+            The public key-value store keys URL.
+        """
+        store = self.get()
+
+        request_params = self._params(
+            limit=limit,
+            exclusive_start_key=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+        )
+
+        if store and 'urlSigningSecretKey' in store:
+            signature = create_storage_signature(
+                resource_id=store['id'],
+                url_signing_secret_key=store['urlSigningSecretKey'],
+                expires_in_millis=expires_in_millis,
+            )
+            request_params['signature'] = signature
+
+        keys_public_url = urlparse(self._url('keys'))
+
+        filtered_params = {k: v for k, v in request_params.items() if v is not None}
+        if filtered_params:
+            keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))
+
+        return urlunparse(keys_public_url)
+
 
 class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
@@ -533,3 +587,52 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             params=self._params(),
             timeout_secs=_SMALL_TIMEOUT,
         )
+
+    async def create_keys_public_url(
+        self,
+        *,
+        limit: int | None = None,
+        exclusive_start_key: str | None = None,
+        collection: str | None = None,
+        prefix: str | None = None,
+        expires_in_millis: int | None = None,
+    ) -> str:
+        """Generate a URL that can be used to access key-value store keys.
+
+        If the client has permission to access the key-value store's URL signing key,
+        the URL will include a signature to verify its authenticity.
+
+        You can optionally control how long the signed URL should be valid using the `expires_in_millis` option.
+        This value sets the expiration duration in milliseconds from the time the URL is generated.
+        If not provided, the URL will not expire.
+
+        Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
+
+        Returns:
+            The public key-value store keys URL.
+        """
+        store = await self.get()
+
+        keys_public_url = urlparse(self._url('keys'))
+
+        request_params = self._params(
+            limit=limit,
+            exclusive_start_key=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+        )
+
+        if store and 'urlSigningSecretKey' in store:
+            signature = create_storage_signature(
+                resource_id=store['id'],
+                url_signing_secret_key=store['urlSigningSecretKey'],
+                expires_in_millis=expires_in_millis,
+            )
+            request_params['signature'] = signature
+
+        keys_public_url = urlparse(self._url('keys'))
+        filtered_params = {k: v for k, v in request_params.items() if v is not None}
+        if filtered_params:
+            keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))
+
+        return urlunparse(keys_public_url)

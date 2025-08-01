@@ -5,7 +5,6 @@ import time
 from typing import TYPE_CHECKING
 
 import httpx
-import requests
 from integration_test_utils import random_resource_name
 
 if TYPE_CHECKING:
@@ -27,13 +26,15 @@ class TestDatasetSync:
         assert 'limit=10' in items_public_url
         assert 'offset=0' in items_public_url
 
-        response = requests.get(items_public_url, timeout=5)
+        httpx_client = httpx.Client()
+        response = httpx_client.get(items_public_url, timeout=5)
         assert response.status_code == 200
 
         time.sleep(3)
 
         # Assert that the request is now forbidden (expired signature)
-        response_after_expiry = requests.get(items_public_url, timeout=5)
+        httpx_client = httpx.Client()
+        response_after_expiry = httpx_client.get(items_public_url, timeout=5)
         assert response_after_expiry.status_code == 403
 
         dataset.delete()
@@ -47,7 +48,8 @@ class TestDatasetSync:
 
         assert 'signature=' in items_public_url
 
-        response = requests.get(items_public_url, timeout=5)
+        httpx_client = httpx.Client()
+        response = httpx_client.get(items_public_url, timeout=5)
         assert response.status_code == 200
 
         dataset.delete()

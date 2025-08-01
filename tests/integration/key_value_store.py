@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class TestKeyValueStoreSync:
-    def test_key_value_store_should_create_public_keys_expiring_url_with_params(
+    def test_key_value_store_should_create_expiring_keys_public_url_with_params(
         self, apify_client: ApifyClient
     ) -> None:
         created_store = apify_client.key_value_stores().get_or_create(name=random_resource_name('key-value-store'))
@@ -57,7 +57,7 @@ class TestKeyValueStoreSync:
 
 
 class TestKeyValueStoreAsync:
-    async def test_key_value_store_should_create_public_keys_expiring_url_with_params(
+    async def test_key_value_store_should_create_expiring_keys_public_url_with_params(
         self, apify_client_async: ApifyClientAsync
     ) -> None:
         created_store = await apify_client_async.key_value_stores().get_or_create(

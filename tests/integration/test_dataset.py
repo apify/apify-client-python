@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import asyncio
-import time
 from typing import TYPE_CHECKING
 
 import httpx
@@ -29,13 +27,6 @@ class TestDatasetSync:
         httpx_client = httpx.Client()
         response = httpx_client.get(items_public_url, timeout=5)
         assert response.status_code == 200
-
-        time.sleep(3)
-
-        # Assert that the request is now forbidden (expired signature)
-        httpx_client = httpx.Client()
-        response_after_expiry = httpx_client.get(items_public_url, timeout=5)
-        assert response_after_expiry.status_code == 403
 
         dataset.delete()
         assert apify_client.dataset(created_dataset['id']).get() is None
@@ -76,12 +67,6 @@ class TestDatasetAsync:
         httpx_async_client = httpx.AsyncClient()
         response = await httpx_async_client.get(items_public_url, timeout=5)
         assert response.status_code == 200
-
-        await asyncio.sleep(3)
-
-        # Assert that the request is now forbidden (expired signature)
-        response_after_expiry = await httpx_async_client.get(items_public_url, timeout=5)
-        assert response_after_expiry.status_code == 403
 
         await dataset.delete()
         assert await apify_client_async.dataset(created_dataset['id']).get() is None

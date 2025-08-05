@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import hashlib
-import hmac
 import json
 import random
-import string
 import time
 from collections.abc import Callable
 from http import HTTPStatus
@@ -152,59 +149,3 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
         value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
 
     return (value, content_type)
-
-
-# TODO: will be removed once create_hmac_signature is moved to apify_shared.utils
-# https://github.com/apify/apify-shared-python/pull/44
-CHARSET = string.digits + string.ascii_letters
-
-
-def encode_base62(num: int) -> str:
-    """Encode the given number to base62."""
-    if num == 0:
-        return CHARSET[0]
-
-    res = ''
-    while num > 0:
-        num, remainder = divmod(num, 62)
-        res = CHARSET[remainder] + res
-    return res
-
-
-def create_hmac_signature(secret_key: str, message: str) -> str:
-    """Generate an HMAC signature and encodes it using Base62. Base62 encoding reduces the signature length.
-
-    HMAC signature is truncated to 30 characters to make it shorter.
-
-    Args:
-        secret_key (str): Secret key used for signing signatures
-        message (str): Message to be signed
-
-    Returns:
-        str: Base62 encoded signature
-    """
-    signature = hmac.new(secret_key.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()[:30]
-
-    decimal_signature = int(signature, 16)
-
-    return encode_base62(decimal_signature)
-
-
-def create_storage_signature(
-    resource_id: str, url_signing_secret_key: str, expires_in_millis: int | None, version: int = 0
-) -> str:
-    """Create a storage signature for a resource, which can be used to generate signed URLs for accessing the resource.
-
-    The signature is created using HMAC with the provided secret key and includes
-    the resource ID, expiration time, and version.
-
-    Note: expires_in_millis is optional. If not provided, the signature will not expire.
-
-    """
-    expires_at = int(time.time() * 1000) + expires_in_millis if expires_in_millis else 0
-
-    message_to_sign = f'{version}.{expires_at}.{resource_id}'
-    hmac = create_hmac_signature(url_signing_secret_key, message_to_sign)
-
-    base64url_encoded_payload = base64.urlsafe_b64encode(f'{version}.{expires_at}.{hmac}'.encode())
-    return base64url_encoded_payload.decode('utf-8')

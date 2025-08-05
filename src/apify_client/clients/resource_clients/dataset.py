@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.models import ListPage
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
+from apify_shared.utils import create_storage_content_signature, filter_out_none_values_recursively, ignore_docs
 
 from apify_client._errors import ApifyApiError
-from apify_client._utils import catch_not_found_or_throw, create_storage_signature, pluck_data
+from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -619,7 +619,7 @@ class DatasetClient(ResourceClient):
         )
 
         if dataset and 'urlSigningSecretKey' in dataset:
-            signature = create_storage_signature(
+            signature = create_storage_content_signature(
                 resource_id=dataset['id'],
                 url_signing_secret_key=dataset['urlSigningSecretKey'],
                 expires_in_millis=expires_in_millis,
@@ -1137,7 +1137,7 @@ class DatasetClientAsync(ResourceClientAsync):
         )
 
         if dataset and 'urlSigningSecretKey' in dataset:
-            signature = create_storage_signature(
+            signature = create_storage_content_signature(
                 resource_id=dataset['id'],
                 url_signing_secret_key=dataset['urlSigningSecretKey'],
                 expires_in_millis=expires_in_millis,

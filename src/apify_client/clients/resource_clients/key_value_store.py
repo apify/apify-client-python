@@ -6,12 +6,16 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
+from apify_shared.utils import (
+    create_storage_content_signature,
+    filter_out_none_values_recursively,
+    ignore_docs,
+    parse_date_fields,
+)
 
 from apify_client._errors import ApifyApiError
 from apify_client._utils import (
     catch_not_found_or_throw,
-    create_storage_signature,
     encode_key_value_store_record_value,
     pluck_data,
 )
@@ -326,7 +330,7 @@ class KeyValueStoreClient(ResourceClient):
         )
 
         if store and 'urlSigningSecretKey' in store:
-            signature = create_storage_signature(
+            signature = create_storage_content_signature(
                 resource_id=store['id'],
                 url_signing_secret_key=store['urlSigningSecretKey'],
                 expires_in_millis=expires_in_millis,
@@ -623,7 +627,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         )
 
         if store and 'urlSigningSecretKey' in store:
-            signature = create_storage_signature(
+            signature = create_storage_content_signature(
                 resource_id=store['id'],
                 url_signing_secret_key=store['urlSigningSecretKey'],
                 expires_in_millis=expires_in_millis,

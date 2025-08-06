@@ -69,11 +69,6 @@ _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES = (
 )
 
 
-def _get_windows_sleep_time() -> float:
-    """Get adjusted sleep time for Windows systems."""
-    return 10.0 if sys.platform == 'win32' else 2.0
-
-
 class StatusResponseGenerator:
     """Generator for actor run status responses to simulate changing status over time."""
 
@@ -123,7 +118,7 @@ def _streaming_log_handler(_request: Request) -> Response:
     def generate_logs() -> Iterator[bytes]:
         for chunk in _MOCKED_ACTOR_LOGS:
             yield chunk
-            time.sleep(0.05)
+            time.sleep(0.01)
 
     total_size = sum(len(chunk) for chunk in _MOCKED_ACTOR_LOGS)
 
@@ -211,7 +206,7 @@ async def test_redirected_logs_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
             # Do stuff while the log from the other Actor is being redirected to the logs.
-            await asyncio.sleep(2)
+            await asyncio.sleep(4.0 if sys.platform == 'win32' else 2.0)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -250,7 +245,7 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
-        time.sleep(_get_windows_sleep_time())
+        time.sleep(4.0 if sys.platform == 'win32' else 2.0)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -427,7 +422,7 @@ def test_redirect_status_message_sync(
     status_message_redirector = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name), status_message_redirector:
         # Do stuff while the status from the other Actor is being redirected to the logs.
-        time.sleep(_get_windows_sleep_time())
+        time.sleep(3)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
     assert caplog.records[1].message == 'Status: RUNNING, Message: Another message'

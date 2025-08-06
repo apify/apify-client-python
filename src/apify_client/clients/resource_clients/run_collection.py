@@ -86,7 +86,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             limit: How many runs to retrieve.
             offset: What run to include as first when retrieving the list.
             desc: Whether to sort the runs in descending order based on their start date.
-            status: Retrieve only runs with the provided status.
+            status: Retrieve only runs with the provided statuses.
 
         Returns:
             The retrieved Actor runs.

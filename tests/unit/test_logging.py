@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import sys
 import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -66,6 +67,11 @@ _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES = (
     ('Status: RUNNING, Message: Another message', logging.INFO),
     ('Status: SUCCEEDED, Message: Final message', logging.INFO),
 )
+
+
+def _get_windows_sleep_time() -> float:
+    """Get adjusted sleep time for Windows systems."""
+    return 5.0 if sys.platform == 'win32' else 2.0
 
 
 class StatusResponseGenerator:
@@ -244,7 +250,7 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
-        time.sleep(2)
+        time.sleep(_get_windows_sleep_time())
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -421,7 +427,7 @@ def test_redirect_status_message_sync(
     status_message_redirector = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name), status_message_redirector:
         # Do stuff while the status from the other Actor is being redirected to the logs.
-        time.sleep(3)
+        time.sleep(_get_windows_sleep_time())
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
     assert caplog.records[1].message == 'Status: RUNNING, Message: Another message'

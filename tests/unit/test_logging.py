@@ -71,7 +71,7 @@ _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES = (
 
 def _get_windows_sleep_time() -> float:
     """Get adjusted sleep time for Windows systems."""
-    return 5.0 if sys.platform == 'win32' else 2.0
+    return 10.0 if sys.platform == 'win32' else 2.0
 
 
 class StatusResponseGenerator:

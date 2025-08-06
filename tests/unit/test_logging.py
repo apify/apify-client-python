@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import sys
 import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -133,8 +132,6 @@ def _streaming_log_handler(_request: Request) -> Response:
 @pytest.fixture
 def mock_api(httpserver: HTTPServer) -> None:
     """Set up HTTP server with mocked API endpoints."""
-    httpserver.clear()  # type: ignore[no-untyped-call]
-
     status_generator = StatusResponseGenerator()
 
     # Add actor run status endpoint
@@ -206,7 +203,7 @@ async def test_redirected_logs_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
             # Do stuff while the log from the other Actor is being redirected to the logs.
-            await asyncio.sleep(4.0 if sys.platform == 'win32' else 2.0)
+            await asyncio.sleep(1)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -245,7 +242,7 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
-        time.sleep(4.0 if sys.platform == 'win32' else 2.0)
+        time.sleep(1)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -398,7 +395,7 @@ async def test_redirect_status_message_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with status_message_redirector:
             # Do stuff while the status from the other Actor is being redirected to the logs.
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
     assert caplog.records[1].message == 'Status: RUNNING, Message: Another message'
@@ -422,7 +419,7 @@ def test_redirect_status_message_sync(
     status_message_redirector = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name), status_message_redirector:
         # Do stuff while the status from the other Actor is being redirected to the logs.
-        time.sleep(3)
+        time.sleep(1)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
     assert caplog.records[1].message == 'Status: RUNNING, Message: Another message'

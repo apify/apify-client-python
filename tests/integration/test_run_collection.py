@@ -11,6 +11,7 @@ from apify_shared.consts import ActorJobStatus
 
 pytestmark = pytest.mark.integration
 
+
 class TestRunCollectionSync:
     APIFY_HELLO_WORLD_ACTOR = 'apify/hello-world'
     created_runs: list[dict]
@@ -21,11 +22,11 @@ class TestRunCollectionSync:
 
         self.created_runs.append(apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call(timeout_secs=1))
 
-    def teadown_runs(self,apify_client: ApifyClient) -> None:
+    def teadown_runs(self, apify_client: ApifyClient) -> None:
         for run in self.created_runs:
             apify_client.run(run.get('id')).delete()
 
-    async def test_run_collection_list_multiple_statuses(self,apify_client: ApifyClient) -> None:
+    async def test_run_collection_list_multiple_statuses(self, apify_client: ApifyClient) -> None:
         self.setup_runs(apify_client)
 
         run_collection = apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).runs()
@@ -42,8 +43,7 @@ class TestRunCollectionSync:
         assert all(
             run.get('status') in [ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT]
             for run in multiple_status_runs.items
-            )
+        )
         assert all(run.get('status') == ActorJobStatus.SUCCEEDED for run in single_status_runs.items)
 
         self.teadown_runs(apify_client)
-

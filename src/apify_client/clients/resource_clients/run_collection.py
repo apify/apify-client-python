@@ -45,7 +45,7 @@ class RunCollectionClient(ResourceCollectionClient):
         Returns:
             The retrieved Actor runs.
         """
-        if isinstance(status,list):
+        if isinstance(status, list):
             status_param = [maybe_extract_enum_member_value(s) for s in status]
         else:
             status_param = maybe_extract_enum_member_value(status)
@@ -91,7 +91,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved Actor runs.
         """
-        if isinstance(status,list):
+        if isinstance(status, list):
             status_param = [maybe_extract_enum_member_value(s) for s in status]
         else:
             status_param = maybe_extract_enum_member_value(status)

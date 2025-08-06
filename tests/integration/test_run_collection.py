@@ -18,13 +18,20 @@ class TestRunCollectionSync:
 
     def setup_runs(self, apify_client: ApifyClient) -> None:
         self.created_runs = []
-        self.created_runs.append(apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call())
 
-        self.created_runs.append(apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call(timeout_secs=1))
+        successfull_run = apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call()
+        if successfull_run is not None:
+            self.created_runs.append(successfull_run)
+
+        timed_out_run = apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call(timeout_secs=1)
+        if timed_out_run is not None:
+            self.created_runs.append(timed_out_run)
 
     def teadown_runs(self, apify_client: ApifyClient) -> None:
         for run in self.created_runs:
-            apify_client.run(run.get('id')).delete()
+            run_id = run.get('id')
+            if isinstance(run_id, str):
+                apify_client.run(run_id).delete()
 
     async def test_run_collection_list_multiple_statuses(self, apify_client: ApifyClient) -> None:
         self.setup_runs(apify_client)

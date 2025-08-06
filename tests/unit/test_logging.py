@@ -117,9 +117,16 @@ def _streaming_log_handler(_request: Request) -> Response:
     def generate_logs() -> Iterator[bytes]:
         for chunk in _MOCKED_ACTOR_LOGS:
             yield chunk
-            time.sleep(0.01)
+            time.sleep(0.05)
 
-    return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+    total_size = sum(len(chunk) for chunk in _MOCKED_ACTOR_LOGS)
+
+    return Response(
+        response=generate_logs(),
+        status=200,
+        mimetype='application/octet-stream',
+        headers={'Content-Length': str(total_size)},
+    )
 
 
 @pytest.fixture

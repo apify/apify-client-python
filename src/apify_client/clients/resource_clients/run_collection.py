@@ -26,7 +26,7 @@ class RunCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        status: ActorJobStatus | None = None,
+        status: ActorJobStatus | list[ActorJobStatus] | None = None,
     ) -> ListPage[dict]:
         """List all Actor runs.
 
@@ -40,16 +40,21 @@ class RunCollectionClient(ResourceCollectionClient):
             limit: How many runs to retrieve.
             offset: What run to include as first when retrieving the list.
             desc: Whether to sort the runs in descending order based on their start date.
-            status: Retrieve only runs with the provided status.
+            status: Retrieve only runs with the provided statuses.
 
         Returns:
             The retrieved Actor runs.
         """
+        if isinstance(status,list):
+            status_param = [maybe_extract_enum_member_value(s) for s in status]
+        else:
+            status_param = maybe_extract_enum_member_value(status)
+
         return self._list(
             limit=limit,
             offset=offset,
             desc=desc,
-            status=maybe_extract_enum_member_value(status),
+            status=status_param,
         )
 
 
@@ -67,7 +72,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        status: ActorJobStatus | None = None,
+        status: ActorJobStatus | list[ActorJobStatus] | None = None,
     ) -> ListPage[dict]:
         """List all Actor runs.
 
@@ -86,9 +91,14 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved Actor runs.
         """
+        if isinstance(status,list):
+            status_param = [maybe_extract_enum_member_value(s) for s in status]
+        else:
+            status_param = maybe_extract_enum_member_value(status)
+
         return await self._list(
             limit=limit,
             offset=offset,
             desc=desc,
-            status=maybe_extract_enum_member_value(status),
+            status=status_param,
         )

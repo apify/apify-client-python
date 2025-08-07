@@ -115,8 +115,9 @@ def _streaming_log_handler(_request: Request) -> Response:
     """Handler for streaming log requests."""
 
     def generate_logs() -> Iterator[bytes]:
-        for chunk in _MOCKED_ACTOR_LOGS:  # noqa: UP028
+        for chunk in _MOCKED_ACTOR_LOGS:
             yield chunk
+            time.sleep(0.01)
 
     total_size = sum(len(chunk) for chunk in _MOCKED_ACTOR_LOGS)
 

@@ -115,9 +115,8 @@ def _streaming_log_handler(_request: Request) -> Response:
     """Handler for streaming log requests."""
 
     def generate_logs() -> Iterator[bytes]:
-        for chunk in _MOCKED_ACTOR_LOGS:
+        for chunk in _MOCKED_ACTOR_LOGS:  # noqa: UP028
             yield chunk
-            time.sleep(0.01)
 
     total_size = sum(len(chunk) for chunk in _MOCKED_ACTOR_LOGS)
 
@@ -242,7 +241,9 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
+        print(1)
         time.sleep(1)
+        print(2)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(

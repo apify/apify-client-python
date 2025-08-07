@@ -28,6 +28,7 @@ dependencies = [
     "apify-shared<2.0.0",
     "colorama>=0.4.0",
     "httpx>=0.25",
+    "impit>=0.5.1",
     "more_itertools>=10.0.0",
 ]
 

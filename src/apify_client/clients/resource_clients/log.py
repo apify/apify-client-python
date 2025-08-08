@@ -262,7 +262,7 @@ class StreamedLog:
             # The last two parts (marker and message) are possibly not complete and will be left in the buffer
             self._stream_buffer = all_parts[-2:]
 
-        for marker, content in zip(message_markers, message_contents):
+        for marker, content in zip(message_markers, message_contents, strict=False):
             decoded_marker = marker.decode('utf-8')
             decoded_content = content.decode('utf-8')
             if self._relevancy_time_limit:

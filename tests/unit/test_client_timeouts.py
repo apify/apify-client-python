@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import time
 from functools import partial
+from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import pytest
 import respx
-from httpx import Request, Response, TimeoutException
+from werkzeug import Response as WerkzeugResponse
 
 from apify_client import ApifyClient
 from apify_client._http_client import HTTPClient, HTTPClientAsync
@@ -13,13 +16,17 @@ from apify_client.clients import DatasetClient, KeyValueStoreClient, RequestQueu
 from apify_client.clients.resource_clients import dataset, request_queue
 from apify_client.clients.resource_clients import key_value_store as kvs
 
+if TYPE_CHECKING:
+    from httpx import Request, Response
+    from pytest_httpserver import HTTPServer
+    from werkzeug import Request as WerkzeugRequest
+
 
 class EndOfTestError(Exception):
     """Custom exception that is raised after the relevant part of the code is executed to stop the test."""
 
 
-@respx.mock
-async def test_dynamic_timeout_async_client() -> None:
+async def test_dynamic_timeout_async_client(httpserver: HTTPServer) -> None:
     """Tests timeout values for request with retriable errors.
 
     Values should increase with each attempt, starting from initial call value and bounded by the client timeout value.
@@ -28,27 +35,35 @@ async def test_dynamic_timeout_async_client() -> None:
     call_timeout = 1
     client_timeout = 5
     expected_timeouts = iter((call_timeout, 2, 4, client_timeout))
+    retry_counter_mock = Mock()
 
-    def check_timeout(request: Request) -> Response:
-        expected_timeout = next(expected_timeouts)
-        assert request.extensions['timeout'] == {
-            'connect': expected_timeout,
-            'pool': expected_timeout,
-            'read': expected_timeout,
-            'write': expected_timeout,
-        }
-        if next(should_raise_error):
-            raise TimeoutException('This error can be retried')
-        return Response(200)
+    def slow_handler(_request: WerkzeugRequest) -> WerkzeugResponse:
+        timeout = next(expected_timeouts)
+        should_raise = next(should_raise_error)
+        # Counter for retries
+        retry_counter_mock()
 
-    respx.get('https://example.com').mock(side_effect=check_timeout)
-    await HTTPClientAsync(timeout_secs=client_timeout).call(
-        method='GET', url='https://example.com', timeout_secs=call_timeout
+        if should_raise:
+            # We expect longer than the client is willing to wait. This will cause a timeout on the client side.
+            time.sleep(timeout + 0.02)
+
+        return WerkzeugResponse('200 OK')
+
+    httpserver.expect_request('/async_timeout', method='GET').respond_with_handler(slow_handler)
+
+    server_url = str(httpserver.url_for('/async_timeout'))
+    response = await HTTPClientAsync(timeout_secs=client_timeout).call(
+        method='GET', url=server_url, timeout_secs=call_timeout
     )
 
+    # Check that the retry counter was called the expected number of times
+    # (4 times: 3 retries + 1 final successful call)
+    assert retry_counter_mock.call_count == 4
+    # Check that the response is successful
+    assert response.status_code == 200
 
-@respx.mock
-def test_dynamic_timeout_sync_client() -> None:
+
+def test_dynamic_timeout_sync_client(httpserver: HTTPServer) -> None:
     """Tests timeout values for request with retriable errors.
 
     Values should increase with each attempt, starting from initial call value and bounded by the client timeout value.
@@ -57,21 +72,31 @@ def test_dynamic_timeout_sync_client() -> None:
     call_timeout = 1
     client_timeout = 5
     expected_timeouts = iter((call_timeout, 2, 4, client_timeout))
+    retry_counter_mock = Mock()
 
-    def check_timeout(request: Request) -> Response:
-        expected_timeout = next(expected_timeouts)
-        assert request.extensions['timeout'] == {
-            'connect': expected_timeout,
-            'pool': expected_timeout,
-            'read': expected_timeout,
-            'write': expected_timeout,
-        }
-        if next(should_raise_error):
-            raise TimeoutException('This error can be retired')
-        return Response(200)
+    def slow_handler(_request: WerkzeugRequest) -> WerkzeugResponse:
+        timeout = next(expected_timeouts)
+        should_raise = next(should_raise_error)
+        # Counter for retries
+        retry_counter_mock()
 
-    respx.get('https://example.com').mock(side_effect=check_timeout)
-    HTTPClient(timeout_secs=client_timeout).call(method='GET', url='https://example.com', timeout_secs=call_timeout)
+        if should_raise:
+            # We expect longer than the client is willing to wait. This will cause a timeout on the client side.
+            time.sleep(timeout + 0.02)
+
+        return WerkzeugResponse('200 OK')
+
+    httpserver.expect_request('/sync_timeout', method='GET').respond_with_handler(slow_handler)
+
+    server_url = str(httpserver.url_for('/sync_timeout'))
+
+    response = HTTPClient(timeout_secs=client_timeout).call(method='GET', url=server_url, timeout_secs=call_timeout)
+
+    # Check that the retry counter was called the expected number of times
+    # (4 times: 3 retries + 1 final successful call)
+    assert retry_counter_mock.call_count == 4
+    # Check that the response is successful
+    assert response.status_code == 200
 
 
 def assert_timeout(expected_timeout: int, request: Request) -> Response:
@@ -122,6 +147,8 @@ _timeout_params = [
 ]
 
 
+# This test will probably need to be reworked or skipped when switching to `impit`.
+# Without the mock library, it's difficult to reproduce, maybe with monkeypatch?
 @pytest.mark.parametrize(
     ('client_type', 'method', 'expected_timeout', 'kwargs'),
     _timeout_params,
@@ -139,6 +166,8 @@ def test_specific_timeouts_for_specific_endpoints_sync(
         getattr(client, method)(**kwargs)
 
 
+# This test will probably need to be reworked or skipped when switching to `impit`.
+# Without the mock library, it's difficult to reproduce, maybe with monkeypatch?
 @pytest.mark.parametrize(
     ('client_type', 'method', 'expected_timeout', 'kwargs'),
     _timeout_params,

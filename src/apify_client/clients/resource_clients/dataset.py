@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as jsonlib
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any
@@ -14,7 +15,7 @@ from apify_client.clients.base import ResourceClient, ResourceClientAsync
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    import httpx
+    import impit
     from apify_shared.consts import StorageGeneralAccess
     from apify_shared.types import JSONSerializable
 
@@ -137,7 +138,7 @@ class DatasetClient(ResourceClient):
             params=request_params,
         )
 
-        data = response.json()
+        data = jsonlib.loads(response.text)
 
         return ListPage(
             {
@@ -446,7 +447,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
-    ) -> Iterator[httpx.Response]:
+    ) -> Iterator[impit.Response]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -565,7 +566,7 @@ class DatasetClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return pluck_data(response.json())
+            return pluck_data(jsonlib.loads(response.text))
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -687,7 +688,7 @@ class DatasetClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        data = response.json()
+        data = jsonlib.loads(response.text)
 
         return ListPage(
             {
@@ -903,7 +904,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
-    ) -> AsyncIterator[httpx.Response]:
+    ) -> AsyncIterator[impit.Response]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -1022,7 +1023,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return pluck_data(response.json())
+            return pluck_data(jsonlib.loads(response.text))
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

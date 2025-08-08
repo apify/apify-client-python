@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json as jsonlib
 import math
 import time
 from datetime import datetime, timezone
@@ -39,7 +40,7 @@ class ActorJobBaseClient(ResourceClient):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(pluck_data(response.json()))
+                job = parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -70,7 +71,7 @@ class ActorJobBaseClient(ResourceClient):
             method='POST',
             params=self._params(gracefully=gracefully),
         )
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
 
 @ignore_docs
@@ -94,7 +95,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(pluck_data(response.json()))
+                job = parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -125,4 +126,4 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
             method='POST',
             params=self._params(gracefully=gracefully),
         )
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))

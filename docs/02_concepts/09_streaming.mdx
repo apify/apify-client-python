@@ -18,7 +18,7 @@ Supported streaming methods:
 - [`KeyValueStoreClient.stream_record`](/reference/class/KeyValueStoreClient#stream_record) - Stream key-value store records as raw data.
 - [`LogClient.stream`](/reference/class/LogClient#stream) - Stream logs in real time.
 
-These methods return a raw, context-managed `httpx.Response` object. The response must be consumed within a with block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
+These methods return a raw, context-managed `impit.Response` object. The response must be consumed within a with block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
 
 The following example demonstrates how to stream the logs of an Actor run incrementally:
 

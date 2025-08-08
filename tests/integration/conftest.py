@@ -21,7 +21,7 @@ def apify_client() -> ApifyClient:
 
 # This fixture can't be session-scoped,
 # because then you start getting `RuntimeError: Event loop is closed` errors,
-# because `httpx.AsyncClient` in `ApifyClientAsync` tries to reuse the same event loop across requests,
+# because `impit.AsyncClient` in `ApifyClientAsync` tries to reuse the same event loop across requests,
 # but `pytest-asyncio` closes the event loop after each test,
 # and uses a new one for the next test.
 @pytest.fixture

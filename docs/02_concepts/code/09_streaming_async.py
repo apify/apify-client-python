@@ -10,5 +10,5 @@ async def main() -> None:
 
     async with log_client.stream() as log_stream:
         if log_stream:
-            for line in log_stream.iter_lines():
-                print(line)
+            async for bytes_chunk in log_stream.aiter_bytes():
+                print(bytes_chunk)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as jsonlib
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_shared.utils import (
@@ -276,7 +277,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     def call(
         self,
@@ -386,7 +387,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -417,7 +418,7 @@ class ActorClient(ResourceClient):
         )
 
         response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
-        data = pluck_data(response.json())
+        data = pluck_data(jsonlib.loads(response.text))
 
         return BuildClient(
             base_url=self.base_url,
@@ -681,7 +682,7 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     async def call(
         self,
@@ -795,7 +796,7 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""
@@ -830,7 +831,7 @@ class ActorClientAsync(ResourceClientAsync):
             method='GET',
             params=request_params,
         )
-        data = pluck_data(response.json())
+        data = pluck_data(jsonlib.loads(response.text))
 
         return BuildClientAsync(
             base_url=self.base_url,

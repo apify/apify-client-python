@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 1.12.2 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Fix API error with stream ([#459](https://github.com/apify/apify-client-python/pull/459)) ([0c91ca5](https://github.com/apify/apify-client-python/commit/0c91ca516a01a6fca7bc8fa07f7bf9c15c75bf9d)) by [@Pijukatel](https://github.com/Pijukatel)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [1.12.1](https://github.com/apify/apify-client-python/releases/tag/v1.12.1) (2025-07-30)
 
 ### 🐛 Bug Fixes

@@ -223,6 +223,9 @@ class HTTPClient(_BaseHTTPClient):
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
                 logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
+
+            # Read the response in case it is a stream, so we can raise the error properly
+            response.read()
             raise ApifyApiError(response, attempt, method=method)
 
         return retry_with_exp_backoff(
@@ -306,6 +309,9 @@ class HTTPClientAsync(_BaseHTTPClient):
             if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
                 logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
                 stop_retrying()
+
+            # Read the response in case it is a stream, so we can raise the error properly
+            await response.aread()
             raise ApifyApiError(response, attempt, method=method)
 
         return await retry_with_exp_backoff_async(

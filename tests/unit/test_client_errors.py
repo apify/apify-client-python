@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import TYPE_CHECKING
 
-import httpx
 import pytest
-import respx
+from werkzeug import Response
 
 from apify_client._errors import ApifyApiError
 from apify_client._http_client import HTTPClient, HTTPClientAsync
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import Iterator
 
     from pytest_httpserver import HTTPServer
+    from werkzeug import Request
 
 _TEST_PATH = '/errors'
 _EXPECTED_MESSAGE = 'some_message'
@@ -41,6 +42,22 @@ def test_endpoint(httpserver: HTTPServer) -> str:
     return str(httpserver.url_for(_TEST_PATH))
 
 
+def streaming_handler(_request: Request) -> Response:
+    """Handler for streaming log requests."""
+
+    def generate_response() -> Iterator[bytes]:
+        for i in range(len(RAW_ERROR)):
+            yield RAW_ERROR[i : i + 1]
+            time.sleep(0.01)
+
+    return Response(
+        response=(RAW_ERROR[i : i + 1] for i in range(len(RAW_ERROR))),
+        status=403,
+        mimetype='application/octet-stream',
+        headers={'Content-Length': str(len(RAW_ERROR))},
+    )
+
+
 def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
     """Test that client correctly throws ApifyApiError with error data from response."""
     client = HTTPClient()
@@ -65,51 +82,33 @@ async def test_async_client_apify_api_error_with_data(test_endpoint: str) -> Non
     assert e.value.data == _EXPECTED_DATA
 
 
-def test_client_apify_api_error_streamed() -> None:
+def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
     """Test that client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    class ByteStream(httpx._types.SyncByteStream):
-        def __iter__(self) -> Iterator[bytes]:
-            yield RAW_ERROR
-
-        def close(self) -> None:
-            pass
-
-    stream_url = 'http://some-stream-url.com'
-
     client = HTTPClient()
 
-    with respx.mock() as respx_mock:
-        respx_mock.get(url=stream_url).mock(return_value=httpx.Response(stream=ByteStream(), status_code=403))
-        with pytest.raises(ApifyApiError) as e:
-            client.call(method='GET', url=stream_url, stream=True, parse_response=False)
+    httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
+
+    with pytest.raises(ApifyApiError) as e:
+        client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True, parse_response=False)
 
     assert e.value.message == error['error']['message']
     assert e.value.type == error['error']['type']
 
 
-async def test_async_client_apify_api_error_streamed() -> None:
+async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
     """Test that async client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    class AsyncByteStream(httpx._types.AsyncByteStream):
-        async def __aiter__(self) -> AsyncIterator[bytes]:
-            yield RAW_ERROR
-
-        async def aclose(self) -> None:
-            pass
-
-    stream_url = 'http://some-stream-url.com'
-
     client = HTTPClientAsync()
 
-    with respx.mock() as respx_mock:
-        respx_mock.get(url=stream_url).mock(return_value=httpx.Response(stream=AsyncByteStream(), status_code=403))
-        with pytest.raises(ApifyApiError) as e:
-            await client.call(method='GET', url=stream_url, stream=True, parse_response=False)
+    httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
+
+    with pytest.raises(ApifyApiError) as e:
+        await client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True, parse_response=False)
 
     assert e.value.message == error['error']['message']
     assert e.value.type == error['error']['type']

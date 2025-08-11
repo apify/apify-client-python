@@ -1,8 +1,15 @@
+from __future__ import annotations
+
+import re
+from typing import TYPE_CHECKING
+
 import pytest
-import respx
 
 import apify_client
 from apify_client import ApifyClient, ApifyClientAsync
+
+if TYPE_CHECKING:
+    from pytest_httpserver import HTTPServer
 
 _PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT = """{
   "data": {
@@ -25,12 +32,11 @@ _PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT = """{
 }"""
 
 
-@respx.mock
-async def test_batch_not_processed_raises_exception_async() -> None:
+@pytest.mark.usefixtures('patch_basic_url')
+async def test_batch_not_processed_raises_exception_async(httpserver: HTTPServer) -> None:
     """Test that client exceptions are not silently ignored"""
-    client = ApifyClientAsync(token='')
-
-    respx.route(method='POST', host='api.apify.com').mock(return_value=respx.MockResponse(401))
+    client = ApifyClientAsync(token='placeholder_token')
+    httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(status=401)
     requests = [
         {'uniqueKey': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'uniqueKey': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
@@ -41,12 +47,12 @@ async def test_batch_not_processed_raises_exception_async() -> None:
         await rq_client.batch_add_requests(requests=requests)
 
 
-@respx.mock
-async def test_batch_processed_partially_async() -> None:
-    client = ApifyClientAsync(token='')
+@pytest.mark.usefixtures('patch_basic_url')
+async def test_batch_processed_partially_async(httpserver: HTTPServer) -> None:
+    client = ApifyClientAsync(token='placeholder_token')
 
-    respx.route(method='POST', host='api.apify.com').mock(
-        return_value=respx.MockResponse(200, content=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT)
+    httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
+        status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
     )
     requests = [
         {'uniqueKey': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
@@ -59,12 +65,12 @@ async def test_batch_processed_partially_async() -> None:
     assert response['unprocessedRequests'] == [requests[1]]
 
 
-@respx.mock
-def test_batch_not_processed_raises_exception_sync() -> None:
+@pytest.mark.usefixtures('patch_basic_url')
+def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> None:
     """Test that client exceptions are not silently ignored"""
-    client = ApifyClient(token='')
+    client = ApifyClient(token='placeholder_token')
 
-    respx.route(method='POST', host='api.apify.com').mock(return_value=respx.MockResponse(401))
+    httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(status=401)
     requests = [
         {'uniqueKey': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'uniqueKey': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
@@ -75,12 +81,12 @@ def test_batch_not_processed_raises_exception_sync() -> None:
         rq_client.batch_add_requests(requests=requests)
 
 
-@respx.mock
-async def test_batch_processed_partially_sync() -> None:
-    client = ApifyClient(token='')
+@pytest.mark.usefixtures('patch_basic_url')
+async def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
+    client = ApifyClient(token='placeholder_token')
 
-    respx.route(method='POST', host='api.apify.com').mock(
-        return_value=respx.MockResponse(200, content=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT)
+    httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
+        status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
     )
     requests = [
         {'uniqueKey': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},

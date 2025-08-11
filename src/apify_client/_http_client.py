@@ -198,8 +198,7 @@ class HTTPClient(_BaseHTTPClient):
                 # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
-                    # TODODO Impit does not support setting custom attributes on the response object,
-                    if not stream and response.content == b'A unique condition for checking types. ABRACADABRA':
+                    if not stream:
                         _maybe_parsed_body = (
                             self._maybe_parse_response(response) if parse_response else response.content
                         )
@@ -284,8 +283,7 @@ class HTTPClientAsync(_BaseHTTPClient):
                 # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
-                    # TODODO Impit does not support setting custom attributes on the response object,
-                    if not stream and response.content == b'A unique condition for checking types. ABRACADABRA':
+                    if not stream:
                         _maybe_parsed_body = (
                             self._maybe_parse_response(response) if parse_response else response.content
                         )

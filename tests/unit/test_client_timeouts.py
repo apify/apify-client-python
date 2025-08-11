@@ -60,9 +60,7 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
         if should_raise:
             raise TimeoutException
 
-        response = Response
-        response.status_code = 200
-        return response  # type: ignore[return-value]
+        return Response(status_code=200)
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
@@ -98,9 +96,7 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
         if should_raise:
             raise TimeoutException
 
-        response = Response
-        response.status_code = 200
-        return response  # type: ignore[return-value]
+        return Response(status_code=200)
 
     monkeypatch.setattr('impit.Client.request', mock_request)
 

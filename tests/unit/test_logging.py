@@ -242,9 +242,7 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
-        print(1)
         time.sleep(1)
-        print(2)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(

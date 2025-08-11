@@ -150,6 +150,8 @@ _timeout_params = [
 ]
 
 
+# This test will probably need to be reworked or skipped when switching to `impit`.
+# Without the mock library, it's difficult to reproduce, maybe with monkeypatch?
 @pytest.mark.parametrize(
     ('client_type', 'method', 'expected_timeout', 'kwargs'),
     _timeout_params,
@@ -171,6 +173,8 @@ def test_specific_timeouts_for_specific_endpoints_sync(
     assert patch_request[0] == expected_timeout
 
 
+# This test will probably need to be reworked or skipped when switching to `impit`.
+# Without the mock library, it's difficult to reproduce, maybe with monkeypatch?
 @pytest.mark.parametrize(
     ('client_type', 'method', 'expected_timeout', 'kwargs'),
     _timeout_params,

@@ -18,8 +18,7 @@
         "lint:md": "markdownlint --config ../.markdownlint.yaml '../docs/**/*.md' '../docs/**/*.mdx' --ignore '../docs/changelog.md'",
         "lint:md:fix": "npm run lint:md -- --fix",
         "lint:code": "eslint .",
-        "lint:code:fix": "eslint . --fix",
-        "postinstall": "node ./tools/patch-typedoc-plugin.js"
+        "lint:code:fix": "eslint . --fix"
     },
     "dependencies": {
         "@apify/docs-theme": "^1.0.181",

@@ -40,7 +40,6 @@ module.exports = {
         [
             '@apify/docs-theme',
             {
-                changelogFromRoot: true,
                 subNavbar: {
                     title: 'API Client for Python',
                     items: [

@@ -52,8 +52,16 @@ fix-async-docstrings:
 build-api-reference:
 	cd website && uv run ./build_api_reference.sh
 
-build-docs:
+PYTHON_DOCS_VERSION ?= 3.13
+
+## Helper target to ensure a suitable Python version for docs (type parsing needs >=3.11)
+ensure-docs-python:
+	@python -c 'import sys; import re; v=sys.version_info;\
+	print(f"Using system Python {v.major}.{v.minor}") if (v.major>3 or (v.major==3 and v.minor>=11)) else (_ for _ in ()).throw(SystemExit(1))' \
+	|| (echo "Local python is too old, trying uv to fetch Python $(PYTHON_DOCS_VERSION)" && uv python install $(PYTHON_DOCS_VERSION))
+
+build-docs: ensure-docs-python
 	cd website && uv run npm clean-install && uv run npm run build
 
-run-docs: build-api-reference
+run-docs: build-api-reference ensure-docs-python
 	cd website && uv run npm clean-install && uv run npm run start

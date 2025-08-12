@@ -1,23 +1,27 @@
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
-import threading
 import time
-from collections.abc import AsyncIterator, Generator, Iterator
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-import httpx
 import pytest
-import respx
-from _pytest.logging import LogCaptureFixture
 from apify_shared.consts import ActorJobStatus
+from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
 from apify_client.clients.resource_clients.log import StatusMessageWatcher, StreamedLog
 
-_MOCKED_API_URL = 'https://example.com'
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from _pytest.logging import LogCaptureFixture
+    from pytest_httpserver import HTTPServer
+
 _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'
 _MOCKED_ACTOR_ID = 'mocked_actor_id'
@@ -64,113 +68,95 @@ _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES = (
 )
 
 
-@pytest.fixture
-def mock_api() -> None:
-    test_server_lock = threading.Lock()
+class StatusResponseGenerator:
+    """Generator for actor run status responses to simulate changing status over time."""
 
-    def get_responses() -> Generator[httpx.Response, None, None]:
-        """Simulate actor run that changes status 3 times."""
-        for _ in range(5):
-            yield httpx.Response(
-                content=json.dumps(
-                    {
-                        'data': {
-                            'id': _MOCKED_RUN_ID,
-                            'actId': _MOCKED_ACTOR_ID,
-                            'status': ActorJobStatus.RUNNING,
-                            'statusMessage': 'Initial message',
-                            'isStatusMessageTerminal': False,
-                        }
-                    }
-                ),
-                status_code=200,
-            )
-        for _ in range(5):
-            yield httpx.Response(
-                content=json.dumps(
-                    {
-                        'data': {
-                            'id': _MOCKED_RUN_ID,
-                            'actId': _MOCKED_ACTOR_ID,
-                            'status': ActorJobStatus.RUNNING,
-                            'statusMessage': 'Another message',
-                            'isStatusMessageTerminal': False,
-                        }
-                    }
-                ),
-                status_code=200,
-            )
-        while True:
-            yield httpx.Response(
-                content=json.dumps(
-                    {
-                        'data': {
-                            'id': _MOCKED_RUN_ID,
-                            'actId': _MOCKED_ACTOR_ID,
-                            'status': ActorJobStatus.SUCCEEDED,
-                            'statusMessage': 'Final message',
-                            'isStatusMessageTerminal': True,
-                        }
-                    }
-                ),
-                status_code=200,
-            )
+    def __init__(self) -> None:
+        self.current_status_index = 0
+        self.requests_for_current_status = 0
+        self.min_requests_per_status = 5
 
-    responses = get_responses()
+        self.statuses = [
+            ('Initial message', ActorJobStatus.RUNNING, False),
+            ('Another message', ActorJobStatus.RUNNING, False),
+            ('Final message', ActorJobStatus.SUCCEEDED, True),
+        ]
 
-    def actor_runs_side_effect(_: httpx.Request) -> httpx.Response:
-        test_server_lock.acquire()
-        # To avoid multiple threads accessing at the same time and causing `ValueError: generator already executing`
-        response = next(responses)
-        test_server_lock.release_lock()
-        return response
+    def get_response(self, _request: Request) -> Response:
+        if self.current_status_index < len(self.statuses):
+            message, status, is_terminal = self.statuses[self.current_status_index]
+        else:
+            message, status, is_terminal = self.statuses[-1]
 
-    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}').mock(side_effect=actor_runs_side_effect)
+        self.requests_for_current_status += 1
 
-    respx.get(url=f'{_MOCKED_API_URL}/v2/acts/{_MOCKED_ACTOR_ID}').mock(
-        return_value=httpx.Response(content=json.dumps({'data': {'name': _MOCKED_ACTOR_NAME}}), status_code=200)
-    )
+        if (
+            self.requests_for_current_status >= self.min_requests_per_status
+            and self.current_status_index < len(self.statuses) - 1
+            and not is_terminal
+        ):
+            self.current_status_index += 1
+            self.requests_for_current_status = 0
 
-    respx.post(url=f'{_MOCKED_API_URL}/v2/acts/{_MOCKED_ACTOR_ID}/runs').mock(
-        return_value=httpx.Response(content=json.dumps({'data': {'id': _MOCKED_RUN_ID}}), status_code=200)
+        status_data = {
+            'data': {
+                'id': _MOCKED_RUN_ID,
+                'actId': _MOCKED_ACTOR_ID,
+                'status': status,
+                'statusMessage': message,
+                'isStatusMessageTerminal': is_terminal,
+            }
+        }
+
+        return Response(response=json.dumps(status_data), status=200, mimetype='application/json')
+
+
+def _streaming_log_handler(_request: Request) -> Response:
+    """Handler for streaming log requests."""
+
+    def generate_logs() -> Iterator[bytes]:
+        for chunk in _MOCKED_ACTOR_LOGS:
+            yield chunk
+            time.sleep(0.01)
+
+    total_size = sum(len(chunk) for chunk in _MOCKED_ACTOR_LOGS)
+
+    return Response(
+        response=generate_logs(),
+        status=200,
+        mimetype='application/octet-stream',
+        headers={'Content-Length': str(total_size)},
     )
 
 
 @pytest.fixture
-def mock_api_async(mock_api: None) -> None:  # noqa: ARG001, fixture
-    class AsyncByteStream(httpx._types.AsyncByteStream):
-        async def __aiter__(self) -> AsyncIterator[bytes]:
-            for i in _MOCKED_ACTOR_LOGS:
-                yield i
-                await asyncio.sleep(0.01)
+def mock_api(httpserver: HTTPServer) -> None:
+    """Set up HTTP server with mocked API endpoints."""
+    status_generator = StatusResponseGenerator()
 
-        async def aclose(self) -> None:
-            pass
-
-    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}/log?stream=1&raw=1').mock(
-        return_value=httpx.Response(stream=AsyncByteStream(), status_code=200)
+    # Add actor run status endpoint
+    httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}', method='GET').respond_with_handler(
+        status_generator.get_response
     )
 
-
-@pytest.fixture
-def mock_api_sync(mock_api: None) -> None:  # noqa: ARG001, fixture
-    class SyncByteStream(httpx._types.SyncByteStream):
-        def __iter__(self) -> Iterator[bytes]:
-            for i in _MOCKED_ACTOR_LOGS:
-                yield i
-                time.sleep(0.01)
-
-        def close(self) -> None:
-            pass
-
-    respx.get(url=f'{_MOCKED_API_URL}/v2/actor-runs/{_MOCKED_RUN_ID}/log?stream=1&raw=1').mock(
-        return_value=httpx.Response(stream=SyncByteStream(), status_code=200)
+    # Add actor info endpoint
+    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
+        {'data': {'name': _MOCKED_ACTOR_NAME}}
     )
+
+    # Add actor run creation endpoint
+    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
+        {'data': {'id': _MOCKED_RUN_ID}}
+    )
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=1&raw=1'
+    ).respond_with_handler(_streaming_log_handler)
 
 
 @pytest.fixture
 def propagate_stream_logs() -> None:
-    # Enable propagation of logs to the caplog fixture
+    """Enable propagation of logs to the caplog fixture."""
     StreamedLog._force_propagate = True
     StatusMessageWatcher._force_propagate = True
     logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
@@ -178,7 +164,7 @@ def propagate_stream_logs() -> None:
 
 @pytest.fixture
 def reduce_final_timeout_for_status_message_redirector() -> None:
-    """Reduce timeout used by the `StatusMessageWatcher`
+    """Reduce timeout used by the `StatusMessageWatcher`.
 
     This timeout makes sense on the platform, but in tests it is better to reduce it to speed up the tests.
     """
@@ -192,18 +178,19 @@ def reduce_final_timeout_for_status_message_redirector() -> None:
         (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH),
     ],
 )
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
 async def test_redirected_logs_async(
     *,
     caplog: LogCaptureFixture,
-    mock_api_async: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
     log_from_start: bool,
     expected_log_count: int,
+    httpserver: HTTPServer,
 ) -> None:
     """Test that redirected logs are formatted correctly."""
 
-    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
     with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
@@ -216,7 +203,7 @@ async def test_redirected_logs_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
             # Do stuff while the log from the other Actor is being redirected to the logs.
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -231,18 +218,19 @@ async def test_redirected_logs_async(
         (False, len(_EXPECTED_MESSAGES_AND_LEVELS) - _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH),
     ],
 )
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
 def test_redirected_logs_sync(
     *,
     caplog: LogCaptureFixture,
-    mock_api_sync: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
     log_from_start: bool,
     expected_log_count: int,
+    httpserver: HTTPServer,
 ) -> None:
     """Test that redirected logs are formatted correctly."""
 
-    run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
     with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
@@ -254,7 +242,7 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
-        time.sleep(2)
+        time.sleep(1)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -262,19 +250,19 @@ def test_redirected_logs_sync(
     )
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
 async def test_actor_call_redirect_logs_to_default_logger_async(
     caplog: LogCaptureFixture,
-    mock_api_async: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
-    reduce_final_timeout_for_status_message_redirector: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
     """Test that logs are redirected correctly to the default logger.
 
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
     logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
-    actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         await actor_client.call()
@@ -289,19 +277,19 @@ async def test_actor_call_redirect_logs_to_default_logger_async(
     )
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
 def test_actor_call_redirect_logs_to_default_logger_sync(
     caplog: LogCaptureFixture,
-    mock_api_sync: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
-    reduce_final_timeout_for_status_message_redirector: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
     """Test that logs are redirected correctly to the default logger.
 
     Caplog contains logs before formatting, so formatting is not included in the test expectations."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
     logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
     logger = logging.getLogger(logger_name)
-    actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClient(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         actor_client.call()
@@ -316,14 +304,15 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     )
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
 async def test_actor_call_no_redirect_logs_async(
     caplog: LogCaptureFixture,
-    mock_api_async: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
+    api_url = httpserver.url_for('/').removesuffix('/')
+
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
-    actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         await actor_client.call(logger=None)
@@ -331,14 +320,15 @@ async def test_actor_call_no_redirect_logs_async(
     assert len(caplog.records) == 0
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
 def test_actor_call_no_redirect_logs_sync(
     caplog: LogCaptureFixture,
-    mock_api_sync: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
+    api_url = httpserver.url_for('/').removesuffix('/')
+
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
-    actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClient(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         actor_client.call(logger=None)
@@ -346,17 +336,17 @@ def test_actor_call_no_redirect_logs_sync(
     assert len(caplog.records) == 0
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
 async def test_actor_call_redirect_logs_to_custom_logger_async(
     caplog: LogCaptureFixture,
-    mock_api_async: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
-    reduce_final_timeout_for_status_message_redirector: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
     """Test that logs are redirected correctly to the custom logger."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
     logger_name = 'custom_logger'
     logger = logging.getLogger(logger_name)
-    actor_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         await actor_client.call(logger=logger)
@@ -367,17 +357,17 @@ async def test_actor_call_redirect_logs_to_custom_logger_async(
     )
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
 def test_actor_call_redirect_logs_to_custom_logger_sync(
     caplog: LogCaptureFixture,
-    mock_api_sync: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
-    reduce_final_timeout_for_status_message_redirector: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
     """Test that logs are redirected correctly to the custom logger."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+
     logger_name = 'custom_logger'
     logger = logging.getLogger(logger_name)
-    actor_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).actor(actor_id=_MOCKED_ACTOR_ID)
+    actor_client = ApifyClient(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
 
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         actor_client.call(logger=logger)
@@ -388,17 +378,16 @@ def test_actor_call_redirect_logs_to_custom_logger_sync(
     )
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
 async def test_redirect_status_message_async(
     *,
     caplog: LogCaptureFixture,
-    mock_api: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
-    reduce_final_timeout_for_status_message_redirector: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
     """Test redirected status and status messages."""
+    api_url = httpserver.url_for('/').removesuffix('/')
 
-    run_client = ApifyClientAsync(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+    run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
@@ -406,31 +395,31 @@ async def test_redirect_status_message_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with status_message_redirector:
             # Do stuff while the status from the other Actor is being redirected to the logs.
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
     assert caplog.records[1].message == 'Status: RUNNING, Message: Another message'
     assert caplog.records[2].message == 'Status: SUCCEEDED, Message: Final message'
 
 
-@respx.mock
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
 def test_redirect_status_message_sync(
     *,
     caplog: LogCaptureFixture,
-    mock_api: None,  # noqa: ARG001, fixture
-    propagate_stream_logs: None,  # noqa: ARG001, fixture
-    reduce_final_timeout_for_status_message_redirector: None,  # noqa: ARG001, fixture
+    httpserver: HTTPServer,
 ) -> None:
     """Test redirected status and status messages."""
 
-    run_client = ApifyClient(token='mocked_token', api_url=_MOCKED_API_URL).run(run_id=_MOCKED_RUN_ID)
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
     logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
 
     status_message_redirector = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
     with caplog.at_level(logging.DEBUG, logger=logger_name), status_message_redirector:
         # Do stuff while the status from the other Actor is being redirected to the logs.
-        time.sleep(3)
+        time.sleep(1)
 
     assert caplog.records[0].message == 'Status: RUNNING, Message: Initial message'
     assert caplog.records[1].message == 'Status: RUNNING, Message: Another message'

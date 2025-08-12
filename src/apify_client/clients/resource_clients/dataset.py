@@ -420,7 +420,6 @@ class DatasetClient(ResourceClient):
             url=self._url('items'),
             method='GET',
             params=request_params,
-            parse_response=False,
         )
 
         return response.content
@@ -516,7 +515,6 @@ class DatasetClient(ResourceClient):
                 method='GET',
                 params=request_params,
                 stream=True,
-                parse_response=False,
             )
             yield response
         finally:
@@ -877,7 +875,6 @@ class DatasetClientAsync(ResourceClientAsync):
             url=self._url('items'),
             method='GET',
             params=request_params,
-            parse_response=False,
         )
 
         return response.content
@@ -973,7 +970,6 @@ class DatasetClientAsync(ResourceClientAsync):
                 method='GET',
                 params=request_params,
                 stream=True,
-                parse_response=False,
             )
             yield response
         finally:

@@ -76,7 +76,6 @@ class LogClient(ResourceClient):
                 url=self.url,
                 method='GET',
                 params=self._params(raw=raw),
-                parse_response=False,
             )
 
             return response.content  # noqa: TRY300
@@ -105,7 +104,6 @@ class LogClient(ResourceClient):
                 method='GET',
                 params=self._params(stream=True, raw=raw),
                 stream=True,
-                parse_response=False,
             )
 
             yield response
@@ -166,7 +164,6 @@ class LogClientAsync(ResourceClientAsync):
                 url=self.url,
                 method='GET',
                 params=self._params(raw=raw),
-                parse_response=False,
             )
 
             return response.content  # noqa: TRY300
@@ -195,7 +192,6 @@ class LogClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(stream=True, raw=raw),
                 stream=True,
-                parse_response=False,
             )
 
             yield response

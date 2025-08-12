@@ -10,9 +10,9 @@ from importlib import metadata
 from typing import TYPE_CHECKING, Any
 
 import httpx
-from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
+from apify_shared.utils import ignore_docs
 
-from apify_client._errors import ApifyApiError, InvalidResponseBodyError, is_retryable_error
+from apify_client._errors import ApifyApiError, is_retryable_error
 from apify_client._logging import log_context, logger_name
 from apify_client._statistics import Statistics
 from apify_client._utils import retry_with_exp_backoff, retry_with_exp_backoff_async
@@ -63,25 +63,6 @@ class _BaseHTTPClient:
         self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
 
         self.stats = stats or Statistics()
-
-    @staticmethod
-    def _maybe_parse_response(response: httpx.Response) -> Any:
-        if response.status_code == HTTPStatus.NO_CONTENT:
-            return None
-
-        content_type = ''
-        if 'content-type' in response.headers:
-            content_type = response.headers['content-type'].split(';')[0].strip()
-
-        try:
-            if is_content_type_json(content_type):
-                return response.json()
-            elif is_content_type_xml(content_type) or is_content_type_text(content_type):  # noqa: RET505
-                return response.text
-            else:
-                return response.content
-        except ValueError as err:
-            raise InvalidResponseBodyError(response) from err
 
     @staticmethod
     def _parse_params(params: dict | None) -> dict | None:
@@ -143,16 +124,12 @@ class HTTPClient(_BaseHTTPClient):
         data: Any = None,
         json: JSONSerializable | None = None,
         stream: bool | None = None,
-        parse_response: bool | None = True,
         timeout_secs: int | None = None,
     ) -> httpx.Response:
         log_context.method.set(method)
         log_context.url.set(url)
 
         self.stats.calls += 1
-
-        if stream and parse_response:
-            raise ValueError('Cannot stream response and parse it at the same time!')
 
         headers, params, content = self._prepare_request_call(headers, params, data, json)
 
@@ -190,11 +167,6 @@ class HTTPClient(_BaseHTTPClient):
                 # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
-                    if not stream:
-                        _maybe_parsed_body = (
-                            self._maybe_parse_response(response) if parse_response else response.content
-                        )
-                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
 
@@ -239,16 +211,12 @@ class HTTPClientAsync(_BaseHTTPClient):
         data: Any = None,
         json: JSONSerializable | None = None,
         stream: bool | None = None,
-        parse_response: bool | None = True,
         timeout_secs: int | None = None,
     ) -> httpx.Response:
         log_context.method.set(method)
         log_context.url.set(url)
 
         self.stats.calls += 1
-
-        if stream and parse_response:
-            raise ValueError('Cannot stream response and parse it at the same time!')
 
         headers, params, content = self._prepare_request_call(headers, params, data, json)
 
@@ -283,11 +251,6 @@ class HTTPClientAsync(_BaseHTTPClient):
                 # If response status is < 300, the request was successful, and we can return the result
                 if response.status_code < 300:  # noqa: PLR2004
                     logger.debug('Request successful', extra={'status_code': response.status_code})
-                    if not stream:
-                        _maybe_parsed_body = (
-                            self._maybe_parse_response(response) if parse_response else response.content
-                        )
-                        setattr(response, '_maybe_parsed_body', _maybe_parsed_body)  # noqa: B010
 
                     return response
 

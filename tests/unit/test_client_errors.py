@@ -92,7 +92,7 @@ def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
     with pytest.raises(ApifyApiError) as e:
-        client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True, parse_response=False)
+        client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True)
 
     assert e.value.message == error['error']['message']
     assert e.value.type == error['error']['type']
@@ -108,7 +108,7 @@ async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
     with pytest.raises(ApifyApiError) as e:
-        await client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True, parse_response=False)
+        await client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True)
 
     assert e.value.message == error['error']['message']
     assert e.value.type == error['error']['type']

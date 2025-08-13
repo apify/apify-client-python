@@ -17,8 +17,8 @@ async def main() -> None:
     # Stream the logs
     async with log_client.stream() as async_log_stream:
         if async_log_stream:
-            async for line in async_log_stream.aiter_lines():
-                print(line)
+            async for bytes_chunk in async_log_stream.aiter_bytes():
+                print(bytes_chunk)
 
 
 if __name__ == '__main__':

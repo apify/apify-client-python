@@ -75,9 +75,7 @@ class DatasetClient(ResourceClient):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
@@ -163,9 +161,7 @@ class DatasetClient(ResourceClient):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
     ) -> Iterator[dict]:
@@ -248,9 +244,7 @@ class DatasetClient(ResourceClient):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -342,9 +336,7 @@ class DatasetClient(ResourceClient):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -438,9 +430,7 @@ class DatasetClient(ResourceClient):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -625,9 +615,7 @@ class DatasetClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
@@ -713,9 +701,7 @@ class DatasetClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
     ) -> AsyncIterator[dict]:
@@ -799,9 +785,7 @@ class DatasetClientAsync(ResourceClientAsync):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,
@@ -895,9 +879,7 @@ class DatasetClientAsync(ResourceClientAsync):
         delimiter: str | None = None,
         fields: list[str] | None = None,
         omit: list[str] | None = None,
-        # TODO: change to list[str] only when doing a breaking release
-        # https://github.com/apify/apify-client-python/issues/255
-        unwind: str | list[str] | None = None,
+        unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_header_row: bool | None = None,
         skip_hidden: bool | None = None,

@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 
 - Extend status parameter to an array of possible statuses  ([#455](https://github.com/apify/apify-client-python/pull/455)) ([76f6769](https://github.com/apify/apify-client-python/commit/76f676973d067ce8af398d8e6ceea55595da5ecf)) by [@JanHranicky](https://github.com/JanHranicky)
 
+### Refactor
+
+- [**breaking**] Remove support for passing a single string to the `unwind` parameter in `DatasetClient` ([#467](https://github.com/apify/apify-client-python/pull/467)) ([e8aea2c](https://github.com/apify/apify-client-python/commit/e8aea2c8f3833082bf78562f3fa981a1f8e88b26)) by [@Mantisus](https://github.com/Mantisus), closes [#255](https://github.com/apify/apify-client-python/issues/255)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [1.12.2](https://github.com/apify/apify-client-python/releases/tag/v1.12.2) (2025-08-08)

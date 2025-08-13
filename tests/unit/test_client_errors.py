@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 from werkzeug import Response
 
-from apify_client._errors import ApifyApiError
 from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

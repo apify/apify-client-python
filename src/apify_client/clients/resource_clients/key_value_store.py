@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import json as jsonlib
-import warnings
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
@@ -16,6 +14,7 @@ from apify_client._utils import (
     pluck_data,
 )
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -107,43 +106,18 @@ class KeyValueStoreClient(ResourceClient):
 
         return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
-    def get_record(self, key: str, *, as_bytes: bool = False, as_file: bool = False) -> dict | None:
+    def get_record(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
-            as_bytes: Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes,
-                default False.
-            as_file: Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object,
-                default False.
 
         Returns:
             The requested record, or None, if the record does not exist.
         """
         try:
-            if as_bytes and as_file:
-                raise ValueError('You cannot have both as_bytes and as_file set.')
-
-            if as_bytes:
-                warnings.warn(
-                    '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, '
-                    'use `KeyValueStoreClient.get_record_as_bytes()` instead.',
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                return self.get_record_as_bytes(key)
-
-            if as_file:
-                warnings.warn(
-                    '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, '
-                    'use `KeyValueStoreClient.stream_record()` instead.',
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                return self.stream_record(key)  # type: ignore[return-value]
-
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
@@ -380,10 +354,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         Args:
             key: Key of the record to retrieve.
-            as_bytes: Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes,
-                default False.
-            as_file: Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object,
-                default False.
 
         Returns:
             The requested record, or None, if the record does not exist.

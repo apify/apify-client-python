@@ -9,6 +9,7 @@ from collections.abc import Callable
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
+import impit
 from apify_shared.utils import (
     is_content_type_json,
     is_content_type_text,
@@ -17,14 +18,14 @@ from apify_shared.utils import (
     maybe_extract_enum_member_value,
 )
 
-from apify_client._errors import InvalidResponseBodyError
+from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from impit import Response
 
-    from apify_client._errors import ApifyApiError
+    from apify_client.errors import ApifyApiError
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
@@ -180,3 +181,16 @@ def maybe_parse_response(response: Response) -> Any:
         raise InvalidResponseBodyError(response) from err
     else:
         return response_data
+
+
+def is_retryable_error(exc: Exception) -> bool:
+    """Check if the given error is retryable."""
+    return isinstance(
+        exc,
+        (
+            InvalidResponseBodyError,
+            impit.NetworkError,
+            impit.TimeoutException,
+            impit.RemoteProtocolError,
+        ),
+    )

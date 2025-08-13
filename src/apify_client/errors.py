@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json as jsonlib
+from typing import TYPE_CHECKING
 
-import impit
 from apify_shared.utils import ignore_docs
+
+if TYPE_CHECKING:
+    import impit
 
 
 class ApifyClientError(Exception):
@@ -75,16 +78,3 @@ class InvalidResponseBodyError(ApifyClientError):
         self.name = 'InvalidResponseBodyError'
         self.code = 'invalid-response-body'
         self.response = response
-
-
-def is_retryable_error(exc: Exception) -> bool:
-    """Check if the given error is retryable."""
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            impit.NetworkError,
-            impit.TimeoutException,
-            impit.RemoteProtocolError,
-        ),
-    )

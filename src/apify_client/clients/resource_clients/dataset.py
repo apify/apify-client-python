@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any
 from apify_shared.models import ListPage
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator

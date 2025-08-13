@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-import httpx
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import ignore_docs
+
+if TYPE_CHECKING:
+    import httpx
 
 
 class ApifyClientError(Exception):
@@ -72,16 +76,3 @@ class InvalidResponseBodyError(ApifyClientError):
         self.name = 'InvalidResponseBodyError'
         self.code = 'invalid-response-body'
         self.response = response
-
-
-def is_retryable_error(exc: Exception) -> bool:
-    """Check if the given error is retryable."""
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            httpx.NetworkError,
-            httpx.TimeoutException,
-            httpx.RemoteProtocolError,
-        ),
-    )

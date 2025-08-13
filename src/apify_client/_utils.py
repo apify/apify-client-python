@@ -9,7 +9,10 @@ from collections.abc import Callable
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
+import httpx
 from apify_shared.utils import is_file_or_bytes, maybe_extract_enum_member_value
+
+from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -149,3 +152,16 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
         value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
 
     return (value, content_type)
+
+
+def is_retryable_error(exc: Exception) -> bool:
+    """Check if the given error is retryable."""
+    return isinstance(
+        exc,
+        (
+            InvalidResponseBodyError,
+            httpx.NetworkError,
+            httpx.TimeoutException,
+            httpx.RemoteProtocolError,
+        ),
+    )

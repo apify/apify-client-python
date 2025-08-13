@@ -13,10 +13,10 @@ from urllib.parse import urlencode
 import impit
 from apify_shared.utils import ignore_docs, is_content_type_json, is_content_type_text, is_content_type_xml
 
-from apify_client._errors import ApifyApiError, InvalidResponseBodyError, is_retryable_error
 from apify_client._logging import log_context, logger_name
 from apify_client._statistics import Statistics
-from apify_client._utils import retry_with_exp_backoff, retry_with_exp_backoff_async
+from apify_client._utils import is_retryable_error, retry_with_exp_backoff, retry_with_exp_backoff_async
+from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import Callable

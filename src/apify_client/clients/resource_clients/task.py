@@ -10,7 +10,6 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, encode_webhook_list_to_base64, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.run import RunClient, RunClientAsync
@@ -19,6 +18,7 @@ from apify_client.clients.resource_clients.webhook_collection import (
     WebhookCollectionClient,
     WebhookCollectionClientAsync,
 )
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorJobStatus, MetaOrigin

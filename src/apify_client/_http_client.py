@@ -8,8 +8,9 @@ import sys
 from http import HTTPStatus
 from importlib import metadata
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode
 
-import httpx
+import impit
 from apify_shared.utils import ignore_docs
 
 from apify_client._errors import ApifyApiError, is_retryable_error
@@ -59,8 +60,8 @@ class _BaseHTTPClient:
         if token is not None:
             headers['Authorization'] = f'Bearer {token}'
 
-        self.httpx_client = httpx.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
-        self.httpx_async_client = httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
+        self.impit_client = impit.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
+        self.impit_async_client = impit.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
 
         self.stats = stats or Statistics()
 
@@ -112,6 +113,21 @@ class _BaseHTTPClient:
             data,
         )
 
+    def _build_url_with_params(self, url: str, params: dict | None = None) -> str:
+        if not params:
+            return url
+
+        param_pairs: list[tuple[str, str]] = []
+        for key, value in params.items():
+            if isinstance(value, list):
+                param_pairs.extend((key, str(v)) for v in value)
+            else:
+                param_pairs.append((key, str(value)))
+
+        query_string = urlencode(param_pairs)
+
+        return f'{url}?{query_string}'
+
 
 class HTTPClient(_BaseHTTPClient):
     def call(
@@ -125,7 +141,7 @@ class HTTPClient(_BaseHTTPClient):
         json: JSONSerializable | None = None,
         stream: bool | None = None,
         timeout_secs: int | None = None,
-    ) -> httpx.Response:
+    ) -> impit.Response:
         log_context.method.set(method)
         log_context.url.set(url)
 
@@ -133,34 +149,26 @@ class HTTPClient(_BaseHTTPClient):
 
         headers, params, content = self._prepare_request_call(headers, params, data, json)
 
-        httpx_client = self.httpx_client
+        impit_client = self.impit_client
 
-        def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
+        def _make_request(stop_retrying: Callable, attempt: int) -> impit.Response:
             log_context.attempt.set(attempt)
             logger.debug('Sending request')
 
             self.stats.requests += 1
 
             try:
-                request = httpx_client.build_request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    params=params,
-                    content=content,
-                )
-
                 # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
                 timeout = min(self.timeout_secs, (timeout_secs or self.timeout_secs) * 2 ** (attempt - 1))
-                request.extensions['timeout'] = {
-                    'connect': timeout,
-                    'pool': timeout,
-                    'read': timeout,
-                    'write': timeout,
-                }
 
-                response = httpx_client.send(
-                    request=request,
+                url_with_params = self._build_url_with_params(url, params)
+
+                response = impit_client.request(
+                    method=method,
+                    url=url_with_params,
+                    headers=headers,
+                    content=content,
+                    timeout=timeout,
                     stream=stream or False,
                 )
 
@@ -189,7 +197,7 @@ class HTTPClient(_BaseHTTPClient):
 
             # Read the response in case it is a stream, so we can raise the error properly
             response.read()
-            raise ApifyApiError(response, attempt)
+            raise ApifyApiError(response, attempt, method=method)
 
         return retry_with_exp_backoff(
             _make_request,
@@ -212,7 +220,7 @@ class HTTPClientAsync(_BaseHTTPClient):
         json: JSONSerializable | None = None,
         stream: bool | None = None,
         timeout_secs: int | None = None,
-    ) -> httpx.Response:
+    ) -> impit.Response:
         log_context.method.set(method)
         log_context.url.set(url)
 
@@ -220,31 +228,23 @@ class HTTPClientAsync(_BaseHTTPClient):
 
         headers, params, content = self._prepare_request_call(headers, params, data, json)
 
-        httpx_async_client = self.httpx_async_client
+        impit_async_client = self.impit_async_client
 
-        async def _make_request(stop_retrying: Callable, attempt: int) -> httpx.Response:
+        async def _make_request(stop_retrying: Callable, attempt: int) -> impit.Response:
             log_context.attempt.set(attempt)
             logger.debug('Sending request')
             try:
-                request = httpx_async_client.build_request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    params=params,
-                    content=content,
-                )
-
                 # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
                 timeout = min(self.timeout_secs, (timeout_secs or self.timeout_secs) * 2 ** (attempt - 1))
-                request.extensions['timeout'] = {
-                    'connect': timeout,
-                    'pool': timeout,
-                    'read': timeout,
-                    'write': timeout,
-                }
 
-                response = await httpx_async_client.send(
-                    request=request,
+                url_with_params = self._build_url_with_params(url, params)
+
+                response = await impit_async_client.request(
+                    method=method,
+                    url=url_with_params,
+                    headers=headers,
+                    content=content,
+                    timeout=timeout,
                     stream=stream or False,
                 )
 
@@ -273,7 +273,7 @@ class HTTPClientAsync(_BaseHTTPClient):
 
             # Read the response in case it is a stream, so we can raise the error properly
             await response.aread()
-            raise ApifyApiError(response, attempt)
+            raise ApifyApiError(response, attempt, method=method)
 
         return await retry_with_exp_backoff_async(
             _make_request,

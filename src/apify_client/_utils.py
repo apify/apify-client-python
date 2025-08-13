@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import json
+import json as jsonlib
 import random
 import time
 from collections.abc import Callable
@@ -22,7 +22,7 @@ from apify_client._errors import InvalidResponseBodyError
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
-    from httpx import Response
+    from impit import Response
 
     from apify_client._errors import ApifyApiError
 
@@ -143,7 +143,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
             webhook_representation['headersTemplate'] = webhook['headers_template']
         data.append(webhook_representation)
 
-    return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
+    return base64.b64encode(jsonlib.dumps(data).encode('utf-8')).decode('ascii')
 
 
 def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:
@@ -156,7 +156,7 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
             content_type = 'application/json; charset=utf-8'
 
     if 'application/json' in content_type and not is_file_or_bytes(value) and not isinstance(value, str):
-        value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
+        value = jsonlib.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
 
     return (value, content_type)
 
@@ -171,7 +171,7 @@ def maybe_parse_response(response: Response) -> Any:
 
     try:
         if is_content_type_json(content_type):
-            response_data = response.json()
+            response_data = jsonlib.loads(response.text)
         elif is_content_type_xml(content_type) or is_content_type_text(content_type):
             response_data = response.text
         else:

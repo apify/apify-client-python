@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as jsonlib
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
@@ -104,7 +105,7 @@ class KeyValueStoreClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     def get_record(self, key: str, *, as_bytes: bool = False, as_file: bool = False) -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -370,7 +371,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     async def get_record(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store.

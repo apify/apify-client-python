@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from types import TracebackType
 
-    import httpx
+    import impit
     from typing_extensions import Self
 
     from apify_client.clients import RunClient, RunClientAsync
@@ -86,7 +86,7 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self, *, raw: bool = False) -> Iterator[httpx.Response | None]:
+    def stream(self, *, raw: bool = False) -> Iterator[impit.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -174,7 +174,7 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self, *, raw: bool = False) -> AsyncIterator[httpx.Response | None]:
+    async def stream(self, *, raw: bool = False) -> AsyncIterator[impit.Response | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import warnings
+import json as jsonlib
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
@@ -13,13 +13,14 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
+    maybe_parse_response,
     pluck_data,
 )
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -109,45 +110,20 @@ class KeyValueStoreClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
-    def get_record(self, key: str, *, as_bytes: bool = False, as_file: bool = False) -> dict | None:
+    def get_record(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
-            as_bytes: Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes,
-                default False.
-            as_file: Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object,
-                default False.
 
         Returns:
             The requested record, or None, if the record does not exist.
         """
         try:
-            if as_bytes and as_file:
-                raise ValueError('You cannot have both as_bytes and as_file set.')
-
-            if as_bytes:
-                warnings.warn(
-                    '`KeyValueStoreClient.get_record(..., as_bytes=True)` is deprecated, '
-                    'use `KeyValueStoreClient.get_record_as_bytes()` instead.',
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                return self.get_record_as_bytes(key)
-
-            if as_file:
-                warnings.warn(
-                    '`KeyValueStoreClient.get_record(..., as_file=True)` is deprecated, '
-                    'use `KeyValueStoreClient.stream_record()` instead.',
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                return self.stream_record(key)  # type: ignore[return-value]
-
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
@@ -156,7 +132,7 @@ class KeyValueStoreClient(ResourceClient):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # type: ignore[attr-defined]  # noqa: SLF001
+                'value': maybe_parse_response(response),
                 'content_type': response.headers['content-type'],
             }
 
@@ -206,7 +182,6 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
             )
 
             return {
@@ -238,7 +213,6 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
                 stream=True,
             )
 
@@ -425,7 +399,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     async def get_record(self, key: str) -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -434,10 +408,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         Args:
             key: Key of the record to retrieve.
-            as_bytes: Deprecated, use `get_record_as_bytes()` instead. Whether to retrieve the record as raw bytes,
-                default False.
-            as_file: Deprecated, use `stream_record()` instead. Whether to retrieve the record as a file-like object,
-                default False.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -451,7 +421,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # type: ignore[attr-defined]  # noqa: SLF001
+                'value': maybe_parse_response(response),
                 'content_type': response.headers['content-type'],
             }
 
@@ -501,7 +471,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
             )
 
             return {
@@ -533,7 +502,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
                 stream=True,
             )
 

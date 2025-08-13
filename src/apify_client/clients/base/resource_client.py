@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json as jsonlib
+
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
+from apify_client.errors import ApifyApiError
 
 
 @ignore_docs
@@ -20,7 +22,7 @@ class ResourceClient(BaseClient):
                 timeout_secs=timeout_secs,
             )
 
-            return parse_date_fields(pluck_data(response.json()))
+            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -36,7 +38,7 @@ class ResourceClient(BaseClient):
             timeout_secs=timeout_secs,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     def _delete(self, timeout_secs: int | None = None) -> None:
         try:
@@ -64,7 +66,7 @@ class ResourceClientAsync(BaseClientAsync):
                 timeout_secs=timeout_secs,
             )
 
-            return parse_date_fields(pluck_data(response.json()))
+            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -80,7 +82,7 @@ class ResourceClientAsync(BaseClientAsync):
             timeout_secs=timeout_secs,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     async def _delete(self, timeout_secs: int | None = None) -> None:
         try:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json as jsonlib
 import math
 import time
 from datetime import datetime, timezone
@@ -8,9 +9,9 @@ from datetime import datetime, timezone
 from apify_shared.consts import ActorJobStatus
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base.resource_client import ResourceClient, ResourceClientAsync
+from apify_client.errors import ApifyApiError
 
 DEFAULT_WAIT_FOR_FINISH_SEC = 999999
 
@@ -39,7 +40,7 @@ class ActorJobBaseClient(ResourceClient):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(pluck_data(response.json()))
+                job = parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -70,7 +71,7 @@ class ActorJobBaseClient(ResourceClient):
             method='POST',
             params=self._params(gracefully=gracefully),
         )
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
 
 @ignore_docs
@@ -94,7 +95,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(pluck_data(response.json()))
+                job = parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -125,4 +126,4 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
             method='POST',
             params=self._params(gracefully=gracefully),
         )
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))

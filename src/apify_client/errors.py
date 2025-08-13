@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-import httpx
+import json as jsonlib
+from typing import TYPE_CHECKING
+
 from apify_shared.utils import ignore_docs
+
+if TYPE_CHECKING:
+    import impit
 
 
 class ApifyClientError(Exception):
@@ -17,12 +22,13 @@ class ApifyApiError(ApifyClientError):
     """
 
     @ignore_docs
-    def __init__(self, response: httpx.Response, attempt: int) -> None:
+    def __init__(self, response: impit.Response, attempt: int, method: str = 'GET') -> None:
         """Initialize a new instance.
 
         Args:
             response: The response to the failed API call.
             attempt: Which attempt was the request that failed.
+            method: The HTTP method used for the request.
         """
         self.message: str | None = None
         self.type: str | None = None
@@ -30,7 +36,7 @@ class ApifyApiError(ApifyClientError):
 
         self.message = f'Unexpected error: {response.text}'
         try:
-            response_data = response.json()
+            response_data = jsonlib.loads(response.text)
             if 'error' in response_data:
                 self.message = response_data['error']['message']
                 self.type = response_data['error']['type']
@@ -44,7 +50,7 @@ class ApifyApiError(ApifyClientError):
         self.name = 'ApifyApiError'
         self.status_code = response.status_code
         self.attempt = attempt
-        self.http_method = response.request.method
+        self.http_method = method
 
         # TODO: self.client_method   # noqa: TD003
         # TODO: self.original_stack  # noqa: TD003
@@ -61,7 +67,7 @@ class InvalidResponseBodyError(ApifyClientError):
     """
 
     @ignore_docs
-    def __init__(self, response: httpx.Response) -> None:
+    def __init__(self, response: impit.Response) -> None:
         """Initialize a new instance.
 
         Args:
@@ -72,16 +78,3 @@ class InvalidResponseBodyError(ApifyClientError):
         self.name = 'InvalidResponseBodyError'
         self.code = 'invalid-response-body'
         self.response = response
-
-
-def is_retryable_error(exc: Exception) -> bool:
-    """Check if the given error is retryable."""
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            httpx.NetworkError,
-            httpx.TimeoutException,
-            httpx.RemoteProtocolError,
-        ),
-    )

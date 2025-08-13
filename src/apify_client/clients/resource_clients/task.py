@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as jsonlib
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_shared.utils import (
@@ -9,7 +10,6 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, encode_webhook_list_to_base64, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.run import RunClient, RunClientAsync
@@ -18,6 +18,7 @@ from apify_client.clients.resource_clients.webhook_collection import (
     WebhookCollectionClient,
     WebhookCollectionClientAsync,
 )
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_shared.consts import ActorJobStatus, MetaOrigin
@@ -201,7 +202,7 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     def call(
         self,
@@ -264,7 +265,7 @@ class TaskClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return cast('dict', response.json())
+            return cast('dict', jsonlib.loads(response.text))
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -283,7 +284,7 @@ class TaskClient(ResourceClient):
             params=self._params(),
             json=task_input,
         )
-        return cast('dict', response.json())
+        return cast('dict', jsonlib.loads(response.text))
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
@@ -458,7 +459,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
     async def call(
         self,
@@ -521,7 +522,7 @@ class TaskClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return cast('dict', response.json())
+            return cast('dict', jsonlib.loads(response.text))
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -540,7 +541,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=self._params(),
             json=task_input,
         )
-        return cast('dict', response.json())
+        return cast('dict', jsonlib.loads(response.text))
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""

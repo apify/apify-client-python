@@ -14,7 +14,7 @@ from apify_shared.utils import is_file_or_bytes, maybe_extract_enum_member_value
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
-    from apify_client._errors import ApifyApiError
+    from apify_client.errors import ApifyApiError
 
 PARSE_DATE_FIELDS_MAX_DEPTH = 3
 PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'

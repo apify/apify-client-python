@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from apify_shared.utils import ignore_docs, parse_date_fields
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
+from apify_client.errors import ApifyApiError
 
 
 @ignore_docs

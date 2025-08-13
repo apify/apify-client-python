@@ -9,13 +9,13 @@ from apify_shared.utils import (
     parse_date_fields,
 )
 
-from apify_client._errors import ApifyApiError
 from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.webhook_dispatch_collection import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
 )
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType

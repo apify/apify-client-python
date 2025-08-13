@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 
-from apify_client._utils import catch_not_found_or_throw, encode_key_value_store_record_value, pluck_data
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    encode_key_value_store_record_value,
+    maybe_parse_response,
+    pluck_data,
+)
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -121,7 +126,7 @@ class KeyValueStoreClient(ResourceClient):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # type: ignore[attr-defined]  # noqa: SLF001
+                'value': maybe_parse_response(response),
                 'content_type': response.headers['content-type'],
             }
 
@@ -171,7 +176,6 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
             )
 
             return {
@@ -203,7 +207,6 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
                 stream=True,
             )
 
@@ -364,7 +367,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             return {
                 'key': key,
-                'value': response._maybe_parsed_body,  # type: ignore[attr-defined]  # noqa: SLF001
+                'value': maybe_parse_response(response),
                 'content_type': response.headers['content-type'],
             }
 
@@ -414,7 +417,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
             )
 
             return {
@@ -446,7 +448,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._url(f'records/{key}'),
                 method='GET',
                 params=self._params(),
-                parse_response=False,
                 stream=True,
             )
 

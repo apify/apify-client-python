@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as jsonlib
 from typing import Any
 
 from apify_shared.utils import ignore_docs
@@ -56,7 +57,7 @@ class BuildClient(ActorJobBaseClient):
             method='GET',
         )
 
-        response_data: dict = response.json()
+        response_data: dict = jsonlib.loads(response.text)
 
         return response_data
 
@@ -133,7 +134,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
             method='GET',
         )
 
-        response_data: dict = response.json()
+        response_data: dict = jsonlib.loads(response.text)
 
         return response_data
 

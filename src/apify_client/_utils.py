@@ -9,7 +9,7 @@ from collections.abc import Callable
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
-import httpx
+import impit
 from apify_shared.utils import is_file_or_bytes, maybe_extract_enum_member_value
 
 from apify_client.errors import InvalidResponseBodyError
@@ -160,8 +160,8 @@ def is_retryable_error(exc: Exception) -> bool:
         exc,
         (
             InvalidResponseBodyError,
-            httpx.NetworkError,
-            httpx.TimeoutException,
-            httpx.RemoteProtocolError,
+            impit.NetworkError,
+            impit.TimeoutException,
+            impit.RemoteProtocolError,
         ),
     )

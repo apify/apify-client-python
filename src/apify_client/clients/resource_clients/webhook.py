@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as jsonlib
 from typing import TYPE_CHECKING, Any
 
 from apify_shared.utils import (
@@ -151,7 +152,7 @@ class WebhookClient(ResourceClient):
                 params=self._params(),
             )
 
-            return parse_date_fields(pluck_data(response.json()))
+            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -262,7 +263,7 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            return parse_date_fields(pluck_data(response.json()))
+            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

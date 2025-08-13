@@ -27,7 +27,7 @@ keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]
 dependencies = [
     "apify-shared<2.0.0",
     "colorama>=0.4.0",
-    "httpx>=0.25",
+    "impit>=0.5.2",
     "more_itertools>=10.0.0",
 ]
 
@@ -54,7 +54,6 @@ dev = [
     "pytest~=8.4.0",
     "pytest-httpserver~=1.1.0",
     "redbaron~=0.9.0",
-    "respx~=0.22.0",
     "ruff~=0.12.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
     "types-colorama~=0.4.15.20240106",
@@ -175,7 +174,7 @@ warn_unused_ignores = true
 exclude = []
 
 [[tool.mypy.overrides]]
-module = ["pandas", "respx"]
+module = ["pandas"]
 ignore_missing_imports = true
 
 [tool.basedpyright]

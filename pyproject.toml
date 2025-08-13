@@ -58,7 +58,7 @@ dev = [
     "ruff~=0.12.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
     "types-colorama~=0.4.15.20240106",
-    "werkzeug~=3.0.0", # Werkzeug is used by pytest-httpserver
+    "werkzeug~=3.1.3", # Werkzeug is used by pytest-httpserver
 ]
 
 [tool.hatch.build.targets.wheel]

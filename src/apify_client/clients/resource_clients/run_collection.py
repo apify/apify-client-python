@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import ignore_docs, maybe_extract_enum_member_value
-
+from apify_client._utils import maybe_extract_enum_member_value
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
@@ -15,7 +14,6 @@ if TYPE_CHECKING:
 class RunCollectionClient(ResourceCollectionClient):
     """Sub-client for listing Actor runs."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -61,7 +59,6 @@ class RunCollectionClient(ResourceCollectionClient):
 class RunCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing Actor runs."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)

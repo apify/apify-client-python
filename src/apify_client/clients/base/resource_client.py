@@ -2,14 +2,11 @@ from __future__ import annotations
 
 import json as jsonlib
 
-from apify_shared.utils import ignore_docs, parse_date_fields
-
-from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client._utils import catch_not_found_or_throw, parse_date_fields, pluck_data
 from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
 from apify_client.errors import ApifyApiError
 
 
-@ignore_docs
 class ResourceClient(BaseClient):
     """Base class for sub-clients manipulating a single resource."""
 
@@ -53,7 +50,6 @@ class ResourceClient(BaseClient):
             catch_not_found_or_throw(exc)
 
 
-@ignore_docs
 class ResourceClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a single resource."""
 

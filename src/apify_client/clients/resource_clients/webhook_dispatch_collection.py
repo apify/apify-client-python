@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import ignore_docs
-
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
@@ -13,7 +11,6 @@ if TYPE_CHECKING:
 class WebhookDispatchCollectionClient(ResourceCollectionClient):
     """Sub-client for listing webhook dispatches."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -43,7 +40,6 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
 class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for listing webhook dispatches."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)

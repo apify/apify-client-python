@@ -35,7 +35,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "apify-shared", specifier = "<2.0.0" },
+    { name = "apify-shared", specifier = ">=2.0.0,<3.0.0" },
     { name = "colorama", specifier = ">=0.4.0" },
     { name = "impit", specifier = ">=0.5.3" },
     { name = "more-itertools", specifier = ">=10.0.0" },
@@ -63,11 +63,11 @@ dev = [
 
 [[package]]
 name = "apify-shared"
-version = "1.5.0"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/63/3e/96de53973fa0704d9b99339fad1838b53d9340870bafc7a9a9f41a7d266f/apify_shared-1.5.0.tar.gz", hash = "sha256:1cba58f0144127f7b52cced426a6527e9722620e9fd1c4ddb6f9c8ce16db0ef1", size = 14639, upload-time = "2025-08-05T11:10:20.617Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/f4/710d95d6d5e1afde0b35359b0eb2ad7363ec81eeab348b5a109959d19513/apify_shared-2.0.0.tar.gz", hash = "sha256:c3ee4f7556f6fd61b9e2d39288d6c4d272b7c3ee0ebf0bb6b8acf46e5605b688", size = 46601, upload-time = "2025-08-13T13:32:22.7Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/87/fe6b3e7eec76e083ce54bb1b4a19b7dd8f6d3441a3a05e053af6607fcda4/apify_shared-1.5.0-py3-none-any.whl", hash = "sha256:46409a75140d25f3487da87adbf446390214e08cda79c2938aaee085e8f7f9dd", size = 13467, upload-time = "2025-08-05T11:10:19.187Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/51/37e94ec858360c85b6b690c5694894c5b051416dcb829c324a507fea8d42/apify_shared-2.0.0-py3-none-any.whl", hash = "sha256:e4c74aba7277190efa52958fa7d1696fd361a828b604cc88858e9a29396c2f27", size = 16191, upload-time = "2025-08-13T13:32:21.286Z" },
 ]
 
 [[package]]

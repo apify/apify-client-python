@@ -3,9 +3,7 @@ from __future__ import annotations
 import json as jsonlib
 from typing import Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
-from apify_client._utils import catch_not_found_or_throw, pluck_data_as_list
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data_as_list
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -36,7 +34,6 @@ def _get_schedule_representation(
 class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -126,7 +123,6 @@ class ScheduleClient(ResourceClient):
 class ScheduleClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single schedule."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)

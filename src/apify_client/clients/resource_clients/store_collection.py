@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import ignore_docs
-
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
@@ -13,7 +11,6 @@ if TYPE_CHECKING:
 class StoreCollectionClient(ResourceCollectionClient):
     """Sub-client for Apify store."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -60,7 +57,6 @@ class StoreCollectionClient(ResourceCollectionClient):
 class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for Apify store."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)

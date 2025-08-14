@@ -3,14 +3,14 @@ from __future__ import annotations
 import json as jsonlib
 from typing import TYPE_CHECKING, Any, Literal
 
-from apify_shared.utils import (
+from apify_client._utils import (
+    encode_key_value_store_record_value,
+    encode_webhook_list_to_base64,
     filter_out_none_values_recursively,
-    ignore_docs,
     maybe_extract_enum_member_value,
     parse_date_fields,
+    pluck_data,
 )
-
-from apify_client._utils import encode_key_value_store_record_value, encode_webhook_list_to_base64, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.actor_version import ActorVersionClient, ActorVersionClientAsync
 from apify_client.clients.resource_clients.actor_version_collection import (
@@ -98,7 +98,6 @@ def get_actor_representation(
 class ActorClient(ResourceClient):
     """Sub-client for manipulating a single Actor."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -503,7 +502,6 @@ class ActorClient(ResourceClient):
 class ActorClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)

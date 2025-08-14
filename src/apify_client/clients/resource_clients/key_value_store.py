@@ -5,12 +5,12 @@ from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
-
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
+    filter_out_none_values_recursively,
     maybe_parse_response,
+    parse_date_fields,
     pluck_data,
 )
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
@@ -28,7 +28,6 @@ _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
 class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -269,7 +268,6 @@ class KeyValueStoreClient(ResourceClient):
 class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)

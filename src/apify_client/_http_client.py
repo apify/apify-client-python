@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
 import impit
-from apify_shared.utils import ignore_docs
 
 from apify_client._logging import log_context, logger_name
 from apify_client._statistics import Statistics
@@ -21,7 +20,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_shared.types import JSONSerializable
+    from apify_client._types import JSONSerializable
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -30,7 +29,6 @@ logger = logging.getLogger(logger_name)
 
 
 class _BaseHTTPClient:
-    @ignore_docs
     def __init__(
         self,
         *,

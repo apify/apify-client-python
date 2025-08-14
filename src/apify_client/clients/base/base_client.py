@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import ignore_docs
-
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils import to_safe_id
 
@@ -45,14 +43,12 @@ class _BaseBaseClient(metaclass=WithLogDetailsClient):
         }
 
 
-@ignore_docs
 class BaseClient(_BaseBaseClient):
     """Base class for sub-clients."""
 
     http_client: HTTPClient
     root_client: ApifyClient
 
-    @ignore_docs
     def __init__(
         self,
         *,
@@ -88,14 +84,12 @@ class BaseClient(_BaseBaseClient):
             self.url = f'{self.url}/{self.safe_id}'
 
 
-@ignore_docs
 class BaseClientAsync(_BaseBaseClient):
     """Base class for async sub-clients."""
 
     http_client: HTTPClientAsync
     root_client: ApifyClientAsync
 
-    @ignore_docs
     def __init__(
         self,
         *,

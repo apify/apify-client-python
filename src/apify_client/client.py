@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from apify_shared.utils import ignore_docs
-
 from apify_client._http_client import HTTPClient, HTTPClientAsync
 from apify_client._statistics import Statistics
 from apify_client.clients import (
@@ -61,7 +59,6 @@ API_VERSION = 'v2'
 class _BaseApifyClient:
     http_client: HTTPClient | HTTPClientAsync
 
-    @ignore_docs
     def __init__(
         self,
         token: str | None = None,

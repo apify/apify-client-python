@@ -3,9 +3,7 @@ from __future__ import annotations
 import json as jsonlib
 from typing import Any, Generic, TypeVar
 
-from apify_shared.utils import ignore_docs, parse_date_fields
-
-from apify_client._utils import pluck_data
+from apify_client._utils import parse_date_fields, pluck_data
 from apify_client.clients.base.base_client import BaseClient, BaseClientAsync
 
 T = TypeVar('T')
@@ -32,7 +30,6 @@ class ListPage(Generic[T]):
     desc: bool
     """Whether the listing is descending or not"""
 
-    @ignore_docs
     def __init__(self, data: dict) -> None:
         """Initialize a ListPage instance from the API response data."""
         self.items = data.get('items', [])
@@ -43,7 +40,6 @@ class ListPage(Generic[T]):
         self.desc = data.get('desc', False)
 
 
-@ignore_docs
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
@@ -77,7 +73,6 @@ class ResourceCollectionClient(BaseClient):
         return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
 
 
-@ignore_docs
 class ResourceCollectionClientAsync(BaseClientAsync):
     """Base class for async sub-clients manipulating a resource collection."""
 

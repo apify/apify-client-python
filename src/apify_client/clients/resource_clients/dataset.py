@@ -5,10 +5,8 @@ import warnings
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.models import ListPage
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
-from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client._types import ListPage
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -17,7 +15,8 @@ if TYPE_CHECKING:
 
     import impit
     from apify_shared.consts import StorageGeneralAccess
-    from apify_shared.types import JSONSerializable
+
+    from apify_client._types import JSONSerializable
 
 _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
 _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
@@ -26,7 +25,6 @@ _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
 class DatasetClient(ResourceClient):
     """Sub-client for manipulating a single dataset."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -564,7 +562,6 @@ class DatasetClient(ResourceClient):
 class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)

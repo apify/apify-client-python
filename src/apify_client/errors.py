@@ -3,8 +3,6 @@ from __future__ import annotations
 import json as jsonlib
 from typing import TYPE_CHECKING
 
-from apify_shared.utils import ignore_docs
-
 if TYPE_CHECKING:
     import impit
 
@@ -21,7 +19,6 @@ class ApifyApiError(ApifyClientError):
     or validation errors, which are thrown immediately, because a correction by the user is needed.
     """
 
-    @ignore_docs
     def __init__(self, response: impit.Response, attempt: int, method: str = 'GET') -> None:
         """Initialize a new instance.
 
@@ -66,7 +63,6 @@ class InvalidResponseBodyError(ApifyClientError):
     identifying this error in the HTTPClient.
     """
 
-    @ignore_docs
     def __init__(self, response: impit.Response) -> None:
         """Initialize a new instance.
 

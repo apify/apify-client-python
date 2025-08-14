@@ -3,8 +3,6 @@ from __future__ import annotations
 import json as jsonlib
 from typing import Any
 
-from apify_shared.utils import ignore_docs
-
 from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
 
@@ -12,7 +10,6 @@ from apify_client.clients.resource_clients.log import LogClient, LogClientAsync
 class BuildClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor build."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -89,7 +86,6 @@ class BuildClient(ActorJobBaseClient):
 class BuildClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single Actor build."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)

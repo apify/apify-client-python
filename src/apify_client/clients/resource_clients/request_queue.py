@@ -8,10 +8,14 @@ from collections.abc import Iterable
 from queue import Queue
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
 from more_itertools import constrained_batches
 
-from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    filter_out_none_values_recursively,
+    parse_date_fields,
+    pluck_data,
+)
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -45,7 +49,6 @@ class BatchAddRequestsResult(TypedDict):
 class RequestQueueClient(ResourceClient):
     """Sub-client for manipulating a single request queue."""
 
-    @ignore_docs
     def __init__(  # noqa: D417
         self,
         *args: Any,
@@ -426,7 +429,6 @@ class RequestQueueClient(ResourceClient):
 class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
 
-    @ignore_docs
     def __init__(  # noqa: D417
         self,
         *args: Any,

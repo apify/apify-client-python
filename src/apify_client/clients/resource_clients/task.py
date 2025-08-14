@@ -3,14 +3,14 @@ from __future__ import annotations
 import json as jsonlib
 from typing import TYPE_CHECKING, Any, cast
 
-from apify_shared.utils import (
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    encode_webhook_list_to_base64,
     filter_out_none_values_recursively,
-    ignore_docs,
     maybe_extract_enum_member_value,
     parse_date_fields,
+    pluck_data,
 )
-
-from apify_client._utils import catch_not_found_or_throw, encode_webhook_list_to_base64, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.run import RunClient, RunClientAsync
 from apify_client.clients.resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -64,7 +64,6 @@ def get_task_representation(
 class TaskClient(ResourceClient):
     """Sub-client for manipulating a single task."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -321,7 +320,6 @@ class TaskClient(ResourceClient):
 class TaskClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single task."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)

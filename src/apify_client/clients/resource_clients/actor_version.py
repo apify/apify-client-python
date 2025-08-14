@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, maybe_extract_enum_member_value
-
+from apify_client._utils import filter_out_none_values_recursively, maybe_extract_enum_member_value
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from apify_client.clients.resource_clients.actor_env_var_collection import (
@@ -43,7 +42,6 @@ def _get_actor_version_representation(
 class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single Actor version."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -132,7 +130,6 @@ class ActorVersionClient(ResourceClient):
 class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor version."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)

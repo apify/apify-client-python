@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import httpx
-from integration_test_utils import random_resource_name
+import impit
+
+from integration.integration_test_utils import random_resource_name
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -17,15 +18,15 @@ class TestKeyValueStoreSync:
 
         store = apify_client.key_value_store(created_store['id'])
         keys_public_url = store.create_keys_public_url(
-            expires_in_millis=2000,
+            expires_in_seconds=2000,
             limit=10,
         )
 
         assert 'signature=' in keys_public_url
         assert 'limit=10' in keys_public_url
 
-        httpx_client = httpx.Client()
-        response = httpx_client.get(keys_public_url, timeout=5)
+        impit_client = impit.Client()
+        response = impit_client.get(keys_public_url, timeout=5)
         assert response.status_code == 200
 
         store.delete()
@@ -39,8 +40,8 @@ class TestKeyValueStoreSync:
 
         assert 'signature=' in keys_public_url
 
-        httpx_client = httpx.Client()
-        response = httpx_client.get(keys_public_url, timeout=5)
+        impit_client = impit.Client()
+        response = impit_client.get(keys_public_url, timeout=5)
         assert response.status_code == 200
 
         store.delete()
@@ -57,15 +58,15 @@ class TestKeyValueStoreAsync:
 
         store = apify_client_async.key_value_store(created_store['id'])
         keys_public_url = await store.create_keys_public_url(
-            expires_in_millis=2000,
+            expires_in_seconds=2000,
             limit=10,
         )
 
         assert 'signature=' in keys_public_url
         assert 'limit=10' in keys_public_url
 
-        httpx_async_client = httpx.AsyncClient()
-        response = await httpx_async_client.get(keys_public_url, timeout=5)
+        impit_async_client = impit.AsyncClient()
+        response = await impit_async_client.get(keys_public_url, timeout=5)
         assert response.status_code == 200
 
         await store.delete()
@@ -83,8 +84,8 @@ class TestKeyValueStoreAsync:
 
         assert 'signature=' in keys_public_url
 
-        httpx_async_client = httpx.AsyncClient()
-        response = await httpx_async_client.get(keys_public_url, timeout=5)
+        impit_async_client = impit.AsyncClient()
+        response = await impit_async_client.get(keys_public_url, timeout=5)
         assert response.status_code == 200
 
         await store.delete()

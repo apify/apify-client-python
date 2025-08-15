@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from integration_test_utils import random_resource_name, random_string
+from integration.integration_test_utils import random_resource_name, random_string
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync

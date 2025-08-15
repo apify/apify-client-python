@@ -6,12 +6,7 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_shared.utils import (
-    create_storage_content_signature,
-    filter_out_none_values_recursively,
-    ignore_docs,
-    parse_date_fields,
-)
+from apify_shared.utils import create_storage_content_signature
 
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -279,15 +274,15 @@ class KeyValueStoreClient(ResourceClient):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
-        expires_in_millis: int | None = None,
+        expires_in_seconds: int | None = None,
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
         If the client has permission to access the key-value store's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_millis` option.
-        This value sets the expiration duration in milliseconds from the time the URL is generated.
+        You can optionally control how long the signed URL should be valid using the `expires_in_seconds` option.
+        This value sets the expiration duration in seconds from the time the URL is generated.
         If not provided, the URL will not expire.
 
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
@@ -308,7 +303,7 @@ class KeyValueStoreClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=store['id'],
                 url_signing_secret_key=store['urlSigningSecretKey'],
-                expires_in_millis=expires_in_millis,
+                expires_in_millis=expires_in_seconds * 1000 if expires_in_seconds is not None else None,
             )
             request_params['signature'] = signature
 
@@ -567,15 +562,15 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
-        expires_in_millis: int | None = None,
+        expires_in_seconds: int | None = None,
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
         If the client has permission to access the key-value store's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_millis` option.
-        This value sets the expiration duration in milliseconds from the time the URL is generated.
+        You can optionally control how long the signed URL should be valid using the `expires_in_seconds` option.
+        This value sets the expiration duration in seconds from the time the URL is generated.
         If not provided, the URL will not expire.
 
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
@@ -598,7 +593,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=store['id'],
                 url_signing_secret_key=store['urlSigningSecretKey'],
-                expires_in_millis=expires_in_millis,
+                expires_in_millis=expires_in_seconds * 1000 if expires_in_seconds is not None else None,
             )
             request_params['signature'] = signature
 

@@ -11,13 +11,15 @@ Support for Python 3.9 has been dropped. The Apify Python API Client v2.x now re
 
 ## New underlying HTTP library
 
-In v2.0, the Apify Python API client switched from using `httpx` to [`impit`](https://github.com/apify/impit) as the underlying HTTP library.
+In v2.0, the Apify Python API client switched from using [`httpx`](https://www.python-httpx.org/) to [`impit`](https://github.com/apify/impit) as the underlying HTTP library. However, this change shouldn't have much impact on the end user.
 
 ## API method changes
 
+Several public methods have changed their signatures or behavior.
+
 ### Removed parameters and attributes
 
-- The `parse_response` parameter has been removed from the `call()` method. This was an internal parameter that added a private attribute to the `Response` object.
+- The `parse_response` parameter has been removed from the `HTTPClient.call()` method. This was an internal parameter that added a private attribute to the `Response` object.
 - The private `_maybe_parsed_body` attribute has been removed from the `Response` object.
 
 ### KeyValueStoreClient
@@ -30,9 +32,11 @@ In v2.0, the Apify Python API client switched from using `httpx` to [`impit`](ht
 
 ## Module reorganization
 
+Some modules have been restructured.
+
 ### Constants
 
-- Deprecated constant re-exports from `consts.py` have been removed. Constants should now be imported from the [apify-shared-python](https://github.com/apify/apify-shared-python) package.
+- Deprecated constant re-exports from `consts.py` have been removed. Constants should now be imported from the [apify-shared-python](https://github.com/apify/apify-shared-python) package if needed.
 
 ### Errors
 

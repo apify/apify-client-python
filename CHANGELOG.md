@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 1.12.3 - **not yet released**
+## [2.0.0](https://github.com/apify/apify-client-python/releases/tag/v2.0.0) (2025-08-15)
 
 ### 🚀 Features
 
@@ -24,7 +23,6 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Remove `parse_response` arg from the `call` method ([#462](https://github.com/apify/apify-client-python/pull/462)) ([840d51a](https://github.com/apify/apify-client-python/commit/840d51af12a7e53decf9d3294d0e0c3c848e9c08)) by [@Mantisus](https://github.com/Mantisus), closes [#166](https://github.com/apify/apify-client-python/issues/166)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [1.12.2](https://github.com/apify/apify-client-python/releases/tag/v1.12.2) (2025-08-08)
 
 ### 🐛 Bug Fixes

@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 - Extend status parameter to an array of possible statuses  ([#455](https://github.com/apify/apify-client-python/pull/455)) ([76f6769](https://github.com/apify/apify-client-python/commit/76f676973d067ce8af398d8e6ceea55595da5ecf)) by [@JanHranicky](https://github.com/JanHranicky)
 - Expose apify_client.errors module ([#468](https://github.com/apify/apify-client-python/pull/468)) ([c0cc147](https://github.com/apify/apify-client-python/commit/c0cc147fd0c5a60e5a025db6b6c761e811efe1da)) by [@Mantisus](https://github.com/Mantisus), closes [#158](https://github.com/apify/apify-client-python/issues/158)
+- Add dataset.create_items_public_url and key_value_store.create_keys_public_url ([#453](https://github.com/apify/apify-client-python/pull/453)) ([2b1e110](https://github.com/apify/apify-client-python/commit/2b1e1104c15c987b0024010df41d6d356ea37dd3)) by [@danpoletaev](https://github.com/danpoletaev)
 
 ### Chore
 

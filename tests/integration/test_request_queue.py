@@ -1,24 +1,16 @@
 from __future__ import annotations
 
-import secrets
-import string
 from typing import TYPE_CHECKING
+
+from integration.integration_test_utils import random_resource_name, random_string
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
 
-def random_string(length: int = 10) -> str:
-    return ''.join(secrets.choice(string.ascii_letters) for _ in range(length))
-
-
-def random_queue_name() -> str:
-    return f'python-client-test-queue-{random_string(5)}'
-
-
 class TestRequestQueueSync:
     def test_request_queue_lock(self, apify_client: ApifyClient) -> None:
-        created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
+        created_queue = apify_client.request_queues().get_or_create(name=random_resource_name('queue'))
         queue = apify_client.request_queue(created_queue['id'], client_key=random_string(10))
 
         # Add requests and check if correct number of requests was locked
@@ -46,7 +38,7 @@ class TestRequestQueueSync:
         assert apify_client.request_queue(created_queue['id']).get() is None
 
     def test_request_batch_operations(self, apify_client: ApifyClient) -> None:
-        created_queue = apify_client.request_queues().get_or_create(name=random_queue_name())
+        created_queue = apify_client.request_queues().get_or_create(name=random_resource_name('queue'))
         queue = apify_client.request_queue(created_queue['id'])
 
         # Add requests to queue and check if they were added
@@ -71,7 +63,7 @@ class TestRequestQueueSync:
 
 class TestRequestQueueAsync:
     async def test_request_queue_lock(self, apify_client_async: ApifyClientAsync) -> None:
-        created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
+        created_queue = await apify_client_async.request_queues().get_or_create(name=random_resource_name('queue'))
         queue = apify_client_async.request_queue(created_queue['id'], client_key=random_string(10))
 
         # Add requests and check if correct number of requests was locked
@@ -100,7 +92,7 @@ class TestRequestQueueAsync:
         assert await apify_client_async.request_queue(created_queue['id']).get() is None
 
     async def test_request_batch_operations(self, apify_client_async: ApifyClientAsync) -> None:
-        created_queue = await apify_client_async.request_queues().get_or_create(name=random_queue_name())
+        created_queue = await apify_client_async.request_queues().get_or_create(name=random_resource_name('queue'))
         queue = apify_client_async.request_queue(created_queue['id'])
 
         # Add requests to queue and check if they were added

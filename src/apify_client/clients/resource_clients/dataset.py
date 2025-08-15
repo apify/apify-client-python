@@ -4,9 +4,16 @@ import json as jsonlib
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode, urlparse, urlunparse
+
+from apify_shared.utils import create_storage_content_signature
 
 from apify_client._types import ListPage
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    filter_out_none_values_recursively,
+    pluck_data,
+)
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -558,6 +565,67 @@ class DatasetClient(ResourceClient):
 
         return None
 
+    def create_items_public_url(
+        self,
+        *,
+        offset: int | None = None,
+        limit: int | None = None,
+        clean: bool | None = None,
+        desc: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: list[str] | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+        flatten: list[str] | None = None,
+        view: str | None = None,
+        expires_in_secs: int | None = None,
+    ) -> str:
+        """Generate a URL that can be used to access dataset items.
+
+        If the client has permission to access the dataset's URL signing key,
+        the URL will include a signature to verify its authenticity.
+
+        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
+        This value sets the expiration duration in seconds from the time the URL is generated.
+        If not provided, the URL will not expire.
+
+        Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
+
+        Returns:
+            The public dataset items URL.
+        """
+        dataset = self.get()
+
+        request_params = self._params(
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
+        )
+
+        if dataset and 'urlSigningSecretKey' in dataset:
+            signature = create_storage_content_signature(
+                resource_id=dataset['id'],
+                url_signing_secret_key=dataset['urlSigningSecretKey'],
+                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
+            )
+            request_params['signature'] = signature
+
+        items_public_url = urlparse(self._url('items'))
+        filtered_params = {k: v for k, v in request_params.items() if v is not None}
+        if filtered_params:
+            items_public_url = items_public_url._replace(query=urlencode(filtered_params))
+
+        return urlunparse(items_public_url)
+
 
 class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
@@ -1003,3 +1071,64 @@ class DatasetClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
 
         return None
+
+    async def create_items_public_url(
+        self,
+        *,
+        offset: int | None = None,
+        limit: int | None = None,
+        clean: bool | None = None,
+        desc: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: list[str] | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+        flatten: list[str] | None = None,
+        view: str | None = None,
+        expires_in_secs: int | None = None,
+    ) -> str:
+        """Generate a URL that can be used to access dataset items.
+
+        If the client has permission to access the dataset's URL signing key,
+        the URL will include a signature to verify its authenticity.
+
+        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
+        This value sets the expiration duration in seconds from the time the URL is generated.
+        If not provided, the URL will not expire.
+
+        Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
+
+        Returns:
+            The public dataset items URL.
+        """
+        dataset = await self.get()
+
+        request_params = self._params(
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
+        )
+
+        if dataset and 'urlSigningSecretKey' in dataset:
+            signature = create_storage_content_signature(
+                resource_id=dataset['id'],
+                url_signing_secret_key=dataset['urlSigningSecretKey'],
+                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
+            )
+            request_params['signature'] = signature
+
+        items_public_url = urlparse(self._url('items'))
+        filtered_params = {k: v for k, v in request_params.items() if v is not None}
+        if filtered_params:
+            items_public_url = items_public_url._replace(query=urlencode(filtered_params))
+
+        return urlunparse(items_public_url)

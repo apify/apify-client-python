@@ -579,14 +579,14 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
         view: str | None = None,
-        expires_in_seconds: int | None = None,
+        expires_in_secs: int | None = None,
     ) -> str:
         """Generate a URL that can be used to access dataset items.
 
         If the client has permission to access the dataset's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_seconds` option.
+        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
         This value sets the expiration duration in seconds from the time the URL is generated.
         If not provided, the URL will not expire.
 
@@ -615,7 +615,7 @@ class DatasetClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=dataset['id'],
                 url_signing_secret_key=dataset['urlSigningSecretKey'],
-                expires_in_millis=expires_in_seconds * 1000 if expires_in_seconds is not None else None,
+                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature
 
@@ -1086,14 +1086,14 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
         view: str | None = None,
-        expires_in_seconds: int | None = None,
+        expires_in_secs: int | None = None,
     ) -> str:
         """Generate a URL that can be used to access dataset items.
 
         If the client has permission to access the dataset's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_seconds` option.
+        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
         This value sets the expiration duration in seconds from the time the URL is generated.
         If not provided, the URL will not expire.
 
@@ -1122,7 +1122,7 @@ class DatasetClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=dataset['id'],
                 url_signing_secret_key=dataset['urlSigningSecretKey'],
-                expires_in_millis=expires_in_seconds * 1000 if expires_in_seconds is not None else None,
+                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature
 

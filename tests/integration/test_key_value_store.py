@@ -18,7 +18,7 @@ class TestKeyValueStoreSync:
 
         store = apify_client.key_value_store(created_store['id'])
         keys_public_url = store.create_keys_public_url(
-            expires_in_seconds=2000,
+            expires_in_secs=2000,
             limit=10,
         )
 
@@ -58,7 +58,7 @@ class TestKeyValueStoreAsync:
 
         store = apify_client_async.key_value_store(created_store['id'])
         keys_public_url = await store.create_keys_public_url(
-            expires_in_seconds=2000,
+            expires_in_secs=2000,
             limit=10,
         )
 

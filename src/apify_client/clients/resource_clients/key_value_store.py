@@ -274,14 +274,14 @@ class KeyValueStoreClient(ResourceClient):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
-        expires_in_seconds: int | None = None,
+        expires_in_secs: int | None = None,
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
         If the client has permission to access the key-value store's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_seconds` option.
+        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
         This value sets the expiration duration in seconds from the time the URL is generated.
         If not provided, the URL will not expire.
 
@@ -303,7 +303,7 @@ class KeyValueStoreClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=store['id'],
                 url_signing_secret_key=store['urlSigningSecretKey'],
-                expires_in_millis=expires_in_seconds * 1000 if expires_in_seconds is not None else None,
+                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature
 
@@ -562,14 +562,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
-        expires_in_seconds: int | None = None,
+        expires_in_secs: int | None = None,
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
         If the client has permission to access the key-value store's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_seconds` option.
+        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
         This value sets the expiration duration in seconds from the time the URL is generated.
         If not provided, the URL will not expire.
 
@@ -593,7 +593,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=store['id'],
                 url_signing_secret_key=store['urlSigningSecretKey'],
-                expires_in_millis=expires_in_seconds * 1000 if expires_in_seconds is not None else None,
+                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature
 

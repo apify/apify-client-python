@@ -16,7 +16,7 @@ class TestDatasetSync:
 
         dataset = apify_client.dataset(created_dataset['id'])
         items_public_url = dataset.create_items_public_url(
-            expires_in_seconds=2000,
+            expires_in_secs=2000,
             limit=10,
             offset=0,
         )
@@ -56,7 +56,7 @@ class TestDatasetAsync:
 
         dataset = apify_client_async.dataset(created_dataset['id'])
         items_public_url = await dataset.create_items_public_url(
-            expires_in_seconds=2000,
+            expires_in_secs=2000,
             limit=10,
             offset=0,
         )

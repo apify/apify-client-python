@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
+from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.actor import get_actor_representation
 
@@ -14,7 +13,6 @@ if TYPE_CHECKING:
 class ActorCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating Actors."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -140,7 +138,6 @@ class ActorCollectionClient(ResourceCollectionClient):
 class ActorCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating Actors."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)

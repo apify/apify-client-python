@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
+from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 
@@ -24,7 +23,6 @@ def get_actor_env_var_representation(
 class ActorEnvVarClient(ResourceClient):
     """Sub-client for manipulating a single Actor environment variable."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -77,7 +75,6 @@ class ActorEnvVarClient(ResourceClient):
 class ActorEnvVarClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor environment variable."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)

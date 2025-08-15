@@ -8,10 +8,19 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Extend status parameter to an array of possible statuses  ([#455](https://github.com/apify/apify-client-python/pull/455)) ([76f6769](https://github.com/apify/apify-client-python/commit/76f676973d067ce8af398d8e6ceea55595da5ecf)) by [@JanHranicky](https://github.com/JanHranicky)
+- Expose apify_client.errors module ([#468](https://github.com/apify/apify-client-python/pull/468)) ([c0cc147](https://github.com/apify/apify-client-python/commit/c0cc147fd0c5a60e5a025db6b6c761e811efe1da)) by [@Mantisus](https://github.com/Mantisus), closes [#158](https://github.com/apify/apify-client-python/issues/158)
+
+### Chore
+
+- [**breaking**] Bump minimum Python version to 3.10 ([#469](https://github.com/apify/apify-client-python/pull/469)) ([92b4789](https://github.com/apify/apify-client-python/commit/92b47895eb48635e2d573b99d59bb077999c5b27)) by [@vdusek](https://github.com/vdusek)
 
 ### Refactor
 
 - [**breaking**] Remove support for passing a single string to the `unwind` parameter in `DatasetClient` ([#467](https://github.com/apify/apify-client-python/pull/467)) ([e8aea2c](https://github.com/apify/apify-client-python/commit/e8aea2c8f3833082bf78562f3fa981a1f8e88b26)) by [@Mantisus](https://github.com/Mantisus), closes [#255](https://github.com/apify/apify-client-python/issues/255)
+- [**breaking**] Remove deprecated constant re-exports from `consts.py` ([#466](https://github.com/apify/apify-client-python/pull/466)) ([7731f0b](https://github.com/apify/apify-client-python/commit/7731f0b3a4ca8c99be9392517d36f841cb293ed5)) by [@Mantisus](https://github.com/Mantisus), closes [#163](https://github.com/apify/apify-client-python/issues/163)
+- [**breaking**] Replace `httpx` HTTP client with `impit` ([#456](https://github.com/apify/apify-client-python/pull/456)) ([1df6792](https://github.com/apify/apify-client-python/commit/1df6792386398b28eb565dfbc58c7eba13f451a4)) by [@Mantisus](https://github.com/Mantisus)
+- [**breaking**] Remove deprecated `as_bytes` and `as_file` parameters from `KeyValueStoreClient.get_record` ([#463](https://github.com/apify/apify-client-python/pull/463)) ([b880231](https://github.com/apify/apify-client-python/commit/b88023125a41d02f95f687b8fd6090e7080efe3e)) by [@Mantisus](https://github.com/Mantisus)
+- [**breaking**] Remove `parse_response` arg from the `call` method ([#462](https://github.com/apify/apify-client-python/pull/462)) ([840d51a](https://github.com/apify/apify-client-python/commit/840d51af12a7e53decf9d3294d0e0c3c848e9c08)) by [@Mantisus](https://github.com/Mantisus), closes [#166](https://github.com/apify/apify-client-python/issues/166)
 
 
 <!-- git-cliff-unreleased-end -->

@@ -9,10 +9,14 @@ import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
-
 from apify_client._logging import create_redirect_logger
-from apify_client._utils import encode_key_value_store_record_value, pluck_data, to_safe_id
+from apify_client._utils import (
+    encode_key_value_store_record_value,
+    filter_out_none_values_recursively,
+    parse_date_fields,
+    pluck_data,
+    to_safe_id,
+)
 from apify_client.clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 from apify_client.clients.resource_clients.dataset import DatasetClient, DatasetClientAsync
 from apify_client.clients.resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
@@ -36,7 +40,6 @@ if TYPE_CHECKING:
 class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor run."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -355,7 +358,6 @@ class RunClient(ActorJobBaseClient):
 class RunClientAsync(ActorJobBaseClientAsync):
     """Async sub-client for manipulating a single Actor run."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs
-
+from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
@@ -13,7 +12,6 @@ if TYPE_CHECKING:
 class KeyValueStoreCollectionClient(ResourceCollectionClient):
     """Sub-client for manipulating key-value stores."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
@@ -64,7 +62,6 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
 class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)

@@ -3,9 +3,12 @@ from __future__ import annotations
 import json as jsonlib
 from typing import Any
 
-from apify_shared.utils import filter_out_none_values_recursively, ignore_docs, parse_date_fields
-
-from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    filter_out_none_values_recursively,
+    parse_date_fields,
+    pluck_data,
+)
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -13,7 +16,6 @@ from apify_client.errors import ApifyApiError
 class UserClient(ResourceClient):
     """Sub-client for querying user data."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:
@@ -105,7 +107,6 @@ class UserClient(ResourceClient):
 class UserClientAsync(ResourceClientAsync):
     """Async sub-client for querying user data."""
 
-    @ignore_docs
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_id = kwargs.pop('resource_id', None)
         if resource_id is None:

@@ -248,7 +248,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The updated request.
         """
-        request_id = request.get('id', unique_key_to_request_id(request.get('unique_key', '')))
+        request_id = request.get('id', unique_key_to_request_id(request.get('uniqueKey', '')))
 
         request_params = self._params(forefront=forefront, clientKey=self.client_key)
 
@@ -682,7 +682,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The updated request.
         """
-        request_id = request.get('id', unique_key_to_request_id(request.get('unique_key', '')))
+        request_id = request.get('id', unique_key_to_request_id(request.get('uniqueKey', '')))
 
         request_params = self._params(forefront=forefront, clientKey=self.client_key)
 

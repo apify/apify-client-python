@@ -59,9 +59,6 @@ def unique_key_to_request_id(unique_key: str, *, request_id_length: int = 15) ->
     Returns:
         A URL-safe, truncated request ID based on the unique key.
     """
-    if not unique_key:
-        raise ValueError('unique_key must not be empty')
-
     # Encode the unique key and compute its SHA-256 hash
     hashed_key = sha256(unique_key.encode('utf-8')).digest()
 

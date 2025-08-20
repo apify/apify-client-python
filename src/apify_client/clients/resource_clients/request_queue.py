@@ -220,18 +220,18 @@ class RequestQueueClient(ResourceClient):
 
         return None
 
-    def get_request_by_unique_key(self, request_unique_key: str) -> dict | None:
+    def get_request_by_unique_key(self, unique_key: str) -> dict | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Args:
-            request_unique_key: Unique key of the request to retrieve.
+            unique_key: Unique key of the request to retrieve.
 
         Returns:
             The retrieved request, or None, if it did not exist.
         """
-        return self.get_request(unique_key_to_request_id(request_unique_key))
+        return self.get_request(unique_key_to_request_id(unique_key))
 
     def update_request(self, request: dict, *, forefront: bool | None = None) -> dict:
         """Update a request in the queue.
@@ -278,15 +278,15 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-    def delete_request_by_unique_key(self, request_unique_key: str) -> None:
+    def delete_request_by_unique_key(self, unique_key: str) -> None:
         """Delete a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/delete-request
 
         Args:
-            request_unique_key: Unique key of the request to delete.
+            unique_key: Unique key of the request to delete.
         """
-        return self.delete_request(unique_key_to_request_id(request_unique_key))
+        return self.delete_request(unique_key_to_request_id(unique_key))
 
     def prolong_request_lock(
         self,
@@ -317,7 +317,7 @@ class RequestQueueClient(ResourceClient):
 
     def prolong_request_lock_by_unique_key(
         self,
-        request_unique_key: str,
+        unique_key: str,
         *,
         forefront: bool | None = None,
         lock_secs: int,
@@ -327,13 +327,11 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
-            request_unique_key: Unique key of the request to prolong the lock.
+            unique_key: Unique key of the request to prolong the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
             lock_secs: By how much to prolong the lock, in seconds.
         """
-        return self.prolong_request_lock(
-            unique_key_to_request_id(request_unique_key), forefront=forefront, lock_secs=lock_secs
-        )
+        return self.prolong_request_lock(unique_key_to_request_id(unique_key), forefront=forefront, lock_secs=lock_secs)
 
     def delete_request_lock(self, request_id: str, *, forefront: bool | None = None) -> None:
         """Delete the lock on a request.
@@ -353,16 +351,16 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-    def delete_request_lock_by_unique_key(self, request_unique_key: str, *, forefront: bool | None = None) -> None:
+    def delete_request_lock_by_unique_key(self, unique_key: str, *, forefront: bool | None = None) -> None:
         """Delete the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
 
         Args:
-            request_unique_key: Unique key of the request to delete the lock.
+            unique_key: Unique key of the request to delete the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after the lock is deleted.
         """
-        return self.delete_request_lock(unique_key_to_request_id(request_unique_key), forefront=forefront)
+        return self.delete_request_lock(unique_key_to_request_id(unique_key), forefront=forefront)
 
     def batch_add_requests(
         self,
@@ -654,18 +652,18 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         return None
 
-    async def get_request_by_unique_key(self, request_unique_key: str) -> dict | None:
+    async def get_request_by_unique_key(self, unique_key: str) -> dict | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Args:
-            request_unique_key: Unique key of the request to retrieve.
+            unique_key: Unique key of the request to retrieve.
 
         Returns:
             The retrieved request, or None, if it did not exist.
         """
-        return await self.get_request(unique_key_to_request_id(request_unique_key))
+        return await self.get_request(unique_key_to_request_id(unique_key))
 
     async def update_request(self, request: dict, *, forefront: bool | None = None) -> dict:
         """Update a request in the queue.
@@ -710,15 +708,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-    async def delete_request_by_unique_key(self, request_unique_key: str) -> None:
+    async def delete_request_by_unique_key(self, unique_key: str) -> None:
         """Delete a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/delete-request
 
         Args:
-            request_unique_key: Unique key of the request to delete.
+            unique_key: Unique key of the request to delete.
         """
-        return await self.delete_request(unique_key_to_request_id(request_unique_key))
+        return await self.delete_request(unique_key_to_request_id(unique_key))
 
     async def prolong_request_lock(
         self,
@@ -749,7 +747,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def prolong_request_lock_by_unique_key(
         self,
-        request_unique_key: str,
+        unique_key: str,
         *,
         forefront: bool | None = None,
         lock_secs: int,
@@ -759,12 +757,12 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
-            request_unique_key: Unique key of the request to prolong the lock.
+            unique_key: Unique key of the request to prolong the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
             lock_secs: By how much to prolong the lock, in seconds.
         """
         return await self.prolong_request_lock(
-            unique_key_to_request_id(request_unique_key), forefront=forefront, lock_secs=lock_secs
+            unique_key_to_request_id(unique_key), forefront=forefront, lock_secs=lock_secs
         )
 
     async def delete_request_lock(
@@ -790,18 +788,16 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-    async def delete_request_lock_by_unique_key(
-        self, request_unique_key: str, *, forefront: bool | None = None
-    ) -> None:
+    async def delete_request_lock_by_unique_key(self, unique_key: str, *, forefront: bool | None = None) -> None:
         """Delete the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
 
         Args:
-            request_unique_key: Unique key of the request to delete the lock.
+            unique_key: Unique key of the request to delete the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after the lock is deleted.
         """
-        return await self.delete_request_lock(unique_key_to_request_id(request_unique_key), forefront=forefront)
+        return await self.delete_request_lock(unique_key_to_request_id(unique_key), forefront=forefront)
 
     async def _batch_add_requests_worker(
         self,

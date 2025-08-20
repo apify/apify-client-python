@@ -226,7 +226,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Args:
-            request_unique_key: unique key of the request to retrieve.
+            request_unique_key: Unique key of the request to retrieve.
 
         Returns:
             The retrieved request, or None, if it did not exist.
@@ -327,7 +327,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
-            request_unique_key: ID of the request to prolong the lock.
+            request_unique_key: Unique key of the request to prolong the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
             lock_secs: By how much to prolong the lock, in seconds.
         """
@@ -359,7 +359,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
 
         Args:
-            request_unique_key: ID of the request to delete the lock.
+            request_unique_key: Unique key of the request to delete the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after the lock is deleted.
         """
         return self.delete_request_lock(unique_key_to_request_id(request_unique_key), forefront=forefront)
@@ -660,7 +660,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
 
         Args:
-            request_unique_key: unique key of the request to retrieve.
+            request_unique_key: Unique key of the request to retrieve.
 
         Returns:
             The retrieved request, or None, if it did not exist.
@@ -759,7 +759,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
 
         Args:
-            request_unique_key: ID of the request to prolong the lock.
+            request_unique_key: Unique key of the request to prolong the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after lock expires.
             lock_secs: By how much to prolong the lock, in seconds.
         """
@@ -798,7 +798,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/delete-request-lock
 
         Args:
-            request_unique_key: ID of the request to delete the lock.
+            request_unique_key: Unique key of the request to delete the lock.
             forefront: Whether to put the request in the beginning or the end of the queue after the lock is deleted.
         """
         return await self.delete_request_lock(unique_key_to_request_id(request_unique_key), forefront=forefront)

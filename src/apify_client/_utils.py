@@ -279,6 +279,7 @@ def is_retryable_error(exc: Exception) -> bool:
         exc,
         (
             InvalidResponseBodyError,
+            impit.HTTPError,
             impit.NetworkError,
             impit.TimeoutException,
             impit.RemoteProtocolError,

@@ -1,4 +1,19 @@
-# Apify API client for Python
+<h1 align=center>Apify API client for Python</h1>
+
+<p align=center>
+    <a href="https://badge.fury.io/py/apify-client" rel="nofollow">
+        <img src="https://badge.fury.io/py/apify-client.svg" alt="PyPI version" style="max-width: 100%;">
+    </a>
+    <a href="https://pypi.org/project/apify-client/" rel="nofollow">
+        <img src="https://img.shields.io/pypi/dm/apify-client" alt="PyPI - Downloads" style="max-width: 100%;">
+    </a>
+    <a href="https://pypi.org/project/apify-client/" rel="nofollow">
+        <img src="https://img.shields.io/pypi/pyversions/apify-client" alt="PyPI - Python Version" style="max-width: 100%;">
+    </a>
+    <a href="https://discord.gg/jyEM2PRvMU" rel="nofollow">
+        <img src="https://img.shields.io/discord/801163717915574323?label=discord" alt="Chat on discord" style="max-width: 100%;">
+    </a>
+</p>
 
 The Apify API Client for Python is the official library to access the [Apify API](https://docs.apify.com/api/v2) from your Python applications.
 It provides useful features like automatic retries and convenience functions to improve your experience with the Apify API.

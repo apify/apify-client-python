@@ -294,7 +294,7 @@ class KeyValueStoreClient(ResourceClient):
 
         request_params = self._params(
             limit=limit,
-            exclusive_start_key=exclusive_start_key,
+            exclusiveStartKey=exclusive_start_key,
             collection=collection,
             prefix=prefix,
         )
@@ -584,7 +584,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         request_params = self._params(
             limit=limit,
-            exclusive_start_key=exclusive_start_key,
+            exclusiveStartKey=exclusive_start_key,
             collection=collection,
             prefix=prefix,
         )

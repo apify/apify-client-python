@@ -44,7 +44,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "dycw-pytest-only", specifier = "~=2.1.0" },
-    { name = "griffe", specifier = "~=1.14.0" },
+    { name = "griffe" },
     { name = "mypy", specifier = "~=1.17.0" },
     { name = "pre-commit", specifier = "~=4.3.0" },
     { name = "pydoc-markdown", specifier = "~=4.8.0" },

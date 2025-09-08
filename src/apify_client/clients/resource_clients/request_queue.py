@@ -396,7 +396,7 @@ class RequestQueueClient(ResourceClient):
             limit: How many requests to retrieve.
             exclusive_start_id: All requests up to this one (including) are skipped from the result.
         """
-        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+        request_params = self._params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
 
         response = self.http_client.call(
             url=self._url('requests'),
@@ -824,7 +824,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             limit: How many requests to retrieve.
             exclusive_start_id: All requests up to this one (including) are skipped from the result.
         """
-        request_params = self._params(limit=limit, exclusive_start_id=exclusive_start_id, clientKey=self.client_key)
+        request_params = self._params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
 
         response = await self.http_client.call(
             url=self._url('requests'),

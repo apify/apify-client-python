@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 2.0.1 - **not yet released**
 
+### 🚀 Features
+
+- Add forcePermissionLevel run option ([#498](https://github.com/apify/apify-client-python/pull/498)) ([b297523](https://github.com/apify/apify-client-python/commit/b2975233c30f47883dbcfc716fc6bb77ce388306)) by [@tobice](https://github.com/tobice)
+
 ### 🐛 Bug Fixes
 
 - Casing in `exclusiveStartKey` API param ([#495](https://github.com/apify/apify-client-python/pull/495)) ([5e96f71](https://github.com/apify/apify-client-python/commit/5e96f71cc6d3290d161fa46fc8cd9adef478088e)) by [@barjin](https://github.com/barjin), closes [#484](https://github.com/apify/apify-client-python/issues/484)

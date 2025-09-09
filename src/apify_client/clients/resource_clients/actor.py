@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_shared.consts import ActorJobStatus, MetaOrigin
+    from apify_shared.consts import ActorJobStatus, ActorPermissionLevel, MetaOrigin
 
 
 def get_actor_representation(
@@ -50,6 +50,7 @@ def get_actor_representation(
     default_run_max_items: int | None = None,
     default_run_memory_mbytes: int | None = None,
     default_run_timeout_secs: int | None = None,
+    default_run_force_permission_level: ActorPermissionLevel | None = None,
     example_run_input_body: Any = None,
     example_run_input_content_type: str | None = None,
     actor_standby_is_enabled: bool | None = None,
@@ -78,6 +79,7 @@ def get_actor_representation(
             'maxItems': default_run_max_items,
             'memoryMbytes': default_run_memory_mbytes,
             'timeoutSecs': default_run_timeout_secs,
+            'forcePermissionLevel': default_run_force_permission_level,
         },
         'exampleRunInput': {
             'body': example_run_input_body,
@@ -224,6 +226,7 @@ class ActorClient(ResourceClient):
         max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
     ) -> dict:
@@ -243,6 +246,8 @@ class ActorClient(ResourceClient):
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
+            force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
+                with permissions configured in the Actor settings.
             wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
                 it is 0, the maximum value is 60.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
@@ -265,6 +270,7 @@ class ActorClient(ResourceClient):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
+            forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
@@ -289,6 +295,7 @@ class ActorClient(ResourceClient):
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         webhooks: list[dict] | None = None,
+        force_permission_level: ActorPermissionLevel | None = None,
         wait_secs: int | None = None,
         logger: Logger | None | Literal['default'] = 'default',
     ) -> dict | None:
@@ -310,6 +317,8 @@ class ActorClient(ResourceClient):
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
+            force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
+                with permissions configured in the Actor settings.
             webhooks: Optional webhooks (https://docs.apify.com/webhooks) associated with the Actor run, which can
                 be used to receive a notification, e.g. when the Actor finished or failed. If you already have
                 a webhook set up for the Actor, you do not have to add it again here.
@@ -332,6 +341,7 @@ class ActorClient(ResourceClient):
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,
+            force_permission_level=force_permission_level,
         )
         if not logger:
             return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
@@ -628,6 +638,7 @@ class ActorClientAsync(ResourceClientAsync):
         max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
     ) -> dict:
@@ -647,6 +658,8 @@ class ActorClientAsync(ResourceClientAsync):
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
+            force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
+                with permissions configured in the Actor settings.
             wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
                 it is 0, the maximum value is 60.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
@@ -669,6 +682,7 @@ class ActorClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
+            forcePermissionLevel=force_permission_level,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
@@ -693,6 +707,7 @@ class ActorClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
         webhooks: list[dict] | None = None,
+        force_permission_level: ActorPermissionLevel | None = None,
         wait_secs: int | None = None,
         logger: Logger | None | Literal['default'] = 'default',
     ) -> dict | None:
@@ -714,6 +729,8 @@ class ActorClientAsync(ResourceClientAsync):
                 specified in the default run configuration for the Actor.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
+            force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
+                with permissions configured in the Actor settings.
             webhooks: Optional webhooks (https://docs.apify.com/webhooks) associated with the Actor run, which can
                 be used to receive a notification, e.g. when the Actor finished or failed. If you already have
                 a webhook set up for the Actor, you do not have to add it again here.
@@ -736,6 +753,7 @@ class ActorClientAsync(ResourceClientAsync):
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
             webhooks=webhooks,
+            force_permission_level=force_permission_level,
         )
 
         if not logger:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
-from urllib.parse import urljoin, urlparse
 
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils import to_safe_id
@@ -23,7 +22,7 @@ class _BaseBaseClient(metaclass=WithLogDetailsClient):
         url = f'{self.url}/{path}' if path is not None else self.url
 
         if public:
-            return urljoin(self.root_client.public_base_url + '/', urlparse(url).path.strip('/'))
+            return url.replace(self.root_client.base_url, self.root_client.public_base_url)
         return url
 
     def _params(self, **kwargs: Any) -> dict:

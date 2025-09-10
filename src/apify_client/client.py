@@ -85,7 +85,8 @@ class _BaseApifyClient:
         self.token = token
         api_url = (api_url or DEFAULT_API_URL).rstrip('/')
         self.base_url = f'{api_url}/{API_VERSION}'
-        self.public_base_url = (api_public_url or DEFAULT_API_URL).rstrip('/')
+        api_public_url = (api_public_url or DEFAULT_API_URL).rstrip('/')
+        self.public_base_url = f'{api_public_url}/{API_VERSION}'
         self.max_retries = max_retries or 8
         self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
         self.timeout_secs = timeout_secs or DEFAULT_TIMEOUT

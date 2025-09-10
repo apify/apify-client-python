@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import impit
 
+from integration.conftest import parametrized_api_urls
 from integration.integration_test_utils import random_resource_name
 
-if TYPE_CHECKING:
-    from apify_client import ApifyClient, ApifyClientAsync
+from apify_client import ApifyClient, ApifyClientAsync
 
 
 class TestKeyValueStoreSync:
@@ -46,6 +44,20 @@ class TestKeyValueStoreSync:
 
         store.delete()
         assert apify_client.key_value_store(created_store['id']).get() is None
+
+    @parametrized_api_urls
+    def test_public_url(self, api_token: str, api_url: str, api_public_url: str) -> None:
+        apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
+        created_store = apify_client.key_value_stores().get_or_create(name=random_resource_name('key-value-store'))
+        kvs = apify_client.key_value_store(created_store['id'])
+        try:
+            public_url = kvs.create_keys_public_url()
+            assert public_url == (
+                f'{api_public_url or api_url}/v2/key-value-stores/'
+                f'{created_store["id"]}/keys?signature={public_url.split("signature=")[1]}'
+            )
+        finally:
+            kvs.delete()
 
 
 class TestKeyValueStoreAsync:
@@ -90,3 +102,19 @@ class TestKeyValueStoreAsync:
 
         await store.delete()
         assert await apify_client_async.key_value_store(created_store['id']).get() is None
+
+    @parametrized_api_urls
+    async def test_public_url(self, api_token: str, api_url: str, api_public_url: str) -> None:
+        apify_client = ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
+        created_store = await apify_client.key_value_stores().get_or_create(
+            name=random_resource_name('key-value-store')
+        )
+        kvs = apify_client.key_value_store(created_store['id'])
+        try:
+            public_url = await kvs.create_keys_public_url()
+            assert public_url == (
+                f'{api_public_url or api_url}/v2/key-value-stores/'
+                f'{created_store["id"]}/keys?signature={public_url.split("signature=")[1]}'
+            )
+        finally:
+            await kvs.delete()

@@ -60,6 +60,14 @@ class TestDatasetSync:
         finally:
             dataset.delete()
 
+    def test_public_url_nonexistent_host(self, api_token: str) -> None:
+        dataset_name = 'whatever'
+        non_existent_url = 'http://10.0.88.214:8010'
+        apify_client = ApifyClient(token=api_token, api_url=non_existent_url)
+        kvs_client = apify_client.dataset(dataset_id=dataset_name)
+        assert kvs_client._url() == f'{non_existent_url}/v2/datasets/{dataset_name}'
+        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/datasets/{dataset_name}'
+
 
 class TestDatasetAsync:
     async def test_dataset_should_create_public_items_expiring_url_with_params(
@@ -115,3 +123,11 @@ class TestDatasetAsync:
             )
         finally:
             await dataset.delete()
+
+    def test_public_url_nonexistent_host(self, api_token: str) -> None:
+        dataset_name = 'whatever'
+        non_existent_url = 'http://10.0.88.214:8010'
+        apify_client = ApifyClientAsync(token=api_token, api_url=non_existent_url)
+        kvs_client = apify_client.dataset(dataset_id=dataset_name)
+        assert kvs_client._url() == f'{non_existent_url}/v2/datasets/{dataset_name}'
+        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/datasets/{dataset_name}'

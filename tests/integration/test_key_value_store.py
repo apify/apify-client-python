@@ -60,6 +60,14 @@ class TestKeyValueStoreSync:
         finally:
             kvs.delete()
 
+    def test_public_url_nonexistent_host(self, api_token: str) -> None:
+        kvs_name = 'whatever'
+        non_existent_url = 'http://10.0.88.214:8010'
+        apify_client = ApifyClient(token=api_token, api_url=non_existent_url)
+        kvs_client = apify_client.key_value_store(key_value_store_id=kvs_name)
+        assert kvs_client._url() == f'{non_existent_url}/v2/key-value-stores/{kvs_name}'
+        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/key-value-stores/{kvs_name}'
+
 
 class TestKeyValueStoreAsync:
     async def test_key_value_store_should_create_expiring_keys_public_url_with_params(
@@ -119,3 +127,11 @@ class TestKeyValueStoreAsync:
             )
         finally:
             await kvs.delete()
+
+    async def test_public_url_nonexistent_host(self, api_token: str) -> None:
+        kvs_name = 'whatever'
+        non_existent_url = 'http://10.0.88.214:8010'
+        apify_client = ApifyClientAsync(token=api_token, api_url=non_existent_url)
+        kvs_client = apify_client.key_value_store(key_value_store_id=kvs_name)
+        assert kvs_client._url() == f'{non_existent_url}/v2/key-value-stores/{kvs_name}'
+        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/key-value-stores/{kvs_name}'

@@ -73,10 +73,10 @@ class _BaseApifyClient:
 
         Args:
             token: The Apify API token.
-            api_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com. It can
-                be internal url that is not globally accessible, in such case `api_public_url` should be set as well.
+            api_url: The URL of the Apify API server to which to connect. Defaults to https://api.apify.com. It can
+                be an internal URL that is not globally accessible, in such case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
-                is internal url that is not globally accessible.
+                is an internal URL that is not globally accessible.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
@@ -117,10 +117,10 @@ class ApifyClient(_BaseApifyClient):
 
         Args:
             token: The Apify API token.
-            api_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com. It can
-                be internal url that is not globally accessible, in such case `api_public_url` should be set as well.
+            api_url: The URL of the Apify API server to which to connect. Defaults to https://api.apify.com. It can
+                be an internal URL that is not globally accessible, in such case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
-                is internal url that is not globally accessible.
+                is an internal URL that is not globally accessible.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
@@ -305,10 +305,10 @@ class ApifyClientAsync(_BaseApifyClient):
 
         Args:
             token: The Apify API token.
-            api_url: The URL of the Apify API server to which to connect to. Defaults to https://api.apify.com. It can
-                be internal url that is not globally accessible, in such case `api_public_url` should be set as well.
+            api_url: The URL of the Apify API server to which to connect. Defaults to https://api.apify.com. It can
+                be an internal URL that is not globally accessible, in such case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
-                is internal url that is not globally accessible.
+                is an internal URL that is not globally accessible.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).

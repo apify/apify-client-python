@@ -6,6 +6,7 @@ from integration.conftest import parametrized_api_urls
 from integration.integration_test_utils import random_resource_name
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client.client import DEFAULT_API_URL
 
 
 class TestKeyValueStoreSync:
@@ -53,7 +54,7 @@ class TestKeyValueStoreSync:
         try:
             public_url = kvs.create_keys_public_url()
             assert public_url == (
-                f'{api_public_url or api_url}/v2/key-value-stores/'
+                f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/'
                 f'{created_store["id"]}/keys?signature={public_url.split("signature=")[1]}'
             )
         finally:
@@ -113,7 +114,7 @@ class TestKeyValueStoreAsync:
         try:
             public_url = await kvs.create_keys_public_url()
             assert public_url == (
-                f'{api_public_url or api_url}/v2/key-value-stores/'
+                f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/'
                 f'{created_store["id"]}/keys?signature={public_url.split("signature=")[1]}'
             )
         finally:

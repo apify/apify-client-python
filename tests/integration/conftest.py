@@ -13,6 +13,8 @@ parametrized_api_urls = pytest.mark.parametrize(
         ('https://api.apify.com', 'https://api.apify.com'),
         ('https://api.apify.com', None),
         ('https://api.apify.com', 'https://custom-public-url.com'),
+        ('https://api.apify.com', 'https://custom-public-url.com/with/custom/path'),
+        ('https://api.apify.com', 'https://custom-public-url.com/with/custom/path/'),
     ],
 )
 

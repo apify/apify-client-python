@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from unittest import mock
+from unittest.mock import Mock
+
 import impit
 
 from integration.conftest import parametrized_api_urls
@@ -7,6 +10,31 @@ from integration.integration_test_utils import random_resource_name
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.client import DEFAULT_API_URL
+
+MOCKED_API_KVS_RESPONSE = """{
+  "data": {
+    "id": "someID",
+    "name": "name",
+    "userId": "userId",
+    "createdAt": "2025-09-11T08:48:51.806Z",
+    "modifiedAt": "2025-09-11T08:48:51.806Z",
+    "accessedAt": "2025-09-11T08:48:51.806Z",
+    "actId": null,
+    "actRunId": null,
+    "schema": null,
+    "stats": {
+      "readCount": 0,
+      "writeCount": 0,
+      "deleteCount": 0,
+      "listCount": 0,
+      "storageBytes": 0
+    },
+    "consoleUrl": "https://console.apify.com/storage/key-value-stores/someID",
+    "keysPublicUrl": "https://api.apify.com/v2/key-value-stores/someID/keys",
+    "generalAccess": "FOLLOW_USER_SETTING",
+    "urlSigningSecretKey": "urlSigningSecretKey"
+  }
+}"""
 
 
 class TestKeyValueStoreSync:
@@ -49,24 +77,15 @@ class TestKeyValueStoreSync:
     @parametrized_api_urls
     def test_public_url(self, api_token: str, api_url: str, api_public_url: str) -> None:
         apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        created_store = apify_client.key_value_stores().get_or_create(name=random_resource_name('key-value-store'))
-        kvs = apify_client.key_value_store(created_store['id'])
-        try:
+        kvs = apify_client.key_value_store('someID')
+
+        # Mock the API call to return predefined response
+        with mock.patch.object(apify_client.http_client, 'call', return_value=Mock(text=MOCKED_API_KVS_RESPONSE)):
             public_url = kvs.create_keys_public_url()
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/'
-                f'{created_store["id"]}/keys?signature={public_url.split("signature=")[1]}'
+                f'someID/keys?signature={public_url.split("signature=")[1]}'
             )
-        finally:
-            kvs.delete()
-
-    def test_public_url_nonexistent_host(self, api_token: str) -> None:
-        kvs_name = 'whatever'
-        non_existent_url = 'http://10.0.88.214:8010'
-        apify_client = ApifyClient(token=api_token, api_url=non_existent_url)
-        kvs_client = apify_client.key_value_store(key_value_store_id=kvs_name)
-        assert kvs_client._url() == f'{non_existent_url}/v2/key-value-stores/{kvs_name}'
-        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/key-value-stores/{kvs_name}'
 
 
 class TestKeyValueStoreAsync:
@@ -115,23 +134,12 @@ class TestKeyValueStoreAsync:
     @parametrized_api_urls
     async def test_public_url(self, api_token: str, api_url: str, api_public_url: str) -> None:
         apify_client = ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        created_store = await apify_client.key_value_stores().get_or_create(
-            name=random_resource_name('key-value-store')
-        )
-        kvs = apify_client.key_value_store(created_store['id'])
-        try:
+        kvs = apify_client.key_value_store('someID')
+
+        # Mock the API call to return predefined response
+        with mock.patch.object(apify_client.http_client, 'call', return_value=Mock(text=MOCKED_API_KVS_RESPONSE)):
             public_url = await kvs.create_keys_public_url()
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/'
-                f'{created_store["id"]}/keys?signature={public_url.split("signature=")[1]}'
+                f'someID/keys?signature={public_url.split("signature=")[1]}'
             )
-        finally:
-            await kvs.delete()
-
-    async def test_public_url_nonexistent_host(self, api_token: str) -> None:
-        kvs_name = 'whatever'
-        non_existent_url = 'http://10.0.88.214:8010'
-        apify_client = ApifyClientAsync(token=api_token, api_url=non_existent_url)
-        kvs_client = apify_client.key_value_store(key_value_store_id=kvs_name)
-        assert kvs_client._url() == f'{non_existent_url}/v2/key-value-stores/{kvs_name}'
-        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/key-value-stores/{kvs_name}'

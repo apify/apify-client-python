@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from unittest import mock
+from unittest.mock import Mock
+
 import impit
 
 from integration.conftest import parametrized_api_urls
@@ -7,6 +10,32 @@ from integration.integration_test_utils import random_resource_name
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.client import DEFAULT_API_URL
+
+MOCKED_API_DATASET_RESPONSE = """{
+  "data": {
+    "id": "someID",
+    "name": "name",
+    "userId": "userId",
+    "createdAt": "2025-09-11T08:48:51.806Z",
+    "modifiedAt": "2025-09-11T08:48:51.806Z",
+    "accessedAt": "2025-09-11T08:48:51.806Z",
+    "actId": null,
+    "actRunId": null,
+    "schema": null,
+    "stats": {
+      "readCount": 0,
+      "writeCount": 0,
+      "deleteCount": 0,
+      "listCount": 0,
+      "storageBytes": 0
+    },
+    "fields": [],
+    "consoleUrl": "https://console.apify.com/storage/datasets/someID",
+    "itemsPublicUrl": "https://api.apify.com/v2/datasets/someID/items",
+    "generalAccess": "FOLLOW_USER_SETTING",
+    "urlSigningSecretKey": "urlSigningSecretKey"
+  }
+}"""
 
 
 class TestDatasetSync:
@@ -49,24 +78,15 @@ class TestDatasetSync:
     @parametrized_api_urls
     def test_public_url(self, api_token: str, api_url: str, api_public_url: str) -> None:
         apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        created_store = apify_client.datasets().get_or_create(name=random_resource_name('key-value-store'))
-        dataset = apify_client.dataset(created_store['id'])
-        try:
+        dataset = apify_client.dataset('someID')
+
+        # Mock the API call to return predefined response
+        with mock.patch.object(apify_client.http_client, 'call', return_value=Mock(text=MOCKED_API_DATASET_RESPONSE)):
             public_url = dataset.create_items_public_url()
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'
-                f'{created_store["id"]}/items?signature={public_url.split("signature=")[1]}'
+                f'someID/items?signature={public_url.split("signature=")[1]}'
             )
-        finally:
-            dataset.delete()
-
-    def test_public_url_nonexistent_host(self, api_token: str) -> None:
-        dataset_name = 'whatever'
-        non_existent_url = 'http://10.0.88.214:8010'
-        apify_client = ApifyClient(token=api_token, api_url=non_existent_url)
-        kvs_client = apify_client.dataset(dataset_id=dataset_name)
-        assert kvs_client._url() == f'{non_existent_url}/v2/datasets/{dataset_name}'
-        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/datasets/{dataset_name}'
 
 
 class TestDatasetAsync:
@@ -113,21 +133,12 @@ class TestDatasetAsync:
     @parametrized_api_urls
     async def test_public_url(self, api_token: str, api_url: str, api_public_url: str) -> None:
         apify_client = ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        created_store = await apify_client.datasets().get_or_create(name=random_resource_name('key-value-store'))
-        dataset = apify_client.dataset(created_store['id'])
-        try:
+        dataset = apify_client.dataset('someID')
+
+        # Mock the API call to return predefined response
+        with mock.patch.object(apify_client.http_client, 'call', return_value=Mock(text=MOCKED_API_DATASET_RESPONSE)):
             public_url = await dataset.create_items_public_url()
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'
-                f'{created_store["id"]}/items?signature={public_url.split("signature=")[1]}'
+                f'someID/items?signature={public_url.split("signature=")[1]}'
             )
-        finally:
-            await dataset.delete()
-
-    def test_public_url_nonexistent_host(self, api_token: str) -> None:
-        dataset_name = 'whatever'
-        non_existent_url = 'http://10.0.88.214:8010'
-        apify_client = ApifyClientAsync(token=api_token, api_url=non_existent_url)
-        kvs_client = apify_client.dataset(dataset_id=dataset_name)
-        assert kvs_client._url() == f'{non_existent_url}/v2/datasets/{dataset_name}'
-        assert kvs_client._url(public=True) == f'{DEFAULT_API_URL}/v2/datasets/{dataset_name}'

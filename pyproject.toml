@@ -53,7 +53,7 @@ dev = [
     "pytest~=8.4.0",
     "pytest-httpserver~=1.1.0",
     "redbaron~=0.9.0",
-    "ruff~=0.12.0",
+    "ruff~=0.13.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
     "types-colorama~=0.4.15.20240106",
     "werkzeug~=3.1.0", # Werkzeug is used by pytest-httpserver

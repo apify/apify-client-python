@@ -26,11 +26,11 @@ def test_pluck_data() -> None:
     assert pluck_data({'a': 'b', 'data': {'b': 'c'}}) == {'b': 'c'}
 
     # throws the right error when it is not
-    with pytest.raises(ValueError, match='The "data" property is missing in the response.'):
+    with pytest.raises(ValueError, match=r'The "data" property is missing in the response.'):
         pluck_data({'a': 'b'})
-    with pytest.raises(ValueError, match='The "data" property is missing in the response.'):
+    with pytest.raises(ValueError, match=r'The "data" property is missing in the response.'):
         pluck_data(None)
-    with pytest.raises(ValueError, match='The "data" property is missing in the response.'):
+    with pytest.raises(ValueError, match=r'The "data" property is missing in the response.'):
         pluck_data('{"a": "b"}')
 
 

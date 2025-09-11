@@ -25,7 +25,7 @@ def test_add_rate_limit_error(attempts: list[int], expected_errors: list[int]) -
 def test_add_rate_limit_error_invalid_attempt() -> None:
     """Test that add_rate_limit_error raises ValueError for invalid attempt."""
     stats = Statistics()
-    with pytest.raises(ValueError, match='Attempt must be greater than 0'):
+    with pytest.raises(ValueError, match=r'Attempt must be greater than 0'):
         stats.add_rate_limit_error(0)
 
 

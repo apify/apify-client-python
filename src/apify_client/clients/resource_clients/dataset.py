@@ -619,7 +619,7 @@ class DatasetClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._url('items'))
+        items_public_url = urlparse(self._url('items', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))
@@ -1126,7 +1126,7 @@ class DatasetClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._url('items'))
+        items_public_url = urlparse(self._url('items', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))

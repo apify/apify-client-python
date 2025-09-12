@@ -18,10 +18,14 @@ class _BaseBaseClient(metaclass=WithLogDetailsClient):
     http_client: HTTPClient | HTTPClientAsync
     root_client: ApifyClient | ApifyClientAsync
 
-    def _url(self, path: str | None = None) -> str:
-        if path is not None:
-            return f'{self.url}/{path}'
-        return self.url
+    def _url(self, path: str | None = None, *, public: bool = False) -> str:
+        url = f'{self.url}/{path}' if path is not None else self.url
+
+        if public:
+            if not url.startswith(self.root_client.base_url):
+                raise ValueError('API based URL has to start with `self.root_client.base_url`')
+            return url.replace(self.root_client.base_url, self.root_client.public_base_url, 1)
+        return url
 
     def _params(self, **kwargs: Any) -> dict:
         return {

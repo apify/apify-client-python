@@ -307,7 +307,7 @@ class KeyValueStoreClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._url('keys'))
+        keys_public_url = urlparse(self._url('keys', public=True))
 
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
@@ -597,7 +597,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._url('keys'))
+        keys_public_url = urlparse(self._url('keys', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))

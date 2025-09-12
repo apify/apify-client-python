@@ -9,13 +9,16 @@ API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
 
 @pytest.fixture
-def apify_client() -> ApifyClient:
-    api_token = os.getenv(TOKEN_ENV_VAR)
-    api_url = os.getenv(API_URL_ENV_VAR)
-
-    if not api_token:
+def api_token() -> str:
+    token = os.getenv(TOKEN_ENV_VAR)
+    if not token:
         raise RuntimeError(f'{TOKEN_ENV_VAR} environment variable is missing, cannot run tests!')
+    return token
 
+
+@pytest.fixture
+def apify_client(api_token: str) -> ApifyClient:
+    api_url = os.getenv(API_URL_ENV_VAR)
     return ApifyClient(api_token, api_url=api_url)
 
 
@@ -25,11 +28,6 @@ def apify_client() -> ApifyClient:
 # but `pytest-asyncio` closes the event loop after each test,
 # and uses a new one for the next test.
 @pytest.fixture
-def apify_client_async() -> ApifyClientAsync:
-    api_token = os.getenv(TOKEN_ENV_VAR)
+def apify_client_async(api_token: str) -> ApifyClientAsync:
     api_url = os.getenv(API_URL_ENV_VAR)
-
-    if not api_token:
-        raise RuntimeError(f'{TOKEN_ENV_VAR} environment variable is missing, cannot run tests!')
-
     return ApifyClientAsync(api_token, api_url=api_url)

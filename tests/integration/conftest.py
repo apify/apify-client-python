@@ -7,19 +7,6 @@ from apify_client import ApifyClient, ApifyClientAsync
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
 API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
-parametrized_api_urls = pytest.mark.parametrize(
-    ('api_url', 'api_public_url'),
-    [
-        ('https://api.apify.com', 'https://api.apify.com'),
-        ('https://api.apify.com', None),
-        ('https://api.apify.com', 'https://custom-public-url.com'),
-        ('https://api.apify.com', 'https://custom-public-url.com/with/custom/path'),
-        ('https://api.apify.com', 'https://custom-public-url.com/with/custom/path/'),
-        ('http://10.0.88.214:8010', 'https://api.apify.com'),
-        ('http://10.0.88.214:8010', None),
-    ],
-)
-
 
 @pytest.fixture
 def api_token() -> str:

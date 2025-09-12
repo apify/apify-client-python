@@ -5,8 +5,7 @@ from unittest.mock import Mock
 
 import impit
 
-from integration.conftest import parametrized_api_urls
-from integration.integration_test_utils import random_resource_name
+from integration.integration_test_utils import parametrized_api_urls, random_resource_name
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.client import DEFAULT_API_URL

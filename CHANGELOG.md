@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Casing in `exclusiveStartKey` API param ([#495](https://github.com/apify/apify-client-python/pull/495)) ([5e96f71](https://github.com/apify/apify-client-python/commit/5e96f71cc6d3290d161fa46fc8cd9adef478088e)) by [@barjin](https://github.com/barjin), closes [#484](https://github.com/apify/apify-client-python/issues/484)
+- Presigned resource urls shouldn&#x27;t follow base url ([#500](https://github.com/apify/apify-client-python/pull/500)) ([b224218](https://github.com/apify/apify-client-python/commit/b2242185f7eb0891bda29c361c7f5cf6f7dcba20)) by [@Pijukatel](https://github.com/Pijukatel), closes [#496](https://github.com/apify/apify-client-python/issues/496)
 
 
 <!-- git-cliff-unreleased-end -->

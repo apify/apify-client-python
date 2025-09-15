@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.0.1 - **not yet released**
+## [2.1.0](https://github.com/apify/apify-client-python/releases/tag/v2.1.0) (2025-09-15)
 
 ### 🚀 Features
 
@@ -15,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - Presigned resource urls shouldn&#x27;t follow base url ([#500](https://github.com/apify/apify-client-python/pull/500)) ([b224218](https://github.com/apify/apify-client-python/commit/b2242185f7eb0891bda29c361c7f5cf6f7dcba20)) by [@Pijukatel](https://github.com/Pijukatel), closes [#496](https://github.com/apify/apify-client-python/issues/496)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.0.0](https://github.com/apify/apify-client-python/releases/tag/v2.0.0) (2025-08-15)
 
 ### 🚀 Features

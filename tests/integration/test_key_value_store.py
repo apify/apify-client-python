@@ -107,9 +107,8 @@ class TestKeyValueStoreSync:
             public_url = kvs.get_record_public_url(key='key')
             expected_signature = f'?signature={public_url.split("signature=")[1]}' if signing_key else ''
             assert public_url == (
-                f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/records/key{
-                    expected_signature
-                }'
+                f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
+                f'records/key{expected_signature}'
             )
 
 
@@ -189,7 +188,6 @@ class TestKeyValueStoreAsync:
             public_url = await kvs.get_record_public_url(key='key')
             expected_signature = f'?signature={public_url.split("signature=")[1]}' if signing_key else ''
             assert public_url == (
-                f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/records/key{
-                    expected_signature
-                }'
+                f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
+                f'records/key{expected_signature}'
             )

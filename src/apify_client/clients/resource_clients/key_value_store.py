@@ -6,7 +6,7 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_shared.utils import create_storage_content_signature
+from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -266,6 +266,29 @@ class KeyValueStoreClient(ResourceClient):
             params=self._params(),
             timeout_secs=_SMALL_TIMEOUT,
         )
+
+    def get_record_public_rul(self, key: str) -> str:
+        """Generate a URL that can be used to access key-value store record.
+
+        If the client has permission to access the key-value store's URL signing key, the URL will include a signature
+        to verify its authenticity.
+
+        Args:
+            key: The key for which the URL should be generated.
+
+        Returns:
+            A public URL that can be used to access the value of the given key in the KVS.
+        """
+        if self.resource_id is None:
+            raise ValueError('resource_id cannot be None when generating a public URL')
+
+        public_url = f'{self._api_public_base_url}/key-value-stores/{self.resource_id}/records/{key}'
+        metadata = self.get_metadata()
+
+        if metadata.url_signing_secret_key is not None:
+            public_url = public_url.with_query(signature=create_hmac_signature(metadata.url_signing_secret_key, key))
+
+        return str(public_url)
 
     def create_keys_public_url(
         self,

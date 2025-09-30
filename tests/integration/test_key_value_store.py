@@ -6,17 +6,20 @@ from unittest.mock import Mock
 
 import impit
 import pytest
+from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
 from integration.integration_test_utils import parametrized_api_urls, random_resource_name
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.client import DEFAULT_API_URL
 
+MOCKED_ID = 'someID'
+
 
 def _get_mocked_api_kvs_response(signing_key: str | None = None) -> str:
     response_data = {
         'data': {
-            'id': 'someID',
+            'id': MOCKED_ID,
             'name': 'name',
             'userId': 'userId',
             'createdAt': '2025-09-11T08:48:51.806Z',
@@ -78,7 +81,7 @@ class TestKeyValueStoreSync:
     @parametrized_api_urls
     def test_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
         apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        kvs = apify_client.key_value_store('someID')
+        kvs = apify_client.key_value_store(MOCKED_ID)
 
         # Mock the API call to return predefined response
         with mock.patch.object(
@@ -87,7 +90,13 @@ class TestKeyValueStoreSync:
             return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
         ):
             public_url = kvs.create_keys_public_url()
-            expected_signature = f'?signature={public_url.split("signature=")[1]}' if signing_key else ''
+            expected_signature = (
+                f'?signature={
+                    create_storage_content_signature(resource_id=MOCKED_ID, url_signing_secret_key=signing_key)
+                }'
+                if signing_key
+                else ''
+            )
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/keys{expected_signature}'
             )
@@ -96,7 +105,8 @@ class TestKeyValueStoreSync:
     @parametrized_api_urls
     def test_record_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
         apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        kvs = apify_client.key_value_store('someID')
+        key = 'some_key'
+        kvs = apify_client.key_value_store(MOCKED_ID)
 
         # Mock the API call to return predefined response
         with mock.patch.object(
@@ -104,11 +114,11 @@ class TestKeyValueStoreSync:
             'call',
             return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
         ):
-            public_url = kvs.get_record_public_url(key='key')
-            expected_signature = f'?signature={public_url.split("signature=")[1]}' if signing_key else ''
+            public_url = kvs.get_record_public_url(key=key)
+            expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
-                f'records/key{expected_signature}'
+                f'records/{key}{expected_signature}'
             )
 
 
@@ -157,27 +167,35 @@ class TestKeyValueStoreAsync:
 
     @pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
     @parametrized_api_urls
-    async def test_record_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
+    async def test_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
         apify_client = ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        kvs = apify_client.key_value_store('someID')
+        kvs = apify_client.key_value_store(MOCKED_ID)
+        mocked_response = _get_mocked_api_kvs_response(signing_key=signing_key)
 
         # Mock the API call to return predefined response
         with mock.patch.object(
             apify_client.http_client,
             'call',
-            return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
+            return_value=Mock(text=mocked_response),
         ):
             public_url = await kvs.create_keys_public_url()
-            expected_signature = f'?signature={public_url.split("signature=")[1]}' if signing_key else ''
+            expected_signature = (
+                f'?signature={
+                    create_storage_content_signature(resource_id=MOCKED_ID, url_signing_secret_key=signing_key)
+                }'
+                if signing_key
+                else ''
+            )
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/keys{expected_signature}'
             )
 
     @pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
     @parametrized_api_urls
-    async def test_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
+    async def test_record_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
         apify_client = ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        kvs = apify_client.key_value_store('someID')
+        key = 'some_key'
+        kvs = apify_client.key_value_store(MOCKED_ID)
 
         # Mock the API call to return predefined response
         with mock.patch.object(
@@ -185,9 +203,9 @@ class TestKeyValueStoreAsync:
             'call',
             return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
         ):
-            public_url = await kvs.get_record_public_url(key='key')
-            expected_signature = f'?signature={public_url.split("signature=")[1]}' if signing_key else ''
+            public_url = await kvs.get_record_public_url(key=key)
+            expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
-                f'records/key{expected_signature}'
+                f'records/{key}{expected_signature}'
             )

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 2.1.1 - **not yet released**
 
+### 🚀 Features
+
+- Add `KeyValueStoreClient(Async).get_record_public_url` ([#506](https://github.com/apify/apify-client-python/pull/506)) ([6417d26](https://github.com/apify/apify-client-python/commit/6417d26f90af2113247b73a42a5909510a3a1a16)) by [@Pijukatel](https://github.com/Pijukatel), closes [#497](https://github.com/apify/apify-client-python/issues/497)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [2.1.0](https://github.com/apify/apify-client-python/releases/tag/v2.1.0) (2025-09-15)

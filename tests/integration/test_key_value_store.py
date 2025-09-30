@@ -90,13 +90,13 @@ class TestKeyValueStoreSync:
             return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
         ):
             public_url = kvs.create_keys_public_url()
-            expected_signature = (
-                f'?signature={
-                    create_storage_content_signature(resource_id=MOCKED_ID, url_signing_secret_key=signing_key)
-                }'
-                if signing_key
-                else ''
-            )
+            if signing_key:
+                signature_value = create_storage_content_signature(
+                    resource_id=MOCKED_ID, url_signing_secret_key=signing_key
+                )
+                expected_signature = f'?signature={signature_value}'
+            else:
+                expected_signature = ''
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/keys{expected_signature}'
             )
@@ -179,13 +179,13 @@ class TestKeyValueStoreAsync:
             return_value=Mock(text=mocked_response),
         ):
             public_url = await kvs.create_keys_public_url()
-            expected_signature = (
-                f'?signature={
-                    create_storage_content_signature(resource_id=MOCKED_ID, url_signing_secret_key=signing_key)
-                }'
-                if signing_key
-                else ''
-            )
+            if signing_key:
+                signature_value = create_storage_content_signature(
+                    resource_id=MOCKED_ID, url_signing_secret_key=signing_key
+                )
+                expected_signature = f'?signature={signature_value}'
+            else:
+                expected_signature = ''
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/keys{expected_signature}'
             )

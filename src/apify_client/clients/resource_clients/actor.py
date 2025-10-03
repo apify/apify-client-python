@@ -69,7 +69,6 @@ def get_actor_representation(
         'seoTitle': seo_title,
         'seoDescription': seo_description,
         'versions': versions,
-        'restartOnError': restart_on_error,
         'isPublic': is_public,
         'isDeprecated': is_deprecated,
         'isAnonymouslyRunnable': is_anonymously_runnable,
@@ -79,6 +78,7 @@ def get_actor_representation(
             'maxItems': default_run_max_items,
             'memoryMbytes': default_run_memory_mbytes,
             'timeoutSecs': default_run_timeout_secs,
+            'restartOnError': restart_on_error,
             'forcePermissionLevel': default_run_force_permission_level,
         },
         'exampleRunInput': {

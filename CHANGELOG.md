@@ -25,6 +25,8 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.0](https://github.com/apify/apify-client-python/releases/tag/v2.0.0) (2025-08-15)
 
+- Check out the [Upgrading guide](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v2) to ensure a smooth update.
+
 ### 🚀 Features
 
 - Extend status parameter to an array of possible statuses  ([#455](https://github.com/apify/apify-client-python/pull/455)) ([76f6769](https://github.com/apify/apify-client-python/commit/76f676973d067ce8af398d8e6ceea55595da5ecf)) by [@JanHranicky](https://github.com/JanHranicky)

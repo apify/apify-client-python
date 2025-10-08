@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import pytest
@@ -52,5 +53,23 @@ class TestRunCollectionSync:
             for run in multiple_status_runs.items
         )
         assert all(run.get('status') == ActorJobStatus.SUCCEEDED for run in single_status_runs.items)
+
+        self.teadown_runs(apify_client)
+
+    # Here we test that date fields can be passed both as datetime objects and as ISO 8601 strings
+    async def test_run_collection_list_accept_date_range(self, apify_client: ApifyClient) -> None:
+        self.setup_runs(apify_client)
+
+        run_collection = apify_client.runs()
+
+        date_obj = datetime(2100, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        iso_date_str = date_obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        # Here we test that date fields can be passed both as datetime objects and as ISO 8601 strings
+        runs_in_range_date_format = run_collection.list(started_before=date_obj, started_after=date_obj)
+        runs_in_range_string_format = run_collection.list(started_before=iso_date_str, started_after=iso_date_str)
+
+        assert hasattr(runs_in_range_date_format, 'items')
+        assert hasattr(runs_in_range_string_format, 'items')
 
         self.teadown_runs(apify_client)

@@ -6,6 +6,8 @@ from apify_client._utils import maybe_extract_enum_member_value
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from apify_shared.consts import ActorJobStatus
 
     from apify_client.clients.base.resource_collection_client import ListPage
@@ -25,6 +27,8 @@ class RunCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
         status: ActorJobStatus | list[ActorJobStatus] | None = None,
+        started_before: str | datetime | None = None,
+        started_after: str | datetime | None = None,
     ) -> ListPage[dict]:
         """List all Actor runs.
 
@@ -39,6 +43,8 @@ class RunCollectionClient(ResourceCollectionClient):
             offset: What run to include as first when retrieving the list.
             desc: Whether to sort the runs in descending order based on their start date.
             status: Retrieve only runs with the provided statuses.
+            started_before: Only return runs started before this date (inclusive).
+            started_after: Only return runs started after this date (inclusive).
 
         Returns:
             The retrieved Actor runs.
@@ -53,6 +59,8 @@ class RunCollectionClient(ResourceCollectionClient):
             offset=offset,
             desc=desc,
             status=status_param,
+            startedBefore=started_before,
+            startedAfter=started_after,
         )
 
 
@@ -70,6 +78,8 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         status: ActorJobStatus | list[ActorJobStatus] | None = None,
+        started_before: str | datetime | None = None,
+        started_after: str | datetime | None = None,
     ) -> ListPage[dict]:
         """List all Actor runs.
 
@@ -84,6 +94,8 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             offset: What run to include as first when retrieving the list.
             desc: Whether to sort the runs in descending order based on their start date.
             status: Retrieve only runs with the provided statuses.
+            started_before: Only return runs started before this date (inclusive).
+            started_after: Only return runs started after this date (inclusive).
 
         Returns:
             The retrieved Actor runs.
@@ -98,4 +110,6 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             offset=offset,
             desc=desc,
             status=status_param,
+            startedBefore=started_before,
+            startedAfter=started_after,
         )

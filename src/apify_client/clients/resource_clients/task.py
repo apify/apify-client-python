@@ -32,6 +32,7 @@ def get_task_representation(
     max_items: int | None = None,
     memory_mbytes: int | None = None,
     timeout_secs: int | None = None,
+    restart_on_error: bool | None = None,
     title: str | None = None,
     actor_standby_desired_requests_per_actor_run: int | None = None,
     actor_standby_max_requests_per_actor_run: int | None = None,
@@ -48,6 +49,7 @@ def get_task_representation(
             'maxItems': max_items,
             'memoryMbytes': memory_mbytes,
             'timeoutSecs': timeout_secs,
+            'restartOnError': restart_on_error,
         },
         'input': task_input,
         'title': title,
@@ -87,6 +89,7 @@ class TaskClient(ResourceClient):
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        restart_on_error: bool | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -109,6 +112,8 @@ class TaskClient(ResourceClient):
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
             task_input: Task input dictionary.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
@@ -129,6 +134,7 @@ class TaskClient(ResourceClient):
             max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
@@ -154,6 +160,7 @@ class TaskClient(ResourceClient):
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
     ) -> dict:
@@ -171,6 +178,8 @@ class TaskClient(ResourceClient):
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
                 it is 0, the maximum value is 60.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
@@ -189,6 +198,7 @@ class TaskClient(ResourceClient):
             maxItems=max_items,
             memory=memory_mbytes,
             timeout=timeout_secs,
+            restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
@@ -211,6 +221,7 @@ class TaskClient(ResourceClient):
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
     ) -> dict | None:
@@ -230,6 +241,8 @@ class TaskClient(ResourceClient):
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             webhooks: Specifies optional webhooks associated with the Actor run, which can be used to receive
                 a notification e.g. when the Actor finished or failed. Note: if you already have a webhook set up for
                 the Actor or task, you do not have to add it again here.
@@ -245,6 +258,7 @@ class TaskClient(ResourceClient):
             max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
 
@@ -343,6 +357,7 @@ class TaskClientAsync(ResourceClientAsync):
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        restart_on_error: bool | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -364,6 +379,8 @@ class TaskClientAsync(ResourceClientAsync):
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             task_input: Task input dictionary.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -385,6 +402,7 @@ class TaskClientAsync(ResourceClientAsync):
             max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
@@ -410,6 +428,7 @@ class TaskClientAsync(ResourceClientAsync):
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
     ) -> dict:
@@ -427,6 +446,8 @@ class TaskClientAsync(ResourceClientAsync):
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             wait_for_finish: The maximum number of seconds the server waits for the run to finish. By default,
                 it is 0, the maximum value is 60.
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
@@ -445,6 +466,7 @@ class TaskClientAsync(ResourceClientAsync):
             maxItems=max_items,
             memory=memory_mbytes,
             timeout=timeout_secs,
+            restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
@@ -467,6 +489,7 @@ class TaskClientAsync(ResourceClientAsync):
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout_secs: int | None = None,
+        restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
     ) -> dict | None:
@@ -486,6 +509,8 @@ class TaskClientAsync(ResourceClientAsync):
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             webhooks: Specifies optional webhooks associated with the Actor run, which can be used to receive
                 a notification e.g. when the Actor finished or failed. Note: if you already have a webhook set up for
                 the Actor or task, you do not have to add it again here.
@@ -501,6 +526,7 @@ class TaskClientAsync(ResourceClientAsync):
             max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
 

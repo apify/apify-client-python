@@ -111,9 +111,9 @@ class TaskClient(ResourceClient):
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
-            task_input: Task input dictionary.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
+            task_input: Task input dictionary.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.

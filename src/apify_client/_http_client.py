@@ -78,7 +78,7 @@ class _BaseHTTPClient:
             elif isinstance(value, list):
                 parsed_params[key] = ','.join(value)
             elif isinstance(value, datetime):
-                utc_aware_dt = value.replace(tzinfo=timezone.utc)
+                utc_aware_dt = value.astimezone(timezone.utc)
 
                 # Convert to ISO 8601 string in Zulu format
                 zulu_date_str = utc_aware_dt.strftime('%Y-%m-%dT%H:%M:%SZ')

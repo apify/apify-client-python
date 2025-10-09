@@ -38,6 +38,7 @@ def get_task_representation(
     actor_standby_idle_timeout_secs: int | None = None,
     actor_standby_build: str | None = None,
     actor_standby_memory_mbytes: int | None = None,
+    *,
     restart_on_error: bool | None = None,
 ) -> dict:
     """Get the dictionary representation of a task."""

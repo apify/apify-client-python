@@ -80,7 +80,7 @@ class ActorCollectionClient(ResourceCollectionClient):
             seo_title: The title of the Actor optimized for search engines.
             seo_description: The description of the Actor optimized for search engines.
             versions: The list of Actor versions.
-            restart_on_error: If true, the main Actor run process will be restarted whenever it exits with
+            restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             is_public: Whether the Actor is public.
             is_deprecated: Whether the Actor is deprecated.
@@ -205,7 +205,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             seo_title: The title of the Actor optimized for search engines.
             seo_description: The description of the Actor optimized for search engines.
             versions: The list of Actor versions.
-            restart_on_error: If true, the main Actor run process will be restarted whenever it exits with
+            restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             is_public: Whether the Actor is public.
             is_deprecated: Whether the Actor is deprecated.

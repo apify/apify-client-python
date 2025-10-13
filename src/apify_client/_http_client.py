@@ -80,8 +80,10 @@ class _BaseHTTPClient:
             elif isinstance(value, datetime):
                 utc_aware_dt = value.astimezone(timezone.utc)
 
+                iso_str = utc_aware_dt.isoformat(timespec='milliseconds')
+
                 # Convert to ISO 8601 string in Zulu format
-                zulu_date_str = utc_aware_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+                zulu_date_str = iso_str.replace('+00:00', 'Z')
 
                 parsed_params[key] = zulu_date_str
             elif value is not None:

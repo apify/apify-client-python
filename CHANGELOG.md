@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.1.1 - **not yet released**
+## [2.2.0](https://github.com/apify/apify-client-python/releases/tag/v2.2.0) (2025-10-13)
 
 ### 🚀 Features
 
@@ -11,7 +10,6 @@ All notable changes to this project will be documented in this file.
 - Add started_before and started_after to run list ([#513](https://github.com/apify/apify-client-python/pull/513)) ([3aaa056](https://github.com/apify/apify-client-python/commit/3aaa056a651f773638b6847c846117365bae6309)) by [@danpoletaev](https://github.com/danpoletaev)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.1.0](https://github.com/apify/apify-client-python/releases/tag/v2.1.0) (2025-09-15)
 
 ### 🚀 Features

@@ -162,6 +162,7 @@ class RunClient(ActorJobBaseClient):
         timeout_secs: int | None = None,
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
+        restart_on_error: bool | None = None,
     ) -> dict:
         """Resurrect a finished Actor run.
 
@@ -181,6 +182,8 @@ class RunClient(ActorJobBaseClient):
                 resurrected run uses the same limit as before. Limit can be only increased.
             max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
+            restart_on_error: Determines whether the resurrected run will be restarted if it fails.
+                By default, the resurrected run uses the same setting as before.
 
         Returns:
             The Actor run data.
@@ -191,6 +194,7 @@ class RunClient(ActorJobBaseClient):
             timeout=timeout_secs,
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
+            restartOnError=restart_on_error,
         )
 
         response = self.http_client.call(
@@ -483,6 +487,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         timeout_secs: int | None = None,
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
+        restart_on_error: bool | None = None,
     ) -> dict:
         """Resurrect a finished Actor run.
 
@@ -502,6 +507,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 resurrected run uses the same limit as before. Limit can be only increased.
             max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
+            restart_on_error: Determines whether the resurrected run will be restarted if it fails.
+                By default, the resurrected run uses the same setting as before.
 
         Returns:
             The Actor run data.
@@ -512,6 +519,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             timeout=timeout_secs,
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
+            restartOnError=restart_on_error,
         )
 
         response = await self.http_client.call(

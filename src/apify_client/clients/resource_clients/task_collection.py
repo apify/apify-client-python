@@ -47,6 +47,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         timeout_secs: int | None = None,
         memory_mbytes: int | None = None,
         max_items: int | None = None,
+        restart_on_error: bool | None = None,
         task_input: dict | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -70,6 +71,8 @@ class TaskCollectionClient(ResourceCollectionClient):
                 is charged per result, you will not be charged for more results than the given limit.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             task_input: Task input object.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -92,6 +95,7 @@ class TaskCollectionClient(ResourceCollectionClient):
             max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
@@ -140,6 +144,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         timeout_secs: int | None = None,
         memory_mbytes: int | None = None,
         max_items: int | None = None,
+        restart_on_error: bool | None = None,
         task_input: dict | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -163,6 +168,8 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
                 is charged per result, you will not be charged for more results than the given limit.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
+            restart_on_error: If true, the Task run process will be restarted whenever it exits with
+                a non-zero status code.
             task_input: Task input object.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -185,6 +192,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
             max_items=max_items,
             memory_mbytes=memory_mbytes,
             timeout_secs=timeout_secs,
+            restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,

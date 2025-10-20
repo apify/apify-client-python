@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 2.2.1 - **not yet released**
 
+### 🐛 Bug Fixes
+
+- Move restart on error Actor option to Run options ([#508](https://github.com/apify/apify-client-python/pull/508)) ([8f73420](https://github.com/apify/apify-client-python/commit/8f73420ba2b9f2045bfdf3a224b6573ca2941b85)) by [@DaveHanns](https://github.com/DaveHanns)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [2.2.0](https://github.com/apify/apify-client-python/releases/tag/v2.2.0) (2025-10-13)

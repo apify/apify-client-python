@@ -37,7 +37,7 @@ dev = [
 requires-dist = [
     { name = "apify-shared", specifier = ">=2.1.0,<3.0.0" },
     { name = "colorama", specifier = ">=0.4.0" },
-    { name = "impit", specifier = ">=0.5.3" },
+    { name = "impit", specifier = ">=0.7.3" },
     { name = "more-itertools", specifier = ">=10.0.0" },
 ]
 

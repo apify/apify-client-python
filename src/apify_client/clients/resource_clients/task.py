@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as jsonlib
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._utils import (
@@ -212,7 +211,7 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def call(
         self,
@@ -279,7 +278,7 @@ class TaskClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return cast('dict', jsonlib.loads(response.text))
+            return cast('dict', response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -298,7 +297,7 @@ class TaskClient(ResourceClient):
             params=self._params(),
             json=task_input,
         )
-        return cast('dict', jsonlib.loads(response.text))
+        return cast('dict', response.json())
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
@@ -480,7 +479,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def call(
         self,
@@ -547,7 +546,7 @@ class TaskClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return cast('dict', jsonlib.loads(response.text))
+            return cast('dict', response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -566,7 +565,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=self._params(),
             json=task_input,
         )
-        return cast('dict', jsonlib.loads(response.text))
+        return cast('dict', response.json())
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""

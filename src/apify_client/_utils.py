@@ -262,7 +262,7 @@ def maybe_parse_response(response: Response) -> Any:
 
     try:
         if is_content_type_json(content_type):
-            response_data = jsonlib.loads(response.text)
+            response_data = response.json()
         elif is_content_type_xml(content_type) or is_content_type_text(content_type):
             response_data = response.text
         else:

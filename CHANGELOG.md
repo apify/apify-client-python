@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 2.2.2 - **not yet released**
+
+### 🚀 Features
+
+- Add support for Python 3.14 ([#520](https://github.com/apify/apify-client-python/pull/520)) ([68ebbd9](https://github.com/apify/apify-client-python/commit/68ebbd9162f076a20a4a02dd1ebe0dac7ece696a)) by [@vdusek](https://github.com/vdusek)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [2.2.1](https://github.com/apify/apify-client-python/releases/tag/v2.2.1) (2025-10-20)
 
 ### 🐛 Bug Fixes

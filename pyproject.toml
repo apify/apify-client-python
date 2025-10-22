@@ -20,13 +20,14 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
 ]
 keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]
 dependencies = [
     "apify-shared>=2.1.0,<3.0.0",
     "colorama>=0.4.0",
-    "impit>=0.5.3",
+    "impit>=0.8.0",
     "more_itertools>=10.0.0",
 ]
 

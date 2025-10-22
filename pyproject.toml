@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "apify_client"
-version = "2.2.1"
+version = "2.2.2"
 description = "Apify API client for Python"
 authors = [{ name = "Apify Technologies s.r.o.", email = "support@apify.com" }]
 license = { file = "LICENSE" }
@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
 ]
 keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]

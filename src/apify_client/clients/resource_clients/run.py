@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import json as jsonlib
 import logging
 import random
 import string
@@ -152,7 +151,7 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def resurrect(
         self,
@@ -203,7 +202,7 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def reboot(self) -> dict:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -217,7 +216,7 @@ class RunClient(ActorJobBaseClient):
             url=self._url('reboot'),
             method='POST',
         )
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -477,7 +476,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def resurrect(
         self,
@@ -528,7 +527,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def reboot(self) -> dict:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -542,7 +541,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             url=self._url('reboot'),
             method='POST',
         )
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.

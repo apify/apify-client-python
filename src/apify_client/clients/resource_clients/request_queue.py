@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import json as jsonlib
 import logging
 import math
 from collections.abc import Iterable
@@ -120,7 +119,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> dict:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
@@ -143,7 +142,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def add_request(self, request: dict, *, forefront: bool | None = None) -> dict:
         """Add a request to the queue.
@@ -167,7 +166,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def get_request(self, request_id: str) -> dict | None:
         """Retrieve a request from the queue.
@@ -187,7 +186,7 @@ class RequestQueueClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -218,7 +217,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -264,7 +263,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def delete_request_lock(self, request_id: str, *, forefront: bool | None = None) -> None:
         """Delete the lock on a request.
@@ -353,7 +352,7 @@ class RequestQueueClient(ResourceClient):
                 timeout_secs=_MEDIUM_TIMEOUT,
             )
 
-            response_parsed = parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            response_parsed = parse_date_fields(pluck_data(response.json()))
             processed_requests.extend(response_parsed.get('processedRequests', []))
             unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
@@ -380,7 +379,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def list_requests(
         self,
@@ -405,7 +404,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     def unlock_requests(self: RequestQueueClient) -> dict:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
@@ -423,7 +422,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
 
 class RequestQueueClientAsync(ResourceClientAsync):
@@ -500,7 +499,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> dict:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
@@ -523,7 +522,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def add_request(self, request: dict, *, forefront: bool | None = None) -> dict:
         """Add a request to the queue.
@@ -547,7 +546,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def get_request(self, request_id: str) -> dict | None:
         """Retrieve a request from the queue.
@@ -567,7 +566,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -598,7 +597,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -642,7 +641,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def delete_request_lock(
         self,
@@ -698,7 +697,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     timeout_secs=_MEDIUM_TIMEOUT,
                 )
 
-                response_parsed = parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+                response_parsed = parse_date_fields(pluck_data(response.json()))
                 processed_requests.extend(response_parsed.get('processedRequests', []))
                 unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
@@ -808,7 +807,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             json=requests,
             timeout_secs=_SMALL_TIMEOUT,
         )
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def list_requests(
         self,
@@ -833,7 +832,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))
 
     async def unlock_requests(self: RequestQueueClientAsync) -> dict:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
@@ -851,4 +850,4 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+        return parse_date_fields(pluck_data(response.json()))

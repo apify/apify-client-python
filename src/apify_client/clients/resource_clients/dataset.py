@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as jsonlib
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any
@@ -141,7 +140,7 @@ class DatasetClient(ResourceClient):
             params=request_params,
         )
 
-        data = jsonlib.loads(response.text)
+        data = response.json()
 
         return ListPage(
             {
@@ -559,7 +558,7 @@ class DatasetClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return pluck_data(jsonlib.loads(response.text))
+            return pluck_data(response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -739,7 +738,7 @@ class DatasetClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        data = jsonlib.loads(response.text)
+        data = response.json()
 
         return ListPage(
             {
@@ -1066,7 +1065,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return pluck_data(jsonlib.loads(response.text))
+            return pluck_data(response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

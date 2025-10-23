@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as jsonlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -33,7 +32,7 @@ class ApifyApiError(ApifyClientError):
 
         self.message = f'Unexpected error: {response.text}'
         try:
-            response_data = jsonlib.loads(response.text)
+            response_data = response.json()
             if 'error' in response_data:
                 self.message = response_data['error']['message']
                 self.type = response_data['error']['type']

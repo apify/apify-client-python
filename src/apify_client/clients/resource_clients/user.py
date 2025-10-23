@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as jsonlib
 from typing import Any
 
 from apify_client._utils import (
@@ -53,7 +52,7 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -77,7 +76,7 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -144,7 +143,7 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -168,7 +167,7 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(jsonlib.loads(response.text)))
+            return parse_date_fields(pluck_data(response.json()))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

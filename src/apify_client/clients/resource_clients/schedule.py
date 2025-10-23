@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as jsonlib
 from typing import Any
 
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data_as_list
@@ -113,7 +112,7 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return pluck_data_as_list(jsonlib.loads(response.text))
+            return pluck_data_as_list(response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -202,7 +201,7 @@ class ScheduleClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return pluck_data_as_list(jsonlib.loads(response.text))
+            return pluck_data_as_list(response.json())
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

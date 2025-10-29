@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from unittest import mock
 from unittest.mock import Mock
 
@@ -16,7 +15,7 @@ from apify_client.client import DEFAULT_API_URL
 MOCKED_ID = 'someID'
 
 
-def _get_mocked_api_kvs_response(signing_key: str | None = None) -> str:
+def _get_mocked_api_kvs_response(signing_key: str | None = None) -> Mock:
     response_data = {
         'data': {
             'id': MOCKED_ID,
@@ -37,7 +36,9 @@ def _get_mocked_api_kvs_response(signing_key: str | None = None) -> str:
     if signing_key:
         response_data['data']['urlSigningSecretKey'] = signing_key
 
-    return json.dumps(response_data)
+    mock_response = Mock()
+    mock_response.json.return_value = response_data
+    return mock_response
 
 
 class TestKeyValueStoreSync:
@@ -87,7 +88,7 @@ class TestKeyValueStoreSync:
         with mock.patch.object(
             apify_client.http_client,
             'call',
-            return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
+            return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
         ):
             public_url = kvs.create_keys_public_url()
             if signing_key:
@@ -112,7 +113,7 @@ class TestKeyValueStoreSync:
         with mock.patch.object(
             apify_client.http_client,
             'call',
-            return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
+            return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
         ):
             public_url = kvs.get_record_public_url(key=key)
             expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
@@ -170,13 +171,12 @@ class TestKeyValueStoreAsync:
     async def test_public_url(self, api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
         apify_client = ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
         kvs = apify_client.key_value_store(MOCKED_ID)
-        mocked_response = _get_mocked_api_kvs_response(signing_key=signing_key)
 
         # Mock the API call to return predefined response
         with mock.patch.object(
             apify_client.http_client,
             'call',
-            return_value=Mock(text=mocked_response),
+            return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
         ):
             public_url = await kvs.create_keys_public_url()
             if signing_key:
@@ -201,7 +201,7 @@ class TestKeyValueStoreAsync:
         with mock.patch.object(
             apify_client.http_client,
             'call',
-            return_value=Mock(text=_get_mocked_api_kvs_response(signing_key=signing_key)),
+            return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
         ):
             public_url = await kvs.get_record_public_url(key=key)
             expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''

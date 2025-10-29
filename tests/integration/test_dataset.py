@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from unittest import mock
 from unittest.mock import Mock
 
@@ -80,7 +81,9 @@ class TestDatasetSync:
         dataset = apify_client.dataset('someID')
 
         # Mock the API call to return predefined response
-        with mock.patch.object(apify_client.http_client, 'call', return_value=Mock(text=MOCKED_API_DATASET_RESPONSE)):
+        mock_response = Mock()
+        mock_response.json.return_value = json.loads(MOCKED_API_DATASET_RESPONSE)
+        with mock.patch.object(apify_client.http_client, 'call', return_value=mock_response):
             public_url = dataset.create_items_public_url()
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'
@@ -135,7 +138,9 @@ class TestDatasetAsync:
         dataset = apify_client.dataset('someID')
 
         # Mock the API call to return predefined response
-        with mock.patch.object(apify_client.http_client, 'call', return_value=Mock(text=MOCKED_API_DATASET_RESPONSE)):
+        mock_response = Mock()
+        mock_response.json.return_value = json.loads(MOCKED_API_DATASET_RESPONSE)
+        with mock.patch.object(apify_client.http_client, 'call', return_value=mock_response):
             public_url = await dataset.create_items_public_url()
             assert public_url == (
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'

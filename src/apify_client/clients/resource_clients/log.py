@@ -404,25 +404,25 @@ class StatusMessageWatcher:
         self._check_period = check_period.total_seconds()
         self._last_status_message = ''
 
-    def _log_run_data(self, run_data: dict[str, Any] | None) -> bool:
+    def log_run_data(self, response: dict[str, Any] | None) -> bool:
         """Get relevant run data, log them if changed and return `True` if more data is expected.
 
         Args:
-            run_data: The dictionary that contains the run data.
+            response: The dictionary that contains the parsed run data.
 
         Returns:
               `True` if more data is expected, `False` otherwise.
         """
-        if run_data is not None:
-            status = run_data.get('status', 'Unknown status')
-            status_message = run_data.get('statusMessage', '')
+        if response is not None:
+            status = response.get('status', 'Unknown status')
+            status_message = response.get('statusMessage', '')
             new_status_message = f'Status: {status}, Message: {status_message}'
 
             if new_status_message != self._last_status_message:
                 self._last_status_message = new_status_message
                 self._to_logger.info(new_status_message)
 
-            return not (run_data.get('isStatusMessageTerminal', False))
+            return not (response.get('isStatusMessageTerminal', False))
         return True
 
 
@@ -476,7 +476,7 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
     async def _log_changed_status_message(self) -> None:
         while True:
             run_data = await self._run_client.get()
-            if not self._log_run_data(run_data):
+            if not self.log_run_data(run_data):
                 break
             await asyncio.sleep(self._check_period)
 
@@ -531,7 +531,7 @@ class StatusMessageWatcherSync(StatusMessageWatcher):
 
     def _log_changed_status_message(self) -> None:
         while True:
-            if not self._log_run_data(self._run_client.get()):
+            if not self.log_run_data(self._run_client.get()):
                 break
             if self._stop_logging:
                 break

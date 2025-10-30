@@ -4,6 +4,7 @@ import asyncio
 import math
 import time
 from datetime import datetime, timezone
+from typing import Any, Protocol
 
 from apify_shared.consts import ActorJobStatus
 
@@ -20,7 +21,9 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
 class ActorJobBaseClient(ResourceClient):
     """Base sub-client class for Actor runs and Actor builds."""
 
-    def _wait_for_finish(self, wait_secs: int | None = None) -> dict | None:
+    def _wait_for_finish(
+        self, wait_secs: int | None = None, response_watcher: ResponseWatcher | None = None
+    ) -> dict | None:
         started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: dict | None = None
@@ -38,6 +41,9 @@ class ActorJobBaseClient(ResourceClient):
                     params=self._params(waitForFinish=wait_for_finish),
                 )
                 job = parse_date_fields(pluck_data(response.json()))
+
+                if response_watcher:
+                    response_watcher(job)
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -74,7 +80,9 @@ class ActorJobBaseClient(ResourceClient):
 class ActorJobBaseClientAsync(ResourceClientAsync):
     """Base async sub-client class for Actor runs and Actor builds."""
 
-    async def _wait_for_finish(self, wait_secs: int | None = None) -> dict | None:
+    async def _wait_for_finish(
+        self, wait_secs: int | None = None, response_watcher: ResponseWatcher | None = None
+    ) -> dict | None:
         started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: dict | None = None
@@ -92,6 +100,9 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     params=self._params(waitForFinish=wait_for_finish),
                 )
                 job = parse_date_fields(pluck_data(response.json()))
+
+                if response_watcher:
+                    response_watcher(job)
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -123,3 +134,10 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
             params=self._params(gracefully=gracefully),
         )
         return parse_date_fields(pluck_data(response.json()))
+
+
+class ResponseWatcher(Protocol):
+    """Protocol for a callable watching parsed responses from wait_for_finish methods."""
+
+    def __call__(self, response: dict[str, Any] | None) -> Any:
+        """Watch the parsed response and act if needed."""

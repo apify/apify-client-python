@@ -35,6 +35,8 @@ if TYPE_CHECKING:
 
     from apify_shared.consts import RunGeneralAccess
 
+    from apify_client.clients.base.actor_job_base_client import ResponseWatcher
+
 
 class RunClient(ActorJobBaseClient):
     """Sub-client for manipulating a single Actor run."""
@@ -102,17 +104,20 @@ class RunClient(ActorJobBaseClient):
         """
         return self._abort(gracefully=gracefully)
 
-    def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
+    def wait_for_finish(
+        self, *, wait_secs: int | None = None, response_watcher: ResponseWatcher | None = None
+    ) -> dict | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
             wait_secs: How long does the client wait for run to finish. None for indefinite.
+            response_watcher: A callback function that will be called with parsed Actor run data.
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        return self._wait_for_finish(wait_secs=wait_secs)
+        return self._wait_for_finish(wait_secs=wait_secs, response_watcher=response_watcher)
 
     def metamorph(
         self,
@@ -417,17 +422,20 @@ class RunClientAsync(ActorJobBaseClientAsync):
         """
         return await self._abort(gracefully=gracefully)
 
-    async def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
+    async def wait_for_finish(
+        self, *, wait_secs: int | None = None, response_watcher: ResponseWatcher | None = None
+    ) -> dict | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
             wait_secs: How long does the client wait for run to finish. None for indefinite.
+            response_watcher: A callback function that will be called with parsed Actor run data.
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        return await self._wait_for_finish(wait_secs=wait_secs)
+        return await self._wait_for_finish(wait_secs=wait_secs, response_watcher=response_watcher)
 
     async def delete(self) -> None:
         """Delete the run.

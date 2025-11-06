@@ -1,0 +1,134 @@
+from http import HTTPStatus
+from typing import Any, cast
+
+import httpx
+
+from ...client import AuthenticatedClient, Client
+from ...types import Response, UNSET
+from ... import errors
+
+
+
+
+def _get_kwargs(
+    actor_id: str,
+    build_id: str,
+
+) -> dict[str, Any]:
+    
+
+    
+
+    
+
+    _kwargs: dict[str, Any] = {
+        "method": "post",
+        "url": "/v2/acts/{actor_id}/builds/{build_id}/abort".format(actor_id=actor_id,build_id=build_id,),
+    }
+
+
+    return _kwargs
+
+
+
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | None:
+    if client.raise_on_unexpected_status:
+        raise errors.UnexpectedStatus(response.status_code, response.content)
+    else:
+        return None
+
+
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any]:
+    return Response(
+        status_code=HTTPStatus(response.status_code),
+        content=response.content,
+        headers=response.headers,
+        parsed=_parse_response(client=client, response=response),
+    )
+
+
+def sync_detailed(
+    actor_id: str,
+    build_id: str,
+    *,
+    client: AuthenticatedClient | Client,
+
+) -> Response[Any]:
+    """ Abort build
+
+     **[DEPRECATED]** API endpoints related to build of the Actor were moved
+    under new namespace [`actor-builds`](#/reference/actor-builds). Aborts an
+    Actor build and returns an object that contains all the details about the
+    build.
+
+    Only builds that are starting or running are aborted. For builds with status
+    `FINISHED`, `FAILED`, `ABORTING` and `TIMED-OUT` this call does nothing.
+
+    Args:
+        actor_id (str):  Example: janedoe~my-actor.
+        build_id (str):  Example: 3KH8gEpp4d8uQSe8T.
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[Any]
+     """
+
+
+    kwargs = _get_kwargs(
+        actor_id=actor_id,
+build_id=build_id,
+
+    )
+
+    response = client.get_httpx_client().request(
+        **kwargs,
+    )
+
+    return _build_response(client=client, response=response)
+
+
+async def asyncio_detailed(
+    actor_id: str,
+    build_id: str,
+    *,
+    client: AuthenticatedClient | Client,
+
+) -> Response[Any]:
+    """ Abort build
+
+     **[DEPRECATED]** API endpoints related to build of the Actor were moved
+    under new namespace [`actor-builds`](#/reference/actor-builds). Aborts an
+    Actor build and returns an object that contains all the details about the
+    build.
+
+    Only builds that are starting or running are aborted. For builds with status
+    `FINISHED`, `FAILED`, `ABORTING` and `TIMED-OUT` this call does nothing.
+
+    Args:
+        actor_id (str):  Example: janedoe~my-actor.
+        build_id (str):  Example: 3KH8gEpp4d8uQSe8T.
+
+    Raises:
+        errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
+        httpx.TimeoutException: If the request takes longer than Client.timeout.
+
+    Returns:
+        Response[Any]
+     """
+
+
+    kwargs = _get_kwargs(
+        actor_id=actor_id,
+build_id=build_id,
+
+    )
+
+    response = await client.get_async_httpx_client().request(
+        **kwargs
+    )
+
+    return _build_response(client=client, response=response)
+

@@ -5,11 +5,13 @@ from unittest import mock
 from unittest.mock import Mock
 
 import impit
+import pytest
 
-from integration.integration_test_utils import parametrized_api_urls, random_resource_name
+from integration.integration_test_utils import TestDataset, parametrized_api_urls, random_resource_name
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.client import DEFAULT_API_URL
+from apify_client.errors import ApifyApiError
 
 MOCKED_API_DATASET_RESPONSE = """{
   "data": {
@@ -90,6 +92,58 @@ class TestDatasetSync:
                 f'someID/items?signature={public_url.split("signature=")[1]}'
             )
 
+    def test_list_items_signature(self, apify_client: ApifyClient, test_dataset_of_another_user: TestDataset) -> None:
+        dataset = apify_client.dataset(dataset_id=test_dataset_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the dataset. Make sure you're passing a "
+            r'correct API token and that it has the required permissions.',
+        ):
+            dataset.list_items()
+
+        # Dataset content retrieved with correct signature
+        assert (
+            test_dataset_of_another_user.expected_content
+            == dataset.list_items(signature=test_dataset_of_another_user.signature).items
+        )
+
+    def test_iterate_items_signature(
+        self, apify_client: ApifyClient, test_dataset_of_another_user: TestDataset
+    ) -> None:
+        dataset = apify_client.dataset(dataset_id=test_dataset_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the dataset. Make sure you're passing a "
+            r'correct API token and that it has the required permissions.',
+        ):
+            list(dataset.iterate_items())
+
+        # Dataset content retrieved with correct signature
+        assert test_dataset_of_another_user.expected_content == list(
+            dataset.iterate_items(signature=test_dataset_of_another_user.signature)
+        )
+
+    def test_get_items_as_bytes_signature(
+        self, apify_client: ApifyClient, test_dataset_of_another_user: TestDataset
+    ) -> None:
+        dataset = apify_client.dataset(dataset_id=test_dataset_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the dataset. Make sure you're passing a "
+            r'correct API token and that it has the required permissions.',
+        ):
+            dataset.get_items_as_bytes()
+
+        # Dataset content retrieved with correct signature
+        raw_data = dataset.get_items_as_bytes(signature=test_dataset_of_another_user.signature)
+        assert test_dataset_of_another_user.expected_content == json.loads(raw_data.decode('utf-8'))
+
 
 class TestDatasetAsync:
     async def test_dataset_should_create_public_items_expiring_url_with_params(
@@ -146,3 +200,57 @@ class TestDatasetAsync:
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'
                 f'someID/items?signature={public_url.split("signature=")[1]}'
             )
+
+    async def test_list_items_signature(
+        self, apify_client_async: ApifyClientAsync, test_dataset_of_another_user: TestDataset
+    ) -> None:
+        dataset = apify_client_async.dataset(dataset_id=test_dataset_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the dataset. Make sure you're passing a "
+            r'correct API token and that it has the required permissions.',
+        ):
+            await dataset.list_items()
+
+        # Dataset content retrieved with correct signature
+        assert (
+            test_dataset_of_another_user.expected_content
+            == (await dataset.list_items(signature=test_dataset_of_another_user.signature)).items
+        )
+
+    async def test_iterate_items_signature(
+        self, apify_client_async: ApifyClientAsync, test_dataset_of_another_user: TestDataset
+    ) -> None:
+        dataset = apify_client_async.dataset(dataset_id=test_dataset_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the dataset. Make sure you're passing a "
+            r'correct API token and that it has the required permissions.',
+        ):
+            [item async for item in dataset.iterate_items()]
+
+        # Dataset content retrieved with correct signature
+        assert test_dataset_of_another_user.expected_content == [
+            item async for item in dataset.iterate_items(signature=test_dataset_of_another_user.signature)
+        ]
+
+    async def test_get_items_as_bytes_signature(
+        self, apify_client_async: ApifyClientAsync, test_dataset_of_another_user: TestDataset
+    ) -> None:
+        dataset = apify_client_async.dataset(dataset_id=test_dataset_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the dataset. Make sure you're passing a "
+            r'correct API token and that it has the required permissions.',
+        ):
+            await dataset.get_items_as_bytes()
+
+        # Dataset content retrieved with correct signature
+        raw_data = await dataset.get_items_as_bytes(signature=test_dataset_of_another_user.signature)
+        assert test_dataset_of_another_user.expected_content == json.loads(raw_data.decode('utf-8'))

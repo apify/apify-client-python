@@ -1,5 +1,7 @@
+import dataclasses
 import secrets
 import string
+from typing import Any
 
 import pytest
 
@@ -24,3 +26,20 @@ parametrized_api_urls = pytest.mark.parametrize(
         ('http://10.0.88.214:8010', None),
     ],
 )
+
+
+@dataclasses.dataclass
+class TestStorage:
+    id: str
+    signature: str
+
+
+@dataclasses.dataclass
+class TestDataset(TestStorage):
+    expected_content: list
+
+
+@dataclasses.dataclass
+class TestKvs(TestStorage):
+    expected_content: dict[str, Any]
+    keys_signature: dict[str, str]

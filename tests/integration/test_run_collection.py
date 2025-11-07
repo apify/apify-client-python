@@ -20,9 +20,9 @@ class TestRunCollectionSync:
     def setup_runs(self, apify_client: ApifyClient) -> None:
         self.created_runs = []
 
-        successfull_run = apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call()
-        if successfull_run is not None:
-            self.created_runs.append(successfull_run)
+        successful_run = apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call()
+        if successful_run is not None:
+            self.created_runs.append(successful_run)
 
         timed_out_run = apify_client.actor(self.APIFY_HELLO_WORLD_ACTOR).call(timeout_secs=1)
         if timed_out_run is not None:

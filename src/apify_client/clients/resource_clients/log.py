@@ -38,7 +38,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
-            raw: If true, the log will include formating. For example, coloring character sequences.
+            raw: If true, the log will include formatting. For example, coloring character sequences.
 
         Returns:
             The retrieved log, or None, if it does not exist.
@@ -63,7 +63,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
-            raw: If true, the log will include formating. For example, coloring character sequences.
+            raw: If true, the log will include formatting. For example, coloring character sequences.
 
         Returns:
             The retrieved log as raw bytes, or None, if it does not exist.
@@ -89,7 +89,7 @@ class LogClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
-            raw: If true, the log will include formating. For example, coloring character sequences.
+            raw: If true, the log will include formatting. For example, coloring character sequences.
 
         Returns:
             The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
@@ -125,7 +125,7 @@ class LogClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
-            raw: If true, the log will include formating. For example, coloring character sequences.
+            raw: If true, the log will include formatting. For example, coloring character sequences.
 
         Returns:
             The retrieved log, or None, if it does not exist.
@@ -150,7 +150,7 @@ class LogClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
-            raw: If true, the log will include formating. For example, coloring character sequences.
+            raw: If true, the log will include formatting. For example, coloring character sequences.
 
         Returns:
             The retrieved log as raw bytes, or None, if it does not exist.
@@ -176,7 +176,7 @@ class LogClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
-            raw: If true, the log will include formating. For example, coloring character sequences.
+            raw: If true, the log will include formatting. For example, coloring character sequences.
 
         Returns:
             The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.

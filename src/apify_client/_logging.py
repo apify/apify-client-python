@@ -155,16 +155,16 @@ def create_redirect_logger(
 
 
 class RedirectLogFormatter(logging.Formatter):
-    """Formater applied to default redirect logger."""
+    """Formatter applied to default redirect logger."""
 
     def format(self, record: logging.LogRecord) -> str:
         """Format the log by prepending logger name to the original message.
 
         Args:
-            record: Log record to be formated.
+            record: Log record to be formatted.
 
         Returns:
-            Formated log message.
+            Formatted log message.
         """
-        formated_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL}'
-        return f'{formated_logger_name} -> {record.msg}'
+        formatted_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL}'
+        return f'{formatted_logger_name} -> {record.msg}'

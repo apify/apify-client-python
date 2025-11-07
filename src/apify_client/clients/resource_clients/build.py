@@ -64,7 +64,7 @@ class BuildClient(ActorJobBaseClient):
             wait_secs: How long does the client wait for build to finish. None for indefinite.
 
         Returns:
-            The Actor build data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
+            The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return self._wait_for_finish(wait_secs=wait_secs)
@@ -140,7 +140,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
             wait_secs: How long does the client wait for build to finish. None for indefinite.
 
         Returns:
-            The Actor build data. If the status on the object is not one of the terminal statuses (SUCEEDED, FAILED,
+            The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         return await self._wait_for_finish(wait_secs=wait_secs)

@@ -267,7 +267,7 @@ async def test_actor_call_redirect_logs_to_default_logger_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         await actor_client.call()
 
-    # Ensure expected handler and formater
+    # Ensure expected handler and formatter
     assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
     assert isinstance(logger.handlers[0], logging.StreamHandler)
 
@@ -294,7 +294,7 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         actor_client.call()
 
-    # Ensure expected handler and formater
+    # Ensure expected handler and formatter
     assert isinstance(logger.handlers[0].formatter, RedirectLogFormatter)
     assert isinstance(logger.handlers[0], logging.StreamHandler)
 

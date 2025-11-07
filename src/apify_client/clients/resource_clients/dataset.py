@@ -85,6 +85,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
         view: str | None = None,
+        signature: str | None = None,
     ) -> ListPage:
         """List the items of the dataset.
 
@@ -116,6 +117,7 @@ class DatasetClient(ResourceClient):
                 the # character.
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
+            signature: Signature used to access the items.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
@@ -132,6 +134,7 @@ class DatasetClient(ResourceClient):
             skipHidden=skip_hidden,
             flatten=flatten,
             view=view,
+            signature=signature,
         )
 
         response = self.http_client.call(
@@ -169,6 +172,7 @@ class DatasetClient(ResourceClient):
         unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
+        signature: str | None = None,
     ) -> Iterator[dict]:
         """Iterate over the items in the dataset.
 
@@ -198,6 +202,7 @@ class DatasetClient(ResourceClient):
                 contain less items than the limit value.
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
+            signature: Signature used to access the items.
 
         Yields:
             An item from the dataset.
@@ -227,6 +232,7 @@ class DatasetClient(ResourceClient):
                 unwind=unwind,
                 skip_empty=skip_empty,
                 skip_hidden=skip_hidden,
+                signature=signature,
             )
 
             yield from current_items_page.items
@@ -256,6 +262,7 @@ class DatasetClient(ResourceClient):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        signature: str | None = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -300,6 +307,7 @@ class DatasetClient(ResourceClient):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            signature: Signature used to access the items.
 
         Returns:
             The dataset items as raw bytes.
@@ -327,6 +335,7 @@ class DatasetClient(ResourceClient):
             xml_root=xml_root,
             xml_row=xml_row,
             flatten=flatten,
+            signature=signature,
         )
 
     def get_items_as_bytes(
@@ -348,6 +357,7 @@ class DatasetClient(ResourceClient):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        signature: str | None = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -390,6 +400,7 @@ class DatasetClient(ResourceClient):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            signature: Signature used to access the items.
 
         Returns:
             The dataset items as raw bytes.
@@ -411,6 +422,7 @@ class DatasetClient(ResourceClient):
             xmlRoot=xml_root,
             xmlRow=xml_row,
             flatten=flatten,
+            signature=signature,
         )
 
         response = self.http_client.call(
@@ -440,6 +452,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
+        signature: str | None = None,
     ) -> Iterator[impit.Response]:
         """Retrieve the items in the dataset as a stream.
 
@@ -481,6 +494,7 @@ class DatasetClient(ResourceClient):
             xml_root: Overrides default root element name of xml output. By default the root element is items.
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            signature: Signature used to access the items.
 
         Returns:
             The dataset items as a context-managed streaming `Response`.
@@ -503,6 +517,7 @@ class DatasetClient(ResourceClient):
                 skipHidden=skip_hidden,
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
+                signature=signature,
             )
 
             response = self.http_client.call(
@@ -683,6 +698,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
         view: str | None = None,
+        signature: str | None = None,
     ) -> ListPage:
         """List the items of the dataset.
 
@@ -714,6 +730,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 the # character.
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
+            signature: Signature used to access the items.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
@@ -730,6 +747,7 @@ class DatasetClientAsync(ResourceClientAsync):
             skipHidden=skip_hidden,
             flatten=flatten,
             view=view,
+            signature=signature,
         )
 
         response = await self.http_client.call(
@@ -767,6 +785,7 @@ class DatasetClientAsync(ResourceClientAsync):
         unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
+        signature: str | None = None,
     ) -> AsyncIterator[dict]:
         """Iterate over the items in the dataset.
 
@@ -796,6 +815,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 contain less items than the limit value.
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
+            signature: Signature used to access the items.
 
         Yields:
             An item from the dataset.
@@ -825,6 +845,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 unwind=unwind,
                 skip_empty=skip_empty,
                 skip_hidden=skip_hidden,
+                signature=signature,
             )
 
             for item in current_items_page.items:
@@ -855,6 +876,7 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        signature: str | None = None,
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -897,6 +919,7 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            signature: Signature used to access the items.
 
         Returns:
             The dataset items as raw bytes.
@@ -918,6 +941,7 @@ class DatasetClientAsync(ResourceClientAsync):
             xmlRoot=xml_root,
             xmlRow=xml_row,
             flatten=flatten,
+            signature=signature,
         )
 
         response = await self.http_client.call(
@@ -947,6 +971,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
+        signature: str | None = None,
     ) -> AsyncIterator[impit.Response]:
         """Retrieve the items in the dataset as a stream.
 
@@ -988,6 +1013,7 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_root: Overrides default root element name of xml output. By default the root element is items.
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            signature: Signature used to access the items.
 
         Returns:
             The dataset items as a context-managed streaming `Response`.
@@ -1010,6 +1036,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 skipHidden=skip_hidden,
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
+                signature=signature,
             )
 
             response = await self.http_client.call(

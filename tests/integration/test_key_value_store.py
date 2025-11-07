@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from unittest import mock
 from unittest.mock import Mock
 
@@ -7,10 +8,10 @@ import impit
 import pytest
 from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
-from integration.integration_test_utils import parametrized_api_urls, random_resource_name
-
+from .integration_test_utils import TestKvs, parametrized_api_urls, random_resource_name
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.client import DEFAULT_API_URL
+from apify_client.errors import ApifyApiError
 
 MOCKED_ID = 'someID'
 
@@ -122,6 +123,77 @@ class TestKeyValueStoreSync:
                 f'records/{key}{expected_signature}'
             )
 
+    def test_list_keys_signature(self, apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+        kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            kvs.list_keys()
+
+        # Kvs content retrieved with correct signature
+        raw_items = kvs.list_keys(signature=test_kvs_of_another_user.signature)['items']
+
+        assert set(test_kvs_of_another_user.expected_content) == {item['key'] for item in raw_items}
+
+    def test_get_record_signature(self, apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+        key = 'key1'
+        kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            kvs.get_record(key=key)
+
+        # Kvs content retrieved with correct signature
+        record = kvs.get_record(key=key, signature=test_kvs_of_another_user.keys_signature[key])
+        assert record
+        assert test_kvs_of_another_user.expected_content[key] == record['value']
+
+    def test_get_record_as_bytes_signature(self, apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+        key = 'key1'
+        kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            kvs.get_record_as_bytes(key=key)
+
+        # Kvs content retrieved with correct signature
+        item = kvs.get_record_as_bytes(key=key, signature=test_kvs_of_another_user.keys_signature[key])
+        assert item
+        assert test_kvs_of_another_user.expected_content[key] == json.loads(item['value'].decode('utf-8'))
+
+    def test_stream_record_signature(self, apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+        key = 'key1'
+        kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with (
+            pytest.raises(
+                ApifyApiError,
+                match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+                r' API token and that it has the required permissions.',
+            ),
+            kvs.stream_record(key=key),
+        ):
+            pass
+
+        # Kvs content retrieved with correct signature
+        with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:
+            assert stream
+            value = json.loads(stream['value'].content.decode('utf-8'))
+        assert test_kvs_of_another_user.expected_content[key] == value
+
 
 class TestKeyValueStoreAsync:
     async def test_key_value_store_should_create_expiring_keys_public_url_with_params(
@@ -209,3 +281,80 @@ class TestKeyValueStoreAsync:
                 f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
                 f'records/{key}{expected_signature}'
             )
+
+    async def test_list_keys_signature(
+        self, apify_client_async: ApifyClientAsync, test_kvs_of_another_user: TestKvs
+    ) -> None:
+        kvs = apify_client_async.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            await kvs.list_keys()
+
+        # Kvs content retrieved with correct signature
+        raw_items = (await kvs.list_keys(signature=test_kvs_of_another_user.signature))['items']
+
+        assert set(test_kvs_of_another_user.expected_content) == {item['key'] for item in raw_items}
+
+    async def test_get_record_signature(
+        self, apify_client_async: ApifyClientAsync, test_kvs_of_another_user: TestKvs
+    ) -> None:
+        key = 'key1'
+        kvs = apify_client_async.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            await kvs.get_record(key=key)
+
+        # Kvs content retrieved with correct signature
+        record = await kvs.get_record(key=key, signature=test_kvs_of_another_user.keys_signature[key])
+        assert record
+        assert test_kvs_of_another_user.expected_content[key] == record['value']
+
+    async def test_get_record_as_bytes_signature(
+        self, apify_client_async: ApifyClientAsync, test_kvs_of_another_user: TestKvs
+    ) -> None:
+        key = 'key1'
+        kvs = apify_client_async.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            await kvs.get_record_as_bytes(key=key)
+
+        # Kvs content retrieved with correct signature
+        item = await kvs.get_record_as_bytes(key=key, signature=test_kvs_of_another_user.keys_signature[key])
+        assert item
+        assert test_kvs_of_another_user.expected_content[key] == json.loads(item['value'].decode('utf-8'))
+
+    async def test_stream_record_signature(
+        self, apify_client_async: ApifyClientAsync, test_kvs_of_another_user: TestKvs
+    ) -> None:
+        key = 'key1'
+        kvs = apify_client_async.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+
+        # Permission error without valid signature
+        with pytest.raises(
+            ApifyApiError,
+            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
+            r' API token and that it has the required permissions.',
+        ):
+            async with kvs.stream_record(key=key):
+                pass
+
+        # Kvs content retrieved with correct signature
+        async with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:
+            assert stream
+            value = json.loads(stream['value'].content.decode('utf-8'))
+        assert test_kvs_of_another_user.expected_content[key] == value

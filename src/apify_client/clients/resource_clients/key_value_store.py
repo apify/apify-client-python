@@ -77,6 +77,7 @@ class KeyValueStoreClient(ResourceClient):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
+        signature: str | None = None,
     ) -> dict:
         """List the keys in the key-value store.
 
@@ -87,6 +88,7 @@ class KeyValueStoreClient(ResourceClient):
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
+            signature: Signature used to access the items.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
@@ -96,6 +98,7 @@ class KeyValueStoreClient(ResourceClient):
             exclusiveStartKey=exclusive_start_key,
             collection=collection,
             prefix=prefix,
+            signature=signature,
         )
 
         response = self.http_client.call(
@@ -107,13 +110,14 @@ class KeyValueStoreClient(ResourceClient):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    def get_record(self, key: str) -> dict | None:
+    def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
+            signature: Signature used to access the items.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -122,7 +126,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(),
+                params=self._params(signature=signature),
             )
 
             return {
@@ -161,13 +165,14 @@ class KeyValueStoreClient(ResourceClient):
 
         return response.status_code == HTTPStatus.OK
 
-    def get_record_as_bytes(self, key: str) -> dict | None:
+    def get_record_as_bytes(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
+            signature: Signature used to access the items.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -176,7 +181,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(),
+                params=self._params(signature=signature),
             )
 
             return {
@@ -191,13 +196,14 @@ class KeyValueStoreClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream_record(self, key: str) -> Iterator[dict | None]:
+    def stream_record(self, key: str, signature: str | None = None) -> Iterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
+            signature: Signature used to access the items.
 
         Returns:
             The requested record as a context-managed streaming Response, or None, if the record does not exist.
@@ -207,7 +213,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(),
+                params=self._params(signature=signature),
                 stream=True,
             )
 
@@ -395,6 +401,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
+        signature: str | None = None,
     ) -> dict:
         """List the keys in the key-value store.
 
@@ -405,6 +412,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
+            signature: Signature used to access the items.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
@@ -414,6 +422,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             exclusiveStartKey=exclusive_start_key,
             collection=collection,
             prefix=prefix,
+            signature=signature,
         )
 
         response = await self.http_client.call(
@@ -425,13 +434,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return parse_date_fields(pluck_data(response.json()))
 
-    async def get_record(self, key: str) -> dict | None:
+    async def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
+            signature: Signature used to access the items.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -440,7 +450,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(),
+                params=self._params(signature=signature),
             )
 
             return {
@@ -479,13 +489,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return response.status_code == HTTPStatus.OK
 
-    async def get_record_as_bytes(self, key: str) -> dict | None:
+    async def get_record_as_bytes(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
+            signature: Signature used to access the items.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -494,7 +505,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(),
+                params=self._params(signature=signature),
             )
 
             return {
@@ -509,13 +520,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream_record(self, key: str) -> AsyncIterator[dict | None]:
+    async def stream_record(self, key: str, signature: str | None = None) -> AsyncIterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
 
         Args:
             key: Key of the record to retrieve.
+            signature: Signature used to access the items.
 
         Returns:
             The requested record as a context-managed streaming Response, or None, if the record does not exist.
@@ -525,7 +537,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(),
+                params=self._params(signature=signature),
                 stream=True,
             )
 

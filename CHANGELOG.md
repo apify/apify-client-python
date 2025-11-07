@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Add support for Python 3.14 ([#520](https://github.com/apify/apify-client-python/pull/520)) ([68ebbd9](https://github.com/apify/apify-client-python/commit/68ebbd9162f076a20a4a02dd1ebe0dac7ece696a)) by [@vdusek](https://github.com/vdusek)
+- Add signature arguments for dataset and kvs methods ([#530](https://github.com/apify/apify-client-python/pull/530)) ([10d1e45](https://github.com/apify/apify-client-python/commit/10d1e45c727cd0cc9324dca70755d8fd61c67f74)) by [@Pijukatel](https://github.com/Pijukatel), closes [#517](https://github.com/apify/apify-client-python/issues/517)
 
 
 <!-- git-cliff-unreleased-end -->

@@ -42,22 +42,22 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "dycw-pytest-only~=2.1.0",
+    "dycw-pytest-only<3.0.0",
     "griffe",
-    "mypy~=1.18.1",
-    "pre-commit~=4.3.0",
-    "pydoc-markdown~=4.8.0",
-    "pytest-asyncio~=1.2.0",
-    "pytest-cov~=7.0.0",
-    "pytest-timeout~=2.4.0",
-    "pytest-xdist~=3.8.0",
-    "pytest~=8.4.0",
-    "pytest-httpserver~=1.1.0",
-    "redbaron~=0.9.0",
+    "mypy~=1.18.0",
+    "pre-commit<5.0.0",
+    "pydoc-markdown<5.0.0",
+    "pytest-asyncio<2.0.0",
+    "pytest-cov<8.0.0",
+    "pytest-timeout<3.0.0",
+    "pytest-xdist<4.0.0",
+    "pytest<9.0.0",
+    "pytest-httpserver<2.0.0",
+    "redbaron<1.0.0",
     "ruff~=0.14.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
-    "types-colorama~=0.4.15.20240106",
-    "werkzeug~=3.1.0", # Werkzeug is used by pytest-httpserver
+    "types-colorama<0.5.0",
+    "werkzeug<4.0.0", # Werkzeug is used by pytest-httpserver
 ]
 
 [tool.hatch.build.targets.wheel]

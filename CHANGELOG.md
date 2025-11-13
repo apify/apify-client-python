@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.2.2 - **not yet released**
+## [2.3.0](https://github.com/apify/apify-client-python/releases/tag/v2.3.0) (2025-11-13)
 
 ### 🚀 Features
 
@@ -15,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - Update impit to fix rare `JSONDecodeError` ([#536](https://github.com/apify/apify-client-python/pull/536)) ([c0b9096](https://github.com/apify/apify-client-python/commit/c0b90967a085307f08e455c860f990f824ce87e2)) by [@Pijukatel](https://github.com/Pijukatel)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.2.1](https://github.com/apify/apify-client-python/releases/tag/v2.2.1) (2025-10-20)
 
 ### 🐛 Bug Fixes

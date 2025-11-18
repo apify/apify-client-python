@@ -105,8 +105,11 @@ class TaskClient(ResourceClient):
             name: Name of the task.
             build: Actor build to run. It can be either a build tag or build number. By default, the run uses
                 the build specified in the task settings (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
-                you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -172,8 +175,11 @@ class TaskClient(ResourceClient):
             task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
-                per result, you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -235,8 +241,11 @@ class TaskClient(ResourceClient):
             task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
-                you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -373,8 +382,11 @@ class TaskClientAsync(ResourceClientAsync):
             name: Name of the task.
             build: Actor build to run. It can be either a build tag or build number. By default, the run uses
                 the build specified in the task settings (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
-                you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -440,8 +452,15 @@ class TaskClientAsync(ResourceClientAsync):
             task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
-                per result, you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
+            max_total_charge_usd: Specifies the maximum cost of the Actor run. This parameter is
+                used only for pay-per-event Actors. It allows you to limit the amount
+                charged to your subscription. You can access the maximum cost in your
+                Actor by using the `ACTOR_MAX_TOTAL_CHARGE_USD` environment variable.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
@@ -503,8 +522,11 @@ class TaskClientAsync(ResourceClientAsync):
             task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
-                you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified

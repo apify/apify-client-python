@@ -177,8 +177,11 @@ class RunClient(ActorJobBaseClient):
                 uses the same memory limit as before.
             timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
                 same timeout as before.
-            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
-                resurrected run uses the same limit as before. Limit can be only increased.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
             restart_on_error: Determines whether the resurrected run will be restarted if it fails.
@@ -502,8 +505,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
                 uses the same memory limit as before.
             timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
                 same timeout as before.
-            max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
-                resurrected run uses the same limit as before. Limit can be only increased.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             max_total_charge_usd: Maximum cost for the resurrected pay-per-event run in USD. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
             restart_on_error: Determines whether the resurrected run will be restarted if it fails.

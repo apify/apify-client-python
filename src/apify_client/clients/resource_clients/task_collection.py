@@ -67,8 +67,11 @@ class TaskCollectionClient(ResourceCollectionClient):
                 the build specified in the task settings (typically latest).
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
-                is charged per result, you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
@@ -164,8 +167,11 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
                 the build specified in the task settings (typically latest).
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
-                is charged per result, you will not be charged for more results than the given limit.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
             timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with

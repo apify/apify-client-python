@@ -239,9 +239,15 @@ class ActorClient(ResourceClient):
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
-                per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
+            max_total_charge_usd: Specifies the maximum cost of the Actor run. This parameter is
+                used only for pay-per-event Actors. It allows you to limit the amount
+                charged to your subscription. You can access the maximum cost in your
+                Actor by using the `ACTOR_MAX_TOTAL_CHARGE_USD` environment variable.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -314,9 +320,15 @@ class ActorClient(ResourceClient):
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
-                per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
+            max_total_charge_usd: Specifies the maximum cost of the Actor run. This parameter is
+                used only for pay-per-event Actors. It allows you to limit the amount
+                charged to your subscription. You can access the maximum cost in your
+                Actor by using the `ACTOR_MAX_TOTAL_CHARGE_USD` environment variable.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -659,9 +671,15 @@ class ActorClientAsync(ResourceClientAsync):
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
-                per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
+            max_total_charge_usd: Specifies the maximum cost of the Actor run. This parameter is
+                used only for pay-per-event Actors. It allows you to limit the amount
+                charged to your subscription. You can access the maximum cost in your
+                Actor by using the `ACTOR_MAX_TOTAL_CHARGE_USD` environment variable.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -734,9 +752,15 @@ class ActorClientAsync(ResourceClientAsync):
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
-            max_items: Maximum number of results that will be returned by this run. If the Actor is charged
-                per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_items: Specifies the maximum number of dataset items that will be charged for pay-per-result Actors.
+                This does NOT guarantee that the Actor will return only this many items.
+                It only ensures you won't be charged for more than this number of items.
+                Only works for pay-per-result Actors.
+                Value can be accessed in the actor run using `ACTOR_MAX_PAID_DATASET_ITEMS` environment variable.
+            max_total_charge_usd: Specifies the maximum cost of the Actor run. This parameter is
+                used only for pay-per-event Actors. It allows you to limit the amount
+                charged to your subscription. You can access the maximum cost in your
+                Actor by using the `ACTOR_MAX_TOTAL_CHARGE_USD` environment variable.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit

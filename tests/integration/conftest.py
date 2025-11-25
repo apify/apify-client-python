@@ -1,3 +1,4 @@
+# type:ignore #noqa:PGH003
 import json
 import os
 import secrets
@@ -10,6 +11,7 @@ from .integration_test_utils import TestDataset, TestKvs
 from apify_client import ApifyClient, ApifyClientAsync
 
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
+TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'
 API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
 
@@ -30,15 +32,16 @@ def api_token() -> str:
 @pytest.fixture(scope='session')
 def api_token_2() -> str:
     """API token for the second test user for storage permission tests."""
-    second_user_env_var = 'APIFY_TEST_USER_PYTHON_SDK_API_TOKEN'
-    token = os.getenv(second_user_env_var)
+    token = os.getenv(TOKEN_ENV_VAR_2)
     if not token:
-        raise RuntimeError(f'{second_user_env_var} environment variable is missing, cannot run permission tests!')
+        raise RuntimeError(f'{TOKEN_ENV_VAR_2} environment variable is missing, cannot run permission tests!')
     return token
 
 
 @pytest.fixture
 def apify_client(api_token: str) -> ApifyClient:
+    client = ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR))
+    raise Exception(client.user().get()['id'])  # noqa:TRY002
     return ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR))
 
 

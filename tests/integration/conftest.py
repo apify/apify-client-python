@@ -1,4 +1,3 @@
-# type:ignore #noqa:PGH003
 import json
 import os
 import secrets
@@ -40,8 +39,6 @@ def api_token_2() -> str:
 
 @pytest.fixture
 def apify_client(api_token: str) -> ApifyClient:
-    client = ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR))
-    raise Exception(client.user().get()['id'])  # noqa:TRY002
     return ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR))
 
 

@@ -78,6 +78,9 @@ We have integration tests which build and run Actors using the Python SDK on the
 you need to set the `APIFY_TEST_USER_API_TOKEN` environment variable to the API token of the Apify user you want to
 use for the tests, and then start them with `make integration-tests`.
 
+For subset of integration tests another token is needed `APIFY_TEST_USER_2_API_TOKEN`. Such tests are testing
+the storage restricted access and thus need two user accounts.
+
 If you want to run the integration tests on a different environment than the main Apify Platform, you need to set
 the `APIFY_INTEGRATION_TESTS_API_URL` environment variable to the right URL to the Apify API you want to use.
 

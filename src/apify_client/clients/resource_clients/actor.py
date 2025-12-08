@@ -565,6 +565,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 
@@ -600,6 +601,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
             pricing_infos: A list of objects that describes the pricing of the Actor.
+            actor_permission_level: The permission level of the Actor on Apify platform.
 
         Returns:
             The updated Actor.
@@ -629,6 +631,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
             pricing_infos=pricing_infos,
+            actor_permission_level=actor_permission_level,
         )
 
         return await self._update(filter_out_none_values_recursively(actor_representation))

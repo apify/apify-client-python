@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.actor import get_actor_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class ActorCollectionClient(ResourceCollectionClient):
@@ -142,7 +142,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         my: bool | None = None,
@@ -150,7 +150,8 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPage[dict]:
+        chunk_size: int | None = None,
+    ) -> ListPageProtocol[dict]:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -165,7 +166,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return await self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        return self._list_paginated(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by, chunk_size=chunk_size)
 
     async def create(
         self,

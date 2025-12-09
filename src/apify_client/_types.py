@@ -33,7 +33,7 @@ class ListPage(Generic[T]):
     """Whether the listing is descending or not."""
 
     def __init__(self, data: dict) -> None:
-        """Initialize a ListPage instance from the API response data."""
+        """Initialize a new instance."""
         self.items = data.get('items', [])
         self.offset = data.get('offset', 0)
         self.limit = data.get('limit', 0)

@@ -24,7 +24,7 @@ class ListPage(Generic[T]):
     """The limit on the number of returned objects offset specified in the API call."""
 
     limit: int
-    """The offset of the first object specified in the API call"""
+    """The offset of the first object specified in the API call."""
 
     total: int
     """Total number of objects matching the API call criteria."""
@@ -32,7 +32,7 @@ class ListPage(Generic[T]):
     desc: bool
     """Whether the listing is descending or not."""
 
-    def __init__(self: ListPage, data: dict) -> None:
+    def __init__(self, data: dict) -> None:
         """Initialize a ListPage instance from the API response data."""
         self.items = data.get('items', [])
         self.offset = data.get('offset', 0)

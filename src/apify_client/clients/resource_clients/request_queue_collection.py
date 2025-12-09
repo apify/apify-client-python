@@ -6,7 +6,7 @@ from apify_client._models import RequestQueue, RequestQueueShort
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client._types import ListPage
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):

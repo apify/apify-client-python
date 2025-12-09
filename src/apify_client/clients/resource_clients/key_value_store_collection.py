@@ -7,7 +7,7 @@ from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client._types import ListPage
 
 
 class KeyValueStoreCollectionClient(ResourceCollectionClient):

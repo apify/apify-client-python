@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from apify_shared.consts import ActorJobStatus
 
-from apify_client._utils import catch_not_found_or_throw, parse_date_fields, pluck_data
+from apify_client._utils import catch_not_found_or_throw, pluck_data
 from apify_client.clients.base.resource_client import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -37,7 +37,7 @@ class ActorJobBaseClient(ResourceClient):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(pluck_data(response.json()))
+                job = pluck_data(response.json())
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -68,7 +68,7 @@ class ActorJobBaseClient(ResourceClient):
             method='POST',
             params=self._params(gracefully=gracefully),
         )
-        return parse_date_fields(pluck_data(response.json()))
+        return pluck_data(response.json())
 
 
 class ActorJobBaseClientAsync(ResourceClientAsync):
@@ -91,7 +91,7 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = parse_date_fields(pluck_data(response.json()))
+                job = pluck_data(response.json())
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
@@ -122,4 +122,4 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
             method='POST',
             params=self._params(gracefully=gracefully),
         )
-        return parse_date_fields(pluck_data(response.json()))
+        return pluck_data(response.json())

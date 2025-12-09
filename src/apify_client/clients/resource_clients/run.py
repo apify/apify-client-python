@@ -13,7 +13,6 @@ from apify_client._models import Run
 from apify_client._utils import (
     encode_key_value_store_record_value,
     filter_out_none_values_recursively,
-    parse_date_fields,
     pluck_data,
     to_safe_id,
 )
@@ -156,7 +155,7 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     def resurrect(
@@ -208,7 +207,7 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     def reboot(self) -> Run:
@@ -223,7 +222,7 @@ class RunClient(ActorJobBaseClient):
             url=self._url('reboot'),
             method='POST',
         )
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     def dataset(self) -> DatasetClient:
@@ -488,7 +487,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     async def resurrect(
@@ -540,7 +539,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     async def reboot(self) -> Run:
@@ -555,7 +554,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             url=self._url('reboot'),
             method='POST',
         )
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     def dataset(self) -> DatasetClientAsync:

@@ -6,7 +6,6 @@ from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, U
 from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
-    parse_date_fields,
     pluck_data,
 )
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
@@ -60,7 +59,7 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = parse_date_fields(pluck_data(response.json()))
+            data = pluck_data(response.json())
             return MonthlyUsage.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
@@ -85,7 +84,7 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = parse_date_fields(pluck_data(response.json()))
+            data = pluck_data(response.json())
             return AccountLimits.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
@@ -160,7 +159,7 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = parse_date_fields(pluck_data(response.json()))
+            data = pluck_data(response.json())
             return MonthlyUsage.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
@@ -185,7 +184,7 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = parse_date_fields(pluck_data(response.json()))
+            data = pluck_data(response.json())
             return AccountLimits.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:

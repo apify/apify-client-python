@@ -7,7 +7,6 @@ from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
-    parse_date_fields,
     pluck_data,
 )
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
@@ -152,7 +151,7 @@ class WebhookClient(ResourceClient):
                 params=self._params(),
             )
 
-            result = parse_date_fields(pluck_data(response.json()))
+            result = pluck_data(response.json())
             return WebhookDispatch.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:
@@ -265,7 +264,7 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            result = parse_date_fields(pluck_data(response.json()))
+            result = pluck_data(response.json())
             return WebhookDispatch.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:

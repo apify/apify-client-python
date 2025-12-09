@@ -8,7 +8,6 @@ from apify_client._utils import (
     encode_webhook_list_to_base64,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
-    parse_date_fields,
     pluck_data,
 )
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
@@ -214,7 +213,7 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     def call(
@@ -485,7 +484,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        result = parse_date_fields(pluck_data(response.json()))
+        result = pluck_data(response.json())
         return Run.model_validate(result)
 
     async def call(

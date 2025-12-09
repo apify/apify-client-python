@@ -9,6 +9,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from apify_client._logging import create_redirect_logger
+from apify_client._models import Run
 from apify_client._utils import (
     encode_key_value_store_record_value,
     filter_out_none_values_recursively,
@@ -43,7 +44,7 @@ class RunClient(ActorJobBaseClient):
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
@@ -51,7 +52,8 @@ class RunClient(ActorJobBaseClient):
         Returns:
             The retrieved Actor run data.
         """
-        return self._get()
+        result = self._get()
+        return Run.model_validate(result) if result is not None else None
 
     def update(
         self,
@@ -59,7 +61,7 @@ class RunClient(ActorJobBaseClient):
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
         general_access: RunGeneralAccess | None = None,
-    ) -> dict:
+    ) -> Run:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -78,7 +80,8 @@ class RunClient(ActorJobBaseClient):
             'generalAccess': general_access,
         }
 
-        return self._update(filter_out_none_values_recursively(updated_fields))
+        result = self._update(filter_out_none_values_recursively(updated_fields))
+        return Run.model_validate(result)
 
     def delete(self) -> None:
         """Delete the run.
@@ -87,7 +90,7 @@ class RunClient(ActorJobBaseClient):
         """
         return self._delete()
 
-    def abort(self, *, gracefully: bool | None = None) -> dict:
+    def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -100,9 +103,10 @@ class RunClient(ActorJobBaseClient):
         Returns:
             The data of the aborted Actor run.
         """
-        return self._abort(gracefully=gracefully)
+        result = self._abort(gracefully=gracefully)
+        return Run.model_validate(result)
 
-    def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
+    def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
@@ -112,7 +116,8 @@ class RunClient(ActorJobBaseClient):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        return self._wait_for_finish(wait_secs=wait_secs)
+        result = self._wait_for_finish(wait_secs=wait_secs)
+        return Run.model_validate(result) if result is not None else None
 
     def metamorph(
         self,
@@ -121,7 +126,7 @@ class RunClient(ActorJobBaseClient):
         target_actor_build: str | None = None,
         run_input: Any = None,
         content_type: str | None = None,
-    ) -> dict:
+    ) -> Run:
         """Transform an Actor run into a run of another Actor with a new input.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run
@@ -151,7 +156,8 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     def resurrect(
         self,
@@ -162,7 +168,7 @@ class RunClient(ActorJobBaseClient):
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
-    ) -> dict:
+    ) -> Run:
         """Resurrect a finished Actor run.
 
         Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
@@ -202,9 +208,10 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
-    def reboot(self) -> dict:
+    def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
@@ -216,7 +223,8 @@ class RunClient(ActorJobBaseClient):
             url=self._url('reboot'),
             method='POST',
         )
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -281,11 +289,11 @@ class RunClient(ActorJobBaseClient):
             `StreamedLog` instance for redirected logs.
         """
         run_data = self.get()
-        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
+        run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
-        actor_id = run_data.get('actId', '') if run_data else ''
-        actor_data = self.root_client.actor(actor_id=actor_id).get() or {}
-        actor_name = actor_data.get('name', '') if run_data else ''
+        actor_id = run_data.act_id if run_data and run_data.act_id else ''
+        actor_data = self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_name = actor_data.name if actor_data and hasattr(actor_data, 'name') and actor_data.name else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
@@ -345,11 +353,11 @@ class RunClient(ActorJobBaseClient):
             `StatusMessageWatcher` instance.
         """
         run_data = self.get()
-        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
+        run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
-        actor_id = run_data.get('actId', '') if run_data else ''
-        actor_data = self.root_client.actor(actor_id=actor_id).get() or {}
-        actor_name = actor_data.get('name', '') if run_data else ''
+        actor_id = run_data.act_id if run_data and run_data.act_id else ''
+        actor_data = self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_name = actor_data.name if actor_data and hasattr(actor_data, 'name') and actor_data.name else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
@@ -365,7 +373,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
@@ -373,7 +381,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Returns:
             The retrieved Actor run data.
         """
-        return await self._get()
+        result = await self._get()
+        return Run.model_validate(result) if result is not None else None
 
     async def update(
         self,
@@ -381,7 +390,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
         general_access: RunGeneralAccess | None = None,
-    ) -> dict:
+    ) -> Run:
         """Update the run with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/update-run
@@ -400,9 +409,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
             'generalAccess': general_access,
         }
 
-        return await self._update(filter_out_none_values_recursively(updated_fields))
+        result = await self._update(filter_out_none_values_recursively(updated_fields))
+        return Run.model_validate(result)
 
-    async def abort(self, *, gracefully: bool | None = None) -> dict:
+    async def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -415,9 +425,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Returns:
             The data of the aborted Actor run.
         """
-        return await self._abort(gracefully=gracefully)
+        result = await self._abort(gracefully=gracefully)
+        return Run.model_validate(result)
 
-    async def wait_for_finish(self, *, wait_secs: int | None = None) -> dict | None:
+    async def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
@@ -427,7 +438,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        return await self._wait_for_finish(wait_secs=wait_secs)
+        result = await self._wait_for_finish(wait_secs=wait_secs)
+        return Run.model_validate(result) if result is not None else None
 
     async def delete(self) -> None:
         """Delete the run.
@@ -443,7 +455,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         target_actor_build: str | None = None,
         run_input: Any = None,
         content_type: str | None = None,
-    ) -> dict:
+    ) -> Run:
         """Transform an Actor run into a run of another Actor with a new input.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/metamorph-run/metamorph-run
@@ -476,7 +488,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     async def resurrect(
         self,
@@ -487,7 +500,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
-    ) -> dict:
+    ) -> Run:
         """Resurrect a finished Actor run.
 
         Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
@@ -527,9 +540,10 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
-    async def reboot(self) -> dict:
+    async def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
@@ -541,7 +555,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             url=self._url('reboot'),
             method='POST',
         )
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.
@@ -608,11 +623,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
             `StreamedLog` instance for redirected logs.
         """
         run_data = await self.get()
-        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
+        run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
-        actor_id = run_data.get('actId', '') if run_data else ''
-        actor_data = await self.root_client.actor(actor_id=actor_id).get() or {}
-        actor_name = actor_data.get('name', '') if run_data else ''
+        actor_id = run_data.act_id if run_data and run_data.act_id else ''
+        actor_data = await self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_name = actor_data.name if actor_data and hasattr(actor_data, 'name') and actor_data.name else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
@@ -673,11 +688,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
             `StatusMessageWatcher` instance.
         """
         run_data = await self.get()
-        run_id = f'runId:{run_data.get("id", "")}' if run_data else ''
+        run_id = f'runId:{run_data.id}' if run_data else ''
 
-        actor_id = run_data.get('actId', '') if run_data else ''
-        actor_data = await self.root_client.actor(actor_id=actor_id).get() or {}
-        actor_name = actor_data.get('name', '') if run_data else ''
+        actor_id = run_data.act_id if run_data else ''
+        actor_data = await self.root_client.actor(actor_id=actor_id).get()
+        actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)

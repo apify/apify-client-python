@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import KeyValueStore
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
@@ -23,7 +24,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[KeyValueStore]:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -44,7 +45,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         *,
         name: str | None = None,
         schema: dict | None = None,
-    ) -> dict:
+    ) -> KeyValueStore:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store
@@ -56,7 +57,8 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        return self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        result = self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        return KeyValueStore.model_validate(result)
 
 
 class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
@@ -73,7 +75,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[KeyValueStore]:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -94,7 +96,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         *,
         name: str | None = None,
         schema: dict | None = None,
-    ) -> dict:
+    ) -> KeyValueStore:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store
@@ -106,4 +108,5 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        return await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        result = await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        return KeyValueStore.model_validate(result)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import Task, TaskShort
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.task import get_task_representation
@@ -23,7 +24,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[TaskShort]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -55,7 +56,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-    ) -> dict:
+    ) -> Task:
         """Create a new task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
@@ -104,7 +105,8 @@ class TaskCollectionClient(ResourceCollectionClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        return self._create(filter_out_none_values_recursively(task_representation))
+        result = self._create(filter_out_none_values_recursively(task_representation))
+        return Task.model_validate(result)
 
 
 class TaskCollectionClientAsync(ResourceCollectionClientAsync):
@@ -120,7 +122,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[TaskShort]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -152,7 +154,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-    ) -> dict:
+    ) -> Task:
         """Create a new task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
@@ -201,4 +203,5 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        return await self._create(filter_out_none_values_recursively(task_representation))
+        result = await self._create(filter_out_none_values_recursively(task_representation))
+        return Task.model_validate(result)

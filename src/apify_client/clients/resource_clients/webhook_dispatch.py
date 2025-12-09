@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._models import WebhookDispatch
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 
 
@@ -12,7 +13,7 @@ class WebhookDispatchClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> WebhookDispatch | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
@@ -20,7 +21,8 @@ class WebhookDispatchClient(ResourceClient):
         Returns:
             The retrieved webhook dispatch, or None if it does not exist.
         """
-        return self._get()
+        result = self._get()
+        return WebhookDispatch.model_validate(result) if result is not None else None
 
 
 class WebhookDispatchClientAsync(ResourceClientAsync):
@@ -30,7 +32,7 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> WebhookDispatch | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
@@ -38,4 +40,5 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
         Returns:
             The retrieved webhook dispatch, or None if it does not exist.
         """
-        return await self._get()
+        result = await self._get()
+        return WebhookDispatch.model_validate(result) if result is not None else None

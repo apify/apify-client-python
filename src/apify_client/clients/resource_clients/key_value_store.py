@@ -7,6 +7,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
+from apify_client._models import KeyValueStore, ListOfKeysResponse
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
@@ -34,7 +35,7 @@ class KeyValueStoreClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> KeyValueStore | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
@@ -42,9 +43,10 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        return self._get(timeout_secs=_SMALL_TIMEOUT)
+        result = self._get(timeout_secs=_SMALL_TIMEOUT)
+        return KeyValueStore.model_validate(result) if result is not None else None
 
-    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
+    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> KeyValueStore:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -61,7 +63,8 @@ class KeyValueStoreClient(ResourceClient):
             'generalAccess': general_access,
         }
 
-        return self._update(filter_out_none_values_recursively(updated_fields))
+        result = self._update(filter_out_none_values_recursively(updated_fields))
+        return KeyValueStore.model_validate(result)
 
     def delete(self) -> None:
         """Delete the key-value store.
@@ -78,7 +81,7 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
-    ) -> dict:
+    ) -> ListOfKeysResponse:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -108,7 +111,8 @@ class KeyValueStoreClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return ListOfKeysResponse.model_validate(result)
 
     def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -291,8 +295,8 @@ class KeyValueStoreClient(ResourceClient):
 
         request_params = self._params()
 
-        if metadata and 'urlSigningSecretKey' in metadata:
-            request_params['signature'] = create_hmac_signature(metadata['urlSigningSecretKey'], key)
+        if metadata and metadata.url_signing_secret_key:
+            request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
         key_public_url = urlparse(self._url(f'records/{key}', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
@@ -334,10 +338,10 @@ class KeyValueStoreClient(ResourceClient):
             prefix=prefix,
         )
 
-        if metadata and 'urlSigningSecretKey' in metadata:
+        if metadata and metadata.url_signing_secret_key:
             signature = create_storage_content_signature(
-                resource_id=metadata['id'],
-                url_signing_secret_key=metadata['urlSigningSecretKey'],
+                resource_id=metadata.id,
+                url_signing_secret_key=metadata.url_signing_secret_key,
                 expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature
@@ -358,7 +362,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> KeyValueStore | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
@@ -366,9 +370,15 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        return await self._get(timeout_secs=_SMALL_TIMEOUT)
+        result = await self._get(timeout_secs=_SMALL_TIMEOUT)
+        return KeyValueStore.model_validate(result) if result is not None else None
 
-    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
+    async def update(
+        self,
+        *,
+        name: str | None = None,
+        general_access: StorageGeneralAccess | None = None,
+    ) -> KeyValueStore:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -385,7 +395,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             'generalAccess': general_access,
         }
 
-        return await self._update(filter_out_none_values_recursively(updated_fields))
+        result = await self._update(filter_out_none_values_recursively(updated_fields))
+        return KeyValueStore.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the key-value store.
@@ -402,7 +413,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
-    ) -> dict:
+    ) -> ListOfKeysResponse:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -432,7 +443,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return ListOfKeysResponse.model_validate(result)
 
     async def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -615,8 +627,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         request_params = self._params()
 
-        if metadata and 'urlSigningSecretKey' in metadata:
-            request_params['signature'] = create_hmac_signature(metadata['urlSigningSecretKey'], key)
+        if metadata and metadata.url_signing_secret_key:
+            request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
         key_public_url = urlparse(self._url(f'records/{key}', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
@@ -660,10 +672,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             prefix=prefix,
         )
 
-        if metadata and 'urlSigningSecretKey' in metadata:
+        if metadata and metadata.url_signing_secret_key:
             signature = create_storage_content_signature(
-                resource_id=metadata['id'],
-                url_signing_secret_key=metadata['urlSigningSecretKey'],
+                resource_id=metadata.id,
+                url_signing_secret_key=metadata.url_signing_secret_key,
                 expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature

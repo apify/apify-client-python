@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import RequestQueue, RequestQueueShort
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
@@ -22,7 +23,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[RequestQueueShort]:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -38,7 +39,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str | None = None) -> dict:
+    def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
@@ -49,7 +50,8 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         Returns:
             The retrieved or newly-created request queue.
         """
-        return self._get_or_create(name=name)
+        result = self._get_or_create(name=name)
+        return RequestQueue.model_validate(result)
 
 
 class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
@@ -66,7 +68,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[RequestQueueShort]:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -82,7 +84,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         """
         return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    async def get_or_create(self, *, name: str | None = None) -> dict:
+    async def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
@@ -93,4 +95,5 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved or newly-created request queue.
         """
-        return await self._get_or_create(name=name)
+        result = await self._get_or_create(name=name)
+        return RequestQueue.model_validate(result)

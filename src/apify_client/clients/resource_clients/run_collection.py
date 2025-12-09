@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
     from apify_shared.consts import ActorJobStatus
 
+    from apify_client._models import RunShort
     from apify_client.clients.base.resource_collection_client import ListPage
 
 
@@ -29,7 +30,7 @@ class RunCollectionClient(ResourceCollectionClient):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[RunShort]:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -80,7 +81,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[RunShort]:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client

@@ -7,12 +7,9 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_storage_content_signature
 
+from apify_client._models import Dataset, GetDatasetStatisticsResponse
 from apify_client._types import ListPage
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    filter_out_none_values_recursively,
-    pluck_data,
-)
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -35,7 +32,7 @@ class DatasetClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> Dataset | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -43,9 +40,10 @@ class DatasetClient(ResourceClient):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        return self._get(timeout_secs=_SMALL_TIMEOUT)
+        result = self._get(timeout_secs=_SMALL_TIMEOUT)
+        return Dataset.model_validate(result) if result is not None else None
 
-    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
+    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -62,7 +60,8 @@ class DatasetClient(ResourceClient):
             'generalAccess': general_access,
         }
 
-        return self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        return Dataset.model_validate(result)
 
     def delete(self) -> None:
         """Delete the dataset.
@@ -558,7 +557,7 @@ class DatasetClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-    def get_statistics(self) -> dict | None:
+    def get_statistics(self) -> GetDatasetStatisticsResponse | None:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
@@ -573,7 +572,8 @@ class DatasetClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return pluck_data(response.json())
+            result = pluck_data(response.json())
+            return GetDatasetStatisticsResponse.model_validate(result) if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -625,10 +625,10 @@ class DatasetClient(ResourceClient):
             view=view,
         )
 
-        if dataset and 'urlSigningSecretKey' in dataset:
+        if dataset and dataset.url_signing_secret_key:
             signature = create_storage_content_signature(
-                resource_id=dataset['id'],
-                url_signing_secret_key=dataset['urlSigningSecretKey'],
+                resource_id=dataset.id,
+                url_signing_secret_key=dataset.url_signing_secret_key,
                 expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature
@@ -648,7 +648,7 @@ class DatasetClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> Dataset | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -656,9 +656,10 @@ class DatasetClientAsync(ResourceClientAsync):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        return await self._get(timeout_secs=_SMALL_TIMEOUT)
+        result = await self._get(timeout_secs=_SMALL_TIMEOUT)
+        return Dataset.model_validate(result) if result is not None else None
 
-    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
+    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -675,7 +676,8 @@ class DatasetClientAsync(ResourceClientAsync):
             'generalAccess': general_access,
         }
 
-        return await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        return Dataset.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the dataset.
@@ -1077,7 +1079,7 @@ class DatasetClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-    async def get_statistics(self) -> dict | None:
+    async def get_statistics(self) -> GetDatasetStatisticsResponse | None:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
@@ -1092,7 +1094,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return pluck_data(response.json())
+            result = pluck_data(response.json())
+            return GetDatasetStatisticsResponse.model_validate(result) if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -1144,10 +1147,10 @@ class DatasetClientAsync(ResourceClientAsync):
             view=view,
         )
 
-        if dataset and 'urlSigningSecretKey' in dataset:
+        if dataset and dataset.url_signing_secret_key:
             signature = create_storage_content_signature(
-                resource_id=dataset['id'],
-                url_signing_secret_key=dataset['urlSigningSecretKey'],
+                resource_id=dataset.id,
+                url_signing_secret_key=dataset.url_signing_secret_key,
                 expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
             )
             request_params['signature'] = signature

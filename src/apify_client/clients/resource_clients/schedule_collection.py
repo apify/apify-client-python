@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import GetListOfSchedulesResponseDataItems, ScheduleResponseData
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.schedule import _get_schedule_representation
@@ -23,7 +24,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[GetListOfSchedulesResponseDataItems]:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -49,7 +50,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-    ) -> dict:
+    ) -> ScheduleResponseData:
         """Create a new schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
@@ -83,7 +84,8 @@ class ScheduleCollectionClient(ResourceCollectionClient):
             title=title,
         )
 
-        return self._create(filter_out_none_values_recursively(schedule_representation))
+        result = self._create(filter_out_none_values_recursively(schedule_representation))
+        return ScheduleResponseData.model_validate(result)
 
 
 class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
@@ -99,7 +101,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[GetListOfSchedulesResponseDataItems]:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -125,7 +127,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-    ) -> dict:
+    ) -> ScheduleResponseData:
         """Create a new schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
@@ -159,4 +161,5 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
             title=title,
         )
 
-        return await self._create(filter_out_none_values_recursively(schedule_representation))
+        result = await self._create(filter_out_none_values_recursively(schedule_representation))
+        return ScheduleResponseData.model_validate(result)

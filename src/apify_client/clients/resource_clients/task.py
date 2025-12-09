@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
+from apify_client._models import Run, Task
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_webhook_list_to_base64,
@@ -70,7 +71,7 @@ class TaskClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> Task | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -78,7 +79,8 @@ class TaskClient(ResourceClient):
         Returns:
             The retrieved task.
         """
-        return self._get()
+        result = self._get()
+        return Task.model_validate(result) if result is not None else None
 
     def update(
         self,
@@ -96,7 +98,7 @@ class TaskClient(ResourceClient):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-    ) -> dict:
+    ) -> Task:
         """Update the task with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
@@ -143,7 +145,8 @@ class TaskClient(ResourceClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        return self._update(filter_out_none_values_recursively(task_representation))
+        result = self._update(filter_out_none_values_recursively(task_representation))
+        return Task.model_validate(result)
 
     def delete(self) -> None:
         """Delete the task.
@@ -163,7 +166,7 @@ class TaskClient(ResourceClient):
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-    ) -> dict:
+    ) -> Run:
         """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
@@ -211,7 +214,8 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     def call(
         self,
@@ -224,7 +228,7 @@ class TaskClient(ResourceClient):
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
-    ) -> dict | None:
+    ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -262,7 +266,7 @@ class TaskClient(ResourceClient):
             webhooks=webhooks,
         )
 
-        return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+        return self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
 
     def get_input(self) -> dict | None:
         """Retrieve the default input for this task.
@@ -338,7 +342,7 @@ class TaskClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> Task | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -346,7 +350,8 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The retrieved task.
         """
-        return await self._get()
+        result = await self._get()
+        return Task.model_validate(result) if result is not None else None
 
     async def update(
         self,
@@ -364,7 +369,7 @@ class TaskClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-    ) -> dict:
+    ) -> Task:
         """Update the task with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
@@ -411,7 +416,8 @@ class TaskClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        return await self._update(filter_out_none_values_recursively(task_representation))
+        result = await self._update(filter_out_none_values_recursively(task_representation))
+        return Task.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the task.
@@ -431,7 +437,7 @@ class TaskClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-    ) -> dict:
+    ) -> Run:
         """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
@@ -479,7 +485,8 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     async def call(
         self,
@@ -492,7 +499,7 @@ class TaskClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_secs: int | None = None,
-    ) -> dict | None:
+    ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -529,8 +536,8 @@ class TaskClientAsync(ResourceClientAsync):
             restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
-
-        return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+        run_client = self.root_client.run(started_run.id)
+        return await run_client.wait_for_finish(wait_secs=wait_secs)
 
     async def get_input(self) -> dict | None:
         """Retrieve the default input for this task.

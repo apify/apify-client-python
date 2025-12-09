@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
 from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
@@ -22,7 +23,7 @@ class UserClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'users')
         super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
@@ -32,9 +33,16 @@ class UserClient(ResourceClient):
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        return self._get()
+        result = self._get()
+        if result is None:
+            return None
+        # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
+        try:
+            return UserPrivateInfo.model_validate(result)
+        except Exception:
+            return UserPublicInfo.model_validate(result)
 
-    def monthly_usage(self) -> dict | None:
+    def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -52,14 +60,15 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(response.json()))
+            data = parse_date_fields(pluck_data(response.json()))
+            return MonthlyUsage.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
         return None
 
-    def limits(self) -> dict | None:
+    def limits(self) -> AccountLimits | None:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
@@ -76,7 +85,8 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(response.json()))
+            data = parse_date_fields(pluck_data(response.json()))
+            return AccountLimits.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -113,7 +123,7 @@ class UserClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'users')
         super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
@@ -123,9 +133,16 @@ class UserClientAsync(ResourceClientAsync):
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        return await self._get()
+        result = await self._get()
+        if result is None:
+            return None
+        # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
+        try:
+            return UserPrivateInfo.model_validate(result)
+        except Exception:
+            return UserPublicInfo.model_validate(result)
 
-    async def monthly_usage(self) -> dict | None:
+    async def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -143,14 +160,15 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(response.json()))
+            data = parse_date_fields(pluck_data(response.json()))
+            return MonthlyUsage.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
         return None
 
-    async def limits(self) -> dict | None:
+    async def limits(self) -> AccountLimits | None:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
@@ -167,7 +185,8 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return parse_date_fields(pluck_data(response.json()))
+            data = parse_date_fields(pluck_data(response.json()))
+            return AccountLimits.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

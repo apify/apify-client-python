@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import Webhook, WebhookShort
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.webhook import get_webhook_representation
@@ -25,7 +26,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[WebhookShort]:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -54,7 +55,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         do_not_retry: bool | None = None,
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
-    ) -> dict:
+    ) -> Webhook:
         """Create a new webhook.
 
         You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
@@ -93,7 +94,8 @@ class WebhookCollectionClient(ResourceCollectionClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return self._create(filter_out_none_values_recursively(webhook_representation))
+        result = self._create(filter_out_none_values_recursively(webhook_representation))
+        return Webhook.model_validate(result)
 
 
 class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
@@ -109,7 +111,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[WebhookShort]:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -138,7 +140,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         do_not_retry: bool | None = None,
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
-    ) -> dict:
+    ) -> Webhook:
         """Create a new webhook.
 
         You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
@@ -177,4 +179,5 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return await self._create(filter_out_none_values_recursively(webhook_representation))
+        result = await self._create(filter_out_none_values_recursively(webhook_representation))
+        return Webhook.model_validate(result)

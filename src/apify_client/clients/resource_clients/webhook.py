@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import Webhook, WebhookDispatch
 from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
@@ -66,7 +67,7 @@ class WebhookClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> Webhook | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -74,7 +75,8 @@ class WebhookClient(ResourceClient):
         Returns:
             The retrieved webhook, or None if it does not exist.
         """
-        return self._get()
+        result = self._get()
+        return Webhook.model_validate(result) if result is not None else None
 
     def update(
         self,
@@ -89,7 +91,7 @@ class WebhookClient(ResourceClient):
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
-    ) -> dict:
+    ) -> Webhook:
         """Update the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
@@ -123,7 +125,8 @@ class WebhookClient(ResourceClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return self._update(filter_out_none_values_recursively(webhook_representation))
+        result = self._update(filter_out_none_values_recursively(webhook_representation))
+        return Webhook.model_validate(result)
 
     def delete(self) -> None:
         """Delete the webhook.
@@ -132,7 +135,7 @@ class WebhookClient(ResourceClient):
         """
         return self._delete()
 
-    def test(self) -> dict | None:
+    def test(self) -> WebhookDispatch | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -149,7 +152,8 @@ class WebhookClient(ResourceClient):
                 params=self._params(),
             )
 
-            return parse_date_fields(pluck_data(response.json()))
+            result = parse_date_fields(pluck_data(response.json()))
+            return WebhookDispatch.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -176,7 +180,7 @@ class WebhookClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> Webhook | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -184,7 +188,8 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             The retrieved webhook, or None if it does not exist.
         """
-        return await self._get()
+        result = await self._get()
+        return Webhook.model_validate(result) if result is not None else None
 
     async def update(
         self,
@@ -199,7 +204,7 @@ class WebhookClientAsync(ResourceClientAsync):
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
-    ) -> dict:
+    ) -> Webhook:
         """Update the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
@@ -233,7 +238,8 @@ class WebhookClientAsync(ResourceClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        return await self._update(filter_out_none_values_recursively(webhook_representation))
+        result = await self._update(filter_out_none_values_recursively(webhook_representation))
+        return Webhook.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the webhook.
@@ -242,7 +248,7 @@ class WebhookClientAsync(ResourceClientAsync):
         """
         return await self._delete()
 
-    async def test(self) -> dict | None:
+    async def test(self) -> WebhookDispatch | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -259,7 +265,8 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            return parse_date_fields(pluck_data(response.json()))
+            result = parse_date_fields(pluck_data(response.json()))
+            return WebhookDispatch.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

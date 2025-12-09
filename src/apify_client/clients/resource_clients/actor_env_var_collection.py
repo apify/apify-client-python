@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import EnvVar
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.actor_env_var import get_actor_env_var_representation
@@ -17,7 +18,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage[dict]:
+    def list(self) -> ListPage[EnvVar]:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -33,7 +34,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         is_secret: bool | None = None,
         name: str,
         value: str,
-    ) -> dict:
+    ) -> EnvVar:
         """Create a new actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/create-environment-variable
@@ -52,7 +53,8 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
             value=value,
         )
 
-        return self._create(filter_out_none_values_recursively(actor_env_var_representation))
+        result = self._create(filter_out_none_values_recursively(actor_env_var_representation))
+        return EnvVar.model_validate(result)
 
 
 class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
@@ -62,7 +64,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self) -> ListPage[dict]:
+    async def list(self) -> ListPage[EnvVar]:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -78,7 +80,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         is_secret: bool | None = None,
         name: str,
         value: str,
-    ) -> dict:
+    ) -> EnvVar:
         """Create a new actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/create-environment-variable
@@ -97,4 +99,5 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
             value=value,
         )
 
-        return await self._create(filter_out_none_values_recursively(actor_env_var_representation))
+        result = await self._create(filter_out_none_values_recursively(actor_env_var_representation))
+        return EnvVar.model_validate(result)

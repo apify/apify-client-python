@@ -9,6 +9,16 @@ from typing import TYPE_CHECKING, Any, TypedDict
 
 from more_itertools import constrained_batches
 
+from apify_client._models import (
+    BatchOperationResponse,
+    GetHeadAndLockResponse,
+    GetHeadResponse,
+    ListRequestsResponse,
+    ProlongRequestLockResponse,
+    RequestOperationInfo,
+    RequestQueue,
+    RequestQueueItems,
+)
 from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
@@ -63,7 +73,7 @@ class RequestQueueClient(ResourceClient):
         super().__init__(*args, resource_path=resource_path, **kwargs)
         self.client_key = client_key
 
-    def get(self) -> dict | None:
+    def get(self) -> RequestQueue | None:
         """Retrieve the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
@@ -71,9 +81,10 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        return self._get(timeout_secs=_SMALL_TIMEOUT)
+        result = self._get(timeout_secs=_SMALL_TIMEOUT)
+        return RequestQueue.model_validate(result) if result is not None else None
 
-    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
+    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> RequestQueue:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -90,7 +101,8 @@ class RequestQueueClient(ResourceClient):
             'generalAccess': general_access,
         }
 
-        return self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        return RequestQueue.model_validate(result)
 
     def delete(self) -> None:
         """Delete the request queue.
@@ -99,7 +111,7 @@ class RequestQueueClient(ResourceClient):
         """
         return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    def list_head(self, *, limit: int | None = None) -> dict:
+    def list_head(self, *, limit: int | None = None) -> GetHeadResponse:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -119,9 +131,10 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return GetHeadResponse.model_validate(result)
 
-    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> dict:
+    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> GetHeadAndLockResponse:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -142,9 +155,10 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return GetHeadAndLockResponse.model_validate(result)
 
-    def add_request(self, request: dict, *, forefront: bool | None = None) -> dict:
+    def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
@@ -166,9 +180,10 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return RequestOperationInfo.model_validate(result)
 
-    def get_request(self, request_id: str) -> dict | None:
+    def get_request(self, request_id: str) -> RequestQueueItems | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -186,14 +201,15 @@ class RequestQueueClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return parse_date_fields(pluck_data(response.json()))
+            result = parse_date_fields(pluck_data(response.json()))
+            return RequestQueueItems.model_validate(result)
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
         return None
 
-    def update_request(self, request: dict, *, forefront: bool | None = None) -> dict:
+    def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
@@ -217,7 +233,8 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return RequestOperationInfo.model_validate(result)
 
     def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -244,7 +261,7 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool | None = None,
         lock_secs: int,
-    ) -> dict:
+    ) -> ProlongRequestLockResponse:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -263,7 +280,8 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return ProlongRequestLockResponse.model_validate(result)
 
     def delete_request_lock(self, request_id: str, *, forefront: bool | None = None) -> None:
         """Delete the lock on a request.
@@ -361,7 +379,7 @@ class RequestQueueClient(ResourceClient):
             'unprocessedRequests': unprocessed_requests,
         }
 
-    def batch_delete_requests(self, requests: list[dict]) -> dict:
+    def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResponse:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -379,14 +397,15 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return BatchOperationResponse.model_validate(result)
 
     def list_requests(
         self,
         *,
         limit: int | None = None,
         exclusive_start_id: str | None = None,
-    ) -> dict:
+    ) -> ListRequestsResponse:
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -404,15 +423,16 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return ListRequestsResponse.model_validate(result)
 
-    def unlock_requests(self: RequestQueueClient) -> dict:
+    def unlock_requests(self: RequestQueueClient) -> BatchOperationResponse:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
 
         Returns:
-            dict: Result of the unlock operation
+            BatchOperationResponse: Result of the unlock operation
         """
         request_params = self._params(clientKey=self.client_key)
 
@@ -422,7 +442,8 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return BatchOperationResponse.model_validate(result)
 
 
 class RequestQueueClientAsync(ResourceClientAsync):
@@ -443,7 +464,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         super().__init__(*args, resource_path=resource_path, **kwargs)
         self.client_key = client_key
 
-    async def get(self) -> dict | None:
+    async def get(self) -> RequestQueue | None:
         """Retrieve the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
@@ -451,9 +472,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        return await self._get(timeout_secs=_SMALL_TIMEOUT)
+        result = await self._get(timeout_secs=_SMALL_TIMEOUT)
+        return RequestQueue.model_validate(result) if result is not None else None
 
-    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> dict:
+    async def update(
+        self,
+        *,
+        name: str | None = None,
+        general_access: StorageGeneralAccess | None = None,
+    ) -> RequestQueue:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -470,7 +497,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
             'generalAccess': general_access,
         }
 
-        return await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        return RequestQueue.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the request queue.
@@ -479,7 +507,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    async def list_head(self, *, limit: int | None = None) -> dict:
+    async def list_head(self, *, limit: int | None = None) -> GetHeadResponse:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -499,9 +527,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return GetHeadResponse.model_validate(result)
 
-    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> dict:
+    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> GetHeadAndLockResponse:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -522,9 +551,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return GetHeadAndLockResponse.model_validate(result)
 
-    async def add_request(self, request: dict, *, forefront: bool | None = None) -> dict:
+    async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
@@ -546,9 +576,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return RequestOperationInfo.model_validate(result)
 
-    async def get_request(self, request_id: str) -> dict | None:
+    async def get_request(self, request_id: str) -> RequestQueueItems | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -566,14 +597,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            return parse_date_fields(pluck_data(response.json()))
+            result = parse_date_fields(pluck_data(response.json()))
+            return RequestQueueItems.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
         return None
 
-    async def update_request(self, request: dict, *, forefront: bool | None = None) -> dict:
+    async def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
@@ -597,7 +629,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return RequestOperationInfo.model_validate(result)
 
     async def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -622,7 +655,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool | None = None,
         lock_secs: int,
-    ) -> dict:
+    ) -> ProlongRequestLockResponse:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -641,7 +674,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return ProlongRequestLockResponse.model_validate(result)
 
     async def delete_request_lock(
         self,
@@ -790,7 +824,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             'unprocessedRequests': unprocessed_requests,
         }
 
-    async def batch_delete_requests(self, requests: list[dict]) -> dict:
+    async def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResponse:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -807,14 +841,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
             json=requests,
             timeout_secs=_SMALL_TIMEOUT,
         )
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return BatchOperationResponse.model_validate(result)
 
     async def list_requests(
         self,
         *,
         limit: int | None = None,
         exclusive_start_id: str | None = None,
-    ) -> dict:
+    ) -> ListRequestsResponse:
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -832,9 +867,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return ListRequestsResponse.model_validate(result)
 
-    async def unlock_requests(self: RequestQueueClientAsync) -> dict:
+    async def unlock_requests(self: RequestQueueClientAsync) -> BatchOperationResponse:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
@@ -850,4 +886,5 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return BatchOperationResponse.model_validate(result)

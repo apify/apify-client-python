@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import Version
 from apify_client._utils import filter_out_none_values_recursively, maybe_extract_enum_member_value
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.clients.resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
@@ -46,7 +47,7 @@ class ActorVersionClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> Version | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
@@ -54,7 +55,8 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The retrieved Actor version data.
         """
-        return self._get()
+        result = self._get()
+        return Version.model_validate(result) if result is not None else None
 
     def update(
         self,
@@ -67,7 +69,7 @@ class ActorVersionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-    ) -> dict:
+    ) -> Version:
         """Update the Actor version with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/update-version
@@ -102,7 +104,8 @@ class ActorVersionClient(ResourceClient):
             github_gist_url=github_gist_url,
         )
 
-        return self._update(filter_out_none_values_recursively(actor_version_representation))
+        result = self._update(filter_out_none_values_recursively(actor_version_representation))
+        return Version.model_validate(result)
 
     def delete(self) -> None:
         """Delete the Actor version.
@@ -134,7 +137,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> Version | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
@@ -142,7 +145,8 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor version data.
         """
-        return await self._get()
+        result = await self._get()
+        return Version.model_validate(result) if result is not None else None
 
     async def update(
         self,
@@ -155,7 +159,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-    ) -> dict:
+    ) -> Version:
         """Update the Actor version with specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/update-version
@@ -190,7 +194,8 @@ class ActorVersionClientAsync(ResourceClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        return await self._update(filter_out_none_values_recursively(actor_version_representation))
+        result = await self._update(filter_out_none_values_recursively(actor_version_representation))
+        return Version.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the Actor version.

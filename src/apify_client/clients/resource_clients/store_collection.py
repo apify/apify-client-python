@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._models import ActorShort
     from apify_client.clients.base.resource_collection_client import ListPage
 
 
@@ -25,7 +26,7 @@ class StoreCollectionClient(ResourceCollectionClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[ActorShort]:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -71,7 +72,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[ActorShort]:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store

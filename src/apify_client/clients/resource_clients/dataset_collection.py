@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import Dataset, DatasetListItem
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
@@ -23,7 +24,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[DatasetListItem]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -39,7 +40,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         """
         return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
-    def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> dict:
+    def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
@@ -51,7 +52,8 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             The retrieved or newly-created dataset.
         """
-        return self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        result = self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        return Dataset.model_validate(result)
 
 
 class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
@@ -68,7 +70,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPage[DatasetListItem]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -89,7 +91,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         *,
         name: str | None = None,
         schema: dict | None = None,
-    ) -> dict:
+    ) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
@@ -101,4 +103,5 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved or newly-created dataset.
         """
-        return await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        result = await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        return Dataset.model_validate(result)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._models import ScheduleInvoked, ScheduleResponseData
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data_as_list
 from apify_client.clients.base import ResourceClient, ResourceClientAsync
 from apify_client.errors import ApifyApiError
@@ -37,7 +38,7 @@ class ScheduleClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> ScheduleResponseData | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
@@ -45,7 +46,8 @@ class ScheduleClient(ResourceClient):
         Returns:
             The retrieved schedule.
         """
-        return self._get()
+        result = self._get()
+        return ScheduleResponseData.model_validate(result) if result is not None else None
 
     def update(
         self,
@@ -58,7 +60,7 @@ class ScheduleClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-    ) -> dict:
+    ) -> ScheduleResponseData:
         """Update the schedule with specified fields.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
@@ -89,7 +91,8 @@ class ScheduleClient(ResourceClient):
             title=title,
         )
 
-        return self._update(filter_out_none_values_recursively(schedule_representation))
+        result = self._update(filter_out_none_values_recursively(schedule_representation))
+        return ScheduleResponseData.model_validate(result)
 
     def delete(self) -> None:
         """Delete the schedule.
@@ -98,7 +101,7 @@ class ScheduleClient(ResourceClient):
         """
         self._delete()
 
-    def get_log(self) -> list | None:
+    def get_log(self) -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -112,7 +115,8 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            return pluck_data_as_list(response.json())
+            data = pluck_data_as_list(response.json())
+            return [ScheduleInvoked.model_validate(item) for item in data] if data else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -126,7 +130,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> ScheduleResponseData | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
@@ -134,7 +138,8 @@ class ScheduleClientAsync(ResourceClientAsync):
         Returns:
             The retrieved schedule.
         """
-        return await self._get()
+        result = await self._get()
+        return ScheduleResponseData.model_validate(result) if result is not None else None
 
     async def update(
         self,
@@ -147,7 +152,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-    ) -> dict:
+    ) -> ScheduleResponseData:
         """Update the schedule with specified fields.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/update-schedule
@@ -178,7 +183,8 @@ class ScheduleClientAsync(ResourceClientAsync):
             title=title,
         )
 
-        return await self._update(filter_out_none_values_recursively(schedule_representation))
+        result = await self._update(filter_out_none_values_recursively(schedule_representation))
+        return ScheduleResponseData.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the schedule.
@@ -187,7 +193,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         """
         await self._delete()
 
-    async def get_log(self) -> list | None:
+    async def get_log(self) -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -201,7 +207,8 @@ class ScheduleClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            return pluck_data_as_list(response.json())
+            data = pluck_data_as_list(response.json())
+            return [ScheduleInvoked.model_validate(item) for item in data] if data else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

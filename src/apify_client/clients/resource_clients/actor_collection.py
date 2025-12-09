@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from apify_client._models import Actor, ActorShort
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.actor import get_actor_representation
@@ -25,7 +26,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPage[dict]:
+    ) -> ListPage[ActorShort]:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -68,7 +69,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-    ) -> dict:
+    ) -> Actor:
         """Create a new Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
@@ -132,7 +133,8 @@ class ActorCollectionClient(ResourceCollectionClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        return self._create(filter_out_none_values_recursively(actor_representation))
+        result = self._create(filter_out_none_values_recursively(actor_representation))
+        return Actor.model_validate(result)
 
 
 class ActorCollectionClientAsync(ResourceCollectionClientAsync):
@@ -150,7 +152,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPage[dict]:
+    ) -> ListPage[ActorShort]:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -193,7 +195,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         actor_standby_idle_timeout_secs: int | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-    ) -> dict:
+    ) -> Actor:
         """Create a new Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
@@ -257,4 +259,5 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        return await self._create(filter_out_none_values_recursively(actor_representation))
+        result = await self._create(filter_out_none_values_recursively(actor_representation))
+        return Actor.model_validate(result)

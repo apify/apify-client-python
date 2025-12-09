@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from apify_client._models import Actor, Build, Run
 from apify_client._utils import (
     encode_key_value_store_record_value,
     encode_webhook_list_to_base64,
@@ -105,7 +106,7 @@ class ActorClient(ResourceClient):
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def get(self) -> dict | None:
+    def get(self) -> Actor | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -113,7 +114,8 @@ class ActorClient(ResourceClient):
         Returns:
             The retrieved Actor.
         """
-        return self._get()
+        result = self._get()
+        return Actor.model_validate(result) if result is not None else None
 
     def update(
         self,
@@ -143,7 +145,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
-    ) -> dict:
+    ) -> Actor:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -211,7 +213,8 @@ class ActorClient(ResourceClient):
             actor_permission_level=actor_permission_level,
         )
 
-        return self._update(filter_out_none_values_recursively(actor_representation))
+        result = self._update(filter_out_none_values_recursively(actor_representation))
+        return Actor.model_validate(result)
 
     def delete(self) -> None:
         """Delete the Actor.
@@ -234,7 +237,7 @@ class ActorClient(ResourceClient):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-    ) -> dict:
+    ) -> Run:
         """Start the Actor and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
@@ -290,7 +293,8 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     def call(
         self,
@@ -307,7 +311,7 @@ class ActorClient(ResourceClient):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_secs: int | None = None,
         logger: Logger | None | Literal['default'] = 'default',
-    ) -> dict | None:
+    ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -356,15 +360,15 @@ class ActorClient(ResourceClient):
             force_permission_level=force_permission_level,
         )
         if not logger:
-            return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+            return self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
 
-        run_client = self.root_client.run(run_id=started_run['id'])
+        run_client = self.root_client.run(run_id=started_run.id)
 
         if logger == 'default':
             logger = None
 
         with run_client.get_status_message_watcher(to_logger=logger), run_client.get_streamed_log(to_logger=logger):
-            return self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+            return self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
 
     def build(
         self,
@@ -374,7 +378,7 @@ class ActorClient(ResourceClient):
         tag: str | None = None,
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
-    ) -> dict:
+    ) -> Build:
         """Build the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor
@@ -408,7 +412,8 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Build.model_validate(result)
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -528,7 +533,7 @@ class ActorClientAsync(ResourceClientAsync):
         resource_path = kwargs.pop('resource_path', 'acts')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> dict | None:
+    async def get(self) -> Actor | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -536,7 +541,8 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor.
         """
-        return await self._get()
+        result = await self._get()
+        return Actor.model_validate(result) if result is not None else None
 
     async def update(
         self,
@@ -566,7 +572,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
-    ) -> dict:
+    ) -> Actor:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -634,7 +640,8 @@ class ActorClientAsync(ResourceClientAsync):
             actor_permission_level=actor_permission_level,
         )
 
-        return await self._update(filter_out_none_values_recursively(actor_representation))
+        result = await self._update(filter_out_none_values_recursively(actor_representation))
+        return Actor.model_validate(result)
 
     async def delete(self) -> None:
         """Delete the Actor.
@@ -657,7 +664,7 @@ class ActorClientAsync(ResourceClientAsync):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-    ) -> dict:
+    ) -> Run:
         """Start the Actor and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
@@ -713,7 +720,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Run.model_validate(result)
 
     async def call(
         self,
@@ -730,7 +738,7 @@ class ActorClientAsync(ResourceClientAsync):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_secs: int | None = None,
         logger: Logger | None | Literal['default'] = 'default',
-    ) -> dict | None:
+    ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
         It waits indefinitely, unless the wait_secs argument is provided.
@@ -780,9 +788,9 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         if not logger:
-            return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+            return await self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
 
-        run_client = self.root_client.run(run_id=started_run['id'])
+        run_client = self.root_client.run(run_id=started_run.id)
 
         if logger == 'default':
             logger = None
@@ -791,7 +799,7 @@ class ActorClientAsync(ResourceClientAsync):
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 
         async with status_redirector, streamed_log:
-            return await self.root_client.run(started_run['id']).wait_for_finish(wait_secs=wait_secs)
+            return await self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
 
     async def build(
         self,
@@ -801,7 +809,7 @@ class ActorClientAsync(ResourceClientAsync):
         tag: str | None = None,
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
-    ) -> dict:
+    ) -> Build:
         """Build the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/build-actor
@@ -835,7 +843,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        return parse_date_fields(pluck_data(response.json()))
+        result = parse_date_fields(pluck_data(response.json()))
+        return Build.model_validate(result)
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""

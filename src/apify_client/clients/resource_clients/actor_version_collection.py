@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._models import Version
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.actor_version import _get_actor_version_representation
@@ -19,7 +20,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage[dict]:
+    def list(self) -> ListPage[Version]:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -41,7 +42,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-    ) -> dict:
+    ) -> Version:
         """Create a new Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version
@@ -78,7 +79,8 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
             github_gist_url=github_gist_url,
         )
 
-        return self._create(filter_out_none_values_recursively(actor_version_representation))
+        result = self._create(filter_out_none_values_recursively(actor_version_representation))
+        return Version.model_validate(result)
 
 
 class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
@@ -88,7 +90,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self) -> ListPage[dict]:
+    async def list(self) -> ListPage[Version]:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -110,7 +112,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-    ) -> dict:
+    ) -> Version:
         """Create a new Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/create-version
@@ -147,4 +149,5 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        return await self._create(filter_out_none_values_recursively(actor_version_representation))
+        result = await self._create(filter_out_none_values_recursively(actor_version_representation))
+        return Version.model_validate(result)

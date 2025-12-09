@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 2.3.1 - **not yet released**
 
+### 🚀 Features
+
+- Expose `actorPermissionLevel` in Actor client ([#553](https://github.com/apify/apify-client-python/pull/553)) ([198e2ca](https://github.com/apify/apify-client-python/commit/198e2cad0d9b79a599a678285420e7dc7026ef00)) by [@stepskop](https://github.com/stepskop)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [2.3.0](https://github.com/apify/apify-client-python/releases/tag/v2.3.0) (2025-11-13)

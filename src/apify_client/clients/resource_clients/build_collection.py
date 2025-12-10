@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class BuildCollectionClient(ResourceCollectionClient):
@@ -48,13 +48,13 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-builds')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -71,4 +71,4 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved Actor builds.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable(limit=limit, offset=offset, desc=desc)

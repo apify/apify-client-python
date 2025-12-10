@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Literal
+from typing import Any, Literal, TypeAlias
 from unittest import mock
 from unittest.mock import Mock
 
@@ -9,22 +9,49 @@ from _pytest.mark import ParameterSet
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.clients import (
     ActorCollectionClient,
+    ActorCollectionClientAsync,
     BaseClient,
     BaseClientAsync,
     BuildCollectionClient,
+    BuildCollectionClientAsync,
     DatasetCollectionClient,
+    DatasetCollectionClientAsync,
     KeyValueStoreCollectionClient,
+    KeyValueStoreCollectionClientAsync,
     RequestQueueCollectionClient,
+    RequestQueueCollectionClientAsync,
+    RunCollectionClient,
+    RunCollectionClientAsync,
     ScheduleCollectionClient,
+    ScheduleCollectionClientAsync,
     StoreCollectionClient,
+    StoreCollectionClientAsync,
     TaskCollectionClient,
+    TaskCollectionClientAsync,
     WebhookCollectionClient,
+    WebhookCollectionClientAsync,
     WebhookDispatchCollectionClient,
+    WebhookDispatchCollectionClientAsync,
 )
 
-CollectionClient = (
+CollectionClientAsync: TypeAlias = (
+    ActorCollectionClientAsync
+    | BuildCollectionClientAsync
+    | RunCollectionClientAsync
+    | ScheduleCollectionClientAsync
+    | TaskCollectionClientAsync
+    | WebhookCollectionClientAsync
+    | WebhookDispatchCollectionClientAsync
+    | DatasetCollectionClientAsync
+    | KeyValueStoreCollectionClientAsync
+    | RequestQueueCollectionClientAsync
+    | StoreCollectionClientAsync
+)
+
+CollectionClient: TypeAlias = (
     ActorCollectionClient
     | BuildCollectionClient
+    | RunCollectionClient
     | ScheduleCollectionClient
     | TaskCollectionClient
     | WebhookCollectionClient
@@ -100,6 +127,7 @@ class TestCase:
 COLLECTION_CLIENTS = {
     'ActorCollectionClient',
     'BuildCollectionClient',
+    'RunCollectionClient',
     'ScheduleCollectionClient',
     'TaskCollectionClient',
     'WebhookCollectionClient',
@@ -112,7 +140,7 @@ COLLECTION_CLIENTS = {
 
 NO_OPTIONS_CLIENTS = {
     'ActorEnvVarCollectionClient',
-    'ActorVersionClient',
+    'ActorVersionCollectionClient',
 }
 
 STORAGE_CLIENTS = {
@@ -176,6 +204,7 @@ def generate_test_params(
                 client.key_value_stores(),
                 client.request_queues(),
                 client.actor('some-id').builds(),
+                client.actor('some-id').runs(),
                 client.actor('some-id').versions(),
                 client.actor('some-id').version('some-version').env_vars(),
             }
@@ -202,7 +231,7 @@ def generate_test_params(
     ('inputs', 'expected_items', 'client'), generate_test_params(client_set='collection', async_clients=True)
 )
 async def test_client_list_iterable_async(
-    client: CollectionClient, inputs: dict, expected_items: list[dict[str, int]]
+    client: CollectionClientAsync, inputs: dict, expected_items: list[dict[str, int]]
 ) -> None:
     with mock.patch.object(client.http_client, 'call', side_effect=mocked_api_pagination_logic):
         returned_items = [item async for item in client.list(**inputs)]
@@ -217,7 +246,7 @@ async def test_client_list_iterable_async(
 @pytest.mark.parametrize(
     ('inputs', 'expected_items', 'client'), generate_test_params(client_set='collection', async_clients=False)
 )
-def test_client_list_iterable(client: BaseClientAsync, inputs: dict, expected_items: list[dict[str, int]]) -> None:
+def test_client_list_iterable(client: CollectionClient, inputs: dict, expected_items: list[dict[str, int]]) -> None:
     with mock.patch.object(client.http_client, 'call', side_effect=mocked_api_pagination_logic):
         returned_items = [item for item in client.list(**inputs)]  # noqa: C416 list needed for assertion
 

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class StoreCollectionClient(ResourceCollectionClient):
@@ -61,7 +61,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
@@ -71,7 +71,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -89,7 +89,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return await self._list(
+        return self._list_iterable(
             limit=limit,
             offset=offset,
             search=search,

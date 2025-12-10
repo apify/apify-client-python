@@ -9,7 +9,7 @@ from apify_client.clients.resource_clients.webhook import get_webhook_representa
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType
 
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class WebhookCollectionClient(ResourceCollectionClient):
@@ -103,13 +103,13 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'webhooks')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -122,7 +122,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable(limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

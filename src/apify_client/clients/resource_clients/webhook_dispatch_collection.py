@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class WebhookDispatchCollectionClient(ResourceCollectionClient):
@@ -44,13 +44,13 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -63,4 +63,4 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable(limit=limit, offset=offset, desc=desc)

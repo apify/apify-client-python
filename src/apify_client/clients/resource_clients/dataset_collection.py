@@ -6,7 +6,7 @@ from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
@@ -61,14 +61,14 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'datasets')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -82,7 +82,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available datasets matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list_iterable(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self,

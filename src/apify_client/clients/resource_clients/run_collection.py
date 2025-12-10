@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from apify_shared.consts import ActorJobStatus
 
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
 
 
 class RunCollectionClient(ResourceCollectionClient):
@@ -71,7 +71,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'actor-runs')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
@@ -80,7 +80,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -105,7 +105,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         else:
             status_param = maybe_extract_enum_member_value(status)
 
-        return await self._list(
+        return self._list_iterable(
             limit=limit,
             offset=offset,
             desc=desc,

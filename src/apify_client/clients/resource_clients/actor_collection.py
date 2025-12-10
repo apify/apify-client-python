@@ -150,7 +150,6 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-        chunk_size: int | None = None,
     ) -> ListPageProtocol[dict]:
         """List the Actors the user has created or used.
 
@@ -166,7 +165,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return self._list_paginated(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by, chunk_size=chunk_size)
+        return self._list_iterable(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
 
     async def create(
         self,

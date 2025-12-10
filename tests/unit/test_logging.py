@@ -192,7 +192,7 @@ async def test_redirected_logs_async(
 
     run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
+    with patch('apify_client._resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
         streamed_log = await run_client.get_streamed_log(from_start=log_from_start)
@@ -232,7 +232,7 @@ def test_redirected_logs_sync(
 
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
+    with patch('apify_client._resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
         streamed_log = run_client.get_streamed_log(from_start=log_from_start)

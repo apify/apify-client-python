@@ -14,7 +14,6 @@ from apify_client._utils import (
     encode_key_value_store_record_value,
     filter_out_none_values_recursively,
     maybe_parse_response,
-    pluck_data,
 )
 from apify_client.errors import ApifyApiError
 
@@ -110,7 +109,7 @@ class KeyValueStoreClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return ListOfKeysResponse.model_validate(result)
 
     def get_record(self, key: str, signature: str | None = None) -> dict | None:
@@ -442,7 +441,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return ListOfKeysResponse.model_validate(result)
 
     async def get_record(self, key: str, signature: str | None = None) -> dict | None:

@@ -25,7 +25,7 @@ from apify_client._utils import (
     encode_webhook_list_to_base64,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
-    pluck_data,
+    response_to_dict,
 )
 
 if TYPE_CHECKING:
@@ -295,8 +295,8 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        result = pluck_data(response.json())
-        return Run.model_validate(result)
+        data = response_to_dict(response)
+        return Run.model_validate(data)
 
     def call(
         self,
@@ -414,8 +414,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        result = pluck_data(response.json())
-        return Build.model_validate(result)
+        return Build.model_validate(response_to_dict(response))
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -446,7 +445,7 @@ class ActorClient(ResourceClient):
         )
 
         response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
-        data = pluck_data(response.json())
+        data = response_to_dict(response)
 
         return BuildClient(
             base_url=self.base_url,
@@ -722,8 +721,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        result = pluck_data(response.json())
-        return Run.model_validate(result)
+        data = response_to_dict(response)
+        return Run.model_validate(data)
 
     async def call(
         self,
@@ -845,8 +844,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        result = pluck_data(response.json())
-        return Build.model_validate(result)
+        data = response_to_dict(response)
+        return Build.model_validate(data)
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""
@@ -881,7 +880,7 @@ class ActorClientAsync(ResourceClientAsync):
             method='GET',
             params=request_params,
         )
-        data = pluck_data(response.json())
+        data = response_to_dict(response)
 
         return BuildClientAsync(
             base_url=self.base_url,

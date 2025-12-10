@@ -23,7 +23,7 @@ from apify_client._models import (
     UnprocessedRequest,
 )
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -117,7 +117,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return GetHeadResponse.model_validate(result)
 
     def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> GetHeadAndLockResponse:
@@ -141,7 +141,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return GetHeadAndLockResponse.model_validate(result)
 
     def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
@@ -166,7 +166,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return RequestOperationInfo.model_validate(result)
 
     def get_request(self, request_id: str) -> RequestQueueItems | None:
@@ -187,7 +187,7 @@ class RequestQueueClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            result = pluck_data(response.json())
+            result = response.json()
             return RequestQueueItems.model_validate(result)
 
         except ApifyApiError as exc:
@@ -219,7 +219,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return RequestOperationInfo.model_validate(result)
 
     def delete_request(self, request_id: str) -> None:
@@ -266,7 +266,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return ProlongRequestLockResponse.model_validate(result)
 
     def delete_request_lock(self, request_id: str, *, forefront: bool | None = None) -> None:
@@ -356,7 +356,7 @@ class RequestQueueClient(ResourceClient):
                 timeout_secs=_MEDIUM_TIMEOUT,
             )
 
-            response_parsed = pluck_data(response.json())
+            response_parsed = response.json()
             processed_requests.extend(response_parsed.get('processedRequests', []))
             unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
@@ -385,7 +385,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return BatchOperationResponse.model_validate(result)
 
     def list_requests(
@@ -411,7 +411,7 @@ class RequestQueueClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return ListRequestsResponse.model_validate(result)
 
     def unlock_requests(self: RequestQueueClient) -> BatchOperationResponse:
@@ -430,7 +430,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return BatchOperationResponse.model_validate(result)
 
 
@@ -515,7 +515,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return GetHeadResponse.model_validate(result)
 
     async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> GetHeadAndLockResponse:
@@ -539,7 +539,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return GetHeadAndLockResponse.model_validate(result)
 
     async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
@@ -564,7 +564,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return RequestOperationInfo.model_validate(result)
 
     async def get_request(self, request_id: str) -> RequestQueueItems | None:
@@ -585,7 +585,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            result = pluck_data(response.json())
+            result = response.json()
             return RequestQueueItems.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:
@@ -617,7 +617,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return RequestOperationInfo.model_validate(result)
 
     async def delete_request(self, request_id: str) -> None:
@@ -662,7 +662,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return ProlongRequestLockResponse.model_validate(result)
 
     async def delete_request_lock(
@@ -719,7 +719,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     timeout_secs=_MEDIUM_TIMEOUT,
                 )
 
-                response_parsed = pluck_data(response.json())
+                response_parsed = response.json()
                 processed_requests.extend(response_parsed.get('processedRequests', []))
                 unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
 
@@ -833,7 +833,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             json=requests,
             timeout_secs=_SMALL_TIMEOUT,
         )
-        result = pluck_data(response.json())
+        result = response.json()
         return BatchOperationResponse.model_validate(result)
 
     async def list_requests(
@@ -859,7 +859,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return ListRequestsResponse.model_validate(result)
 
     async def unlock_requests(self: RequestQueueClientAsync) -> BatchOperationResponse:
@@ -878,5 +878,5 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        result = pluck_data(response.json())
+        result = response.json()
         return BatchOperationResponse.model_validate(result)

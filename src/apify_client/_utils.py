@@ -73,40 +73,42 @@ def to_safe_id(id: str) -> str:
     return id.replace('/', '~')
 
 
-def pluck_data(parsed_response: Any) -> dict:
-    """Extract the "data" field from an API response.
+def response_to_dict(response: impit.Response) -> dict:
+    """Ensure the API response is a dictionary.
 
     Args:
-        parsed_response: The parsed API response.
+        response: The parsed API response (typically from `response.json()`).
 
     Returns:
-        The value of the "data" field.
+        The response as a dictionary.
 
     Raises:
-        ValueError: If the "data" field is missing.
+        ValueError: If the response is not a dictionary.
     """
-    if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast('dict', parsed_response['data'])
+    data = response.json()
+    if isinstance(data, dict):
+        return data
 
-    raise ValueError('The "data" property is missing in the response.')
+    raise ValueError('The response is not a dictionary.')
 
 
-def pluck_data_as_list(parsed_response: Any) -> list:
-    """Extract the "data" field from an API response as a list.
+def response_to_list(response: impit.Response) -> list:
+    """Ensure the API response is a list.
 
     Args:
-        parsed_response: The parsed API response.
+        response: The parsed API response (typically from `response.json()`).
 
     Returns:
-        The value of the "data" field as a list.
+        The response as a list.
 
     Raises:
-        ValueError: If the "data" field is missing.
+        ValueError: If the response is not a list.
     """
-    if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast('list', parsed_response['data'])
+    data = response.json()
+    if isinstance(data, list):
+        return data
 
-    raise ValueError('The "data" property is missing in the response.')
+    raise ValueError('The response is not a list.')
 
 
 def retry_with_exp_backoff(

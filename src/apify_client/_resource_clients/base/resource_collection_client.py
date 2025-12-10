@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_client._resource_clients.base.base_client import BaseClient, BaseClientAsync
 from apify_client._types import ListPage
-from apify_client._utils import pluck_data
+from apify_client._utils import response_to_dict
 
 
 class ResourceCollectionClient(BaseClient):
@@ -17,7 +17,8 @@ class ResourceCollectionClient(BaseClient):
             params=self._params(**kwargs),
         )
 
-        return ListPage(pluck_data(response.json()))
+        data = response_to_dict(response)
+        return ListPage(data)
 
     def _create(self, resource: dict) -> dict:
         response = self.http_client.call(
@@ -27,7 +28,7 @@ class ResourceCollectionClient(BaseClient):
             json=resource,
         )
 
-        return pluck_data(response.json())
+        return response_to_dict(response)
 
     def _get_or_create(self, name: str | None = None, resource: dict | None = None) -> dict:
         response = self.http_client.call(
@@ -37,7 +38,7 @@ class ResourceCollectionClient(BaseClient):
             json=resource,
         )
 
-        return pluck_data(response.json())
+        return response_to_dict(response)
 
 
 class ResourceCollectionClientAsync(BaseClientAsync):
@@ -50,7 +51,8 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             params=self._params(**kwargs),
         )
 
-        return ListPage(pluck_data(response.json()))
+        data = response_to_dict(response)
+        return ListPage(data)
 
     async def _create(self, resource: dict) -> dict:
         response = await self.http_client.call(
@@ -60,7 +62,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             json=resource,
         )
 
-        return pluck_data(response.json())
+        return response_to_dict(response)
 
     async def _get_or_create(
         self,
@@ -74,4 +76,4 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             json=resource,
         )
 
-        return pluck_data(response.json())
+        return response_to_dict(response)

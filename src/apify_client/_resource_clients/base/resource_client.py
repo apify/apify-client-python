@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from apify_client._resource_clients.base.base_client import BaseClient, BaseClientAsync
-from apify_client._utils import catch_not_found_or_throw, pluck_data
+from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -16,8 +16,7 @@ class ResourceClient(BaseClient):
                 params=self._params(),
                 timeout_secs=timeout_secs,
             )
-
-            return pluck_data(response.json())
+            return response_to_dict(response)
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -33,7 +32,7 @@ class ResourceClient(BaseClient):
             timeout_secs=timeout_secs,
         )
 
-        return pluck_data(response.json())
+        return response_to_dict(response)
 
     def _delete(self, timeout_secs: int | None = None) -> None:
         try:
@@ -60,7 +59,7 @@ class ResourceClientAsync(BaseClientAsync):
                 timeout_secs=timeout_secs,
             )
 
-            return pluck_data(response.json())
+            return response_to_dict(response)
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -76,7 +75,7 @@ class ResourceClientAsync(BaseClientAsync):
             timeout_secs=timeout_secs,
         )
 
-        return pluck_data(response.json())
+        return response_to_dict(response)
 
     async def _delete(self, timeout_secs: int | None = None) -> None:
         try:

@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_client._models import ScheduleInvoked, ScheduleResponseData
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data_as_list
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_list
 from apify_client.errors import ApifyApiError
 
 
@@ -115,7 +115,7 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = pluck_data_as_list(response.json())
+            data = response_to_list(response)
             return [ScheduleInvoked.model_validate(item) for item in data] if data else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -207,7 +207,7 @@ class ScheduleClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = pluck_data_as_list(response.json())
+            data = response_to_list(response)
             return [ScheduleInvoked.model_validate(item) for item in data] if data else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

@@ -12,7 +12,6 @@ from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
-    pluck_data,
 )
 from apify_client.errors import ApifyApiError
 
@@ -151,7 +150,7 @@ class WebhookClient(ResourceClient):
                 params=self._params(),
             )
 
-            result = pluck_data(response.json())
+            result = response.json()
             return WebhookDispatch.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:
@@ -264,7 +263,7 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
 
-            result = pluck_data(response.json())
+            result = response.json()
             return WebhookDispatch.model_validate(result) if result is not None else None
 
         except ApifyApiError as exc:

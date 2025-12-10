@@ -10,7 +10,7 @@ from apify_shared.utils import create_storage_content_signature
 from apify_client._models import Dataset, GetDatasetStatisticsResponse
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._types import ListPage
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -142,7 +142,7 @@ class DatasetClient(ResourceClient):
             params=request_params,
         )
 
-        data = response.json()
+        data = response_to_dict(response)
 
         return ListPage(
             {
@@ -572,7 +572,7 @@ class DatasetClient(ResourceClient):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            result = pluck_data(response.json())
+            result = response.json()
             return GetDatasetStatisticsResponse.model_validate(result) if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -758,7 +758,7 @@ class DatasetClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        data = response.json()
+        data = response_to_dict(response)
 
         return ListPage(
             {
@@ -1094,7 +1094,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 params=self._params(),
                 timeout_secs=_SMALL_TIMEOUT,
             )
-            result = pluck_data(response.json())
+            result = response.json()
             return GetDatasetStatisticsResponse.model_validate(result) if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

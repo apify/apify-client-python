@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, pluck_data
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -55,7 +55,7 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = pluck_data(response.json())
+            data = response_to_dict(response)
             return MonthlyUsage.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
@@ -80,7 +80,7 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = pluck_data(response.json())
+            data = response_to_dict(response)
             return AccountLimits.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
@@ -155,7 +155,7 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = pluck_data(response.json())
+            data = response_to_dict(response)
             return MonthlyUsage.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:
@@ -180,7 +180,7 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = pluck_data(response.json())
+            data = response_to_dict(response)
             return AccountLimits.model_validate(data) if data is not None else None
 
         except ApifyApiError as exc:

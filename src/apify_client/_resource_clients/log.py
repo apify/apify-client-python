@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     import impit
     from typing_extensions import Self
 
+    from apify_client._models import Run
     from apify_client._resource_clients import RunClient, RunClientAsync
 
 
@@ -404,25 +405,25 @@ class StatusMessageWatcher:
         self._check_period = check_period.total_seconds()
         self._last_status_message = ''
 
-    def _log_run_data(self, run_data: dict[str, Any] | None) -> bool:
+    def _log_run_data(self, run_data: Run | None) -> bool:
         """Get relevant run data, log them if changed and return `True` if more data is expected.
 
         Args:
-            run_data: The dictionary that contains the run data.
+            run_data: The Run model that contains the run data.
 
         Returns:
               `True` if more data is expected, `False` otherwise.
         """
         if run_data is not None:
-            status = run_data.get('status', 'Unknown status')
-            status_message = run_data.get('statusMessage', '')
+            status = run_data.status if run_data.status else 'Unknown status'
+            status_message = run_data.status_message or ''
             new_status_message = f'Status: {status}, Message: {status_message}'
 
             if new_status_message != self._last_status_message:
                 self._last_status_message = new_status_message
                 self._to_logger.info(new_status_message)
 
-            return not (run_data.get('isStatusMessageTerminal', False))
+            return not (run_data.is_status_message_terminal or False)
         return True
 
 

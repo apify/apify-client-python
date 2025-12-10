@@ -125,7 +125,7 @@ class _BaseHTTPClient:
         if not params:
             return url
 
-        param_pairs: list[tuple[str, str]] = []
+        param_pairs = list[tuple[str, str]]()
         for key, value in params.items():
             if isinstance(value, list):
                 param_pairs.extend((key, str(v)) for v in value)

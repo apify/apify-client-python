@@ -59,19 +59,22 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[TestDataset]:
 
     dataset_name = f'API-test-permissions-{crypto_random_object_id()}'
     dataset = client.datasets().get_or_create(name=dataset_name)
-    dataset_client = client.dataset(dataset_id=dataset['id'])
+    dataset_client = client.dataset(dataset_id=dataset.id)
     expected_content = [{'item1': 1, 'item2': 2, 'item3': 3}, {'item1': 4, 'item2': 5, 'item3': 6}]
 
     # Push data to dataset
     dataset_client.push_items(json.dumps(expected_content))
 
+    assert dataset.url_signing_secret_key is not None
+
     # Generate signature for the test
     signature = create_storage_content_signature(
-        resource_id=dataset['id'], url_signing_secret_key=dataset['urlSigningSecretKey']
+        resource_id=dataset.id,
+        url_signing_secret_key=dataset.url_signing_secret_key,
     )
 
     yield TestDataset(
-        id=dataset['id'],
+        id=dataset.id,
         signature=signature,
         expected_content=[{'item1': 1, 'item2': 2, 'item3': 3}, {'item1': 4, 'item2': 5, 'item3': 6}],
     )
@@ -86,7 +89,7 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[TestKvs]:
 
     kvs_name = f'API-test-permissions-{crypto_random_object_id()}'
     kvs = client.key_value_stores().get_or_create(name=kvs_name)
-    kvs_client = client.key_value_store(key_value_store_id=kvs['id'])
+    kvs_client = client.key_value_store(key_value_store_id=kvs.id)
     expected_content = {'key1': 1, 'key2': 2, 'key3': 3}
 
     # Push data to kvs
@@ -95,14 +98,14 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[TestKvs]:
 
     # Generate signature for the test
     signature = create_storage_content_signature(
-        resource_id=kvs['id'], url_signing_secret_key=kvs['urlSigningSecretKey']
+        resource_id=kvs.id, url_signing_secret_key=kvs.url_signing_secret_key or ''
     )
 
     yield TestKvs(
-        id=kvs['id'],
+        id=kvs.id,
         signature=signature,
         expected_content=expected_content,
-        keys_signature={key: create_hmac_signature(kvs['urlSigningSecretKey'], key) for key in expected_content},
+        keys_signature={key: create_hmac_signature(kvs.url_signing_secret_key or '', key) for key in expected_content},
     )
 
     kvs_client.delete()

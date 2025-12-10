@@ -223,7 +223,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
     Returns:
         Base64-encoded JSON string.
     """
-    data = []
+    data = list[dict]()
     for webhook in webhooks:
         webhook_representation = {
             'eventTypes': [maybe_extract_enum_member_value(event_type) for event_type in webhook['event_types']],

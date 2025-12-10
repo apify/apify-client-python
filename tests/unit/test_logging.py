@@ -14,7 +14,7 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client.clients.resource_clients.log import StatusMessageWatcher, StreamedLog
+from apify_client._resource_clients.log import StatusMessageWatcher, StreamedLog
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

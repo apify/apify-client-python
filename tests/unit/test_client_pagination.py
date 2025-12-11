@@ -113,6 +113,7 @@ def mocked_api_pagination_logic(*_: Any, **kwargs: Any) -> dict:
 @dataclasses.dataclass
 class TestCase:
     """Class representing a single test case for pagination tests."""
+
     id: str
     inputs: dict
     expected_items: list[dict[str, int]]
@@ -154,7 +155,7 @@ STORAGE_CLIENTS = {
 
 ALL_CLIENTS = COLLECTION_CLIENTS | NO_OPTIONS_CLIENTS | STORAGE_CLIENTS
 
-TEST_CASES = {
+TEST_CASES = (
     TestCase('No options', {}, create_items(0, 2500), ALL_CLIENTS),
     TestCase('Limit', {'limit': 1100}, create_items(0, 1100), ALL_CLIENTS - NO_OPTIONS_CLIENTS),
     TestCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), ALL_CLIENTS - NO_OPTIONS_CLIENTS),
@@ -183,7 +184,7 @@ TEST_CASES = {
     ),
     TestCase('Exclusive start key', {'exclusive_start_key': 1000}, create_items(1001, 2500), {'KeyValueStoreClient'}),
     TestCase('Exclusive start id', {'exclusive_start_id': 1000}, create_items(1001, 2500), {'RequestQueueClient'}),
-}
+)
 
 
 def generate_test_params(
@@ -196,11 +197,13 @@ def generate_test_params(
 
     client = ApifyClientAsync(token='') if async_clients else ApifyClient(token='')
 
-    clients: set[BaseClient | BaseClientAsync]
+    # This is tuple instead of set because pytest-xdist
+    # https://pytest-xdist.readthedocs.io/en/stable/known-limitations.html#order-and-amount-of-test-must-be-consistent
+    clients: tuple[BaseClient | BaseClientAsync, ...]
 
     match client_set:
         case 'collection':
-            clients = {
+            clients = (
                 client.actors(),
                 client.schedules(),
                 client.tasks(),
@@ -214,13 +217,13 @@ def generate_test_params(
                 client.actor('some-id').runs(),
                 client.actor('some-id').versions(),
                 client.actor('some-id').version('some-version').env_vars(),
-            }
+            )
         case 'kvs':
-            clients = {client.key_value_store('some-id')}
+            clients = (client.key_value_store('some-id'),)
         case 'rq':
-            clients = {client.request_queue('some-id')}
+            clients = (client.request_queue('some-id'),)
         case 'dataset':
-            clients = {client.dataset('some-id')}
+            clients = (client.dataset('some-id'),)
         case _:
             raise ValueError(f'Unknown client set: {client_set}')
 

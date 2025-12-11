@@ -52,7 +52,6 @@ class ResourceCollectionClient(BaseClient):
 
         return ListPage(parse_date_fields(pluck_data(response.json())))
 
-
     def _list_iterable(self, **kwargs: Any) -> IterableListPage[T]:
         """Return object can be awaited or iterated over."""
         chunk_size = kwargs.pop('chunk_size', None)
@@ -192,7 +191,8 @@ class ListPageProtocol(Protocol[T], Iterable[T]):
     desc: bool
     """Whether the listing is descending or not"""
 
-class IterableListPage(Generic[T], ListPage[T]):
+
+class IterableListPage(ListPage[T], Generic[T]):
     """Can be called to get ListPage with items or iterated over to get individual items."""
 
     def __init__(self, list_page: ListPage[T], iterator: Iterator[T]) -> None:
@@ -208,8 +208,10 @@ class IterableListPage(Generic[T], ListPage[T]):
         """Return an iterator over the items from API, possibly doing multiple API calls."""
         return self._iterator
 
+
 class ListPageProtocolAsync(Protocol[T], AsyncIterable[T], Awaitable[ListPage[T]]):
     """Protocol for an object that can be both awaited and asynchronously iterated over."""
+
 
 class IterableListPageAsync(Generic[T]):
     """Can be awaited to get ListPage with items or asynchronously iterated over to get individual items."""

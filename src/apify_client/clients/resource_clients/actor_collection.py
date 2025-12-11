@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.actor import get_actor_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
+    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class ActorCollectionClient(ResourceCollectionClient):
@@ -25,7 +25,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -40,7 +40,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        return self._list_iterable(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
 
     def create(
         self,
@@ -150,7 +150,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPageProtocol[dict]:
+    ) -> ListPageProtocolAsync[dict]:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors

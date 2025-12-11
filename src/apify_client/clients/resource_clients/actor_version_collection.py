@@ -9,7 +9,7 @@ from apify_client.clients.resource_clients.actor_version import _get_actor_versi
 if TYPE_CHECKING:
     from apify_shared.consts import ActorSourceType
 
-    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
+    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):
@@ -19,7 +19,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage[dict]:
+    def list(self) -> ListPageProtocol[dict]:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -27,7 +27,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actor versions.
         """
-        return self._list()
+        return self._list_iterable()
 
     def create(
         self,
@@ -88,7 +88,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPageProtocol[dict]:
+    def list(self) -> ListPageProtocolAsync[dict]:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions

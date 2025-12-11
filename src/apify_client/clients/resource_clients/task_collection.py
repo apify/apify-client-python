@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.task import get_task_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
+    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class TaskCollectionClient(ResourceCollectionClient):
@@ -23,7 +23,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -36,7 +36,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable(limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -120,7 +120,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPageProtocol[dict]:
+    ) -> ListPageProtocolAsync[dict]:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks

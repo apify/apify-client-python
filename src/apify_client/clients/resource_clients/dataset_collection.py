@@ -6,7 +6,7 @@ from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage, ListPageProtocol
+    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
@@ -23,7 +23,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -37,7 +37,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available datasets matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list_iterable(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -68,7 +68,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPageProtocol[dict]:
+    ) -> ListPageProtocolAsync[dict]:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets

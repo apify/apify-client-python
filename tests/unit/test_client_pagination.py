@@ -64,6 +64,7 @@ CollectionClient: TypeAlias = (
 
 
 def create_items(start: int, end: int) -> list[dict[str, int]]:
+    """Create list of test items of specified range."""
     step = -1 if end < start else 1
     return [{'id': i, 'key': i} for i in range(start, end, step)]
 
@@ -111,6 +112,7 @@ def mocked_api_pagination_logic(*_: Any, **kwargs: Any) -> dict:
 
 @dataclasses.dataclass
 class TestCase:
+    """Class representing a single test case for pagination tests."""
     id: str
     inputs: dict
     expected_items: list[dict[str, int]]
@@ -120,6 +122,7 @@ class TestCase:
         return hash(self.id)
 
     def supports(self, client: BaseClient | BaseClientAsync) -> bool:
+        """Check whether the given client implements functionality tested by this test."""
         return client.__class__.__name__.replace('Async', '') in self.supported_clients
 
 
@@ -186,7 +189,11 @@ TEST_CASES = {
 def generate_test_params(
     client_set: Literal['collection', 'kvs', 'rq', 'dataset'], *, async_clients: bool = False
 ) -> list[ParameterSet]:
-    # Different clients support different options and thus different scenarios
+    """Generate list of ParameterSets for parametrized tests.
+
+    Different clients support different options and thus different scenarios.
+    """
+
     client = ApifyClientAsync(token='') if async_clients else ApifyClient(token='')
 
     clients: set[BaseClient | BaseClientAsync]

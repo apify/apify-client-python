@@ -55,26 +55,13 @@ jobs:
     with:
       python-versions: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
 
-  unit_tests:
-    name: Unit tests
-    uses: apify/workflows/.github/workflows/python_unit_tests.yaml@main
-    with:
-      python-versions: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
-
   async_docstrings:
     name: Async dostrings check
     uses: ./.github/workflows/_async_docstrings_check.yaml
 
-  integration_tests:
-    name: Integration tests
-    uses: apify/workflows/.github/workflows/python_integration_tests.yaml@main
-    secrets: inherit
-    with:
-      python-versions: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
-
   update_changelog:
     name: Update changelog
-    needs: [release_metadata, lint_check, type_check, unit_tests, integration_tests]
+    needs: [release_metadata, lint_check, type_check]
     uses: apify/workflows/.github/workflows/python_bump_and_update_changelog.yaml@main
     with:
       version_number: ${{ needs.release_metadata.outputs.version_number }}

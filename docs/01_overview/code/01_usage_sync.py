@@ -16,6 +16,6 @@ def main() -> None:
         return
 
     # Fetch results from the Actor run's default dataset.
-    dataset_client = apify_client.dataset(call_result['defaultDatasetId'])
+    dataset_client = apify_client.dataset(call_result.default_dataset_id)
     list_items_result = dataset_client.list_items()
     print(f'Dataset: {list_items_result}')

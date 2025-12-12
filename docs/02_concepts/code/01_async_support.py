@@ -11,7 +11,7 @@ async def main() -> None:
 
     # Start the Actor and get the run ID
     run_result = await actor_client.start()
-    run_client = apify_client.run(run_result['id'])
+    run_client = apify_client.run(run_result.id)
     log_client = run_client.log()
 
     # Stream the logs

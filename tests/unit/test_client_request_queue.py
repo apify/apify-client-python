@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import apify_client
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -43,7 +43,7 @@ async def test_batch_not_processed_raises_exception_async(httpserver: HTTPServer
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    with pytest.raises(apify_client.errors.ApifyApiError):
+    with pytest.raises(ApifyApiError):
         await rq_client.batch_add_requests(requests=requests)
 
 
@@ -60,9 +60,10 @@ async def test_batch_processed_partially_async(httpserver: HTTPServer) -> None:
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    response = await rq_client.batch_add_requests(requests=requests)
-    assert requests[0]['uniqueKey'] in {request['uniqueKey'] for request in response['processedRequests']}
-    assert response['unprocessedRequests'] == [requests[1]]
+    batch_response = await rq_client.batch_add_requests(requests=requests)
+    assert requests[0]['uniqueKey'] in {request.unique_key for request in batch_response.data.processed_requests}
+    assert len(batch_response.data.unprocessed_requests) == 1
+    assert batch_response.data.unprocessed_requests[0].unique_key == requests[1]['uniqueKey']
 
 
 @pytest.mark.usefixtures('patch_basic_url')
@@ -77,7 +78,7 @@ def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> No
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    with pytest.raises(apify_client.errors.ApifyApiError):
+    with pytest.raises(ApifyApiError):
         rq_client.batch_add_requests(requests=requests)
 
 
@@ -94,6 +95,7 @@ async def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    response = rq_client.batch_add_requests(requests=requests)
-    assert requests[0]['uniqueKey'] in {request['uniqueKey'] for request in response['processedRequests']}
-    assert response['unprocessedRequests'] == [requests[1]]
+    batch_response = rq_client.batch_add_requests(requests=requests)
+    assert requests[0]['uniqueKey'] in {request.unique_key for request in batch_response.data.processed_requests}
+    assert len(batch_response.data.unprocessed_requests) == 1
+    assert batch_response.data.unprocessed_requests[0].unique_key == requests[1]['uniqueKey']

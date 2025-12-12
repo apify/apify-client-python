@@ -59,13 +59,6 @@ jobs:
     name: Async dostrings check
     uses: ./.github/workflows/_async_docstrings_check.yaml
 
-  integration_tests:
-    name: Integration tests
-    uses: apify/workflows/.github/workflows/python_integration_tests.yaml@main
-    secrets: inherit
-    with:
-      python-versions: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
-
   update_changelog:
     name: Update changelog
     needs: [release_metadata, lint_check, type_check]

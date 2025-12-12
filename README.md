@@ -7,6 +7,9 @@
     <a href="https://pypi.org/project/apify-client/" rel="nofollow">
         <img src="https://img.shields.io/pypi/dm/apify-client" alt="PyPI - Downloads" style="max-width: 100%;">
     </a>
+    <a href="https://codecov.io/gh/apify/apify-client-python" >
+        <img src="https://codecov.io/gh/apify/apify-client-python/graph/badge.svg?token=TODO" alt="Code cov report" style="max-width: 100%;"/>
+    </a>
     <a href="https://pypi.org/project/apify-client/" rel="nofollow">
         <img src="https://img.shields.io/pypi/pyversions/apify-client" alt="PyPI - Python version" style="max-width: 100%;">
     </a>

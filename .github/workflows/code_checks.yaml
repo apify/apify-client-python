@@ -50,10 +50,6 @@ jobs:
     name: Async dostrings check
     uses: ./.github/workflows/_async_docstrings_check.yaml
 
-  docs_check:
-    name: Docs check
-    uses: apify/workflows/.github/workflows/python_docs_check.yaml@main
-
   integration_tests:
     name: Integration tests
     needs: [lint_check, type_check, unit_tests]

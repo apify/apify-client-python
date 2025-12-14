@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 20
+  NODE_VERSION: 22
   PYTHON_VERSION: 3.14
 
 jobs:
@@ -67,6 +67,8 @@ jobs:
 
       - name: Build Docusaurus docs
         run: make build-docs
+        env:
+          APIFY_SIGNING_TOKEN: ${{ secrets.APIFY_SIGNING_TOKEN }}
 
       - name: Set up GitHub Pages
         uses: actions/configure-pages@v5

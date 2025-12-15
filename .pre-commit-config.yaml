@@ -13,8 +13,8 @@ repos:
         language: system
         pass_filenames: false
 
-      - id: async-docstrings-check
-        name: Async docstrings check
+      - id: docstrings-check
+        name: Docstrings check
         entry: make check-async-docstrings
         language: system
         pass_filenames: false

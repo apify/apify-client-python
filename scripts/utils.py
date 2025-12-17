@@ -25,7 +25,7 @@ def get_current_package_version() -> str:
 # It replaces the version number on the line with the format `version = "1.2.3"`
 def set_current_package_version(version: str) -> None:
     with open(PYPROJECT_TOML_FILE_PATH, 'r+', encoding='utf-8') as pyproject_toml_file:
-        updated_pyproject_toml_file_lines = []
+        updated_pyproject_toml_file_lines = list[str]()
         version_string_found = False
         for line in pyproject_toml_file:
             line_processed = line

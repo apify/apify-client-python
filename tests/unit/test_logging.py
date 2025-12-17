@@ -14,7 +14,7 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client.clients.resource_clients.log import StatusMessageWatcher, StreamedLog
+from apify_client._resource_clients.log import StatusMessageWatcher, StreamedLog
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -82,6 +82,38 @@ class StatusResponseGenerator:
             ('Final message', ActorJobStatus.SUCCEEDED, True),
         ]
 
+    def _create_minimal_run_data(self, message: str, status: str, *, is_terminal: bool) -> dict:
+        """Create minimal valid Run data for testing."""
+        return {
+            'id': _MOCKED_RUN_ID,
+            'actId': _MOCKED_ACTOR_ID,
+            'userId': 'test_user_id',
+            'startedAt': '2019-11-30T07:34:24.202Z',
+            'finishedAt': '2019-12-12T09:30:12.202Z',
+            'status': status,
+            'statusMessage': message,
+            'isStatusMessageTerminal': is_terminal,
+            'meta': {'origin': 'WEB'},
+            'stats': {
+                'restartCount': 0,
+                'resurrectCount': 0,
+                'computeUnits': 0.1,
+            },
+            'options': {
+                'build': 'latest',
+                'timeoutSecs': 300,
+                'memoryMbytes': 1024,
+                'diskMbytes': 2048,
+            },
+            'buildId': 'test_build_id',
+            'generalAccess': 'RESTRICTED',
+            'defaultKeyValueStoreId': 'test_kvs_id',
+            'defaultDatasetId': 'test_dataset_id',
+            'defaultRequestQueueId': 'test_rq_id',
+            'buildNumber': '0.0.1',
+            'containerUrl': 'https://test.runs.apify.net',
+        }
+
     def get_response(self, _request: Request) -> Response:
         if self.current_status_index < len(self.statuses):
             message, status, is_terminal = self.statuses[self.current_status_index]
@@ -98,15 +130,7 @@ class StatusResponseGenerator:
             self.current_status_index += 1
             self.requests_for_current_status = 0
 
-        status_data = {
-            'data': {
-                'id': _MOCKED_RUN_ID,
-                'actId': _MOCKED_ACTOR_ID,
-                'status': status,
-                'statusMessage': message,
-                'isStatusMessageTerminal': is_terminal,
-            }
-        }
+        status_data = {'data': self._create_minimal_run_data(message, status, is_terminal=is_terminal)}
 
         return Response(response=json.dumps(status_data), status=200, mimetype='application/json')
 
@@ -141,12 +165,43 @@ def mock_api(httpserver: HTTPServer) -> None:
 
     # Add actor info endpoint
     httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
-        {'data': {'name': _MOCKED_ACTOR_NAME}}
+        {
+            'data': {
+                'id': _MOCKED_ACTOR_ID,
+                'userId': 'test_user_id',
+                'name': _MOCKED_ACTOR_NAME,
+                'username': 'test_user',
+                'isPublic': False,
+                'createdAt': '2019-07-08T11:27:57.401Z',
+                'modifiedAt': '2019-07-08T14:01:05.546Z',
+                'stats': {
+                    'totalBuilds': 0,
+                    'totalRuns': 0,
+                    'totalUsers': 0,
+                    'totalUsers7Days': 0,
+                    'totalUsers30Days': 0,
+                    'totalUsers90Days': 0,
+                    'totalMetamorphs': 0,
+                    'lastRunStartedAt': '2019-07-08T14:01:05.546Z',
+                },
+                'versions': [],
+                'defaultRunOptions': {
+                    'build': 'latest',
+                    'timeoutSecs': 3600,
+                    'memoryMbytes': 2048,
+                },
+                'deploymentKey': 'test_key',
+            }
+        }
     )
 
     # Add actor run creation endpoint
     httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
-        {'data': {'id': _MOCKED_RUN_ID}}
+        {
+            'data': status_generator._create_minimal_run_data(
+                'Initial message', ActorJobStatus.RUNNING, is_terminal=False
+            ),
+        }
     )
 
     httpserver.expect_request(
@@ -192,7 +247,7 @@ async def test_redirected_logs_async(
 
     run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
+    with patch('apify_client._resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
         streamed_log = await run_client.get_streamed_log(from_start=log_from_start)
@@ -203,7 +258,7 @@ async def test_redirected_logs_async(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         async with streamed_log:
             # Do stuff while the log from the other Actor is being redirected to the logs.
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(
@@ -232,7 +287,7 @@ def test_redirected_logs_sync(
 
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client.clients.resource_clients.log.datetime') as mocked_datetime:
+    with patch('apify_client._resource_clients.log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
         streamed_log = run_client.get_streamed_log(from_start=log_from_start)
@@ -242,7 +297,7 @@ def test_redirected_logs_sync(
 
     with caplog.at_level(logging.DEBUG, logger=logger_name), streamed_log:
         # Do stuff while the log from the other Actor is being redirected to the logs.
-        time.sleep(1)
+        time.sleep(2)
 
     # Ensure logs are propagated
     assert {(record.message, record.levelno) for record in caplog.records} == set(

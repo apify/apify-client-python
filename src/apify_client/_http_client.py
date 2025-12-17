@@ -14,14 +14,14 @@ from urllib.parse import urlencode
 import impit
 
 from apify_client._logging import log_context, logger_name
-from apify_client._statistics import Statistics
+from apify_client._types import Statistics
 from apify_client._utils import is_retryable_error, retry_with_exp_backoff, retry_with_exp_backoff_async
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._types import JSONSerializable
+    from apify_client._types import JsonSerializable
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -96,7 +96,7 @@ class _BaseHTTPClient:
         headers: dict | None = None,
         params: dict | None = None,
         data: Any = None,
-        json: JSONSerializable | None = None,
+        json: JsonSerializable | None = None,
     ) -> tuple[dict, dict | None, Any]:
         if json and data:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
@@ -125,7 +125,7 @@ class _BaseHTTPClient:
         if not params:
             return url
 
-        param_pairs: list[tuple[str, str]] = []
+        param_pairs = list[tuple[str, str]]()
         for key, value in params.items():
             if isinstance(value, list):
                 param_pairs.extend((key, str(v)) for v in value)
@@ -146,7 +146,7 @@ class HTTPClient(_BaseHTTPClient):
         headers: dict | None = None,
         params: dict | None = None,
         data: Any = None,
-        json: JSONSerializable | None = None,
+        json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout_secs: int | None = None,
     ) -> impit.Response:
@@ -225,7 +225,7 @@ class HTTPClientAsync(_BaseHTTPClient):
         headers: dict | None = None,
         params: dict | None = None,
         data: Any = None,
-        json: JSONSerializable | None = None,
+        json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout_secs: int | None = None,
     ) -> impit.Response:

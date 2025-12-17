@@ -64,6 +64,7 @@ dev = [
     "ty~=0.0.0",
     "types-colorama<0.5.0",
     "werkzeug<4.0.0", # Werkzeug is used by pytest-httpserver
+    "datamodel-code-generator[http,ruff]<1.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -144,6 +145,11 @@ indent-style = "space"
     "N999",   # Invalid module name
     "T201",   # print found
 ]
+"src/apify_client/_models.py" = [
+    "D",      # Everything from the pydocstyle
+    "E501",   # Line too long
+    "ERA001", # Commented-out code
+]
 
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
@@ -220,3 +226,22 @@ cwd = "website"
 [tool.poe.tasks.run-docs]
 shell = "./build_api_reference.sh && corepack enable && yarn && uv run yarn start"
 cwd = "website"
+
+# https://koxudaxi.github.io/datamodel-code-generator/
+[tool.datamodel-codegen]
+# url = "https://docs.apify.com/api/openapi.json"
+input = "../apify-docs/static/api/openapi.json"
+input_file_type = "openapi"
+output = "src/apify_client/_models.py"
+target_python_version = "3.10"
+output_model_type = "pydantic_v2.BaseModel"
+use_schema_description = true
+use_field_description = true
+use_union_operator = true
+capitalise_enum_members = true
+collapse_root_models = true
+set_default_enum_member = true
+use_annotated = true
+wrap_string_literal = true
+snake_case_field = true
+formatters = ["ruff-check", "ruff-format"]

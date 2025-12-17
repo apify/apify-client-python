@@ -26,7 +26,7 @@ class RunCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        status: ActorJobStatus | list[ActorJobStatus] | None = None,
+        status: ActorJobStatus | list[ActorJobStatus] | None = None,  # type: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
     ) -> ListPage[dict]:
@@ -77,7 +77,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        status: ActorJobStatus | list[ActorJobStatus] | None = None,
+        status: ActorJobStatus | list[ActorJobStatus] | None = None,  # type: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
     ) -> ListPage[dict]:

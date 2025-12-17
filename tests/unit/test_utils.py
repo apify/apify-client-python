@@ -7,7 +7,6 @@ from apify_shared.consts import WebhookEventType
 
 from apify_client._utils import (
     encode_webhook_list_to_base64,
-    pluck_data,
     retry_with_exp_backoff,
     retry_with_exp_backoff_async,
     to_safe_id,
@@ -18,20 +17,6 @@ def test__to_safe_id() -> None:
     assert to_safe_id('abc') == 'abc'
     assert to_safe_id('abc/def') == 'abc~def'
     assert to_safe_id('abc~def') == 'abc~def'
-
-
-def test_pluck_data() -> None:
-    # works correctly when data is present
-    assert pluck_data({'data': {}}) == {}
-    assert pluck_data({'a': 'b', 'data': {'b': 'c'}}) == {'b': 'c'}
-
-    # throws the right error when it is not
-    with pytest.raises(ValueError, match=r'The "data" property is missing in the response.'):
-        pluck_data({'a': 'b'})
-    with pytest.raises(ValueError, match=r'The "data" property is missing in the response.'):
-        pluck_data(None)
-    with pytest.raises(ValueError, match=r'The "data" property is missing in the response.'):
-        pluck_data('{"a": "b"}')
 
 
 def test__retry_with_exp_backoff() -> None:

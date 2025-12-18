@@ -41,4 +41,4 @@ def test_add_rate_limit_error_type_validation() -> None:
     """Test type validation in add_rate_limit_error."""
     stats = Statistics()
     with pytest.raises(TypeError):
-        stats.add_rate_limit_error('1')  # type: ignore[arg-type]
+        stats.add_rate_limit_error('1')  # ty: ignore[invalid-argument-type]

@@ -59,7 +59,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
         @functools.wraps(fun)
         async def async_wrapper(resource_client: _BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
-            log_context.client_method.set(fun.__qualname__)
+            log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
             log_context.resource_id.set(resource_client.resource_id)
 
             return await fun(resource_client, *args, **kwargs)
@@ -69,7 +69,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
         @functools.wraps(fun)
         async def async_generator_wrapper(resource_client: _BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
-            log_context.client_method.set(fun.__qualname__)
+            log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
             log_context.resource_id.set(resource_client.resource_id)
 
             async for item in fun(resource_client, *args, **kwargs):
@@ -80,7 +80,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
 
         @functools.wraps(fun)
         def wrapper(resource_client: _BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
-            log_context.client_method.set(fun.__qualname__)
+            log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
             log_context.resource_id.set(resource_client.resource_id)
 
             return fun(resource_client, *args, **kwargs)

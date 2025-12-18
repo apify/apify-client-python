@@ -45,7 +45,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         is_enabled: bool,
         is_exclusive: bool,
         name: str | None = None,
-        actions: list[dict] | None = None,  # type: ignore[valid-type]
+        actions: list[dict] | None = None,  # ty: ignore[invalid-type-form]
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -121,7 +121,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         is_enabled: bool,
         is_exclusive: bool,
         name: str | None = None,
-        actions: list[dict] | None = None,  # type: ignore[valid-type]
+        actions: list[dict] | None = None,  # ty: ignore[invalid-type-form]
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,

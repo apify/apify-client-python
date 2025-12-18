@@ -44,7 +44,6 @@ dependencies = [
 dev = [
     "dycw-pytest-only<3.0.0",
     "griffe",
-    "mypy~=1.19.0",
     "pre-commit<5.0.0",
     "pydoc-markdown<5.0.0",
     "pytest-asyncio<2.0.0",
@@ -56,6 +55,7 @@ dev = [
     "redbaron<1.0.0",
     "ruff~=0.14.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
+    "ty~=0.0.0",
     "types-colorama<0.5.0",
     "werkzeug<4.0.0", # Werkzeug is used by pytest-httpserver
 ]
@@ -158,29 +158,20 @@ asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
 timeout = 1200
 
-[tool.mypy]
-python_version = "3.10"
-files = ["src", "tests", "scripts", "docs", "website"]
-check_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_calls = true
-disallow_untyped_decorators = true
-disallow_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_return_any = true
-warn_unreachable = true
-warn_unused_ignores = true
-exclude = []
+[tool.ty.environment]
+python-version = "3.10"
 
-[[tool.mypy.overrides]]
-module = ["pandas"]
-ignore_missing_imports = true
-
-[tool.basedpyright]
-pythonVersion = "3.10"
-typeCheckingMode = "standard"
+[tool.ty.src]
 include = ["src", "tests", "scripts", "docs", "website"]
+
+[[tool.ty.overrides]]
+include = [
+    "docs/**/*.py",
+    "website/**/*.py",
+]
+
+[tool.ty.overrides.rules]
+unresolved-import = "ignore"
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert_never()"]

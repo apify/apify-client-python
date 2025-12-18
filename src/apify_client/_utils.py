@@ -13,7 +13,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from enum import Enum
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 import impit
 
@@ -32,7 +32,6 @@ RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-fou
 
 T = TypeVar('T')
 StopRetryingType = Callable[[], None]
-ListOrDict = TypeVar('ListOrDict', list, dict)
 
 
 def filter_out_none_values_recursively(dictionary: dict) -> dict:
@@ -63,7 +62,15 @@ def filter_out_none_values_recursively_internal(
     return result
 
 
-def parse_date_fields(data: ListOrDict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> ListOrDict:
+@overload
+def parse_date_fields(data: list, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> list: ...
+
+
+@overload
+def parse_date_fields(data: dict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> dict: ...
+
+
+def parse_date_fields(data: list | dict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> list | dict:
     """Recursively parse date fields in a list or dictionary up to the specified depth."""
     if max_depth < 0:
         return data

@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from apify_client._models import Actor, Build, Run
+from apify_client._models import (
+    Actor,
+    Build,
+    BuildActorResponse,
+    GetActorResponse,
+    Run,
+    RunResponse,
+    UpdateActorResponse,
+)
 from apify_client._resource_clients.actor_version import ActorVersionClient, ActorVersionClientAsync
 from apify_client._resource_clients.actor_version_collection import (
     ActorVersionCollectionClient,
@@ -117,7 +125,7 @@ class ActorClient(ResourceClient):
             The retrieved Actor.
         """
         result = self._get()
-        return Actor.model_validate(result) if result is not None else None
+        return GetActorResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -216,7 +224,7 @@ class ActorClient(ResourceClient):
         )
 
         result = self._update(filter_out_none_values_recursively(actor_representation))
-        return Actor.model_validate(result)
+        return UpdateActorResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the Actor.
@@ -296,7 +304,7 @@ class ActorClient(ResourceClient):
         )
 
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     def call(
         self,
@@ -414,7 +422,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return Build.model_validate(response_to_dict(response))
+        return BuildActorResponse.model_validate(response_to_dict(response)).data
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -543,7 +551,7 @@ class ActorClientAsync(ResourceClientAsync):
             The retrieved Actor.
         """
         result = await self._get()
-        return Actor.model_validate(result) if result is not None else None
+        return GetActorResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -642,7 +650,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         result = await self._update(filter_out_none_values_recursively(actor_representation))
-        return Actor.model_validate(result)
+        return UpdateActorResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the Actor.
@@ -722,7 +730,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     async def call(
         self,
@@ -845,7 +853,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         data = response_to_dict(response)
-        return Build.model_validate(data)
+        return BuildActorResponse.model_validate(data).data
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""

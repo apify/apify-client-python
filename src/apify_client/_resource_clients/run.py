@@ -9,7 +9,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from apify_client._logging import create_redirect_logger
-from apify_client._models import Run
+from apify_client._models import Run, RunResponse
 from apify_client._resource_clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
 from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
@@ -52,7 +52,7 @@ class RunClient(ActorJobBaseClient):
             The retrieved Actor run data.
         """
         result = self._get()
-        return Run.model_validate(result) if result is not None else None
+        return RunResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -381,7 +381,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             The retrieved Actor run data.
         """
         result = await self._get()
-        return Run.model_validate(result) if result is not None else None
+        return RunResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from apify_client._models import Run, Task
+from apify_client._models import Run, RunResponse, Task
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.run import RunClient, RunClientAsync
 from apify_client._resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -210,7 +210,7 @@ class TaskClient(ResourceClient):
         )
 
         result = response.json()
-        return Run.model_validate(result)
+        return RunResponse.model_validate(result).data
 
     def call(
         self,
@@ -481,7 +481,7 @@ class TaskClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return Run.model_validate(result)
+        return RunResponse.model_validate(result).data
 
     async def call(
         self,

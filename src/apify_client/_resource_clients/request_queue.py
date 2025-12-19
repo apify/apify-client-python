@@ -357,11 +357,12 @@ class RequestQueueClient(ResourceClient):
             )
 
             response_parsed = response.json()
-            processed_requests.extend(response_parsed.get('processedRequests', []))
-            unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
+            batch_response = BatchOperationResponse.model_validate(response_parsed)
+            processed_requests.extend(batch_response.data.processed_requests)
+            unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
-        return BatchOperationResponse(
-            data=Data12(
+        return BatchOperationResponse.model_construct(
+            data=Data12.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
@@ -720,15 +721,16 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 )
 
                 response_parsed = response.json()
-                processed_requests.extend(response_parsed.get('processedRequests', []))
-                unprocessed_requests.extend(response_parsed.get('unprocessedRequests', []))
+                batch_response = BatchOperationResponse.model_validate(response_parsed)
+                processed_requests.extend(batch_response.data.processed_requests)
+                unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
             finally:
                 # Mark the batch as done whether it succeeded or failed.
                 queue.task_done()
 
-        return BatchOperationResponse(
-            data=Data12(
+        return BatchOperationResponse.model_construct(
+            data=Data12.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
@@ -809,8 +811,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
             processed_requests.extend(result.data.processed_requests)
             unprocessed_requests.extend(result.data.unprocessed_requests)
 
-        return BatchOperationResponse(
-            data=Data12(
+        return BatchOperationResponse.model_construct(
+            data=Data12.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )

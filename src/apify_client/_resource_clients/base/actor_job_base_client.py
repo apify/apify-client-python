@@ -9,7 +9,7 @@ from apify_shared.consts import ActorJobStatus
 
 from apify_client._resource_clients.base.resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict
-from apify_client.errors import ApifyApiError
+from apify_client.errors import ApifyApiError, ApifyClientError
 
 DEFAULT_WAIT_FOR_FINISH_SEC = 999999
 
@@ -37,9 +37,13 @@ class ActorJobBaseClient(ResourceClient):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = response_to_dict(response)
-
+                job_response = response_to_dict(response)
+                job = job_response.get('data') if isinstance(job_response, dict) else job_response
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+
+                if not isinstance(job, dict):
+                    raise ApifyClientError('Unexpected response format received from the API.')
+
                 if ActorJobStatus(job['status']).is_terminal or (
                     wait_secs is not None and seconds_elapsed >= wait_secs
                 ):
@@ -91,7 +95,11 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                     method='GET',
                     params=self._params(waitForFinish=wait_for_finish),
                 )
-                job = response_to_dict(response)
+                job_response = response_to_dict(response)
+                job = job_response.get('data') if isinstance(job_response, dict) else job_response
+
+                if not isinstance(job, dict):
+                    raise ApifyClientError('Unexpected response format received from the API.')
 
                 seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (

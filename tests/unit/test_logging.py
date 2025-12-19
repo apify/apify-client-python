@@ -82,6 +82,37 @@ class StatusResponseGenerator:
             ('Final message', ActorJobStatus.SUCCEEDED, True),
         ]
 
+    def _create_minimal_run_data(self, message: str, status: str, *, is_terminal: bool) -> dict:
+        """Create minimal valid Run data for testing."""
+        return {
+            'id': _MOCKED_RUN_ID,
+            'actId': _MOCKED_ACTOR_ID,
+            'userId': 'test_user_id',
+            'startedAt': '2019-11-30T07:34:24.202Z',
+            'finishedAt': '2019-12-12T09:30:12.202Z',
+            'status': status,
+            'statusMessage': message,
+            'isStatusMessageTerminal': is_terminal,
+            'meta': {'origin': 'WEB'},
+            'stats': {
+                'restartCount': 0,
+                'resurrectCount': 0,
+                'computeUnits': 0.1,
+            },
+            'options': {
+                'build': 'latest',
+                'timeoutSecs': 300,
+                'memoryMbytes': 1024,
+                'diskMbytes': 2048,
+            },
+            'buildId': 'test_build_id',
+            'defaultKeyValueStoreId': 'test_kvs_id',
+            'defaultDatasetId': 'test_dataset_id',
+            'defaultRequestQueueId': 'test_rq_id',
+            'buildNumber': '0.0.1',
+            'containerUrl': 'https://test.runs.apify.net',
+        }
+
     def get_response(self, _request: Request) -> Response:
         if self.current_status_index < len(self.statuses):
             message, status, is_terminal = self.statuses[self.current_status_index]
@@ -98,15 +129,7 @@ class StatusResponseGenerator:
             self.current_status_index += 1
             self.requests_for_current_status = 0
 
-        status_data = {
-            'data': {
-                'id': _MOCKED_RUN_ID,
-                'actId': _MOCKED_ACTOR_ID,
-                'status': status,
-                'statusMessage': message,
-                'isStatusMessageTerminal': is_terminal,
-            }
-        }
+        status_data = {'data': self._create_minimal_run_data(message, status, is_terminal=is_terminal)}
 
         return Response(response=json.dumps(status_data), status=200, mimetype='application/json')
 
@@ -141,12 +164,43 @@ def mock_api(httpserver: HTTPServer) -> None:
 
     # Add actor info endpoint
     httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
-        {'data': {'name': _MOCKED_ACTOR_NAME}}
+        {
+            'data': {
+                'id': _MOCKED_ACTOR_ID,
+                'userId': 'test_user_id',
+                'name': _MOCKED_ACTOR_NAME,
+                'username': 'test_user',
+                'isPublic': False,
+                'createdAt': '2019-07-08T11:27:57.401Z',
+                'modifiedAt': '2019-07-08T14:01:05.546Z',
+                'stats': {
+                    'totalBuilds': 0,
+                    'totalRuns': 0,
+                    'totalUsers': 0,
+                    'totalUsers7Days': 0,
+                    'totalUsers30Days': 0,
+                    'totalUsers90Days': 0,
+                    'totalMetamorphs': 0,
+                    'lastRunStartedAt': '2019-07-08T14:01:05.546Z',
+                },
+                'versions': [],
+                'defaultRunOptions': {
+                    'build': 'latest',
+                    'timeoutSecs': 3600,
+                    'memoryMbytes': 2048,
+                },
+                'deploymentKey': 'test_key',
+            }
+        }
     )
 
     # Add actor run creation endpoint
     httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
-        {'data': {'id': _MOCKED_RUN_ID}}
+        {
+            'data': status_generator._create_minimal_run_data(
+                'Initial message', ActorJobStatus.RUNNING, is_terminal=False
+            ),
+        }
     )
 
     httpserver.expect_request(

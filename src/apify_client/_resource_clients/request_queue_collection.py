@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import RequestQueue, RequestQueueShort
+from apify_client._models import CreateRequestQueueResponse, RequestQueue, RequestQueueShort
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
@@ -51,7 +51,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
             The retrieved or newly-created request queue.
         """
         result = self._get_or_create(name=name)
-        return RequestQueue.model_validate(result)
+        return CreateRequestQueueResponse.model_validate(result).data
 
 
 class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
@@ -96,4 +96,4 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
             The retrieved or newly-created request queue.
         """
         result = await self._get_or_create(name=name)
-        return RequestQueue.model_validate(result)
+        return CreateRequestQueueResponse.model_validate(result).data

@@ -10,10 +10,12 @@ from typing import TYPE_CHECKING, Any
 from more_itertools import constrained_batches
 
 from apify_client._models import (
+    AddRequestResponse,
     BatchOperationResponse,
     Data12,
     GetHeadAndLockResponse,
     GetHeadResponse,
+    GetRequestQueueResponse,
     ListRequestsResponse,
     ProcessedRequest,
     ProlongRequestLockResponse,
@@ -68,7 +70,7 @@ class RequestQueueClient(ResourceClient):
             The retrieved request queue, or None, if it does not exist.
         """
         result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return RequestQueue.model_validate(result) if result is not None else None
+        return GetRequestQueueResponse.model_validate(result).data if result is not None else None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> RequestQueue:
         """Update the request queue with specified fields.
@@ -88,7 +90,7 @@ class RequestQueueClient(ResourceClient):
         }
 
         result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
-        return RequestQueue.model_validate(result)
+        return GetRequestQueueResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the request queue.
@@ -167,7 +169,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return RequestOperationInfo.model_validate(result)
+        return AddRequestResponse.model_validate(result).data
 
     def get_request(self, request_id: str) -> RequestQueueItems | None:
         """Retrieve a request from the queue.
@@ -220,7 +222,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return RequestOperationInfo.model_validate(result)
+        return AddRequestResponse.model_validate(result).data
 
     def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.
@@ -462,7 +464,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             The retrieved request queue, or None, if it does not exist.
         """
         result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return RequestQueue.model_validate(result) if result is not None else None
+        return GetRequestQueueResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -487,7 +489,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         }
 
         result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
-        return RequestQueue.model_validate(result)
+        return GetRequestQueueResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the request queue.
@@ -566,7 +568,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return RequestOperationInfo.model_validate(result)
+        return AddRequestResponse.model_validate(result).data
 
     async def get_request(self, request_id: str) -> RequestQueueItems | None:
         """Retrieve a request from the queue.
@@ -619,7 +621,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return RequestOperationInfo.model_validate(result)
+        return AddRequestResponse.model_validate(result).data
 
     async def delete_request(self, request_id: str) -> None:
         """Delete a request from the queue.

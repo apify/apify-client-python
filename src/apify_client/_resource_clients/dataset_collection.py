@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import Dataset, DatasetListItem
+from apify_client._models import Dataset, DatasetListItem, DatasetResponse
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively
 
@@ -53,7 +53,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
             The retrieved or newly-created dataset.
         """
         result = self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
-        return Dataset.model_validate(result)
+        return DatasetResponse.model_validate(result).data
 
 
 class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
@@ -104,4 +104,4 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
             The retrieved or newly-created dataset.
         """
         result = await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
-        return Dataset.model_validate(result)
+        return DatasetResponse.model_validate(result).data

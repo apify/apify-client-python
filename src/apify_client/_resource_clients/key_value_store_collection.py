@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import KeyValueStore
+from apify_client._models import CreateKeyValueStoreResponse, KeyValueStore
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively
 
@@ -58,7 +58,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
             The retrieved or newly-created key-value store.
         """
         result = self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
-        return KeyValueStore.model_validate(result)
+        return CreateKeyValueStoreResponse.model_validate(result).data
 
 
 class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
@@ -109,4 +109,4 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
             The retrieved or newly-created key-value store.
         """
         result = await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
-        return KeyValueStore.model_validate(result)
+        return CreateKeyValueStoreResponse.model_validate(result).data

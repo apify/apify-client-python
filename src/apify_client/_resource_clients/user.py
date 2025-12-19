@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
+from apify_client._models import (
+    AccountLimits,
+    GetPrivateUserDataResponse,
+    GetPublicUserDataResponse,
+    MonthlyUsage,
+    UserPrivateInfo,
+    UserPublicInfo,
+)
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
@@ -33,9 +40,9 @@ class UserClient(ResourceClient):
             return None
         # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
         try:
-            return UserPrivateInfo.model_validate(result)
+            return GetPrivateUserDataResponse.model_validate(result).data
         except Exception:
-            return UserPublicInfo.model_validate(result)
+            return GetPublicUserDataResponse.model_validate(result).data
 
     def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.
@@ -133,9 +140,9 @@ class UserClientAsync(ResourceClientAsync):
             return None
         # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
         try:
-            return UserPrivateInfo.model_validate(result)
+            return GetPrivateUserDataResponse.model_validate(result).data
         except Exception:
-            return UserPublicInfo.model_validate(result)
+            return GetPublicUserDataResponse.model_validate(result).data
 
     async def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.

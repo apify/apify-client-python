@@ -7,7 +7,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_storage_content_signature
 
-from apify_client._models import Dataset, GetDatasetStatisticsResponse
+from apify_client._models import Dataset, DatasetResponse, GetDatasetStatisticsResponse
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._types import ListPage
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
@@ -41,7 +41,7 @@ class DatasetClient(ResourceClient):
             The retrieved dataset, or None, if it does not exist.
         """
         result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return Dataset.model_validate(result) if result is not None else None
+        return DatasetResponse.model_validate(result).data if result is not None else None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -61,7 +61,7 @@ class DatasetClient(ResourceClient):
         }
 
         result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
-        return Dataset.model_validate(result)
+        return DatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the dataset.
@@ -657,7 +657,7 @@ class DatasetClientAsync(ResourceClientAsync):
             The retrieved dataset, or None, if it does not exist.
         """
         result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return Dataset.model_validate(result) if result is not None else None
+        return DatasetResponse.model_validate(result).data if result is not None else None
 
     async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -677,7 +677,7 @@ class DatasetClientAsync(ResourceClientAsync):
         }
 
         result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
-        return Dataset.model_validate(result)
+        return DatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the dataset.

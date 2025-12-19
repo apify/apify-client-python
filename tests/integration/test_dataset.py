@@ -21,6 +21,8 @@ MOCKED_API_DATASET_RESPONSE = """{
     "createdAt": "2025-09-11T08:48:51.806Z",
     "modifiedAt": "2025-09-11T08:48:51.806Z",
     "accessedAt": "2025-09-11T08:48:51.806Z",
+    "itemCount": 0,
+    "cleanItemCount": 0,
     "actId": null,
     "actRunId": null,
     "schema": null,

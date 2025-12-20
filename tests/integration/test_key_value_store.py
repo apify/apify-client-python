@@ -138,7 +138,8 @@ def test_list_keys_signature_sync(apify_client: ApifyClient, test_kvs_of_another
         kvs.list_keys()
 
     # Kvs content retrieved with correct signature
-    raw_items = kvs.list_keys(signature=test_kvs_of_another_user.signature).items
+    response = kvs.list_keys(signature=test_kvs_of_another_user.signature)
+    raw_items = response.data.items
 
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
 
@@ -305,7 +306,8 @@ async def test_list_keys_signature_async(
         await kvs.list_keys()
 
     # Kvs content retrieved with correct signature
-    raw_items = (await kvs.list_keys(signature=test_kvs_of_another_user.signature)).items
+    response = await kvs.list_keys(signature=test_kvs_of_another_user.signature)
+    raw_items = response.data.items
 
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
 

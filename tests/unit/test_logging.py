@@ -106,6 +106,7 @@ class StatusResponseGenerator:
                 'diskMbytes': 2048,
             },
             'buildId': 'test_build_id',
+            'generalAccess': 'RESTRICTED',
             'defaultKeyValueStoreId': 'test_kvs_id',
             'defaultDatasetId': 'test_dataset_id',
             'defaultRequestQueueId': 'test_rq_id',

@@ -12,7 +12,7 @@ from more_itertools import constrained_batches
 from apify_client._models import (
     AddRequestResponse,
     BatchOperationResponse,
-    Data12,
+    Data13,
     GetHeadAndLockResponse,
     GetHeadResponse,
     GetRequestQueueResponse,
@@ -364,7 +364,7 @@ class RequestQueueClient(ResourceClient):
             unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
         return BatchOperationResponse.model_construct(
-            data=Data12.model_construct(
+            data=Data13.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
@@ -732,7 +732,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 queue.task_done()
 
         return BatchOperationResponse.model_construct(
-            data=Data12.model_construct(
+            data=Data13.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
@@ -814,7 +814,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             unprocessed_requests.extend(result.data.unprocessed_requests)
 
         return BatchOperationResponse.model_construct(
-            data=Data12.model_construct(
+            data=Data13.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )

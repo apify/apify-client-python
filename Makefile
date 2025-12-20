@@ -65,6 +65,9 @@ check-async-docstrings:
 # and the run_checks.yaml GitHub Actions workflow.
 check-code: lint type-check unit-tests check-async-docstrings
 
+generate-models:
+	uv run datamodel-codegen
+
 fix-async-docstrings:
 	uv run python scripts/fix_async_docstrings.py
 

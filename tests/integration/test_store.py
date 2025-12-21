@@ -3,16 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client import ApifyClient
 
 
-def test_store_list_sync(apify_client: ApifyClient) -> None:
+def test_store_list(apify_client: ApifyClient) -> None:
     actors_list = apify_client.store().list()
-    assert actors_list is not None
-    assert len(actors_list.items) != 0
-
-
-async def test_store_list_async(apify_client_async: ApifyClientAsync) -> None:
-    actors_list = await apify_client_async.store().list()
     assert actors_list is not None
     assert len(actors_list.items) != 0

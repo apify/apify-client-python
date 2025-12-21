@@ -16,6 +16,7 @@ from apify_client._models import (
     GetHeadAndLockResponse,
     GetHeadResponse,
     GetRequestQueueResponse,
+    GetRequestResponse,
     ListRequestsResponse,
     ProcessedRequest,
     ProlongRequestLockResponse,
@@ -190,7 +191,7 @@ class RequestQueueClient(ResourceClient):
                 timeout_secs=_SMALL_TIMEOUT,
             )
             result = response.json()
-            return RequestQueueItems.model_validate(result)
+            return GetRequestResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -589,12 +590,12 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout_secs=_SMALL_TIMEOUT,
             )
             result = response.json()
-            return RequestQueueItems.model_validate(result) if result is not None else None
-
+            validated_response = GetRequestResponse.model_validate(result) if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
-
-        return None
+            return None
+        else:
+            return validated_response.data if validated_response is not None else None
 
     async def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Update a request in the queue.

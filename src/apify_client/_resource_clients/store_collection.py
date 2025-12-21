@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._types import ListPage
+from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
     from apify_client._models import ActorShort
-    from apify_client._types import ListPage
 
 
 class StoreCollectionClient(ResourceCollectionClient):
@@ -15,6 +16,16 @@ class StoreCollectionClient(ResourceCollectionClient):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    def _list(self, **kwargs: Any) -> ListPage:
+        """Override to unwrap the 'data' field from the store API response."""
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(**kwargs),
+        )
+        data = response_to_dict(response)
+        return ListPage(data.get('data', {}))
 
     def list(
         self,
@@ -61,6 +72,16 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    async def _list(self, **kwargs: Any) -> ListPage:
+        """Override to unwrap the 'data' field from the store API response."""
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(**kwargs),
+        )
+        data = response_to_dict(response)
+        return ListPage(data.get('data', {}))
 
     async def list(
         self,

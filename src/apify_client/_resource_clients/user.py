@@ -63,7 +63,10 @@ class UserClient(ResourceClient):
                 params=self._params(),
             )
             data = response_to_dict(response)
-            return MonthlyUsage.model_validate(data) if data is not None else None
+            if data is None:
+                return None
+            # API returns {data: {...}} structure
+            return MonthlyUsage.model_validate(data.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -88,7 +91,10 @@ class UserClient(ResourceClient):
                 params=self._params(),
             )
             data = response_to_dict(response)
-            return AccountLimits.model_validate(data) if data is not None else None
+            if data is None:
+                return None
+            # API returns {data: {...}} structure
+            return AccountLimits.model_validate(data.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -163,7 +169,10 @@ class UserClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
             data = response_to_dict(response)
-            return MonthlyUsage.model_validate(data) if data is not None else None
+            if data is None:
+                return None
+            # API returns {data: {...}} structure
+            return MonthlyUsage.model_validate(data.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -188,7 +197,10 @@ class UserClientAsync(ResourceClientAsync):
                 params=self._params(),
             )
             data = response_to_dict(response)
-            return AccountLimits.model_validate(data) if data is not None else None
+            if data is None:
+                return None
+            # API returns {data: {...}} structure
+            return AccountLimits.model_validate(data.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

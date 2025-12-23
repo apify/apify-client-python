@@ -13,6 +13,10 @@ from apify_client._models import (
     AddRequestResponse,
     BatchOperationResponse,
     Data13,
+    Data14,
+    Data15,
+    Data16,
+    Data17,
     GetHeadAndLockResponse,
     GetHeadResponse,
     GetRequestQueueResponse,
@@ -100,7 +104,7 @@ class RequestQueueClient(ResourceClient):
         """
         return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    def list_head(self, *, limit: int | None = None) -> GetHeadResponse:
+    def list_head(self, *, limit: int | None = None) -> Data15:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -121,9 +125,9 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return GetHeadResponse.model_validate(result)
+        return GetHeadResponse.model_validate(result).data
 
-    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> GetHeadAndLockResponse:
+    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> Data16:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -145,7 +149,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return GetHeadAndLockResponse.model_validate(result)
+        return GetHeadAndLockResponse.model_validate(result).data
 
     def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Add a request to the queue.
@@ -250,7 +254,7 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool | None = None,
         lock_secs: int,
-    ) -> ProlongRequestLockResponse:
+    ) -> Data17 | None:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -270,7 +274,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return ProlongRequestLockResponse.model_validate(result)
+        return ProlongRequestLockResponse.model_validate(result).data
 
     def delete_request_lock(self, request_id: str, *, forefront: bool | None = None) -> None:
         """Delete the lock on a request.
@@ -371,7 +375,7 @@ class RequestQueueClient(ResourceClient):
             )
         )
 
-    def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResponse:
+    def batch_delete_requests(self, requests: list[dict]) -> Data13:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -390,14 +394,14 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return BatchOperationResponse.model_validate(result)
+        return BatchOperationResponse.model_validate(result).data
 
     def list_requests(
         self,
         *,
         limit: int | None = None,
         exclusive_start_id: str | None = None,
-    ) -> ListRequestsResponse:
+    ) -> Data14:
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -416,9 +420,9 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return ListRequestsResponse.model_validate(result)
+        return ListRequestsResponse.model_validate(result).data
 
-    def unlock_requests(self: RequestQueueClient) -> BatchOperationResponse:
+    def unlock_requests(self: RequestQueueClient) -> Data13:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
@@ -435,7 +439,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return BatchOperationResponse.model_validate(result)
+        return BatchOperationResponse.model_validate(result).data
 
 
 class RequestQueueClientAsync(ResourceClientAsync):
@@ -499,7 +503,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    async def list_head(self, *, limit: int | None = None) -> GetHeadResponse:
+    async def list_head(self, *, limit: int | None = None) -> Data15:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -520,9 +524,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetHeadResponse.model_validate(result)
+        return GetHeadResponse.model_validate(result).data
 
-    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> GetHeadAndLockResponse:
+    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> Data16:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -544,7 +548,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetHeadAndLockResponse.model_validate(result)
+        return GetHeadAndLockResponse.model_validate(result).data
 
     async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
         """Add a request to the queue.
@@ -647,7 +651,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool | None = None,
         lock_secs: int,
-    ) -> ProlongRequestLockResponse:
+    ) -> Data17 | None:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -667,7 +671,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return ProlongRequestLockResponse.model_validate(result)
+        return ProlongRequestLockResponse.model_validate(result).data
 
     async def delete_request_lock(
         self,
@@ -821,7 +825,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             )
         )
 
-    async def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResponse:
+    async def batch_delete_requests(self, requests: list[dict]) -> Data13:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -839,14 +843,14 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
         result = response.json()
-        return BatchOperationResponse.model_validate(result)
+        return BatchOperationResponse.model_validate(result).data
 
     async def list_requests(
         self,
         *,
         limit: int | None = None,
         exclusive_start_id: str | None = None,
-    ) -> ListRequestsResponse:
+    ) -> Data14:
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -865,9 +869,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return ListRequestsResponse.model_validate(result)
+        return ListRequestsResponse.model_validate(result).data
 
-    async def unlock_requests(self: RequestQueueClientAsync) -> BatchOperationResponse:
+    async def unlock_requests(self: RequestQueueClientAsync) -> Data13:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
@@ -884,4 +888,4 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return BatchOperationResponse.model_validate(result)
+        return BatchOperationResponse.model_validate(result).data

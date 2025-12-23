@@ -302,7 +302,7 @@ class RequestQueueClient(ResourceClient):
         max_parallel: int = 1,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-    ) -> BatchOperationResponse:
+    ) -> Data13:
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
@@ -373,7 +373,7 @@ class RequestQueueClient(ResourceClient):
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
-        )
+        ).data
 
     def batch_delete_requests(self, requests: list[dict]) -> Data13:
         """Delete given requests from the queue.
@@ -751,7 +751,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         max_parallel: int = 5,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-    ) -> BatchOperationResponse:
+    ) -> Data13:
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
@@ -823,7 +823,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
-        )
+        ).data
 
     async def batch_delete_requests(self, requests: list[dict]) -> Data13:
         """Delete given requests from the queue.

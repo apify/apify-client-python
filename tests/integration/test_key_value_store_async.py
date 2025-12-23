@@ -150,7 +150,7 @@ async def test_list_keys_signature(apify_client_async: ApifyClientAsync, test_kv
 
     # Kvs content retrieved with correct signature
     response = await kvs.list_keys(signature=test_kvs_of_another_user.signature)
-    raw_items = response.data.items
+    raw_items = response.items
 
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
 
@@ -329,11 +329,10 @@ async def test_key_value_store_list_keys(apify_client_async: ApifyClientAsync) -
     # List keys
     keys_response = await store_client.list_keys()
     assert keys_response is not None
-    assert keys_response.data is not None
-    assert len(keys_response.data.items) == 5
+    assert len(keys_response.items) == 5
 
     # Verify key names
-    key_names = [item.key for item in keys_response.data.items]
+    key_names = [item.key for item in keys_response.items]
     for i in range(5):
         assert f'key-{i}' in key_names
 
@@ -358,8 +357,7 @@ async def test_key_value_store_list_keys_with_limit(apify_client_async: ApifyCli
     # List with limit
     keys_response = await store_client.list_keys(limit=5)
     assert keys_response is not None
-    assert keys_response.data is not None
-    assert len(keys_response.data.items) == 5
+    assert len(keys_response.items) == 5
 
     # Cleanup
     await store_client.delete()

@@ -144,7 +144,7 @@ def test_list_keys_signature(apify_client: ApifyClient, test_kvs_of_another_user
 
     # Kvs content retrieved with correct signature
     response = kvs.list_keys(signature=test_kvs_of_another_user.signature)
-    raw_items = response.data.items
+    raw_items = response.items
 
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
 
@@ -323,11 +323,10 @@ def test_key_value_store_list_keys(apify_client: ApifyClient) -> None:
     # List keys
     keys_response = store_client.list_keys()
     assert keys_response is not None
-    assert keys_response.data is not None
-    assert len(keys_response.data.items) == 5
+    assert len(keys_response.items) == 5
 
     # Verify key names
-    key_names = [item.key for item in keys_response.data.items]
+    key_names = [item.key for item in keys_response.items]
     for i in range(5):
         assert f'key-{i}' in key_names
 
@@ -352,8 +351,7 @@ def test_key_value_store_list_keys_with_limit(apify_client: ApifyClient) -> None
     # List with limit
     keys_response = store_client.list_keys(limit=5)
     assert keys_response is not None
-    assert keys_response.data is not None
-    assert len(keys_response.data.items) == 5
+    assert len(keys_response.items) == 5
 
     # Cleanup
     store_client.delete()

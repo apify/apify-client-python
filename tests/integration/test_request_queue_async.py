@@ -23,11 +23,11 @@ async def test_request_queue_lock(apify_client_async: ApifyClientAsync) -> None:
 
     get_head_and_lock_response = await rq.list_and_lock_head(limit=10, lock_secs=10)
 
-    for locked_request in get_head_and_lock_response.data.items:
+    for locked_request in get_head_and_lock_response.items:
         assert locked_request.lock_expires_at is not None
 
     # Check if the delete request works
-    await rq.delete_request_lock(get_head_and_lock_response.data.items[1].id)
+    await rq.delete_request_lock(get_head_and_lock_response.items[1].id)
 
     """This is probably not working:
     delete_lock_request = await rq.get_request(get_head_and_lock_response.data.items[1].id)
@@ -35,7 +35,7 @@ async def test_request_queue_lock(apify_client_async: ApifyClientAsync) -> None:
     assert delete_lock_request.lock_expires_at is None
     """
 
-    await rq.delete_request_lock(get_head_and_lock_response.data.items[2].id, forefront=True)
+    await rq.delete_request_lock(get_head_and_lock_response.items[2].id, forefront=True)
 
     """This is probably not working:
     delete_lock_request2 = await rq.get_request(get_head_and_lock_response.data.items[2].id)
@@ -45,11 +45,11 @@ async def test_request_queue_lock(apify_client_async: ApifyClientAsync) -> None:
 
     # Check if the prolong request works
     prolong_request_lock_response = await rq.prolong_request_lock(
-        get_head_and_lock_response.data.items[3].id,
+        get_head_and_lock_response.items[3].id,
         lock_secs=15,
     )
-    assert prolong_request_lock_response.data is not None
-    assert prolong_request_lock_response.data.lock_expires_at is not None
+    assert prolong_request_lock_response is not None
+    assert prolong_request_lock_response.lock_expires_at is not None
 
     await rq.delete()
     assert await apify_client_async.request_queue(created_rq.id).get() is None
@@ -157,8 +157,7 @@ async def test_request_queue_list_head(apify_client_async: ApifyClientAsync) -> 
     # List head
     head_response = await queue_client.list_head(limit=3)
     assert head_response is not None
-    assert head_response.data is not None
-    assert len(head_response.data.items) == 3
+    assert len(head_response.items) == 3
 
     # Cleanup
     await queue_client.delete()
@@ -186,8 +185,7 @@ async def test_request_queue_list_requests(apify_client_async: ApifyClientAsync)
     # List all requests
     list_response = await queue_client.list_requests()
     assert list_response is not None
-    assert list_response.data is not None
-    assert len(list_response.data.items) == 5
+    assert len(list_response.items) == 5
 
     # Cleanup
     await queue_client.delete()
@@ -249,7 +247,7 @@ async def test_request_queue_batch_add_requests(apify_client_async: ApifyClientA
 
     # Verify requests were added
     list_response = await queue_client.list_requests()
-    assert len(list_response.data.items) == 10
+    assert len(list_response.items) == 10
 
     # Cleanup
     await queue_client.delete()
@@ -276,20 +274,19 @@ async def test_request_queue_batch_delete_requests(apify_client_async: ApifyClie
 
     # List requests to get IDs
     list_response = await queue_client.list_requests()
-    requests_to_delete = [{'uniqueKey': item.unique_key} for item in list_response.data.items[:5]]
+    requests_to_delete = [{'uniqueKey': item.unique_key} for item in list_response.items[:5]]
 
     # Batch delete
     delete_response = await queue_client.batch_delete_requests(requests_to_delete)
     assert delete_response is not None
-    assert delete_response.data is not None
-    assert len(delete_response.data.processed_requests) == 5
+    assert len(delete_response.processed_requests) == 5
 
     # Wait briefly
     await asyncio.sleep(1)
 
     # Verify remaining requests
     remaining = await queue_client.list_requests()
-    assert len(remaining.data.items) == 5
+    assert len(remaining.items) == 5
 
     # Cleanup
     await queue_client.delete()

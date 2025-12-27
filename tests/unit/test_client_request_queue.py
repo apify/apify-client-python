@@ -61,9 +61,9 @@ async def test_batch_processed_partially_async(httpserver: HTTPServer) -> None:
     rq_client = client.request_queue(request_queue_id='whatever')
 
     batch_response = await rq_client.batch_add_requests(requests=requests)
-    assert requests[0]['uniqueKey'] in {request.unique_key for request in batch_response.data.processed_requests}
-    assert len(batch_response.data.unprocessed_requests) == 1
-    assert batch_response.data.unprocessed_requests[0].unique_key == requests[1]['uniqueKey']
+    assert requests[0]['uniqueKey'] in {request.unique_key for request in batch_response.processed_requests}
+    assert len(batch_response.unprocessed_requests) == 1
+    assert batch_response.unprocessed_requests[0].unique_key == requests[1]['uniqueKey']
 
 
 @pytest.mark.usefixtures('patch_basic_url')
@@ -96,6 +96,6 @@ async def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
     rq_client = client.request_queue(request_queue_id='whatever')
 
     batch_response = rq_client.batch_add_requests(requests=requests)
-    assert requests[0]['uniqueKey'] in {request.unique_key for request in batch_response.data.processed_requests}
-    assert len(batch_response.data.unprocessed_requests) == 1
-    assert batch_response.data.unprocessed_requests[0].unique_key == requests[1]['uniqueKey']
+    assert requests[0]['uniqueKey'] in {request.unique_key for request in batch_response.processed_requests}
+    assert len(batch_response.unprocessed_requests) == 1
+    assert batch_response.unprocessed_requests[0].unique_key == requests[1]['uniqueKey']

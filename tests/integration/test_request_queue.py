@@ -238,9 +238,8 @@ def test_request_queue_batch_add_requests(apify_client: ApifyClient) -> None:
     requests_to_add = [{'url': f'https://example.com/batch-{i}', 'uniqueKey': f'batch-{i}'} for i in range(10)]
     batch_response = queue_client.batch_add_requests(requests_to_add)
     assert batch_response is not None
-    assert batch_response.data is not None
-    assert len(batch_response.data.processed_requests) == 10
-    assert len(batch_response.data.unprocessed_requests) == 0
+    assert len(batch_response.processed_requests) == 10
+    assert len(batch_response.unprocessed_requests) == 0
 
     # Wait briefly for eventual consistency
     time.sleep(1)

@@ -1,6 +1,6 @@
 import pytest
 
-from apify_client._statistics import Statistics
+from apify_client._types import Statistics
 
 
 @pytest.mark.parametrize(

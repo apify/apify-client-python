@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from apify_client._models import Actor, ActorShort
+from apify_client._models import Actor, ActorShort, CreateActorResponse
 from apify_client._resource_clients.actor import get_actor_representation
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively
@@ -133,8 +133,8 @@ class ActorCollectionClient(ResourceCollectionClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = self._create(filter_out_none_values_recursively(actor_representation))
-        return Actor.model_validate(result)
+        result = self._create(filter_out_none_values_recursively(actor_representation, remove_empty_dicts=True))
+        return CreateActorResponse.model_validate(result).data
 
 
 class ActorCollectionClientAsync(ResourceCollectionClientAsync):
@@ -259,5 +259,5 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = await self._create(filter_out_none_values_recursively(actor_representation))
-        return Actor.model_validate(result)
+        result = await self._create(filter_out_none_values_recursively(actor_representation, remove_empty_dicts=True))
+        return CreateActorResponse.model_validate(result).data

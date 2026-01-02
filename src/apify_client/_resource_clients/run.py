@@ -52,7 +52,11 @@ class RunClient(ActorJobBaseClient):
             The retrieved Actor run data.
         """
         result = self._get()
-        return RunResponse.model_validate(result).data if result is not None else None
+
+        if result is None:
+            return None
+
+        return RunResponse.model_validate(result).data
 
     def update(
         self,
@@ -290,9 +294,9 @@ class RunClient(ActorJobBaseClient):
         run_data = self.get()
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
-        actor_id = run_data.act_id if run_data and run_data.act_id else ''
+        actor_id = run_data.act_id if run_data else ''
         actor_data = self.root_client.actor(actor_id=actor_id).get() if actor_id else None
-        actor_name = actor_data.name if actor_data and hasattr(actor_data, 'name') and actor_data.name else ''
+        actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
@@ -354,9 +358,9 @@ class RunClient(ActorJobBaseClient):
         run_data = self.get()
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
-        actor_id = run_data.act_id if run_data and run_data.act_id else ''
+        actor_id = run_data.act_id if run_data else ''
         actor_data = self.root_client.actor(actor_id=actor_id).get() if actor_id else None
-        actor_name = actor_data.name if actor_data and hasattr(actor_data, 'name') and actor_data.name else ''
+        actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
@@ -624,9 +628,9 @@ class RunClientAsync(ActorJobBaseClientAsync):
         run_data = await self.get()
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
-        actor_id = run_data.act_id if run_data and run_data.act_id else ''
+        actor_id = run_data.act_id if run_data else ''
         actor_data = await self.root_client.actor(actor_id=actor_id).get() if actor_id else None
-        actor_name = actor_data.name if actor_data and hasattr(actor_data, 'name') and actor_data.name else ''
+        actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
@@ -687,10 +691,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
             `StatusMessageWatcher` instance.
         """
         run_data = await self.get()
-        run_id = f'runId:{run_data.id}' if run_data else ''
+
+        run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
-        actor_data = await self.root_client.actor(actor_id=actor_id).get()
+        actor_data = await self.root_client.actor(actor_id=actor_id).get() if actor_id else None
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:

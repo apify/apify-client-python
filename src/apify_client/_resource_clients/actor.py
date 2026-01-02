@@ -73,7 +73,7 @@ def get_actor_representation(
     actor_permission_level: ActorPermissionLevel | None = None,
 ) -> dict:
     """Get dictionary representation of the Actor."""
-    return {
+    actor_dict = {
         'name': name,
         'title': title,
         'description': description,
@@ -92,10 +92,6 @@ def get_actor_representation(
             'restartOnError': restart_on_error,
             'forcePermissionLevel': default_run_force_permission_level,
         },
-        'exampleRunInput': {
-            'body': example_run_input_body,
-            'contentType': example_run_input_content_type,
-        },
         'actorStandby': {
             'isEnabled': actor_standby_is_enabled,
             'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
@@ -107,6 +103,15 @@ def get_actor_representation(
         'pricingInfos': pricing_infos,
         'actorPermissionLevel': actor_permission_level,
     }
+
+    # Only include exampleRunInput if at least one field is provided
+    if example_run_input_body is not None or example_run_input_content_type is not None:
+        actor_dict['exampleRunInput'] = {
+            'body': example_run_input_body,
+            'contentType': example_run_input_content_type,
+        }
+
+    return actor_dict
 
 
 class ActorClient(ResourceClient):

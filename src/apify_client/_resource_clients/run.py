@@ -160,7 +160,7 @@ class RunClient(ActorJobBaseClient):
         )
 
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     def resurrect(
         self,
@@ -212,7 +212,7 @@ class RunClient(ActorJobBaseClient):
         )
 
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -227,7 +227,7 @@ class RunClient(ActorJobBaseClient):
             method='POST',
         )
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -385,7 +385,11 @@ class RunClientAsync(ActorJobBaseClientAsync):
             The retrieved Actor run data.
         """
         result = await self._get()
-        return RunResponse.model_validate(result).data if result is not None else None
+
+        if result is None:
+            return None
+
+        return RunResponse.model_validate(result).data
 
     async def update(
         self,
@@ -492,7 +496,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     async def resurrect(
         self,
@@ -544,7 +548,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
         )
 
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     async def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -559,7 +563,7 @@ class RunClientAsync(ActorJobBaseClientAsync):
             method='POST',
         )
         data = response_to_dict(response)
-        return Run.model_validate(data)
+        return RunResponse.model_validate(data).data
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import Webhook, WebhookShort
+from apify_client._models import CreateWebhookResponse, Webhook, WebhookShort
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._resource_clients.webhook import get_webhook_representation
 from apify_client._utils import filter_out_none_values_recursively
@@ -179,5 +179,5 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        result = await self._create(filter_out_none_values_recursively(webhook_representation))
-        return Webhook.model_validate(result)
+        response = await self._create(filter_out_none_values_recursively(webhook_representation))
+        return CreateWebhookResponse.model_validate(response).data

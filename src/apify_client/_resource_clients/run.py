@@ -51,12 +51,12 @@ class RunClient(ActorJobBaseClient):
         Returns:
             The retrieved Actor run data.
         """
-        result = self._get()
+        response = self._get()
 
-        if result is None:
+        if response is None:
             return None
 
-        return RunResponse.model_validate(result).data
+        return RunResponse.model_validate(response).data
 
     def update(
         self,
@@ -83,8 +83,8 @@ class RunClient(ActorJobBaseClient):
             'generalAccess': general_access,
         }
 
-        result = self._update(filter_out_none_values_recursively(updated_fields))
-        return Run.model_validate(result)
+        response = self._update(filter_out_none_values_recursively(updated_fields))
+        return Run.model_validate(response)
 
     def delete(self) -> None:
         """Delete the run.
@@ -106,8 +106,8 @@ class RunClient(ActorJobBaseClient):
         Returns:
             The data of the aborted Actor run.
         """
-        result = self._abort(gracefully=gracefully)
-        return Run.model_validate(result)
+        response = self._abort(gracefully=gracefully)
+        return Run.model_validate(response)
 
     def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
@@ -119,8 +119,12 @@ class RunClient(ActorJobBaseClient):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        result = self._wait_for_finish(wait_secs=wait_secs)
-        return Run.model_validate(result) if result is not None else None
+        response = self._wait_for_finish(wait_secs=wait_secs)
+
+        if response is None:
+            return None
+
+        return Run.model_validate(response)
 
     def metamorph(
         self,
@@ -384,12 +388,12 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Returns:
             The retrieved Actor run data.
         """
-        result = await self._get()
+        response = await self._get()
 
-        if result is None:
+        if response is None:
             return None
 
-        return RunResponse.model_validate(result).data
+        return RunResponse.model_validate(response).data
 
     async def update(
         self,
@@ -416,8 +420,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             'generalAccess': general_access,
         }
 
-        result = await self._update(filter_out_none_values_recursively(updated_fields))
-        return Run.model_validate(result)
+        response = await self._update(filter_out_none_values_recursively(updated_fields))
+        return RunResponse.model_validate(response).data
 
     async def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
@@ -432,8 +436,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Returns:
             The data of the aborted Actor run.
         """
-        result = await self._abort(gracefully=gracefully)
-        return Run.model_validate(result)
+        response = await self._abort(gracefully=gracefully)
+        return RunResponse.model_validate(response).data
 
     async def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
@@ -445,8 +449,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        result = await self._wait_for_finish(wait_secs=wait_secs)
-        return Run.model_validate(result) if result is not None else None
+        response = await self._wait_for_finish(wait_secs=wait_secs)
+        return Run.model_validate(response) if response is not None else None
 
     async def delete(self) -> None:
         """Delete the run.

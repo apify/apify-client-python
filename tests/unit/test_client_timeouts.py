@@ -7,11 +7,16 @@ import pytest
 from impit import Response, TimeoutException
 
 from apify_client import ApifyClient
+from apify_client._client import DEFAULT_TIMEOUT
 from apify_client._http_client import HTTPClient, HTTPClientAsync
-from apify_client.client import DEFAULT_TIMEOUT
-from apify_client.clients import DatasetClient, KeyValueStoreClient, RequestQueueClient
-from apify_client.clients.resource_clients import dataset, request_queue
-from apify_client.clients.resource_clients import key_value_store as kvs
+from apify_client._resource_clients import (
+    DatasetClient,
+    KeyValueStoreClient,
+    RequestQueueClient,
+    dataset,
+    request_queue,
+)
+from apify_client._resource_clients import key_value_store as kvs
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

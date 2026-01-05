@@ -229,8 +229,7 @@ cwd = "website"
 
 # https://koxudaxi.github.io/datamodel-code-generator/
 [tool.datamodel-codegen]
-# url = "https://docs.apify.com/api/openapi.json"
-input = "../apify-docs/static/api/openapi.json"
+url = "https://docs.apify.com/api/openapi.json"
 input_file_type = "openapi"
 output = "src/apify_client/_models.py"
 target_python_version = "3.10"

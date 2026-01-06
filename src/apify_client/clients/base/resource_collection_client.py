@@ -53,32 +53,37 @@ class ResourceCollectionClient(BaseClient):
         return ListPage(parse_date_fields(pluck_data(response.json())))
 
     def _list_iterable(self, **kwargs: Any) -> IterableListPage[T]:
-        """Return object can be awaited or iterated over."""
-        chunk_size = kwargs.pop('chunk_size', None)
+        """Return object can be awaited or iterated over.
 
-        list_page = self._list(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)})
+        Not using total from the API response as it can change during iteration.
+        """
+        chunk_size = kwargs.pop('chunk_size', 0) or 0
+        offset = kwargs.get('offset') or 0
+        limit = kwargs.get('limit') or 0
+
+        list_page = self._list(**{**kwargs, 'limit': _min_for_limit_param(limit, chunk_size)})
 
         def iterator() -> Iterator[T]:
             current_page = list_page
             for item in current_page.items:
                 yield item
 
-            offset = kwargs.get('offset') or 0
-            limit = min(kwargs.get('limit') or current_page.total, current_page.total)
-
-            current_offset = offset + len(current_page.items)
-            remaining_items = min(current_page.total - offset, limit) - len(current_page.items)
-            while current_page.items and remaining_items > 0:
+            fetched_items = len(current_page.items)
+            while (
+                current_page.items  # If there are any items left to fetch
+                and (
+                    not limit or (limit > fetched_items)
+                )  # If there are is limit to fetch and have not reached it yet.
+            ):
                 new_kwargs = {
                     **kwargs,
-                    'offset': current_offset,
-                    'limit': _min_for_limit_param(remaining_items, chunk_size),
+                    'offset': offset + fetched_items,
+                    'limit': chunk_size if not limit else _min_for_limit_param(limit - fetched_items, chunk_size),
                 }
                 current_page = self._list(**new_kwargs)
                 for item in current_page.items:
                     yield item
-                current_offset += len(current_page.items)
-                remaining_items -= len(current_page.items)
+                fetched_items += len(current_page.items)
 
         return IterableListPage[T](list_page, iterator())
 
@@ -116,8 +121,13 @@ class ResourceCollectionClientAsync(BaseClientAsync):
         return ListPage(parse_date_fields(pluck_data(response.json())))
 
     def _list_iterable(self, **kwargs: Any) -> ListPageProtocolAsync[T]:
-        """Return object can be awaited or iterated over."""
-        chunk_size = kwargs.pop('chunk_size', None)
+        """Return object can be awaited or iterated over.
+
+        Not using total from the API response as it can change during iteration.
+        """
+        chunk_size = kwargs.pop('chunk_size', 0) or 0
+        offset = kwargs.get('offset') or 0
+        limit = kwargs.get('limit') or 0
 
         list_page_awaitable = self._list(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)})
 
@@ -126,22 +136,22 @@ class ResourceCollectionClientAsync(BaseClientAsync):
             for item in current_page.items:
                 yield item
 
-            offset = kwargs.get('offset') or 0
-            limit = min(kwargs.get('limit') or current_page.total, current_page.total)
-
-            current_offset = offset + len(current_page.items)
-            remaining_items = min(current_page.total - offset, limit) - len(current_page.items)
-            while current_page.items and remaining_items > 0:
+            fetched_items = len(current_page.items)
+            while (
+                current_page.items  # If there are any items left to fetch
+                and (
+                    not limit or (limit > fetched_items)
+                )  # If there are is limit to fetch and have not reached it yet.
+            ):
                 new_kwargs = {
                     **kwargs,
-                    'offset': current_offset,
-                    'limit': _min_for_limit_param(remaining_items, chunk_size),
+                    'offset': offset + fetched_items,
+                    'limit': chunk_size if not limit else _min_for_limit_param(limit - fetched_items, chunk_size),
                 }
                 current_page = await self._list(**new_kwargs)
                 for item in current_page.items:
                     yield item
-                current_offset += len(current_page.items)
-                remaining_items -= len(current_page.items)
+                fetched_items += len(current_page.items)
 
         return IterableListPageAsync[T](list_page_awaitable, async_iterator())
 
@@ -170,7 +180,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
         return parse_date_fields(pluck_data(response.json()))
 
 
-class ListPageProtocol(Protocol[T], Iterable[T]):
+class ListPageProtocol(Iterable[T], Protocol[T]):
     """Protocol for an object that can be both awaited and asynchronously iterated over."""
 
     items: list[T]
@@ -209,7 +219,7 @@ class IterableListPage(ListPage[T], Generic[T]):
         return self._iterator
 
 
-class ListPageProtocolAsync(Protocol[T], AsyncIterable[T], Awaitable[ListPage[T]]):
+class ListPageProtocolAsync(AsyncIterable[T], Awaitable[ListPage[T]], Protocol[T]):
     """Protocol for an object that can be both awaited and asynchronously iterated over."""
 
 

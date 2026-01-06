@@ -33,6 +33,7 @@ from apify_client.clients import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
 )
+from apify_client.clients.resource_clients import DatasetClientAsync
 
 CollectionClientAsync: TypeAlias = (
     ActorCollectionClientAsync
@@ -106,7 +107,12 @@ def mocked_api_pagination_logic(*_: Any, **kwargs: Any) -> dict:
             'items': items[lower_index : min(upper_index, lower_index + max_items_per_page)],
         }
     }
-
+    response.headers = {
+        'x-apify-pagination-total': str(total_items),
+        'x-apify-pagination-offset': str(offset),
+        'x-apify-pagination-limit': str(limit or count),
+        'x-apify-pagination-desc': str(params.get('desc', False)).lower(),
+    }
     return response
 
 
@@ -262,6 +268,23 @@ def test_client_list_iterable(client: CollectionClient, inputs: dict, expected_i
 
         if inputs == {}:
             list_response = client.list(**inputs)
+            assert len(returned_items) == list_response.total
+
+        assert returned_items == expected_items
+
+
+@pytest.mark.parametrize(
+    ('inputs', 'expected_items', 'client'), generate_test_params(client_set='dataset', async_clients=True)
+)
+async def test_dataset_items_list_iterable_async(
+    client: DatasetClientAsync, inputs: dict, expected_items: list[dict[str, int]]
+) -> None:
+    with mock.patch.object(client.http_client, 'call', side_effect=mocked_api_pagination_logic):
+        returned_items = [item async for item in client.list_items(**inputs)]
+
+        if inputs == {}:
+            list_response = await client.list_items(**inputs)
+            print(1)
             assert len(returned_items) == list_response.total
 
         assert returned_items == expected_items

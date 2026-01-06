@@ -1,14 +1,18 @@
-name: Async docstrings check
+name: Docstrings checks
 
 on:
+  # Runs when manually triggered from the GitHub UI.
+  workflow_dispatch:
+
+  # Runs when invoked by another workflow.
   workflow_call:
 
 env:
   PYTHON_VERSION: 3.14
 
 jobs:
-  async_docstring_check:
-    name: Async docstrings check
+  docstrings_checks:
+    name: Docstrings checks
     runs-on: ubuntu-latest
 
     steps:
@@ -28,5 +32,5 @@ jobs:
       - name: Install dependencies
         run: make install-dev
 
-      - name: Run async docstrings check
+      - name: Async docstrings check
         run: make check-async-docstrings

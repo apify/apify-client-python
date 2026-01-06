@@ -3,6 +3,8 @@ __pycache__
 .mypy_cache
 .pytest_cache
 .ruff_cache
+.ty_cache
+.uv-cache
 
 # Virtual envs
 .venv
@@ -23,6 +25,8 @@ build/
 # Coverage reports
 .coverage*
 htmlcov
+coverage-unit.xml
+coverage-integration.xml
 
 # IDE, editors
 .vscode

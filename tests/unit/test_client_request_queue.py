@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import apify_client
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -43,7 +43,7 @@ async def test_batch_not_processed_raises_exception_async(httpserver: HTTPServer
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    with pytest.raises(apify_client.errors.ApifyApiError):
+    with pytest.raises(ApifyApiError):
         await rq_client.batch_add_requests(requests=requests)
 
 
@@ -77,7 +77,7 @@ def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> No
     ]
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    with pytest.raises(apify_client.errors.ApifyApiError):
+    with pytest.raises(ApifyApiError):
         rq_client.batch_add_requests(requests=requests)
 
 

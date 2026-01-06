@@ -6,7 +6,7 @@ import re
 import sys
 from pathlib import Path
 
-from redbaron import RedBaron  # type: ignore[import-untyped]
+from redbaron import RedBaron
 from utils import sync_to_async_docstring
 
 found_issues = False

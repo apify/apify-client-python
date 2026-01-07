@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.task import get_task_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class TaskCollectionClient(ResourceCollectionClient):
@@ -36,7 +36,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return self._list_iterable(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(self._list, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -133,7 +133,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return self._list_iterable(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(callback=self._list, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

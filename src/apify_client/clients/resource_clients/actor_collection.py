@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.actor import get_actor_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class ActorCollectionClient(ResourceCollectionClient):
@@ -40,7 +40,9 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return self._list_iterable(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        return self._list_iterable_from_callback(
+            self._list, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by
+        )
 
     def create(
         self,
@@ -165,7 +167,9 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return self._list_iterable(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        return self._list_iterable_from_callback(
+            callback=self._list, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by
+        )
 
     async def create(
         self,

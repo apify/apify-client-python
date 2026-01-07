@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.actor_env_var import get_actor_env_var_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class ActorEnvVarCollectionClient(ResourceCollectionClient):
@@ -25,7 +25,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available actor environment variables.
         """
-        return self._list_iterable()
+        return self._list_iterable_from_callback(self._list)
 
     def create(
         self,
@@ -70,7 +70,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available actor environment variables.
         """
-        return self._list_iterable()
+        return self._list_iterable_from_callback(callback=self._list)
 
     async def create(
         self,

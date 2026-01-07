@@ -1,4 +1,5 @@
 import dataclasses
+import math
 from typing import Any, Literal, TypeAlias
 from unittest import mock
 from unittest.mock import Mock
@@ -14,6 +15,7 @@ from apify_client.clients import (
     BaseClientAsync,
     BuildCollectionClient,
     BuildCollectionClientAsync,
+    DatasetClient,
     DatasetCollectionClient,
     DatasetCollectionClientAsync,
     KeyValueStoreCollectionClient,
@@ -63,6 +65,8 @@ CollectionClient: TypeAlias = (
     | StoreCollectionClient
 )
 
+ID_PLACEHOLDER = 'some-id'
+
 
 def create_items(start: int, end: int) -> list[dict[str, int]]:
     """Create list of test items of specified range."""
@@ -96,17 +100,25 @@ def mocked_api_pagination_logic(*_: Any, **kwargs: Any) -> dict:
     upper_index = min(offset + (limit or total_items), total_items)
     count = min(upper_index - lower_index, max_items_per_page)
 
+    selected_items = items[lower_index : min(upper_index, lower_index + max_items_per_page)]
+
     response = Mock()
-    response.json = lambda: {
-        'data': {
-            'total': total_items,
-            'count': count,
-            'offset': offset,
-            'limit': limit or count,
-            'desc': params.get('desc', False),
-            'items': items[lower_index : min(upper_index, lower_index + max_items_per_page)],
+    if kwargs['url'] == f'https://api.apify.com/v2/datasets/{ID_PLACEHOLDER}/items':
+        # Get dataset items endpoint returns the items directly
+        response_content = selected_items
+    else:
+        response_content = {
+            'data': {
+                'total': total_items,
+                'count': count,
+                'offset': offset,
+                'limit': limit or count,
+                'desc': params.get('desc', False),
+                'items': selected_items,
+            }
         }
-    }
+
+    response.json = lambda: response_content
     response.headers = {
         'x-apify-pagination-total': str(total_items),
         'x-apify-pagination-offset': str(offset),
@@ -183,9 +195,9 @@ TEST_CASES = (
         {'DatasetCollectionClient', 'KeyValueStoreCollectionClient', 'RequestQueueCollectionClient'},
     ),
     TestCase(
-        'Offset, limit, descending, chunkSize',
+        'Offset, limit, descending, chunk_size',
         {'offset': 50, 'limit': 1100, 'desc': True, 'chunk_size': 100},
-        create_items(1500, 400),
+        create_items(2450, 1350),
         {'DatasetClient'},
     ),
     TestCase('Exclusive start key', {'exclusive_start_key': 1000}, create_items(1001, 2500), {'KeyValueStoreClient'}),
@@ -219,17 +231,17 @@ def generate_test_params(
                 client.datasets(),
                 client.key_value_stores(),
                 client.request_queues(),
-                client.actor('some-id').builds(),
-                client.actor('some-id').runs(),
-                client.actor('some-id').versions(),
-                client.actor('some-id').version('some-version').env_vars(),
+                client.actor(ID_PLACEHOLDER).builds(),
+                client.actor(ID_PLACEHOLDER).runs(),
+                client.actor(ID_PLACEHOLDER).versions(),
+                client.actor(ID_PLACEHOLDER).version('some-version').env_vars(),
             )
         case 'kvs':
-            clients = (client.key_value_store('some-id'),)
+            clients = (client.key_value_store(ID_PLACEHOLDER),)
         case 'rq':
-            clients = (client.request_queue('some-id'),)
+            clients = (client.request_queue(ID_PLACEHOLDER),)
         case 'dataset':
-            clients = (client.dataset('some-id'),)
+            clients = (client.dataset(ID_PLACEHOLDER),)
         case _:
             raise ValueError(f'Unknown client set: {client_set}')
 
@@ -279,12 +291,37 @@ def test_client_list_iterable(client: CollectionClient, inputs: dict, expected_i
 async def test_dataset_items_list_iterable_async(
     client: DatasetClientAsync, inputs: dict, expected_items: list[dict[str, int]]
 ) -> None:
-    with mock.patch.object(client.http_client, 'call', side_effect=mocked_api_pagination_logic):
+    with mock.patch.object(client.http_client, 'call', side_effect=mocked_api_pagination_logic) as mocked_client_call:
         returned_items = [item async for item in client.list_items(**inputs)]
 
         if inputs == {}:
             list_response = await client.list_items(**inputs)
-            print(1)
             assert len(returned_items) == list_response.total
 
         assert returned_items == expected_items
+        input_chunk_size = inputs.get('chunk_size', 1000)
+        assert mocked_client_call.call_count == math.ceil(len(expected_items) / input_chunk_size) or 1
+
+        # Until deprecated method `iterate_items` is removed
+        inputs.pop('chunk_size', None)
+        assert returned_items == [item async for item in client.iterate_items(**inputs)]
+
+
+@pytest.mark.parametrize(
+    ('inputs', 'expected_items', 'client'), generate_test_params(client_set='dataset', async_clients=False)
+)
+def test_dataset_items_list_iterable(client: DatasetClient, inputs: dict, expected_items: list[dict[str, int]]) -> None:
+    with mock.patch.object(client.http_client, 'call', side_effect=mocked_api_pagination_logic) as mocked_client_call:
+        returned_items = list(client.list_items(**inputs))
+
+        if inputs == {}:
+            list_response = client.list_items(**inputs)
+            assert len(returned_items) == list_response.total
+
+        assert returned_items == expected_items
+        input_chunk_size = inputs.get('chunk_size', 1000)
+        assert mocked_client_call.call_count == math.ceil(len(expected_items) / input_chunk_size) or 1
+
+        # Until deprecated method `iterate_items` is removed
+        inputs.pop('chunk_size', None)
+        assert returned_items == list(client.iterate_items(**inputs))

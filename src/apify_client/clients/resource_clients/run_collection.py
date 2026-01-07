@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from apify_shared.consts import ActorJobStatus
 
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class RunCollectionClient(ResourceCollectionClient):
@@ -54,7 +54,8 @@ class RunCollectionClient(ResourceCollectionClient):
         else:
             status_param = maybe_extract_enum_member_value(status)
 
-        return self._list_iterable(
+        return self._list_iterable_from_callback(
+            self._list,
             limit=limit,
             offset=offset,
             desc=desc,
@@ -105,7 +106,8 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         else:
             status_param = maybe_extract_enum_member_value(status)
 
-        return self._list_iterable(
+        return self._list_iterable_from_callback(
+            callback=self._list,
             limit=limit,
             offset=offset,
             desc=desc,

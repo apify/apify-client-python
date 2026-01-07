@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class StoreCollectionClient(ResourceCollectionClient):
@@ -43,7 +43,8 @@ class StoreCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return self._list_iterable(
+        return self._list_iterable_from_callback(
+            self._list,
             limit=limit,
             offset=offset,
             search=search,
@@ -89,7 +90,8 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return self._list_iterable(
+        return self._list_iterable_from_callback(
+            callback=self._list,
             limit=limit,
             offset=offset,
             search=search,

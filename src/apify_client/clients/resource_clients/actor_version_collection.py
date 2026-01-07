@@ -9,7 +9,7 @@ from apify_client.clients.resource_clients.actor_version import _get_actor_versi
 if TYPE_CHECKING:
     from apify_shared.consts import ActorSourceType
 
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):
@@ -27,7 +27,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actor versions.
         """
-        return self._list_iterable()
+        return self._list_iterable_from_callback(self._list)
 
     def create(
         self,
@@ -96,7 +96,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available Actor versions.
         """
-        return self._list_iterable()
+        return self._list_iterable_from_callback(callback=self._list)
 
     async def create(
         self,

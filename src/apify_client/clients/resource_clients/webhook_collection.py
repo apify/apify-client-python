@@ -9,7 +9,7 @@ from apify_client.clients.resource_clients.webhook import get_webhook_representa
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType
 
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class WebhookCollectionClient(ResourceCollectionClient):
@@ -38,7 +38,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        return self._list_iterable(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(self._list, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -122,7 +122,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        return self._list_iterable(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(callback=self._list, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

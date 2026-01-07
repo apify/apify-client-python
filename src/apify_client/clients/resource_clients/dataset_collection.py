@@ -6,7 +6,7 @@ from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPageProtocol, ListPageProtocolAsync
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
@@ -37,7 +37,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available datasets matching the specified filters.
         """
-        return self._list_iterable(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(self._list, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> dict:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -82,7 +82,9 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available datasets matching the specified filters.
         """
-        return self._list_iterable(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(
+            callback=self._list, unnamed=unnamed, limit=limit, offset=offset, desc=desc
+        )
 
     async def get_or_create(
         self,

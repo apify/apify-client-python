@@ -22,19 +22,19 @@ The [Apify client for Python](https://github.com/apify/apify-client-python) is t
 
 Key features:
 
-- **Synchronous and asynchronous interfaces** for flexible integration
-- **Automatic retries** for improved reliability
-- **JSON encoding** with UTF-8 for all requests and responses
-- **Comprehensive API coverage** for [Actors](), [datasets](), [key-value stores](), and more
+- Synchronous and asynchronous interfaces for flexible integration
+- Automatic retries for improved reliability
+- JSON encoding with UTF-8 for all requests and responses
+- Comprehensive API coverage for [Actors](/platform/actors), [datasets]/platform/storage/dataset), [key-value stores](/platform/storage/key-value-store), and more
 
 ## Prerequisites
 
 Before installing the Apify client, ensure your system meets the following requirements:
 
-- **Python 3.10 or higher**: You can download Python from the [official website](https://www.python.org/downloads/).
-- **Python package manager**: While this guide uses Pip (the most common package manager), you can also use any package manager you want. You can download Pip from the [official website](https://pip.pypa.io/en/stable/installation/).
+- _Python 3.10 or higher_: You can download Python from the [official website](https://www.python.org/downloads/).
+- _Python package manager_: While this guide uses [pip](https://pip.pypa.io/en/stable/), you can also use any package manager you want.
 
-To verify that Python and Pip are installed, run the following commands:
+To verify that Python and pip are installed, run the following commands:
 
 ```sh
 python --version
@@ -148,6 +148,8 @@ Running an Actor might take time, depending on the Actor's complexity and the am
 
 Now that you're familiar with the basics, explore more advanced features:
 
-- [Async support](/concepts/async-support) - Learn about asynchronous programming with the client
-- [Examples](/examples/passing-input-to-actor) - See practical examples for common use cases
-- [API Reference](/reference/class/ApifyClient) - Browse the complete API documentation
+- [Asyncio support](/concepts/asyncio-support) - Learn about asynchronous programming with the client
+- Common use-case examples like:
+  - [Passing an input to Actor](/api/client/python/docs/examples/passing-input-to-actor)
+  - [Retrieve Actor data](/api/client/python/docs/examples/retrieve-actor-data)
+- [API Reference](/api/client/python/reference) - Browse the complete API documentation

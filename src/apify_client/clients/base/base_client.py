@@ -96,6 +96,15 @@ class BaseClient(_BaseBaseClient):
             self.safe_id = to_safe_id(self.resource_id)
             self.url = f'{self.url}/{self.safe_id}'
 
+    def _list_raw(self, **kwargs: Any) -> dict:
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(**kwargs),
+        )
+
+        return parse_date_fields(pluck_data(response.json()))
+
     @staticmethod
     def _list_iterable_from_callback(callback: Callable[..., ListPage[T]], **kwargs: Any) -> ListPageProtocol[T]:
         """Return object can be awaited or iterated over.
@@ -258,7 +267,7 @@ class IterableListPage(ListPage[T], Generic[T]):
         self.count = list_page.count
         self.total = list_page.total
         self.desc = list_page.desc
-        self._iterator = iterator
+        self._iterator: Iterator[T] = iterator
 
     def __iter__(self) -> Iterator[T]:
         """Return an iterator over the items from API, possibly doing multiple API calls."""
@@ -279,3 +288,14 @@ class IterableListPageAsync(Generic[T]):
     def __await__(self) -> Generator[Any, Any, ListPage[T]]:
         """Return an awaitable that resolves to the ListPage doing exactly one API call."""
         return self._awaitable.__await__()
+
+
+from typing import TypedDict, TypeVar, Generic
+
+T = TypeVar('T')
+
+class ItemsDict(TypedDict, Generic[T]):
+    items: T
+
+def _list_page_from_dict(raw_data: ItemsDict[T]) -> ListPage[T]:
+    return ListPage(raw_data)

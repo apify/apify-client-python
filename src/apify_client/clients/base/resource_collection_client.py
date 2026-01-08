@@ -15,14 +15,6 @@ T = TypeVar('T')
 class ResourceCollectionClient(BaseClient):
     """Base class for sub-clients manipulating a resource collection."""
 
-    def _list(self, **kwargs: Any) -> ListPage:
-        response = self.http_client.call(
-            url=self._url(),
-            method='GET',
-            params=self._params(**kwargs),
-        )
-
-        return ListPage(parse_date_fields(pluck_data(response.json())))
 
     def _create(self, resource: dict) -> dict:
         response = self.http_client.call(

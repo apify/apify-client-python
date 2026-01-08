@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from apify_client._types import ListPageProtocolIterable
 from apify_client._utils import filter_out_none_values_recursively
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client.clients.resource_clients.actor import get_actor_representation
 
 if TYPE_CHECKING:
     from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
+
 
 
 class ActorCollectionClient(ResourceCollectionClient):
@@ -25,7 +27,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPageProtocol[dict]:
+    ) -> ListPageProtocolIterable[dict]:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors

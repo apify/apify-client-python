@@ -126,7 +126,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature),
+                params=self._params(signature=signature, attachment=True),
             )
 
             return {
@@ -181,7 +181,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature),
+                params=self._params(signature=signature, attachment=True),
             )
 
             return {
@@ -213,7 +213,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature),
+                params=self._params(signature=signature, attachment=True),
                 stream=True,
             )
 
@@ -450,7 +450,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature),
+                params=self._params(signature=signature, attachment=True),
             )
 
             return {
@@ -505,7 +505,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature),
+                params=self._params(signature=signature, attachment=True),
             )
 
             return {
@@ -537,7 +537,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature),
+                params=self._params(signature=signature, attachment=True),
                 stream=True,
             )
 

@@ -11,20 +11,19 @@ class ApifyClientError(Exception):
 
 
 class ApifyApiError(ApifyClientError):
-    """Error specific to requests to the Apify API.
+    """Error from Apify API responses (rate limits, validation errors, internal errors).
 
-    An `ApifyApiError` is thrown for successful HTTP requests that reach the API, but the API responds with
-    an error response. Typically, those are rate limit errors and internal errors, which are automatically retried,
-    or validation errors, which are thrown immediately, because a correction by the user is needed.
+    Thrown when HTTP request succeeds but API returns an error response. Rate limit and internal errors are
+    retried automatically, while validation errors are thrown immediately for user correction.
     """
 
     def __init__(self, response: impit.Response, attempt: int, method: str = 'GET') -> None:
-        """Initialize a new instance.
+        """Initialize an API error from a failed response.
 
         Args:
-            response: The response to the failed API call.
-            attempt: Which attempt was the request that failed.
-            method: The HTTP method used for the request.
+            response: The failed API response.
+            attempt: The attempt number when the request failed.
+            method: The HTTP method used.
         """
         self.message: str | None = None
         self.type: str | None = None
@@ -33,7 +32,7 @@ class ApifyApiError(ApifyClientError):
         self.message = f'Unexpected error: {response.text}'
         try:
             response_data = response.json()
-            if 'error' in response_data:
+            if isinstance(response_data, dict) and 'error' in response_data:
                 self.message = response_data['error']['message']
                 self.type = response_data['error']['type']
                 if 'data' in response_data['error']:
@@ -48,25 +47,18 @@ class ApifyApiError(ApifyClientError):
         self.attempt = attempt
         self.http_method = method
 
-        # TODO: self.client_method   # noqa: TD003
-        # TODO: self.original_stack  # noqa: TD003
-        # TODO: self.path  # noqa: TD003
-        # TODO: self.stack  # noqa: TD003
-
 
 class InvalidResponseBodyError(ApifyClientError):
-    """Error caused by the response body failing to be parsed.
+    """Error when response body cannot be parsed (e.g., partial JSON).
 
-    This error exists for the quite common situation, where only a partial JSON response is received and an attempt
-    to parse the JSON throws an error. In most cases this can be resolved by retrying the request. We do that by
-    identifying this error in the HTTPClient.
+    Commonly occurs when only partial JSON is received. Usually resolved by retrying the request.
     """
 
     def __init__(self, response: impit.Response) -> None:
         """Initialize a new instance.
 
         Args:
-            response: The response which failed to be parsed.
+            response: The response that failed to parse.
         """
         super().__init__('Response body could not be parsed')
 

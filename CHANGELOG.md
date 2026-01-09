@@ -9,6 +9,11 @@ All notable changes to this project will be documented in this file.
 
 - Expose `actorPermissionLevel` in Actor client ([#553](https://github.com/apify/apify-client-python/pull/553)) ([198e2ca](https://github.com/apify/apify-client-python/commit/198e2cad0d9b79a599a678285420e7dc7026ef00)) by [@stepskop](https://github.com/stepskop)
 
+### 🐛 Bug Fixes
+
+- Fetch key-value store records as attachments ([#573](https://github.com/apify/apify-client-python/pull/573)) ([f5d2941](https://github.com/apify/apify-client-python/commit/f5d2941f27a3fa926e9edcc3b29cb62f1e8534e4)) by [@mvolfik](https://github.com/mvolfik)
+- Fix force permissions serialization for Actor calls ([#575](https://github.com/apify/apify-client-python/pull/575)) ([4a763f6](https://github.com/apify/apify-client-python/commit/4a763f6076a5b097765ecbe642e0ffc619e123d3)) by [@vdusek](https://github.com/vdusek)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [2.3.0](https://github.com/apify/apify-client-python/releases/tag/v2.3.0) (2025-11-13)

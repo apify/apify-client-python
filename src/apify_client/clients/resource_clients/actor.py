@@ -701,7 +701,7 @@ class ActorClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=timeout_secs,
             waitForFinish=wait_for_finish,
-            forcePermissionLevel=force_permission_level,
+            forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 

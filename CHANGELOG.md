@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.3.1 - **not yet released**
+## [2.4.0](https://github.com/apify/apify-client-python/releases/tag/v2.4.0) (2026-01-09)
 
 ### 🚀 Features
 
@@ -15,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - Fix force permissions serialization for Actor calls ([#575](https://github.com/apify/apify-client-python/pull/575)) ([4a763f6](https://github.com/apify/apify-client-python/commit/4a763f6076a5b097765ecbe642e0ffc619e123d3)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.3.0](https://github.com/apify/apify-client-python/releases/tag/v2.3.0) (2025-11-13)
 
 ### 🚀 Features

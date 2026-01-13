@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import Task, TaskShort
+from apify_client._models import CreateTaskResponse, Task, TaskShort
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._resource_clients.task import get_task_representation
 from apify_client._utils import filter_out_none_values_recursively
@@ -106,7 +106,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         )
 
         result = self._create(filter_out_none_values_recursively(task_representation))
-        return Task.model_validate(result)
+        return CreateTaskResponse.model_validate(result).data
 
 
 class TaskCollectionClientAsync(ResourceCollectionClientAsync):
@@ -204,4 +204,4 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         )
 
         result = await self._create(filter_out_none_values_recursively(task_representation))
-        return Task.model_validate(result)
+        return CreateTaskResponse.model_validate(result).data

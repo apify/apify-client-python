@@ -37,7 +37,7 @@ def get_task_representation(
     restart_on_error: bool | None = None,
 ) -> dict:
     """Get the dictionary representation of a task."""
-    return {
+    task_dict = {
         'actId': actor_id,
         'name': name,
         'options': {
@@ -49,14 +49,27 @@ def get_task_representation(
         },
         'input': task_input,
         'title': title,
-        'actorStandby': {
+    }
+
+    # Only include actorStandby if at least one field is provided
+    if any(
+        [
+            actor_standby_desired_requests_per_actor_run is not None,
+            actor_standby_max_requests_per_actor_run is not None,
+            actor_standby_idle_timeout_secs is not None,
+            actor_standby_build is not None,
+            actor_standby_memory_mbytes is not None,
+        ]
+    ):
+        task_dict['actorStandby'] = {
             'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
             'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
             'idleTimeoutSecs': actor_standby_idle_timeout_secs,
             'build': actor_standby_build,
             'memoryMbytes': actor_standby_memory_mbytes,
-        },
-    }
+        }
+
+    return task_dict
 
 
 class TaskClient(ResourceClient):

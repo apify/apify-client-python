@@ -1,0 +1,156 @@
+---
+id: overview
+title: Overview
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import AuthAsyncExample from '!!raw-loader!./code/02_auth_async.py';
+import AuthSyncExample from '!!raw-loader!./code/02_auth_sync.py';
+import UsageAsyncExample from '!!raw-loader!./code/01_usage_async.py';
+import UsageSyncExample from '!!raw-loader!./code/01_usage_sync.py';
+import InputAsyncExample from '!!raw-loader!./code/03_input_async.py';
+import InputSyncExample from '!!raw-loader!./code/03_input_sync.py';
+import DatasetAsyncExample from '!!raw-loader!./code/03_dataset_async.py';
+import DatasetSyncExample from '!!raw-loader!./code/03_dataset_sync.py';
+
+## Introduction
+
+The [Apify client for Python](https://github.com/apify/apify-client-python) is the official library to access the [Apify REST API](/api/v2) from your Python applications. It provides useful features like automatic retries and convenience functions that improve the experience of using the Apify API.
+
+Key features:
+
+- Synchronous and asynchronous interfaces for flexible integration
+- Automatic retries for improved reliability
+- JSON encoding with UTF-8 for all requests and responses
+- Comprehensive API coverage for [Actors](/platform/actors), [datasets](/platform/storage/dataset), [key-value stores](/platform/storage/key-value-store), and more
+
+## Prerequisites
+
+Before installing the Apify client, ensure your system meets the following requirements:
+
+- _An Apify account_
+- _Python 3.10 or higher_: You can download Python from the [official website](https://www.python.org/downloads/).
+- _Python package manager_: While this guide uses [pip](https://pip.pypa.io/en/stable/), you can also use any package manager you want.
+
+To verify that Python and pip are installed, run the following commands:
+
+```sh
+python --version
+```
+
+```sh
+pip --version
+```
+
+If these commands return the respective versions, you're ready to continue.
+
+## Installation
+
+The Apify client is available as the [`apify-client`](https://pypi.org/project/apify-client/) package on PyPI. To install it, run:
+
+```sh
+pip install apify-client
+```
+
+After installation, verify that the client is installed correctly by checking its version:
+
+```sh
+python -c 'import apify_client; print(apify_client.__version__)'
+```
+
+## Authentication and initialization
+
+To use the client, you need an [API token](/platform/integrations/api#api-token). You can find your token under the [Integrations](https://console.apify.com/account/integrations) tab in Apify Console. Copy the token and initialize the client by providing it as a parameter to the `ApifyClient` constructor.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {AuthAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {AuthSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::warning Secure access
+
+The API token is used to authorize your requests to the Apify API. You can be charged for the usage of the underlying services, so do not share your API token with untrusted parties or expose it on the client side of your applications.
+
+:::
+
+## Quick start
+
+Now that you have the client set up, let's explore how to run Actors on the Apify platform, provide input to them, and retrieve their results.
+
+### Running your first Actor
+
+To start an Actor, you need its ID (e.g., `john-doe/my-cool-actor`) and an API token. The Actor's ID is a combination of the Actor name and the Actor owner's username. Use the [`ActorClient`](/reference/class/ActorClient) to run the Actor and wait for it to complete. You can run both your own Actors and [Actors from Apify Store](https://docs.apify.com/platform/actors/running/actors-in-store).
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {UsageAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {UsageSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+### Providing input to Actor
+
+Actors often require input, such as URLs to scrape, search terms, or other configuration data. You can pass input as a JSON object when starting the Actor using the [`ActorClient.call`](/reference/class/ActorClient#call) method. Actors respect the input schema defined in the Actor's [input schema](https://docs.apify.com/platform/actors/development/actor-definition/input-schema).
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {InputAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {InputSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+### Getting results from the dataset
+
+To get the results from the dataset, you can use the [`DatasetClient`](/reference/class/DatasetClient) ([`ApifyClient.dataset`](/reference/class/ApifyClient#dataset)) and [`DatasetClient.list_items`](/reference/class/DatasetClient#list_items) method. You need to pass the dataset ID to define which dataset you want to access. You can get the dataset ID from the Actor's run dictionary (represented by `defaultDatasetId`).
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {DatasetAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {DatasetSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::note Dataset access
+
+Running an Actor might take time, depending on the Actor's complexity and the amount of data it processes. If you want only to get data and have an immediate response, you should access the existing dataset of the finished [Actor run](https://docs.apify.com/platform/actors/running/runs-and-builds#runs).
+
+:::
+
+## Next steps
+
+Now that you're familiar with the basics, explore more advanced features:
+
+- [Asyncio support](/concepts/asyncio-support) - Learn about asynchronous programming with the client
+- Common use-case examples like:
+  - [Passing an input to Actor](/api/client/python/docs/examples/passing-input-to-actor)
+  - [Retrieve Actor data](/api/client/python/docs/examples/retrieve-actor-data)
+- [API Reference](/api/client/python/reference) - Browse the complete API documentation

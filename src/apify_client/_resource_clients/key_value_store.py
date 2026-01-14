@@ -7,7 +7,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
-from apify_client._models import Data8, GetStoreResponse, KeyValueStore, ListOfKeysResponse
+from apify_client._models import GetListOfKeysResponse, GetStoreResponse, KeyValueStore, ListOfKeys
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -79,7 +79,7 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
-    ) -> Data8:
+    ) -> ListOfKeys:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -110,7 +110,7 @@ class KeyValueStoreClient(ResourceClient):
         )
 
         result = response.json()
-        return ListOfKeysResponse.model_validate(result).data
+        return GetListOfKeysResponse.model_validate(result).data
 
     def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -411,7 +411,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
-    ) -> Data8:
+    ) -> ListOfKeys:
         """List the keys in the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
@@ -442,7 +442,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return ListOfKeysResponse.model_validate(result).data
+        return GetListOfKeysResponse.model_validate(result).data
 
     async def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.

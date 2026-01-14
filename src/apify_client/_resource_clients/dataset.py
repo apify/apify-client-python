@@ -7,7 +7,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_storage_content_signature
 
-from apify_client._models import Data11, Dataset, DatasetResponse, GetDatasetStatisticsResponse
+from apify_client._models import Data10, Dataset, DatasetResponse, GetDatasetStatisticsResponse
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._types import ListPage
 from apify_client._utils import (
@@ -566,7 +566,7 @@ class DatasetClient(ResourceClient):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-    def get_statistics(self) -> Data11 | None:
+    def get_statistics(self) -> Data10 | None:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
@@ -1092,7 +1092,7 @@ class DatasetClientAsync(ResourceClientAsync):
             timeout_secs=_MEDIUM_TIMEOUT,
         )
 
-    async def get_statistics(self) -> Data11 | None:
+    async def get_statistics(self) -> Data10 | None:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get

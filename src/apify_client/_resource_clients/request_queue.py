@@ -12,18 +12,18 @@ from more_itertools import constrained_batches
 from apify_client._models import (
     AddRequestResponse,
     BatchOperationResponse,
-    Data12,
-    Data13,
-    Data14,
-    Data15,
-    Data16,
+    BatchOperationResult,
     GetHeadAndLockResponse,
     GetHeadResponse,
     GetRequestQueueResponse,
     GetRequestResponse,
+    ListOfRequests,
     ListRequestsResponse,
+    LockedQueueHead,
     ProcessedRequest,
     ProlongRequestLockResponse,
+    QueueHead,
+    RequestLockInfo,
     RequestOperationInfo,
     RequestQueue,
     RequestQueueItems,
@@ -104,7 +104,7 @@ class RequestQueueClient(ResourceClient):
         """
         return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    def list_head(self, *, limit: int | None = None) -> Data14:
+    def list_head(self, *, limit: int | None = None) -> QueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -127,7 +127,7 @@ class RequestQueueClient(ResourceClient):
         result = response.json()
         return GetHeadResponse.model_validate(result).data
 
-    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> Data15:
+    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> LockedQueueHead:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -254,7 +254,7 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool | None = None,
         lock_secs: int,
-    ) -> Data16 | None:
+    ) -> RequestLockInfo | None:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -302,7 +302,7 @@ class RequestQueueClient(ResourceClient):
         max_parallel: int = 1,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-    ) -> Data12:
+    ) -> BatchOperationResult:
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
@@ -369,13 +369,13 @@ class RequestQueueClient(ResourceClient):
             unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
         return BatchOperationResponse.model_construct(
-            data=Data12.model_construct(
+            data=BatchOperationResult.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
         ).data
 
-    def batch_delete_requests(self, requests: list[dict]) -> Data12:
+    def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResult:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -401,7 +401,7 @@ class RequestQueueClient(ResourceClient):
         *,
         limit: int | None = None,
         exclusive_start_id: str | None = None,
-    ) -> Data13:
+    ) -> ListOfRequests:
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -422,7 +422,7 @@ class RequestQueueClient(ResourceClient):
         result = response.json()
         return ListRequestsResponse.model_validate(result).data
 
-    def unlock_requests(self: RequestQueueClient) -> Data12:
+    def unlock_requests(self: RequestQueueClient) -> BatchOperationResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
@@ -503,7 +503,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    async def list_head(self, *, limit: int | None = None) -> Data14:
+    async def list_head(self, *, limit: int | None = None) -> QueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -526,7 +526,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response.json()
         return GetHeadResponse.model_validate(result).data
 
-    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> Data15:
+    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> LockedQueueHead:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -651,7 +651,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool | None = None,
         lock_secs: int,
-    ) -> Data16 | None:
+    ) -> RequestLockInfo | None:
         """Prolong the lock on a request.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-lock/prolong-request-lock
@@ -737,7 +737,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 queue.task_done()
 
         return BatchOperationResponse.model_construct(
-            data=Data12.model_construct(
+            data=BatchOperationResult.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
@@ -751,7 +751,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         max_parallel: int = 5,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-    ) -> Data12:
+    ) -> BatchOperationResult:
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
@@ -819,13 +819,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
             unprocessed_requests.extend(result.data.unprocessed_requests)
 
         return BatchOperationResponse.model_construct(
-            data=Data12.model_construct(
+            data=BatchOperationResult.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
         ).data
 
-    async def batch_delete_requests(self, requests: list[dict]) -> Data12:
+    async def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResult:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -850,7 +850,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         limit: int | None = None,
         exclusive_start_id: str | None = None,
-    ) -> Data13:
+    ) -> ListOfRequests:
         """List requests in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
@@ -871,7 +871,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response.json()
         return ListRequestsResponse.model_validate(result).data
 
-    async def unlock_requests(self: RequestQueueClientAsync) -> Data12:
+    async def unlock_requests(self: RequestQueueClientAsync) -> BatchOperationResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests

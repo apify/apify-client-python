@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from apify_shared.consts import ActorJobStatus
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
+from apify_client._models import ActorJobStatus
 from apify_client._resource_clients.log import StatusMessageWatcher, StreamedLog
 
 if TYPE_CHECKING:
@@ -82,7 +82,7 @@ class StatusResponseGenerator:
             ('Final message', ActorJobStatus.SUCCEEDED, True),
         ]
 
-    def _create_minimal_run_data(self, message: str, status: str, *, is_terminal: bool) -> dict:
+    def _create_minimal_run_data(self, message: str, status: ActorJobStatus, *, is_terminal: bool) -> dict:
         """Create minimal valid Run data for testing."""
         return {
             'id': _MOCKED_RUN_ID,
@@ -90,7 +90,7 @@ class StatusResponseGenerator:
             'userId': 'test_user_id',
             'startedAt': '2019-11-30T07:34:24.202Z',
             'finishedAt': '2019-12-12T09:30:12.202Z',
-            'status': status,
+            'status': status.value,
             'statusMessage': message,
             'isStatusMessageTerminal': is_terminal,
             'meta': {'origin': 'WEB'},

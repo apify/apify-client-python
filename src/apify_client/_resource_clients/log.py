@@ -415,7 +415,7 @@ class StatusMessageWatcher:
               `True` if more data is expected, `False` otherwise.
         """
         if run_data is not None:
-            status = run_data.status if run_data.status else 'Unknown status'
+            status = run_data.status.value if run_data.status else 'Unknown status'
             status_message = run_data.status_message or ''
             new_status_message = f'Status: {status}, Message: {status_message}'
 

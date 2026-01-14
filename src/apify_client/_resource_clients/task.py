@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from apify_client._models import Run, RunResponse, Task
+from apify_client._models import Run, RunOrigin, RunResponse, Task
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.run import RunClient, RunClientAsync
 from apify_client._resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -16,7 +16,7 @@ from apify_client._utils import (
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_shared.consts import ActorJobStatus, MetaOrigin
+    from apify_shared.consts import ActorJobStatus
 
 
 def get_task_representation(
@@ -315,7 +315,7 @@ class TaskClient(ResourceClient):
         """Retrieve a client for the runs of this task."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClient:
+    def last_run(self, *, status: ActorJobStatus | None = None, origin: RunOrigin | None = None) -> RunClient:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.
@@ -586,7 +586,7 @@ class TaskClientAsync(ResourceClientAsync):
         """Retrieve a client for the runs of this task."""
         return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
 
-    def last_run(self, *, status: ActorJobStatus | None = None, origin: MetaOrigin | None = None) -> RunClientAsync:
+    def last_run(self, *, status: ActorJobStatus | None = None, origin: RunOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this task.
 
         Last run is retrieved based on the start time of the runs.

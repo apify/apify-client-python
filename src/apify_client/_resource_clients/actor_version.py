@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import Version
+from apify_client._models import Version, VersionSourceType
 from apify_client._resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from apify_client._resource_clients.actor_env_var_collection import (
     ActorEnvVarCollectionClient,
@@ -11,9 +11,6 @@ from apify_client._resource_clients.actor_env_var_collection import (
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_out_none_values_recursively, maybe_extract_enum_member_value
 
-if TYPE_CHECKING:
-    from apify_shared.consts import ActorSourceType
-
 
 def _get_actor_version_representation(
     *,
@@ -21,7 +18,7 @@ def _get_actor_version_representation(
     build_tag: str | None = None,
     env_vars: list[dict] | None = None,
     apply_env_vars_to_build: bool | None = None,
-    source_type: ActorSourceType | None = None,
+    source_type: VersionSourceType | None = None,
     source_files: list[dict] | None = None,
     git_repo_url: str | None = None,
     tarball_url: str | None = None,
@@ -64,7 +61,7 @@ class ActorVersionClient(ResourceClient):
         build_tag: str | None = None,
         env_vars: list[dict] | None = None,
         apply_env_vars_to_build: bool | None = None,
-        source_type: ActorSourceType | None = None,
+        source_type: VersionSourceType | None = None,
         source_files: list[dict] | None = None,
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
@@ -82,13 +79,13 @@ class ActorVersionClient(ResourceClient):
                 be set to the Actor build process.
             source_type: What source type is the Actor version using.
             source_files: Source code comprised of multiple files, each an item of the array. Required when
-                `source_type` is `ActorSourceType.SOURCE_FILES`. See the API docs for the exact structure.
+                `source_type` is `VersionSourceType.SOURCE_FILES`. See the API docs for the exact structure.
             git_repo_url: The URL of a Git repository from which the source code will be cloned.
-                Required when `source_type` is `ActorSourceType.GIT_REPO`.
+                Required when `source_type` is `VersionSourceType.GIT_REPO`.
             tarball_url: The URL of a tarball or a zip archive from which the source code will be downloaded.
-                Required when `source_type` is `ActorSourceType.TARBALL`.
+                Required when `source_type` is `VersionSourceType.TARBALL`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
-                Required when `source_type` is `ActorSourceType.GITHUB_GIST`.
+                Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
 
         Returns:
             The updated Actor version.
@@ -154,7 +151,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         build_tag: str | None = None,
         env_vars: list[dict] | None = None,
         apply_env_vars_to_build: bool | None = None,
-        source_type: ActorSourceType | None = None,
+        source_type: VersionSourceType | None = None,
         source_files: list[dict] | None = None,
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
@@ -172,13 +169,13 @@ class ActorVersionClientAsync(ResourceClientAsync):
                 be set to the Actor build process.
             source_type: What source type is the Actor version using.
             source_files: Source code comprised of multiple files, each an item of the array. Required when
-                `source_type` is `ActorSourceType.SOURCE_FILES`. See the API docs for the exact structure.
+                `source_type` is `VersionSourceType.SOURCE_FILES`. See the API docs for the exact structure.
             git_repo_url: The URL of a Git repository from which the source code will be cloned.
-                Required when `source_type` is `ActorSourceType.GIT_REPO`.
+                Required when `source_type` is `VersionSourceType.GIT_REPO`.
             tarball_url: The URL of a tarball or a zip archive from which the source code will be downloaded.
-                Required when `source_type` is `ActorSourceType.TARBALL`.
+                Required when `source_type` is `VersionSourceType.TARBALL`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
-                Required when `source_type` is `ActorSourceType.GITHUB_GIST`.
+                Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
 
         Returns:
             The updated Actor version.

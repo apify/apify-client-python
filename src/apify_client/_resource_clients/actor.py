@@ -4,10 +4,12 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._models import (
     Actor,
+    ActorPermissionLevel,
     Build,
     BuildActorResponse,
     GetActorResponse,
     Run,
+    RunOrigin,
     RunResponse,
     UpdateActorResponse,
 )
@@ -40,7 +42,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_shared.consts import ActorJobStatus, ActorPermissionLevel, MetaOrigin
+    from apify_shared.consts import ActorJobStatus
 
 
 def get_actor_representation(
@@ -504,7 +506,7 @@ class ActorClient(ResourceClient):
         self,
         *,
         status: ActorJobStatus | None = None,
-        origin: MetaOrigin | None = None,
+        origin: RunOrigin | None = None,
     ) -> RunClient:
         """Retrieve the client for the last run of this Actor.
 
@@ -944,7 +946,7 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         *,
         status: ActorJobStatus | None = None,
-        origin: MetaOrigin | None = None,
+        origin: RunOrigin | None = None,
     ) -> RunClientAsync:
         """Retrieve the client for the last run of this Actor.
 

@@ -10,24 +10,28 @@ from typing import TYPE_CHECKING, Any
 from more_itertools import constrained_batches
 
 from apify_client._models import (
+    AddedRequest,
     AddRequestResponse,
-    BatchOperationResponse,
-    BatchOperationResult,
+    BatchAddResponse,
+    BatchAddResult,
+    BatchDeleteResponse,
+    BatchDeleteResult,
     GetHeadAndLockResponse,
     GetHeadResponse,
+    GetListOfRequestsResponse,
     GetRequestQueueResponse,
     GetRequestResponse,
     ListOfRequests,
-    ListRequestsResponse,
-    LockedQueueHead,
-    ProcessedRequest,
+    LockedRequestQueueHead,
     ProlongRequestLockResponse,
-    QueueHead,
+    Request,
+    RequestDraft,
     RequestLockInfo,
-    RequestOperationInfo,
     RequestQueue,
-    RequestQueueItems,
-    UnprocessedRequest,
+    RequestQueueHead,
+    RequestRegistration,
+    UnlockRequestsResponse,
+    UnlockRequestsResult,
 )
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively
@@ -104,7 +108,7 @@ class RequestQueueClient(ResourceClient):
         """
         return self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    def list_head(self, *, limit: int | None = None) -> QueueHead:
+    def list_head(self, *, limit: int | None = None) -> RequestQueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -127,7 +131,7 @@ class RequestQueueClient(ResourceClient):
         result = response.json()
         return GetHeadResponse.model_validate(result).data
 
-    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> LockedQueueHead:
+    def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> LockedRequestQueueHead:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -151,7 +155,7 @@ class RequestQueueClient(ResourceClient):
         result = response.json()
         return GetHeadAndLockResponse.model_validate(result).data
 
-    def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
+    def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
@@ -176,7 +180,7 @@ class RequestQueueClient(ResourceClient):
         result = response.json()
         return AddRequestResponse.model_validate(result).data
 
-    def get_request(self, request_id: str) -> RequestQueueItems | None:
+    def get_request(self, request_id: str) -> Request | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -202,7 +206,7 @@ class RequestQueueClient(ResourceClient):
 
         return None
 
-    def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
+    def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
@@ -302,7 +306,7 @@ class RequestQueueClient(ResourceClient):
         max_parallel: int = 1,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-    ) -> BatchOperationResult:
+    ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
@@ -347,8 +351,8 @@ class RequestQueueClient(ResourceClient):
         for batch in batches:
             queue.put(batch)
 
-        processed_requests = list[ProcessedRequest]()
-        unprocessed_requests = list[UnprocessedRequest]()
+        processed_requests = list[AddedRequest]()
+        unprocessed_requests = list[RequestDraft]()
 
         # Process all batches in the queue sequentially.
         while not queue.empty():
@@ -364,18 +368,18 @@ class RequestQueueClient(ResourceClient):
             )
 
             response_parsed = response.json()
-            batch_response = BatchOperationResponse.model_validate(response_parsed)
+            batch_response = BatchAddResponse.model_validate(response_parsed)
             processed_requests.extend(batch_response.data.processed_requests)
             unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
-        return BatchOperationResponse.model_construct(
-            data=BatchOperationResult.model_construct(
+        return BatchAddResponse.model_construct(
+            data=BatchAddResult.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
         ).data
 
-    def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResult:
+    def batch_delete_requests(self, requests: list[dict]) -> BatchDeleteResult:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -394,7 +398,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return BatchOperationResponse.model_validate(result).data
+        return BatchDeleteResponse.model_validate(result).data
 
     def list_requests(
         self,
@@ -420,15 +424,15 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return ListRequestsResponse.model_validate(result).data
+        return GetListOfRequestsResponse.model_validate(result).data
 
-    def unlock_requests(self: RequestQueueClient) -> BatchOperationResult:
+    def unlock_requests(self: RequestQueueClient) -> UnlockRequestsResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
 
         Returns:
-            Result of the unlock operation
+            Result of the unlock operation containing the count of unlocked requests
         """
         request_params = self._params(clientKey=self.client_key)
 
@@ -439,7 +443,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return BatchOperationResponse.model_validate(result).data
+        return UnlockRequestsResponse.model_validate(result).data
 
 
 class RequestQueueClientAsync(ResourceClientAsync):
@@ -503,7 +507,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    async def list_head(self, *, limit: int | None = None) -> QueueHead:
+    async def list_head(self, *, limit: int | None = None) -> RequestQueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head/get-head
@@ -526,7 +530,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response.json()
         return GetHeadResponse.model_validate(result).data
 
-    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> LockedQueueHead:
+    async def list_and_lock_head(self, *, lock_secs: int, limit: int | None = None) -> LockedRequestQueueHead:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-head-with-locks/get-head-and-lock
@@ -550,7 +554,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response.json()
         return GetHeadAndLockResponse.model_validate(result).data
 
-    async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
+    async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
@@ -575,7 +579,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response.json()
         return AddRequestResponse.model_validate(result).data
 
-    async def get_request(self, request_id: str) -> RequestQueueItems | None:
+    async def get_request(self, request_id: str) -> Request | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -601,7 +605,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         else:
             return validated_response.data if validated_response is not None else None
 
-    async def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestOperationInfo:
+    async def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
@@ -700,15 +704,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         queue: asyncio.Queue[Iterable[dict]],
         request_params: dict,
-    ) -> BatchOperationResponse:
+    ) -> BatchAddResponse:
         """Worker function to process a batch of requests.
 
         This worker will process batches from the queue.
 
         Return result containing lists of processed and unprocessed requests by the worker.
         """
-        processed_requests = list[ProcessedRequest]()
-        unprocessed_requests = list[UnprocessedRequest]()
+        processed_requests = list[AddedRequest]()
+        unprocessed_requests = list[RequestDraft]()
 
         while True:
             # Get the next batch from the queue.
@@ -728,7 +732,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 )
 
                 response_parsed = response.json()
-                batch_response = BatchOperationResponse.model_validate(response_parsed)
+                batch_response = BatchAddResponse.model_validate(response_parsed)
                 processed_requests.extend(batch_response.data.processed_requests)
                 unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
@@ -736,8 +740,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 # Mark the batch as done whether it succeeded or failed.
                 queue.task_done()
 
-        return BatchOperationResponse.model_construct(
-            data=BatchOperationResult.model_construct(
+        return BatchAddResponse.model_construct(
+            data=BatchAddResult.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
@@ -751,7 +755,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         max_parallel: int = 5,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-    ) -> BatchOperationResult:
+    ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
         Requests are split into batches based on size and processed in parallel.
@@ -808,24 +812,24 @@ class RequestQueueClientAsync(ResourceClientAsync):
         for task in tasks:
             task.cancel()
 
-        results: list[BatchOperationResponse] = await asyncio.gather(*tasks)
+        results: list[BatchAddResponse] = await asyncio.gather(*tasks)
 
         # Combine the results from all workers and return them.
-        processed_requests = list[ProcessedRequest]()
-        unprocessed_requests = list[UnprocessedRequest]()
+        processed_requests = list[AddedRequest]()
+        unprocessed_requests = list[RequestDraft]()
 
         for result in results:
             processed_requests.extend(result.data.processed_requests)
             unprocessed_requests.extend(result.data.unprocessed_requests)
 
-        return BatchOperationResponse.model_construct(
-            data=BatchOperationResult.model_construct(
+        return BatchAddResponse.model_construct(
+            data=BatchAddResult.model_construct(
                 processed_requests=processed_requests,
                 unprocessed_requests=unprocessed_requests,
             )
         ).data
 
-    async def batch_delete_requests(self, requests: list[dict]) -> BatchOperationResult:
+    async def batch_delete_requests(self, requests: list[dict]) -> BatchDeleteResult:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
@@ -843,7 +847,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout_secs=_SMALL_TIMEOUT,
         )
         result = response.json()
-        return BatchOperationResponse.model_validate(result).data
+        return BatchDeleteResponse.model_validate(result).data
 
     async def list_requests(
         self,
@@ -869,15 +873,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return ListRequestsResponse.model_validate(result).data
+        return GetListOfRequestsResponse.model_validate(result).data
 
-    async def unlock_requests(self: RequestQueueClientAsync) -> BatchOperationResult:
+    async def unlock_requests(self: RequestQueueClientAsync) -> UnlockRequestsResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/unlock-requests
 
         Returns:
-            Result of the unlock operation
+            Result of the unlock operation containing the count of unlocked requests
         """
         request_params = self._params(clientKey=self.client_key)
 
@@ -888,4 +892,4 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return BatchOperationResponse.model_validate(result).data
+        return UnlockRequestsResponse.model_validate(result).data

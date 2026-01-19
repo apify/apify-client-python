@@ -62,54 +62,54 @@ async def test_request_queue_lock(apify_client_async: ApifyClientAsync) -> None:
 
 async def test_request_queue_get_or_create_and_get(apify_client_async: ApifyClientAsync) -> None:
     """Test creating a request queue and retrieving it."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
     # Create queue
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    assert created_queue is not None
-    assert created_queue.id is not None
-    assert created_queue.name == queue_name
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    assert created_rq is not None
+    assert created_rq.id is not None
+    assert created_rq.name == rq_name
 
     # Get the same queue
-    queue_client = apify_client_async.request_queue(created_queue.id)
-    retrieved_queue = await queue_client.get()
-    assert retrieved_queue is not None
-    assert retrieved_queue.id == created_queue.id
-    assert retrieved_queue.name == queue_name
+    rq_client = apify_client_async.request_queue(created_rq.id)
+    retrieved_rq = await rq_client.get()
+    assert retrieved_rq is not None
+    assert retrieved_rq.id == created_rq.id
+    assert retrieved_rq.name == rq_name
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_update(apify_client_async: ApifyClientAsync) -> None:
     """Test updating request queue properties."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
     new_name = get_random_resource_name('queue-updated')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Update the name
-    updated_queue = await queue_client.update(name=new_name)
-    assert updated_queue is not None
-    assert updated_queue.name == new_name
-    assert updated_queue.id == created_queue.id
+    updated_rq = await rq_client.update(name=new_name)
+    assert updated_rq is not None
+    assert updated_rq.name == new_name
+    assert updated_rq.id == created_rq.id
 
     # Verify the update persisted
-    retrieved_queue = await queue_client.get()
-    assert retrieved_queue is not None
-    assert retrieved_queue.name == new_name
+    retrieved_rq = await rq_client.get()
+    assert retrieved_rq is not None
+    assert retrieved_rq.name == new_name
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_add_and_get_request(apify_client_async: ApifyClientAsync) -> None:
     """Test adding and getting a request from the queue."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Add a request
     request_data = {
@@ -117,7 +117,7 @@ async def test_request_queue_add_and_get_request(apify_client_async: ApifyClient
         'uniqueKey': 'test-key-1',
         'method': 'GET',
     }
-    add_result = await queue_client.add_request(request_data)
+    add_result = await rq_client.add_request(request_data)
     assert add_result is not None
     assert add_result.request_id is not None
     assert add_result.was_already_present is False
@@ -126,25 +126,25 @@ async def test_request_queue_add_and_get_request(apify_client_async: ApifyClient
     await asyncio.sleep(1)
 
     # Get the request
-    request = await queue_client.get_request(add_result.request_id)
+    request = await rq_client.get_request(add_result.request_id)
     assert request is not None
     assert request.url == 'https://example.com/test'
     assert request.unique_key == 'test-key-1'
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_list_head(apify_client_async: ApifyClientAsync) -> None:
     """Test listing requests from the head of the queue."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Add multiple requests
     for i in range(5):
-        await queue_client.add_request(
+        await rq_client.add_request(
             {
                 'url': f'https://example.com/page-{i}',
                 'uniqueKey': f'page-{i}',
@@ -155,24 +155,24 @@ async def test_request_queue_list_head(apify_client_async: ApifyClientAsync) -> 
     await asyncio.sleep(1)
 
     # List head
-    head_response = await queue_client.list_head(limit=3)
+    head_response = await rq_client.list_head(limit=3)
     assert head_response is not None
     assert len(head_response.items) == 3
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_list_requests(apify_client_async: ApifyClientAsync) -> None:
     """Test listing all requests in the queue."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Add multiple requests
     for i in range(5):
-        await queue_client.add_request(
+        await rq_client.add_request(
             {
                 'url': f'https://example.com/item-{i}',
                 'uniqueKey': f'item-{i}',
@@ -183,23 +183,23 @@ async def test_request_queue_list_requests(apify_client_async: ApifyClientAsync)
     await asyncio.sleep(1)
 
     # List all requests
-    list_response = await queue_client.list_requests()
+    list_response = await rq_client.list_requests()
     assert list_response is not None
     assert len(list_response.items) == 5
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_delete_request(apify_client_async: ApifyClientAsync) -> None:
     """Test deleting a request from the queue."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Add a request
-    add_result = await queue_client.add_request(
+    add_result = await rq_client.add_request(
         {
             'url': 'https://example.com/to-delete',
             'uniqueKey': 'delete-me',
@@ -210,33 +210,33 @@ async def test_request_queue_delete_request(apify_client_async: ApifyClientAsync
     await asyncio.sleep(1)
 
     # Verify it exists
-    request = await queue_client.get_request(add_result.request_id)
+    request = await rq_client.get_request(add_result.request_id)
     assert request is not None
 
     # Delete the request
-    await queue_client.delete_request(add_result.request_id)
+    await rq_client.delete_request(add_result.request_id)
 
     # Wait briefly
     await asyncio.sleep(1)
 
     # Verify it's gone
-    deleted_request = await queue_client.get_request(add_result.request_id)
+    deleted_request = await rq_client.get_request(add_result.request_id)
     assert deleted_request is None
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_batch_add_requests(apify_client_async: ApifyClientAsync) -> None:
     """Test adding multiple requests in batch."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Batch add requests
     requests_to_add = [{'url': f'https://example.com/batch-{i}', 'uniqueKey': f'batch-{i}'} for i in range(10)]
-    batch_response = await queue_client.batch_add_requests(requests_to_add)
+    batch_response = await rq_client.batch_add_requests(requests_to_add)
     assert batch_response is not None
     assert len(batch_response.processed_requests) == 10
     assert len(batch_response.unprocessed_requests) == 0
@@ -245,23 +245,23 @@ async def test_request_queue_batch_add_requests(apify_client_async: ApifyClientA
     await asyncio.sleep(1)
 
     # Verify requests were added
-    list_response = await queue_client.list_requests()
+    list_response = await rq_client.list_requests()
     assert len(list_response.items) == 10
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_batch_delete_requests(apify_client_async: ApifyClientAsync) -> None:
     """Test deleting multiple requests in batch."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Add requests
     for i in range(10):
-        await queue_client.add_request(
+        await rq_client.add_request(
             {
                 'url': f'https://example.com/delete-{i}',
                 'uniqueKey': f'delete-{i}',
@@ -272,11 +272,11 @@ async def test_request_queue_batch_delete_requests(apify_client_async: ApifyClie
     await asyncio.sleep(1)
 
     # List requests to get IDs
-    list_response = await queue_client.list_requests()
+    list_response = await rq_client.list_requests()
     requests_to_delete = [{'uniqueKey': item.unique_key} for item in list_response.items[:5]]
 
     # Batch delete
-    delete_response = await queue_client.batch_delete_requests(requests_to_delete)
+    delete_response = await rq_client.batch_delete_requests(requests_to_delete)
     assert delete_response is not None
     assert len(delete_response.processed_requests) == 5
 
@@ -284,23 +284,138 @@ async def test_request_queue_batch_delete_requests(apify_client_async: ApifyClie
     await asyncio.sleep(1)
 
     # Verify remaining requests
-    remaining = await queue_client.list_requests()
+    remaining = await rq_client.list_requests()
     assert len(remaining.items) == 5
 
     # Cleanup
-    await queue_client.delete()
+    await rq_client.delete()
 
 
 async def test_request_queue_delete_nonexistent(apify_client_async: ApifyClientAsync) -> None:
     """Test that getting a deleted queue returns None."""
-    queue_name = get_random_resource_name('queue')
+    rq_name = get_random_resource_name('queue')
 
-    created_queue = await apify_client_async.request_queues().get_or_create(name=queue_name)
-    queue_client = apify_client_async.request_queue(created_queue.id)
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id)
 
     # Delete queue
-    await queue_client.delete()
+    await rq_client.delete()
 
     # Verify it's gone
-    retrieved_queue = await queue_client.get()
-    assert retrieved_queue is None
+    retrieved_rq = await rq_client.get()
+    assert retrieved_rq is None
+
+
+async def test_request_queue_list_and_lock_head(apify_client_async: ApifyClientAsync) -> None:
+    """Test locking requests from the head of the queue."""
+    rq_name = get_random_resource_name('queue')
+
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id, client_key=get_random_string(10))
+
+    # Add multiple requests
+    for i in range(5):
+        await rq_client.add_request({'url': f'https://example.com/lock-{i}', 'uniqueKey': f'lock-{i}'})
+
+    # Wait briefly for eventual consistency
+    await asyncio.sleep(1)
+
+    # Lock head requests
+    lock_response = await rq_client.list_and_lock_head(limit=3, lock_secs=60)
+    assert lock_response is not None
+    assert len(lock_response.items) == 3
+
+    # Verify requests are locked
+    for locked_request in lock_response.items:
+        assert locked_request.id is not None
+        assert locked_request.lock_expires_at is not None
+
+    # Cleanup
+    await rq_client.delete()
+
+
+async def test_request_queue_prolong_request_lock(apify_client_async: ApifyClientAsync) -> None:
+    """Test prolonging a request lock."""
+    rq_name = get_random_resource_name('queue')
+
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id, client_key=get_random_string(10))
+
+    # Add a request
+    await rq_client.add_request({'url': 'https://example.com/prolong', 'uniqueKey': 'prolong-test'})
+
+    # Wait briefly for eventual consistency
+    await asyncio.sleep(1)
+
+    # Lock the request
+    lock_response = await rq_client.list_and_lock_head(limit=1, lock_secs=60)
+    assert len(lock_response.items) == 1
+    locked_request = lock_response.items[0]
+    original_lock_expires = locked_request.lock_expires_at
+
+    # Prolong the lock
+    prolong_response = await rq_client.prolong_request_lock(locked_request.id, lock_secs=120)
+    assert prolong_response is not None
+    assert prolong_response.lock_expires_at is not None
+    assert prolong_response.lock_expires_at > original_lock_expires
+
+    # Cleanup
+    await rq_client.delete()
+
+
+async def test_request_queue_delete_request_lock(apify_client_async: ApifyClientAsync) -> None:
+    """Test deleting a request lock."""
+    rq_name = get_random_resource_name('queue')
+
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id, client_key=get_random_string(10))
+
+    # Add a request
+    await rq_client.add_request({'url': 'https://example.com/unlock', 'uniqueKey': 'unlock-test'})
+
+    # Wait briefly for eventual consistency
+    await asyncio.sleep(1)
+
+    # Lock the request
+    lock_response = await rq_client.list_and_lock_head(limit=1, lock_secs=60)
+    assert len(lock_response.items) == 1
+    locked_request = lock_response.items[0]
+
+    # Delete the lock
+    await rq_client.delete_request_lock(locked_request.id)
+
+    # Verify the operation succeeded (no exception thrown)
+    # The request should still exist but be unlocked
+    request = await rq_client.get_request(locked_request.id)
+    assert request is not None
+
+    # Cleanup
+    await rq_client.delete()
+
+
+async def test_request_queue_unlock_requests(apify_client_async: ApifyClientAsync) -> None:
+    """Test unlocking all requests locked by the client."""
+    rq_name = get_random_resource_name('queue')
+
+    created_rq = await apify_client_async.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client_async.request_queue(created_rq.id, client_key=get_random_string(10))
+
+    # Add multiple requests
+    for i in range(5):
+        await rq_client.add_request({'url': f'https://example.com/unlock-{i}', 'uniqueKey': f'unlock-{i}'})
+
+    # Wait briefly for eventual consistency
+    await asyncio.sleep(1)
+
+    # Lock some requests
+    lock_response = await rq_client.list_and_lock_head(limit=3, lock_secs=60)
+    assert len(lock_response.items) == 3
+
+    # Unlock all requests
+    unlock_response = await rq_client.unlock_requests()
+
+    assert unlock_response is not None
+    assert unlock_response.unlocked_count == 3
+
+    # Cleanup
+    await rq_client.delete()

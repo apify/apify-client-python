@@ -128,7 +128,7 @@ def test_request_queue_add_and_get_request(apify_client: ApifyClient) -> None:
     # Get the request
     request = rq_client.get_request(add_result.request_id)
     assert request is not None
-    assert request.url == 'https://example.com/test'
+    assert str(request.url) == 'https://example.com/test'
     assert request.unique_key == 'test-key-1'
 
     # Cleanup

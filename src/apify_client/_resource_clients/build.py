@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import Build
+from apify_client._models import Build, GetBuildResponse, PostAbortBuildResponse
 from apify_client._resource_clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
 from apify_client._resource_clients.log import LogClient, LogClientAsync
 
@@ -23,7 +23,7 @@ class BuildClient(ActorJobBaseClient):
             The retrieved Actor build data.
         """
         result = self._get()
-        return Build.model_validate(result) if result is not None else None
+        return GetBuildResponse.model_validate(result).data if result is not None else None
 
     def delete(self) -> None:
         """Delete the build.
@@ -41,7 +41,7 @@ class BuildClient(ActorJobBaseClient):
             The data of the aborted Actor build.
         """
         result = self._abort()
-        return Build.model_validate(result)
+        return PostAbortBuildResponse.model_validate(result).data
 
     def get_open_api_definition(self) -> dict | None:
         """Return OpenAPI definition of the Actor's build.
@@ -102,7 +102,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
             The retrieved Actor build data.
         """
         result = await self._get()
-        return Build.model_validate(result) if result is not None else None
+        return GetBuildResponse.model_validate(result).data if result is not None else None
 
     async def abort(self) -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
@@ -113,7 +113,7 @@ class BuildClientAsync(ActorJobBaseClientAsync):
             The data of the aborted Actor build.
         """
         result = await self._abort()
-        return Build.model_validate(result)
+        return PostAbortBuildResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the build.

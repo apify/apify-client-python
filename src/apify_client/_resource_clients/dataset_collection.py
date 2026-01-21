@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import Dataset, DatasetListItem, DatasetResponse
+from apify_client._models import Dataset, DatasetResponse, GetListOfDatasetsResponse, ListOfDatasets
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class DatasetCollectionClient(ResourceCollectionClient):
@@ -24,7 +21,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[DatasetListItem]:
+    ) -> ListOfDatasets:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -38,7 +35,13 @@ class DatasetCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available datasets matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfDatasetsResponse.model_validate(data).data
 
     def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -70,7 +73,7 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[DatasetListItem]:
+    ) -> ListOfDatasets:
         """List the available datasets.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
@@ -84,7 +87,13 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available datasets matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfDatasetsResponse.model_validate(data).data
 
     async def get_or_create(
         self,

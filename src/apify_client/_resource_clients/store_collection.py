@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from apify_client._models import GetListOfActorsInStoreResponse, StoreData
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-from apify_client._types import ListPage
 from apify_client._utils import response_to_dict
-
-if TYPE_CHECKING:
-    from apify_client._models import ActorShort
 
 
 class StoreCollectionClient(ResourceCollectionClient):
@@ -16,16 +13,6 @@ class StoreCollectionClient(ResourceCollectionClient):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
-
-    def _list(self, **kwargs: Any) -> ListPage:
-        """Override to unwrap the 'data' field from the store API response."""
-        response = self.http_client.call(
-            url=self._url(),
-            method='GET',
-            params=self._params(**kwargs),
-        )
-        data = response_to_dict(response)
-        return ListPage(data.get('data', {}))
 
     def list(
         self,
@@ -37,7 +24,7 @@ class StoreCollectionClient(ResourceCollectionClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> ListPage[ActorShort]:
+    ) -> StoreData:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -53,17 +40,23 @@ class StoreCollectionClient(ResourceCollectionClient):
             pricing_model: Filter by this pricing model.
 
         Returns:
-            The list of available tasks matching the specified filters.
+            The list of available actors matching the specified filters.
         """
-        return self._list(
-            limit=limit,
-            offset=offset,
-            search=search,
-            sortBy=sort_by,
-            category=category,
-            username=username,
-            pricingModel=pricing_model,
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(
+                limit=limit,
+                offset=offset,
+                search=search,
+                sortBy=sort_by,
+                category=category,
+                username=username,
+                pricingModel=pricing_model,
+            ),
         )
+        data = response_to_dict(response)
+        return GetListOfActorsInStoreResponse.model_validate(data).data
 
 
 class StoreCollectionClientAsync(ResourceCollectionClientAsync):
@@ -72,16 +65,6 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
         super().__init__(*args, resource_path=resource_path, **kwargs)
-
-    async def _list(self, **kwargs: Any) -> ListPage:
-        """Override to unwrap the 'data' field from the store API response."""
-        response = await self.http_client.call(
-            url=self._url(),
-            method='GET',
-            params=self._params(**kwargs),
-        )
-        data = response_to_dict(response)
-        return ListPage(data.get('data', {}))
 
     async def list(
         self,
@@ -93,7 +76,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> ListPage[ActorShort]:
+    ) -> StoreData:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -109,14 +92,20 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
             pricing_model: Filter by this pricing model.
 
         Returns:
-            The list of available tasks matching the specified filters.
+            The list of available actors matching the specified filters.
         """
-        return await self._list(
-            limit=limit,
-            offset=offset,
-            search=search,
-            sortBy=sort_by,
-            category=category,
-            username=username,
-            pricingModel=pricing_model,
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(
+                limit=limit,
+                offset=offset,
+                search=search,
+                sortBy=sort_by,
+                category=category,
+                username=username,
+                pricingModel=pricing_model,
+            ),
         )
+        data = response_to_dict(response)
+        return GetListOfActorsInStoreResponse.model_validate(data).data

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import CreateRequestQueueResponse, RequestQueue, RequestQueueShort
+from apify_client._models import (
+    CreateRequestQueueResponse,
+    GetListOfRequestQueuesResponse,
+    ListOfRequestQueues,
+    RequestQueue,
+)
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import response_to_dict
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):
@@ -23,7 +26,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[RequestQueueShort]:
+    ) -> ListOfRequestQueues:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -37,7 +40,13 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfRequestQueuesResponse.model_validate(data).data
 
     def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -68,7 +77,7 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[RequestQueueShort]:
+    ) -> ListOfRequestQueues:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -82,7 +91,13 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfRequestQueuesResponse.model_validate(data).data
 
     async def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.

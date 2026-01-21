@@ -107,7 +107,7 @@ class RunClient(ActorJobBaseClient):
             The data of the aborted Actor run.
         """
         response = self._abort(gracefully=gracefully)
-        return Run.model_validate(response)
+        return RunResponse.model_validate(response).data
 
     def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.

@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import Webhook, WebhookDispatch
+from apify_client._models import (
+    GetWebhookResponse,
+    TestWebhookResponse,
+    UpdateWebhookResponse,
+    Webhook,
+    WebhookDispatch,
+)
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.webhook_dispatch_collection import (
     WebhookDispatchCollectionClient,
@@ -74,7 +80,7 @@ class WebhookClient(ResourceClient):
             The retrieved webhook, or None if it does not exist.
         """
         result = self._get()
-        return Webhook.model_validate(result) if result is not None else None
+        return GetWebhookResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -124,7 +130,7 @@ class WebhookClient(ResourceClient):
         )
 
         result = self._update(filter_out_none_values_recursively(webhook_representation))
-        return Webhook.model_validate(result)
+        return UpdateWebhookResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the webhook.
@@ -151,7 +157,7 @@ class WebhookClient(ResourceClient):
             )
 
             result = response.json()
-            return WebhookDispatch.model_validate(result) if result is not None else None
+            return TestWebhookResponse.model_validate(result).data if result is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -187,7 +193,7 @@ class WebhookClientAsync(ResourceClientAsync):
             The retrieved webhook, or None if it does not exist.
         """
         result = await self._get()
-        return Webhook.model_validate(result) if result is not None else None
+        return GetWebhookResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -237,7 +243,7 @@ class WebhookClientAsync(ResourceClientAsync):
         )
 
         result = await self._update(filter_out_none_values_recursively(webhook_representation))
-        return Webhook.model_validate(result)
+        return UpdateWebhookResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the webhook.
@@ -264,7 +270,7 @@ class WebhookClientAsync(ResourceClientAsync):
             )
 
             result = response.json()
-            return WebhookDispatch.model_validate(result) if result is not None else None
+            return TestWebhookResponse.model_validate(result).data if result is not None else None
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

@@ -22,3 +22,14 @@ def test_limits(apify_client: ApifyClient) -> None:
     assert limits is not None
     # Verify we have at least some limit information
     # The actual fields depend on the account type
+
+
+def test_monthly_usage(apify_client: ApifyClient) -> None:
+    """Test retrieving monthly usage information."""
+    usage = apify_client.user().monthly_usage()
+
+    assert usage is not None
+    # Verify expected fields exist
+    assert usage.usage_cycle is not None
+    assert isinstance(usage.monthly_service_usage, dict)
+    assert isinstance(usage.daily_service_usages, list)

@@ -18,7 +18,7 @@ class ResourceCollectionClient(BaseClient):
         )
 
         data = response_to_dict(response)
-        return ListPage(data)
+        return ListPage(data.get('data', data))
 
     def _create(self, resource: dict) -> dict:
         response = self.http_client.call(
@@ -52,7 +52,7 @@ class ResourceCollectionClientAsync(BaseClientAsync):
         )
 
         data = response_to_dict(response)
-        return ListPage(data)
+        return ListPage(data.get('data', data))
 
     async def _create(self, resource: dict) -> dict:
         response = await self.http_client.call(

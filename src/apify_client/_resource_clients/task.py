@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from apify_client._models import Run, RunOrigin, RunResponse, Task
+from apify_client._models import CreateTaskResponse, Run, RunOrigin, RunResponse, Task
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.run import RunClient, RunClientAsync
 from apify_client._resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
@@ -88,7 +88,7 @@ class TaskClient(ResourceClient):
             The retrieved task.
         """
         result = self._get()
-        return Task.model_validate(result) if result is not None else None
+        return CreateTaskResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -154,7 +154,7 @@ class TaskClient(ResourceClient):
         )
 
         result = self._update(filter_out_none_values_recursively(task_representation))
-        return Task.model_validate(result)
+        return CreateTaskResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the task.
@@ -359,7 +359,7 @@ class TaskClientAsync(ResourceClientAsync):
             The retrieved task.
         """
         result = await self._get()
-        return Task.model_validate(result) if result is not None else None
+        return CreateTaskResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -425,7 +425,7 @@ class TaskClientAsync(ResourceClientAsync):
         )
 
         result = await self._update(filter_out_none_values_recursively(task_representation))
-        return Task.model_validate(result)
+        return CreateTaskResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the task.

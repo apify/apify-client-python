@@ -95,7 +95,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         )
 
         result = self._create(filter_out_none_values_recursively(webhook_representation))
-        return Webhook.model_validate(result)
+        return CreateWebhookResponse.model_validate(result).data
 
 
 class WebhookCollectionClientAsync(ResourceCollectionClientAsync):

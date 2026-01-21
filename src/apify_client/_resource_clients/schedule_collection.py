@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import GetListOfSchedulesResponseDataItems, ScheduleResponseData
+from apify_client._models import GetListOfSchedulesResponseDataItems, ScheduleResponse, ScheduleResponseData
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._resource_clients.schedule import _get_schedule_representation
 from apify_client._utils import filter_out_none_values_recursively
@@ -85,7 +85,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         )
 
         result = self._create(filter_out_none_values_recursively(schedule_representation))
-        return ScheduleResponseData.model_validate(result)
+        return ScheduleResponse.model_validate(result).data
 
 
 class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
@@ -162,4 +162,4 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         )
 
         result = await self._create(filter_out_none_values_recursively(schedule_representation))
-        return ScheduleResponseData.model_validate(result)
+        return ScheduleResponse.model_validate(result).data

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import CreateKeyValueStoreResponse, KeyValueStore
+from apify_client._models import (
+    CreateKeyValueStoreResponse,
+    GetListOfKeyValueStoresResponse,
+    KeyValueStore,
+    ListOfKeyValueStores,
+)
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class KeyValueStoreCollectionClient(ResourceCollectionClient):
@@ -24,7 +26,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[KeyValueStore]:
+    ) -> ListOfKeyValueStores:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -38,7 +40,13 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfKeyValueStoresResponse.model_validate(data).data
 
     def get_or_create(
         self,
@@ -75,7 +83,7 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[KeyValueStore]:
+    ) -> ListOfKeyValueStores:
         """List the available key-value stores.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
@@ -89,7 +97,13 @@ class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfKeyValueStoresResponse.model_validate(data).data
 
     async def get_or_create(
         self,

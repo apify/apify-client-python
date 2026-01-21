@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import ScheduleInvoked, ScheduleResponseData
+from apify_client._models import ScheduleInvoked, ScheduleResponse, ScheduleResponseData
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_list
 from apify_client.errors import ApifyApiError
@@ -47,7 +47,7 @@ class ScheduleClient(ResourceClient):
             The retrieved schedule.
         """
         result = self._get()
-        return ScheduleResponseData.model_validate(result) if result is not None else None
+        return ScheduleResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -92,7 +92,7 @@ class ScheduleClient(ResourceClient):
         )
 
         result = self._update(filter_out_none_values_recursively(schedule_representation))
-        return ScheduleResponseData.model_validate(result)
+        return ScheduleResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the schedule.
@@ -139,7 +139,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             The retrieved schedule.
         """
         result = await self._get()
-        return ScheduleResponseData.model_validate(result) if result is not None else None
+        return ScheduleResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -184,7 +184,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         )
 
         result = await self._update(filter_out_none_values_recursively(schedule_representation))
-        return ScheduleResponseData.model_validate(result)
+        return ScheduleResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the schedule.

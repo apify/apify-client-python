@@ -42,6 +42,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "black>=24.3.0",  # Security fix for CVE-2024-21503 (ReDoS vulnerability)
     "dycw-pytest-only<3.0.0",
     "griffe",
     "pre-commit<5.0.0",

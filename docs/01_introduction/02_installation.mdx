@@ -1,0 +1,39 @@
+---
+id: installation
+title: Installation
+description: 'How to install the Apify client for Python and verify the installation.'
+---
+
+## Prerequisites
+
+Before installing the Apify client, ensure your system meets the following requirements:
+
+- _An Apify account_
+- _Python 3.10 or higher_: You can download Python from the [official website](https://www.python.org/downloads/).
+- _Python package manager_: While this guide uses [pip](https://pip.pypa.io/en/stable/), you can also use any package manager you want.
+
+To verify that Python and pip are installed, run the following commands:
+
+```sh
+python --version
+```
+
+```sh
+pip --version
+```
+
+If these commands return the respective versions, you're ready to continue.
+
+## Installation
+
+The Apify client is available as the [`apify-client`](https://pypi.org/project/apify-client/) package on PyPI. To install it, run:
+
+```sh
+pip install apify-client
+```
+
+After installation, verify that the client is installed correctly by checking its version:
+
+```sh
+python -c 'import apify_client; print(apify_client.__version__)'
+```

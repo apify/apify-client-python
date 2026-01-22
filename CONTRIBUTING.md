@@ -15,7 +15,7 @@ All tasks are defined in `pyproject.toml` under `[tool.poe.tasks]` and can be ru
 
 | Task | Description |
 | ---- | ----------- |
-| `install-dev` | Install dependencies and pre-commit hooks |
+| `install-dev` | Install development dependencies |
 | `check-code` | Run lint, type-check, unit-tests, and docstring check |
 | `lint` | Run linter |
 | `format` | Fix lint issues and format code |
@@ -27,9 +27,9 @@ All tasks are defined in `pyproject.toml` under `[tool.poe.tasks]` and can be ru
 | `check-async-docstrings` | Check async client docstrings |
 | `fix-async-docstrings` | Fix async client docstrings |
 | `build-docs` | Build documentation website |
-| `run-docs` | Run documentation locally |
+| `run-docs` | Run documentation website locally |
 | `build` | Build package |
-| `clean` | Remove build artifacts |
+| `clean` | Remove build artifacts and clean caches |
 
 ## Dependencies
 

@@ -54,7 +54,9 @@ for client_source_path in clients_path.glob('**/*.py'):
 
 if found_issues:
     print()
-    print('Issues with async docstrings found. Please fix them manually or by running `make fix-async-docstrings`.')
+    print(
+        'Issues with async docstrings found. Please fix them manually or by running `uv run poe fix-async-docstrings`.'
+    )
     sys.exit(1)
 else:
     print('Success: async method docstrings are in sync with sync method docstrings.')

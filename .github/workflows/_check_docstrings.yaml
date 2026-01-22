@@ -30,7 +30,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: make install-dev
+        run: uv run poe install-dev
 
       - name: Async docstrings check
-        run: make check-async-docstrings
+        run: uv run poe check-async-docstrings

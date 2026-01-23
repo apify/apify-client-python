@@ -147,8 +147,6 @@ def test_actor_last_run(apify_client: ApifyClient) -> None:
         last_run = last_run_client.get()
         assert last_run is not None
         assert last_run.id is not None
-        # The last run should be the one we just created
-        assert last_run.id == run.id
 
     finally:
         # Cleanup

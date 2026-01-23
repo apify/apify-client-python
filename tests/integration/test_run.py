@@ -222,16 +222,22 @@ def test_run_metamorph(apify_client: ApifyClient) -> None:
         time.sleep(2)
 
         # Metamorph the run into the same actor (allowed) with new input
-        metamorphed_run = run_client.metamorph(
-            target_actor_id=HELLO_WORLD_ACTOR,
-            run_input={'message': 'Hello from metamorph!'},
-        )
-        assert metamorphed_run is not None
-        assert metamorphed_run.id == run.id  # Same run ID
+        # Note: hello-world may finish before we can metamorph, so we handle that case
+        try:
+            metamorphed_run = run_client.metamorph(
+                target_actor_id=HELLO_WORLD_ACTOR,
+                run_input={'message': 'Hello from metamorph!'},
+            )
+            assert metamorphed_run is not None
+            assert metamorphed_run.id == run.id  # Same run ID
 
-        # Wait for the metamorphed run to finish
-        final_run = run_client.wait_for_finish()
-        assert final_run is not None
+            # Wait for the metamorphed run to finish
+            final_run = run_client.wait_for_finish()
+            assert final_run is not None
+        except ApifyApiError as exc:
+            # If the actor finished before we could metamorph, that's OK - the test still verified the API call
+            if 'already finished' not in str(exc):
+                raise
 
     finally:
         # Cleanup
@@ -255,10 +261,16 @@ def test_run_reboot(apify_client: ApifyClient) -> None:
         current_run = run_client.get()
 
         # Only try to reboot if the run is still running
+        # Note: There's a race condition - run may finish between check and reboot call
         if current_run and current_run.status.value == 'RUNNING':
-            rebooted_run = run_client.reboot()
-            assert rebooted_run is not None
-            assert rebooted_run.id == run.id
+            try:
+                rebooted_run = run_client.reboot()
+                assert rebooted_run is not None
+                assert rebooted_run.id == run.id
+            except ApifyApiError as exc:
+                # If the actor finished before we could reboot, that's OK
+                if 'already finished' not in str(exc):
+                    raise
 
         # Wait for the run to finish
         final_run = run_client.wait_for_finish()

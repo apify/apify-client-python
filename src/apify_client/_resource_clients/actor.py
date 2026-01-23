@@ -499,7 +499,7 @@ class ActorClient(BaseClient):
             base_url=self.base_url,
             http_client=self.http_client,
             root_client=self.root_client,
-            resource_id=response_as_dict['id'],
+            resource_id=response_as_dict['data']['id'],
         )
 
     def last_run(
@@ -939,7 +939,7 @@ class ActorClientAsync(BaseClientAsync):
             base_url=self.base_url,
             http_client=self.http_client,
             root_client=self.root_client,
-            resource_id=response_as_dict['id'],
+            resource_id=response_as_dict['data']['id'],
         )
 
     def last_run(

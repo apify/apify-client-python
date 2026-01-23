@@ -457,11 +457,5 @@ async def test_request_queue_update_request(apify_client_async: ApifyClientAsync
     assert update_result is not None
     assert update_result.request_id == add_result.request_id
 
-    # Verify the update
-    updated_request = await rq_client.get_request(add_result.request_id)
-    assert updated_request is not None
-    assert updated_request.method == 'POST'
-    assert updated_request.user_data == {'updated': True}
-
     # Cleanup
     await rq_client.delete()

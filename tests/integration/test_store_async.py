@@ -2,13 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
 
-@pytest.mark.asyncio
 async def test_store_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing public actors in the store."""
     actors_list = await apify_client_async.store().list(limit=10)
@@ -17,7 +14,6 @@ async def test_store_list(apify_client_async: ApifyClientAsync) -> None:
     assert len(actors_list.items) > 0  # Store always has actors
 
 
-@pytest.mark.asyncio
 async def test_store_list_with_search(apify_client_async: ApifyClientAsync) -> None:
     """Test listing store with search filter."""
     store_page = await apify_client_async.store().list(limit=5, search='web scraper')
@@ -27,7 +23,6 @@ async def test_store_list_with_search(apify_client_async: ApifyClientAsync) -> N
     assert isinstance(store_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_store_list_pagination(apify_client_async: ApifyClientAsync) -> None:
     """Test store listing pagination."""
     page1 = await apify_client_async.store().list(limit=5, offset=0)

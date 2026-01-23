@@ -55,9 +55,9 @@ def test_request_queue_lock(apify_client: ApifyClient) -> None:
     assert apify_client.request_queue(created_rq.id).get() is None
 
 
-##################################################
-# NEW TESTS - Basic CRUD operations without mocks
-##################################################
+#############
+# NEW TESTS #
+#############
 
 
 def test_request_queue_get_or_create_and_get(apify_client: ApifyClient) -> None:
@@ -415,6 +415,52 @@ def test_request_queue_unlock_requests(apify_client: ApifyClient) -> None:
     unlock_response = rq_client.unlock_requests()
     assert unlock_response is not None
     assert unlock_response.unlocked_count == 3
+
+    # Cleanup
+    rq_client.delete()
+
+
+def test_request_queue_update_request(apify_client: ApifyClient) -> None:
+    """Test updating a request in the queue."""
+    rq_name = get_random_resource_name('queue')
+
+    created_rq = apify_client.request_queues().get_or_create(name=rq_name)
+    rq_client = apify_client.request_queue(created_rq.id)
+
+    # Add a request
+    request_data = {
+        'url': 'https://example.com/original',
+        'uniqueKey': 'update-test',
+        'method': 'GET',
+    }
+    add_result = rq_client.add_request(request_data)
+    assert add_result is not None
+    assert add_result.request_id is not None
+
+    # Wait briefly for eventual consistency
+    time.sleep(1)
+
+    # Get the request to get its full data
+    original_request = rq_client.get_request(add_result.request_id)
+    assert original_request is not None
+
+    # Update the request (change method and add user data)
+    updated_request_data = {
+        'id': add_result.request_id,
+        'url': str(original_request.url),
+        'uniqueKey': original_request.unique_key,
+        'method': 'POST',
+        'userData': {'updated': True},
+    }
+    update_result = rq_client.update_request(updated_request_data)
+    assert update_result is not None
+    assert update_result.request_id == add_result.request_id
+
+    # Verify the update
+    updated_request = rq_client.get_request(add_result.request_id)
+    assert updated_request is not None
+    assert updated_request.method == 'POST'
+    assert updated_request.user_data == {'updated': True}
 
     # Cleanup
     rq_client.delete()

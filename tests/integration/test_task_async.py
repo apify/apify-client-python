@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from .utils import get_random_resource_name
 
 if TYPE_CHECKING:
@@ -13,7 +11,6 @@ if TYPE_CHECKING:
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
 
-@pytest.mark.asyncio
 async def test_task_create_and_get(apify_client_async: ApifyClientAsync) -> None:
     """Test creating a task and retrieving it."""
     task_name = get_random_resource_name('task')
@@ -44,7 +41,6 @@ async def test_task_create_and_get(apify_client_async: ApifyClientAsync) -> None
     await task_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_task_update(apify_client_async: ApifyClientAsync) -> None:
     """Test updating task properties."""
     task_name = get_random_resource_name('task')
@@ -79,7 +75,6 @@ async def test_task_update(apify_client_async: ApifyClientAsync) -> None:
     await task_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_task_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing tasks."""
     task_name = get_random_resource_name('task')
@@ -107,7 +102,6 @@ async def test_task_list(apify_client_async: ApifyClientAsync) -> None:
     await apify_client_async.task(created_task.id).delete()
 
 
-@pytest.mark.asyncio
 async def test_task_get_input(apify_client_async: ApifyClientAsync) -> None:
     """Test getting and updating task input."""
     task_name = get_random_resource_name('task')
@@ -140,7 +134,6 @@ async def test_task_get_input(apify_client_async: ApifyClientAsync) -> None:
     await task_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_task_start(apify_client_async: ApifyClientAsync) -> None:
     """Test starting a task run."""
     task_name = get_random_resource_name('task')
@@ -172,7 +165,6 @@ async def test_task_start(apify_client_async: ApifyClientAsync) -> None:
     await task_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_task_call(apify_client_async: ApifyClientAsync) -> None:
     """Test calling a task and waiting for completion."""
     task_name = get_random_resource_name('task')
@@ -199,7 +191,6 @@ async def test_task_call(apify_client_async: ApifyClientAsync) -> None:
     await task_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_task_delete(apify_client_async: ApifyClientAsync) -> None:
     """Test deleting a task."""
     task_name = get_random_resource_name('task')

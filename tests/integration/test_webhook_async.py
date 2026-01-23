@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
 from apify_shared.consts import WebhookEventType
 
 if TYPE_CHECKING:
@@ -11,7 +10,6 @@ if TYPE_CHECKING:
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
 
-@pytest.mark.asyncio
 async def test_list_webhooks(apify_client_async: ApifyClientAsync) -> None:
     """Test listing webhooks."""
     webhooks_page = await apify_client_async.webhooks().list(limit=10)
@@ -22,7 +20,6 @@ async def test_list_webhooks(apify_client_async: ApifyClientAsync) -> None:
     assert isinstance(webhooks_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_list_webhooks_pagination(apify_client_async: ApifyClientAsync) -> None:
     """Test listing webhooks with pagination."""
     webhooks_page = await apify_client_async.webhooks().list(limit=5, offset=0)
@@ -32,7 +29,6 @@ async def test_list_webhooks_pagination(apify_client_async: ApifyClientAsync) ->
     assert isinstance(webhooks_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_webhook_create_and_get(apify_client_async: ApifyClientAsync) -> None:
     """Test creating a webhook and retrieving it."""
     # Get actor ID for webhook condition
@@ -58,7 +54,6 @@ async def test_webhook_create_and_get(apify_client_async: ApifyClientAsync) -> N
     await webhook_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_webhook_update(apify_client_async: ApifyClientAsync) -> None:
     """Test updating a webhook."""
     actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()
@@ -83,7 +78,6 @@ async def test_webhook_update(apify_client_async: ApifyClientAsync) -> None:
     await webhook_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_webhook_test(apify_client_async: ApifyClientAsync) -> None:
     """Test the webhook test endpoint."""
     actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()
@@ -106,7 +100,6 @@ async def test_webhook_test(apify_client_async: ApifyClientAsync) -> None:
     await webhook_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_webhook_dispatches(apify_client_async: ApifyClientAsync) -> None:
     """Test listing webhook dispatches."""
     actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()
@@ -133,7 +126,6 @@ async def test_webhook_dispatches(apify_client_async: ApifyClientAsync) -> None:
     await webhook_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_webhook_delete(apify_client_async: ApifyClientAsync) -> None:
     """Test deleting a webhook."""
     actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()

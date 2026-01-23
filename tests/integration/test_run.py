@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import time
 from typing import TYPE_CHECKING
+
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient
@@ -202,3 +205,95 @@ def test_run_runs_client(apify_client: ApifyClient) -> None:
         first_run = runs_page.items[0]
         assert first_run.id is not None
         assert first_run.act_id is not None
+
+
+def test_run_metamorph(apify_client: ApifyClient) -> None:
+    """Test metamorphing a run into another actor."""
+    # Start an actor that will run long enough to metamorph. We use hello-world and try to metamorph it into itself
+    actor = apify_client.actor(HELLO_WORLD_ACTOR)
+    run = actor.start()
+    assert run is not None
+    assert run.id is not None
+
+    run_client = apify_client.run(run.id)
+
+    try:
+        # Wait a bit for the run to start properly
+        time.sleep(2)
+
+        # Metamorph the run into the same actor (allowed) with new input
+        metamorphed_run = run_client.metamorph(
+            target_actor_id=HELLO_WORLD_ACTOR,
+            run_input={'message': 'Hello from metamorph!'},
+        )
+        assert metamorphed_run is not None
+        assert metamorphed_run.id == run.id  # Same run ID
+
+        # Wait for the metamorphed run to finish
+        final_run = run_client.wait_for_finish()
+        assert final_run is not None
+
+    finally:
+        # Cleanup
+        run_client.wait_for_finish()
+        run_client.delete()
+
+
+def test_run_reboot(apify_client: ApifyClient) -> None:
+    """Test rebooting a running actor."""
+    # Start an actor
+    actor = apify_client.actor(HELLO_WORLD_ACTOR)
+    run = actor.start()
+    assert run is not None
+    assert run.id is not None
+
+    run_client = apify_client.run(run.id)
+
+    try:
+        # Wait a bit and check if the run is still running
+        time.sleep(1)
+        current_run = run_client.get()
+
+        # Only try to reboot if the run is still running
+        if current_run and current_run.status.value == 'RUNNING':
+            rebooted_run = run_client.reboot()
+            assert rebooted_run is not None
+            assert rebooted_run.id == run.id
+
+        # Wait for the run to finish
+        final_run = run_client.wait_for_finish()
+        assert final_run is not None
+
+    finally:
+        # Cleanup
+        run_client.wait_for_finish()
+        run_client.delete()
+
+
+def test_run_charge(apify_client: ApifyClient) -> None:
+    """Test charging for an event in a pay-per-event run.
+
+    Note: This test may fail if the actor is not a pay-per-event actor. The test verifies that the charge method can
+    be called correctly.
+    """
+    # Run an actor
+    actor = apify_client.actor(HELLO_WORLD_ACTOR)
+    run = actor.call()
+    assert run is not None
+
+    run_client = apify_client.run(run.id)
+
+    try:
+        # Try to charge - this will fail for non-PPE actors but tests the API call
+        try:
+            run_client.charge(event_name='test-event', count=1)
+            # If it succeeds, the actor supports PPE
+        except ApifyApiError as exc:
+            # Expected error for non-PPE actors - re-raise if unexpected.
+            # The API returns an error indicating this is not a PPE run.
+            if exc.status_code not in [400, 403, 404]:
+                raise
+
+    finally:
+        # Cleanup
+        run_client.delete()

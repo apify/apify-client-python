@@ -189,10 +189,10 @@ class HTTPClient(_BaseHTTPClient):
                 if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
                     self.stats.add_rate_limit_error(attempt)
 
-            except Exception as e:
-                logger.debug('Request threw exception', exc_info=e)
-                if not is_retryable_error(e):
-                    logger.debug('Exception is not retryable', exc_info=e)
+            except Exception as exc:
+                logger.debug('Request threw exception', exc_info=exc)
+                if not is_retryable_error(exc):
+                    logger.debug('Exception is not retryable', exc_info=exc)
                     stop_retrying()
                 raise
 
@@ -265,10 +265,10 @@ class HTTPClientAsync(_BaseHTTPClient):
                 if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
                     self.stats.add_rate_limit_error(attempt)
 
-            except Exception as e:
-                logger.debug('Request threw exception', exc_info=e)
-                if not is_retryable_error(e):
-                    logger.debug('Exception is not retryable', exc_info=e)
+            except Exception as exc:
+                logger.debug('Request threw exception', exc_info=exc)
+                if not is_retryable_error(exc):
+                    logger.debug('Exception is not retryable', exc_info=exc)
                     stop_retrying()
                 raise
 

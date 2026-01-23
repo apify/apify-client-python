@@ -2,13 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
 
-@pytest.mark.asyncio
 async def test_webhook_dispatch_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing webhook dispatches."""
     dispatches_page = await apify_client_async.webhook_dispatches().list(limit=10)

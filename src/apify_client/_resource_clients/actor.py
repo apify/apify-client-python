@@ -472,7 +472,7 @@ class ActorClient(BaseClient):
         """Retrieve a client for the runs of this Actor."""
         return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
 
-    async def default_build(
+    def default_build(
         self,
         *,
         wait_for_finish: int | None = None,

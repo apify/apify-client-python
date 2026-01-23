@@ -113,3 +113,53 @@ async def test_actor_create_update_delete(apify_client_async: ApifyClientAsync) 
     # Verify deletion
     deleted_actor = await actor_client.get()
     assert deleted_actor is None
+
+
+async def test_actor_default_build(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting an actor's default build."""
+    # Use a public actor that has builds
+    actor_client = apify_client_async.actor('apify/hello-world')
+
+    # Get default build client
+    build_client = await actor_client.default_build()
+    assert build_client is not None
+
+    # Use the returned client to get the build
+    build = await build_client.get()
+    assert build is not None
+    assert build.id is not None
+    assert build.status is not None
+
+
+async def test_actor_last_run(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting an actor's last run."""
+    # First run an actor to ensure there is a last run
+    actor_client = apify_client_async.actor('apify/hello-world')
+    run = await actor_client.call()
+    assert run is not None
+
+    try:
+        # Get last run client
+        last_run_client = actor_client.last_run()
+        assert last_run_client is not None
+
+        # Use the returned client to get the run
+        last_run = await last_run_client.get()
+        assert last_run is not None
+        assert last_run.id is not None
+        # The last run should be the one we just created
+        assert last_run.id == run.id
+
+    finally:
+        # Cleanup
+        await apify_client_async.run(run.id).delete()
+
+
+async def test_actor_validate_input(apify_client_async: ApifyClientAsync) -> None:
+    """Test validating actor input."""
+    # Use a public actor with an input schema
+    actor_client = apify_client_async.actor('apify/hello-world')
+
+    # Valid input (hello-world accepts empty input or simple input)
+    is_valid = await actor_client.validate_input({})
+    assert is_valid is True

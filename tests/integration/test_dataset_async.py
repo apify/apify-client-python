@@ -159,9 +159,9 @@ async def test_get_items_as_bytes_signature(
     assert test_dataset_of_another_user.expected_content == json.loads(raw_data.decode('utf-8'))
 
 
-##################################################
-# NEW TESTS - Basic CRUD operations without mocks
-##################################################
+#############
+# NEW TESTS #
+#############
 
 
 async def test_dataset_get_or_create_and_get(apify_client_async: ApifyClientAsync) -> None:
@@ -372,6 +372,39 @@ async def test_dataset_get_statistics(apify_client_async: ApifyClientAsync) -> N
 
         # Verify statistics is returned and properly parsed
         assert statistics is not None
+
+    finally:
+        # Cleanup
+        await dataset_client.delete()
+
+
+async def test_dataset_stream_items(apify_client_async: ApifyClientAsync) -> None:
+    """Test streaming dataset items."""
+    dataset_name = get_random_resource_name('dataset')
+
+    created_dataset = await apify_client_async.datasets().get_or_create(name=dataset_name)
+    dataset_client = apify_client_async.dataset(created_dataset.id)
+
+    try:
+        # Push some items
+        items_to_push = [
+            {'id': 1, 'name': 'Item 1', 'value': 100},
+            {'id': 2, 'name': 'Item 2', 'value': 200},
+            {'id': 3, 'name': 'Item 3', 'value': 300},
+        ]
+        await dataset_client.push_items(items_to_push)
+
+        # Wait briefly for eventual consistency
+        await asyncio.sleep(1)
+
+        # Stream items using async context manager
+        async with dataset_client.stream_items(item_format='json') as response:
+            assert response is not None
+            assert response.status_code == 200
+            content = await response.aread()
+            items = json.loads(content)
+            assert len(items) == 3
+            assert items[0]['id'] == 1
 
     finally:
         # Cleanup

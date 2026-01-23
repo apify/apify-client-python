@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from .utils import get_random_resource_name
 
 if TYPE_CHECKING:
@@ -13,7 +11,6 @@ if TYPE_CHECKING:
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
 
-@pytest.mark.asyncio
 async def test_build_list_for_actor(apify_client_async: ApifyClientAsync) -> None:
     """Test listing builds for a public actor."""
     # Get builds for hello-world actor
@@ -30,7 +27,6 @@ async def test_build_list_for_actor(apify_client_async: ApifyClientAsync) -> Non
     assert first_build.act_id is not None
 
 
-@pytest.mark.asyncio
 async def test_build_get(apify_client_async: ApifyClientAsync) -> None:
     """Test getting a specific build."""
     # First list builds to get a build ID
@@ -48,7 +44,6 @@ async def test_build_get(apify_client_async: ApifyClientAsync) -> None:
     assert build.status is not None
 
 
-@pytest.mark.asyncio
 async def test_user_builds_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing all user builds."""
     # List user's builds (may be empty if user has no actors)

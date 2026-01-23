@@ -216,9 +216,9 @@ async def test_stream_record_signature(
     assert test_kvs_of_another_user.expected_content[key] == value
 
 
-##################################################
-# NEW TESTS - Basic CRUD operations without mocks
-##################################################
+#############
+# NEW TESTS #
+#############
 
 
 async def test_key_value_store_get_or_create_and_get(apify_client_async: ApifyClientAsync) -> None:

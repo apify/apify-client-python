@@ -3,13 +3,10 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-import pytest
-
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
 
-@pytest.mark.asyncio
 async def test_request_queues_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing request queues."""
     rq_page = await apify_client_async.request_queues().list(limit=10)
@@ -19,7 +16,6 @@ async def test_request_queues_list(apify_client_async: ApifyClientAsync) -> None
     assert isinstance(rq_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_request_queues_list_pagination(apify_client_async: ApifyClientAsync) -> None:
     """Test listing request queues with pagination."""
     rq_page = await apify_client_async.request_queues().list(limit=5, offset=0)
@@ -29,7 +25,6 @@ async def test_request_queues_list_pagination(apify_client_async: ApifyClientAsy
     assert isinstance(rq_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_request_queues_get_or_create(apify_client_async: ApifyClientAsync) -> None:
     """Test get_or_create for request queues."""
     unique_name = f'test-rq-{uuid.uuid4().hex[:8]}'

@@ -113,3 +113,53 @@ def test_actor_create_update_delete(apify_client: ApifyClient) -> None:
     # Verify deletion
     deleted_actor = actor_client.get()
     assert deleted_actor is None
+
+
+def test_actor_default_build(apify_client: ApifyClient) -> None:
+    """Test getting an actor's default build."""
+    # Use a public actor that has builds
+    actor_client = apify_client.actor('apify/hello-world')
+
+    # Get default build client
+    build_client = actor_client.default_build()
+    assert build_client is not None
+
+    # Use the returned client to get the build
+    build = build_client.get()
+    assert build is not None
+    assert build.id is not None
+    assert build.status is not None
+
+
+def test_actor_last_run(apify_client: ApifyClient) -> None:
+    """Test getting an actor's last run."""
+    # First run an actor to ensure there is a last run
+    actor_client = apify_client.actor('apify/hello-world')
+    run = actor_client.call()
+    assert run is not None
+
+    try:
+        # Get last run client
+        last_run_client = actor_client.last_run()
+        assert last_run_client is not None
+
+        # Use the returned client to get the run
+        last_run = last_run_client.get()
+        assert last_run is not None
+        assert last_run.id is not None
+        # The last run should be the one we just created
+        assert last_run.id == run.id
+
+    finally:
+        # Cleanup
+        apify_client.run(run.id).delete()
+
+
+def test_actor_validate_input(apify_client: ApifyClient) -> None:
+    """Test validating actor input."""
+    # Use a public actor with an input schema
+    actor_client = apify_client.actor('apify/hello-world')
+
+    # Valid input (hello-world accepts empty input or simple input)
+    is_valid = actor_client.validate_input({})
+    assert is_valid is True

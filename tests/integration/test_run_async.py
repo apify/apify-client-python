@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
-import pytest
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
@@ -10,7 +11,6 @@ if TYPE_CHECKING:
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
 
-@pytest.mark.asyncio
 async def test_run_get_and_delete(apify_client_async: ApifyClientAsync) -> None:
     """Test getting and deleting a run."""
     # Run actor
@@ -33,7 +33,6 @@ async def test_run_get_and_delete(apify_client_async: ApifyClientAsync) -> None:
     assert deleted_run is None
 
 
-@pytest.mark.asyncio
 async def test_run_dataset(apify_client_async: ApifyClientAsync) -> None:
     """Test accessing run's default dataset."""
     # Run actor
@@ -54,7 +53,6 @@ async def test_run_dataset(apify_client_async: ApifyClientAsync) -> None:
     await run_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_run_key_value_store(apify_client_async: ApifyClientAsync) -> None:
     """Test accessing run's default key-value store."""
     # Run actor
@@ -75,7 +73,6 @@ async def test_run_key_value_store(apify_client_async: ApifyClientAsync) -> None
     await run_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_run_request_queue(apify_client_async: ApifyClientAsync) -> None:
     """Test accessing run's default request queue."""
     # Run actor
@@ -96,7 +93,6 @@ async def test_run_request_queue(apify_client_async: ApifyClientAsync) -> None:
     await run_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_run_abort(apify_client_async: ApifyClientAsync) -> None:
     """Test aborting a running actor."""
     # Start actor without waiting
@@ -209,3 +205,95 @@ async def test_run_runs_client(apify_client_async: ApifyClientAsync) -> None:
         first_run = runs_page.items[0]
         assert first_run.id is not None
         assert first_run.act_id is not None
+
+
+async def test_run_metamorph(apify_client_async: ApifyClientAsync) -> None:
+    """Test metamorphing a run into another actor."""
+    # Start an actor that will run long enough to metamorph. We use hello-world and try to metamorph it into itself
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    run = await actor.start()
+    assert run is not None
+    assert run.id is not None
+
+    run_client = apify_client_async.run(run.id)
+
+    try:
+        # Wait a bit for the run to start properly
+        await asyncio.sleep(2)
+
+        # Metamorph the run into the same actor (allowed) with new input
+        metamorphed_run = await run_client.metamorph(
+            target_actor_id=HELLO_WORLD_ACTOR,
+            run_input={'message': 'Hello from metamorph!'},
+        )
+        assert metamorphed_run is not None
+        assert metamorphed_run.id == run.id  # Same run ID
+
+        # Wait for the metamorphed run to finish
+        final_run = await run_client.wait_for_finish()
+        assert final_run is not None
+
+    finally:
+        # Cleanup
+        await run_client.wait_for_finish()
+        await run_client.delete()
+
+
+async def test_run_reboot(apify_client_async: ApifyClientAsync) -> None:
+    """Test rebooting a running actor."""
+    # Start an actor
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    run = await actor.start()
+    assert run is not None
+    assert run.id is not None
+
+    run_client = apify_client_async.run(run.id)
+
+    try:
+        # Wait a bit and check if the run is still running
+        await asyncio.sleep(1)
+        current_run = await run_client.get()
+
+        # Only try to reboot if the run is still running
+        if current_run and current_run.status.value == 'RUNNING':
+            rebooted_run = await run_client.reboot()
+            assert rebooted_run is not None
+            assert rebooted_run.id == run.id
+
+        # Wait for the run to finish
+        final_run = await run_client.wait_for_finish()
+        assert final_run is not None
+
+    finally:
+        # Cleanup
+        await run_client.wait_for_finish()
+        await run_client.delete()
+
+
+async def test_run_charge(apify_client_async: ApifyClientAsync) -> None:
+    """Test charging for an event in a pay-per-event run.
+
+    Note: This test may fail if the actor is not a pay-per-event actor. The test verifies that the charge method can
+    be called correctly.
+    """
+    # Run an actor
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    run = await actor.call()
+    assert run is not None
+
+    run_client = apify_client_async.run(run.id)
+
+    try:
+        # Try to charge - this will fail for non-PPE actors but tests the API call
+        try:
+            await run_client.charge(event_name='test-event', count=1)
+            # If it succeeds, the actor supports PPE
+        except ApifyApiError as exc:
+            # Expected error for non-PPE actors - re-raise if unexpected.
+            # The API returns an error indicating this is not a PPE run.
+            if exc.status_code not in [400, 403, 404]:
+                raise
+
+    finally:
+        # Cleanup
+        await run_client.delete()

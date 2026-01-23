@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
@@ -11,7 +9,6 @@ if TYPE_CHECKING:
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
 
-@pytest.mark.asyncio
 async def test_log_get_from_run(apify_client_async: ApifyClientAsync) -> None:
     """Test retrieving log from an actor run."""
     # Run hello-world actor
@@ -31,7 +28,6 @@ async def test_log_get_from_run(apify_client_async: ApifyClientAsync) -> None:
     await run_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_log_get_from_build(apify_client_async: ApifyClientAsync) -> None:
     """Test retrieving log from a build."""
     # Get a build from hello-world actor
@@ -49,7 +45,6 @@ async def test_log_get_from_build(apify_client_async: ApifyClientAsync) -> None:
         assert isinstance(log, str)
 
 
-@pytest.mark.asyncio
 async def test_log_get_as_bytes(apify_client_async: ApifyClientAsync) -> None:
     """Test retrieving log as raw bytes."""
     # Run hello-world actor

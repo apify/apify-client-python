@@ -3,13 +3,10 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-import pytest
-
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
 
-@pytest.mark.asyncio
 async def test_datasets_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing datasets."""
     datasets_page = await apify_client_async.datasets().list(limit=10)
@@ -19,7 +16,6 @@ async def test_datasets_list(apify_client_async: ApifyClientAsync) -> None:
     assert isinstance(datasets_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_datasets_list_pagination(apify_client_async: ApifyClientAsync) -> None:
     """Test listing datasets with pagination."""
     datasets_page = await apify_client_async.datasets().list(limit=5, offset=0)
@@ -29,7 +25,6 @@ async def test_datasets_list_pagination(apify_client_async: ApifyClientAsync) ->
     assert isinstance(datasets_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_datasets_get_or_create(apify_client_async: ApifyClientAsync) -> None:
     """Test get_or_create for datasets."""
     unique_name = f'test-dataset-{uuid.uuid4().hex[:8]}'

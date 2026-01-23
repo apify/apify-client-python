@@ -3,13 +3,10 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-import pytest
-
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
 
-@pytest.mark.asyncio
 async def test_key_value_stores_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing key-value stores."""
     kvs_page = await apify_client_async.key_value_stores().list(limit=10)
@@ -19,7 +16,6 @@ async def test_key_value_stores_list(apify_client_async: ApifyClientAsync) -> No
     assert isinstance(kvs_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_key_value_stores_list_pagination(apify_client_async: ApifyClientAsync) -> None:
     """Test listing key-value stores with pagination."""
     kvs_page = await apify_client_async.key_value_stores().list(limit=5, offset=0)
@@ -29,7 +25,6 @@ async def test_key_value_stores_list_pagination(apify_client_async: ApifyClientA
     assert isinstance(kvs_page.items, list)
 
 
-@pytest.mark.asyncio
 async def test_key_value_stores_get_or_create(apify_client_async: ApifyClientAsync) -> None:
     """Test get_or_create for key-value stores."""
     unique_name = f'test-kvs-{uuid.uuid4().hex[:8]}'

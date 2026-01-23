@@ -2,15 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from .utils import get_random_resource_name
 
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
 
-@pytest.mark.asyncio
 async def test_schedule_create_and_get(apify_client_async: ApifyClientAsync) -> None:
     """Test creating a schedule and retrieving it."""
     schedule_name = get_random_resource_name('schedule')
@@ -40,7 +37,6 @@ async def test_schedule_create_and_get(apify_client_async: ApifyClientAsync) -> 
     await schedule_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_schedule_update(apify_client_async: ApifyClientAsync) -> None:
     """Test updating schedule properties."""
     schedule_name = get_random_resource_name('schedule')
@@ -77,7 +73,6 @@ async def test_schedule_update(apify_client_async: ApifyClientAsync) -> None:
     await schedule_client.delete()
 
 
-@pytest.mark.asyncio
 async def test_schedule_list(apify_client_async: ApifyClientAsync) -> None:
     """Test listing schedules."""
     schedule_name_1 = get_random_resource_name('schedule')
@@ -112,7 +107,6 @@ async def test_schedule_list(apify_client_async: ApifyClientAsync) -> None:
     await apify_client_async.schedule(created_2.id).delete()
 
 
-@pytest.mark.asyncio
 async def test_schedule_delete(apify_client_async: ApifyClientAsync) -> None:
     """Test deleting a schedule."""
     schedule_name = get_random_resource_name('schedule')

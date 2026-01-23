@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .utils import get_random_resource_name
+
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
@@ -55,3 +57,59 @@ async def test_list_actors_sorting(apify_client_async: ApifyClientAsync) -> None
     assert actors_page is not None
     assert actors_page.items is not None
     assert isinstance(actors_page.items, list)
+
+
+async def test_actor_create_update_delete(apify_client_async: ApifyClientAsync) -> None:
+    """Test creating, updating, and deleting an actor."""
+    actor_name = get_random_resource_name('actor')
+
+    # Create actor
+    created_actor = await apify_client_async.actors().create(
+        name=actor_name,
+        title='Test Actor',
+        description='Test actor for integration tests',
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+            }
+        ],
+    )
+    assert created_actor is not None
+    assert created_actor.id is not None
+    assert created_actor.name == actor_name
+
+    actor_client = apify_client_async.actor(created_actor.id)
+
+    try:
+        # Update actor (only title and description - updating defaultRunOptions requires build to be set)
+        new_title = 'Updated Test Actor'
+        new_description = 'Updated description'
+        updated_actor = await actor_client.update(
+            title=new_title,
+            description=new_description,
+        )
+        assert updated_actor is not None
+        assert updated_actor.title == new_title
+        assert updated_actor.description == new_description
+
+        # Verify update persisted
+        retrieved_actor = await actor_client.get()
+        assert retrieved_actor is not None
+        assert retrieved_actor.title == new_title
+
+    finally:
+        # Cleanup - delete actor
+        await actor_client.delete()
+
+    # Verify deletion
+    deleted_actor = await actor_client.get()
+    assert deleted_actor is None

@@ -84,7 +84,7 @@ class RunClient(ActorJobBaseClient):
         }
 
         response = self._update(filter_out_none_values_recursively(updated_fields))
-        return Run.model_validate(response)
+        return GetRunResponse.model_validate(response).data
 
     def delete(self) -> None:
         """Delete the run.

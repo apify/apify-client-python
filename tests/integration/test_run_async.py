@@ -120,3 +120,92 @@ async def test_run_abort(apify_client_async: ApifyClientAsync) -> None:
 
     # Cleanup
     await run_client.delete()
+
+
+async def test_run_update(apify_client_async: ApifyClientAsync) -> None:
+    """Test updating a run's status message."""
+    # Run actor
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    run = await actor.call()
+    assert run is not None
+
+    run_client = apify_client_async.run(run.id)
+
+    try:
+        # Update run status message
+        updated_run = await run_client.update(
+            status_message='Test status message',
+            is_status_message_terminal=True,
+        )
+        assert updated_run is not None
+        assert updated_run.status_message == 'Test status message'
+
+    finally:
+        # Cleanup
+        await run_client.delete()
+
+
+async def test_run_resurrect(apify_client_async: ApifyClientAsync) -> None:
+    """Test resurrecting a finished run."""
+    # Run actor and wait for it to finish
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    run = await actor.call()
+    assert run is not None
+    assert run.status.value == 'SUCCEEDED'
+
+    run_client = apify_client_async.run(run.id)
+
+    try:
+        # Resurrect the run
+        resurrected_run = await run_client.resurrect()
+        assert resurrected_run is not None
+        # Status should be READY, RUNNING or already finished (if fast)
+        assert resurrected_run.status.value in ['READY', 'RUNNING', 'SUCCEEDED']
+
+        # Wait for it to finish before deleting
+        final_run = await run_client.wait_for_finish()
+        assert final_run is not None
+        assert final_run.status.value == 'SUCCEEDED'
+
+    finally:
+        # Wait for run to finish before cleanup (resurrected run might still be running)
+        await run_client.wait_for_finish()
+        await run_client.delete()
+
+
+async def test_run_log(apify_client_async: ApifyClientAsync) -> None:
+    """Test accessing run's log."""
+    # Run actor
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    run = await actor.call()
+    assert run is not None
+
+    run_client = apify_client_async.run(run.id)
+
+    try:
+        # Get log client
+        log_client = run_client.log()
+
+        # Get log content
+        log_content = await log_client.get()
+        assert log_content is not None
+        # Log should contain something (at least actor startup messages)
+        assert len(log_content) > 0
+
+    finally:
+        # Cleanup
+        await run_client.delete()
+
+
+async def test_run_runs_client(apify_client_async: ApifyClientAsync) -> None:
+    """Test listing runs through the run collection client."""
+    # List runs (should return valid data structure)
+    runs_page = await apify_client_async.runs().list(limit=10)
+    assert runs_page is not None
+    assert runs_page.items is not None
+    assert isinstance(runs_page.items, list)
+    # The user may have runs, verify the structure
+    if runs_page.items:
+        first_run = runs_page.items[0]
+        assert first_run.id is not None
+        assert first_run.act_id is not None

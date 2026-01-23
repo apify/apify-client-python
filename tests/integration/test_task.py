@@ -212,3 +212,101 @@ def test_task_delete(apify_client: ApifyClient) -> None:
     # Verify it's gone
     retrieved_task = task_client.get()
     assert retrieved_task is None
+
+
+def test_task_runs(apify_client: ApifyClient) -> None:
+    """Test listing task runs."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    actor = apify_client.actor(HELLO_WORLD_ACTOR).get()
+    assert actor is not None
+
+    # Create task
+    created_task = apify_client.tasks().create(
+        actor_id=actor.id,
+        name=task_name,
+    )
+    task_client = apify_client.task(created_task.id)
+
+    try:
+        # Run the task
+        run = task_client.call()
+        assert run is not None
+
+        # List runs for this task
+        runs_client = task_client.runs()
+        runs_page = runs_client.list(limit=10)
+        assert runs_page is not None
+        assert runs_page.items is not None
+        assert len(runs_page.items) >= 1
+
+        # Cleanup run
+        apify_client.run(run.id).delete()
+
+    finally:
+        # Cleanup task
+        task_client.delete()
+
+
+def test_task_last_run(apify_client: ApifyClient) -> None:
+    """Test getting the last run of a task."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    actor = apify_client.actor(HELLO_WORLD_ACTOR).get()
+    assert actor is not None
+
+    # Create task
+    created_task = apify_client.tasks().create(
+        actor_id=actor.id,
+        name=task_name,
+    )
+    task_client = apify_client.task(created_task.id)
+
+    try:
+        # Run the task
+        run = task_client.call()
+        assert run is not None
+
+        # Get last run client
+        last_run_client = task_client.last_run()
+        last_run = last_run_client.get()
+        assert last_run is not None
+        assert last_run.id == run.id
+
+        # Cleanup run
+        apify_client.run(run.id).delete()
+
+    finally:
+        # Cleanup task
+        task_client.delete()
+
+
+def test_task_webhooks(apify_client: ApifyClient) -> None:
+    """Test listing webhooks for a task."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    actor = apify_client.actor(HELLO_WORLD_ACTOR).get()
+    assert actor is not None
+
+    # Create task
+    created_task = apify_client.tasks().create(
+        actor_id=actor.id,
+        name=task_name,
+    )
+    task_client = apify_client.task(created_task.id)
+
+    try:
+        # Get webhooks client
+        webhooks_client = task_client.webhooks()
+        webhooks_page = webhooks_client.list()
+        assert webhooks_page is not None
+        assert webhooks_page.items is not None
+        # New task should have no webhooks
+        assert len(webhooks_page.items) == 0
+
+    finally:
+        # Cleanup task
+        task_client.delete()

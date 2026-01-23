@@ -221,3 +221,101 @@ async def test_task_delete(apify_client_async: ApifyClientAsync) -> None:
     # Verify it's gone
     retrieved_task = await task_client.get()
     assert retrieved_task is None
+
+
+async def test_task_runs(apify_client_async: ApifyClientAsync) -> None:
+    """Test listing task runs."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()
+    assert actor is not None
+
+    # Create task
+    created_task = await apify_client_async.tasks().create(
+        actor_id=actor.id,
+        name=task_name,
+    )
+    task_client = apify_client_async.task(created_task.id)
+
+    try:
+        # Run the task
+        run = await task_client.call()
+        assert run is not None
+
+        # List runs for this task
+        runs_client = task_client.runs()
+        runs_page = await runs_client.list(limit=10)
+        assert runs_page is not None
+        assert runs_page.items is not None
+        assert len(runs_page.items) >= 1
+
+        # Cleanup run
+        await apify_client_async.run(run.id).delete()
+
+    finally:
+        # Cleanup task
+        await task_client.delete()
+
+
+async def test_task_last_run(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting the last run of a task."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()
+    assert actor is not None
+
+    # Create task
+    created_task = await apify_client_async.tasks().create(
+        actor_id=actor.id,
+        name=task_name,
+    )
+    task_client = apify_client_async.task(created_task.id)
+
+    try:
+        # Run the task
+        run = await task_client.call()
+        assert run is not None
+
+        # Get last run client
+        last_run_client = task_client.last_run()
+        last_run = await last_run_client.get()
+        assert last_run is not None
+        assert last_run.id == run.id
+
+        # Cleanup run
+        await apify_client_async.run(run.id).delete()
+
+    finally:
+        # Cleanup task
+        await task_client.delete()
+
+
+async def test_task_webhooks(apify_client_async: ApifyClientAsync) -> None:
+    """Test listing webhooks for a task."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    actor = await apify_client_async.actor(HELLO_WORLD_ACTOR).get()
+    assert actor is not None
+
+    # Create task
+    created_task = await apify_client_async.tasks().create(
+        actor_id=actor.id,
+        name=task_name,
+    )
+    task_client = apify_client_async.task(created_task.id)
+
+    try:
+        # Get webhooks client
+        webhooks_client = task_client.webhooks()
+        webhooks_page = await webhooks_client.list()
+        assert webhooks_page is not None
+        assert webhooks_page.items is not None
+        # New task should have no webhooks
+        assert len(webhooks_page.items) == 0
+
+    finally:
+        # Cleanup task
+        await task_client.delete()

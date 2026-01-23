@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .utils import get_random_resource_name
+
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync
 
@@ -113,3 +115,92 @@ async def test_build_wait_for_finish(apify_client_async: ApifyClientAsync) -> No
 
     assert build is not None
     assert build.id == completed_build.id
+
+
+async def test_build_delete_and_abort(apify_client_async: ApifyClientAsync) -> None:
+    """Test deleting and aborting a build on our own actor."""
+    actor_name = get_random_resource_name('actor')
+
+    # Create actor with two versions
+    created_actor = await apify_client_async.actors().create(
+        name=actor_name,
+        title='Test Actor for Build Delete',
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'beta',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello v0.1")',
+                    }
+                ],
+            },
+            {
+                'versionNumber': '0.2',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello v0.2")',
+                    }
+                ],
+            },
+        ],
+    )
+    assert created_actor is not None
+    actor_client = apify_client_async.actor(created_actor.id)
+
+    try:
+        # Build both versions - we need 2 builds because we can't delete the default build
+        first_build = await actor_client.build(version_number='0.1')
+        assert first_build is not None
+        first_build_client = apify_client_async.build(first_build.id)
+        await first_build_client.wait_for_finish()
+
+        second_build = await actor_client.build(version_number='0.2')
+        assert second_build is not None
+        second_build_client = apify_client_async.build(second_build.id)
+
+        # Wait for the second build to finish
+        finished_build = await second_build_client.wait_for_finish()
+        assert finished_build is not None
+        assert finished_build.status.value in ('SUCCEEDED', 'FAILED')
+
+        # Test abort on already finished build (should return the build in its current state)
+        aborted_build = await second_build_client.abort()
+        assert aborted_build is not None
+        assert aborted_build.status.value in ('SUCCEEDED', 'FAILED', 'ABORTED')
+
+        # Delete the first build (not the default/latest)
+        await first_build_client.delete()
+
+        # Verify the build is deleted
+        deleted_build = await first_build_client.get()
+        assert deleted_build is None
+
+    finally:
+        # Cleanup - delete actor
+        await actor_client.delete()
+
+
+async def test_build_get_open_api_definition(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting OpenAPI definition for a build."""
+    # Get builds for hello-world actor
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    builds_page = await actor.builds().list(limit=1)
+    assert builds_page.items
+    build_id = builds_page.items[0].id
+
+    # Get the OpenAPI definition
+    build_client = apify_client_async.build(build_id)
+    openapi_def = await build_client.get_open_api_definition()
+
+    # OpenAPI definition should be a dict with standard OpenAPI fields
+    # Note: May be None if the actor doesn't have an OpenAPI definition
+    if openapi_def is not None:
+        assert isinstance(openapi_def, dict)

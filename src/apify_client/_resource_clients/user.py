@@ -62,11 +62,11 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = response_to_dict(response)
-            if data is None:
+            response_as_dict = response_to_dict(response)
+            if response_as_dict is None:
                 return None
             # API returns {data: {...}} structure
-            return MonthlyUsage.model_validate(data.get('data', {}))
+            return MonthlyUsage.model_validate(response_as_dict.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -90,11 +90,11 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = response_to_dict(response)
-            if data is None:
+            response_as_dict = response_to_dict(response)
+            if response_as_dict is None:
                 return None
             # API returns {data: {...}} structure
-            return AccountLimits.model_validate(data.get('data', {}))
+            return AccountLimits.model_validate(response_as_dict.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -168,11 +168,11 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = response_to_dict(response)
-            if data is None:
+            response_as_dict = response_to_dict(response)
+            if response_as_dict is None:
                 return None
             # API returns {data: {...}} structure
-            return MonthlyUsage.model_validate(data.get('data', {}))
+            return MonthlyUsage.model_validate(response_as_dict.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -196,11 +196,11 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = response_to_dict(response)
-            if data is None:
+            response_as_dict = response_to_dict(response)
+            if response_as_dict is None:
                 return None
             # API returns {data: {...}} structure
-            return AccountLimits.model_validate(data.get('data', {}))
+            return AccountLimits.model_validate(response_as_dict.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

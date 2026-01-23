@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import EnvVar, GetListOfEnvVarsResponse, ListOfEnvVars
+from apify_client._models import EnvVar, GetEnvVarResponse, GetListOfEnvVarsResponse, ListOfEnvVars
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
@@ -28,8 +28,8 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(),
         )
-        data = response_to_dict(response)
-        return GetListOfEnvVarsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfEnvVarsResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -57,7 +57,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         )
 
         result = self._create(filter_out_none_values_recursively(actor_env_var_representation))
-        return EnvVar.model_validate(result)
+        return GetEnvVarResponse.model_validate(result).data
 
 
 class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
@@ -80,8 +80,8 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(),
         )
-        data = response_to_dict(response)
-        return GetListOfEnvVarsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfEnvVarsResponse.model_validate(response_as_dict).data
 
     async def create(
         self,
@@ -109,4 +109,4 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         )
 
         result = await self._create(filter_out_none_values_recursively(actor_env_var_representation))
-        return EnvVar.model_validate(result)
+        return GetEnvVarResponse.model_validate(result).data

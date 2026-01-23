@@ -132,3 +132,28 @@ async def test_schedule_delete(apify_client_async: ApifyClientAsync) -> None:
     # Verify it's gone
     retrieved_schedule = await schedule_client.get()
     assert retrieved_schedule is None
+
+
+async def test_schedule_get_log(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting schedule log."""
+    schedule_name = get_random_resource_name('schedule')
+
+    # Create schedule
+    created_schedule = await apify_client_async.schedules().create(
+        cron_expression='0 0 * * *',
+        is_enabled=False,
+        is_exclusive=False,
+        name=schedule_name,
+    )
+    schedule_client = apify_client_async.schedule(created_schedule.id)
+
+    try:
+        # Get schedule log - new schedule has no log entries but the method should work
+        log = await schedule_client.get_log()
+
+        # Log should be None or empty list for a new disabled schedule
+        assert log is None or isinstance(log, list)
+
+    finally:
+        # Cleanup
+        await schedule_client.delete()

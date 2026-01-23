@@ -40,8 +40,8 @@ class DatasetCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return GetListOfDatasetsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfDatasetsResponse.model_validate(response_as_dict).data
 
     def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -92,8 +92,8 @@ class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return GetListOfDatasetsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfDatasetsResponse.model_validate(response_as_dict).data
 
     async def get_or_create(
         self,

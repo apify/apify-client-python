@@ -65,8 +65,8 @@ class RunCollectionClient(ResourceCollectionClient):
                 startedAfter=started_after,
             ),
         )
-        data = response_to_dict(response)
-        return GetListOfRunsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfRunsResponse.model_validate(response_as_dict).data
 
 
 class RunCollectionClientAsync(ResourceCollectionClientAsync):
@@ -122,5 +122,5 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
                 startedAfter=started_after,
             ),
         )
-        data = response_to_dict(response)
-        return GetListOfRunsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfRunsResponse.model_validate(response_as_dict).data

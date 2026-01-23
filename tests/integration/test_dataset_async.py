@@ -347,3 +347,32 @@ async def test_dataset_delete_nonexistent(apify_client_async: ApifyClientAsync) 
     # Verify it's gone
     retrieved_dataset = await dataset_client.get()
     assert retrieved_dataset is None
+
+
+async def test_dataset_get_statistics(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting dataset statistics."""
+    dataset_name = get_random_resource_name('dataset')
+
+    created_dataset = await apify_client_async.datasets().get_or_create(name=dataset_name)
+    dataset_client = apify_client_async.dataset(created_dataset.id)
+
+    try:
+        # Push some items first
+        items_to_push = [
+            {'id': 1, 'name': 'Item 1'},
+            {'id': 2, 'name': 'Item 2'},
+        ]
+        await dataset_client.push_items(items_to_push)
+
+        # Wait briefly for eventual consistency
+        await asyncio.sleep(1)
+
+        # Get statistics
+        statistics = await dataset_client.get_statistics()
+
+        # Verify statistics is returned and properly parsed
+        assert statistics is not None
+
+    finally:
+        # Cleanup
+        await dataset_client.delete()

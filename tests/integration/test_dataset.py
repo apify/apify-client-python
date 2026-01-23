@@ -339,3 +339,32 @@ def test_dataset_delete_nonexistent(apify_client: ApifyClient) -> None:
     # Verify it's gone
     retrieved_dataset = dataset_client.get()
     assert retrieved_dataset is None
+
+
+def test_dataset_get_statistics(apify_client: ApifyClient) -> None:
+    """Test getting dataset statistics."""
+    dataset_name = get_random_resource_name('dataset')
+
+    created_dataset = apify_client.datasets().get_or_create(name=dataset_name)
+    dataset_client = apify_client.dataset(created_dataset.id)
+
+    try:
+        # Push some items first
+        items_to_push = [
+            {'id': 1, 'name': 'Item 1'},
+            {'id': 2, 'name': 'Item 2'},
+        ]
+        dataset_client.push_items(items_to_push)
+
+        # Wait briefly for eventual consistency
+        time.sleep(1)
+
+        # Get statistics
+        statistics = dataset_client.get_statistics()
+
+        # Verify statistics is returned and properly parsed
+        assert statistics is not None
+
+    finally:
+        # Cleanup
+        dataset_client.delete()

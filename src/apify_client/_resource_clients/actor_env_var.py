@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import EnvVar
+from apify_client._models import EnvVar, GetEnvVarResponse
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_out_none_values_recursively
 
@@ -37,7 +37,7 @@ class ActorEnvVarClient(ResourceClient):
             The retrieved Actor environment variable data.
         """
         result = self._get()
-        return EnvVar.model_validate(result) if result is not None else None
+        return GetEnvVarResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -65,7 +65,7 @@ class ActorEnvVarClient(ResourceClient):
         )
 
         result = self._update(filter_out_none_values_recursively(actor_env_var_representation))
-        return EnvVar.model_validate(result)
+        return GetEnvVarResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the Actor environment variable.
@@ -91,7 +91,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             The retrieved Actor environment variable data.
         """
         result = await self._get()
-        return EnvVar.model_validate(result) if result is not None else None
+        return GetEnvVarResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -119,7 +119,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         )
 
         result = await self._update(filter_out_none_values_recursively(actor_env_var_representation))
-        return EnvVar.model_validate(result)
+        return GetEnvVarResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the Actor environment variable.

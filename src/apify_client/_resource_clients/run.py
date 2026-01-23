@@ -163,8 +163,8 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     def resurrect(
         self,
@@ -215,8 +215,8 @@ class RunClient(ActorJobBaseClient):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -230,8 +230,8 @@ class RunClient(ActorJobBaseClient):
             url=self._url('reboot'),
             method='POST',
         )
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -499,8 +499,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     async def resurrect(
         self,
@@ -551,8 +551,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     async def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -566,8 +566,8 @@ class RunClientAsync(ActorJobBaseClientAsync):
             url=self._url('reboot'),
             method='POST',
         )
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.

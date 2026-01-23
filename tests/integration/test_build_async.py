@@ -56,3 +56,60 @@ async def test_user_builds_list(apify_client_async: ApifyClientAsync) -> None:
     assert builds_page.items is not None
     # User may have 0 builds, so we just check the structure
     assert isinstance(builds_page.items, list)
+
+
+async def test_build_log(apify_client_async: ApifyClientAsync) -> None:
+    """Test getting build log."""
+    # First list builds to get a completed build ID
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    builds_page = await actor.builds().list(limit=5)
+    assert builds_page.items
+
+    # Find a completed build (SUCCEEDED status)
+    completed_build = None
+    for build in builds_page.items:
+        if build.status and build.status.value == 'SUCCEEDED':
+            completed_build = build
+            break
+
+    if completed_build is None:
+        # If no succeeded build found, use any build
+        completed_build = builds_page.items[0]
+
+    # Get the build log
+    log_client = apify_client_async.build(completed_build.id).log()
+    log_content = await log_client.get()
+
+    # Build logs should be available for completed builds
+    assert log_content is not None
+
+
+async def test_build_wait_for_finish(apify_client_async: ApifyClientAsync) -> None:
+    """Test wait_for_finish on an already completed build."""
+    # First list builds to get a completed build ID
+    actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
+    builds_page = await actor.builds().list(limit=5)
+    assert builds_page.items
+
+    # Find a completed build (SUCCEEDED status)
+    completed_build = None
+    for build in builds_page.items:
+        if build.status and build.status.value == 'SUCCEEDED':
+            completed_build = build
+            break
+
+    if completed_build is None:
+        # If no succeeded build found, use any finished build
+        for build in builds_page.items:
+            if build.status and build.status.value in ('SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED_OUT'):
+                completed_build = build
+                break
+
+    if completed_build is None:
+        completed_build = builds_page.items[0]
+
+    # Wait for finish on already completed build (should return immediately)
+    build = await apify_client_async.build(completed_build.id).wait_for_finish(wait_secs=5)
+
+    assert build is not None
+    assert build.id == completed_build.id

@@ -38,8 +38,8 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return WebhookDispatchList.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return WebhookDispatchList.model_validate(response_as_dict).data
 
 
 class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
@@ -73,5 +73,5 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return WebhookDispatchList.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return WebhookDispatchList.model_validate(response_as_dict).data

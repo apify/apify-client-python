@@ -43,8 +43,8 @@ class ActorCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
         )
-        data = response_to_dict(response)
-        return GetListOfActorsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfActorsResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -175,8 +175,8 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
         )
-        data = response_to_dict(response)
-        return GetListOfActorsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfActorsResponse.model_validate(response_as_dict).data
 
     async def create(
         self,

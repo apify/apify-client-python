@@ -56,9 +56,9 @@ class BuildClient(ActorJobBaseClient):
             method='GET',
         )
 
-        response_data: dict = response.json()
+        response_as_dict: dict = response.json()
 
-        return response_data
+        return response_as_dict
 
     def wait_for_finish(self, *, wait_secs: int | None = None) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.
@@ -135,9 +135,9 @@ class BuildClientAsync(ActorJobBaseClientAsync):
             method='GET',
         )
 
-        response_data: dict = response.json()
+        response_as_dict: dict = response.json()
 
-        return response_data
+        return response_as_dict
 
     async def wait_for_finish(self, *, wait_secs: int | None = None) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.

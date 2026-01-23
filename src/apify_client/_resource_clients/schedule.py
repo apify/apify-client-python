@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetScheduleResponse, Schedule, ScheduleInvoked
+from apify_client._models import GetScheduleLogResponse, GetScheduleResponse, Schedule, ScheduleInvoked
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_list
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -115,8 +115,10 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._params(),
             )
-            data = response_to_list(response)
-            return [ScheduleInvoked.model_validate(item) for item in data] if data else None
+            response_as_dict = response_to_dict(response)
+            if response_as_dict is None:
+                return None
+            return GetScheduleLogResponse.model_validate(response_as_dict).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -207,8 +209,10 @@ class ScheduleClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._params(),
             )
-            data = response_to_list(response)
-            return [ScheduleInvoked.model_validate(item) for item in data] if data else None
+            response_as_dict = response_to_dict(response)
+            if response_as_dict is None:
+                return None
+            return GetScheduleLogResponse.model_validate(response_as_dict).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

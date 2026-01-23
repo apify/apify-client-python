@@ -343,8 +343,8 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     def call(
         self,
@@ -493,13 +493,13 @@ class ActorClient(ResourceClient):
         )
 
         response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
-        data = response_to_dict(response)
+        response_as_dict = response_to_dict(response)
 
         return BuildClient(
             base_url=self.base_url,
             http_client=self.http_client,
             root_client=self.root_client,
-            resource_id=data['id'],
+            resource_id=response_as_dict['id'],
         )
 
     def last_run(
@@ -774,8 +774,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return GetRunResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetRunResponse.model_validate(response_as_dict).data
 
     async def call(
         self,
@@ -897,8 +897,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        data = response_to_dict(response)
-        return BuildActorResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return BuildActorResponse.model_validate(response_as_dict).data
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""
@@ -933,13 +933,13 @@ class ActorClientAsync(ResourceClientAsync):
             method='GET',
             params=request_params,
         )
-        data = response_to_dict(response)
+        response_as_dict = response_to_dict(response)
 
         return BuildClientAsync(
             base_url=self.base_url,
             http_client=self.http_client,
             root_client=self.root_client,
-            resource_id=data['id'],
+            resource_id=response_as_dict['id'],
         )
 
     def last_run(

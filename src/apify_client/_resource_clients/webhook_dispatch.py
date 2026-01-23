@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import WebhookDispatch
+from apify_client._models import GetWebhookDispatchResponse, WebhookDispatch
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 
 
@@ -22,7 +22,7 @@ class WebhookDispatchClient(ResourceClient):
             The retrieved webhook dispatch, or None if it does not exist.
         """
         result = self._get()
-        return WebhookDispatch.model_validate(result) if result is not None else None
+        return GetWebhookDispatchResponse.model_validate(result).data if result is not None else None
 
 
 class WebhookDispatchClientAsync(ResourceClientAsync):
@@ -41,4 +41,4 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
             The retrieved webhook dispatch, or None if it does not exist.
         """
         result = await self._get()
-        return WebhookDispatch.model_validate(result) if result is not None else None
+        return GetWebhookDispatchResponse.model_validate(result).data if result is not None else None

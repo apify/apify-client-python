@@ -55,8 +55,8 @@ class StoreCollectionClient(ResourceCollectionClient):
                 pricingModel=pricing_model,
             ),
         )
-        data = response_to_dict(response)
-        return GetListOfActorsInStoreResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfActorsInStoreResponse.model_validate(response_as_dict).data
 
 
 class StoreCollectionClientAsync(ResourceCollectionClientAsync):
@@ -107,5 +107,5 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
                 pricingModel=pricing_model,
             ),
         )
-        data = response_to_dict(response)
-        return GetListOfActorsInStoreResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfActorsInStoreResponse.model_validate(response_as_dict).data

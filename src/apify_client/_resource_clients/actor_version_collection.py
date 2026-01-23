@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetListOfVersionsResponse, ListOfVersions, Version, VersionSourceType
+from apify_client._models import (
+    GetListOfVersionsResponse,
+    GetVersionResponse,
+    ListOfVersions,
+    Version,
+    VersionSourceType,
+)
 from apify_client._resource_clients.actor_version import _get_actor_version_representation
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
@@ -28,8 +34,8 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(),
         )
-        data = response_to_dict(response)
-        return GetListOfVersionsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfVersionsResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -81,7 +87,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         )
 
         result = self._create(filter_out_none_values_recursively(actor_version_representation))
-        return Version.model_validate(result)
+        return GetVersionResponse.model_validate(result).data
 
 
 class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
@@ -104,8 +110,8 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(),
         )
-        data = response_to_dict(response)
-        return GetListOfVersionsResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfVersionsResponse.model_validate(response_as_dict).data
 
     async def create(
         self,
@@ -157,4 +163,4 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         )
 
         result = await self._create(filter_out_none_values_recursively(actor_version_representation))
-        return Version.model_validate(result)
+        return GetVersionResponse.model_validate(result).data

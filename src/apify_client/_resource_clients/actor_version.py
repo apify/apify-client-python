@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import Version, VersionSourceType
+from apify_client._models import GetVersionResponse, Version, VersionSourceType
 from apify_client._resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from apify_client._resource_clients.actor_env_var_collection import (
     ActorEnvVarCollectionClient,
@@ -53,7 +53,7 @@ class ActorVersionClient(ResourceClient):
             The retrieved Actor version data.
         """
         result = self._get()
-        return Version.model_validate(result) if result is not None else None
+        return GetVersionResponse.model_validate(result).data if result is not None else None
 
     def update(
         self,
@@ -102,7 +102,7 @@ class ActorVersionClient(ResourceClient):
         )
 
         result = self._update(filter_out_none_values_recursively(actor_version_representation))
-        return Version.model_validate(result)
+        return GetVersionResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the Actor version.
@@ -143,7 +143,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             The retrieved Actor version data.
         """
         result = await self._get()
-        return Version.model_validate(result) if result is not None else None
+        return GetVersionResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -192,7 +192,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         )
 
         result = await self._update(filter_out_none_values_recursively(actor_version_representation))
-        return Version.model_validate(result)
+        return GetVersionResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the Actor version.

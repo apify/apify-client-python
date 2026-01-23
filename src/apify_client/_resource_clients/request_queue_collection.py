@@ -45,8 +45,8 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return GetListOfRequestQueuesResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfRequestQueuesResponse.model_validate(response_as_dict).data
 
     def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -96,8 +96,8 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return GetListOfRequestQueuesResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfRequestQueuesResponse.model_validate(response_as_dict).data
 
     async def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.

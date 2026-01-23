@@ -42,8 +42,8 @@ class WebhookCollectionClient(ResourceCollectionClient):
             method='GET',
             params=self._params(limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return GetListOfWebhooksResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfWebhooksResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -133,8 +133,8 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
             method='GET',
             params=self._params(limit=limit, offset=offset, desc=desc),
         )
-        data = response_to_dict(response)
-        return GetListOfWebhooksResponse.model_validate(data).data
+        response_as_dict = response_to_dict(response)
+        return GetListOfWebhooksResponse.model_validate(response_as_dict).data
 
     async def create(
         self,

@@ -154,10 +154,10 @@ known-local-folder = ["apify_client"]
 max-branches = 18
 
 [tool.pytest.ini_options]
-addopts = "-ra"
+addopts = "-r a --verbose"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
-timeout = 1200
+timeout = 1800
 
 [tool.ty.environment]
 python-version = "3.10"
@@ -184,13 +184,13 @@ context = 7
 [tool.poe.tasks]
 clean = "rm -rf .coverage .pytest_cache .ruff_cache .ty_cache build dist htmlcov"
 install-sync = "uv sync --all-extras"
-build = "uv build --verbose"
-publish-to-pypi = "uv publish --verbose --token ${APIFY_PYPI_TOKEN_CRAWLEE}"
+build = "uv build"
+publish-to-pypi = "uv publish --token ${APIFY_PYPI_TOKEN_CRAWLEE}"
 type-check = "uv run ty check"
-unit-tests = "uv run pytest --numprocesses=auto --verbose tests/unit"
-unit-tests-cov = "uv run pytest --numprocesses=auto --verbose --cov=src/apify_client --cov-report=xml:coverage-unit.xml tests/unit"
-integration-tests = "uv run pytest --numprocesses=${INTEGRATION_TESTS_CONCURRENCY:-1} --verbose tests/integration"
-integration-tests-cov = "uv run pytest --numprocesses=${INTEGRATION_TESTS_CONCURRENCY:-1} --verbose --cov=src/apify_client --cov-report=xml:coverage-integration.xml tests/integration"
+unit-tests = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/unit"
+unit-tests-cov = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-unit.xml tests/unit"
+integration-tests = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/integration"
+integration-tests-cov = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-integration.xml tests/integration"
 check-async-docstrings = "uv run python scripts/check_async_docstrings.py"
 fix-async-docstrings = "uv run python scripts/fix_async_docstrings.py"
 check-code = ["lint", "type-check", "unit-tests", "check-async-docstrings"]

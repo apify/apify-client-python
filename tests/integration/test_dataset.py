@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from .utils import TestDataset, get_random_resource_name, parametrized_api_urls
+from .utils import DatasetFixture, get_random_resource_name, parametrized_api_urls
 from apify_client import ApifyClient
 from apify_client._client import DEFAULT_API_URL
 from apify_client.errors import ApifyApiError
@@ -100,7 +100,7 @@ def test_public_url(api_token: str, api_url: str, api_public_url: str) -> None:
         )
 
 
-def test_list_items_signature(apify_client: ApifyClient, test_dataset_of_another_user: TestDataset) -> None:
+def test_list_items_signature(apify_client: ApifyClient, test_dataset_of_another_user: DatasetFixture) -> None:
     dataset = apify_client.dataset(dataset_id=test_dataset_of_another_user.id)
 
     # Permission error without valid signature
@@ -118,7 +118,7 @@ def test_list_items_signature(apify_client: ApifyClient, test_dataset_of_another
     )
 
 
-def test_iterate_items_signature(apify_client: ApifyClient, test_dataset_of_another_user: TestDataset) -> None:
+def test_iterate_items_signature(apify_client: ApifyClient, test_dataset_of_another_user: DatasetFixture) -> None:
     dataset = apify_client.dataset(dataset_id=test_dataset_of_another_user.id)
 
     # Permission error without valid signature
@@ -135,7 +135,7 @@ def test_iterate_items_signature(apify_client: ApifyClient, test_dataset_of_anot
     )
 
 
-def test_get_items_as_bytes_signature(apify_client: ApifyClient, test_dataset_of_another_user: TestDataset) -> None:
+def test_get_items_as_bytes_signature(apify_client: ApifyClient, test_dataset_of_another_user: DatasetFixture) -> None:
     dataset = apify_client.dataset(dataset_id=test_dataset_of_another_user.id)
 
     # Permission error without valid signature

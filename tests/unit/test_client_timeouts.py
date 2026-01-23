@@ -122,7 +122,6 @@ _timeout_params = [
     (DatasetClient, 'update', dataset._SMALL_TIMEOUT, {}),
     (DatasetClient, 'delete', dataset._SMALL_TIMEOUT, {}),
     (DatasetClient, 'list_items', DEFAULT_TIMEOUT, {}),
-    (DatasetClient, 'download_items', DEFAULT_TIMEOUT, {}),
     (DatasetClient, 'get_items_as_bytes', DEFAULT_TIMEOUT, {}),
     (DatasetClient, 'push_items', dataset._MEDIUM_TIMEOUT, {'items': {}}),
     (DatasetClient, 'get_statistics', dataset._SMALL_TIMEOUT, {}),

@@ -9,7 +9,7 @@ import impit
 import pytest
 from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
-from .utils import TestKvs, get_random_resource_name, parametrized_api_urls
+from .utils import KvsFixture, get_random_resource_name, parametrized_api_urls
 from apify_client import ApifyClient
 from apify_client._client import DEFAULT_API_URL
 from apify_client.errors import ApifyApiError
@@ -131,7 +131,7 @@ def test_record_public_url(api_token: str, api_url: str, api_public_url: str, si
         )
 
 
-def test_list_keys_signature(apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+def test_list_keys_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
     kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
     # Permission error without valid signature
@@ -149,7 +149,7 @@ def test_list_keys_signature(apify_client: ApifyClient, test_kvs_of_another_user
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
 
 
-def test_get_record_signature(apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+def test_get_record_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
     key = 'key1'
     kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
@@ -167,7 +167,7 @@ def test_get_record_signature(apify_client: ApifyClient, test_kvs_of_another_use
     assert test_kvs_of_another_user.expected_content[key] == record['value']
 
 
-def test_get_record_as_bytes_signature(apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+def test_get_record_as_bytes_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
     key = 'key1'
     kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
@@ -185,7 +185,7 @@ def test_get_record_as_bytes_signature(apify_client: ApifyClient, test_kvs_of_an
     assert test_kvs_of_another_user.expected_content[key] == json.loads(item['value'].decode('utf-8'))
 
 
-def test_stream_record_signature(apify_client: ApifyClient, test_kvs_of_another_user: TestKvs) -> None:
+def test_stream_record_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
     key = 'key1'
     kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 

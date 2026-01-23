@@ -5,7 +5,7 @@ from collections.abc import Generator
 import pytest
 from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
-from .utils import TestDataset, TestKvs, get_crypto_random_object_id
+from .utils import DatasetFixture, KvsFixture, get_crypto_random_object_id
 from apify_client import ApifyClient, ApifyClientAsync
 
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -46,7 +46,7 @@ def apify_client_async(api_token: str) -> ApifyClientAsync:
 
 
 @pytest.fixture(scope='session')
-def test_dataset_of_another_user(api_token_2: str) -> Generator[TestDataset]:
+def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
     """Pre-existing named dataset of another test user with restricted access."""
     client = ApifyClient(api_token_2, api_url=os.getenv(API_URL_ENV_VAR))
 
@@ -66,7 +66,7 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[TestDataset]:
         url_signing_secret_key=dataset.url_signing_secret_key,
     )
 
-    yield TestDataset(
+    yield DatasetFixture(
         id=dataset.id,
         signature=signature,
         expected_content=[{'item1': 1, 'item2': 2, 'item3': 3}, {'item1': 4, 'item2': 5, 'item3': 6}],
@@ -76,7 +76,7 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[TestDataset]:
 
 
 @pytest.fixture(scope='session')
-def test_kvs_of_another_user(api_token_2: str) -> Generator[TestKvs]:
+def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     """Pre-existing named key value store of another test user with restricted access."""
     client = ApifyClient(api_token_2, api_url=os.getenv(API_URL_ENV_VAR))
 
@@ -94,7 +94,7 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[TestKvs]:
         resource_id=kvs.id, url_signing_secret_key=kvs.url_signing_secret_key or ''
     )
 
-    yield TestKvs(
+    yield KvsFixture(
         id=kvs.id,
         signature=signature,
         expected_content=expected_content,

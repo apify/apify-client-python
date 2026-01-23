@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from .utils import TestDataset, get_random_resource_name, parametrized_api_urls
+from .utils import DatasetFixture, get_random_resource_name, parametrized_api_urls
 from apify_client import ApifyClientAsync
 from apify_client._client import DEFAULT_API_URL
 from apify_client.errors import ApifyApiError
@@ -103,7 +103,7 @@ async def test_public_url(api_token: str, api_url: str, api_public_url: str) -> 
 
 
 async def test_list_items_signature(
-    apify_client_async: ApifyClientAsync, test_dataset_of_another_user: TestDataset
+    apify_client_async: ApifyClientAsync, test_dataset_of_another_user: DatasetFixture
 ) -> None:
     dataset = apify_client_async.dataset(dataset_id=test_dataset_of_another_user.id)
 
@@ -123,7 +123,7 @@ async def test_list_items_signature(
 
 
 async def test_iterate_items_signature(
-    apify_client_async: ApifyClientAsync, test_dataset_of_another_user: TestDataset
+    apify_client_async: ApifyClientAsync, test_dataset_of_another_user: DatasetFixture
 ) -> None:
     dataset = apify_client_async.dataset(dataset_id=test_dataset_of_another_user.id)
 
@@ -142,7 +142,7 @@ async def test_iterate_items_signature(
 
 
 async def test_get_items_as_bytes_signature(
-    apify_client_async: ApifyClientAsync, test_dataset_of_another_user: TestDataset
+    apify_client_async: ApifyClientAsync, test_dataset_of_another_user: DatasetFixture
 ) -> None:
     dataset = apify_client_async.dataset(dataset_id=test_dataset_of_another_user.id)
 

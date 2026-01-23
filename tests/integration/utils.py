@@ -7,23 +7,23 @@ import pytest
 
 
 @dataclasses.dataclass
-class TestStorage:
-    """Test storage resource with ID and signature."""
+class StorageFixture:
+    """Storage resource fixture with ID and signature."""
 
     id: str
     signature: str
 
 
 @dataclasses.dataclass
-class TestDataset(TestStorage):
-    """Test dataset with expected content."""
+class DatasetFixture(StorageFixture):
+    """Dataset fixture with expected content."""
 
     expected_content: list
 
 
 @dataclasses.dataclass
-class TestKvs(TestStorage):
-    """Test key-value store with expected content and key signatures."""
+class KvsFixture(StorageFixture):
+    """Key-value store fixture with expected content and key signatures."""
 
     expected_content: dict[str, Any]
     keys_signature: dict[str, str]

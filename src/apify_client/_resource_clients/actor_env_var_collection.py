@@ -4,11 +4,11 @@ from typing import Any
 
 from apify_client._models import EnvVar, GetEnvVarResponse, GetListOfEnvVarsResponse, ListOfEnvVars
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class ActorEnvVarCollectionClient(ResourceCollectionClient):
+class ActorEnvVarCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating actor env vars."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -60,7 +60,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         return GetEnvVarResponse.model_validate(result).data
 
 
-class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
+class ActorEnvVarCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

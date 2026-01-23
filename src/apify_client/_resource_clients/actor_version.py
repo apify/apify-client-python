@@ -8,7 +8,7 @@ from apify_client._resource_clients.actor_env_var_collection import (
     ActorEnvVarCollectionClient,
     ActorEnvVarCollectionClientAsync,
 )
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._utils import filter_out_none_values_recursively, maybe_extract_enum_member_value
 
 
@@ -37,7 +37,7 @@ def _get_actor_version_representation(
     }
 
 
-class ActorVersionClient(ResourceClient):
+class ActorVersionClient(BaseClient):
     """Sub-client for manipulating a single Actor version."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -127,7 +127,7 @@ class ActorVersionClient(ResourceClient):
         return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
 
 
-class ActorVersionClientAsync(ResourceClientAsync):
+class ActorVersionClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single Actor version."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

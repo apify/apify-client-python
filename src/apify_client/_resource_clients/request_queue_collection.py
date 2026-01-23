@@ -8,11 +8,11 @@ from apify_client._models import (
     ListOfRequestQueues,
     RequestQueue,
 )
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import response_to_dict
 
 
-class RequestQueueCollectionClient(ResourceCollectionClient):
+class RequestQueueCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating request queues."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -63,7 +63,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         return CreateRequestQueueResponse.model_validate(result).data
 
 
-class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
+class RequestQueueCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating request queues."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetScheduleLogResponse, GetScheduleResponse, Schedule, ScheduleInvoked
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
@@ -31,7 +31,7 @@ def _get_schedule_representation(
     }
 
 
-class ScheduleClient(ResourceClient):
+class ScheduleClient(BaseClient):
     """Sub-client for manipulating a single schedule."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -125,7 +125,7 @@ class ScheduleClient(ResourceClient):
         return None
 
 
-class ScheduleClientAsync(ResourceClientAsync):
+class ScheduleClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single schedule."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

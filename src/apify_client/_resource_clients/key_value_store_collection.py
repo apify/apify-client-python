@@ -8,11 +8,11 @@ from apify_client._models import (
     KeyValueStore,
     ListOfKeyValueStores,
 )
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class KeyValueStoreCollectionClient(ResourceCollectionClient):
+class KeyValueStoreCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating key-value stores."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -69,7 +69,7 @@ class KeyValueStoreCollectionClient(ResourceCollectionClient):
         return CreateKeyValueStoreResponse.model_validate(result).data
 
 
-class KeyValueStoreCollectionClientAsync(ResourceCollectionClientAsync):
+class KeyValueStoreCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

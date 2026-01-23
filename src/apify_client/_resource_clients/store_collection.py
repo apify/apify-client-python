@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetListOfActorsInStoreResponse, ListOfStoreActors
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import response_to_dict
 
 
-class StoreCollectionClient(ResourceCollectionClient):
+class StoreCollectionClient(BaseCollectionClient):
     """Sub-client for Apify store."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -59,7 +59,7 @@ class StoreCollectionClient(ResourceCollectionClient):
         return GetListOfActorsInStoreResponse.model_validate(response_as_dict).data
 
 
-class StoreCollectionClientAsync(ResourceCollectionClientAsync):
+class StoreCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for Apify store."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

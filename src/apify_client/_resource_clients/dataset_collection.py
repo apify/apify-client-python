@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import CreateDatasetResponse, Dataset, GetListOfDatasetsResponse, ListOfDatasets
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class DatasetCollectionClient(ResourceCollectionClient):
+class DatasetCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating datasets."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -59,7 +59,7 @@ class DatasetCollectionClient(ResourceCollectionClient):
         return CreateDatasetResponse.model_validate(result).data
 
 
-class DatasetCollectionClientAsync(ResourceCollectionClientAsync):
+class DatasetCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating datasets."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

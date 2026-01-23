@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import EnvVar, GetEnvVarResponse
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._utils import filter_out_none_values_recursively
 
 
@@ -21,7 +21,7 @@ def get_actor_env_var_representation(
     }
 
 
-class ActorEnvVarClient(ResourceClient):
+class ActorEnvVarClient(BaseClient):
     """Sub-client for manipulating a single Actor environment variable."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -75,7 +75,7 @@ class ActorEnvVarClient(ResourceClient):
         return self._delete()
 
 
-class ActorEnvVarClientAsync(ResourceClientAsync):
+class ActorEnvVarClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single Actor environment variable."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

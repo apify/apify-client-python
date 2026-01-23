@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetWebhookDispatchResponse, WebhookDispatch
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 
 
-class WebhookDispatchClient(ResourceClient):
+class WebhookDispatchClient(BaseClient):
     """Sub-client for querying information about a webhook dispatch."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -25,7 +25,7 @@ class WebhookDispatchClient(ResourceClient):
         return GetWebhookDispatchResponse.model_validate(result).data if result is not None else None
 
 
-class WebhookDispatchClientAsync(ResourceClientAsync):
+class WebhookDispatchClientAsync(BaseClientAsync):
     """Async sub-client for querying information about a webhook dispatch."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

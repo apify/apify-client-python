@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._resource_clients.webhook import get_webhook_representation
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType
 
 
-class WebhookCollectionClient(ResourceCollectionClient):
+class WebhookCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating webhooks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -102,7 +102,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         return CreateWebhookResponse.model_validate(result).data
 
 
-class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
+class WebhookCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating webhooks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

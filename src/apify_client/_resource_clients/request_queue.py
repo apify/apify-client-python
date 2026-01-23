@@ -33,7 +33,7 @@ from apify_client._models import (
     UnlockRequestsResponse,
     UnlockRequestsResult,
 )
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively
 from apify_client.errors import ApifyApiError
 
@@ -52,7 +52,7 @@ _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actio
 _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
 
 
-class RequestQueueClient(ResourceClient):
+class RequestQueueClient(BaseClient):
     """Sub-client for manipulating a single request queue."""
 
     def __init__(  # noqa: D417
@@ -446,7 +446,7 @@ class RequestQueueClient(ResourceClient):
         return UnlockRequestsResponse.model_validate(result).data
 
 
-class RequestQueueClientAsync(ResourceClientAsync):
+class RequestQueueClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single request queue."""
 
     def __init__(  # noqa: D417

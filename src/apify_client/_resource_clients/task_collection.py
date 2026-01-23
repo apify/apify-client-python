@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._resource_clients.task import get_task_representation
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class TaskCollectionClient(ResourceCollectionClient):
+class TaskCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating tasks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -112,7 +112,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         return CreateTaskResponse.model_validate(result).data
 
 
-class TaskCollectionClientAsync(ResourceCollectionClientAsync):
+class TaskCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating tasks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

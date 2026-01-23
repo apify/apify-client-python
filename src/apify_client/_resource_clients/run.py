@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._logging import create_redirect_logger
 from apify_client._models import GetRunResponse, Run
-from apify_client._resource_clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
 from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
 from apify_client._resource_clients.log import (
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from apify_shared.consts import RunGeneralAccess
 
 
-class RunClient(ActorJobBaseClient):
+class RunClient(BaseClient):
     """Sub-client for manipulating a single Actor run."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -106,8 +106,13 @@ class RunClient(ActorJobBaseClient):
         Returns:
             The data of the aborted Actor run.
         """
-        response = self._abort(gracefully=gracefully)
-        return GetRunResponse.model_validate(response).data
+        response = self.http_client.call(
+            url=self._url('abort'),
+            method='POST',
+            params=self._params(gracefully=gracefully),
+        )
+        result = response_to_dict(response)
+        return GetRunResponse.model_validate(result).data
 
     def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
@@ -373,7 +378,7 @@ class RunClient(ActorJobBaseClient):
         return StatusMessageWatcherSync(run_client=self, to_logger=to_logger, check_period=check_period)
 
 
-class RunClientAsync(ActorJobBaseClientAsync):
+class RunClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single Actor run."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -436,8 +441,13 @@ class RunClientAsync(ActorJobBaseClientAsync):
         Returns:
             The data of the aborted Actor run.
         """
-        response = await self._abort(gracefully=gracefully)
-        return GetRunResponse.model_validate(response).data
+        response = await self.http_client.call(
+            url=self._url('abort'),
+            method='POST',
+            params=self._params(gracefully=gracefully),
+        )
+        result = response_to_dict(response)
+        return GetRunResponse.model_validate(result).data
 
     async def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.

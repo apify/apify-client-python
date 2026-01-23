@@ -18,7 +18,7 @@ from apify_client._resource_clients.actor_version_collection import (
     ActorVersionCollectionClient,
     ActorVersionCollectionClientAsync,
 )
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._resource_clients.build import BuildClient, BuildClientAsync
 from apify_client._resource_clients.build_collection import (
     BuildCollectionClient,
@@ -144,7 +144,7 @@ def get_actor_representation(
     return actor_dict
 
 
-class ActorClient(ResourceClient):
+class ActorClient(BaseClient):
     """Sub-client for manipulating a single Actor."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -575,7 +575,7 @@ class ActorClient(ResourceClient):
         return True
 
 
-class ActorClientAsync(ResourceClientAsync):
+class ActorClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single Actor."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

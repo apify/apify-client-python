@@ -10,12 +10,12 @@ from apify_client._models import (
     UserPrivateInfo,
     UserPublicInfo,
 )
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
-class UserClient(ResourceClient):
+class UserClient(BaseClient):
     """Sub-client for querying user data."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -121,7 +121,7 @@ class UserClient(ResourceClient):
         )
 
 
-class UserClientAsync(ResourceClientAsync):
+class UserClientAsync(BaseClientAsync):
     """Async sub-client for querying user data."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

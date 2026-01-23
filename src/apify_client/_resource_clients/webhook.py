@@ -9,7 +9,7 @@ from apify_client._models import (
     Webhook,
     WebhookDispatch,
 )
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._resource_clients.webhook_dispatch_collection import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
@@ -64,7 +64,7 @@ def get_webhook_representation(
     return webhook
 
 
-class WebhookClient(ResourceClient):
+class WebhookClient(BaseClient):
     """Sub-client for manipulating a single webhook."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -177,7 +177,7 @@ class WebhookClient(ResourceClient):
         )
 
 
-class WebhookClientAsync(ResourceClientAsync):
+class WebhookClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single webhook."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

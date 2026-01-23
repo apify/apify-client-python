@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._resource_clients.run import RunClient, RunClientAsync
 from apify_client._resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
 from apify_client._resource_clients.webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
@@ -72,7 +72,7 @@ def get_task_representation(
     return task_dict
 
 
-class TaskClient(ResourceClient):
+class TaskClient(BaseClient):
     """Sub-client for manipulating a single task."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -343,7 +343,7 @@ class TaskClient(ResourceClient):
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
 
-class TaskClientAsync(ResourceClientAsync):
+class TaskClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single task."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

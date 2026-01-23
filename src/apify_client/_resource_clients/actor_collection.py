@@ -4,11 +4,11 @@ from typing import Any, Literal
 
 from apify_client._models import Actor, CreateActorResponse, GetListOfActorsResponse, ListOfActors
 from apify_client._resource_clients.actor import get_actor_representation
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class ActorCollectionClient(ResourceCollectionClient):
+class ActorCollectionClient(BaseCollectionClient):
     """Sub-client for manipulating Actors."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -140,7 +140,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         return CreateActorResponse.model_validate(result).data
 
 
-class ActorCollectionClientAsync(ResourceCollectionClientAsync):
+class ActorCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for manipulating Actors."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

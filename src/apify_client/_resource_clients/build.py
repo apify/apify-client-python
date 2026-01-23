@@ -3,11 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import Build, GetBuildResponse, PostAbortBuildResponse
-from apify_client._resource_clients.base import ActorJobBaseClient, ActorJobBaseClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._resource_clients.log import LogClient, LogClientAsync
+from apify_client._utils import response_to_dict
 
 
-class BuildClient(ActorJobBaseClient):
+class BuildClient(BaseClient):
     """Sub-client for manipulating a single Actor build."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -40,7 +41,12 @@ class BuildClient(ActorJobBaseClient):
         Returns:
             The data of the aborted Actor build.
         """
-        result = self._abort()
+        response = self.http_client.call(
+            url=self._url('abort'),
+            method='POST',
+            params=self._params(),
+        )
+        result = response_to_dict(response)
         return PostAbortBuildResponse.model_validate(result).data
 
     def get_open_api_definition(self) -> dict | None:
@@ -86,7 +92,7 @@ class BuildClient(ActorJobBaseClient):
         )
 
 
-class BuildClientAsync(ActorJobBaseClientAsync):
+class BuildClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single Actor build."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -112,7 +118,12 @@ class BuildClientAsync(ActorJobBaseClientAsync):
         Returns:
             The data of the aborted Actor build.
         """
-        result = await self._abort()
+        response = await self.http_client.call(
+            url=self._url('abort'),
+            method='POST',
+            params=self._params(),
+        )
+        result = response_to_dict(response)
         return PostAbortBuildResponse.model_validate(result).data
 
     async def delete(self) -> None:

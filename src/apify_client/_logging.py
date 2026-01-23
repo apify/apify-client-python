@@ -11,7 +11,9 @@ from colorama import Fore, Style
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._resource_clients.base import BaseBaseClient
+    from apify_client._resource_clients.base import BaseClient, BaseCollectionClient
+
+    _BaseClient = BaseClient | BaseCollectionClient
 
 
 logger_name = __name__.split('.')[0]
@@ -111,7 +113,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     if inspect.iscoroutinefunction(fun):
 
         @functools.wraps(fun)
-        async def async_wrapper(resource_client: BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
+        async def async_wrapper(resource_client: _BaseClient, *args: Any, **kwargs: Any) -> Any:
             log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
             log_context.resource_id.set(resource_client.resource_id)
 
@@ -122,7 +124,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
     if inspect.isasyncgenfunction(fun):
 
         @functools.wraps(fun)
-        async def async_generator_wrapper(resource_client: BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
+        async def async_generator_wrapper(resource_client: _BaseClient, *args: Any, **kwargs: Any) -> Any:
             log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
             log_context.resource_id.set(resource_client.resource_id)
 
@@ -132,7 +134,7 @@ def _injects_client_details_to_log_context(fun: Callable) -> Callable:
         return async_generator_wrapper
 
     @functools.wraps(fun)
-    def wrapper(resource_client: BaseBaseClient, *args: Any, **kwargs: Any) -> Any:
+    def wrapper(resource_client: _BaseClient, *args: Any, **kwargs: Any) -> Any:
         log_context.client_method.set(fun.__qualname__)  # ty: ignore[unresolved-attribute]
         log_context.resource_id.set(resource_client.resource_id)
 

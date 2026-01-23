@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetListOfBuildsResponse, ListOfBuilds
-from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
+from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import response_to_dict
 
 
-class BuildCollectionClient(ResourceCollectionClient):
+class BuildCollectionClient(BaseCollectionClient):
     """Sub-client for listing Actor builds."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -46,7 +46,7 @@ class BuildCollectionClient(ResourceCollectionClient):
         return GetListOfBuildsResponse.model_validate(response_as_dict).data
 
 
-class BuildCollectionClientAsync(ResourceCollectionClientAsync):
+class BuildCollectionClientAsync(BaseCollectionClientAsync):
     """Async sub-client for listing Actor builds."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

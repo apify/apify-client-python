@@ -9,7 +9,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from apify_shared.utils import create_storage_content_signature
 
 from apify_client._models import CreateDatasetResponse, Dataset, DatasetStatistics, GetDatasetStatisticsResponse
-from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.base import BaseClient, BaseClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
@@ -59,7 +59,7 @@ _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actio
 _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
 
 
-class DatasetClient(ResourceClient):
+class DatasetClient(BaseClient):
     """Sub-client for manipulating a single dataset."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -675,7 +675,7 @@ class DatasetClient(ResourceClient):
         return urlunparse(items_public_url)
 
 
-class DatasetClientAsync(ResourceClientAsync):
+class DatasetClientAsync(BaseClientAsync):
     """Async sub-client for manipulating a single dataset."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

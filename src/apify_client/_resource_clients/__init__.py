@@ -4,7 +4,6 @@ from .actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from .actor_env_var_collection import ActorEnvVarCollectionClient, ActorEnvVarCollectionClientAsync
 from .actor_version import ActorVersionClient, ActorVersionClientAsync
 from .actor_version_collection import ActorVersionCollectionClient, ActorVersionCollectionClientAsync
-from .base import ActorJobBaseClient, ActorJobBaseClientAsync
 from .build import BuildClient, BuildClientAsync
 from .build_collection import BuildCollectionClient, BuildCollectionClientAsync
 from .dataset import DatasetClient, DatasetClientAsync
@@ -36,8 +35,6 @@ __all__ = [
     'ActorEnvVarClientAsync',
     'ActorEnvVarCollectionClient',
     'ActorEnvVarCollectionClientAsync',
-    'ActorJobBaseClient',
-    'ActorJobBaseClientAsync',
     'ActorVersionClient',
     'ActorVersionClientAsync',
     'ActorVersionCollectionClient',

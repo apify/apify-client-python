@@ -7,7 +7,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
-from apify_client._models import GetListOfKeysResponse, GetStoreResponse, KeyValueStore, ListOfKeys
+from apify_client._models import GetKeyValueStoreResponse, GetListOfKeysResponse, KeyValueStore, ListOfKeys
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -42,7 +42,7 @@ class KeyValueStoreClient(ResourceClient):
             The retrieved key-value store, or None if it does not exist.
         """
         result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return GetStoreResponse.model_validate(result).data if result is not None else None
+        return GetKeyValueStoreResponse.model_validate(result).data if result is not None else None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> KeyValueStore:
         """Update the key-value store with specified fields.
@@ -62,7 +62,7 @@ class KeyValueStoreClient(ResourceClient):
         }
 
         result = self._update(filter_out_none_values_recursively(updated_fields))
-        return GetStoreResponse.model_validate(result).data
+        return GetKeyValueStoreResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the key-value store.
@@ -369,7 +369,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The retrieved key-value store, or None if it does not exist.
         """
         result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return GetStoreResponse.model_validate(result).data if result is not None else None
+        return GetKeyValueStoreResponse.model_validate(result).data if result is not None else None
 
     async def update(
         self,
@@ -394,7 +394,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         }
 
         result = await self._update(filter_out_none_values_recursively(updated_fields))
-        return GetStoreResponse.model_validate(result).data
+        return GetKeyValueStoreResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the key-value store.

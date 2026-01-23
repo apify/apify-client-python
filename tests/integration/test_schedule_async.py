@@ -103,7 +103,7 @@ async def test_schedule_list(apify_client_async: ApifyClientAsync) -> None:
     assert schedules_page.items is not None
 
     # Verify our schedules are in the list
-    schedule_ids = [s['id'] for s in schedules_page.items]  # type: ignore[typeddict-item]
+    schedule_ids = [s.id for s in schedules_page.items]
     assert created_1.id in schedule_ids
     assert created_2.id in schedule_ids
 

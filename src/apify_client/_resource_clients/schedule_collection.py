@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import GetListOfSchedulesResponseDataItems, ScheduleResponse, ScheduleResponseData
+from apify_client._models import (
+    GetListOfSchedulesResponse,
+    GetScheduleResponse,
+    ListOfSchedules,
+    Schedule,
+)
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._resource_clients.schedule import _get_schedule_representation
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class ScheduleCollectionClient(ResourceCollectionClient):
@@ -24,7 +26,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[GetListOfSchedulesResponseDataItems]:
+    ) -> ListOfSchedules:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -37,7 +39,13 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfSchedulesResponse.model_validate(data).data
 
     def create(
         self,
@@ -50,7 +58,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-    ) -> ScheduleResponseData:
+    ) -> Schedule:
         """Create a new schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
@@ -85,7 +93,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         )
 
         result = self._create(filter_out_none_values_recursively(schedule_representation))
-        return ScheduleResponse.model_validate(result).data
+        return GetScheduleResponse.model_validate(result).data
 
 
 class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
@@ -101,7 +109,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[GetListOfSchedulesResponseDataItems]:
+    ) -> ListOfSchedules:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -114,7 +122,13 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfSchedulesResponse.model_validate(data).data
 
     async def create(
         self,
@@ -127,7 +141,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-    ) -> ScheduleResponseData:
+    ) -> Schedule:
         """Create a new schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/create-schedule
@@ -162,4 +176,4 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         )
 
         result = await self._create(filter_out_none_values_recursively(schedule_representation))
-        return ScheduleResponse.model_validate(result).data
+        return GetScheduleResponse.model_validate(result).data

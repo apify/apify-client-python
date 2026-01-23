@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import EnvVar
+from apify_client._models import EnvVar, GetListOfEnvVarsResponse, ListOfEnvVars
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class ActorEnvVarCollectionClient(ResourceCollectionClient):
@@ -18,7 +15,7 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage[EnvVar]:
+    def list(self) -> ListOfEnvVars:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -26,7 +23,13 @@ class ActorEnvVarCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available actor environment variables.
         """
-        return self._list()
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(),
+        )
+        data = response_to_dict(response)
+        return GetListOfEnvVarsResponse.model_validate(data).data
 
     def create(
         self,
@@ -64,7 +67,7 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'env-vars')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self) -> ListPage[EnvVar]:
+    async def list(self) -> ListOfEnvVars:
         """List the available actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -72,7 +75,13 @@ class ActorEnvVarCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available actor environment variables.
         """
-        return await self._list()
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(),
+        )
+        data = response_to_dict(response)
+        return GetListOfEnvVarsResponse.model_validate(data).data
 
     async def create(
         self,

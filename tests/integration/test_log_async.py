@@ -38,7 +38,7 @@ async def test_log_get_from_build(apify_client_async: ApifyClientAsync) -> None:
     actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
     builds_page = await actor.builds().list(limit=1)
     assert builds_page.items
-    build_id = builds_page.items[0]['id']
+    build_id = builds_page.items[0].id
 
     # Get log from the build
     build = apify_client_async.build(build_id)

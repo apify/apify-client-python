@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import GetUserRunsListResponse, RunList
+from apify_client._models import GetListOfRunsResponse, ListOfRuns
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import maybe_extract_enum_member_value, response_to_dict
 
@@ -28,7 +28,7 @@ class RunCollectionClient(ResourceCollectionClient):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-    ) -> RunList:
+    ) -> ListOfRuns:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -66,7 +66,7 @@ class RunCollectionClient(ResourceCollectionClient):
             ),
         )
         data = response_to_dict(response)
-        return GetUserRunsListResponse.model_validate(data).data
+        return GetListOfRunsResponse.model_validate(data).data
 
 
 class RunCollectionClientAsync(ResourceCollectionClientAsync):
@@ -85,7 +85,7 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-    ) -> RunList:
+    ) -> ListOfRuns:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -123,4 +123,4 @@ class RunCollectionClientAsync(ResourceCollectionClientAsync):
             ),
         )
         data = response_to_dict(response)
-        return GetUserRunsListResponse.model_validate(data).data
+        return GetListOfRunsResponse.model_validate(data).data

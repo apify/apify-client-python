@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import Version, VersionSourceType
+from apify_client._models import GetListOfVersionsResponse, ListOfVersions, Version, VersionSourceType
 from apify_client._resource_clients.actor_version import _get_actor_version_representation
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class ActorVersionCollectionClient(ResourceCollectionClient):
@@ -18,7 +15,7 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    def list(self) -> ListPage[Version]:
+    def list(self) -> ListOfVersions:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -26,7 +23,13 @@ class ActorVersionCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actor versions.
         """
-        return self._list()
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(),
+        )
+        data = response_to_dict(response)
+        return GetListOfVersionsResponse.model_validate(data).data
 
     def create(
         self,
@@ -88,7 +91,7 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'versions')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(self) -> ListPage[Version]:
+    async def list(self) -> ListOfVersions:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -96,7 +99,13 @@ class ActorVersionCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available Actor versions.
         """
-        return await self._list()
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(),
+        )
+        data = response_to_dict(response)
+        return GetListOfVersionsResponse.model_validate(data).data
 
     async def create(
         self,

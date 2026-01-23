@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetListOfActorsInStoreResponse, StoreData
+from apify_client._models import GetListOfActorsInStoreResponse, ListOfStoreActors
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._utils import response_to_dict
 
@@ -24,7 +24,7 @@ class StoreCollectionClient(ResourceCollectionClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> StoreData:
+    ) -> ListOfStoreActors:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
@@ -76,7 +76,7 @@ class StoreCollectionClientAsync(ResourceCollectionClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-    ) -> StoreData:
+    ) -> ListOfStoreActors:
         """List Actors in Apify store.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store

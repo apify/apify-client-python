@@ -8,9 +8,9 @@ from apify_client._models import (
     Build,
     BuildActorResponse,
     GetActorResponse,
+    GetRunResponse,
     Run,
     RunOrigin,
-    RunResponse,
     UpdateActorResponse,
 )
 from apify_client._resource_clients.actor_version import ActorVersionClient, ActorVersionClientAsync
@@ -344,7 +344,7 @@ class ActorClient(ResourceClient):
         )
 
         data = response_to_dict(response)
-        return RunResponse.model_validate(data).data
+        return GetRunResponse.model_validate(data).data
 
     def call(
         self,
@@ -775,7 +775,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         data = response_to_dict(response)
-        return RunResponse.model_validate(data).data
+        return GetRunResponse.model_validate(data).data
 
     async def call(
         self,

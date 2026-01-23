@@ -2,15 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import CreateWebhookResponse, Webhook, WebhookShort
+from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._resource_clients.webhook import get_webhook_representation
-from apify_client._utils import filter_out_none_values_recursively
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 if TYPE_CHECKING:
     from apify_shared.consts import WebhookEventType
-
-    from apify_client._types import ListPage
 
 
 class WebhookCollectionClient(ResourceCollectionClient):
@@ -26,7 +24,7 @@ class WebhookCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[WebhookShort]:
+    ) -> ListOfWebhooks:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -39,7 +37,13 @@ class WebhookCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfWebhooksResponse.model_validate(data).data
 
     def create(
         self,
@@ -111,7 +115,7 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[WebhookShort]:
+    ) -> ListOfWebhooks:
         """List the available webhooks.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
@@ -124,7 +128,13 @@ class WebhookCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfWebhooksResponse.model_validate(data).data
 
     async def create(
         self,

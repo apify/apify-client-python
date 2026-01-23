@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
-from apify_client._models import Actor, ActorShort, CreateActorResponse
+from apify_client._models import Actor, CreateActorResponse, GetListOfActorsResponse, ListOfActors
 from apify_client._resource_clients.actor import get_actor_representation
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class ActorCollectionClient(ResourceCollectionClient):
@@ -26,7 +23,7 @@ class ActorCollectionClient(ResourceCollectionClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPage[ActorShort]:
+    ) -> ListOfActors:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -41,7 +38,13 @@ class ActorCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
+        )
+        data = response_to_dict(response)
+        return GetListOfActorsResponse.model_validate(data).data
 
     def create(
         self,
@@ -152,7 +155,7 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-    ) -> ListPage[ActorShort]:
+    ) -> ListOfActors:
         """List the Actors the user has created or used.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
@@ -167,7 +170,13 @@ class ActorCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        return await self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
+        )
+        data = response_to_dict(response)
+        return GetListOfActorsResponse.model_validate(data).data
 
     async def create(
         self,

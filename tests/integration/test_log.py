@@ -34,7 +34,7 @@ def test_log_get_from_build(apify_client: ApifyClient) -> None:
     actor = apify_client.actor(HELLO_WORLD_ACTOR)
     builds_page = actor.builds().list(limit=1)
     assert builds_page.items
-    build_id = builds_page.items[0]['id']
+    build_id = builds_page.items[0].id
 
     # Get log from the build
     build = apify_client.build(build_id)

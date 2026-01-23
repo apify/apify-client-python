@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from apify_client._models import CreateTaskResponse, Task, TaskShort
+from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 from apify_client._resource_clients.task import get_task_representation
-from apify_client._utils import filter_out_none_values_recursively
-
-if TYPE_CHECKING:
-    from apify_client._types import ListPage
+from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
 class TaskCollectionClient(ResourceCollectionClient):
@@ -24,7 +21,7 @@ class TaskCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[TaskShort]:
+    ) -> ListOfTasks:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -37,7 +34,13 @@ class TaskCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfTasksResponse.model_validate(data).data
 
     def create(
         self,
@@ -122,7 +125,7 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[TaskShort]:
+    ) -> ListOfTasks:
         """List the available tasks.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
@@ -135,7 +138,13 @@ class TaskCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfTasksResponse.model_validate(data).data
 
     async def create(
         self,

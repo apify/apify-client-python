@@ -100,7 +100,7 @@ async def test_task_list(apify_client_async: ApifyClientAsync) -> None:
     assert tasks_page.items is not None
 
     # Verify our task is in the list
-    task_ids = [t['id'] for t in tasks_page.items]  # type: ignore[typeddict-item]
+    task_ids = [t.id for t in tasks_page.items]
     assert created_task.id in task_ids
 
     # Cleanup

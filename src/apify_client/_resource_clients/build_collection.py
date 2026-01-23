@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from apify_client._models import GetListOfBuildsResponse, ListOfBuilds
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-
-if TYPE_CHECKING:
-    from apify_client._models import BuildShort
-    from apify_client._types import ListPage
+from apify_client._utils import response_to_dict
 
 
 class BuildCollectionClient(ResourceCollectionClient):
@@ -22,7 +20,7 @@ class BuildCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[BuildShort]:
+    ) -> ListOfBuilds:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -39,7 +37,13 @@ class BuildCollectionClient(ResourceCollectionClient):
         Returns:
             The retrieved Actor builds.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfBuildsResponse.model_validate(data).data
 
 
 class BuildCollectionClientAsync(ResourceCollectionClientAsync):
@@ -55,7 +59,7 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[BuildShort]:
+    ) -> ListOfBuilds:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -72,4 +76,10 @@ class BuildCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved Actor builds.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return GetListOfBuildsResponse.model_validate(data).data

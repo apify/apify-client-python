@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from apify_client._models import ListOfWebhookDispatches, WebhookDispatchList
 from apify_client._resource_clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
-
-if TYPE_CHECKING:
-    from apify_client._models import WebhookDispatch
-    from apify_client._types import ListPage
+from apify_client._utils import response_to_dict
 
 
 class WebhookDispatchCollectionClient(ResourceCollectionClient):
@@ -22,7 +20,7 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[WebhookDispatch]:
+    ) -> ListOfWebhookDispatches | None:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -35,7 +33,13 @@ class WebhookDispatchCollectionClient(ResourceCollectionClient):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        response = self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return WebhookDispatchList.model_validate(data).data
 
 
 class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
@@ -51,7 +55,7 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[WebhookDispatch]:
+    ) -> ListOfWebhookDispatches | None:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -64,4 +68,10 @@ class WebhookDispatchCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='GET',
+            params=self._params(limit=limit, offset=offset, desc=desc),
+        )
+        data = response_to_dict(response)
+        return WebhookDispatchList.model_validate(data).data

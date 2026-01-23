@@ -24,8 +24,8 @@ async def test_build_list_for_actor(apify_client_async: ApifyClientAsync) -> Non
 
     # Verify build structure
     first_build = builds_page.items[0]
-    assert 'id' in first_build
-    assert 'actId' in first_build
+    assert first_build.id is not None
+    assert first_build.act_id is not None
 
 
 @pytest.mark.asyncio
@@ -35,7 +35,7 @@ async def test_build_get(apify_client_async: ApifyClientAsync) -> None:
     actor = apify_client_async.actor(HELLO_WORLD_ACTOR)
     builds_page = await actor.builds().list(limit=1)
     assert builds_page.items
-    build_id = builds_page.items[0]['id']
+    build_id = builds_page.items[0].id
 
     # Get the specific build
     build = await apify_client_async.build(build_id).get()

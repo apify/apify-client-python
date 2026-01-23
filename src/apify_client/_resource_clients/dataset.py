@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_storage_content_signature
 
-from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, GetDatasetStatisticsResponse
+from apify_client._models import CreateDatasetResponse, Dataset, DatasetStatistics, GetDatasetStatisticsResponse
 from apify_client._resource_clients.base import ResourceClient, ResourceClientAsync
-from apify_client._types import ListPage
 from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
@@ -25,6 +25,35 @@ if TYPE_CHECKING:
     from apify_shared.consts import StorageGeneralAccess
 
     from apify_client._types import JsonSerializable
+
+
+@dataclass
+class DatasetItemsPage:
+    """A page of dataset items returned by the `list_items` method.
+
+    Dataset items are arbitrary JSON objects stored in the dataset, so they cannot be
+    represented by a specific Pydantic model. This class provides pagination metadata
+    along with the raw items.
+    """
+
+    items: list[dict[str, Any]]
+    """List of dataset items. Each item is a JSON object (dictionary)."""
+
+    total: int
+    """Total number of items in the dataset."""
+
+    offset: int
+    """The offset of the first item in this page."""
+
+    count: int
+    """Number of items in this page."""
+
+    limit: int
+    """The limit that was used for this request."""
+
+    desc: bool
+    """Whether the items are sorted in descending order."""
+
 
 _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
 _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
@@ -46,7 +75,7 @@ class DatasetClient(ResourceClient):
             The retrieved dataset, or None, if it does not exist.
         """
         result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return DatasetResponse.model_validate(result).data if result is not None else None
+        return CreateDatasetResponse.model_validate(result).data if result is not None else None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -66,7 +95,7 @@ class DatasetClient(ResourceClient):
         }
 
         result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
-        return DatasetResponse.model_validate(result).data
+        return CreateDatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the dataset.
@@ -90,7 +119,7 @@ class DatasetClient(ResourceClient):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
-    ) -> ListPage:
+    ) -> DatasetItemsPage:
         """List the items of the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -149,23 +178,19 @@ class DatasetClient(ResourceClient):
 
         # When using signature, API returns items as list directly
         try:
-            data = response_to_list(response)
+            items = response_to_list(response)
         except ValueError:
-            data = response_to_dict(response)
+            items = cast('list', response_to_dict(response))
 
-        return ListPage(
-            {
-                'items': data,
-                'total': int(response.headers['x-apify-pagination-total']),
-                'offset': int(response.headers['x-apify-pagination-offset']),
-                'count': len(
-                    data
-                ),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-                'limit': int(
-                    response.headers['x-apify-pagination-limit']
-                ),  # API returns 999999999999 when no limit is used
-                'desc': bool(response.headers['x-apify-pagination-desc']),
-            }
+        return DatasetItemsPage(
+            items=items,
+            total=int(response.headers['x-apify-pagination-total']),
+            offset=int(response.headers['x-apify-pagination-offset']),
+            # x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+            count=len(items),
+            # API returns 999999999999 when no limit is used
+            limit=int(response.headers['x-apify-pagination-limit']),
+            desc=bool(response.headers['x-apify-pagination-desc']),
         )
 
     def iterate_items(
@@ -220,7 +245,7 @@ class DatasetClient(ResourceClient):
         should_finish = False
         read_items = 0
 
-        # We can't rely on ListPage.total because that is updated with a delay,
+        # We can't rely on DatasetItemsPage.total because that is updated with a delay,
         # so if you try to read the dataset items right after a run finishes, you could miss some.
         # Instead, we just read and read until we reach the limit, or until there are no more items to read.
         while not should_finish:
@@ -666,7 +691,7 @@ class DatasetClientAsync(ResourceClientAsync):
             The retrieved dataset, or None, if it does not exist.
         """
         result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return DatasetResponse.model_validate(result).data if result is not None else None
+        return CreateDatasetResponse.model_validate(result).data if result is not None else None
 
     async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -686,7 +711,7 @@ class DatasetClientAsync(ResourceClientAsync):
         }
 
         result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
-        return DatasetResponse.model_validate(result).data
+        return CreateDatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the dataset.
@@ -710,7 +735,7 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
-    ) -> ListPage:
+    ) -> DatasetItemsPage:
         """List the items of the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -769,23 +794,19 @@ class DatasetClientAsync(ResourceClientAsync):
 
         # When using signature, API returns items as list directly
         try:
-            data = response_to_list(response)
+            items = response_to_list(response)
         except ValueError:
-            data = response_to_dict(response)
+            items = cast('list', response_to_dict(response))
 
-        return ListPage(
-            {
-                'items': data,
-                'total': int(response.headers['x-apify-pagination-total']),
-                'offset': int(response.headers['x-apify-pagination-offset']),
-                'count': len(
-                    data
-                ),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-                'limit': int(
-                    response.headers['x-apify-pagination-limit']
-                ),  # API returns 999999999999 when no limit is used
-                'desc': bool(response.headers['x-apify-pagination-desc']),
-            }
+        return DatasetItemsPage(
+            items=items,
+            total=int(response.headers['x-apify-pagination-total']),
+            offset=int(response.headers['x-apify-pagination-offset']),
+            # x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+            count=len(items),
+            # API returns 999999999999 when no limit is used
+            limit=int(response.headers['x-apify-pagination-limit']),
+            desc=bool(response.headers['x-apify-pagination-desc']),
         )
 
     async def iterate_items(
@@ -840,7 +861,7 @@ class DatasetClientAsync(ResourceClientAsync):
         should_finish = False
         read_items = 0
 
-        # We can't rely on ListPage.total because that is updated with a delay,
+        # We can't rely on DatasetItemsPage.total because that is updated with a delay,
         # so if you try to read the dataset items right after a run finishes, you could miss some.
         # Instead, we just read and read until we reach the limit, or until there are no more items to read.
         while not should_finish:

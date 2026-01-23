@@ -3,9 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from apify_shared.consts import ActorJobStatus
-
-from apify_client._models import Run
+from apify_client._models import ActorJobStatus, Run
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient

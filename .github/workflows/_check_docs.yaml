@@ -11,36 +11,3 @@ jobs:
   doc_checks:
     name: Doc checks
     uses: apify/workflows/.github/workflows/python_docs_check.yaml@main
-
-  # tmp
-  doc_tests:
-    name: Doc release test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      - name: Set up uv package manager
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: "3.14"
-
-      - name: Install Python dependencies
-        run: uv run poe install-dev
-
-      - name: Update docs theme
-        run: uv run poe update-docs-theme
-
-      - name: Build docs
-        run: uv run poe build-docs

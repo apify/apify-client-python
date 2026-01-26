@@ -42,7 +42,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=24.3.0",  # Security fix for CVE-2024-21503 (ReDoS vulnerability)
+    # TODO: Remove this constraint once pydoc-markdown updates its dependencies.
+    # Package pydoc-markdown is unmaintained and pins old docspec-python with vulnerable black.
+    # See https://github.com/apify/apify-client-python/pull/582/ for more details.
+    # We explicitly constrain black>=24.3.0 to override the transitive dependency.
+    "black>=24.3.0",
     "dycw-pytest-only<3.0.0",
     "griffe",
     "pre-commit<5.0.0",

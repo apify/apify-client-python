@@ -11,3 +11,19 @@ jobs:
   doc_checks:
     name: Doc checks
     uses: apify/workflows/.github/workflows/python_docs_check.yaml@main
+
+  # tmp
+  doc_tests:
+    name: Doc release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enable Corepack
+        run: corepack enable
+
+      # Install Node dependencies and update docs theme to the latest version
+      - name: Install Node dependencies
+        run: |
+          yarn install
+          yarn up @apify/docs-theme
+        working-directory: ./website

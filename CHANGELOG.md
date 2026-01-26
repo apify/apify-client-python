@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 2.4.1 - **not yet released**
 
+### 🐛 Bug Fixes
+
+- Update black to fix ReDoS vulnerability ([#582](https://github.com/apify/apify-client-python/pull/582)) ([aae2eb9](https://github.com/apify/apify-client-python/commit/aae2eb9f5aeda0c7274285b9aaab3c73550bcad6)) by [@B4nan](https://github.com/B4nan)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [2.4.0](https://github.com/apify/apify-client-python/releases/tag/v2.4.0) (2026-01-09)

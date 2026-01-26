@@ -28,12 +28,21 @@ jobs:
           cache: yarn
           cache-dependency-path: website/yarn.lock
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
 
-      # Install Node dependencies and update docs theme to the latest version
-      - name: Install Node dependencies
-        run: |
-          yarn install
-          yarn up @apify/docs-theme
-        working-directory: ./website
+      - name: Set up uv package manager
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install Python dependencies
+        run: uv run poe install-dev
+
+      - name: Update docs theme
+        run: uv run poe update-docs-theme
+
+      - name: Build docs
+        run: uv run poe build-docs

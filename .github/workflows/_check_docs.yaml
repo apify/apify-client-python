@@ -14,10 +14,20 @@ jobs:
 
   # tmp
   doc_tests:
-    name: Doc release
+    name: Doc release test
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: yarn
+          cache-dependency-path: website/yarn.lock
+
       - name: Enable Corepack
         run: corepack enable
 

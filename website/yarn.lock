@@ -402,7 +402,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apify/docs-theme@npm:^1.0.203":
+"@apify/docs-theme@npm:^1.0.181":
   version: 1.0.230
   resolution: "@apify/docs-theme@npm:1.0.230"
   dependencies:
@@ -456,7 +456,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apify/eslint-config-ts@npm:>=0.0.1 <1.0.0":
+"@apify/eslint-config-ts@npm:>=0.4.0 <1.0.0":
   version: 0.4.1
   resolution: "@apify/eslint-config-ts@npm:0.4.1"
   dependencies:
@@ -492,7 +492,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apify/tsconfig@npm:>=0.0.1 <1.0.0":
+"@apify/tsconfig@npm:>=0.1.0 <1.0.0":
   version: 0.1.1
   resolution: "@apify/tsconfig@npm:0.1.1"
   checksum: 10c0/85b064b318ab71fc84a98d70b028ad510fe1be20452d057c0f4cda1b5c62cbe931e62f674ce927abda46c0b1cfc2f08f08a227b1d9385edb735d77b717dd9640
@@ -6768,10 +6768,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "apify-client-python@workspace:."
   dependencies:
-    "@apify/docs-theme": "npm:^1.0.203"
+    "@apify/docs-theme": "npm:^1.0.181"
     "@apify/docusaurus-plugin-typedoc-api": "npm:^5.0.0"
-    "@apify/eslint-config-ts": "npm:>=0.0.1 <1.0.0"
-    "@apify/tsconfig": "npm:>=0.0.1 <1.0.0"
+    "@apify/eslint-config-ts": "npm:>=0.4.0 <1.0.0"
+    "@apify/tsconfig": "npm:>=0.1.0 <1.0.0"
     "@docusaurus/core": "npm:^3.8.1"
     "@docusaurus/faster": "npm:^3.8.1"
     "@docusaurus/plugin-client-redirects": "npm:^3.8.1"
@@ -6782,12 +6782,12 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
     clsx: "npm:^2.0.0"
-    docusaurus-gtm-plugin: "npm:>=0.0.1 <1.0.0"
+    docusaurus-gtm-plugin: "npm:>=0.0.2 <1.0.0"
     eslint: "npm:^9.0.0"
     eslint-plugin-react: "npm:^7.32.2"
     eslint-plugin-react-hooks: "npm:^7.0.0"
-    markdownlint: "npm:>=0.0.1 <1.0.0"
-    markdownlint-cli: "npm:>=0.0.1 <1.0.0"
+    markdownlint: "npm:>=0.39.0 <1.0.0"
+    markdownlint-cli: "npm:>=0.46.0 <1.0.0"
     path-browserify: "npm:^1.0.1"
     prettier: "npm:^3.0.0"
     prop-types: "npm:^15.8.1"
@@ -8571,7 +8571,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docusaurus-gtm-plugin@npm:>=0.0.1 <1.0.0, docusaurus-gtm-plugin@npm:^0.0.2":
+"docusaurus-gtm-plugin@npm:>=0.0.2 <1.0.0, docusaurus-gtm-plugin@npm:^0.0.2":
   version: 0.0.2
   resolution: "docusaurus-gtm-plugin@npm:0.0.2"
   checksum: 10c0/2c0aee22aa398e8dafa17ec549b0284698ce27cacc353fe1c052121cb503e17b26745309e43277474bc9f56f0d15e4d1f73cb03a79b4bd42c86c72f55ef553fd
@@ -12203,7 +12203,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"markdownlint-cli@npm:>=0.0.1 <1.0.0":
+"markdownlint-cli@npm:>=0.46.0 <1.0.0":
   version: 0.47.0
   resolution: "markdownlint-cli@npm:0.47.0"
   dependencies:
@@ -12225,7 +12225,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"markdownlint@npm:>=0.0.1 <1.0.0, markdownlint@npm:~0.40.0":
+"markdownlint@npm:>=0.39.0 <1.0.0, markdownlint@npm:~0.40.0":
   version: 0.40.0
   resolution: "markdownlint@npm:0.40.0"
   dependencies:

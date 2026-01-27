@@ -88,6 +88,7 @@ def get_actor_representation(
         },
         'pricingInfos': pricing_infos,
         'actorPermissionLevel': actor_permission_level,
+        'taggedBuilds': tagged_builds,
     }
 
     # Only include actorStandby if at least one field is provided
@@ -109,10 +110,6 @@ def get_actor_representation(
             'build': actor_standby_build,
             'memoryMbytes': actor_standby_memory_mbytes,
         }
-
-    # Add taggedBuilds if provided
-    if tagged_builds is not None:
-        actor_dict['taggedBuilds'] = tagged_builds
 
     return actor_dict
 

@@ -1,6 +1,6 @@
 import pytest
 
-from apify_client._statistics import Statistics
+from apify_client._statistics import ClientStatistics
 
 
 @pytest.mark.parametrize(
@@ -16,7 +16,7 @@ from apify_client._statistics import Statistics
 )
 def test_add_rate_limit_error(attempts: list[int], expected_errors: list[int]) -> None:
     """Test that add_rate_limit_error correctly tracks errors for different attempt sequences."""
-    stats = Statistics()
+    stats = ClientStatistics()
     for attempt in attempts:
         stats.add_rate_limit_error(attempt)
     assert stats.rate_limit_errors == expected_errors
@@ -24,14 +24,14 @@ def test_add_rate_limit_error(attempts: list[int], expected_errors: list[int]) -
 
 def test_add_rate_limit_error_invalid_attempt() -> None:
     """Test that add_rate_limit_error raises ValueError for invalid attempt."""
-    stats = Statistics()
+    stats = ClientStatistics()
     with pytest.raises(ValueError, match=r'Attempt must be greater than 0'):
         stats.add_rate_limit_error(0)
 
 
 def test_statistics_initial_state() -> None:
     """Test initial state of Statistics instance."""
-    stats = Statistics()
+    stats = ClientStatistics()
     assert stats.calls == 0
     assert stats.requests == 0
     assert stats.rate_limit_errors == {}
@@ -39,6 +39,6 @@ def test_statistics_initial_state() -> None:
 
 def test_add_rate_limit_error_type_validation() -> None:
     """Test type validation in add_rate_limit_error."""
-    stats = Statistics()
+    stats = ClientStatistics()
     with pytest.raises(TypeError):
         stats.add_rate_limit_error('1')  # ty: ignore[invalid-argument-type]

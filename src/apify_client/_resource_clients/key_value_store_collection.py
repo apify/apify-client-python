@@ -9,7 +9,7 @@ from apify_client._models import (
     ListOfKeyValueStores,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import filter_none_values, response_to_dict
 
 
 class KeyValueStoreCollectionClient(ResourceClient):
@@ -43,7 +43,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfKeyValueStoresResponse.model_validate(response_as_dict).data
@@ -66,14 +66,10 @@ class KeyValueStoreCollectionClient(ResourceClient):
             The retrieved or newly-created key-value store.
         """
         response = self.http_client.call(
-
             url=self._url(),
-
             method='POST',
-
-            params=self._params(name=name),
-
-            json=filter_out_none_values_recursively({'schema': schema}),
+            params=self._build_params(name=name),
+            json=filter_none_values({'schema': schema}),
         )
 
         result = response_to_dict(response)
@@ -111,7 +107,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfKeyValueStoresResponse.model_validate(response_as_dict).data
@@ -134,14 +130,10 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             The retrieved or newly-created key-value store.
         """
         response = await self.http_client.call(
-
             url=self._url(),
-
             method='POST',
-
-            params=self._params(name=name),
-
-            json=filter_out_none_values_recursively({'schema': schema}),
+            params=self._build_params(name=name),
+            json=filter_none_values({'schema': schema}),
         )
 
         result = response_to_dict(response)

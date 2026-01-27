@@ -40,7 +40,7 @@ class BuildCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfBuildsResponse.model_validate(response_as_dict).data
@@ -79,7 +79,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfBuildsResponse.model_validate(response_as_dict).data

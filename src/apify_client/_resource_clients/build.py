@@ -61,7 +61,7 @@ class BuildClient(ResourceClient):
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(),
+            params=self._build_params(),
         )
         result = response_to_dict(response)
         return PostAbortBuildResponse.model_validate(result).data
@@ -110,7 +110,7 @@ class BuildClient(ResourceClient):
             A client allowing access to the log of this Actor build.
         """
         return LogClient(
-            **self._sub_resource_init_options(resource_path='log'),
+            **self._nested_client_config(resource_path='log'),
         )
 
 
@@ -152,7 +152,7 @@ class BuildClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(),
+            params=self._build_params(),
         )
         result = response_to_dict(response)
         return PostAbortBuildResponse.model_validate(result).data
@@ -215,5 +215,5 @@ class BuildClientAsync(ResourceClientAsync):
             A client allowing access to the log of this Actor build.
         """
         return LogClientAsync(
-            **self._sub_resource_init_options(resource_path='log'),
+            **self._nested_client_config(resource_path='log'),
         )

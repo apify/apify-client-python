@@ -14,15 +14,15 @@ from urllib.parse import urlencode
 import impit
 
 from apify_client._logging import log_context, logger_name
-from apify_client._statistics import Statistics
+from apify_client._statistics import ClientStatistics
 from apify_client._utils import is_retryable_error, retry_with_exp_backoff, retry_with_exp_backoff_async
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._client_config import ClientConfig
-    from apify_client._utils import JsonSerializable
+    from apify_client._config import ClientConfig
+    from apify_client._consts import JsonSerializable
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -33,7 +33,7 @@ logger = logging.getLogger(logger_name)
 class _BaseHttpClient:
     """Base class for HTTP clients with shared configuration and utilities."""
 
-    def __init__(self, config: ClientConfig, stats: Statistics | None = None) -> None:
+    def __init__(self, config: ClientConfig, stats: ClientStatistics | None = None) -> None:
         """Initialize HTTP client with configuration.
 
         Args:
@@ -41,7 +41,7 @@ class _BaseHttpClient:
             stats: Optional statistics tracker.
         """
         self.config = config
-        self.stats = stats or Statistics()
+        self.stats = stats or ClientStatistics()
 
         # Build headers
         headers = {'Accept': 'application/json, */*'}

@@ -9,12 +9,7 @@ from apify_client._resource_clients.actor_env_var_collection import (
     ActorEnvVarCollectionClient,
     ActorEnvVarCollectionClientAsync,
 )
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    filter_out_none_values_recursively,
-    maybe_extract_enum_member_value,
-    response_to_dict,
-)
+from apify_client._utils import catch_not_found_or_throw, enum_to_value, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -35,7 +30,7 @@ def _get_actor_version_representation(
         'buildTag': build_tag,
         'envVars': env_vars,
         'applyEnvVarsToBuild': apply_env_vars_to_build,
-        'sourceType': maybe_extract_enum_member_value(source_type),
+        'sourceType': enum_to_value(source_type),
         'sourceFiles': source_files,
         'gitRepoUrl': git_repo_url,
         'tarballUrl': tarball_url,
@@ -115,7 +110,7 @@ class ActorVersionClient(ResourceClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        cleaned = filter_out_none_values_recursively(actor_version_representation)
+        cleaned = filter_none_values(actor_version_representation)
 
         response = self.http_client.call(
             url=self.url,
@@ -142,7 +137,7 @@ class ActorVersionClient(ResourceClient):
 
     def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
-        return ActorEnvVarCollectionClient(**self._sub_resource_init_options())
+        return ActorEnvVarCollectionClient(**self._nested_client_config())
 
     def env_var(self, env_var_name: str) -> ActorEnvVarClient:
         """Retrieve the client for the specified environment variable of this Actor version.
@@ -153,7 +148,7 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The resource client for the specified Actor environment variable.
         """
-        return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
+        return ActorEnvVarClient(**self._nested_client_config(resource_id=env_var_name))
 
 
 class ActorVersionClientAsync(ResourceClientAsync):
@@ -228,7 +223,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        cleaned = filter_out_none_values_recursively(actor_version_representation)
+        cleaned = filter_none_values(actor_version_representation)
 
         response = await self.http_client.call(
             url=self.url,
@@ -255,7 +250,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
 
     def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""
-        return ActorEnvVarCollectionClientAsync(**self._sub_resource_init_options())
+        return ActorEnvVarCollectionClientAsync(**self._nested_client_config())
 
     def env_var(self, env_var_name: str) -> ActorEnvVarClientAsync:
         """Retrieve the client for the specified environment variable of this Actor version.
@@ -266,4 +261,4 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the specified Actor environment variable.
         """
-        return ActorEnvVarClientAsync(**self._sub_resource_init_options(resource_id=env_var_name))
+        return ActorEnvVarClientAsync(**self._nested_client_config(resource_id=env_var_name))

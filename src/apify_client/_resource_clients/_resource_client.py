@@ -119,9 +119,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         # Convert to public URL if requested
         if public:
             if not url.startswith(self._base_url):
-                raise ValueError(
-                    f'Cannot convert to public URL: {url} does not start with base URL {self._base_url}'
-                )
+                raise ValueError(f'Cannot convert to public URL: {url} does not start with base URL {self._base_url}')
             url = url.replace(self._base_url, self._public_base_url, 1)
 
         # Append query parameters if provided
@@ -153,9 +151,6 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         merged = {**self._default_params, **kwargs}
         return {k: v for k, v in merged.items() if v is not None}
 
-    # Backwards compatibility alias
-    _params = _build_params
-
     def _nested_client_config(self, **kwargs: Any) -> NestedClientConfig:
         """Build configuration dict for initializing a nested resource client.
 
@@ -180,10 +175,14 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         }
         return {**options, **kwargs}
 
-    # Backwards compatibility alias
-    _sub_resource_init_options = _nested_client_config
-
-    def _create_sibling_client(self, client_class: type, *, resource_id: str, resource_path: str | None = None, **kwargs: Any) -> Any:
+    def _create_sibling_client(
+        self,
+        client_class: type,
+        *,
+        resource_id: str,
+        resource_path: str | None = None,
+        **kwargs: Any,
+    ) -> Any:
         """Create a sibling resource client (e.g., RunClient from ActorClient).
 
         This is used when a resource client needs to create another resource client
@@ -310,9 +309,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         # Convert to public URL if requested
         if public:
             if not url.startswith(self._base_url):
-                raise ValueError(
-                    f'Cannot convert to public URL: {url} does not start with base URL {self._base_url}'
-                )
+                raise ValueError(f'Cannot convert to public URL: {url} does not start with base URL {self._base_url}')
             url = url.replace(self._base_url, self._public_base_url, 1)
 
         # Append query parameters if provided
@@ -344,9 +341,6 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         merged = {**self._default_params, **kwargs}
         return {k: v for k, v in merged.items() if v is not None}
 
-    # Backwards compatibility alias
-    _params = _build_params
-
     def _nested_client_config(self, **kwargs: Any) -> NestedClientConfig:
         """Build configuration dict for initializing a nested resource client.
 
@@ -371,10 +365,14 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         }
         return {**options, **kwargs}
 
-    # Backwards compatibility alias
-    _sub_resource_init_options = _nested_client_config
-
-    def _create_sibling_client(self, client_class: type, *, resource_id: str, resource_path: str | None = None, **kwargs: Any) -> Any:
+    def _create_sibling_client(
+        self,
+        client_class: type,
+        *,
+        resource_id: str,
+        resource_path: str | None = None,
+        **kwargs: Any,
+    ) -> Any:
         """Create a sibling resource client (e.g., RunClientAsync from ActorClientAsync).
 
         This is used when a resource client needs to create another resource client

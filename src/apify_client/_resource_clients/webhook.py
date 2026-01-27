@@ -16,8 +16,8 @@ from apify_client._resource_clients.webhook_dispatch_collection import (
 )
 from apify_client._utils import (
     catch_not_found_or_throw,
-    filter_out_none_values_recursively,
-    maybe_extract_enum_member_value,
+    enum_to_value,
+    filter_none_values,
     response_to_dict,
 )
 from apify_client.errors import ApifyApiError
@@ -60,7 +60,7 @@ def get_webhook_representation(
         webhook['isAdHoc'] = True
 
     if event_types is not None:
-        webhook['eventTypes'] = [maybe_extract_enum_member_value(event_type) for event_type in event_types]
+        webhook['eventTypes'] = [enum_to_value(event_type) for event_type in event_types]
 
     return webhook
 
@@ -138,7 +138,7 @@ class WebhookClient(ResourceClient):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
-        cleaned = filter_out_none_values_recursively(webhook_representation)
+        cleaned = filter_none_values(webhook_representation)
 
         response = self.http_client.call(
             url=self.url,
@@ -177,7 +177,7 @@ class WebhookClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url('test'),
                 method='POST',
-                params=self._params(),
+                params=self._build_params(),
             )
 
             result = response.json()
@@ -197,7 +197,7 @@ class WebhookClient(ResourceClient):
             A client allowing access to dispatches of this webhook using its list method.
         """
         return WebhookDispatchCollectionClient(
-            **self._sub_resource_init_options(resource_path='dispatches'),
+            **self._nested_client_config(resource_path='dispatches'),
         )
 
 
@@ -274,7 +274,7 @@ class WebhookClientAsync(ResourceClientAsync):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
-        cleaned = filter_out_none_values_recursively(webhook_representation)
+        cleaned = filter_none_values(webhook_representation)
 
         response = await self.http_client.call(
             url=self.url,
@@ -313,7 +313,7 @@ class WebhookClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url('test'),
                 method='POST',
-                params=self._params(),
+                params=self._build_params(),
             )
 
             result = response.json()
@@ -333,5 +333,5 @@ class WebhookClientAsync(ResourceClientAsync):
             A client allowing access to dispatches of this webhook using its list method.
         """
         return WebhookDispatchCollectionClientAsync(
-            **self._sub_resource_init_options(resource_path='dispatches'),
+            **self._nested_client_config(resource_path='dispatches'),
         )

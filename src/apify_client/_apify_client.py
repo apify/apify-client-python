@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from apify_client._client_config import ClientConfig
+from apify_client._config import ClientConfig
 from apify_client._http_client import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
@@ -50,7 +50,7 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
 )
-from apify_client._statistics import Statistics
+from apify_client._statistics import ClientStatistics
 
 
 class ApifyClient:
@@ -88,7 +88,7 @@ class ApifyClient:
             timeout_secs=timeout_secs,
         )
 
-        self.stats = Statistics()
+        self.stats = ClientStatistics()
         self.http_client = HttpClient(config=self._config, stats=self.stats)
 
     def _options(self) -> dict:
@@ -104,11 +104,7 @@ class ApifyClient:
         Args:
             actor_id: ID of the Actor to be manipulated.
         """
-        return ActorClient(
-            resource_id=actor_id,
-            resource_path='acts',
-            **self._options()
-        )
+        return ActorClient(resource_id=actor_id, resource_path='acts', **self._options())
 
     def actors(self) -> ActorCollectionClient:
         """Retrieve the sub-client for manipulating Actors."""
@@ -279,7 +275,7 @@ class ApifyClientAsync:
             timeout_secs=timeout_secs,
         )
 
-        self.stats = Statistics()
+        self.stats = ClientStatistics()
         self.http_client = HttpClientAsync(config=self._config, stats=self.stats)
 
     def _options(self) -> dict:

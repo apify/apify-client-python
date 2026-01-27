@@ -10,7 +10,7 @@ from apify_client._models import (
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.schedule import _get_schedule_representation
-from apify_client._utils import filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import filter_none_values, response_to_dict
 
 
 class ScheduleCollectionClient(ResourceClient):
@@ -42,7 +42,7 @@ class ScheduleCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfSchedulesResponse.model_validate(response_as_dict).data
@@ -95,8 +95,8 @@ class ScheduleCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(schedule_representation),
+            params=self._build_params(),
+            json=filter_none_values(schedule_representation),
         )
 
         result = response_to_dict(response)
@@ -132,7 +132,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfSchedulesResponse.model_validate(response_as_dict).data
@@ -185,8 +185,8 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(schedule_representation),
+            params=self._build_params(),
+            json=filter_none_values(schedule_representation),
         )
 
         result = response_to_dict(response)

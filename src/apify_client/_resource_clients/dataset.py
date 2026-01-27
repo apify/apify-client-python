@@ -6,14 +6,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode, urlparse, urlunparse
 
+from apify_client._consts import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
 from apify_client._models import CreateDatasetResponse, Dataset, DatasetStatistics, GetDatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._signing import create_storage_content_signature
 from apify_client._utils import (
-    FAST_OPERATION_TIMEOUT_SECS,
-    STANDARD_OPERATION_TIMEOUT_SECS,
     catch_not_found_or_throw,
-    filter_out_none_values_recursively,
+    create_storage_content_signature,
+    filter_none_values,
     response_to_dict,
     response_to_list,
 )
@@ -24,8 +23,7 @@ if TYPE_CHECKING:
 
     import impit
 
-    from apify_client._consts import StorageGeneralAccess
-    from apify_client._utils import JsonSerializable
+    from apify_client._consts import JsonSerializable, StorageGeneralAccess
 
 
 @dataclass
@@ -100,7 +98,7 @@ class DatasetClient(ResourceClient):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_out_none_values_recursively(updated_fields)
+        cleaned = filter_none_values(updated_fields)
 
         response = self.http_client.call(
             url=self.url,
@@ -178,7 +176,7 @@ class DatasetClient(ResourceClient):
         Returns:
             A page of the list of dataset items according to the specified filters.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             offset=offset,
             limit=limit,
             desc=desc,
@@ -461,7 +459,7 @@ class DatasetClient(ResourceClient):
         Returns:
             The dataset items as raw bytes.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             format=item_format,
             offset=offset,
             limit=limit,
@@ -557,7 +555,7 @@ class DatasetClient(ResourceClient):
         """
         response = None
         try:
-            request_params = self._params(
+            request_params = self._build_params(
                 format=item_format,
                 offset=offset,
                 limit=limit,
@@ -608,7 +606,7 @@ class DatasetClient(ResourceClient):
             url=self._url('items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
-            params=self._params(),
+            params=self._build_params(),
             data=data,
             json=json,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -626,7 +624,7 @@ class DatasetClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url('statistics'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response.json()
@@ -668,7 +666,7 @@ class DatasetClient(ResourceClient):
         """
         dataset = self.get()
 
-        request_params = self._params(
+        request_params = self._build_params(
             offset=offset,
             limit=limit,
             desc=desc,
@@ -742,7 +740,7 @@ class DatasetClientAsync(ResourceClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_out_none_values_recursively(updated_fields)
+        cleaned = filter_none_values(updated_fields)
 
         response = await self.http_client.call(
             url=self.url,
@@ -820,7 +818,7 @@ class DatasetClientAsync(ResourceClientAsync):
         Returns:
             A page of the list of dataset items according to the specified filters.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             offset=offset,
             limit=limit,
             desc=desc,
@@ -1009,7 +1007,7 @@ class DatasetClientAsync(ResourceClientAsync):
         Returns:
             The dataset items as raw bytes.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             format=item_format,
             offset=offset,
             limit=limit,
@@ -1105,7 +1103,7 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         response = None
         try:
-            request_params = self._params(
+            request_params = self._build_params(
                 format=item_format,
                 offset=offset,
                 limit=limit,
@@ -1156,7 +1154,7 @@ class DatasetClientAsync(ResourceClientAsync):
             url=self._url('items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
-            params=self._params(),
+            params=self._build_params(),
             data=data,
             json=json,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -1174,7 +1172,7 @@ class DatasetClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url('statistics'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response.json()
@@ -1216,7 +1214,7 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         dataset = await self.get()
 
-        request_params = self._params(
+        request_params = self._build_params(
             offset=offset,
             limit=limit,
             desc=desc,

@@ -11,7 +11,7 @@ from apify_client._models import (
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_version import _get_actor_version_representation
-from apify_client._utils import filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import filter_none_values, response_to_dict
 
 
 class ActorVersionCollectionClient(ResourceClient):
@@ -32,7 +32,7 @@ class ActorVersionCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(),
+            params=self._build_params(),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfVersionsResponse.model_validate(response_as_dict).data
@@ -89,8 +89,8 @@ class ActorVersionCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(actor_version_representation),
+            params=self._build_params(),
+            json=filter_none_values(actor_version_representation),
         )
 
         result = response_to_dict(response)
@@ -115,7 +115,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(),
+            params=self._build_params(),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfVersionsResponse.model_validate(response_as_dict).data
@@ -172,8 +172,8 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(actor_version_representation),
+            params=self._build_params(),
+            json=filter_none_values(actor_version_representation),
         )
 
         result = response_to_dict(response)

@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_client._models import GetScheduleLogResponse, GetScheduleResponse, Schedule, ScheduleInvoked
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -99,7 +99,7 @@ class ScheduleClient(ResourceClient):
             timezone=timezone,
             title=title,
         )
-        cleaned = filter_out_none_values_recursively(schedule_representation)
+        cleaned = filter_none_values(schedule_representation)
 
         response = self.http_client.call(
             url=self.url,
@@ -136,7 +136,7 @@ class ScheduleClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url('log'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
@@ -216,7 +216,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             timezone=timezone,
             title=title,
         )
-        cleaned = filter_out_none_values_recursively(schedule_representation)
+        cleaned = filter_none_values(schedule_representation)
 
         response = await self.http_client.call(
             url=self.url,
@@ -253,7 +253,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url('log'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:

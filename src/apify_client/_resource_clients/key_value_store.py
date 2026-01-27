@@ -5,15 +5,15 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
+from apify_client._consts import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
 from apify_client._models import GetKeyValueStoreResponse, GetListOfKeysResponse, KeyValueStore, ListOfKeys
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._signing import create_hmac_signature, create_storage_content_signature
 from apify_client._utils import (
-    FAST_OPERATION_TIMEOUT_SECS,
-    STANDARD_OPERATION_TIMEOUT_SECS,
     catch_not_found_or_throw,
+    create_hmac_signature,
+    create_storage_content_signature,
     encode_key_value_store_record_value,
-    filter_out_none_values_recursively,
+    filter_none_values,
     maybe_parse_response,
     response_to_dict,
 )
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._consts import StorageGeneralAccess
-
 
 
 class KeyValueStoreClient(ResourceClient):
@@ -70,7 +69,7 @@ class KeyValueStoreClient(ResourceClient):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_out_none_values_recursively(updated_fields)
+        cleaned = filter_none_values(updated_fields)
 
         response = self.http_client.call(
             url=self.url,
@@ -119,7 +118,7 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             limit=limit,
             exclusiveStartKey=exclusive_start_key,
             collection=collection,
@@ -153,7 +152,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature, attachment=True),
+                params=self._build_params(signature=signature, attachment=True),
             )
 
             return {
@@ -182,7 +181,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='HEAD',
-                params=self._params(),
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             if exc.status_code == HTTPStatus.NOT_FOUND:
@@ -208,7 +207,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature, attachment=True),
+                params=self._build_params(signature=signature, attachment=True),
             )
 
             return {
@@ -240,7 +239,7 @@ class KeyValueStoreClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature, attachment=True),
+                params=self._build_params(signature=signature, attachment=True),
                 stream=True,
             )
 
@@ -279,7 +278,7 @@ class KeyValueStoreClient(ResourceClient):
         self.http_client.call(
             url=self._url(f'records/{key}'),
             method='PUT',
-            params=self._params(),
+            params=self._build_params(),
             data=value,
             headers=headers,
         )
@@ -295,7 +294,7 @@ class KeyValueStoreClient(ResourceClient):
         self.http_client.call(
             url=self._url(f'records/{key}'),
             method='DELETE',
-            params=self._params(),
+            params=self._build_params(),
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
@@ -316,7 +315,7 @@ class KeyValueStoreClient(ResourceClient):
 
         metadata = self.get()
 
-        request_params = self._params()
+        request_params = self._build_params()
 
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
@@ -354,7 +353,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         metadata = self.get()
 
-        request_params = self._params(
+        request_params = self._build_params(
             limit=limit,
             exclusiveStartKey=exclusive_start_key,
             collection=collection,
@@ -427,7 +426,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_out_none_values_recursively(updated_fields)
+        cleaned = filter_none_values(updated_fields)
 
         response = await self.http_client.call(
             url=self.url,
@@ -476,7 +475,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             limit=limit,
             exclusiveStartKey=exclusive_start_key,
             collection=collection,
@@ -510,7 +509,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature, attachment=True),
+                params=self._build_params(signature=signature, attachment=True),
             )
 
             return {
@@ -539,7 +538,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='HEAD',
-                params=self._params(),
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             if exc.status_code == HTTPStatus.NOT_FOUND:
@@ -565,7 +564,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature, attachment=True),
+                params=self._build_params(signature=signature, attachment=True),
             )
 
             return {
@@ -597,7 +596,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url(f'records/{key}'),
                 method='GET',
-                params=self._params(signature=signature, attachment=True),
+                params=self._build_params(signature=signature, attachment=True),
                 stream=True,
             )
 
@@ -636,7 +635,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         await self.http_client.call(
             url=self._url(f'records/{key}'),
             method='PUT',
-            params=self._params(),
+            params=self._build_params(),
             data=value,
             headers=headers,
         )
@@ -652,7 +651,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         await self.http_client.call(
             url=self._url(f'records/{key}'),
             method='DELETE',
-            params=self._params(),
+            params=self._build_params(),
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
@@ -673,7 +672,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         metadata = await self.get()
 
-        request_params = self._params()
+        request_params = self._build_params()
 
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
@@ -713,7 +712,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         keys_public_url = urlparse(self._url('keys'))
 
-        request_params = self._params(
+        request_params = self._build_params(
             limit=limit,
             exclusiveStartKey=exclusive_start_key,
             collection=collection,

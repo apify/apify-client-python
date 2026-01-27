@@ -31,7 +31,7 @@ from apify_client._resource_clients.request_queue import RequestQueueClient, Req
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
-    filter_out_none_values_recursively,
+    filter_none_values,
     response_to_dict,
     to_safe_id,
     wait_for_finish_async,
@@ -91,7 +91,7 @@ class RunClient(ResourceClient):
             'isStatusMessageTerminal': is_status_message_terminal,
             'generalAccess': general_access,
         }
-        cleaned = filter_out_none_values_recursively(updated_fields)
+        cleaned = filter_none_values(updated_fields)
 
         response = self.http_client.call(
             url=self.url,
@@ -132,7 +132,7 @@ class RunClient(ResourceClient):
         response = self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(gracefully=gracefully),
+            params=self._build_params(gracefully=gracefully),
         )
         result = response_to_dict(response)
         return GetRunResponse.model_validate(result).data
@@ -186,7 +186,7 @@ class RunClient(ResourceClient):
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
-        request_params = self._params(targetActorId=safe_target_actor_id, build=target_actor_build)
+        request_params = self._build_params(targetActorId=safe_target_actor_id, build=target_actor_build)
 
         response = self.http_client.call(
             url=self._url('metamorph'),
@@ -233,7 +233,7 @@ class RunClient(ResourceClient):
         Returns:
             The Actor run data.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
             timeout=timeout_secs,
@@ -275,7 +275,7 @@ class RunClient(ResourceClient):
             A client allowing access to the default dataset of this Actor run.
         """
         return DatasetClient(
-            **self._sub_resource_init_options(resource_path='dataset'),
+            **self._nested_client_config(resource_path='dataset'),
         )
 
     def key_value_store(self) -> KeyValueStoreClient:
@@ -287,7 +287,7 @@ class RunClient(ResourceClient):
             A client allowing access to the default key-value store of this Actor run.
         """
         return KeyValueStoreClient(
-            **self._sub_resource_init_options(resource_path='key-value-store'),
+            **self._nested_client_config(resource_path='key-value-store'),
         )
 
     def request_queue(self) -> RequestQueueClient:
@@ -299,7 +299,7 @@ class RunClient(ResourceClient):
             A client allowing access to the default request_queue of this Actor run.
         """
         return RequestQueueClient(
-            **self._sub_resource_init_options(resource_path='request-queue'),
+            **self._nested_client_config(resource_path='request-queue'),
         )
 
     def log(self) -> LogClient:
@@ -310,10 +310,11 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the log of this Actor run.
         """
-        from apify_client._resource_clients.log import LogClient
+        # Import inline to avoid circular dependency with log.py
+        from apify_client._resource_clients.log import LogClient  # noqa: PLC0415
 
         return LogClient(
-            **self._sub_resource_init_options(resource_path='log'),
+            **self._nested_client_config(resource_path='log'),
         )
 
     def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
@@ -336,7 +337,9 @@ class RunClient(ResourceClient):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            from apify_client._resource_clients.actor import ActorClient
+            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
+            from apify_client._resource_clients.actor import ActorClient  # noqa: PLC0415
+
             actor_client = self._create_sibling_client(ActorClient, resource_id=actor_id)
             actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -345,7 +348,8 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        from apify_client._resource_clients.log import StreamedLogSync
+        # Import inline to avoid circular dependency with log.py
+        from apify_client._resource_clients.log import StreamedLogSync  # noqa: PLC0415
 
         return StreamedLogSync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
@@ -406,7 +410,9 @@ class RunClient(ResourceClient):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            from apify_client._resource_clients.actor import ActorClient
+            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
+            from apify_client._resource_clients.actor import ActorClient  # noqa: PLC0415
+
             actor_client = self._create_sibling_client(ActorClient, resource_id=actor_id)
             actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -415,7 +421,8 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        from apify_client._resource_clients.log import StatusMessageWatcherSync
+        # Import inline to avoid circular dependency with log.py
+        from apify_client._resource_clients.log import StatusMessageWatcherSync  # noqa: PLC0415
 
         return StatusMessageWatcherSync(run_client=self, to_logger=to_logger, check_period=check_period)
 
@@ -471,7 +478,7 @@ class RunClientAsync(ResourceClientAsync):
             'isStatusMessageTerminal': is_status_message_terminal,
             'generalAccess': general_access,
         }
-        cleaned = filter_out_none_values_recursively(updated_fields)
+        cleaned = filter_none_values(updated_fields)
 
         response = await self.http_client.call(
             url=self.url,
@@ -498,7 +505,7 @@ class RunClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('abort'),
             method='POST',
-            params=self._params(gracefully=gracefully),
+            params=self._build_params(gracefully=gracefully),
         )
         result = response_to_dict(response)
         return GetRunResponse.model_validate(result).data
@@ -562,7 +569,7 @@ class RunClientAsync(ResourceClientAsync):
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
-        request_params = self._params(
+        request_params = self._build_params(
             targetActorId=safe_target_actor_id,
             build=target_actor_build,
         )
@@ -612,7 +619,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The Actor run data.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
             timeout=timeout_secs,
@@ -654,7 +661,7 @@ class RunClientAsync(ResourceClientAsync):
             A client allowing access to the default dataset of this Actor run.
         """
         return DatasetClientAsync(
-            **self._sub_resource_init_options(resource_path='dataset'),
+            **self._nested_client_config(resource_path='dataset'),
         )
 
     def key_value_store(self) -> KeyValueStoreClientAsync:
@@ -666,7 +673,7 @@ class RunClientAsync(ResourceClientAsync):
             A client allowing access to the default key-value store of this Actor run.
         """
         return KeyValueStoreClientAsync(
-            **self._sub_resource_init_options(resource_path='key-value-store'),
+            **self._nested_client_config(resource_path='key-value-store'),
         )
 
     def request_queue(self) -> RequestQueueClientAsync:
@@ -678,7 +685,7 @@ class RunClientAsync(ResourceClientAsync):
             A client allowing access to the default request_queue of this Actor run.
         """
         return RequestQueueClientAsync(
-            **self._sub_resource_init_options(resource_path='request-queue'),
+            **self._nested_client_config(resource_path='request-queue'),
         )
 
     def log(self) -> LogClientAsync:
@@ -689,10 +696,11 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the log of this Actor run.
         """
-        from apify_client._resource_clients.log import LogClientAsync
+        # Import inline to avoid circular dependency with log.py
+        from apify_client._resource_clients.log import LogClientAsync  # noqa: PLC0415
 
         return LogClientAsync(
-            **self._sub_resource_init_options(resource_path='log'),
+            **self._nested_client_config(resource_path='log'),
         )
 
     async def get_streamed_log(
@@ -717,7 +725,9 @@ class RunClientAsync(ResourceClientAsync):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            from apify_client._resource_clients.actor import ActorClientAsync
+            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
+            from apify_client._resource_clients.actor import ActorClientAsync  # noqa: PLC0415
+
             actor_client = self._create_sibling_client(ActorClientAsync, resource_id=actor_id)
             actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -726,7 +736,8 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        from apify_client._resource_clients.log import StreamedLogAsync
+        # Import inline to avoid circular dependency with log.py
+        from apify_client._resource_clients.log import StreamedLogAsync  # noqa: PLC0415
 
         return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
@@ -789,7 +800,9 @@ class RunClientAsync(ResourceClientAsync):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            from apify_client._resource_clients.actor import ActorClientAsync
+            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
+            from apify_client._resource_clients.actor import ActorClientAsync  # noqa: PLC0415
+
             actor_client = self._create_sibling_client(ActorClientAsync, resource_id=actor_id)
             actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -798,6 +811,7 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        from apify_client._resource_clients.log import StatusMessageWatcherAsync
+        # Import inline to avoid circular dependency with log.py
+        from apify_client._resource_clients.log import StatusMessageWatcherAsync  # noqa: PLC0415
 
         return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)

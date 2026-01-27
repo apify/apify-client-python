@@ -6,14 +6,14 @@ from unittest.mock import Mock
 import pytest
 from impit import Response, TimeoutException
 
-from apify_client._client_config import DEFAULT_TIMEOUT, ClientConfig
+from apify_client._config import DEFAULT_TIMEOUT, ClientConfig
+from apify_client._consts import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
 from apify_client._http_client import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     DatasetClient,
     KeyValueStoreClient,
     RequestQueueClient,
 )
-from apify_client._utils import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -182,7 +182,7 @@ def test_specific_timeouts_for_specific_endpoints_sync(
         public_base_url=base_url,
         http_client=http_client,
         resource_path=resource_path,
-        resource_id='test-id'
+        resource_id='test-id',
     )
     with pytest.raises(EndOfTestError):
         getattr(client, method)(**kwargs)
@@ -224,7 +224,7 @@ async def test_specific_timeouts_for_specific_endpoints_async(
         public_base_url=base_url,
         http_client=http_client,
         resource_path=resource_path,
-        resource_id='test-id'
+        resource_id='test-id',
     )
     with pytest.raises(EndOfTestError):
         await getattr(client, method)(**kwargs)

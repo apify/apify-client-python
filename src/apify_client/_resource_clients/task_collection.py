@@ -5,7 +5,7 @@ from typing import Any
 from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.task import get_task_representation
-from apify_client._utils import filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import filter_none_values, response_to_dict
 
 
 class TaskCollectionClient(ResourceClient):
@@ -37,7 +37,7 @@ class TaskCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfTasksResponse.model_validate(response_as_dict).data
@@ -111,8 +111,8 @@ class TaskCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(task_representation),
+            params=self._build_params(),
+            json=filter_none_values(task_representation),
         )
 
         result = response_to_dict(response)
@@ -148,7 +148,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfTasksResponse.model_validate(response_as_dict).data
@@ -222,8 +222,8 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(task_representation),
+            params=self._build_params(),
+            json=filter_none_values(task_representation),
         )
 
         result = response_to_dict(response)

@@ -43,7 +43,7 @@ class RequestQueueCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfRequestQueuesResponse.model_validate(response_as_dict).data
@@ -62,7 +62,7 @@ class RequestQueueCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(name=name),
+            params=self._build_params(name=name),
         )
         result = response_to_dict(response)
         return CreateRequestQueueResponse.model_validate(result).data
@@ -99,7 +99,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
+            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfRequestQueuesResponse.model_validate(response_as_dict).data
@@ -118,7 +118,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(name=name),
+            params=self._build_params(name=name),
         )
         result = response_to_dict(response)
         return CreateRequestQueueResponse.model_validate(result).data

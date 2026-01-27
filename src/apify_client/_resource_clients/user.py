@@ -11,7 +11,7 @@ from apify_client._models import (
     UserPublicInfo,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -67,7 +67,7 @@ class UserClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url('usage/monthly'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
@@ -95,7 +95,7 @@ class UserClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url('limits'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
@@ -118,8 +118,8 @@ class UserClient(ResourceClient):
         self.http_client.call(
             url=self._url('limits'),
             method='PUT',
-            params=self._params(),
-            json=filter_out_none_values_recursively(
+            params=self._build_params(),
+            json=filter_none_values(
                 {
                     'maxMonthlyUsageUsd': max_monthly_usage_usd,
                     'dataRetentionDays': data_retention_days,
@@ -180,7 +180,7 @@ class UserClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url('usage/monthly'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
@@ -208,7 +208,7 @@ class UserClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url('limits'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
@@ -231,8 +231,8 @@ class UserClientAsync(ResourceClientAsync):
         await self.http_client.call(
             url=self._url('limits'),
             method='PUT',
-            params=self._params(),
-            json=filter_out_none_values_recursively(
+            params=self._build_params(),
+            json=filter_none_values(
                 {
                     'maxMonthlyUsageUsd': max_monthly_usage_usd,
                     'dataRetentionDays': data_retention_days,

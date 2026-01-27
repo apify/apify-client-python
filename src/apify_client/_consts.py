@@ -3,6 +3,27 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
+
+# Type aliases
+JsonSerializable = str | int | float | bool | None | dict[str, Any] | list[Any]
+"""Type for representing json-serializable values. It's close enough to the real thing supported by json.parse.
+It was suggested in a discussion with (and approved by) Guido van Rossum, so I'd consider it correct enough.
+"""
+
+# Constants for wait_for_finish functionality
+DEFAULT_WAIT_FOR_FINISH_SEC = 999999
+"""Default maximum wait time for job completion (effectively infinite)."""
+
+DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
+"""How long to wait for a job to exist before giving up."""
+
+# Standard timeout values for API operations
+FAST_OPERATION_TIMEOUT_SECS = 5
+"""Timeout for fast, idempotent operations (e.g., GET, DELETE)."""
+
+STANDARD_OPERATION_TIMEOUT_SECS = 30
+"""Timeout for operations that may take longer (e.g., list operations, batch operations)."""
 
 
 class ActorJobStatus(str, Enum):

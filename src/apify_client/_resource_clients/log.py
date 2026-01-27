@@ -49,7 +49,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(raw=raw),
+                params=self._build_params(raw=raw),
             )
 
             return response.text  # noqa: TRY300
@@ -74,7 +74,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(raw=raw),
+                params=self._build_params(raw=raw),
             )
 
             return response.content  # noqa: TRY300
@@ -101,7 +101,7 @@ class LogClient(ResourceClient):
             response = self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True, raw=raw),
+                params=self._build_params(stream=True, raw=raw),
                 stream=True,
             )
 
@@ -136,7 +136,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(raw=raw),
+                params=self._build_params(raw=raw),
             )
 
             return response.text  # noqa: TRY300
@@ -161,7 +161,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(raw=raw),
+                params=self._build_params(raw=raw),
             )
 
             return response.content  # noqa: TRY300
@@ -188,7 +188,7 @@ class LogClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self.url,
                 method='GET',
-                params=self._params(stream=True, raw=raw),
+                params=self._build_params(stream=True, raw=raw),
                 stream=True,
             )
 

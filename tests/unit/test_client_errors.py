@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 from werkzeug import Response
 
-from apify_client._client_config import ClientConfig
+from apify_client._config import ClientConfig
 from apify_client._http_client import HttpClient, HttpClientAsync
 from apify_client.errors import ApifyApiError
 

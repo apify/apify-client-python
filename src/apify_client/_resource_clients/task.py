@@ -10,8 +10,8 @@ from apify_client._resource_clients.webhook_collection import WebhookCollectionC
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_webhook_list_to_base64,
-    filter_out_none_values_recursively,
-    maybe_extract_enum_member_value,
+    enum_to_value,
+    filter_none_values,
     response_to_dict,
 )
 from apify_client.errors import ApifyApiError
@@ -162,7 +162,7 @@ class TaskClient(ResourceClient):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
-        cleaned = filter_out_none_values_recursively(task_representation)
+        cleaned = filter_none_values(task_representation)
 
         response = self.http_client.call(
             url=self.url,
@@ -228,7 +228,7 @@ class TaskClient(ResourceClient):
         Returns:
             The run object.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
@@ -298,7 +298,6 @@ class TaskClient(ResourceClient):
             webhooks=webhooks,
         )
 
-        from apify_client._resource_clients.run import RunClient
         run_client = self._create_sibling_client(RunClient, resource_id=started_run.id)
         return run_client.wait_for_finish(wait_secs=wait_secs)
 
@@ -314,7 +313,7 @@ class TaskClient(ResourceClient):
             response = self.http_client.call(
                 url=self._url('input'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             return cast('dict', response.json())
         except ApifyApiError as exc:
@@ -332,14 +331,14 @@ class TaskClient(ResourceClient):
         response = self.http_client.call(
             url=self._url('input'),
             method='PUT',
-            params=self._params(),
+            params=self._build_params(),
             json=task_input,
         )
         return cast('dict', response.json())
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
-        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
+        return RunCollectionClient(**self._nested_client_config(resource_path='runs'))
 
     def last_run(self, *, status: ActorJobStatus | None = None, origin: RunOrigin | None = None) -> RunClient:
         """Retrieve the client for the last run of this task.
@@ -354,19 +353,19 @@ class TaskClient(ResourceClient):
             The resource client for the last run of this task.
         """
         return RunClient(
-            **self._sub_resource_init_options(
+            **self._nested_client_config(
                 resource_id='last',
                 resource_path='runs',
-                params=self._params(
-                    status=maybe_extract_enum_member_value(status),
-                    origin=maybe_extract_enum_member_value(origin),
+                params=self._build_params(
+                    status=enum_to_value(status),
+                    origin=enum_to_value(origin),
                 ),
             )
         )
 
     def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this task."""
-        return WebhookCollectionClient(**self._sub_resource_init_options())
+        return WebhookCollectionClient(**self._nested_client_config())
 
 
 class TaskClientAsync(ResourceClientAsync):
@@ -458,7 +457,7 @@ class TaskClientAsync(ResourceClientAsync):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
-        cleaned = filter_out_none_values_recursively(task_representation)
+        cleaned = filter_none_values(task_representation)
 
         response = await self.http_client.call(
             url=self.url,
@@ -524,7 +523,7 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The run object.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
@@ -593,7 +592,6 @@ class TaskClientAsync(ResourceClientAsync):
             restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
-        from apify_client._resource_clients.run import RunClientAsync
         run_client = self._create_sibling_client(RunClientAsync, resource_id=started_run.id)
         return await run_client.wait_for_finish(wait_secs=wait_secs)
 
@@ -609,7 +607,7 @@ class TaskClientAsync(ResourceClientAsync):
             response = await self.http_client.call(
                 url=self._url('input'),
                 method='GET',
-                params=self._params(),
+                params=self._build_params(),
             )
             return cast('dict', response.json())
         except ApifyApiError as exc:
@@ -627,14 +625,14 @@ class TaskClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url('input'),
             method='PUT',
-            params=self._params(),
+            params=self._build_params(),
             json=task_input,
         )
         return cast('dict', response.json())
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""
-        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
+        return RunCollectionClientAsync(**self._nested_client_config(resource_path='runs'))
 
     def last_run(self, *, status: ActorJobStatus | None = None, origin: RunOrigin | None = None) -> RunClientAsync:
         """Retrieve the client for the last run of this task.
@@ -649,16 +647,16 @@ class TaskClientAsync(ResourceClientAsync):
             The resource client for the last run of this task.
         """
         return RunClientAsync(
-            **self._sub_resource_init_options(
+            **self._nested_client_config(
                 resource_id='last',
                 resource_path='runs',
-                params=self._params(
-                    status=maybe_extract_enum_member_value(status),
-                    origin=maybe_extract_enum_member_value(origin),
+                params=self._build_params(
+                    status=enum_to_value(status),
+                    origin=enum_to_value(origin),
                 ),
             )
         )
 
     def webhooks(self) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this task."""
-        return WebhookCollectionClientAsync(**self._sub_resource_init_options())
+        return WebhookCollectionClientAsync(**self._nested_client_config())

@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._models import GetListOfRunsResponse, ListOfRuns
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import maybe_extract_enum_member_value, response_to_dict
+from apify_client._utils import enum_to_value, response_to_dict
 
 if TYPE_CHECKING:
     from datetime import datetime
 
     from apify_client._consts import ActorJobStatus
-
 
 
 class RunCollectionClient(ResourceClient):
@@ -49,15 +48,12 @@ class RunCollectionClient(ResourceClient):
         Returns:
             The retrieved Actor runs.
         """
-        if isinstance(status, list):
-            status_param = [maybe_extract_enum_member_value(s) for s in status]
-        else:
-            status_param = maybe_extract_enum_member_value(status)
+        status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
 
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(
+            params=self._build_params(
                 limit=limit,
                 offset=offset,
                 desc=desc,
@@ -106,15 +102,12 @@ class RunCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor runs.
         """
-        if isinstance(status, list):
-            status_param = [maybe_extract_enum_member_value(s) for s in status]
-        else:
-            status_param = maybe_extract_enum_member_value(status)
+        status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
 
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(
+            params=self._build_params(
                 limit=limit,
                 offset=offset,
                 desc=desc,

@@ -4,7 +4,7 @@ from typing import Any
 
 from apify_client._models import EnvVar, GetEnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -73,7 +73,7 @@ class ActorEnvVarClient(ResourceClient):
             name=name,
             value=value,
         )
-        cleaned = filter_out_none_values_recursively(actor_env_var_representation)
+        cleaned = filter_none_values(actor_env_var_representation)
 
         response = self.http_client.call(
             url=self.url,
@@ -150,7 +150,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             name=name,
             value=value,
         )
-        cleaned = filter_out_none_values_recursively(actor_env_var_representation)
+        cleaned = filter_none_values(actor_env_var_representation)
 
         response = await self.http_client.call(
             url=self.url,

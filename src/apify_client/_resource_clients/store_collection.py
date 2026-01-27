@@ -45,7 +45,7 @@ class StoreCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(
+            params=self._build_params(
                 limit=limit,
                 offset=offset,
                 search=search,
@@ -97,7 +97,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(
+            params=self._build_params(
                 limit=limit,
                 offset=offset,
                 search=search,

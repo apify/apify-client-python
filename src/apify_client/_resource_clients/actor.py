@@ -33,8 +33,8 @@ from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
     encode_webhook_list_to_base64,
-    filter_out_none_values_recursively,
-    maybe_extract_enum_member_value,
+    enum_to_value,
+    filter_none_values,
     response_to_dict,
 )
 from apify_client.errors import ApifyApiError
@@ -45,7 +45,6 @@ if TYPE_CHECKING:
 
     from apify_client._consts import ActorJobStatus
     from apify_client._resource_clients.build import BuildClient, BuildClientAsync
-
 
 
 def get_actor_representation(
@@ -274,7 +273,7 @@ class ActorClient(ResourceClient):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_out_none_values_recursively(actor_representation)
+        cleaned = filter_none_values(actor_representation)
 
         response = self.http_client.call(
             url=self.url,
@@ -349,7 +348,7 @@ class ActorClient(ResourceClient):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        request_params = self._params(
+        request_params = self._build_params(
             build=build,
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
@@ -436,11 +435,9 @@ class ActorClient(ResourceClient):
             force_permission_level=force_permission_level,
         )
         if not logger:
-            from apify_client._resource_clients.run import RunClient
             run_client = self._create_sibling_client(RunClient, resource_id=started_run.id)
             return run_client.wait_for_finish(wait_secs=wait_secs)
 
-        from apify_client._resource_clients.run import RunClient
         run_client = self._create_sibling_client(RunClient, resource_id=started_run.id)
 
         if logger == 'default':
@@ -477,7 +474,7 @@ class ActorClient(ResourceClient):
         Returns:
             The build object.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             version=version_number,
             betaPackages=beta_packages,
             tag=tag,
@@ -495,11 +492,11 @@ class ActorClient(ResourceClient):
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
-        return BuildCollectionClient(**self._sub_resource_init_options(resource_path='builds'))
+        return BuildCollectionClient(**self._nested_client_config(resource_path='builds'))
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this Actor."""
-        return RunCollectionClient(**self._sub_resource_init_options(resource_path='runs'))
+        return RunCollectionClient(**self._nested_client_config(resource_path='runs'))
 
     def default_build(
         self,
@@ -517,14 +514,16 @@ class ActorClient(ResourceClient):
         Returns:
             The resource client for the default build of this Actor.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             waitForFinish=wait_for_finish,
         )
 
         response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
         response_as_dict = response_to_dict(response)
 
-        from apify_client._resource_clients.build import BuildClient
+        # Import inline to avoid circular dependency with build.py
+        from apify_client._resource_clients.build import BuildClient  # noqa: PLC0415
+
         return self._create_sibling_client(BuildClient, resource_id=response_as_dict['data']['id'])
 
     def last_run(
@@ -545,19 +544,19 @@ class ActorClient(ResourceClient):
             The resource client for the last run of this Actor.
         """
         return RunClient(
-            **self._sub_resource_init_options(
+            **self._nested_client_config(
                 resource_id='last',
                 resource_path='runs',
-                params=self._params(
-                    status=maybe_extract_enum_member_value(status),
-                    origin=maybe_extract_enum_member_value(origin),
+                params=self._build_params(
+                    status=enum_to_value(status),
+                    origin=enum_to_value(origin),
                 ),
             )
         )
 
     def versions(self) -> ActorVersionCollectionClient:
         """Retrieve a client for the versions of this Actor."""
-        return ActorVersionCollectionClient(**self._sub_resource_init_options())
+        return ActorVersionCollectionClient(**self._nested_client_config())
 
     def version(self, version_number: str) -> ActorVersionClient:
         """Retrieve the client for the specified version of this Actor.
@@ -568,11 +567,11 @@ class ActorClient(ResourceClient):
         Returns:
             The resource client for the specified Actor version.
         """
-        return ActorVersionClient(**self._sub_resource_init_options(resource_id=version_number))
+        return ActorVersionClient(**self._nested_client_config(resource_id=version_number))
 
     def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this Actor."""
-        return WebhookCollectionClient(**self._sub_resource_init_options())
+        return WebhookCollectionClient(**self._nested_client_config())
 
     def validate_input(
         self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
@@ -594,7 +593,7 @@ class ActorClient(ResourceClient):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
-            params=self._params(build=build_tag),
+            params=self._build_params(build=build_tag),
         )
 
         return True
@@ -727,7 +726,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_out_none_values_recursively(actor_representation)
+        cleaned = filter_none_values(actor_representation)
 
         response = await self.http_client.call(
             url=self.url,
@@ -802,7 +801,7 @@ class ActorClientAsync(ResourceClientAsync):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        request_params = self._params(
+        request_params = self._build_params(
             build=build,
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
@@ -890,11 +889,9 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         if not logger:
-            from apify_client._resource_clients.run import RunClientAsync
             run_client = self._create_sibling_client(RunClientAsync, resource_id=started_run.id)
             return await run_client.wait_for_finish(wait_secs=wait_secs)
 
-        from apify_client._resource_clients.run import RunClientAsync
         run_client = self._create_sibling_client(RunClientAsync, resource_id=started_run.id)
 
         if logger == 'default':
@@ -934,7 +931,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The build object.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             version=version_number,
             betaPackages=beta_packages,
             tag=tag,
@@ -953,11 +950,11 @@ class ActorClientAsync(ResourceClientAsync):
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""
-        return BuildCollectionClientAsync(**self._sub_resource_init_options(resource_path='builds'))
+        return BuildCollectionClientAsync(**self._nested_client_config(resource_path='builds'))
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this Actor."""
-        return RunCollectionClientAsync(**self._sub_resource_init_options(resource_path='runs'))
+        return RunCollectionClientAsync(**self._nested_client_config(resource_path='runs'))
 
     async def default_build(
         self,
@@ -975,7 +972,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the default build of this Actor.
         """
-        request_params = self._params(
+        request_params = self._build_params(
             waitForFinish=wait_for_finish,
         )
 
@@ -986,7 +983,9 @@ class ActorClientAsync(ResourceClientAsync):
         )
         response_as_dict = response_to_dict(response)
 
-        from apify_client._resource_clients.build import BuildClientAsync
+        # Import inline to avoid circular dependency with build.py
+        from apify_client._resource_clients.build import BuildClientAsync  # noqa: PLC0415
+
         return self._create_sibling_client(BuildClientAsync, resource_id=response_as_dict['data']['id'])
 
     def last_run(
@@ -1007,19 +1006,19 @@ class ActorClientAsync(ResourceClientAsync):
             The resource client for the last run of this Actor.
         """
         return RunClientAsync(
-            **self._sub_resource_init_options(
+            **self._nested_client_config(
                 resource_id='last',
                 resource_path='runs',
-                params=self._params(
-                    status=maybe_extract_enum_member_value(status),
-                    origin=maybe_extract_enum_member_value(origin),
+                params=self._build_params(
+                    status=enum_to_value(status),
+                    origin=enum_to_value(origin),
                 ),
             )
         )
 
     def versions(self) -> ActorVersionCollectionClientAsync:
         """Retrieve a client for the versions of this Actor."""
-        return ActorVersionCollectionClientAsync(**self._sub_resource_init_options())
+        return ActorVersionCollectionClientAsync(**self._nested_client_config())
 
     def version(self, version_number: str) -> ActorVersionClientAsync:
         """Retrieve the client for the specified version of this Actor.
@@ -1030,11 +1029,11 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the specified Actor version.
         """
-        return ActorVersionClientAsync(**self._sub_resource_init_options(resource_id=version_number))
+        return ActorVersionClientAsync(**self._nested_client_config(resource_id=version_number))
 
     def webhooks(self) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this Actor."""
-        return WebhookCollectionClientAsync(**self._sub_resource_init_options())
+        return WebhookCollectionClientAsync(**self._nested_client_config())
 
     async def validate_input(
         self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
@@ -1056,7 +1055,7 @@ class ActorClientAsync(ResourceClientAsync):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
-            params=self._params(build=build_tag),
+            params=self._build_params(build=build_tag),
         )
 
         return True

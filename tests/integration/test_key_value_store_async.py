@@ -10,8 +10,8 @@ import pytest
 
 from .utils import KvsFixture, get_random_resource_name, parametrized_api_urls
 from apify_client import ApifyClientAsync
-from apify_client._client_config import DEFAULT_API_URL
-from apify_client._signing import create_hmac_signature, create_storage_content_signature
+from apify_client._config import DEFAULT_API_URL
+from apify_client._utils import create_hmac_signature, create_storage_content_signature
 from apify_client.errors import ApifyApiError
 
 ##################################################

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.webhook import get_webhook_representation
-from apify_client._utils import filter_out_none_values_recursively, response_to_dict
+from apify_client._utils import filter_none_values, response_to_dict
 
 if TYPE_CHECKING:
     from apify_client._consts import WebhookEventType
@@ -40,7 +40,7 @@ class WebhookCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfWebhooksResponse.model_validate(response_as_dict).data
@@ -101,8 +101,8 @@ class WebhookCollectionClient(ResourceClient):
         response = self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(webhook_representation),
+            params=self._build_params(),
+            json=filter_none_values(webhook_representation),
         )
 
         result = response_to_dict(response)
@@ -138,7 +138,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         response = await self.http_client.call(
             url=self._url(),
             method='GET',
-            params=self._params(limit=limit, offset=offset, desc=desc),
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
         return GetListOfWebhooksResponse.model_validate(response_as_dict).data
@@ -199,8 +199,8 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         response_obj = await self.http_client.call(
             url=self._url(),
             method='POST',
-            params=self._params(),
-            json=filter_out_none_values_recursively(webhook_representation),
+            params=self._build_params(),
+            json=filter_none_values(webhook_representation),
         )
 
         response = response_to_dict(response_obj)

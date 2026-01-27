@@ -60,7 +60,7 @@ def get_actor_representation(
     actor_standby_memory_mbytes: int | None = None,
     pricing_infos: list[dict] | None = None,
     actor_permission_level: ActorPermissionLevel | None = None,
-    tagged_builds: dict | None = None,
+    tagged_builds: dict[str, None | dict[str, str]] | None = None,
 ) -> dict:
     """Get dictionary representation of the Actor."""
     return {
@@ -145,7 +145,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
-        tagged_builds: dict | None = None,
+        tagged_builds: dict[str, None | dict[str, str]] | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 
@@ -573,7 +573,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
-        tagged_builds: dict | None = None,
+        tagged_builds: dict[str, None | dict[str, str]] | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 

@@ -63,7 +63,7 @@ def get_actor_representation(
     tagged_builds: dict[str, None | dict[str, str]] | None = None,
 ) -> dict:
     """Get dictionary representation of the Actor."""
-    return {
+    actor_dict = {
         'name': name,
         'title': title,
         'description': description,
@@ -86,18 +86,35 @@ def get_actor_representation(
             'body': example_run_input_body,
             'contentType': example_run_input_content_type,
         },
-        'actorStandby': {
+        'pricingInfos': pricing_infos,
+        'actorPermissionLevel': actor_permission_level,
+    }
+
+    # Only include actorStandby if at least one field is provided
+    if any(
+        [
+            actor_standby_is_enabled is not None,
+            actor_standby_desired_requests_per_actor_run is not None,
+            actor_standby_max_requests_per_actor_run is not None,
+            actor_standby_idle_timeout_secs is not None,
+            actor_standby_build is not None,
+            actor_standby_memory_mbytes is not None,
+        ]
+    ):
+        actor_dict['actorStandby'] = {
             'isEnabled': actor_standby_is_enabled,
             'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
             'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
             'idleTimeoutSecs': actor_standby_idle_timeout_secs,
             'build': actor_standby_build,
             'memoryMbytes': actor_standby_memory_mbytes,
-        },
-        'pricingInfos': pricing_infos,
-        'actorPermissionLevel': actor_permission_level,
-        'taggedBuilds': tagged_builds,
-    }
+        }
+
+    # Add taggedBuilds if provided
+    if tagged_builds is not None:
+        actor_dict['taggedBuilds'] = tagged_builds
+
+    return actor_dict
 
 
 class ActorClient(ResourceClient):

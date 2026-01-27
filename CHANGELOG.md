@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 - Update black to fix ReDoS vulnerability ([#582](https://github.com/apify/apify-client-python/pull/582)) ([aae2eb9](https://github.com/apify/apify-client-python/commit/aae2eb9f5aeda0c7274285b9aaab3c73550bcad6)) by [@B4nan](https://github.com/B4nan)
 - Only include Actor standby when at least one field is provided ([#597](https://github.com/apify/apify-client-python/pull/597)) ([7112c09](https://github.com/apify/apify-client-python/commit/7112c09ceab0d87a0bd0caecabea634c70f63b8c)) by [@vdusek](https://github.com/vdusek), closes [#595](https://github.com/apify/apify-client-python/issues/595)
+- Add missing tagged_builds parameter to Actor update method ([#596](https://github.com/apify/apify-client-python/pull/596)) ([6210e80](https://github.com/apify/apify-client-python/commit/6210e80fc5037d57c969a16458c13b68b61ddd07)) by [@vdusek](https://github.com/vdusek), closes [#585](https://github.com/apify/apify-client-python/issues/585)
 
 
 <!-- git-cliff-unreleased-end -->

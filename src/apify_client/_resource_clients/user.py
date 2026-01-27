@@ -10,12 +10,12 @@ from apify_client._models import (
     UserPrivateInfo,
     UserPublicInfo,
 )
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
-class UserClient(BaseClient):
+class UserClient(ResourceClient):
     """Sub-client for querying user data."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -35,14 +35,21 @@ class UserClient(BaseClient):
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        result = self._get()
-        if result is None:
-            return None
-        # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
         try:
-            return GetPrivateUserDataResponse.model_validate(result).data
-        except Exception:
-            return GetPublicUserDataResponse.model_validate(result).data
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
+            try:
+                return GetPrivateUserDataResponse.model_validate(result).data
+            except Exception:
+                return GetPublicUserDataResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.
@@ -121,7 +128,7 @@ class UserClient(BaseClient):
         )
 
 
-class UserClientAsync(BaseClientAsync):
+class UserClientAsync(ResourceClientAsync):
     """Async sub-client for querying user data."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -141,14 +148,21 @@ class UserClientAsync(BaseClientAsync):
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        result = await self._get()
-        if result is None:
-            return None
-        # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
         try:
-            return GetPrivateUserDataResponse.model_validate(result).data
-        except Exception:
-            return GetPublicUserDataResponse.model_validate(result).data
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
+            try:
+                return GetPrivateUserDataResponse.model_validate(result).data
+            except Exception:
+                return GetPublicUserDataResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.

@@ -6,17 +6,14 @@ from unittest.mock import Mock
 import pytest
 from impit import Response, TimeoutException
 
-from apify_client import ApifyClient
-from apify_client._client import DEFAULT_TIMEOUT
-from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client._client_config import DEFAULT_TIMEOUT, ClientConfig
+from apify_client._http_client import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     DatasetClient,
     KeyValueStoreClient,
     RequestQueueClient,
-    dataset,
-    request_queue,
 )
-from apify_client._resource_clients import key_value_store as kvs
+from apify_client._utils import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -69,7 +66,8 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await HTTPClientAsync(timeout_secs=client_timeout).call(
+    config = ClientConfig.from_user_params(timeout_secs=client_timeout)
+    response = await HttpClientAsync(config=config).call(
         method='GET', url='http://placeholder.url/async_timeout', timeout_secs=call_timeout
     )
 
@@ -105,7 +103,8 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr('impit.Client.request', mock_request)
 
-    response = HTTPClient(timeout_secs=client_timeout).call(
+    config = ClientConfig.from_user_params(timeout_secs=client_timeout)
+    response = HttpClient(config=config).call(
         method='GET', url='http://placeholder.url/sync_timeout', timeout_secs=call_timeout
     )
 
@@ -118,35 +117,35 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 _timeout_params = [
-    (DatasetClient, 'get', dataset._SMALL_TIMEOUT, {}),
-    (DatasetClient, 'update', dataset._SMALL_TIMEOUT, {}),
-    (DatasetClient, 'delete', dataset._SMALL_TIMEOUT, {}),
+    (DatasetClient, 'get', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (DatasetClient, 'update', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (DatasetClient, 'delete', FAST_OPERATION_TIMEOUT_SECS, {}),
     (DatasetClient, 'list_items', DEFAULT_TIMEOUT, {}),
     (DatasetClient, 'get_items_as_bytes', DEFAULT_TIMEOUT, {}),
-    (DatasetClient, 'push_items', dataset._MEDIUM_TIMEOUT, {'items': {}}),
-    (DatasetClient, 'get_statistics', dataset._SMALL_TIMEOUT, {}),
-    (KeyValueStoreClient, 'get', kvs._SMALL_TIMEOUT, {}),
+    (DatasetClient, 'push_items', STANDARD_OPERATION_TIMEOUT_SECS, {'items': {}}),
+    (DatasetClient, 'get_statistics', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (KeyValueStoreClient, 'get', FAST_OPERATION_TIMEOUT_SECS, {}),
     (KeyValueStoreClient, 'update', DEFAULT_TIMEOUT, {}),
-    (KeyValueStoreClient, 'delete', kvs._SMALL_TIMEOUT, {}),
-    (KeyValueStoreClient, 'list_keys', kvs._MEDIUM_TIMEOUT, {}),
+    (KeyValueStoreClient, 'delete', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (KeyValueStoreClient, 'list_keys', STANDARD_OPERATION_TIMEOUT_SECS, {}),
     (KeyValueStoreClient, 'get_record', DEFAULT_TIMEOUT, {'key': 'some_key'}),
     (KeyValueStoreClient, 'get_record_as_bytes', DEFAULT_TIMEOUT, {'key': 'some_key'}),
     (KeyValueStoreClient, 'set_record', DEFAULT_TIMEOUT, {'key': 'some_key', 'value': 'some_value'}),
-    (KeyValueStoreClient, 'delete_record', kvs._SMALL_TIMEOUT, {'key': 'some_key'}),
-    (RequestQueueClient, 'get', request_queue._SMALL_TIMEOUT, {}),
-    (RequestQueueClient, 'update', request_queue._SMALL_TIMEOUT, {}),
-    (RequestQueueClient, 'delete', request_queue._SMALL_TIMEOUT, {}),
-    (RequestQueueClient, 'list_head', request_queue._SMALL_TIMEOUT, {}),
-    (RequestQueueClient, 'list_and_lock_head', request_queue._MEDIUM_TIMEOUT, {'lock_secs': 1}),
-    (RequestQueueClient, 'add_request', request_queue._SMALL_TIMEOUT, {'request': {}}),
-    (RequestQueueClient, 'get_request', request_queue._SMALL_TIMEOUT, {'request_id': 'some_id'}),
-    (RequestQueueClient, 'update_request', request_queue._MEDIUM_TIMEOUT, {'request': {'id': 123}}),
-    (RequestQueueClient, 'delete_request', request_queue._SMALL_TIMEOUT, {'request_id': 123}),
-    (RequestQueueClient, 'prolong_request_lock', request_queue._MEDIUM_TIMEOUT, {'request_id': 123, 'lock_secs': 1}),
-    (RequestQueueClient, 'delete_request_lock', request_queue._SMALL_TIMEOUT, {'request_id': 123}),
-    (RequestQueueClient, 'batch_add_requests', request_queue._MEDIUM_TIMEOUT, {'requests': [{}]}),
-    (RequestQueueClient, 'batch_delete_requests', request_queue._SMALL_TIMEOUT, {'requests': [{}]}),
-    (RequestQueueClient, 'list_requests', request_queue._MEDIUM_TIMEOUT, {}),
+    (KeyValueStoreClient, 'delete_record', FAST_OPERATION_TIMEOUT_SECS, {'key': 'some_key'}),
+    (RequestQueueClient, 'get', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (RequestQueueClient, 'update', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (RequestQueueClient, 'delete', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (RequestQueueClient, 'list_head', FAST_OPERATION_TIMEOUT_SECS, {}),
+    (RequestQueueClient, 'list_and_lock_head', STANDARD_OPERATION_TIMEOUT_SECS, {'lock_secs': 1}),
+    (RequestQueueClient, 'add_request', FAST_OPERATION_TIMEOUT_SECS, {'request': {}}),
+    (RequestQueueClient, 'get_request', FAST_OPERATION_TIMEOUT_SECS, {'request_id': 'some_id'}),
+    (RequestQueueClient, 'update_request', STANDARD_OPERATION_TIMEOUT_SECS, {'request': {'id': 123}}),
+    (RequestQueueClient, 'delete_request', FAST_OPERATION_TIMEOUT_SECS, {'request_id': 123}),
+    (RequestQueueClient, 'prolong_request_lock', STANDARD_OPERATION_TIMEOUT_SECS, {'request_id': 123, 'lock_secs': 1}),
+    (RequestQueueClient, 'delete_request_lock', FAST_OPERATION_TIMEOUT_SECS, {'request_id': 123}),
+    (RequestQueueClient, 'batch_add_requests', STANDARD_OPERATION_TIMEOUT_SECS, {'requests': [{}]}),
+    (RequestQueueClient, 'batch_delete_requests', FAST_OPERATION_TIMEOUT_SECS, {'requests': [{}]}),
+    (RequestQueueClient, 'list_requests', STANDARD_OPERATION_TIMEOUT_SECS, {}),
 ]
 
 
@@ -165,7 +164,26 @@ def test_specific_timeouts_for_specific_endpoints_sync(
     httpserver: HTTPServer,
 ) -> None:
     httpserver.expect_request('/').respond_with_data(status=200)
-    client = client_type(base_url=httpserver.url_for('/'), root_client=ApifyClient(), http_client=HTTPClient())
+    config = ClientConfig.from_user_params()
+    http_client = HttpClient(config=config)
+    base_url = httpserver.url_for('/')
+    # Determine resource_path based on client type
+    if client_type == DatasetClient:
+        resource_path = 'datasets/test-id'
+    elif client_type == KeyValueStoreClient:
+        resource_path = 'key-value-stores/test-id'
+    elif client_type == RequestQueueClient:
+        resource_path = 'request-queues/test-id'
+    else:
+        resource_path = 'resource/test-id'
+
+    client = client_type(
+        base_url=base_url,
+        public_base_url=base_url,
+        http_client=http_client,
+        resource_path=resource_path,
+        resource_id='test-id'
+    )
     with pytest.raises(EndOfTestError):
         getattr(client, method)(**kwargs)
 
@@ -188,7 +206,26 @@ async def test_specific_timeouts_for_specific_endpoints_async(
     httpserver: HTTPServer,
 ) -> None:
     httpserver.expect_request('/').respond_with_data(status=200)
-    client = client_type(base_url=httpserver.url_for('/'), root_client=ApifyClient(), http_client=HTTPClient())
+    config = ClientConfig.from_user_params()
+    http_client = HttpClient(config=config)
+    base_url = httpserver.url_for('/')
+    # Determine resource_path based on client type
+    if client_type == DatasetClient:
+        resource_path = 'datasets/test-id'
+    elif client_type == KeyValueStoreClient:
+        resource_path = 'key-value-stores/test-id'
+    elif client_type == RequestQueueClient:
+        resource_path = 'request-queues/test-id'
+    else:
+        resource_path = 'resource/test-id'
+
+    client = client_type(
+        base_url=base_url,
+        public_base_url=base_url,
+        http_client=http_client,
+        resource_path=resource_path,
+        resource_id='test-id'
+    )
     with pytest.raises(EndOfTestError):
         await getattr(client, method)(**kwargs)
 

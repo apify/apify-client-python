@@ -3,16 +3,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import GetListOfRunsResponse, ListOfRuns
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import maybe_extract_enum_member_value, response_to_dict
 
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from apify_shared.consts import ActorJobStatus
+    from apify_client._consts import ActorJobStatus
 
 
-class RunCollectionClient(BaseCollectionClient):
+
+class RunCollectionClient(ResourceClient):
     """Sub-client for listing Actor runs."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -69,7 +70,7 @@ class RunCollectionClient(BaseCollectionClient):
         return GetListOfRunsResponse.model_validate(response_as_dict).data
 
 
-class RunCollectionClientAsync(BaseCollectionClientAsync):
+class RunCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for listing Actor runs."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

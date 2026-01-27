@@ -13,13 +13,12 @@ from apify_client._models import (
     RunOrigin,
     UpdateActorResponse,
 )
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_version import ActorVersionClient, ActorVersionClientAsync
 from apify_client._resource_clients.actor_version_collection import (
     ActorVersionCollectionClient,
     ActorVersionCollectionClientAsync,
 )
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
-from apify_client._resource_clients.build import BuildClient, BuildClientAsync
 from apify_client._resource_clients.build_collection import (
     BuildCollectionClient,
     BuildCollectionClientAsync,
@@ -31,18 +30,22 @@ from apify_client._resource_clients.webhook_collection import (
     WebhookCollectionClientAsync,
 )
 from apify_client._utils import (
+    catch_not_found_or_throw,
     encode_key_value_store_record_value,
     encode_webhook_list_to_base64,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
     response_to_dict,
 )
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_shared.consts import ActorJobStatus
+    from apify_client._consts import ActorJobStatus
+    from apify_client._resource_clients.build import BuildClient, BuildClientAsync
+
 
 
 def get_actor_representation(
@@ -144,7 +147,7 @@ def get_actor_representation(
     return actor_dict
 
 
-class ActorClient(BaseClient):
+class ActorClient(ResourceClient):
     """Sub-client for manipulating a single Actor."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -159,8 +162,17 @@ class ActorClient(BaseClient):
         Returns:
             The retrieved Actor.
         """
-        result = self._get()
-        return GetActorResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetActorResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(
         self,
@@ -262,8 +274,15 @@ class ActorClient(BaseClient):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
+        cleaned = filter_out_none_values_recursively(actor_representation)
 
-        result = self._update(filter_out_none_values_recursively(actor_representation))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return UpdateActorResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -271,7 +290,14 @@ class ActorClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
         """
-        return self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def start(
         self,
@@ -410,15 +436,18 @@ class ActorClient(BaseClient):
             force_permission_level=force_permission_level,
         )
         if not logger:
-            return self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
+            from apify_client._resource_clients.run import RunClient
+            run_client = self._create_sibling_client(RunClient, resource_id=started_run.id)
+            return run_client.wait_for_finish(wait_secs=wait_secs)
 
-        run_client = self.root_client.run(run_id=started_run.id)
+        from apify_client._resource_clients.run import RunClient
+        run_client = self._create_sibling_client(RunClient, resource_id=started_run.id)
 
         if logger == 'default':
             logger = None
 
         with run_client.get_status_message_watcher(to_logger=logger), run_client.get_streamed_log(to_logger=logger):
-            return self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
+            return run_client.wait_for_finish(wait_secs=wait_secs)
 
     def build(
         self,
@@ -495,12 +524,8 @@ class ActorClient(BaseClient):
         response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
         response_as_dict = response_to_dict(response)
 
-        return BuildClient(
-            base_url=self.base_url,
-            http_client=self.http_client,
-            root_client=self.root_client,
-            resource_id=response_as_dict['data']['id'],
-        )
+        from apify_client._resource_clients.build import BuildClient
+        return self._create_sibling_client(BuildClient, resource_id=response_as_dict['data']['id'])
 
     def last_run(
         self,
@@ -575,7 +600,7 @@ class ActorClient(BaseClient):
         return True
 
 
-class ActorClientAsync(BaseClientAsync):
+class ActorClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -590,8 +615,17 @@ class ActorClientAsync(BaseClientAsync):
         Returns:
             The retrieved Actor.
         """
-        result = await self._get()
-        return GetActorResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetActorResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -693,8 +727,15 @@ class ActorClientAsync(BaseClientAsync):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
+        cleaned = filter_out_none_values_recursively(actor_representation)
 
-        result = await self._update(filter_out_none_values_recursively(actor_representation))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return UpdateActorResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -702,7 +743,14 @@ class ActorClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
         """
-        return await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def start(
         self,
@@ -842,9 +890,12 @@ class ActorClientAsync(BaseClientAsync):
         )
 
         if not logger:
-            return await self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
+            from apify_client._resource_clients.run import RunClientAsync
+            run_client = self._create_sibling_client(RunClientAsync, resource_id=started_run.id)
+            return await run_client.wait_for_finish(wait_secs=wait_secs)
 
-        run_client = self.root_client.run(run_id=started_run.id)
+        from apify_client._resource_clients.run import RunClientAsync
+        run_client = self._create_sibling_client(RunClientAsync, resource_id=started_run.id)
 
         if logger == 'default':
             logger = None
@@ -853,7 +904,7 @@ class ActorClientAsync(BaseClientAsync):
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 
         async with status_redirector, streamed_log:
-            return await self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
+            return await run_client.wait_for_finish(wait_secs=wait_secs)
 
     async def build(
         self,
@@ -935,12 +986,8 @@ class ActorClientAsync(BaseClientAsync):
         )
         response_as_dict = response_to_dict(response)
 
-        return BuildClientAsync(
-            base_url=self.base_url,
-            http_client=self.http_client,
-            root_client=self.root_client,
-            resource_id=response_as_dict['data']['id'],
-        )
+        from apify_client._resource_clients.build import BuildClientAsync
+        return self._create_sibling_client(BuildClientAsync, resource_id=response_as_dict['data']['id'])
 
     def last_run(
         self,

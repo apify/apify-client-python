@@ -7,11 +7,11 @@ from unittest.mock import Mock
 
 import impit
 import pytest
-from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
 from .utils import KvsFixture, get_random_resource_name, parametrized_api_urls
 from apify_client import ApifyClient
-from apify_client._client import DEFAULT_API_URL
+from apify_client._client_config import DEFAULT_API_URL
+from apify_client._signing import create_hmac_signature, create_storage_content_signature
 from apify_client.errors import ApifyApiError
 
 ##################################################

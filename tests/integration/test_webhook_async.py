@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from apify_shared.consts import WebhookEventType
+from apify_client._consts import WebhookEventType
 
 if TYPE_CHECKING:
     from apify_client import ApifyClientAsync

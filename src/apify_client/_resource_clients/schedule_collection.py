@@ -8,12 +8,12 @@ from apify_client._models import (
     ListOfSchedules,
     Schedule,
 )
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.schedule import _get_schedule_representation
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class ScheduleCollectionClient(BaseCollectionClient):
+class ScheduleCollectionClient(ResourceClient):
     """Sub-client for manipulating schedules."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -92,11 +92,18 @@ class ScheduleCollectionClient(BaseCollectionClient):
             title=title,
         )
 
-        result = self._create(filter_out_none_values_recursively(schedule_representation))
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(schedule_representation),
+        )
+
+        result = response_to_dict(response)
         return GetScheduleResponse.model_validate(result).data
 
 
-class ScheduleCollectionClientAsync(BaseCollectionClientAsync):
+class ScheduleCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating schedules."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -175,5 +182,12 @@ class ScheduleCollectionClientAsync(BaseCollectionClientAsync):
             title=title,
         )
 
-        result = await self._create(filter_out_none_values_recursively(schedule_representation))
+        response = await self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(schedule_representation),
+        )
+
+        result = response_to_dict(response)
         return GetScheduleResponse.model_validate(result).data

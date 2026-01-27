@@ -8,11 +8,11 @@ from apify_client._models import (
     ListOfRequestQueues,
     RequestQueue,
 )
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import response_to_dict
 
 
-class RequestQueueCollectionClient(BaseCollectionClient):
+class RequestQueueCollectionClient(ResourceClient):
     """Sub-client for manipulating request queues."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -59,11 +59,16 @@ class RequestQueueCollectionClient(BaseCollectionClient):
         Returns:
             The retrieved or newly-created request queue.
         """
-        result = self._get_or_create(name=name)
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(name=name),
+        )
+        result = response_to_dict(response)
         return CreateRequestQueueResponse.model_validate(result).data
 
 
-class RequestQueueCollectionClientAsync(BaseCollectionClientAsync):
+class RequestQueueCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating request queues."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -110,5 +115,10 @@ class RequestQueueCollectionClientAsync(BaseCollectionClientAsync):
         Returns:
             The retrieved or newly-created request queue.
         """
-        result = await self._get_or_create(name=name)
+        response = await self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(name=name),
+        )
+        result = response_to_dict(response)
         return CreateRequestQueueResponse.model_validate(result).data

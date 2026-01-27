@@ -3,8 +3,8 @@ from collections.abc import Callable
 from typing import Any
 
 import pytest
-from apify_shared.consts import WebhookEventType
 
+from apify_client._consts import WebhookEventType
 from apify_client._utils import (
     encode_webhook_list_to_base64,
     retry_with_exp_backoff,

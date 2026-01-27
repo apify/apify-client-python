@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.task import get_task_representation
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class TaskCollectionClient(BaseCollectionClient):
+class TaskCollectionClient(ResourceClient):
     """Sub-client for manipulating tasks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -108,11 +108,18 @@ class TaskCollectionClient(BaseCollectionClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = self._create(filter_out_none_values_recursively(task_representation))
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(task_representation),
+        )
+
+        result = response_to_dict(response)
         return CreateTaskResponse.model_validate(result).data
 
 
-class TaskCollectionClientAsync(BaseCollectionClientAsync):
+class TaskCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating tasks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -212,5 +219,12 @@ class TaskCollectionClientAsync(BaseCollectionClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = await self._create(filter_out_none_values_recursively(task_representation))
+        response = await self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(task_representation),
+        )
+
+        result = response_to_dict(response)
         return CreateTaskResponse.model_validate(result).data

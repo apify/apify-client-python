@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import EnvVar, GetEnvVarResponse
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
-from apify_client._utils import filter_out_none_values_recursively
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
+from apify_client.errors import ApifyApiError
 
 
 def get_actor_env_var_representation(
@@ -21,7 +22,7 @@ def get_actor_env_var_representation(
     }
 
 
-class ActorEnvVarClient(BaseClient):
+class ActorEnvVarClient(ResourceClient):
     """Sub-client for manipulating a single Actor environment variable."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -36,8 +37,17 @@ class ActorEnvVarClient(BaseClient):
         Returns:
             The retrieved Actor environment variable data.
         """
-        result = self._get()
-        return GetEnvVarResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetEnvVarResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(
         self,
@@ -63,8 +73,15 @@ class ActorEnvVarClient(BaseClient):
             name=name,
             value=value,
         )
+        cleaned = filter_out_none_values_recursively(actor_env_var_representation)
 
-        result = self._update(filter_out_none_values_recursively(actor_env_var_representation))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetEnvVarResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -72,10 +89,17 @@ class ActorEnvVarClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/delete-environment-variable
         """
-        return self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
 
-class ActorEnvVarClientAsync(BaseClientAsync):
+class ActorEnvVarClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor environment variable."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -90,8 +114,17 @@ class ActorEnvVarClientAsync(BaseClientAsync):
         Returns:
             The retrieved Actor environment variable data.
         """
-        result = await self._get()
-        return GetEnvVarResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetEnvVarResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -117,8 +150,15 @@ class ActorEnvVarClientAsync(BaseClientAsync):
             name=name,
             value=value,
         )
+        cleaned = filter_out_none_values_recursively(actor_env_var_representation)
 
-        result = await self._update(filter_out_none_values_recursively(actor_env_var_representation))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetEnvVarResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -126,4 +166,11 @@ class ActorEnvVarClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/delete-environment-variable
         """
-        return await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)

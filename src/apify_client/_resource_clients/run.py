@@ -1,42 +1,46 @@
 from __future__ import annotations
 
 import json
-import logging
 import random
 import string
 import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
-from apify_client._logging import create_redirect_logger
-from apify_client._models import GetRunResponse, Run
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
-from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
-from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-from apify_client._resource_clients.log import (
-    LogClient,
-    LogClientAsync,
-    StatusMessageWatcherAsync,
-    StatusMessageWatcherSync,
-    StreamedLogAsync,
-    StreamedLogSync,
-)
-from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
-from apify_client._utils import (
-    encode_key_value_store_record_value,
-    filter_out_none_values_recursively,
-    response_to_dict,
-    to_safe_id,
-)
-
 if TYPE_CHECKING:
     import logging
     from decimal import Decimal
 
-    from apify_shared.consts import RunGeneralAccess
+    from apify_client._consts import RunGeneralAccess
+    from apify_client._resource_clients.log import (
+        LogClient,
+        LogClientAsync,
+        StatusMessageWatcherAsync,
+        StatusMessageWatcherSync,
+        StreamedLogAsync,
+        StreamedLogSync,
+    )
 
 
-class RunClient(BaseClient):
+from apify_client._logging import create_redirect_logger
+from apify_client._models import GetRunResponse, Run
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
+from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
+from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    encode_key_value_store_record_value,
+    filter_out_none_values_recursively,
+    response_to_dict,
+    to_safe_id,
+    wait_for_finish_async,
+    wait_for_finish_sync,
+)
+from apify_client.errors import ApifyApiError
+
+
+class RunClient(ResourceClient):
     """Sub-client for manipulating a single Actor run."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -51,12 +55,17 @@ class RunClient(BaseClient):
         Returns:
             The retrieved Actor run data.
         """
-        response = self._get()
-
-        if response is None:
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetRunResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
             return None
-
-        return GetRunResponse.model_validate(response).data
 
     def update(
         self,
@@ -82,16 +91,30 @@ class RunClient(BaseClient):
             'isStatusMessageTerminal': is_status_message_terminal,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        response = self._update(filter_out_none_values_recursively(updated_fields))
-        return GetRunResponse.model_validate(response).data
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
+        return GetRunResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
-        return self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
@@ -124,7 +147,12 @@ class RunClient(BaseClient):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        response = self._wait_for_finish(wait_secs=wait_secs)
+        response = wait_for_finish_sync(
+            http_client=self.http_client,
+            url=self.url,
+            params=self.params,
+            wait_secs=wait_secs,
+        )
 
         if response is None:
             return None
@@ -282,6 +310,8 @@ class RunClient(BaseClient):
         Returns:
             A client allowing access to the log of this Actor run.
         """
+        from apify_client._resource_clients.log import LogClient
+
         return LogClient(
             **self._sub_resource_init_options(resource_path='log'),
         )
@@ -304,12 +334,18 @@ class RunClient(BaseClient):
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
-        actor_data = self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_data = None
+        if actor_id:
+            from apify_client._resource_clients.actor import ActorClient
+            actor_client = self._create_sibling_client(ActorClient, resource_id=actor_id)
+            actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
+
+        from apify_client._resource_clients.log import StreamedLogSync
 
         return StreamedLogSync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
@@ -368,17 +404,23 @@ class RunClient(BaseClient):
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
-        actor_data = self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_data = None
+        if actor_id:
+            from apify_client._resource_clients.actor import ActorClient
+            actor_client = self._create_sibling_client(ActorClient, resource_id=actor_id)
+            actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
+        from apify_client._resource_clients.log import StatusMessageWatcherSync
+
         return StatusMessageWatcherSync(run_client=self, to_logger=to_logger, check_period=check_period)
 
 
-class RunClientAsync(BaseClientAsync):
+class RunClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor run."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -393,12 +435,17 @@ class RunClientAsync(BaseClientAsync):
         Returns:
             The retrieved Actor run data.
         """
-        response = await self._get()
-
-        if response is None:
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetRunResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
             return None
-
-        return GetRunResponse.model_validate(response).data
 
     async def update(
         self,
@@ -424,9 +471,16 @@ class RunClientAsync(BaseClientAsync):
             'isStatusMessageTerminal': is_status_message_terminal,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        response = await self._update(filter_out_none_values_recursively(updated_fields))
-        return GetRunResponse.model_validate(response).data
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
+        return GetRunResponse.model_validate(result).data
 
     async def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
@@ -459,7 +513,12 @@ class RunClientAsync(BaseClientAsync):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        response = await self._wait_for_finish(wait_secs=wait_secs)
+        response = await wait_for_finish_async(
+            http_client=self.http_client,
+            url=self.url,
+            params=self.params,
+            wait_secs=wait_secs,
+        )
         return Run.model_validate(response) if response is not None else None
 
     async def delete(self) -> None:
@@ -467,7 +526,14 @@ class RunClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
-        return await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def metamorph(
         self,
@@ -623,6 +689,8 @@ class RunClientAsync(BaseClientAsync):
         Returns:
             A client allowing access to the log of this Actor run.
         """
+        from apify_client._resource_clients.log import LogClientAsync
+
         return LogClientAsync(
             **self._sub_resource_init_options(resource_path='log'),
         )
@@ -647,12 +715,18 @@ class RunClientAsync(BaseClientAsync):
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
-        actor_data = await self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_data = None
+        if actor_id:
+            from apify_client._resource_clients.actor import ActorClientAsync
+            actor_client = self._create_sibling_client(ActorClientAsync, resource_id=actor_id)
+            actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
+
+        from apify_client._resource_clients.log import StreamedLogAsync
 
         return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
@@ -713,11 +787,17 @@ class RunClientAsync(BaseClientAsync):
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
-        actor_data = await self.root_client.actor(actor_id=actor_id).get() if actor_id else None
+        actor_data = None
+        if actor_id:
+            from apify_client._resource_clients.actor import ActorClientAsync
+            actor_client = self._create_sibling_client(ActorClientAsync, resource_id=actor_id)
+            actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
+
+        from apify_client._resource_clients.log import StatusMessageWatcherAsync
 
         return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)

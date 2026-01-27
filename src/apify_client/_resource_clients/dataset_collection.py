@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import CreateDatasetResponse, Dataset, GetListOfDatasetsResponse, ListOfDatasets
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class DatasetCollectionClient(BaseCollectionClient):
+class DatasetCollectionClient(ResourceClient):
     """Sub-client for manipulating datasets."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -55,11 +55,22 @@ class DatasetCollectionClient(BaseCollectionClient):
         Returns:
             The retrieved or newly-created dataset.
         """
-        result = self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        response = self.http_client.call(
+
+            url=self._url(),
+
+            method='POST',
+
+            params=self._params(name=name),
+
+            json=filter_out_none_values_recursively({'schema': schema}),
+        )
+
+        result = response_to_dict(response)
         return CreateDatasetResponse.model_validate(result).data
 
 
-class DatasetCollectionClientAsync(BaseCollectionClientAsync):
+class DatasetCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating datasets."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -112,5 +123,16 @@ class DatasetCollectionClientAsync(BaseCollectionClientAsync):
         Returns:
             The retrieved or newly-created dataset.
         """
-        result = await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        response = await self.http_client.call(
+
+            url=self._url(),
+
+            method='POST',
+
+            params=self._params(name=name),
+
+            json=filter_out_none_values_recursively({'schema': schema}),
+        )
+
+        result = response_to_dict(response)
         return CreateDatasetResponse.model_validate(result).data

@@ -3,13 +3,19 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetVersionResponse, Version, VersionSourceType
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
 from apify_client._resource_clients.actor_env_var_collection import (
     ActorEnvVarCollectionClient,
     ActorEnvVarCollectionClientAsync,
 )
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
-from apify_client._utils import filter_out_none_values_recursively, maybe_extract_enum_member_value
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    filter_out_none_values_recursively,
+    maybe_extract_enum_member_value,
+    response_to_dict,
+)
+from apify_client.errors import ApifyApiError
 
 
 def _get_actor_version_representation(
@@ -37,7 +43,7 @@ def _get_actor_version_representation(
     }
 
 
-class ActorVersionClient(BaseClient):
+class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single Actor version."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -52,8 +58,17 @@ class ActorVersionClient(BaseClient):
         Returns:
             The retrieved Actor version data.
         """
-        result = self._get()
-        return GetVersionResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetVersionResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(
         self,
@@ -100,8 +115,15 @@ class ActorVersionClient(BaseClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
+        cleaned = filter_out_none_values_recursively(actor_version_representation)
 
-        result = self._update(filter_out_none_values_recursively(actor_version_representation))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetVersionResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -109,7 +131,14 @@ class ActorVersionClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
-        return self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
@@ -127,7 +156,7 @@ class ActorVersionClient(BaseClient):
         return ActorEnvVarClient(**self._sub_resource_init_options(resource_id=env_var_name))
 
 
-class ActorVersionClientAsync(BaseClientAsync):
+class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor version."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -142,8 +171,17 @@ class ActorVersionClientAsync(BaseClientAsync):
         Returns:
             The retrieved Actor version data.
         """
-        result = await self._get()
-        return GetVersionResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetVersionResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -190,8 +228,15 @@ class ActorVersionClientAsync(BaseClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
+        cleaned = filter_out_none_values_recursively(actor_version_representation)
 
-        result = await self._update(filter_out_none_values_recursively(actor_version_representation))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetVersionResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -199,7 +244,14 @@ class ActorVersionClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
-        return await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""

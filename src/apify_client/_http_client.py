@@ -14,14 +14,15 @@ from urllib.parse import urlencode
 import impit
 
 from apify_client._logging import log_context, logger_name
-from apify_client._types import Statistics
+from apify_client._statistics import Statistics
 from apify_client._utils import is_retryable_error, retry_with_exp_backoff, retry_with_exp_backoff_async
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._types import JsonSerializable
+    from apify_client._client_config import ClientConfig
+    from apify_client._utils import JsonSerializable
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
@@ -29,20 +30,20 @@ DEFAULT_BACKOFF_RANDOM_FACTOR = 1
 logger = logging.getLogger(logger_name)
 
 
-class _BaseHTTPClient:
-    def __init__(
-        self,
-        *,
-        token: str | None = None,
-        max_retries: int = 8,
-        min_delay_between_retries_millis: int = 500,
-        timeout_secs: int = 360,
-        stats: Statistics | None = None,
-    ) -> None:
-        self.max_retries = max_retries
-        self.min_delay_between_retries_millis = min_delay_between_retries_millis
-        self.timeout_secs = timeout_secs
+class _BaseHttpClient:
+    """Base class for HTTP clients with shared configuration and utilities."""
 
+    def __init__(self, config: ClientConfig, stats: Statistics | None = None) -> None:
+        """Initialize HTTP client with configuration.
+
+        Args:
+            config: Immutable client configuration.
+            stats: Optional statistics tracker.
+        """
+        self.config = config
+        self.stats = stats or Statistics()
+
+        # Build headers
         headers = {'Accept': 'application/json, */*'}
 
         workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
@@ -56,13 +57,20 @@ class _BaseHTTPClient:
         user_agent = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
         headers['User-Agent'] = user_agent
 
-        if token is not None:
-            headers['Authorization'] = f'Bearer {token}'
+        if config.token is not None:
+            headers['Authorization'] = f'Bearer {config.token}'
 
-        self.impit_client = impit.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
-        self.impit_async_client = impit.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
-
-        self.stats = stats or Statistics()
+        # Create impit clients
+        self.impit_client = impit.Client(
+            headers=headers,
+            follow_redirects=True,
+            timeout=config.timeout_secs,
+        )
+        self.impit_async_client = impit.AsyncClient(
+            headers=headers,
+            follow_redirects=True,
+            timeout=config.timeout_secs,
+        )
 
     @staticmethod
     def _parse_params(params: dict | None) -> dict | None:
@@ -137,7 +145,7 @@ class _BaseHTTPClient:
         return f'{url}?{query_string}'
 
 
-class HTTPClient(_BaseHTTPClient):
+class HttpClient(_BaseHttpClient):
     def call(
         self,
         *,
@@ -167,7 +175,7 @@ class HTTPClient(_BaseHTTPClient):
 
             try:
                 # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
-                timeout = min(self.timeout_secs, (timeout_secs or self.timeout_secs) * 2 ** (attempt - 1))
+                timeout = min(self.config.timeout_secs, (timeout_secs or self.config.timeout_secs) * 2 ** (attempt - 1))
 
                 url_with_params = self._build_url_with_params(url, params)
 
@@ -209,14 +217,14 @@ class HTTPClient(_BaseHTTPClient):
 
         return retry_with_exp_backoff(
             _make_request,
-            max_retries=self.max_retries,
-            backoff_base_millis=self.min_delay_between_retries_millis,
+            max_retries=self.config.max_retries,
+            backoff_base_millis=self.config.min_delay_between_retries_millis,
             backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
             random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )
 
 
-class HTTPClientAsync(_BaseHTTPClient):
+class HttpClientAsync(_BaseHttpClient):
     async def call(
         self,
         *,
@@ -243,7 +251,7 @@ class HTTPClientAsync(_BaseHTTPClient):
             logger.debug('Sending request')
             try:
                 # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
-                timeout = min(self.timeout_secs, (timeout_secs or self.timeout_secs) * 2 ** (attempt - 1))
+                timeout = min(self.config.timeout_secs, (timeout_secs or self.config.timeout_secs) * 2 ** (attempt - 1))
 
                 url_with_params = self._build_url_with_params(url, params)
 
@@ -285,8 +293,8 @@ class HTTPClientAsync(_BaseHTTPClient):
 
         return await retry_with_exp_backoff_async(
             _make_request,
-            max_retries=self.max_retries,
-            backoff_base_millis=self.min_delay_between_retries_millis,
+            max_retries=self.config.max_retries,
+            backoff_base_millis=self.config.min_delay_between_retries_millis,
             backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
             random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )

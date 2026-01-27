@@ -6,11 +6,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_shared.utils import create_storage_content_signature
-
 from apify_client._models import CreateDatasetResponse, Dataset, DatasetStatistics, GetDatasetStatisticsResponse
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._signing import create_storage_content_signature
 from apify_client._utils import (
+    FAST_OPERATION_TIMEOUT_SECS,
+    STANDARD_OPERATION_TIMEOUT_SECS,
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
     response_to_dict,
@@ -22,9 +23,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     import impit
-    from apify_shared.consts import StorageGeneralAccess
 
-    from apify_client._types import JsonSerializable
+    from apify_client._consts import StorageGeneralAccess
+    from apify_client._utils import JsonSerializable
 
 
 @dataclass
@@ -55,11 +56,7 @@ class DatasetItemsPage:
     """Whether the items are sorted in descending order."""
 
 
-_SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
-_MEDIUM_TIMEOUT = 30  # For actions that may take longer.
-
-
-class DatasetClient(BaseClient):
+class DatasetClient(ResourceClient):
     """Sub-client for manipulating a single dataset."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -74,8 +71,18 @@ class DatasetClient(BaseClient):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return CreateDatasetResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+            result = response_to_dict(response)
+            return CreateDatasetResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -93,8 +100,16 @@ class DatasetClient(BaseClient):
             'name': name,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+        )
+        result = response_to_dict(response)
         return CreateDatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -102,7 +117,15 @@ class DatasetClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        return self._delete(timeout_secs=_SMALL_TIMEOUT)
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def list_items(
         self,
@@ -588,7 +611,7 @@ class DatasetClient(BaseClient):
             params=self._params(),
             data=data,
             json=json,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
     def get_statistics(self) -> DatasetStatistics | None:
@@ -604,7 +627,7 @@ class DatasetClient(BaseClient):
                 url=self._url('statistics'),
                 method='GET',
                 params=self._params(),
-                timeout_secs=_SMALL_TIMEOUT,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response.json()
             return GetDatasetStatisticsResponse.model_validate(result).data if result is not None else None
@@ -675,7 +698,7 @@ class DatasetClient(BaseClient):
         return urlunparse(items_public_url)
 
 
-class DatasetClientAsync(BaseClientAsync):
+class DatasetClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single dataset."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -690,8 +713,18 @@ class DatasetClientAsync(BaseClientAsync):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return CreateDatasetResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+            result = response_to_dict(response)
+            return CreateDatasetResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -709,8 +742,16 @@ class DatasetClientAsync(BaseClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+        )
+        result = response_to_dict(response)
         return CreateDatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -718,7 +759,15 @@ class DatasetClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        return await self._delete(timeout_secs=_SMALL_TIMEOUT)
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def list_items(
         self,
@@ -1110,7 +1159,7 @@ class DatasetClientAsync(BaseClientAsync):
             params=self._params(),
             data=data,
             json=json,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
     async def get_statistics(self) -> DatasetStatistics | None:
@@ -1126,7 +1175,7 @@ class DatasetClientAsync(BaseClientAsync):
                 url=self._url('statistics'),
                 method='GET',
                 params=self._params(),
-                timeout_secs=_SMALL_TIMEOUT,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response.json()
             return GetDatasetStatisticsResponse.model_validate(result).data if result is not None else None

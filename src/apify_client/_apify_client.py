@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client._client_config import ClientConfig
+from apify_client._http_client import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,
@@ -49,61 +50,12 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
 )
-from apify_client._types import Statistics
-
-DEFAULT_API_URL = 'https://api.apify.com'
-DEFAULT_TIMEOUT = 360
-API_VERSION = 'v2'
+from apify_client._statistics import Statistics
 
 
-class _BaseApifyClient:
-    http_client: HTTPClient | HTTPClientAsync
-
-    def __init__(
-        self,
-        token: str | None = None,
-        *,
-        api_url: str | None = None,
-        api_public_url: str | None = None,
-        max_retries: int | None = 8,
-        min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = DEFAULT_TIMEOUT,
-    ) -> None:
-        """Initialize a new instance.
-
-        Args:
-            token: The Apify API token.
-            api_url: The URL of the Apify API server to which to connect. Defaults to https://api.apify.com. It can
-                be an internal URL that is not globally accessible, in such case `api_public_url` should be set as well.
-            api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
-                is an internal URL that is not globally accessible.
-            max_retries: How many times to retry a failed request at most.
-            min_delay_between_retries_millis: How long will the client wait between retrying requests
-                (increases exponentially from this value).
-            timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
-        """
-        self.token = token
-        api_url = (api_url or DEFAULT_API_URL).rstrip('/')
-        self.base_url = f'{api_url}/{API_VERSION}'
-        api_public_url = (api_public_url or DEFAULT_API_URL).rstrip('/')
-        self.public_base_url = f'{api_public_url}/{API_VERSION}'
-        self.max_retries = max_retries or 8
-        self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
-        self.timeout_secs = timeout_secs or DEFAULT_TIMEOUT
-
-    def _options(self) -> dict:
-        return {
-            'root_client': self,
-            'base_url': self.base_url,
-            'http_client': self.http_client,
-        }
-
-
-class ApifyClient(_BaseApifyClient):
+class ApifyClient:
     """The Apify API client."""
 
-    http_client: HTTPClient
-
     def __init__(
         self,
         token: str | None = None,
@@ -112,7 +64,7 @@ class ApifyClient(_BaseApifyClient):
         api_public_url: str | None = None,
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = DEFAULT_TIMEOUT,
+        timeout_secs: int | None = 360,
     ) -> None:
         """Initialize a new instance.
 
@@ -127,8 +79,8 @@ class ApifyClient(_BaseApifyClient):
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
-        super().__init__(
-            token,
+        self._config = ClientConfig.from_user_params(
+            token=token,
             api_url=api_url,
             api_public_url=api_public_url,
             max_retries=max_retries,
@@ -137,13 +89,14 @@ class ApifyClient(_BaseApifyClient):
         )
 
         self.stats = Statistics()
-        self.http_client = HTTPClient(
-            token=token,
-            max_retries=self.max_retries,
-            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
-            timeout_secs=self.timeout_secs,
-            stats=self.stats,
-        )
+        self.http_client = HttpClient(config=self._config, stats=self.stats)
+
+    def _options(self) -> dict:
+        return {
+            'base_url': self._config.base_url,
+            'public_base_url': self._config.public_base_url,
+            'http_client': self.http_client,
+        }
 
     def actor(self, actor_id: str) -> ActorClient:
         """Retrieve the sub-client for manipulating a single Actor.
@@ -151,7 +104,11 @@ class ApifyClient(_BaseApifyClient):
         Args:
             actor_id: ID of the Actor to be manipulated.
         """
-        return ActorClient(resource_id=actor_id, **self._options())
+        return ActorClient(
+            resource_id=actor_id,
+            resource_path='acts',
+            **self._options()
+        )
 
     def actors(self) -> ActorCollectionClient:
         """Retrieve the sub-client for manipulating Actors."""
@@ -287,10 +244,8 @@ class ApifyClient(_BaseApifyClient):
         return StoreCollectionClient(**self._options())
 
 
-class ApifyClientAsync(_BaseApifyClient):
+class ApifyClientAsync:
     """The asynchronous version of the Apify API client."""
-
-    http_client: HTTPClientAsync
 
     def __init__(
         self,
@@ -300,7 +255,7 @@ class ApifyClientAsync(_BaseApifyClient):
         api_public_url: str | None = None,
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = DEFAULT_TIMEOUT,
+        timeout_secs: int | None = 360,
     ) -> None:
         """Initialize a new instance.
 
@@ -315,8 +270,8 @@ class ApifyClientAsync(_BaseApifyClient):
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
-        super().__init__(
-            token,
+        self._config = ClientConfig.from_user_params(
+            token=token,
             api_url=api_url,
             api_public_url=api_public_url,
             max_retries=max_retries,
@@ -325,13 +280,14 @@ class ApifyClientAsync(_BaseApifyClient):
         )
 
         self.stats = Statistics()
-        self.http_client = HTTPClientAsync(
-            token=token,
-            max_retries=self.max_retries,
-            min_delay_between_retries_millis=self.min_delay_between_retries_millis,
-            timeout_secs=self.timeout_secs,
-            stats=self.stats,
-        )
+        self.http_client = HttpClientAsync(config=self._config, stats=self.stats)
+
+    def _options(self) -> dict:
+        return {
+            'base_url': self._config.base_url,
+            'public_base_url': self._config.public_base_url,
+            'http_client': self.http_client,
+        }
 
     def actor(self, actor_id: str) -> ActorClientAsync:
         """Retrieve the sub-client for manipulating a single Actor.

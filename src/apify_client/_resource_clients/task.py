@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.run import RunClient, RunClientAsync
 from apify_client._resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
 from apify_client._resource_clients.webhook_collection import WebhookCollectionClient, WebhookCollectionClientAsync
@@ -12,11 +12,12 @@ from apify_client._utils import (
     encode_webhook_list_to_base64,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
+    response_to_dict,
 )
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_shared.consts import ActorJobStatus
+    from apify_client._consts import ActorJobStatus
 
 
 def get_task_representation(
@@ -72,7 +73,7 @@ def get_task_representation(
     return task_dict
 
 
-class TaskClient(BaseClient):
+class TaskClient(ResourceClient):
     """Sub-client for manipulating a single task."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -87,8 +88,17 @@ class TaskClient(BaseClient):
         Returns:
             The retrieved task.
         """
-        result = self._get()
-        return CreateTaskResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return CreateTaskResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(
         self,
@@ -152,8 +162,15 @@ class TaskClient(BaseClient):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
+        cleaned = filter_out_none_values_recursively(task_representation)
 
-        result = self._update(filter_out_none_values_recursively(task_representation))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return CreateTaskResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -161,7 +178,14 @@ class TaskClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
         """
-        return self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def start(
         self,
@@ -274,7 +298,9 @@ class TaskClient(BaseClient):
             webhooks=webhooks,
         )
 
-        return self.root_client.run(started_run.id).wait_for_finish(wait_secs=wait_secs)
+        from apify_client._resource_clients.run import RunClient
+        run_client = self._create_sibling_client(RunClient, resource_id=started_run.id)
+        return run_client.wait_for_finish(wait_secs=wait_secs)
 
     def get_input(self) -> dict | None:
         """Retrieve the default input for this task.
@@ -343,7 +369,7 @@ class TaskClient(BaseClient):
         return WebhookCollectionClient(**self._sub_resource_init_options())
 
 
-class TaskClientAsync(BaseClientAsync):
+class TaskClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single task."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -358,8 +384,17 @@ class TaskClientAsync(BaseClientAsync):
         Returns:
             The retrieved task.
         """
-        result = await self._get()
-        return CreateTaskResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return CreateTaskResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -423,8 +458,15 @@ class TaskClientAsync(BaseClientAsync):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
+        cleaned = filter_out_none_values_recursively(task_representation)
 
-        result = await self._update(filter_out_none_values_recursively(task_representation))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return CreateTaskResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -432,7 +474,14 @@ class TaskClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
         """
-        return await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def start(
         self,
@@ -544,7 +593,8 @@ class TaskClientAsync(BaseClientAsync):
             restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
-        run_client = self.root_client.run(started_run.id)
+        from apify_client._resource_clients.run import RunClientAsync
+        run_client = self._create_sibling_client(RunClientAsync, resource_id=started_run.id)
         return await run_client.wait_for_finish(wait_secs=wait_secs)
 
     async def get_input(self) -> dict | None:

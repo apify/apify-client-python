@@ -8,11 +8,11 @@ from apify_client._models import (
     KeyValueStore,
     ListOfKeyValueStores,
 )
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class KeyValueStoreCollectionClient(BaseCollectionClient):
+class KeyValueStoreCollectionClient(ResourceClient):
     """Sub-client for manipulating key-value stores."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -65,11 +65,22 @@ class KeyValueStoreCollectionClient(BaseCollectionClient):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        result = self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        response = self.http_client.call(
+
+            url=self._url(),
+
+            method='POST',
+
+            params=self._params(name=name),
+
+            json=filter_out_none_values_recursively({'schema': schema}),
+        )
+
+        result = response_to_dict(response)
         return CreateKeyValueStoreResponse.model_validate(result).data
 
 
-class KeyValueStoreCollectionClientAsync(BaseCollectionClientAsync):
+class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating key-value stores."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -122,5 +133,16 @@ class KeyValueStoreCollectionClientAsync(BaseCollectionClientAsync):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        result = await self._get_or_create(name=name, resource=filter_out_none_values_recursively({'schema': schema}))
+        response = await self.http_client.call(
+
+            url=self._url(),
+
+            method='POST',
+
+            params=self._params(name=name),
+
+            json=filter_out_none_values_recursively({'schema': schema}),
+        )
+
+        result = response_to_dict(response)
         return CreateKeyValueStoreResponse.model_validate(result).data

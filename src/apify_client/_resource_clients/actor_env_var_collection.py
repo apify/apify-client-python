@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import EnvVar, GetEnvVarResponse, GetListOfEnvVarsResponse, ListOfEnvVars
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class ActorEnvVarCollectionClient(BaseCollectionClient):
+class ActorEnvVarCollectionClient(ResourceClient):
     """Sub-client for manipulating actor env vars."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -56,11 +56,18 @@ class ActorEnvVarCollectionClient(BaseCollectionClient):
             value=value,
         )
 
-        result = self._create(filter_out_none_values_recursively(actor_env_var_representation))
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(actor_env_var_representation),
+        )
+
+        result = response_to_dict(response)
         return GetEnvVarResponse.model_validate(result).data
 
 
-class ActorEnvVarCollectionClientAsync(BaseCollectionClientAsync):
+class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating actor env vars."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -108,5 +115,12 @@ class ActorEnvVarCollectionClientAsync(BaseCollectionClientAsync):
             value=value,
         )
 
-        result = await self._create(filter_out_none_values_recursively(actor_env_var_representation))
+        response = await self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(actor_env_var_representation),
+        )
+
+        result = response_to_dict(response)
         return GetEnvVarResponse.model_validate(result).data

@@ -11,9 +11,9 @@ from colorama import Fore, Style
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._resource_clients.base import BaseClient, BaseCollectionClient
+    from apify_client._resource_clients._resource_client import ResourceClient
 
-    _BaseClient = BaseClient | BaseCollectionClient
+    _BaseClient = ResourceClient
 
 
 logger_name = __name__.split('.')[0]

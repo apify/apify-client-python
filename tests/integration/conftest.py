@@ -3,10 +3,10 @@ import os
 from collections.abc import Generator
 
 import pytest
-from apify_shared.utils import create_hmac_signature, create_storage_content_signature
 
 from .utils import DatasetFixture, KvsFixture, get_crypto_random_object_id
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._signing import create_hmac_signature, create_storage_content_signature
 
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
 TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'

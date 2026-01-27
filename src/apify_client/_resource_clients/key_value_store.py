@@ -5,28 +5,28 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_shared.utils import create_hmac_signature, create_storage_content_signature
-
 from apify_client._models import GetKeyValueStoreResponse, GetListOfKeysResponse, KeyValueStore, ListOfKeys
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._signing import create_hmac_signature, create_storage_content_signature
 from apify_client._utils import (
+    FAST_OPERATION_TIMEOUT_SECS,
+    STANDARD_OPERATION_TIMEOUT_SECS,
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
     filter_out_none_values_recursively,
     maybe_parse_response,
+    response_to_dict,
 )
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    from apify_shared.consts import StorageGeneralAccess
-
-_SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
-_MEDIUM_TIMEOUT = 30  # For actions that may take longer.
+    from apify_client._consts import StorageGeneralAccess
 
 
-class KeyValueStoreClient(BaseClient):
+
+class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -41,8 +41,18 @@ class KeyValueStoreClient(BaseClient):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return GetKeyValueStoreResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+            result = response_to_dict(response)
+            return GetKeyValueStoreResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> KeyValueStore:
         """Update the key-value store with specified fields.
@@ -60,8 +70,15 @@ class KeyValueStoreClient(BaseClient):
             'name': name,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        result = self._update(filter_out_none_values_recursively(updated_fields))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetKeyValueStoreResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -69,7 +86,15 @@ class KeyValueStoreClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        return self._delete(timeout_secs=_SMALL_TIMEOUT)
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def list_keys(
         self,
@@ -106,7 +131,7 @@ class KeyValueStoreClient(BaseClient):
             url=self._url('keys'),
             method='GET',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -271,7 +296,7 @@ class KeyValueStoreClient(BaseClient):
             url=self._url(f'records/{key}'),
             method='DELETE',
             params=self._params(),
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
     def get_record_public_url(self, key: str) -> str:
@@ -353,7 +378,7 @@ class KeyValueStoreClient(BaseClient):
         return urlunparse(keys_public_url)
 
 
-class KeyValueStoreClientAsync(BaseClientAsync):
+class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -368,8 +393,18 @@ class KeyValueStoreClientAsync(BaseClientAsync):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return GetKeyValueStoreResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+            result = response_to_dict(response)
+            return GetKeyValueStoreResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -392,8 +427,15 @@ class KeyValueStoreClientAsync(BaseClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        result = await self._update(filter_out_none_values_recursively(updated_fields))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetKeyValueStoreResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -401,7 +443,15 @@ class KeyValueStoreClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        return await self._delete(timeout_secs=_SMALL_TIMEOUT)
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def list_keys(
         self,
@@ -438,7 +488,7 @@ class KeyValueStoreClientAsync(BaseClientAsync):
             url=self._url('keys'),
             method='GET',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -603,7 +653,7 @@ class KeyValueStoreClientAsync(BaseClientAsync):
             url=self._url(f'records/{key}'),
             method='DELETE',
             params=self._params(),
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
     async def get_record_public_url(self, key: str) -> str:

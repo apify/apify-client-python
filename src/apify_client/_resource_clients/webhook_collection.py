@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.webhook import get_webhook_representation
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 if TYPE_CHECKING:
-    from apify_shared.consts import WebhookEventType
+    from apify_client._consts import WebhookEventType
 
 
-class WebhookCollectionClient(BaseCollectionClient):
+class WebhookCollectionClient(ResourceClient):
     """Sub-client for manipulating webhooks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -98,11 +98,18 @@ class WebhookCollectionClient(BaseCollectionClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        result = self._create(filter_out_none_values_recursively(webhook_representation))
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(webhook_representation),
+        )
+
+        result = response_to_dict(response)
         return CreateWebhookResponse.model_validate(result).data
 
 
-class WebhookCollectionClientAsync(BaseCollectionClientAsync):
+class WebhookCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating webhooks."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -189,5 +196,12 @@ class WebhookCollectionClientAsync(BaseCollectionClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        response = await self._create(filter_out_none_values_recursively(webhook_representation))
+        response_obj = await self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(webhook_representation),
+        )
+
+        response = response_to_dict(response_obj)
         return CreateWebhookResponse.model_validate(response).data

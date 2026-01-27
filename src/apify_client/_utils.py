@@ -4,40 +4,210 @@ import asyncio
 import base64
 import io
 import json
+import math
 import random
 import re
 import time
+from datetime import datetime, timezone
 from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import impit
 
-from apify_client.errors import InvalidResponseBodyError
+from apify_client._consts import ActorJobStatus
+from apify_client.errors import ApifyApiError, ApifyClientError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from impit import Response
 
-    from apify_client.errors import ApifyApiError
+    from apify_client._http_client import HttpClient, HttpClientAsync
 
 T = TypeVar('T')
 
+JsonSerializable = str | int | float | bool | None | dict[str, Any] | list[Any]
+"""Type for representing json-serializable values. It's close enough to the real thing supported by json.parse.
+It was suggested in a discussion with (and approved by) Guido van Rossum, so I'd consider it correct enough.
+"""
 
-def filter_out_none_values_recursively(
-    dictionary: dict,
+# Constants for wait_for_finish functionality
+DEFAULT_WAIT_FOR_FINISH_SEC = 999999
+DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC = 3
+
+# Standard timeout values for API operations
+FAST_OPERATION_TIMEOUT_SECS = 5  # For fast, idempotent operations
+STANDARD_OPERATION_TIMEOUT_SECS = 30  # For operations that may take longer
+
+
+def wait_for_finish_sync(
+    http_client: HttpClient,
+    url: str,
+    params: dict,
+    wait_secs: int | None = None,
+) -> dict | None:
+    """Wait synchronously for an Actor job (run or build) to finish.
+
+    Polls the job status until it reaches a terminal state or timeout.
+    Handles 404 errors gracefully (job might not exist yet in replicas).
+
+    Args:
+        http_client: HTTP client instance for making requests
+        url: Full URL to the job endpoint
+        params: Base query parameters to include in each request
+        wait_secs: Maximum seconds to wait (None = indefinite)
+
+    Returns:
+        Job data dict when finished, or None if job doesn't exist after
+        DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC seconds
+
+    Raises:
+        ApifyApiError: If API returns errors other than 404
+    """
+    started_at = datetime.now(timezone.utc)
+    should_repeat = True
+    job: dict | None = None
+    seconds_elapsed = 0
+
+    while should_repeat:
+        wait_for_finish = DEFAULT_WAIT_FOR_FINISH_SEC
+        if wait_secs is not None:
+            wait_for_finish = wait_secs - seconds_elapsed
+
+        try:
+            response = http_client.call(
+                url=url,
+                method='GET',
+                params={**params, 'waitForFinish': wait_for_finish},
+            )
+            job_response = response_to_dict(response)
+            job = job_response.get('data') if isinstance(job_response, dict) else job_response
+            seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+
+            if not isinstance(job, dict):
+                raise ApifyClientError(
+                    f'Unexpected response format received from the API. '
+                    f'Expected dict with "status" field, got: {type(job).__name__}'
+                )
+
+            is_terminal = ActorJobStatus(job['status']).is_terminal
+            is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
+            if is_terminal or is_timed_out:
+                should_repeat = False
+
+            if not should_repeat:
+                # Early return here so that we avoid the sleep below if not needed
+                return job
+
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+
+            # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up
+            # and return None. In such case, the requested record probably really doesn't exist.
+            if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
+                return None
+
+        # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
+        time.sleep(0.25)
+
+    return job
+
+
+async def wait_for_finish_async(
+    http_client: HttpClientAsync,
+    url: str,
+    params: dict,
+    wait_secs: int | None = None,
+) -> dict | None:
+    """Wait asynchronously for an Actor job (run or build) to finish.
+
+    Polls the job status until it reaches a terminal state or timeout.
+    Handles 404 errors gracefully (job might not exist yet in replicas).
+
+    Args:
+        http_client: Async HTTP client instance for making requests
+        url: Full URL to the job endpoint
+        params: Base query parameters to include in each request
+        wait_secs: Maximum seconds to wait (None = indefinite)
+
+    Returns:
+        Job data dict when finished, or None if job doesn't exist after
+        DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC seconds
+
+    Raises:
+        ApifyApiError: If API returns errors other than 404
+    """
+    started_at = datetime.now(timezone.utc)
+    should_repeat = True
+    job: dict | None = None
+    seconds_elapsed = 0
+
+    while should_repeat:
+        wait_for_finish = DEFAULT_WAIT_FOR_FINISH_SEC
+        if wait_secs is not None:
+            wait_for_finish = wait_secs - seconds_elapsed
+
+        try:
+            response = await http_client.call(
+                url=url,
+                method='GET',
+                params={**params, 'waitForFinish': wait_for_finish},
+            )
+            job_response = response_to_dict(response)
+            job = job_response.get('data') if isinstance(job_response, dict) else job_response
+
+            if not isinstance(job, dict):
+                raise ApifyClientError(
+                    f'Unexpected response format received from the API. '
+                    f'Expected dict with "status" field, got: {type(job).__name__}'
+                )
+
+            seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+            is_terminal = ActorJobStatus(job['status']).is_terminal
+            is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
+            if is_terminal or is_timed_out:
+                should_repeat = False
+
+            if not should_repeat:
+                # Early return here so that we avoid the sleep below if not needed
+                return job
+
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+
+            # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up
+            # and return None. In such case, the requested record probably really doesn't exist.
+            if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
+                return None
+
+        # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
+        await asyncio.sleep(0.25)
+
+    return job
+
+
+def clean_request_dict(
+    data: dict,
     *,
     remove_empty_dicts: bool | None = None,
 ) -> dict:
-    """Return a copy of the dictionary with all None values recursively removed.
+    """Remove None values from a dictionary recursively.
+
+    The Apify API ignores missing fields but may reject fields explicitly
+    set to None. This prepares request payloads by recursively removing
+    None values.
 
     Args:
-        dictionary: The dictionary to filter.
-        remove_empty_dicts: If True, also remove empty dictionaries after filtering.
+        data: Dictionary to clean
+        remove_empty_dicts: Also remove empty dicts after filtering None values
 
     Returns:
-        A new dictionary without None values.
+        New dictionary with None values removed at all nesting levels
+
+    Example:
+        >>> clean_request_dict({'a': 1, 'b': None, 'c': {'d': None, 'e': 2}})
+        {'a': 1, 'c': {'e': 2}}
     """
 
     def _internal(dictionary: dict, *, remove_empty: bool | None = None) -> dict | None:
@@ -51,14 +221,40 @@ def filter_out_none_values_recursively(
             return None
         return result
 
-    return cast('dict', _internal(dictionary, remove_empty=remove_empty_dicts))
+    return cast('dict', _internal(data, remove_empty=remove_empty_dicts))
 
 
-def maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
-    """Extract the value from an Enum member, or return the input unchanged if not an Enum."""
-    if isinstance(maybe_enum_member, Enum):
-        return maybe_enum_member.value
-    return maybe_enum_member
+# Backwards compatibility alias
+filter_out_none_values_recursively = clean_request_dict
+
+
+def enum_to_value(value: Any) -> Any:
+    """Convert Enum member to its value, or return unchanged if not an Enum.
+
+    Ensures Enum instances are converted to primitive values suitable
+    for API transmission.
+
+    Args:
+        value: Value to potentially convert (Enum member or any other type)
+
+    Returns:
+        If value is an Enum, returns value.value; otherwise returns value unchanged
+
+    Example:
+        >>> enum_to_value(ActorJobStatus.SUCCEEDED)
+        'SUCCEEDED'
+        >>> enum_to_value('already_a_string')
+        'already_a_string'
+        >>> enum_to_value(None)
+        None
+    """
+    if isinstance(value, Enum):
+        return value.value
+    return value
+
+
+# Backwards compatibility alias
+maybe_extract_enum_member_value = enum_to_value
 
 
 def to_safe_id(id: str) -> str:
@@ -89,7 +285,7 @@ def response_to_dict(response: impit.Response) -> dict:
     if isinstance(data, dict):
         return data
 
-    raise ValueError('The response is not a dictionary.')
+    raise ValueError(f'The response is not a dictionary. Got: {type(data).__name__}')
 
 
 def response_to_list(response: impit.Response) -> list:
@@ -108,7 +304,7 @@ def response_to_list(response: impit.Response) -> list:
     if isinstance(data, list):
         return data
 
-    raise ValueError('The response is not a list.')
+    raise ValueError(f'The response is not a list. Got: {type(data).__name__}')
 
 
 def retry_with_exp_backoff(

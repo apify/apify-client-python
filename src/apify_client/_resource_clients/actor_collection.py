@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from apify_client._models import Actor, CreateActorResponse, GetListOfActorsResponse, ListOfActors
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor import get_actor_representation
-from apify_client._resource_clients.base import BaseCollectionClient, BaseCollectionClientAsync
 from apify_client._utils import filter_out_none_values_recursively, response_to_dict
 
 
-class ActorCollectionClient(BaseCollectionClient):
+class ActorCollectionClient(ResourceClient):
     """Sub-client for manipulating Actors."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -136,11 +136,18 @@ class ActorCollectionClient(BaseCollectionClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = self._create(filter_out_none_values_recursively(actor_representation, remove_empty_dicts=True))
+        response = self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(actor_representation, remove_empty_dicts=True),
+        )
+
+        result = response_to_dict(response)
         return CreateActorResponse.model_validate(result).data
 
 
-class ActorCollectionClientAsync(BaseCollectionClientAsync):
+class ActorCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating Actors."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -268,5 +275,12 @@ class ActorCollectionClientAsync(BaseCollectionClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = await self._create(filter_out_none_values_recursively(actor_representation, remove_empty_dicts=True))
+        response = await self.http_client.call(
+            url=self._url(),
+            method='POST',
+            params=self._params(),
+            json=filter_out_none_values_recursively(actor_representation, remove_empty_dicts=True),
+        )
+
+        result = response_to_dict(response)
         return CreateActorResponse.model_validate(result).data

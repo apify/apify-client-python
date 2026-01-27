@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetScheduleLogResponse, GetScheduleResponse, Schedule, ScheduleInvoked
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively, response_to_dict
 from apify_client.errors import ApifyApiError
 
@@ -31,7 +31,7 @@ def _get_schedule_representation(
     }
 
 
-class ScheduleClient(BaseClient):
+class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -46,8 +46,17 @@ class ScheduleClient(BaseClient):
         Returns:
             The retrieved schedule.
         """
-        result = self._get()
-        return GetScheduleResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetScheduleResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(
         self,
@@ -90,8 +99,15 @@ class ScheduleClient(BaseClient):
             timezone=timezone,
             title=title,
         )
+        cleaned = filter_out_none_values_recursively(schedule_representation)
 
-        result = self._update(filter_out_none_values_recursively(schedule_representation))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetScheduleResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -99,7 +115,14 @@ class ScheduleClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
-        self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def get_log(self) -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
@@ -125,7 +148,7 @@ class ScheduleClient(BaseClient):
         return None
 
 
-class ScheduleClientAsync(BaseClientAsync):
+class ScheduleClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single schedule."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -140,8 +163,17 @@ class ScheduleClientAsync(BaseClientAsync):
         Returns:
             The retrieved schedule.
         """
-        result = await self._get()
-        return GetScheduleResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetScheduleResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -184,8 +216,15 @@ class ScheduleClientAsync(BaseClientAsync):
             timezone=timezone,
             title=title,
         )
+        cleaned = filter_out_none_values_recursively(schedule_representation)
 
-        result = await self._update(filter_out_none_values_recursively(schedule_representation))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return GetScheduleResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -193,7 +232,14 @@ class ScheduleClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
-        await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def get_log(self) -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.

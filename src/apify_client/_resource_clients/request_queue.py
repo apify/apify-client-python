@@ -33,14 +33,22 @@ from apify_client._models import (
     UnlockRequestsResponse,
     UnlockRequestsResult,
 )
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_out_none_values_recursively
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils import (
+    FAST_OPERATION_TIMEOUT_SECS,
+    STANDARD_OPERATION_TIMEOUT_SECS,
+    catch_not_found_or_throw,
+    filter_out_none_values_recursively,
+    response_to_dict,
+)
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_shared.consts import StorageGeneralAccess
+    from apify_client._consts import StorageGeneralAccess
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +56,8 @@ _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
-_SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
-_MEDIUM_TIMEOUT = 30  # For actions that may take longer.
 
-
-class RequestQueueClient(BaseClient):
+class RequestQueueClient(ResourceClient):
     """Sub-client for manipulating a single request queue."""
 
     def __init__(  # noqa: D417
@@ -78,8 +83,18 @@ class RequestQueueClient(BaseClient):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        result = self._get(timeout_secs=_SMALL_TIMEOUT)
-        return GetRequestQueueResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+            result = response_to_dict(response)
+            return GetRequestQueueResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> RequestQueue:
         """Update the request queue with specified fields.
@@ -97,8 +112,16 @@ class RequestQueueClient(BaseClient):
             'name': name,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        result = self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+        )
+        result = response_to_dict(response)
         return GetRequestQueueResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -106,7 +129,15 @@ class RequestQueueClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        return self._delete(timeout_secs=_SMALL_TIMEOUT)
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def list_head(self, *, limit: int | None = None) -> RequestQueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
@@ -125,7 +156,7 @@ class RequestQueueClient(BaseClient):
             url=self._url('head'),
             method='GET',
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -149,7 +180,7 @@ class RequestQueueClient(BaseClient):
             url=self._url('head/lock'),
             method='POST',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -174,7 +205,7 @@ class RequestQueueClient(BaseClient):
             method='POST',
             json=request,
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -196,7 +227,7 @@ class RequestQueueClient(BaseClient):
                 url=self._url(f'requests/{request_id}'),
                 method='GET',
                 params=self._params(),
-                timeout_secs=_SMALL_TIMEOUT,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response.json()
             return GetRequestResponse.model_validate(result).data
@@ -227,7 +258,7 @@ class RequestQueueClient(BaseClient):
             method='PUT',
             json=request,
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -249,7 +280,7 @@ class RequestQueueClient(BaseClient):
             url=self._url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
     def prolong_request_lock(
@@ -274,7 +305,7 @@ class RequestQueueClient(BaseClient):
             url=self._url(f'requests/{request_id}/lock'),
             method='PUT',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -295,7 +326,7 @@ class RequestQueueClient(BaseClient):
             url=self._url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
     def batch_add_requests(
@@ -364,7 +395,7 @@ class RequestQueueClient(BaseClient):
                 method='POST',
                 params=request_params,
                 json=list(request_batch),
-                timeout_secs=_MEDIUM_TIMEOUT,
+                timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
             )
 
             response_parsed = response.json()
@@ -394,7 +425,7 @@ class RequestQueueClient(BaseClient):
             method='DELETE',
             params=request_params,
             json=requests,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -420,7 +451,7 @@ class RequestQueueClient(BaseClient):
             url=self._url('requests'),
             method='GET',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -446,7 +477,7 @@ class RequestQueueClient(BaseClient):
         return UnlockRequestsResponse.model_validate(result).data
 
 
-class RequestQueueClientAsync(BaseClientAsync):
+class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
 
     def __init__(  # noqa: D417
@@ -472,8 +503,18 @@ class RequestQueueClientAsync(BaseClientAsync):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        result = await self._get(timeout_secs=_SMALL_TIMEOUT)
-        return GetRequestQueueResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+            result = response_to_dict(response)
+            return GetRequestQueueResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -496,8 +537,16 @@ class RequestQueueClientAsync(BaseClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
+        cleaned = filter_out_none_values_recursively(updated_fields)
 
-        result = await self._update(filter_out_none_values_recursively(updated_fields), timeout_secs=_SMALL_TIMEOUT)
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+        )
+        result = response_to_dict(response)
         return GetRequestQueueResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -505,7 +554,15 @@ class RequestQueueClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        return await self._delete(timeout_secs=_SMALL_TIMEOUT)
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def list_head(self, *, limit: int | None = None) -> RequestQueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
@@ -524,7 +581,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             url=self._url('head'),
             method='GET',
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -548,7 +605,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             url=self._url('head/lock'),
             method='POST',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -573,7 +630,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             method='POST',
             json=request,
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -595,7 +652,7 @@ class RequestQueueClientAsync(BaseClientAsync):
                 url=self._url(f'requests/{request_id}'),
                 method='GET',
                 params=self._params(),
-                timeout_secs=_SMALL_TIMEOUT,
+                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response.json()
             validated_response = GetRequestResponse.model_validate(result) if result is not None else None
@@ -626,7 +683,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             method='PUT',
             json=request,
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -646,7 +703,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             url=self._url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
     async def prolong_request_lock(
@@ -671,7 +728,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             url=self._url(f'requests/{request_id}/lock'),
             method='PUT',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()
@@ -697,7 +754,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             url=self._url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
 
     async def _batch_add_requests_worker(
@@ -728,7 +785,7 @@ class RequestQueueClientAsync(BaseClientAsync):
                     method='POST',
                     params=request_params,
                     json=list(request_batch),
-                    timeout_secs=_MEDIUM_TIMEOUT,
+                    timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
                 )
 
                 response_parsed = response.json()
@@ -844,7 +901,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             method='DELETE',
             params=request_params,
             json=requests,
-            timeout_secs=_SMALL_TIMEOUT,
+            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
         result = response.json()
         return BatchDeleteResponse.model_validate(result).data
@@ -869,7 +926,7 @@ class RequestQueueClientAsync(BaseClientAsync):
             url=self._url('requests'),
             method='GET',
             params=request_params,
-            timeout_secs=_MEDIUM_TIMEOUT,
+            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
         )
 
         result = response.json()

@@ -10,7 +10,7 @@ import pytest
 
 from .utils import DatasetFixture, get_random_resource_name, parametrized_api_urls
 from apify_client import ApifyClient
-from apify_client._client import DEFAULT_API_URL
+from apify_client._client_config import DEFAULT_API_URL
 from apify_client.errors import ApifyApiError
 
 ##################################################

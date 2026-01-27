@@ -11,7 +11,9 @@ from datetime import datetime, timedelta, timezone
 from threading import Thread
 from typing import TYPE_CHECKING, Any, cast
 
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from typing_extensions import Self
+
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw
 from apify_client.errors import ApifyApiError
 
@@ -20,13 +22,12 @@ if TYPE_CHECKING:
     from types import TracebackType
 
     import impit
-    from typing_extensions import Self
 
     from apify_client._models import Run
-    from apify_client._resource_clients import RunClient, RunClientAsync
+    from apify_client._resource_clients.run import RunClient, RunClientAsync
 
 
-class LogClient(BaseClient):
+class LogClient(ResourceClient):
     """Sub-client for manipulating logs."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -113,7 +114,7 @@ class LogClient(BaseClient):
                 response.close()
 
 
-class LogClientAsync(BaseClientAsync):
+class LogClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating logs."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

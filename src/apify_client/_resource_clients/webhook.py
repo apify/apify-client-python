@@ -9,7 +9,7 @@ from apify_client._models import (
     Webhook,
     WebhookDispatch,
 )
-from apify_client._resource_clients.base import BaseClient, BaseClientAsync
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.webhook_dispatch_collection import (
     WebhookDispatchCollectionClient,
     WebhookDispatchCollectionClientAsync,
@@ -18,11 +18,12 @@ from apify_client._utils import (
     catch_not_found_or_throw,
     filter_out_none_values_recursively,
     maybe_extract_enum_member_value,
+    response_to_dict,
 )
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_shared.consts import WebhookEventType
+    from apify_client._consts import WebhookEventType
 
 
 def get_webhook_representation(
@@ -64,7 +65,7 @@ def get_webhook_representation(
     return webhook
 
 
-class WebhookClient(BaseClient):
+class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -79,8 +80,17 @@ class WebhookClient(BaseClient):
         Returns:
             The retrieved webhook, or None if it does not exist.
         """
-        result = self._get()
-        return GetWebhookResponse.model_validate(result).data if result is not None else None
+        try:
+            response = self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetWebhookResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     def update(
         self,
@@ -128,8 +138,15 @@ class WebhookClient(BaseClient):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
+        cleaned = filter_out_none_values_recursively(webhook_representation)
 
-        result = self._update(filter_out_none_values_recursively(webhook_representation))
+        response = self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return UpdateWebhookResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -137,7 +154,14 @@ class WebhookClient(BaseClient):
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
-        return self._delete()
+        try:
+            self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     def test(self) -> WebhookDispatch | None:
         """Test a webhook.
@@ -177,7 +201,7 @@ class WebhookClient(BaseClient):
         )
 
 
-class WebhookClientAsync(BaseClientAsync):
+class WebhookClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single webhook."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -192,8 +216,17 @@ class WebhookClientAsync(BaseClientAsync):
         Returns:
             The retrieved webhook, or None if it does not exist.
         """
-        result = await self._get()
-        return GetWebhookResponse.model_validate(result).data if result is not None else None
+        try:
+            response = await self.http_client.call(
+                url=self.url,
+                method='GET',
+                params=self.params,
+            )
+            result = response_to_dict(response)
+            return GetWebhookResponse.model_validate(result).data
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
+            return None
 
     async def update(
         self,
@@ -241,8 +274,15 @@ class WebhookClientAsync(BaseClientAsync):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
+        cleaned = filter_out_none_values_recursively(webhook_representation)
 
-        result = await self._update(filter_out_none_values_recursively(webhook_representation))
+        response = await self.http_client.call(
+            url=self.url,
+            method='PUT',
+            params=self.params,
+            json=cleaned,
+        )
+        result = response_to_dict(response)
         return UpdateWebhookResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -250,7 +290,14 @@ class WebhookClientAsync(BaseClientAsync):
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
-        return await self._delete()
+        try:
+            await self.http_client.call(
+                url=self.url,
+                method='DELETE',
+                params=self.params,
+            )
+        except ApifyApiError as exc:
+            catch_not_found_or_throw(exc)
 
     async def test(self) -> WebhookDispatch | None:
         """Test a webhook.

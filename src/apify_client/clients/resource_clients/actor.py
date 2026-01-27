@@ -60,6 +60,7 @@ def get_actor_representation(
     actor_standby_memory_mbytes: int | None = None,
     pricing_infos: list[dict] | None = None,
     actor_permission_level: ActorPermissionLevel | None = None,
+    tagged_builds: dict[str, None | dict[str, str]] | None = None,
 ) -> dict:
     """Get dictionary representation of the Actor."""
     actor_dict = {
@@ -87,6 +88,7 @@ def get_actor_representation(
         },
         'pricingInfos': pricing_infos,
         'actorPermissionLevel': actor_permission_level,
+        'taggedBuilds': tagged_builds,
     }
 
     # Only include actorStandby if at least one field is provided
@@ -157,6 +159,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
+        tagged_builds: dict[str, None | dict[str, str]] | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 
@@ -193,6 +196,9 @@ class ActorClient(ResourceClient):
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
+            tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
+                or remove build tags. To assign a tag, provide a dict with 'buildId' key. To remove a tag,
+                set its value to None. Example: {'latest': {'buildId': 'abc'}, 'beta': None}.
 
         Returns:
             The updated Actor.
@@ -223,6 +229,7 @@ class ActorClient(ResourceClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
             pricing_infos=pricing_infos,
             actor_permission_level=actor_permission_level,
+            tagged_builds=tagged_builds,
         )
 
         return self._update(filter_out_none_values_recursively(actor_representation))
@@ -580,6 +587,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
+        tagged_builds: dict[str, None | dict[str, str]] | None = None,
     ) -> dict:
         """Update the Actor with the specified fields.
 
@@ -616,6 +624,9 @@ class ActorClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
+            tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
+                or remove build tags. To assign a tag, provide a dict with 'buildId' key. To remove a tag,
+                set its value to None. Example: {'latest': {'buildId': 'abc'}, 'beta': None}.
 
         Returns:
             The updated Actor.
@@ -646,6 +657,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
             pricing_infos=pricing_infos,
             actor_permission_level=actor_permission_level,
+            tagged_builds=tagged_builds,
         )
 
         return await self._update(filter_out_none_values_recursively(actor_representation))

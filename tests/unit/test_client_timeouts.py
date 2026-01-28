@@ -7,7 +7,7 @@ import pytest
 from impit import Response, TimeoutException
 
 from apify_client._config import ClientConfig
-from apify_client._http_client import HttpClient, HttpClientAsync
+from apify_client._http_clients import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

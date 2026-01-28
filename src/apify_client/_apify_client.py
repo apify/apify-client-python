@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from apify_client._client_classes import ClientRegistry, ClientRegistryAsync
 from apify_client._config import ClientConfig
-from apify_client._http_client import HttpClient, HttpClientAsync
+from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,

@@ -8,7 +8,7 @@ import pytest
 from werkzeug import Response
 
 from apify_client._config import ClientConfig
-from apify_client._http_client import HttpClient, HttpClientAsync
+from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:

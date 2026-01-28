@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from apify_client._http_client import HttpClient, HttpClientAsync
+from apify_client._http_clients import HttpClient, HttpClientAsync
 
 
 def test__retry_with_exp_backoff() -> None:

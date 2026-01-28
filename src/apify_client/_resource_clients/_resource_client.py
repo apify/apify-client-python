@@ -14,7 +14,7 @@ from apify_client.errors import ApifyApiError, ApifyClientError
 
 if TYPE_CHECKING:
     from apify_client._client_classes import ClientRegistry, ClientRegistryAsync
-    from apify_client._http_client import HttpClient, HttpClientAsync
+    from apify_client._http_clients import HttpClient, HttpClientAsync
 
 
 class ResourceClient(metaclass=WithLogDetailsClient):

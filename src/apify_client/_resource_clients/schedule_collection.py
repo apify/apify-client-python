@@ -39,8 +39,8 @@ class ScheduleCollectionClient(ResourceClient):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -92,8 +92,8 @@ class ScheduleCollectionClient(ResourceClient):
             title=title,
         )
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(schedule_representation),
@@ -129,8 +129,8 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -182,8 +182,8 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             title=title,
         )
 
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(schedule_representation),

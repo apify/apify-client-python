@@ -47,10 +47,10 @@ class ScheduleClient(ResourceClient):
             The retrieved schedule.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetScheduleResponse.model_validate(result).data
@@ -101,10 +101,10 @@ class ScheduleClient(ResourceClient):
         )
         cleaned = filter_none_values(schedule_representation)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -116,10 +116,10 @@ class ScheduleClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -133,8 +133,8 @@ class ScheduleClient(ResourceClient):
             Retrieved log of the given schedule.
         """
         try:
-            response = self.http_client.call(
-                url=self._url('log'),
+            response = self._http_client.call(
+                url=self._build_url('log'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -164,10 +164,10 @@ class ScheduleClientAsync(ResourceClientAsync):
             The retrieved schedule.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetScheduleResponse.model_validate(result).data
@@ -218,10 +218,10 @@ class ScheduleClientAsync(ResourceClientAsync):
         )
         cleaned = filter_none_values(schedule_representation)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -233,10 +233,10 @@ class ScheduleClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -250,8 +250,8 @@ class ScheduleClientAsync(ResourceClientAsync):
             Retrieved log of the given schedule.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url('log'),
+            response = await self._http_client.call(
+                url=self._build_url('log'),
                 method='GET',
                 params=self._build_params(),
             )

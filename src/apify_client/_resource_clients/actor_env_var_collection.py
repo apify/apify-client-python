@@ -23,8 +23,8 @@ class ActorEnvVarCollectionClient(ResourceClient):
         Returns:
             The list of available actor environment variables.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(),
         )
@@ -56,8 +56,8 @@ class ActorEnvVarCollectionClient(ResourceClient):
             value=value,
         )
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(actor_env_var_representation),
@@ -82,8 +82,8 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available actor environment variables.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(),
         )
@@ -115,8 +115,8 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             value=value,
         )
 
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(actor_env_var_representation),

@@ -33,8 +33,8 @@ class WebhookDispatchCollectionClient(ResourceClient):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -68,8 +68,8 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )

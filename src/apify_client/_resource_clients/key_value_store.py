@@ -41,10 +41,10 @@ class KeyValueStoreClient(ResourceClient):
             The retrieved key-value store, or None if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response_to_dict(response)
@@ -71,10 +71,10 @@ class KeyValueStoreClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -86,10 +86,10 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
         except ApifyApiError as exc:
@@ -126,8 +126,8 @@ class KeyValueStoreClient(ResourceClient):
             signature=signature,
         )
 
-        response = self.http_client.call(
-            url=self._url('keys'),
+        response = self._http_client.call(
+            url=self._build_url('keys'),
             method='GET',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -149,8 +149,8 @@ class KeyValueStoreClient(ResourceClient):
             The requested record, or None, if the record does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
@@ -178,8 +178,8 @@ class KeyValueStoreClient(ResourceClient):
             True if the record exists, False otherwise.
         """
         try:
-            response = self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='HEAD',
                 params=self._build_params(),
             )
@@ -204,8 +204,8 @@ class KeyValueStoreClient(ResourceClient):
             The requested record, or None, if the record does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
@@ -236,8 +236,8 @@ class KeyValueStoreClient(ResourceClient):
         """
         response = None
         try:
-            response = self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
@@ -275,8 +275,8 @@ class KeyValueStoreClient(ResourceClient):
 
         headers = {'content-type': content_type}
 
-        self.http_client.call(
-            url=self._url(f'records/{key}'),
+        self._http_client.call(
+            url=self._build_url(f'records/{key}'),
             method='PUT',
             params=self._build_params(),
             data=value,
@@ -291,8 +291,8 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             key: The key of the record which to delete.
         """
-        self.http_client.call(
-            url=self._url(f'records/{key}'),
+        self._http_client.call(
+            url=self._build_url(f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -310,7 +310,7 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             A public URL that can be used to access the value of the given key in the KVS.
         """
-        if self.resource_id is None:
+        if self._resource_id is None:
             raise ValueError('resource_id cannot be None when generating a public URL')
 
         metadata = self.get()
@@ -320,7 +320,7 @@ class KeyValueStoreClient(ResourceClient):
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        key_public_url = urlparse(self._url(f'records/{key}', public=True))
+        key_public_url = urlparse(self._build_url(f'records/{key}', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
 
         if filtered_params:
@@ -368,7 +368,7 @@ class KeyValueStoreClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._url('keys', public=True))
+        keys_public_url = urlparse(self._build_url('keys', public=True))
 
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
@@ -393,10 +393,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The retrieved key-value store, or None if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response_to_dict(response)
@@ -428,10 +428,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -443,10 +443,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
         except ApifyApiError as exc:
@@ -483,8 +483,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             signature=signature,
         )
 
-        response = await self.http_client.call(
-            url=self._url('keys'),
+        response = await self._http_client.call(
+            url=self._build_url('keys'),
             method='GET',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -506,8 +506,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The requested record, or None, if the record does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = await self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
@@ -535,8 +535,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             True if the record exists, False otherwise.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = await self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='HEAD',
                 params=self._build_params(),
             )
@@ -561,8 +561,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The requested record, or None, if the record does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = await self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
@@ -593,8 +593,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         response = None
         try:
-            response = await self.http_client.call(
-                url=self._url(f'records/{key}'),
+            response = await self._http_client.call(
+                url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
@@ -632,8 +632,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         headers = {'content-type': content_type}
 
-        await self.http_client.call(
-            url=self._url(f'records/{key}'),
+        await self._http_client.call(
+            url=self._build_url(f'records/{key}'),
             method='PUT',
             params=self._build_params(),
             data=value,
@@ -648,8 +648,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Args:
             key: The key of the record which to delete.
         """
-        await self.http_client.call(
-            url=self._url(f'records/{key}'),
+        await self._http_client.call(
+            url=self._build_url(f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -667,7 +667,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             A public URL that can be used to access the value of the given key in the KVS.
         """
-        if self.resource_id is None:
+        if self._resource_id is None:
             raise ValueError('resource_id cannot be None when generating a public URL')
 
         metadata = await self.get()
@@ -677,7 +677,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        key_public_url = urlparse(self._url(f'records/{key}', public=True))
+        key_public_url = urlparse(self._build_url(f'records/{key}', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
 
         if filtered_params:
@@ -710,7 +710,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         metadata = await self.get()
 
-        keys_public_url = urlparse(self._url('keys'))
+        keys_public_url = urlparse(self._build_url('keys'))
 
         request_params = self._build_params(
             limit=limit,
@@ -727,7 +727,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._url('keys', public=True))
+        keys_public_url = urlparse(self._build_url('keys', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))

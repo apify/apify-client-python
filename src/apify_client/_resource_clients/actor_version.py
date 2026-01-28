@@ -54,10 +54,10 @@ class ActorVersionClient(ResourceClient):
             The retrieved Actor version data.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetVersionResponse.model_validate(result).data
@@ -112,10 +112,10 @@ class ActorVersionClient(ResourceClient):
         )
         cleaned = filter_none_values(actor_version_representation)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -127,10 +127,10 @@ class ActorVersionClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -167,10 +167,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
             The retrieved Actor version data.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetVersionResponse.model_validate(result).data
@@ -225,10 +225,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
         )
         cleaned = filter_none_values(actor_version_representation)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -240,10 +240,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

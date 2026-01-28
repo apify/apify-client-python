@@ -37,8 +37,8 @@ class WebhookCollectionClient(ResourceClient):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -98,8 +98,8 @@ class WebhookCollectionClient(ResourceClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(webhook_representation),
@@ -135,8 +135,8 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -196,8 +196,8 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        response_obj = await self.http_client.call(
-            url=self._url(),
+        response_obj = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(webhook_representation),

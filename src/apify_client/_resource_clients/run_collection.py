@@ -50,8 +50,8 @@ class RunCollectionClient(ResourceClient):
         """
         status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(
                 limit=limit,
@@ -104,8 +104,8 @@ class RunCollectionClientAsync(ResourceClientAsync):
         """
         status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
 
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(
                 limit=limit,

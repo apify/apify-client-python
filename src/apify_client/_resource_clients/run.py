@@ -56,10 +56,10 @@ class RunClient(ResourceClient):
             The retrieved Actor run data.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetRunResponse.model_validate(result).data
@@ -93,10 +93,10 @@ class RunClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -108,10 +108,10 @@ class RunClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -129,8 +129,8 @@ class RunClient(ResourceClient):
         Returns:
             The data of the aborted Actor run.
         """
-        response = self.http_client.call(
-            url=self._url('abort'),
+        response = self._http_client.call(
+            url=self._build_url('abort'),
             method='POST',
             params=self._build_params(gracefully=gracefully),
         )
@@ -148,9 +148,9 @@ class RunClient(ResourceClient):
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
         response = wait_for_finish_sync(
-            http_client=self.http_client,
-            url=self.url,
-            params=self.params,
+            http_client=self._http_client,
+            url=self._build_url(),
+            params=self._build_params(),
             wait_secs=wait_secs,
         )
 
@@ -188,8 +188,8 @@ class RunClient(ResourceClient):
 
         request_params = self._build_params(targetActorId=safe_target_actor_id, build=target_actor_build)
 
-        response = self.http_client.call(
-            url=self._url('metamorph'),
+        response = self._http_client.call(
+            url=self._build_url('metamorph'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
@@ -242,8 +242,8 @@ class RunClient(ResourceClient):
             restartOnError=restart_on_error,
         )
 
-        response = self.http_client.call(
-            url=self._url('resurrect'),
+        response = self._http_client.call(
+            url=self._build_url('resurrect'),
             method='POST',
             params=request_params,
         )
@@ -259,8 +259,8 @@ class RunClient(ResourceClient):
         Returns:
             The Actor run data.
         """
-        response = self.http_client.call(
-            url=self._url('reboot'),
+        response = self._http_client.call(
+            url=self._build_url('reboot'),
             method='POST',
         )
         response_as_dict = response_to_dict(response)
@@ -371,11 +371,11 @@ class RunClient(ResourceClient):
 
         idempotency_key = (
             idempotency_key
-            or f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
+            or f'{self._resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
         )
 
-        self.http_client.call(
-            url=self._url('charge'),
+        self._http_client.call(
+            url=self._build_url('charge'),
             method='POST',
             headers={
                 'idempotency-key': idempotency_key,
@@ -443,10 +443,10 @@ class RunClientAsync(ResourceClientAsync):
             The retrieved Actor run data.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetRunResponse.model_validate(result).data
@@ -480,10 +480,10 @@ class RunClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -502,8 +502,8 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The data of the aborted Actor run.
         """
-        response = await self.http_client.call(
-            url=self._url('abort'),
+        response = await self._http_client.call(
+            url=self._build_url('abort'),
             method='POST',
             params=self._build_params(gracefully=gracefully),
         )
@@ -521,9 +521,9 @@ class RunClientAsync(ResourceClientAsync):
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
         response = await wait_for_finish_async(
-            http_client=self.http_client,
-            url=self.url,
-            params=self.params,
+            http_client=self._http_client,
+            url=self._build_url(),
+            params=self._build_params(),
             wait_secs=wait_secs,
         )
         return Run.model_validate(response) if response is not None else None
@@ -534,10 +534,10 @@ class RunClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -574,8 +574,8 @@ class RunClientAsync(ResourceClientAsync):
             build=target_actor_build,
         )
 
-        response = await self.http_client.call(
-            url=self._url('metamorph'),
+        response = await self._http_client.call(
+            url=self._build_url('metamorph'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
@@ -628,8 +628,8 @@ class RunClientAsync(ResourceClientAsync):
             restartOnError=restart_on_error,
         )
 
-        response = await self.http_client.call(
-            url=self._url('resurrect'),
+        response = await self._http_client.call(
+            url=self._build_url('resurrect'),
             method='POST',
             params=request_params,
         )
@@ -645,8 +645,8 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The Actor run data.
         """
-        response = await self.http_client.call(
-            url=self._url('reboot'),
+        response = await self._http_client.call(
+            url=self._build_url('reboot'),
             method='POST',
         )
         response_as_dict = response_to_dict(response)
@@ -758,11 +758,11 @@ class RunClientAsync(ResourceClientAsync):
             raise ValueError('event_name is required for charging an event')
 
         idempotency_key = idempotency_key or (
-            f'{self.resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
+            f'{self._resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
         )
 
-        await self.http_client.call(
-            url=self._url('charge'),
+        await self._http_client.call(
+            url=self._build_url('charge'),
             method='POST',
             headers={
                 'idempotency-key': idempotency_key,

@@ -40,8 +40,8 @@ class RequestQueueCollectionClient(ResourceClient):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
@@ -59,8 +59,8 @@ class RequestQueueCollectionClient(ResourceClient):
         Returns:
             The retrieved or newly-created request queue.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(name=name),
         )
@@ -96,8 +96,8 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
@@ -115,8 +115,8 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved or newly-created request queue.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(name=name),
         )

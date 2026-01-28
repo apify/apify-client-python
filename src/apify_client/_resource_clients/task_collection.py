@@ -34,8 +34,8 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -108,8 +108,8 @@ class TaskCollectionClient(ResourceClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(task_representation),
@@ -145,8 +145,8 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -219,8 +219,8 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(task_representation),

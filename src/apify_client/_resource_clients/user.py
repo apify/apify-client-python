@@ -36,10 +36,10 @@ class UserClient(ResourceClient):
             The retrieved user data, or None if the user does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
@@ -64,8 +64,8 @@ class UserClient(ResourceClient):
             The retrieved request, or None, if it did not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self._url('usage/monthly'),
+            response = self._http_client.call(
+                url=self._build_url('usage/monthly'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -92,8 +92,8 @@ class UserClient(ResourceClient):
             The retrieved request, or None, if it did not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self._url('limits'),
+            response = self._http_client.call(
+                url=self._build_url('limits'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -115,8 +115,8 @@ class UserClient(ResourceClient):
         data_retention_days: int | None = None,
     ) -> None:
         """Update the account's limits manageable on your account's Limits page."""
-        self.http_client.call(
-            url=self._url('limits'),
+        self._http_client.call(
+            url=self._build_url('limits'),
             method='PUT',
             params=self._build_params(),
             json=filter_none_values(
@@ -149,10 +149,10 @@ class UserClientAsync(ResourceClientAsync):
             The retrieved user data, or None if the user does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
@@ -177,8 +177,8 @@ class UserClientAsync(ResourceClientAsync):
             The retrieved request, or None, if it did not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url('usage/monthly'),
+            response = await self._http_client.call(
+                url=self._build_url('usage/monthly'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -205,8 +205,8 @@ class UserClientAsync(ResourceClientAsync):
             The retrieved request, or None, if it did not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url('limits'),
+            response = await self._http_client.call(
+                url=self._build_url('limits'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -228,8 +228,8 @@ class UserClientAsync(ResourceClientAsync):
         data_retention_days: int | None = None,
     ) -> None:
         """Update the account's limits manageable on your account's Limits page."""
-        await self.http_client.call(
-            url=self._url('limits'),
+        await self._http_client.call(
+            url=self._build_url('limits'),
             method='PUT',
             params=self._build_params(),
             json=filter_none_values(

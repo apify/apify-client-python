@@ -70,10 +70,10 @@ class DatasetClient(ResourceClient):
             The retrieved dataset, or None, if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response_to_dict(response)
@@ -100,10 +100,10 @@ class DatasetClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
@@ -116,10 +116,10 @@ class DatasetClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
         except ApifyApiError as exc:
@@ -191,8 +191,8 @@ class DatasetClient(ResourceClient):
             signature=signature,
         )
 
-        response = self.http_client.call(
-            url=self._url('items'),
+        response = self._http_client.call(
+            url=self._build_url('items'),
             method='GET',
             params=request_params,
         )
@@ -479,8 +479,8 @@ class DatasetClient(ResourceClient):
             signature=signature,
         )
 
-        response = self.http_client.call(
-            url=self._url('items'),
+        response = self._http_client.call(
+            url=self._build_url('items'),
             method='GET',
             params=request_params,
         )
@@ -574,8 +574,8 @@ class DatasetClient(ResourceClient):
                 signature=signature,
             )
 
-            response = self.http_client.call(
-                url=self._url('items'),
+            response = self._http_client.call(
+                url=self._build_url('items'),
                 method='GET',
                 params=request_params,
                 stream=True,
@@ -602,8 +602,8 @@ class DatasetClient(ResourceClient):
         else:
             json = items
 
-        self.http_client.call(
-            url=self._url('items'),
+        self._http_client.call(
+            url=self._build_url('items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             params=self._build_params(),
@@ -621,8 +621,8 @@ class DatasetClient(ResourceClient):
             The dataset statistics or None if the dataset does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self._url('statistics'),
+            response = self._http_client.call(
+                url=self._build_url('statistics'),
                 method='GET',
                 params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -688,7 +688,7 @@ class DatasetClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._url('items', public=True))
+        items_public_url = urlparse(self._build_url('items', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))
@@ -712,10 +712,10 @@ class DatasetClientAsync(ResourceClientAsync):
             The retrieved dataset, or None, if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response_to_dict(response)
@@ -742,10 +742,10 @@ class DatasetClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
@@ -758,10 +758,10 @@ class DatasetClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
         except ApifyApiError as exc:
@@ -833,8 +833,8 @@ class DatasetClientAsync(ResourceClientAsync):
             signature=signature,
         )
 
-        response = await self.http_client.call(
-            url=self._url('items'),
+        response = await self._http_client.call(
+            url=self._build_url('items'),
             method='GET',
             params=request_params,
         )
@@ -1027,8 +1027,8 @@ class DatasetClientAsync(ResourceClientAsync):
             signature=signature,
         )
 
-        response = await self.http_client.call(
-            url=self._url('items'),
+        response = await self._http_client.call(
+            url=self._build_url('items'),
             method='GET',
             params=request_params,
         )
@@ -1122,8 +1122,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 signature=signature,
             )
 
-            response = await self.http_client.call(
-                url=self._url('items'),
+            response = await self._http_client.call(
+                url=self._build_url('items'),
                 method='GET',
                 params=request_params,
                 stream=True,
@@ -1150,8 +1150,8 @@ class DatasetClientAsync(ResourceClientAsync):
         else:
             json = items
 
-        await self.http_client.call(
-            url=self._url('items'),
+        await self._http_client.call(
+            url=self._build_url('items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             params=self._build_params(),
@@ -1169,8 +1169,8 @@ class DatasetClientAsync(ResourceClientAsync):
             The dataset statistics or None if the dataset does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url('statistics'),
+            response = await self._http_client.call(
+                url=self._build_url('statistics'),
                 method='GET',
                 params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -1236,7 +1236,7 @@ class DatasetClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._url('items', public=True))
+        items_public_url = urlparse(self._build_url('items', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))

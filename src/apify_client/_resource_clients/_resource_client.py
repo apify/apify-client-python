@@ -61,32 +61,18 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         self._default_params = params or {}
         self._resource_path = resource_path
         self._resource_id = resource_id
-        self._resource_url = f'{self._base_url}/{self._resource_path}'
+
+    @property
+    def _resource_url(self) -> str:
+        resource_url = f'{self._base_url}/{self._resource_path}'
+
         if self._resource_id is not None:
-            self._safe_id = to_safe_id(self._resource_id)
-            self._resource_url = f'{self._resource_url}/{self._safe_id}'
+            safe_id = to_safe_id(self._resource_id)
+            resource_url = f'{resource_url}/{safe_id}'
 
-    @property
-    def http_client(self) -> HttpClient:
-        """HTTP client for making API requests."""
-        return self._http_client
+        return resource_url
 
-    @property
-    def url(self) -> str:
-        """Full URL of this resource."""
-        return self._resource_url
-
-    @property
-    def params(self) -> dict:
-        """Default parameters for requests."""
-        return self._default_params
-
-    @property
-    def resource_id(self) -> str | None:
-        """ID of the manipulated resource."""
-        return self._resource_id
-
-    def _url(
+    def _build_url(
         self,
         path: str | None = None,
         *,
@@ -251,32 +237,18 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         self._default_params = params or {}
         self._resource_path = resource_path
         self._resource_id = resource_id
-        self._resource_url = f'{self._base_url}/{self._resource_path}'
+
+    @property
+    def _resource_url(self) -> str:
+        resource_url = f'{self._base_url}/{self._resource_path}'
+
         if self._resource_id is not None:
-            self._safe_id = to_safe_id(self._resource_id)
-            self._resource_url = f'{self._resource_url}/{self._safe_id}'
+            safe_id = to_safe_id(self._resource_id)
+            resource_url = f'{resource_url}/{safe_id}'
 
-    @property
-    def http_client(self) -> HttpClientAsync:
-        """HTTP client for making API requests."""
-        return self._http_client
+        return resource_url
 
-    @property
-    def url(self) -> str:
-        """Full URL of this resource."""
-        return self._resource_url
-
-    @property
-    def params(self) -> dict:
-        """Default parameters for requests."""
-        return self._default_params
-
-    @property
-    def resource_id(self) -> str | None:
-        """ID of the manipulated resource."""
-        return self._resource_id
-
-    def _url(
+    def _build_url(
         self,
         path: str | None = None,
         *,

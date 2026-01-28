@@ -29,8 +29,8 @@ class ActorVersionCollectionClient(ResourceClient):
         Returns:
             The list of available Actor versions.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(),
         )
@@ -86,8 +86,8 @@ class ActorVersionCollectionClient(ResourceClient):
             github_gist_url=github_gist_url,
         )
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(actor_version_representation),
@@ -112,8 +112,8 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actor versions.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(),
         )
@@ -169,8 +169,8 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(actor_version_representation),

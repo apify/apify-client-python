@@ -33,15 +33,15 @@ logger = logging.getLogger(logger_name)
 class _BaseHttpClient:
     """Base class for HTTP clients with shared configuration and utilities."""
 
-    def __init__(self, config: ClientConfig, stats: ClientStatistics | None = None) -> None:
+    def __init__(self, config: ClientConfig, statistics: ClientStatistics | None = None) -> None:
         """Initialize HTTP client with configuration.
 
         Args:
             config: Immutable client configuration.
-            stats: Optional statistics tracker.
+            statistics: Optional statistics tracker.
         """
-        self.config = config
-        self.stats = stats or ClientStatistics()
+        self._config = config
+        self._statistics = statistics or ClientStatistics()
 
         # Build headers
         headers = {'Accept': 'application/json, */*'}
@@ -161,7 +161,7 @@ class HttpClient(_BaseHttpClient):
         log_context.method.set(method)
         log_context.url.set(url)
 
-        self.stats.calls += 1
+        self._statistics.calls += 1
 
         headers, params, content = self._prepare_request_call(headers, params, data, json)
 
@@ -171,11 +171,13 @@ class HttpClient(_BaseHttpClient):
             log_context.attempt.set(attempt)
             logger.debug('Sending request')
 
-            self.stats.requests += 1
+            self._statistics.requests += 1
 
             try:
                 # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
-                timeout = min(self.config.timeout_secs, (timeout_secs or self.config.timeout_secs) * 2 ** (attempt - 1))
+                timeout = min(
+                    self._config.timeout_secs, (timeout_secs or self._config.timeout_secs) * 2 ** (attempt - 1)
+                )
 
                 url_with_params = self._build_url_with_params(url, params)
 
@@ -195,7 +197,7 @@ class HttpClient(_BaseHttpClient):
                     return response
 
                 if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-                    self.stats.add_rate_limit_error(attempt)
+                    self._statistics.add_rate_limit_error(attempt)
 
             except Exception as exc:
                 logger.debug('Request threw exception', exc_info=exc)
@@ -217,8 +219,8 @@ class HttpClient(_BaseHttpClient):
 
         return retry_with_exp_backoff(
             _make_request,
-            max_retries=self.config.max_retries,
-            backoff_base_millis=self.config.min_delay_between_retries_millis,
+            max_retries=self._config.max_retries,
+            backoff_base_millis=self._config.min_delay_between_retries_millis,
             backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
             random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )
@@ -240,7 +242,7 @@ class HttpClientAsync(_BaseHttpClient):
         log_context.method.set(method)
         log_context.url.set(url)
 
-        self.stats.calls += 1
+        self._statistics.calls += 1
 
         headers, params, content = self._prepare_request_call(headers, params, data, json)
 
@@ -251,7 +253,9 @@ class HttpClientAsync(_BaseHttpClient):
             logger.debug('Sending request')
             try:
                 # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
-                timeout = min(self.config.timeout_secs, (timeout_secs or self.config.timeout_secs) * 2 ** (attempt - 1))
+                timeout = min(
+                    self._config.timeout_secs, (timeout_secs or self._config.timeout_secs) * 2 ** (attempt - 1)
+                )
 
                 url_with_params = self._build_url_with_params(url, params)
 
@@ -271,7 +275,7 @@ class HttpClientAsync(_BaseHttpClient):
                     return response
 
                 if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-                    self.stats.add_rate_limit_error(attempt)
+                    self._statistics.add_rate_limit_error(attempt)
 
             except Exception as exc:
                 logger.debug('Request threw exception', exc_info=exc)
@@ -293,8 +297,8 @@ class HttpClientAsync(_BaseHttpClient):
 
         return await retry_with_exp_backoff_async(
             _make_request,
-            max_retries=self.config.max_retries,
-            backoff_base_millis=self.config.min_delay_between_retries_millis,
+            max_retries=self._config.max_retries,
+            backoff_base_millis=self._config.min_delay_between_retries_millis,
             backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
             random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )

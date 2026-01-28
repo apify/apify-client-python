@@ -99,7 +99,7 @@ async def test_public_url(api_token: str, api_url: str, api_public_url: str, sig
 
     # Mock the API call to return predefined response
     with mock.patch.object(
-        apify_client.http_client,
+        apify_client._http_client,
         'call',
         return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
     ):
@@ -125,7 +125,7 @@ async def test_record_public_url(api_token: str, api_url: str, api_public_url: s
 
     # Mock the API call to return predefined response
     with mock.patch.object(
-        apify_client.http_client,
+        apify_client._http_client,
         'call',
         return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
     ):

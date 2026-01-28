@@ -40,8 +40,8 @@ class KeyValueStoreCollectionClient(ResourceClient):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
@@ -65,8 +65,8 @@ class KeyValueStoreCollectionClient(ResourceClient):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(name=name),
             json=filter_none_values({'schema': schema}),
@@ -104,8 +104,8 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
@@ -129,8 +129,8 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(name=name),
             json=filter_none_values({'schema': schema}),

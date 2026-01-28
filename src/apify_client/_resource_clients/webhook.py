@@ -81,10 +81,10 @@ class WebhookClient(ResourceClient):
             The retrieved webhook, or None if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetWebhookResponse.model_validate(result).data
@@ -140,10 +140,10 @@ class WebhookClient(ResourceClient):
         )
         cleaned = filter_none_values(webhook_representation)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -155,10 +155,10 @@ class WebhookClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -174,8 +174,8 @@ class WebhookClient(ResourceClient):
             The webhook dispatch created by the test.
         """
         try:
-            response = self.http_client.call(
-                url=self._url('test'),
+            response = self._http_client.call(
+                url=self._build_url('test'),
                 method='POST',
                 params=self._build_params(),
             )
@@ -217,10 +217,10 @@ class WebhookClientAsync(ResourceClientAsync):
             The retrieved webhook, or None if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetWebhookResponse.model_validate(result).data
@@ -276,10 +276,10 @@ class WebhookClientAsync(ResourceClientAsync):
         )
         cleaned = filter_none_values(webhook_representation)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -291,10 +291,10 @@ class WebhookClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -310,8 +310,8 @@ class WebhookClientAsync(ResourceClientAsync):
             The webhook dispatch created by the test.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url('test'),
+            response = await self._http_client.call(
+                url=self._build_url('test'),
                 method='POST',
                 params=self._build_params(),
             )

@@ -89,10 +89,10 @@ class TaskClient(ResourceClient):
             The retrieved task.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return CreateTaskResponse.model_validate(result).data
@@ -164,10 +164,10 @@ class TaskClient(ResourceClient):
         )
         cleaned = filter_none_values(task_representation)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -179,10 +179,10 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -238,8 +238,8 @@ class TaskClient(ResourceClient):
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
-        response = self.http_client.call(
-            url=self._url('runs'),
+        response = self._http_client.call(
+            url=self._build_url('runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             json=task_input,
@@ -310,8 +310,8 @@ class TaskClient(ResourceClient):
             Retrieved task input.
         """
         try:
-            response = self.http_client.call(
-                url=self._url('input'),
+            response = self._http_client.call(
+                url=self._build_url('input'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -328,8 +328,8 @@ class TaskClient(ResourceClient):
         Returns:
             Retrieved task input.
         """
-        response = self.http_client.call(
-            url=self._url('input'),
+        response = self._http_client.call(
+            url=self._build_url('input'),
             method='PUT',
             params=self._build_params(),
             json=task_input,
@@ -384,10 +384,10 @@ class TaskClientAsync(ResourceClientAsync):
             The retrieved task.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return CreateTaskResponse.model_validate(result).data
@@ -459,10 +459,10 @@ class TaskClientAsync(ResourceClientAsync):
         )
         cleaned = filter_none_values(task_representation)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -474,10 +474,10 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -533,8 +533,8 @@ class TaskClientAsync(ResourceClientAsync):
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
-        response = await self.http_client.call(
-            url=self._url('runs'),
+        response = await self._http_client.call(
+            url=self._build_url('runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             json=task_input,
@@ -604,8 +604,8 @@ class TaskClientAsync(ResourceClientAsync):
             Retrieved task input.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url('input'),
+            response = await self._http_client.call(
+                url=self._build_url('input'),
                 method='GET',
                 params=self._build_params(),
             )
@@ -622,8 +622,8 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             Retrieved task input.
         """
-        response = await self.http_client.call(
-            url=self._url('input'),
+        response = await self._http_client.call(
+            url=self._build_url('input'),
             method='PUT',
             params=self._build_params(),
             json=task_input,

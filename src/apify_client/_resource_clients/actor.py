@@ -162,10 +162,10 @@ class ActorClient(ResourceClient):
             The retrieved Actor.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetActorResponse.model_validate(result).data
@@ -275,10 +275,10 @@ class ActorClient(ResourceClient):
         )
         cleaned = filter_none_values(actor_representation)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -290,10 +290,10 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -360,8 +360,8 @@ class ActorClient(ResourceClient):
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
-        response = self.http_client.call(
-            url=self._url('runs'),
+        response = self._http_client.call(
+            url=self._build_url('runs'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
@@ -482,8 +482,8 @@ class ActorClient(ResourceClient):
             waitForFinish=wait_for_finish,
         )
 
-        response = self.http_client.call(
-            url=self._url('builds'),
+        response = self._http_client.call(
+            url=self._build_url('builds'),
             method='POST',
             params=request_params,
         )
@@ -518,7 +518,7 @@ class ActorClient(ResourceClient):
             waitForFinish=wait_for_finish,
         )
 
-        response = self.http_client.call(url=self._url('builds/default'), method='GET', params=request_params)
+        response = self._http_client.call(url=self._build_url('builds/default'), method='GET', params=request_params)
         response_as_dict = response_to_dict(response)
 
         # Import inline to avoid circular dependency with build.py
@@ -588,8 +588,8 @@ class ActorClient(ResourceClient):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        self.http_client.call(
-            url=self._url('validate-input'),
+        self._http_client.call(
+            url=self._build_url('validate-input'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
@@ -615,10 +615,10 @@ class ActorClientAsync(ResourceClientAsync):
             The retrieved Actor.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetActorResponse.model_validate(result).data
@@ -728,10 +728,10 @@ class ActorClientAsync(ResourceClientAsync):
         )
         cleaned = filter_none_values(actor_representation)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
         )
         result = response_to_dict(response)
@@ -743,10 +743,10 @@ class ActorClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -813,8 +813,8 @@ class ActorClientAsync(ResourceClientAsync):
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
         )
 
-        response = await self.http_client.call(
-            url=self._url('runs'),
+        response = await self._http_client.call(
+            url=self._build_url('runs'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
@@ -939,8 +939,8 @@ class ActorClientAsync(ResourceClientAsync):
             waitForFinish=wait_for_finish,
         )
 
-        response = await self.http_client.call(
-            url=self._url('builds'),
+        response = await self._http_client.call(
+            url=self._build_url('builds'),
             method='POST',
             params=request_params,
         )
@@ -976,8 +976,8 @@ class ActorClientAsync(ResourceClientAsync):
             waitForFinish=wait_for_finish,
         )
 
-        response = await self.http_client.call(
-            url=self._url('builds/default'),
+        response = await self._http_client.call(
+            url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
         )
@@ -1050,8 +1050,8 @@ class ActorClientAsync(ResourceClientAsync):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        await self.http_client.call(
-            url=self._url('validate-input'),
+        await self._http_client.call(
+            url=self._build_url('validate-input'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,

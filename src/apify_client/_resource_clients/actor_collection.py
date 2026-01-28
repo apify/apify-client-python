@@ -38,8 +38,8 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
         )
@@ -136,8 +136,8 @@ class ActorCollectionClient(ResourceClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(actor_representation, remove_empty_dicts=True),
@@ -177,8 +177,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
         )
@@ -275,8 +275,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='POST',
             params=self._build_params(),
             json=filter_none_values(actor_representation, remove_empty_dicts=True),

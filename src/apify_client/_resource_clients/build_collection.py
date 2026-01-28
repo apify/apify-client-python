@@ -37,8 +37,8 @@ class BuildCollectionClient(ResourceClient):
         Returns:
             The retrieved Actor builds.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
@@ -76,8 +76,8 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor builds.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )

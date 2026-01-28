@@ -87,15 +87,14 @@ class ApifyClient:
             min_delay_between_retries_millis=min_delay_between_retries_millis,
             timeout_secs=timeout_secs,
         )
-
-        self.stats = ClientStatistics()
-        self.http_client = HttpClient(config=self._config, stats=self.stats)
+        self._statistics = ClientStatistics()
+        self._http_client = HttpClient(config=self._config, statistics=self._statistics)
 
     def _options(self) -> dict:
         return {
             'base_url': self._config.base_url,
             'public_base_url': self._config.public_base_url,
-            'http_client': self.http_client,
+            'http_client': self._http_client,
         }
 
     def actor(self, actor_id: str) -> ActorClient:
@@ -274,15 +273,14 @@ class ApifyClientAsync:
             min_delay_between_retries_millis=min_delay_between_retries_millis,
             timeout_secs=timeout_secs,
         )
-
-        self.stats = ClientStatistics()
-        self.http_client = HttpClientAsync(config=self._config, stats=self.stats)
+        self._statistics = ClientStatistics()
+        self._http_client = HttpClientAsync(config=self._config, statistics=self._statistics)
 
     def _options(self) -> dict:
         return {
             'base_url': self._config.base_url,
             'public_base_url': self._config.public_base_url,
-            'http_client': self.http_client,
+            'http_client': self._http_client,
         }
 
     def actor(self, actor_id: str) -> ActorClientAsync:

@@ -24,10 +24,10 @@ class WebhookDispatchClient(ResourceClient):
             The retrieved webhook dispatch, or None if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetWebhookDispatchResponse.model_validate(result).data
@@ -52,10 +52,10 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
             The retrieved webhook dispatch, or None if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetWebhookDispatchResponse.model_validate(result).data

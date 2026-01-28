@@ -82,10 +82,10 @@ class RequestQueueClient(ResourceClient):
             The retrieved request queue, or None, if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response_to_dict(response)
@@ -112,10 +112,10 @@ class RequestQueueClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self.http_client.call(
-            url=self.url,
+        response = self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
@@ -128,10 +128,10 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
         except ApifyApiError as exc:
@@ -150,8 +150,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(limit=limit, clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url('head'),
+        response = self._http_client.call(
+            url=self._build_url('head'),
             method='GET',
             params=request_params,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -174,8 +174,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url('head/lock'),
+        response = self._http_client.call(
+            url=self._build_url('head/lock'),
             method='POST',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -198,8 +198,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url('requests'),
+        response = self._http_client.call(
+            url=self._build_url('requests'),
             method='POST',
             json=request,
             params=request_params,
@@ -221,8 +221,8 @@ class RequestQueueClient(ResourceClient):
             The retrieved request, or None, if it did not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self._url(f'requests/{request_id}'),
+            response = self._http_client.call(
+                url=self._build_url(f'requests/{request_id}'),
                 method='GET',
                 params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -251,8 +251,8 @@ class RequestQueueClient(ResourceClient):
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url(f'requests/{request_id}'),
+        response = self._http_client.call(
+            url=self._build_url(f'requests/{request_id}'),
             method='PUT',
             json=request,
             params=request_params,
@@ -274,8 +274,8 @@ class RequestQueueClient(ResourceClient):
             clientKey=self.client_key,
         )
 
-        self.http_client.call(
-            url=self._url(f'requests/{request_id}'),
+        self._http_client.call(
+            url=self._build_url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -299,8 +299,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront, lockSecs=lock_secs)
 
-        response = self.http_client.call(
-            url=self._url(f'requests/{request_id}/lock'),
+        response = self._http_client.call(
+            url=self._build_url(f'requests/{request_id}/lock'),
             method='PUT',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -320,8 +320,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
-        self.http_client.call(
-            url=self._url(f'requests/{request_id}/lock'),
+        self._http_client.call(
+            url=self._build_url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -388,8 +388,8 @@ class RequestQueueClient(ResourceClient):
             request_batch = queue.get()
 
             # Send the batch to the API.
-            response = self.http_client.call(
-                url=self._url('requests/batch'),
+            response = self._http_client.call(
+                url=self._build_url('requests/batch'),
                 method='POST',
                 params=request_params,
                 json=list(request_batch),
@@ -418,8 +418,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url('requests/batch'),
+        response = self._http_client.call(
+            url=self._build_url('requests/batch'),
             method='DELETE',
             params=request_params,
             json=requests,
@@ -445,8 +445,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url('requests'),
+        response = self._http_client.call(
+            url=self._build_url('requests'),
             method='GET',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -465,8 +465,8 @@ class RequestQueueClient(ResourceClient):
         """
         request_params = self._build_params(clientKey=self.client_key)
 
-        response = self.http_client.call(
-            url=self._url('requests/unlock'),
+        response = self._http_client.call(
+            url=self._build_url('requests/unlock'),
             method='POST',
             params=request_params,
         )
@@ -502,10 +502,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
             The retrieved request queue, or None, if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
             result = response_to_dict(response)
@@ -537,10 +537,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self.http_client.call(
-            url=self.url,
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='PUT',
-            params=self.params,
+            params=self._build_params(),
             json=cleaned,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
         )
@@ -553,10 +553,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
             )
         except ApifyApiError as exc:
@@ -575,8 +575,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(limit=limit, clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url('head'),
+        response = await self._http_client.call(
+            url=self._build_url('head'),
             method='GET',
             params=request_params,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -599,8 +599,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(lockSecs=lock_secs, limit=limit, clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url('head/lock'),
+        response = await self._http_client.call(
+            url=self._build_url('head/lock'),
             method='POST',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -623,8 +623,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url('requests'),
+        response = await self._http_client.call(
+            url=self._build_url('requests'),
             method='POST',
             json=request,
             params=request_params,
@@ -646,8 +646,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
             The retrieved request, or None, if it did not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self._url(f'requests/{request_id}'),
+            response = await self._http_client.call(
+                url=self._build_url(f'requests/{request_id}'),
                 method='GET',
                 params=self._build_params(),
                 timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -676,8 +676,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url(f'requests/{request_id}'),
+        response = await self._http_client.call(
+            url=self._build_url(f'requests/{request_id}'),
             method='PUT',
             json=request,
             params=request_params,
@@ -697,8 +697,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(clientKey=self.client_key)
 
-        await self.http_client.call(
-            url=self._url(f'requests/{request_id}'),
+        await self._http_client.call(
+            url=self._build_url(f'requests/{request_id}'),
             method='DELETE',
             params=request_params,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -722,8 +722,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront, lockSecs=lock_secs)
 
-        response = await self.http_client.call(
-            url=self._url(f'requests/{request_id}/lock'),
+        response = await self._http_client.call(
+            url=self._build_url(f'requests/{request_id}/lock'),
             method='PUT',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -748,8 +748,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
-        await self.http_client.call(
-            url=self._url(f'requests/{request_id}/lock'),
+        await self._http_client.call(
+            url=self._build_url(f'requests/{request_id}/lock'),
             method='DELETE',
             params=request_params,
             timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
@@ -778,8 +778,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
             try:
                 # Send the batch to the API.
-                response = await self.http_client.call(
-                    url=self._url('requests/batch'),
+                response = await self._http_client.call(
+                    url=self._build_url('requests/batch'),
                     method='POST',
                     params=request_params,
                     json=list(request_batch),
@@ -894,8 +894,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url('requests/batch'),
+        response = await self._http_client.call(
+            url=self._build_url('requests/batch'),
             method='DELETE',
             params=request_params,
             json=requests,
@@ -920,8 +920,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url('requests'),
+        response = await self._http_client.call(
+            url=self._build_url('requests'),
             method='GET',
             params=request_params,
             timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
@@ -940,8 +940,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         request_params = self._build_params(clientKey=self.client_key)
 
-        response = await self.http_client.call(
-            url=self._url('requests/unlock'),
+        response = await self._http_client.call(
+            url=self._build_url('requests/unlock'),
             method='POST',
             params=request_params,
         )

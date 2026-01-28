@@ -94,7 +94,7 @@ async def test_public_url(api_token: str, api_url: str, api_public_url: str) -> 
     # Mock the API call to return predefined response
     mock_response = Mock()
     mock_response.json.return_value = json.loads(MOCKED_API_DATASET_RESPONSE)
-    with mock.patch.object(apify_client.http_client, 'call', return_value=mock_response):
+    with mock.patch.object(apify_client._http_client, 'call', return_value=mock_response):
         public_url = await dataset.create_items_public_url()
         assert public_url == (
             f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'

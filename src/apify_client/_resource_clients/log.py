@@ -46,8 +46,8 @@ class LogClient(ResourceClient):
             The retrieved log, or None, if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
             )
@@ -71,8 +71,8 @@ class LogClient(ResourceClient):
             The retrieved log as raw bytes, or None, if it does not exist.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
             )
@@ -98,8 +98,8 @@ class LogClient(ResourceClient):
         """
         response = None
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
                 params=self._build_params(stream=True, raw=raw),
                 stream=True,
@@ -133,8 +133,8 @@ class LogClientAsync(ResourceClientAsync):
             The retrieved log, or None, if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
             )
@@ -158,8 +158,8 @@ class LogClientAsync(ResourceClientAsync):
             The retrieved log as raw bytes, or None, if it does not exist.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
             )
@@ -185,8 +185,8 @@ class LogClientAsync(ResourceClientAsync):
         """
         response = None
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
                 params=self._build_params(stream=True, raw=raw),
                 stream=True,

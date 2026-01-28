@@ -42,8 +42,8 @@ class StoreCollectionClient(ResourceClient):
         Returns:
             The list of available actors matching the specified filters.
         """
-        response = self.http_client.call(
-            url=self._url(),
+        response = self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(
                 limit=limit,
@@ -94,8 +94,8 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available actors matching the specified filters.
         """
-        response = await self.http_client.call(
-            url=self._url(),
+        response = await self._http_client.call(
+            url=self._build_url(),
             method='GET',
             params=self._build_params(
                 limit=limit,

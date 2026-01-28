@@ -25,10 +25,10 @@ class BuildClient(ResourceClient):
             The retrieved Actor build data.
         """
         try:
-            response = self.http_client.call(
-                url=self.url,
+            response = self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetBuildResponse.model_validate(result).data
@@ -42,10 +42,10 @@ class BuildClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         try:
-            self.http_client.call(
-                url=self.url,
+            self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -58,8 +58,8 @@ class BuildClient(ResourceClient):
         Returns:
             The data of the aborted Actor build.
         """
-        response = self.http_client.call(
-            url=self._url('abort'),
+        response = self._http_client.call(
+            url=self._build_url('abort'),
             method='POST',
             params=self._build_params(),
         )
@@ -74,8 +74,8 @@ class BuildClient(ResourceClient):
         Returns:
             OpenAPI definition of the Actor's build.
         """
-        response = self.http_client.call(
-            url=self._url('openapi.json'),
+        response = self._http_client.call(
+            url=self._build_url('openapi.json'),
             method='GET',
         )
 
@@ -94,9 +94,9 @@ class BuildClient(ResourceClient):
                 TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         result = wait_for_finish_sync(
-            http_client=self.http_client,
-            url=self.url,
-            params=self.params,
+            http_client=self._http_client,
+            url=self._build_url(),
+            params=self._build_params(),
             wait_secs=wait_secs,
         )
         return Build.model_validate(result) if result is not None else None
@@ -130,10 +130,10 @@ class BuildClientAsync(ResourceClientAsync):
             The retrieved Actor build data.
         """
         try:
-            response = await self.http_client.call(
-                url=self.url,
+            response = await self._http_client.call(
+                url=self._build_url(),
                 method='GET',
-                params=self.params,
+                params=self._build_params(),
             )
             result = response_to_dict(response)
             return GetBuildResponse.model_validate(result).data
@@ -149,8 +149,8 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             The data of the aborted Actor build.
         """
-        response = await self.http_client.call(
-            url=self._url('abort'),
+        response = await self._http_client.call(
+            url=self._build_url('abort'),
             method='POST',
             params=self._build_params(),
         )
@@ -163,10 +163,10 @@ class BuildClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
         try:
-            await self.http_client.call(
-                url=self.url,
+            await self._http_client.call(
+                url=self._build_url(),
                 method='DELETE',
-                params=self.params,
+                params=self._build_params(),
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -179,8 +179,8 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             OpenAPI definition of the Actor's build.
         """
-        response = await self.http_client.call(
-            url=self._url('openapi.json'),
+        response = await self._http_client.call(
+            url=self._build_url('openapi.json'),
             method='GET',
         )
 
@@ -199,9 +199,9 @@ class BuildClientAsync(ResourceClientAsync):
                 TIMED_OUT, ABORTED), then the build has not yet finished.
         """
         result = await wait_for_finish_async(
-            http_client=self.http_client,
-            url=self.url,
-            params=self.params,
+            http_client=self._http_client,
+            url=self._build_url(),
+            params=self._build_params(),
             wait_secs=wait_secs,
         )
         return Build.model_validate(result) if result is not None else None

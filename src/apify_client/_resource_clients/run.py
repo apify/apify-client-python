@@ -280,7 +280,7 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the default dataset of this Actor run.
         """
-        return self._client_classes.dataset_client(
+        return self._client_registry.dataset_client(
             resource_path='dataset',
             **self._base_client_kwargs,
         )
@@ -293,7 +293,7 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the default key-value store of this Actor run.
         """
-        return self._client_classes.key_value_store_client(
+        return self._client_registry.key_value_store_client(
             resource_path='key-value-store',
             **self._base_client_kwargs,
         )
@@ -306,7 +306,7 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the default request_queue of this Actor run.
         """
-        return self._client_classes.request_queue_client(
+        return self._client_registry.request_queue_client(
             resource_path='request-queue',
             **self._base_client_kwargs,
         )
@@ -319,7 +319,7 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the log of this Actor run.
         """
-        return self._client_classes.log_client(
+        return self._client_registry.log_client(
             resource_path='log',
             **self._base_client_kwargs,
         )
@@ -344,12 +344,12 @@ class RunClient(ResourceClient):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            actor_client = self._client_classes.actor_client(
+            actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
                 base_url=self._base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
-                client_classes=self._client_classes,
+                client_registry=self._client_registry,
             )
             actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -420,12 +420,12 @@ class RunClient(ResourceClient):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            actor_client = self._client_classes.actor_client(
+            actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
                 base_url=self._base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
-                client_classes=self._client_classes,
+                client_registry=self._client_registry,
             )
             actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -681,7 +681,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the default dataset of this Actor run.
         """
-        return self._client_classes.dataset_client(
+        return self._client_registry.dataset_client(
             resource_path='dataset',
             **self._base_client_kwargs,
         )
@@ -694,7 +694,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the default key-value store of this Actor run.
         """
-        return self._client_classes.key_value_store_client(
+        return self._client_registry.key_value_store_client(
             resource_path='key-value-store',
             **self._base_client_kwargs,
         )
@@ -707,7 +707,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the default request_queue of this Actor run.
         """
-        return self._client_classes.request_queue_client(
+        return self._client_registry.request_queue_client(
             resource_path='request-queue',
             **self._base_client_kwargs,
         )
@@ -720,7 +720,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the log of this Actor run.
         """
-        return self._client_classes.log_client(
+        return self._client_registry.log_client(
             resource_path='log',
             **self._base_client_kwargs,
         )
@@ -747,12 +747,12 @@ class RunClientAsync(ResourceClientAsync):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            actor_client = self._client_classes.actor_client(
+            actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
                 base_url=self._base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
-                client_classes=self._client_classes,
+                client_registry=self._client_registry,
             )
             actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
@@ -825,12 +825,12 @@ class RunClientAsync(ResourceClientAsync):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            actor_client = self._client_classes.actor_client(
+            actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
                 base_url=self._base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
-                client_classes=self._client_classes,
+                client_registry=self._client_registry,
             )
             actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''

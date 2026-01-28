@@ -148,7 +148,7 @@ class ActorVersionClient(ResourceClient):
 
     def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
-        return self._client_classes.actor_env_var_collection_client(**self._base_client_kwargs)
+        return self._client_registry.actor_env_var_collection_client(**self._base_client_kwargs)
 
     def env_var(self, env_var_name: str) -> ActorEnvVarClient:
         """Retrieve the client for the specified environment variable of this Actor version.
@@ -159,7 +159,7 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The resource client for the specified Actor environment variable.
         """
-        return self._client_classes.actor_env_var_client(
+        return self._client_registry.actor_env_var_client(
             resource_id=env_var_name,
             **self._base_client_kwargs,
         )
@@ -273,7 +273,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
 
     def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""
-        return self._client_classes.actor_env_var_collection_client(**self._base_client_kwargs)
+        return self._client_registry.actor_env_var_collection_client(**self._base_client_kwargs)
 
     def env_var(self, env_var_name: str) -> ActorEnvVarClientAsync:
         """Retrieve the client for the specified environment variable of this Actor version.
@@ -284,7 +284,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the specified Actor environment variable.
         """
-        return self._client_classes.actor_env_var_client(
+        return self._client_registry.actor_env_var_client(
             resource_id=env_var_name,
             **self._base_client_kwargs,
         )

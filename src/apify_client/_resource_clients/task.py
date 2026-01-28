@@ -306,12 +306,12 @@ class TaskClient(ResourceClient):
             webhooks=webhooks,
         )
 
-        run_client = self._client_classes.run_client(
+        run_client = self._client_registry.run_client(
             resource_id=started_run.id,
             base_url=self._base_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
-            client_classes=self._client_classes,
+            client_registry=self._client_registry,
         )
         return run_client.wait_for_finish(wait_secs=wait_secs)
 
@@ -352,7 +352,7 @@ class TaskClient(ResourceClient):
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
-        return self._client_classes.run_collection_client(
+        return self._client_registry.run_collection_client(
             resource_path='runs',
             **self._base_client_kwargs,
         )
@@ -375,7 +375,7 @@ class TaskClient(ResourceClient):
             base_url=self._resource_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
-            client_classes=self._client_classes,
+            client_registry=self._client_registry,
             params=self._build_params(
                 status=enum_to_value(status),
                 origin=enum_to_value(origin),
@@ -384,7 +384,7 @@ class TaskClient(ResourceClient):
 
     def webhooks(self) -> WebhookCollectionClient:
         """Retrieve a client for webhooks associated with this task."""
-        return self._client_classes.webhook_collection_client(**self._base_client_kwargs)
+        return self._client_registry.webhook_collection_client(**self._base_client_kwargs)
 
 
 class TaskClientAsync(ResourceClientAsync):
@@ -616,12 +616,12 @@ class TaskClientAsync(ResourceClientAsync):
             restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
-        run_client = self._client_classes.run_client(
+        run_client = self._client_registry.run_client(
             resource_id=started_run.id,
             base_url=self._base_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
-            client_classes=self._client_classes,
+            client_registry=self._client_registry,
         )
         return await run_client.wait_for_finish(wait_secs=wait_secs)
 
@@ -662,7 +662,7 @@ class TaskClientAsync(ResourceClientAsync):
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""
-        return self._client_classes.run_collection_client(
+        return self._client_registry.run_collection_client(
             resource_path='runs',
             **self._base_client_kwargs,
         )
@@ -685,7 +685,7 @@ class TaskClientAsync(ResourceClientAsync):
             base_url=self._resource_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
-            client_classes=self._client_classes,
+            client_registry=self._client_registry,
             params=self._build_params(
                 status=enum_to_value(status),
                 origin=enum_to_value(origin),
@@ -694,4 +694,4 @@ class TaskClientAsync(ResourceClientAsync):
 
     def webhooks(self) -> WebhookCollectionClientAsync:
         """Retrieve a client for webhooks associated with this task."""
-        return self._client_classes.webhook_collection_client(**self._base_client_kwargs)
+        return self._client_registry.webhook_collection_client(**self._base_client_kwargs)

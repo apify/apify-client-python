@@ -13,7 +13,7 @@ from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_s
 from apify_client.errors import ApifyApiError, ApifyClientError
 
 if TYPE_CHECKING:
-    from apify_client._client_classes import ClientRegistry, ClientRegistryAsync
+    from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
     from apify_client._http_clients import HttpClient, HttpClientAsync
 
 
@@ -31,7 +31,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         public_base_url: str,
         http_client: HttpClient,
         resource_path: str,
-        client_classes: ClientRegistry,
+        client_registry: ClientRegistry,
         resource_id: str | None = None,
         params: dict | None = None,
     ) -> None:
@@ -42,7 +42,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
             public_base_url: Public CDN base URL.
             http_client: HTTP client for making requests.
             resource_path: Resource endpoint path (e.g., 'actors', 'datasets').
-            client_classes: Bundle of client classes for dependency injection.
+            client_registry: Bundle of client classes for dependency injection.
             resource_id: Optional resource ID for single-resource clients.
             params: Optional default parameters for all requests.
         """
@@ -55,7 +55,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         self._default_params = params or {}
         self._resource_path = resource_path
         self._resource_id = resource_id
-        self._client_classes = client_classes
+        self._client_registry = client_registry
 
     @property
     def _resource_url(self) -> str:
@@ -69,14 +69,14 @@ class ResourceClient(metaclass=WithLogDetailsClient):
     def _base_client_kwargs(self) -> dict[str, Any]:
         """Base kwargs for creating nested/child clients.
 
-        Returns dict with base_url, public_base_url, http_client, and client_classes. Caller adds
+        Returns dict with base_url, public_base_url, http_client, and client_registry. Caller adds
         resource_path, resource_id, and params as needed.
         """
         return {
             'base_url': self._resource_url,
             'public_base_url': self._public_base_url,
             'http_client': self._http_client,
-            'client_classes': self._client_classes,
+            'client_registry': self._client_registry,
         }
 
     def _build_url(
@@ -209,7 +209,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         public_base_url: str,
         http_client: HttpClientAsync,
         resource_path: str,
-        client_classes: ClientRegistryAsync,
+        client_registry: ClientRegistryAsync,
         resource_id: str | None = None,
         params: dict | None = None,
     ) -> None:
@@ -220,7 +220,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
             public_base_url: Public CDN base URL.
             http_client: HTTP client for making requests.
             resource_path: Resource endpoint path (e.g., 'actors', 'datasets').
-            client_classes: Bundle of client classes for dependency injection.
+            client_registry: Bundle of client classes for dependency injection.
             resource_id: Optional resource ID for single-resource clients.
             params: Optional default parameters for all requests.
         """
@@ -233,7 +233,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         self._default_params = params or {}
         self._resource_path = resource_path
         self._resource_id = resource_id
-        self._client_classes = client_classes
+        self._client_registry = client_registry
 
     @property
     def _resource_url(self) -> str:
@@ -247,14 +247,14 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
     def _base_client_kwargs(self) -> dict[str, Any]:
         """Base kwargs for creating nested/child clients.
 
-        Returns dict with base_url, public_base_url, http_client, and client_classes. Caller adds
+        Returns dict with base_url, public_base_url, http_client, and client_registry. Caller adds
         resource_path, resource_id, and params as needed.
         """
         return {
             'base_url': self._resource_url,
             'public_base_url': self._public_base_url,
             'http_client': self._http_client,
-            'client_classes': self._client_classes,
+            'client_registry': self._client_registry,
         }
 
     def _build_url(

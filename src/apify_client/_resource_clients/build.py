@@ -119,7 +119,7 @@ class BuildClient(ResourceClient):
         Returns:
             A client allowing access to the log of this Actor build.
         """
-        return self._client_classes.log_client(
+        return self._client_registry.log_client(
             resource_path='log',
             **self._base_client_kwargs,
         )
@@ -233,7 +233,7 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the log of this Actor build.
         """
-        return self._client_classes.log_client(
+        return self._client_registry.log_client(
             resource_path='log',
             **self._base_client_kwargs,
         )

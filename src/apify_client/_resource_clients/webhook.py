@@ -196,7 +196,7 @@ class WebhookClient(ResourceClient):
         Returns:
             A client allowing access to dispatches of this webhook using its list method.
         """
-        return self._client_classes.webhook_dispatch_collection_client(
+        return self._client_registry.webhook_dispatch_collection_client(
             resource_path='dispatches',
             **self._base_client_kwargs,
         )
@@ -333,7 +333,7 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to dispatches of this webhook using its list method.
         """
-        return self._client_classes.webhook_dispatch_collection_client(
+        return self._client_registry.webhook_dispatch_collection_client(
             resource_path='dispatches',
             **self._base_client_kwargs,
         )

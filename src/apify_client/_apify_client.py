@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from apify_client._client_classes import ClientRegistry, ClientRegistryAsync
+from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._config import ClientConfig
 from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
@@ -100,7 +100,7 @@ class ApifyClient:
         self._http_client = HttpClient(config=self._config, statistics=self._statistics)
 
         # Create client classes config for dependency injection
-        self._client_classes = ClientRegistry(
+        self._client_registry = ClientRegistry(
             actor_client=ActorClient,
             actor_version_client=ActorVersionClient,
             actor_version_collection_client=ActorVersionCollectionClient,
@@ -125,7 +125,7 @@ class ApifyClient:
             'base_url': self._config.base_url,
             'public_base_url': self._config.public_base_url,
             'http_client': self._http_client,
-            'client_classes': self._client_classes,
+            'client_registry': self._client_registry,
         }
 
     def actor(self, actor_id: str) -> ActorClient:
@@ -308,7 +308,7 @@ class ApifyClientAsync:
         self._http_client = HttpClientAsync(config=self._config, statistics=self._statistics)
 
         # Create async client classes config for dependency injection
-        self._client_classes = ClientRegistryAsync(
+        self._client_registry = ClientRegistryAsync(
             actor_client=ActorClientAsync,
             actor_version_client=ActorVersionClientAsync,
             actor_version_collection_client=ActorVersionCollectionClientAsync,
@@ -333,7 +333,7 @@ class ApifyClientAsync:
             'base_url': self._config.base_url,
             'public_base_url': self._config.public_base_url,
             'http_client': self._http_client,
-            'client_classes': self._client_classes,
+            'client_registry': self._client_registry,
         }
 
     def actor(self, actor_id: str) -> ActorClientAsync:

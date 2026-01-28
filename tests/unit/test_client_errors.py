@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 from werkzeug import Response
 
-from apify_client._http_client import HTTPClient, HTTPClientAsync
+from apify_client._config import ClientConfig
+from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -35,6 +36,11 @@ RAW_ERROR = (
 
 
 @pytest.fixture
+def test_config() -> ClientConfig:
+    return ClientConfig.from_user_params()
+
+
+@pytest.fixture
 def test_endpoint(httpserver: HTTPServer) -> str:
     httpserver.expect_request(_TEST_PATH).respond_with_json(
         {'error': {'message': _EXPECTED_MESSAGE, 'type': _EXPECTED_TYPE, 'data': _EXPECTED_DATA}}, status=400
@@ -58,57 +64,57 @@ def streaming_handler(_request: Request) -> Response:
     )
 
 
-def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
+def test_client_apify_api_error_with_data(test_endpoint: str, test_config: ClientConfig) -> None:
     """Test that client correctly throws ApifyApiError with error data from response."""
-    client = HTTPClient()
+    client = HttpClient(config=test_config)
 
-    with pytest.raises(ApifyApiError) as e:
+    with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=test_endpoint)
 
-    assert e.value.message == _EXPECTED_MESSAGE
-    assert e.value.type == _EXPECTED_TYPE
-    assert e.value.data == _EXPECTED_DATA
+    assert exc.value.message == _EXPECTED_MESSAGE
+    assert exc.value.type == _EXPECTED_TYPE
+    assert exc.value.data == _EXPECTED_DATA
 
 
-async def test_async_client_apify_api_error_with_data(test_endpoint: str) -> None:
+async def test_async_client_apify_api_error_with_data(test_endpoint: str, test_config: ClientConfig) -> None:
     """Test that async client correctly throws ApifyApiError with error data from response."""
-    client = HTTPClientAsync()
+    client = HttpClientAsync(config=test_config)
 
-    with pytest.raises(ApifyApiError) as e:
+    with pytest.raises(ApifyApiError) as exc:
         await client.call(method='GET', url=test_endpoint)
 
-    assert e.value.message == _EXPECTED_MESSAGE
-    assert e.value.type == _EXPECTED_TYPE
-    assert e.value.data == _EXPECTED_DATA
+    assert exc.value.message == _EXPECTED_MESSAGE
+    assert exc.value.type == _EXPECTED_TYPE
+    assert exc.value.data == _EXPECTED_DATA
 
 
-def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
+def test_client_apify_api_error_streamed(httpserver: HTTPServer, test_config: ClientConfig) -> None:
     """Test that client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = HTTPClient()
+    client = HttpClient(config=test_config)
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
-    with pytest.raises(ApifyApiError) as e:
+    with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True)
 
-    assert e.value.message == error['error']['message']
-    assert e.value.type == error['error']['type']
+    assert exc.value.message == error['error']['message']
+    assert exc.value.type == error['error']['type']
 
 
-async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
+async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer, test_config: ClientConfig) -> None:
     """Test that async client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = HTTPClientAsync()
+    client = HttpClientAsync(config=test_config)
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
-    with pytest.raises(ApifyApiError) as e:
+    with pytest.raises(ApifyApiError) as exc:
         await client.call(method='GET', url=httpserver.url_for('/stream_error'), stream=True)
 
-    assert e.value.message == error['error']['message']
-    assert e.value.type == error['error']['type']
+    assert exc.value.message == error['error']['message']
+    assert exc.value.type == error['error']['type']

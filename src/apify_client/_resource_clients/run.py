@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from apify_client._consts import RunGeneralAccess
+    from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
+    from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
     from apify_client._resource_clients.log import (
         LogClient,
         LogClientAsync,
@@ -20,14 +22,12 @@ if TYPE_CHECKING:
         StreamedLogAsync,
         StreamedLogSync,
     )
+    from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
 
 from apify_client._logging import create_redirect_logger
 from apify_client._models import GetRunResponse, Run
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
-from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_key_value_store_record_value,
@@ -43,9 +43,18 @@ from apify_client.errors import ApifyApiError
 class RunClient(ResourceClient):
     """Sub-client for manipulating a single Actor run."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'actor-runs',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self) -> Run | None:
         """Return information about the Actor run.
@@ -274,8 +283,9 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the default dataset of this Actor run.
         """
-        return DatasetClient(
-            **self._nested_client_config(resource_path='dataset'),
+        return self._client_classes.dataset_client(
+            resource_path='dataset',
+            **self._base_client_kwargs,
         )
 
     def key_value_store(self) -> KeyValueStoreClient:
@@ -286,8 +296,9 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the default key-value store of this Actor run.
         """
-        return KeyValueStoreClient(
-            **self._nested_client_config(resource_path='key-value-store'),
+        return self._client_classes.key_value_store_client(
+            resource_path='key-value-store',
+            **self._base_client_kwargs,
         )
 
     def request_queue(self) -> RequestQueueClient:
@@ -298,8 +309,9 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the default request_queue of this Actor run.
         """
-        return RequestQueueClient(
-            **self._nested_client_config(resource_path='request-queue'),
+        return self._client_classes.request_queue_client(
+            resource_path='request-queue',
+            **self._base_client_kwargs,
         )
 
     def log(self) -> LogClient:
@@ -310,11 +322,9 @@ class RunClient(ResourceClient):
         Returns:
             A client allowing access to the log of this Actor run.
         """
-        # Import inline to avoid circular dependency with log.py
-        from apify_client._resource_clients.log import LogClient  # noqa: PLC0415
-
-        return LogClient(
-            **self._nested_client_config(resource_path='log'),
+        return self._client_classes.log_client(
+            resource_path='log',
+            **self._base_client_kwargs,
         )
 
     def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
@@ -337,10 +347,13 @@ class RunClient(ResourceClient):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
-            from apify_client._resource_clients.actor import ActorClient  # noqa: PLC0415
-
-            actor_client = self._create_sibling_client(ActorClient, resource_id=actor_id)
+            actor_client = self._client_classes.actor_client(
+                resource_id=actor_id,
+                base_url=self._base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_classes=self._client_classes,
+            )
             actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
@@ -410,10 +423,13 @@ class RunClient(ResourceClient):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
-            from apify_client._resource_clients.actor import ActorClient  # noqa: PLC0415
-
-            actor_client = self._create_sibling_client(ActorClient, resource_id=actor_id)
+            actor_client = self._client_classes.actor_client(
+                resource_id=actor_id,
+                base_url=self._base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_classes=self._client_classes,
+            )
             actor_data = actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
@@ -430,9 +446,18 @@ class RunClient(ResourceClient):
 class RunClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor run."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'actor-runs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'actor-runs',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self) -> Run | None:
         """Return information about the Actor run.
@@ -660,8 +685,9 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the default dataset of this Actor run.
         """
-        return DatasetClientAsync(
-            **self._nested_client_config(resource_path='dataset'),
+        return self._client_classes.dataset_client(
+            resource_path='dataset',
+            **self._base_client_kwargs,
         )
 
     def key_value_store(self) -> KeyValueStoreClientAsync:
@@ -672,8 +698,9 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the default key-value store of this Actor run.
         """
-        return KeyValueStoreClientAsync(
-            **self._nested_client_config(resource_path='key-value-store'),
+        return self._client_classes.key_value_store_client(
+            resource_path='key-value-store',
+            **self._base_client_kwargs,
         )
 
     def request_queue(self) -> RequestQueueClientAsync:
@@ -684,8 +711,9 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the default request_queue of this Actor run.
         """
-        return RequestQueueClientAsync(
-            **self._nested_client_config(resource_path='request-queue'),
+        return self._client_classes.request_queue_client(
+            resource_path='request-queue',
+            **self._base_client_kwargs,
         )
 
     def log(self) -> LogClientAsync:
@@ -696,11 +724,9 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the log of this Actor run.
         """
-        # Import inline to avoid circular dependency with log.py
-        from apify_client._resource_clients.log import LogClientAsync  # noqa: PLC0415
-
-        return LogClientAsync(
-            **self._nested_client_config(resource_path='log'),
+        return self._client_classes.log_client(
+            resource_path='log',
+            **self._base_client_kwargs,
         )
 
     async def get_streamed_log(
@@ -725,10 +751,13 @@ class RunClientAsync(ResourceClientAsync):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
-            from apify_client._resource_clients.actor import ActorClientAsync  # noqa: PLC0415
-
-            actor_client = self._create_sibling_client(ActorClientAsync, resource_id=actor_id)
+            actor_client = self._client_classes.actor_client(
+                resource_id=actor_id,
+                base_url=self._base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_classes=self._client_classes,
+            )
             actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 
@@ -800,10 +829,13 @@ class RunClientAsync(ResourceClientAsync):
         actor_id = run_data.act_id if run_data else ''
         actor_data = None
         if actor_id:
-            # Import inline to avoid circular dependency: run.py ← actor.py → run.py
-            from apify_client._resource_clients.actor import ActorClientAsync  # noqa: PLC0415
-
-            actor_client = self._create_sibling_client(ActorClientAsync, resource_id=actor_id)
+            actor_client = self._client_classes.actor_client(
+                resource_id=actor_id,
+                base_url=self._base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_classes=self._client_classes,
+            )
             actor_data = await actor_client.get()
         actor_name = actor_data.name if actor_data else ''
 

@@ -1,20 +1,31 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._models import Build, GetBuildResponse, PostAbortBuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.log import LogClient, LogClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, wait_for_finish_async, wait_for_finish_sync
 from apify_client.errors import ApifyApiError
+
+if TYPE_CHECKING:
+    from apify_client._resource_clients.log import LogClient, LogClientAsync
 
 
 class BuildClient(ResourceClient):
     """Sub-client for manipulating a single Actor build."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'actor-builds')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'actor-builds',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self) -> Build | None:
         """Return information about the Actor build.
@@ -109,17 +120,27 @@ class BuildClient(ResourceClient):
         Returns:
             A client allowing access to the log of this Actor build.
         """
-        return LogClient(
-            **self._nested_client_config(resource_path='log'),
+        return self._client_classes.log_client(
+            resource_path='log',
+            **self._base_client_kwargs,
         )
 
 
 class BuildClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor build."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'actor-builds')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'actor-builds',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self) -> Build | None:
         """Return information about the Actor build.
@@ -214,6 +235,7 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             A client allowing access to the log of this Actor build.
         """
-        return LogClientAsync(
-            **self._nested_client_config(resource_path='log'),
+        return self._client_classes.log_client(
+            resource_path='log',
+            **self._base_client_kwargs,
         )

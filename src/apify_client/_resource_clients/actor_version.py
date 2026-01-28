@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._models import GetVersionResponse, Version, VersionSourceType
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
-from apify_client._resource_clients.actor_env_var_collection import (
-    ActorEnvVarCollectionClient,
-    ActorEnvVarCollectionClientAsync,
-)
 from apify_client._utils import catch_not_found_or_throw, enum_to_value, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
+
+if TYPE_CHECKING:
+    from apify_client._resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
+    from apify_client._resource_clients.actor_env_var_collection import (
+        ActorEnvVarCollectionClient,
+        ActorEnvVarCollectionClientAsync,
+    )
 
 
 def _get_actor_version_representation(
@@ -41,9 +43,18 @@ def _get_actor_version_representation(
 class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single Actor version."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'versions',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self) -> Version | None:
         """Return information about the Actor version.
@@ -137,7 +148,7 @@ class ActorVersionClient(ResourceClient):
 
     def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
-        return ActorEnvVarCollectionClient(**self._nested_client_config())
+        return self._client_classes.actor_env_var_collection_client(**self._base_client_kwargs)
 
     def env_var(self, env_var_name: str) -> ActorEnvVarClient:
         """Retrieve the client for the specified environment variable of this Actor version.
@@ -148,15 +159,27 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The resource client for the specified Actor environment variable.
         """
-        return ActorEnvVarClient(**self._nested_client_config(resource_id=env_var_name))
+        return self._client_classes.actor_env_var_client(
+            resource_id=env_var_name,
+            **self._base_client_kwargs,
+        )
 
 
 class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor version."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'versions',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self) -> Version | None:
         """Return information about the Actor version.
@@ -250,7 +273,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
 
     def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""
-        return ActorEnvVarCollectionClientAsync(**self._nested_client_config())
+        return self._client_classes.actor_env_var_collection_client(**self._base_client_kwargs)
 
     def env_var(self, env_var_name: str) -> ActorEnvVarClientAsync:
         """Retrieve the client for the specified environment variable of this Actor version.
@@ -261,4 +284,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the specified Actor environment variable.
         """
-        return ActorEnvVarClientAsync(**self._nested_client_config(resource_id=env_var_name))
+        return self._client_classes.actor_env_var_client(
+            resource_id=env_var_name,
+            **self._base_client_kwargs,
+        )

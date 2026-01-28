@@ -34,8 +34,6 @@ from apify_client._utils import (
     filter_none_values,
     response_to_dict,
     to_safe_id,
-    wait_for_finish_async,
-    wait_for_finish_sync,
 )
 from apify_client.errors import ApifyApiError
 
@@ -156,8 +154,7 @@ class RunClient(ResourceClient):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        response = wait_for_finish_sync(
-            http_client=self._http_client,
+        response = self._wait_for_finish(
             url=self._build_url(),
             params=self._build_params(),
             wait_secs=wait_secs,
@@ -545,8 +542,7 @@ class RunClientAsync(ResourceClientAsync):
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
                 TIMED_OUT, ABORTED), then the run has not yet finished.
         """
-        response = await wait_for_finish_async(
-            http_client=self._http_client,
+        response = await self._wait_for_finish(
             url=self._build_url(),
             params=self._build_params(),
             wait_secs=wait_secs,

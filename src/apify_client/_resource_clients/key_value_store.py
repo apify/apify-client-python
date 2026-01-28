@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
@@ -14,15 +15,50 @@ from apify_client._utils import (
     create_storage_content_signature,
     encode_key_value_store_record_value,
     filter_none_values,
-    maybe_parse_response,
     response_to_dict,
 )
-from apify_client.errors import ApifyApiError
+from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
+    from impit import Response
+
     from apify_client._consts import StorageGeneralAccess
+
+
+def _parse_get_record_response(response: Response) -> Any:
+    """Parse an HTTP response based on its content type.
+
+    Args:
+        response: The HTTP response to parse.
+
+    Returns:
+        Parsed response data (JSON dict/list, text string, or raw bytes).
+
+    Raises:
+        InvalidResponseBodyError: If the response body cannot be parsed.
+    """
+    if response.status_code == HTTPStatus.NO_CONTENT:
+        return None
+
+    content_type = ''
+    if 'content-type' in response.headers:
+        content_type = response.headers['content-type'].split(';')[0].strip()
+
+    try:
+        if re.search(r'^application/json', content_type, flags=re.IGNORECASE):
+            response_data = response.json()
+        elif re.search(r'^application/.*xml$', content_type, flags=re.IGNORECASE) or re.search(
+            r'^text/', content_type, flags=re.IGNORECASE
+        ):
+            response_data = response.text
+        else:
+            response_data = response.content
+    except ValueError as err:
+        raise InvalidResponseBodyError(response) from err
+    else:
+        return response_data
 
 
 class KeyValueStoreClient(ResourceClient):
@@ -157,7 +193,7 @@ class KeyValueStoreClient(ResourceClient):
 
             return {
                 'key': key,
-                'value': maybe_parse_response(response),
+                'value': _parse_get_record_response(response),
                 'content_type': response.headers['content-type'],
             }
 
@@ -514,7 +550,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             return {
                 'key': key,
-                'value': maybe_parse_response(response),
+                'value': _parse_get_record_response(response),
                 'content_type': response.headers['content-type'],
             }
 

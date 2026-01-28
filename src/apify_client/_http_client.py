@@ -1,31 +1,35 @@
 from __future__ import annotations
 
+import asyncio
 import gzip
 import json as jsonlib
 import logging
 import os
+import random
 import sys
+import time
 from datetime import datetime, timezone
 from http import HTTPStatus
 from importlib import metadata
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 from urllib.parse import urlencode
 
 import impit
 
 from apify_client._logging import log_context, logger_name
 from apify_client._statistics import ClientStatistics
-from apify_client._utils import is_retryable_error, retry_with_exp_backoff, retry_with_exp_backoff_async
-from apify_client.errors import ApifyApiError
+from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Awaitable, Callable
 
     from apify_client._config import ClientConfig
     from apify_client._consts import JsonSerializable
 
 DEFAULT_BACKOFF_EXPONENTIAL_FACTOR = 2
 DEFAULT_BACKOFF_RANDOM_FACTOR = 1
+
+T = TypeVar('T')
 
 logger = logging.getLogger(logger_name)
 
@@ -98,6 +102,26 @@ class _BaseHttpClient:
                 parsed_params[key] = value
 
         return parsed_params
+
+    @staticmethod
+    def _is_retryable_error(exc: Exception) -> bool:
+        """Check if an exception should be retried.
+
+        Args:
+            exc: The exception to check.
+
+        Returns:
+            True if the exception is retryable (network errors, timeouts, etc.).
+        """
+        return isinstance(
+            exc,
+            (
+                InvalidResponseBodyError,
+                impit.NetworkError,
+                impit.TimeoutException,
+                impit.RemoteProtocolError,
+            ),
+        )
 
     def _prepare_request_call(
         self,
@@ -201,7 +225,7 @@ class HttpClient(_BaseHttpClient):
 
             except Exception as exc:
                 logger.debug('Request threw exception', exc_info=exc)
-                if not is_retryable_error(exc):
+                if not self._is_retryable_error(exc):
                     logger.debug('Exception is not retryable', exc_info=exc)
                     stop_retrying()
                 raise
@@ -217,13 +241,58 @@ class HttpClient(_BaseHttpClient):
             response.read()
             raise ApifyApiError(response, attempt, method=method)
 
-        return retry_with_exp_backoff(
+        return self._retry_with_exp_backoff(
             _make_request,
             max_retries=self._config.max_retries,
             backoff_base_millis=self._config.min_delay_between_retries_millis,
             backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
             random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )
+
+    @staticmethod
+    def _retry_with_exp_backoff(
+        func: Callable[[Callable[[], None], int], T],
+        *,
+        max_retries: int = 8,
+        backoff_base_millis: int = 500,
+        backoff_factor: float = 2,
+        random_factor: float = 1,
+    ) -> T:
+        """Retry a function with exponential backoff.
+
+        Args:
+            func: Function to retry. Receives a stop_retrying callback and attempt number.
+            max_retries: Maximum number of retry attempts.
+            backoff_base_millis: Base backoff delay in milliseconds.
+            backoff_factor: Exponential backoff multiplier (1-10).
+            random_factor: Random jitter factor (0-1).
+
+        Returns:
+            The return value of the function.
+        """
+        random_factor = min(max(0, random_factor), 1)
+        backoff_factor = min(max(1, backoff_factor), 10)
+        swallow = True
+
+        def stop_retrying() -> None:
+            nonlocal swallow
+            swallow = False
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                return func(stop_retrying, attempt)
+            except Exception:
+                if not swallow:
+                    raise
+
+            random_sleep_factor = random.uniform(1, 1 + random_factor)
+            backoff_base_secs = backoff_base_millis / 1000
+            backoff_exp_factor = backoff_factor ** (attempt - 1)
+
+            sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
+            time.sleep(sleep_time_secs)
+
+        return func(stop_retrying, max_retries + 1)
 
 
 class HttpClientAsync(_BaseHttpClient):
@@ -279,7 +348,7 @@ class HttpClientAsync(_BaseHttpClient):
 
             except Exception as exc:
                 logger.debug('Request threw exception', exc_info=exc)
-                if not is_retryable_error(exc):
+                if not self._is_retryable_error(exc):
                     logger.debug('Exception is not retryable', exc_info=exc)
                     stop_retrying()
                 raise
@@ -295,10 +364,55 @@ class HttpClientAsync(_BaseHttpClient):
             await response.aread()
             raise ApifyApiError(response, attempt, method=method)
 
-        return await retry_with_exp_backoff_async(
+        return await self._retry_with_exp_backoff(
             _make_request,
             max_retries=self._config.max_retries,
             backoff_base_millis=self._config.min_delay_between_retries_millis,
             backoff_factor=DEFAULT_BACKOFF_EXPONENTIAL_FACTOR,
             random_factor=DEFAULT_BACKOFF_RANDOM_FACTOR,
         )
+
+    @staticmethod
+    async def _retry_with_exp_backoff(
+        func: Callable[[Callable[[], None], int], Awaitable[T]],
+        *,
+        max_retries: int = 8,
+        backoff_base_millis: int = 500,
+        backoff_factor: float = 2,
+        random_factor: float = 1,
+    ) -> T:
+        """Retry a function with exponential backoff.
+
+        Args:
+            func: Function to retry. Receives a stop_retrying callback and attempt number.
+            max_retries: Maximum number of retry attempts.
+            backoff_base_millis: Base backoff delay in milliseconds.
+            backoff_factor: Exponential backoff multiplier (1-10).
+            random_factor: Random jitter factor (0-1).
+
+        Returns:
+            The return value of the function.
+        """
+        random_factor = min(max(0, random_factor), 1)
+        backoff_factor = min(max(1, backoff_factor), 10)
+        swallow = True
+
+        def stop_retrying() -> None:
+            nonlocal swallow
+            swallow = False
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                return await func(stop_retrying, attempt)
+            except Exception:
+                if not swallow:
+                    raise
+
+            random_sleep_factor = random.uniform(1, 1 + random_factor)
+            backoff_base_secs = backoff_base_millis / 1000
+            backoff_exp_factor = backoff_factor ** (attempt - 1)
+
+            sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
+            await asyncio.sleep(sleep_time_secs)
+
+        return await func(stop_retrying, max_retries + 1)

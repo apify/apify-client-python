@@ -4,6 +4,7 @@ import asyncio
 import math
 import time
 from datetime import datetime, timezone
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
@@ -58,6 +59,11 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         self._client_registry = client_registry
 
     @property
+    def resource_id(self) -> str | None:
+        """Get the resource ID."""
+        return self._resource_id
+
+    @property
     def _resource_url(self) -> str:
         """Build the full resource URL from base URL, path, and optional ID."""
         url = f'{self._base_url}/{self._resource_path}'
@@ -65,7 +71,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
             url = f'{url}/{to_safe_id(self._resource_id)}'
         return url
 
-    @property
+    @cached_property
     def _base_client_kwargs(self) -> dict[str, Any]:
         """Base kwargs for creating nested/child clients.
 
@@ -236,6 +242,11 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         self._client_registry = client_registry
 
     @property
+    def resource_id(self) -> str | None:
+        """Get the resource ID."""
+        return self._resource_id
+
+    @property
     def _resource_url(self) -> str:
         """Build the full resource URL from base URL, path, and optional ID."""
         url = f'{self._base_url}/{self._resource_path}'
@@ -243,7 +254,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
             url = f'{url}/{to_safe_id(self._resource_id)}'
         return url
 
-    @property
+    @cached_property
     def _base_client_kwargs(self) -> dict[str, Any]:
         """Base kwargs for creating nested/child clients.
 

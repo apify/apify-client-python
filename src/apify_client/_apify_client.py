@@ -136,6 +136,11 @@ class ApifyClient:
             'client_registry': self._client_registry,
         }
 
+    @property
+    def token(self) -> str | None:
+        """The Apify API token used by the client."""
+        return self._config.token
+
     def actor(self, actor_id: str) -> ActorClient:
         """Retrieve the sub-client for manipulating a single Actor.
 
@@ -349,6 +354,11 @@ class ApifyClientAsync:
             'http_client': self._http_client,
             'client_registry': self._client_registry,
         }
+
+    @property
+    def token(self) -> str | None:
+        """The Apify API token used by the client."""
+        return self._config.token
 
     def actor(self, actor_id: str) -> ActorClientAsync:
         """Retrieve the sub-client for manipulating a single Actor.

@@ -74,11 +74,9 @@ async def test_run_collection_list_accept_date_range(client: ApifyClient | Apify
     iso_date_str = date_obj.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Here we test that date fields can be passed both as datetime objects and as ISO 8601 strings
-    result = await maybe_await(run_collection.list(started_before=date_obj, started_after=date_obj))
-    runs_in_range_date_format = cast('ListOfRuns', result)  # noqa: F841
+    await maybe_await(run_collection.list(started_before=date_obj, started_after=date_obj))
 
-    result = await maybe_await(run_collection.list(started_before=iso_date_str, started_after=iso_date_str))
-    runs_in_range_string_format = cast('ListOfRuns', result)  # noqa: F841
+    await maybe_await(run_collection.list(started_before=iso_date_str, started_after=iso_date_str))
 
     for run in created_runs:
         run_id = run.id

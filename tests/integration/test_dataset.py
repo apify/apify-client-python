@@ -149,9 +149,11 @@ async def test_iterate_items_signature(
         r'correct API token and that it has the required permissions.',
     ):
         if is_async:
-            items = [item async for item in cast('AsyncIterator[dict]', dataset.iterate_items())]  # noqa: F841
+            async for _ in cast('AsyncIterator[dict]', dataset.iterate_items()):
+                pass
         else:
-            list(cast('Iterator[dict]', dataset.iterate_items()))
+            for _ in cast('Iterator[dict]', dataset.iterate_items()):
+                pass
 
     # Dataset content retrieved with correct signature
     signature = test_dataset_of_another_user.signature

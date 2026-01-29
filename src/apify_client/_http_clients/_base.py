@@ -20,20 +20,23 @@ if TYPE_CHECKING:
 
 
 class BaseHttpClient:
-    """Base class for HTTP clients with shared configuration and utilities."""
+    """Base class for HTTP clients with shared configuration and utilities.
+
+    Subclasses should call `super().__init__()` and create their specific impit client using the `_headers` attribute.
+    """
 
     def __init__(self, config: ClientConfig, statistics: ClientStatistics | None = None) -> None:
-        """Initialize HTTP client with configuration.
+        """Initialize the base HTTP client.
 
         Args:
-            config: Immutable client configuration.
-            statistics: Optional statistics tracker.
+            config: Client configuration with API URL, token, timeout, and retry settings.
+            statistics: Statistics tracker for API calls. Created automatically if not provided.
         """
         self._config = config
         self._statistics = statistics or ClientStatistics()
 
-        # Build headers
-        headers = {'Accept': 'application/json, */*'}
+        # Build headers for subclasses to use when creating their impit clients.
+        headers: dict[str, str] = {'Accept': 'application/json, */*'}
 
         workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
         if workflow_key is not None:
@@ -49,40 +52,27 @@ class BaseHttpClient:
         if config.token is not None:
             headers['Authorization'] = f'Bearer {config.token}'
 
-        # Create impit clients
-        self.impit_client = impit.Client(
-            headers=headers,
-            follow_redirects=True,
-            timeout=config.timeout_secs,
-        )
-        self.impit_async_client = impit.AsyncClient(
-            headers=headers,
-            follow_redirects=True,
-            timeout=config.timeout_secs,
-        )
+        self._headers = headers
 
     @staticmethod
-    def _parse_params(params: dict | None) -> dict | None:
+    def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
+        """Convert request parameters to Apify API-compatible formats.
+
+        Converts booleans to 0/1, lists to comma-separated strings, datetimes to ISO 8601 Zulu format.
+        """
         if params is None:
             return None
 
-        parsed_params: dict = {}
+        parsed_params: dict[str, Any] = {}
         for key, value in params.items():
-            # Our API needs boolean parameters passed as 0 or 1
             if isinstance(value, bool):
                 parsed_params[key] = int(value)
-            # Our API needs lists passed as comma-separated strings
             elif isinstance(value, list):
                 parsed_params[key] = ','.join(value)
             elif isinstance(value, datetime):
                 utc_aware_dt = value.astimezone(timezone.utc)
-
                 iso_str = utc_aware_dt.isoformat(timespec='milliseconds')
-
-                # Convert to ISO 8601 string in Zulu format
-                zulu_date_str = iso_str.replace('+00:00', 'Z')
-
-                parsed_params[key] = zulu_date_str
+                parsed_params[key] = iso_str.replace('+00:00', 'Z')
             elif value is not None:
                 parsed_params[key] = value
 
@@ -90,14 +80,7 @@ class BaseHttpClient:
 
     @staticmethod
     def _is_retryable_error(exc: Exception) -> bool:
-        """Check if an exception should be retried.
-
-        Args:
-            exc: The exception to check.
-
-        Returns:
-            True if the exception is retryable (network errors, timeouts, etc.).
-        """
+        """Check if an exception represents a transient error that should be retried."""
         return isinstance(
             exc,
             (
@@ -110,18 +93,19 @@ class BaseHttpClient:
 
     def _prepare_request_call(
         self,
-        headers: dict | None = None,
-        params: dict | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
         data: Any = None,
         json: JsonSerializable | None = None,
-    ) -> tuple[dict, dict | None, Any]:
+    ) -> tuple[dict[str, str], dict[str, Any] | None, Any]:
+        """Prepare headers, params, and body for an HTTP request. Serializes JSON and applies gzip compression."""
         if json and data:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         if not headers:
             headers = {}
 
-        # dump JSON data to string, so they can be gzipped
+        # Dump JSON data to string so it can be gzipped.
         if json:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
@@ -132,13 +116,10 @@ class BaseHttpClient:
             data = gzip.compress(data)
             headers['Content-Encoding'] = 'gzip'
 
-        return (
-            headers,
-            self._parse_params(params),
-            data,
-        )
+        return (headers, self._parse_params(params), data)
 
-    def _build_url_with_params(self, url: str, params: dict | None = None) -> str:
+    def _build_url_with_params(self, url: str, params: dict[str, Any] | None = None) -> str:
+        """Build a URL with query parameters appended. List values are expanded into multiple key=value pairs."""
         if not params:
             return url
 
@@ -152,3 +133,7 @@ class BaseHttpClient:
         query_string = urlencode(param_pairs)
 
         return f'{url}?{query_string}'
+
+    def _calculate_timeout(self, attempt: int, timeout_secs: int | None = None) -> int:
+        """Calculate timeout for a request attempt with exponential increase, bounded by client timeout."""
+        return min(self._config.timeout_secs, (timeout_secs or self._config.timeout_secs) * 2 ** (attempt - 1))

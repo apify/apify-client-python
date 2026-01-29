@@ -6,6 +6,8 @@ import random
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
 
+import impit
+
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._logging import log_context, logger_name
 from apify_client.errors import ApifyApiError
@@ -13,9 +15,9 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    import impit
-
+    from apify_client._config import ClientConfig
     from apify_client._consts import JsonSerializable
+    from apify_client._statistics import ClientStatistics
 
 T = TypeVar('T')
 
@@ -23,79 +25,152 @@ logger = logging.getLogger(logger_name)
 
 
 class HttpClientAsync(BaseHttpClient):
+    """Asynchronous HTTP client for Apify API with automatic retries and exponential backoff."""
+
+    def __init__(self, config: ClientConfig, statistics: ClientStatistics | None = None) -> None:
+        """Initialize the asynchronous HTTP client.
+
+        Args:
+            config: Client configuration with API URL, token, timeout, and retry settings.
+            statistics: Statistics tracker for API calls. Created automatically if not provided.
+        """
+        super().__init__(config, statistics)
+
+        self._impit_async_client = impit.AsyncClient(
+            headers=self._headers,
+            follow_redirects=True,
+            timeout=self._config.timeout_secs,
+        )
+
     async def call(
         self,
         *,
         method: str,
         url: str,
-        headers: dict | None = None,
-        params: dict | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
         data: Any = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout_secs: int | None = None,
     ) -> impit.Response:
+        """Make an HTTP request with automatic retry and exponential backoff.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            url: Full URL to make the request to.
+            headers: Additional headers to include.
+            params: Query parameters to append to the URL.
+            data: Raw request body data. Cannot be used together with json.
+            json: JSON-serializable data for the request body. Cannot be used together with data.
+            stream: Whether to stream the response body.
+            timeout_secs: Timeout override for this request.
+
+        Returns:
+            The HTTP response object.
+
+        Raises:
+            ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
+            ValueError: If both json and data are provided.
+        """
         log_context.method.set(method)
         log_context.url.set(url)
 
         self._statistics.calls += 1
 
-        headers, params, content = self._prepare_request_call(headers, params, data, json)
-
-        impit_async_client = self.impit_async_client
-
-        async def _make_request(stop_retrying: Callable, attempt: int) -> impit.Response:
-            log_context.attempt.set(attempt)
-            logger.debug('Sending request')
-            try:
-                # Increase timeout with each attempt. Max timeout is bounded by the client timeout.
-                timeout = min(
-                    self._config.timeout_secs, (timeout_secs or self._config.timeout_secs) * 2 ** (attempt - 1)
-                )
-
-                url_with_params = self._build_url_with_params(url, params)
-
-                response = await impit_async_client.request(
-                    method=method,
-                    url=url_with_params,
-                    headers=headers,
-                    content=content,
-                    timeout=timeout,
-                    stream=stream or False,
-                )
-
-                # If response status is < 300, the request was successful, and we can return the result
-                if response.status_code < 300:  # noqa: PLR2004
-                    logger.debug('Request successful', extra={'status_code': response.status_code})
-
-                    return response
-
-                if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-                    self._statistics.add_rate_limit_error(attempt)
-
-            except Exception as exc:
-                logger.debug('Request threw exception', exc_info=exc)
-                if not self._is_retryable_error(exc):
-                    logger.debug('Exception is not retryable', exc_info=exc)
-                    stop_retrying()
-                raise
-
-            # We want to retry only requests which are server errors (status >= 500) and could resolve on their own,
-            # and also retry rate limited requests that throw 429 Too Many Requests errors
-            logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
-            if response.status_code < 500 and response.status_code != HTTPStatus.TOO_MANY_REQUESTS:  # noqa: PLR2004
-                logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
-                stop_retrying()
-
-            # Read the response in case it is a stream, so we can raise the error properly
-            await response.aread()
-            raise ApifyApiError(response, attempt, method=method)
+        prepared_headers, prepared_params, content = self._prepare_request_call(headers, params, data, json)
 
         return await self._retry_with_exp_backoff(
-            _make_request,
+            lambda stop_retrying, attempt: self._make_request(
+                stop_retrying=stop_retrying,
+                attempt=attempt,
+                method=method,
+                url=url,
+                headers=prepared_headers,
+                params=prepared_params,
+                content=content,
+                stream=stream,
+                timeout_secs=timeout_secs,
+            ),
             max_retries=self._config.max_retries,
             backoff_base_millis=self._config.min_delay_between_retries_millis,
         )
+
+    async def _make_request(
+        self,
+        *,
+        stop_retrying: Callable[[], None],
+        attempt: int,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        params: dict[str, Any] | None,
+        content: Any,
+        stream: bool | None,
+        timeout_secs: int | None,
+    ) -> impit.Response:
+        """Execute a single HTTP request attempt.
+
+        Args:
+            stop_retrying: Callback to signal that retries should stop.
+            attempt: Current attempt number (1-indexed).
+            method: HTTP method.
+            url: Request URL.
+            headers: Request headers.
+            params: Query parameters.
+            content: Request body content.
+            stream: Whether to stream the response.
+            timeout_secs: Timeout override for this request.
+
+        Returns:
+            The HTTP response object.
+
+        Raises:
+            ApifyApiError: If the request fails with an error status.
+        """
+        log_context.attempt.set(attempt)
+        logger.debug('Sending request')
+
+        self._statistics.requests += 1
+
+        try:
+            url_with_params = self._build_url_with_params(url, params)
+
+            response = await self._impit_async_client.request(
+                method=method,
+                url=url_with_params,
+                headers=headers,
+                content=content,
+                timeout=self._calculate_timeout(attempt, timeout_secs),
+                stream=stream or False,
+            )
+
+            if response.status_code < HTTPStatus.MULTIPLE_CHOICES:
+                logger.debug('Request successful', extra={'status_code': response.status_code})
+                return response
+
+            if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+                self._statistics.add_rate_limit_error(attempt)
+
+        except Exception as exc:
+            logger.debug('Request threw exception', exc_info=exc)
+            if not self._is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
+        # Retry only server errors (5xx) and rate limits (429).
+        logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
+        if (
+            response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            and response.status_code != HTTPStatus.TOO_MANY_REQUESTS
+        ):
+            logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
+            stop_retrying()
+
+        # Read the response in case it is a stream, so we can raise the error properly.
+        await response.aread()
+        raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod
     async def _retry_with_exp_backoff(
@@ -106,17 +181,20 @@ class HttpClientAsync(BaseHttpClient):
         backoff_factor: float = 2,
         random_factor: float = 1,
     ) -> T:
-        """Retry a function with exponential backoff.
+        """Retry an async function with exponential backoff and jitter.
 
         Args:
-            func: Function to retry. Receives a stop_retrying callback and attempt number.
-            max_retries: Maximum number of retry attempts.
-            backoff_base_millis: Base backoff delay in milliseconds.
-            backoff_factor: Exponential backoff multiplier (1-10).
-            random_factor: Random jitter factor (0-1).
+            func: Async function to retry. Receives (stop_retrying callback, attempt number).
+            max_retries: Maximum retry attempts.
+            backoff_base_millis: Base delay in milliseconds.
+            backoff_factor: Exponential multiplier (clamped to 1-10).
+            random_factor: Jitter factor (clamped to 0-1).
 
         Returns:
-            The return value of the function.
+            The function's return value on success.
+
+        Raises:
+            Exception: Re-raises the last exception if all retries fail or stop_retrying is called.
         """
         random_factor = min(max(0, random_factor), 1)
         backoff_factor = min(max(1, backoff_factor), 10)

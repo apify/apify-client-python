@@ -130,24 +130,33 @@ def test_base_http_client_initialization() -> None:
 
     assert client._config == config
     assert client._statistics == statistics
-    assert isinstance(client.impit_client, impit.Client)
-    assert isinstance(client.impit_async_client, impit.AsyncClient)
+    assert client._headers is not None
+    assert 'Authorization' in client._headers
+    assert client._headers['Authorization'] == 'Bearer test_token'
 
     # Test without statistics (should create default)
     client2 = BaseHttpClient(config=config)
     assert isinstance(client2._statistics, ClientStatistics)
 
 
-def test_base_http_client_creates_impit_clients() -> None:
-    """Test that BaseHttpClient creates impit clients correctly."""
+def test_http_client_creates_sync_impit_client() -> None:
+    """Test that HttpClient creates sync impit client correctly."""
     config = ClientConfig.from_user_params(token='test_token_123')
-    client = BaseHttpClient(config=config)
+    client = HttpClient(config=config)
 
-    # Check that impit clients are created
-    assert client.impit_client is not None
-    assert client.impit_async_client is not None
-    assert isinstance(client.impit_client, impit.Client)
-    assert isinstance(client.impit_async_client, impit.AsyncClient)
+    # Check that sync impit client is created
+    assert client._impit_client is not None
+    assert isinstance(client._impit_client, impit.Client)
+
+
+def test_http_client_async_creates_async_impit_client() -> None:
+    """Test that HttpClientAsync creates async impit client correctly."""
+    config = ClientConfig.from_user_params(token='test_token_123')
+    client = HttpClientAsync(config=config)
+
+    # Check that async impit client is created
+    assert client._impit_async_client is not None
+    assert isinstance(client._impit_async_client, impit.AsyncClient)
 
 
 def test_parse_params_none() -> None:

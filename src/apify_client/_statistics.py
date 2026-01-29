@@ -1,5 +1,3 @@
-"""Statistics about API client usage and rate limit errors."""
-
 from __future__ import annotations
 
 from collections import defaultdict

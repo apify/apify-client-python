@@ -1,9 +1,3 @@
-"""Client configuration module.
-
-This module provides the ClientConfig dataclass that encapsulates all
-configuration options for the Apify API client.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass

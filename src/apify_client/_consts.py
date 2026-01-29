@@ -1,5 +1,3 @@
-"""Constants and enums used by the Apify client."""
-
 from __future__ import annotations
 
 from enum import Enum

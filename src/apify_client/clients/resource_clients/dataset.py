@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_shared.utils import create_storage_content_signature
@@ -23,9 +23,12 @@ if TYPE_CHECKING:
     from apify_shared.consts import StorageGeneralAccess
 
     from apify_client._types import JSONSerializable
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
+
 
 _SMALL_TIMEOUT = 5  # For fast and common actions. Suitable for idempotent actions.
 _MEDIUM_TIMEOUT = 30  # For actions that may take longer.
+T = TypeVar('T')
 
 
 class DatasetClient(ResourceClient):
@@ -86,7 +89,8 @@ class DatasetClient(ResourceClient):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
-    ) -> ListPage:
+        chunk_size: int | None = None,
+    ) -> ListPageProtocol[dict]:
         """List the items of the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -118,11 +122,66 @@ class DatasetClient(ResourceClient):
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of items returned in one API response. Relevant when used as async iterator.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
         """
-        request_params = self._params(
+
+        def _list(
+            *,
+            offset: int | None = None,
+            limit: int | None = None,
+            clean: bool | None = None,
+            desc: bool | None = None,
+            fields: list[str] | None = None,
+            omit: list[str] | None = None,
+            unwind: list[str] | None = None,
+            skip_empty: bool | None = None,
+            skip_hidden: bool | None = None,
+            flatten: list[str] | None = None,
+            view: str | None = None,
+            signature: str | None = None,
+        ) -> ListPage:
+            request_params = self._params(
+                offset=offset,
+                limit=limit,
+                desc=desc,
+                clean=clean,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skipEmpty=skip_empty,
+                skipHidden=skip_hidden,
+                flatten=flatten,
+                view=view,
+                signature=signature,
+            )
+
+            response = self.http_client.call(
+                url=self._url('items'),
+                method='GET',
+                params=request_params,
+            )
+
+            data = response.json()
+            return ListPage(
+                {
+                    'items': data,
+                    'total': int(response.headers['x-apify-pagination-total']),
+                    'offset': int(response.headers['x-apify-pagination-offset']),
+                    'count': len(
+                        data
+                    ),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+                    'limit': int(
+                        response.headers['x-apify-pagination-limit']
+                    ),  # API returns 999999999999 when no limit is used
+                    'desc': bool(response.headers['x-apify-pagination-desc']),
+                }
+            )
+
+        return self._list_iterable_from_callback(
+            callback=_list,
             offset=offset,
             limit=limit,
             desc=desc,
@@ -130,34 +189,12 @@ class DatasetClient(ResourceClient):
             fields=fields,
             omit=omit,
             unwind=unwind,
-            skipEmpty=skip_empty,
-            skipHidden=skip_hidden,
+            skip_empty=skip_empty,
+            skip_hidden=skip_hidden,
             flatten=flatten,
             view=view,
             signature=signature,
-        )
-
-        response = self.http_client.call(
-            url=self._url('items'),
-            method='GET',
-            params=request_params,
-        )
-
-        data = response.json()
-
-        return ListPage(
-            {
-                'items': data,
-                'total': int(response.headers['x-apify-pagination-total']),
-                'offset': int(response.headers['x-apify-pagination-offset']),
-                'count': len(
-                    data
-                ),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-                'limit': int(
-                    response.headers['x-apify-pagination-limit']
-                ),  # API returns 999999999999 when no limit is used
-                'desc': bool(response.headers['x-apify-pagination-desc']),
-            }
+            chunk_size=chunk_size,
         )
 
     def iterate_items(
@@ -173,8 +210,8 @@ class DatasetClient(ResourceClient):
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         signature: str | None = None,
-    ) -> Iterator[dict]:
-        """Iterate over the items in the dataset.
+    ) -> ListPageProtocol[dict]:
+        """Iterate over the items in the dataset. Deprecated, It is possible to use `list_items` even for iteration.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -207,41 +244,24 @@ class DatasetClient(ResourceClient):
         Yields:
             An item from the dataset.
         """
-        cache_size = 1000
-
-        should_finish = False
-        read_items = 0
-
-        # We can't rely on ListPage.total because that is updated with a delay,
-        # so if you try to read the dataset items right after a run finishes, you could miss some.
-        # Instead, we just read and read until we reach the limit, or until there are no more items to read.
-        while not should_finish:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_items == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_items)
-
-            current_items_page = self.list_items(
-                offset=offset + read_items,
-                limit=effective_limit,
-                clean=clean,
-                desc=desc,
-                fields=fields,
-                omit=omit,
-                unwind=unwind,
-                skip_empty=skip_empty,
-                skip_hidden=skip_hidden,
-                signature=signature,
-            )
-
-            yield from current_items_page.items
-
-            current_page_item_count = len(current_items_page.items)
-            read_items += current_page_item_count
-
-            if current_page_item_count < cache_size:
-                should_finish = True
+        warnings.warn(
+            '`DatasetClient.iterate_items()` is deprecated, you can use return value of `DatasetClient.list_items()`.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.list_items(
+            offset=offset,
+            limit=limit,
+            clean=clean,
+            desc=desc,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skip_empty=skip_empty,
+            skip_hidden=skip_hidden,
+            signature=signature,
+            chunk_size=1000,
+        )
 
     def download_items(
         self,
@@ -684,7 +704,7 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         return await self._delete(timeout_secs=_SMALL_TIMEOUT)
 
-    async def list_items(
+    def list_items(
         self,
         *,
         offset: int | None = None,
@@ -699,7 +719,8 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
-    ) -> ListPage:
+        chunk_size: int | None = None,
+    ) -> ListPageProtocolAsync[dict]:
         """List the items of the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -731,11 +752,66 @@ class DatasetClientAsync(ResourceClientAsync):
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of items returned in one API response. Relevant when used as async iterator.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
         """
-        request_params = self._params(
+
+        async def _list(
+            *,
+            offset: int | None = None,
+            limit: int | None = None,
+            clean: bool | None = None,
+            desc: bool | None = None,
+            fields: list[str] | None = None,
+            omit: list[str] | None = None,
+            unwind: list[str] | None = None,
+            skip_empty: bool | None = None,
+            skip_hidden: bool | None = None,
+            flatten: list[str] | None = None,
+            view: str | None = None,
+            signature: str | None = None,
+        ) -> ListPage:
+            request_params = self._params(
+                offset=offset,
+                limit=limit,
+                desc=desc,
+                clean=clean,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skipEmpty=skip_empty,
+                skipHidden=skip_hidden,
+                flatten=flatten,
+                view=view,
+                signature=signature,
+            )
+
+            response = await self.http_client.call(
+                url=self._url('items'),
+                method='GET',
+                params=request_params,
+            )
+
+            data = response.json()
+            return ListPage(
+                {
+                    'items': data,
+                    'total': int(response.headers['x-apify-pagination-total']),
+                    'offset': int(response.headers['x-apify-pagination-offset']),
+                    'count': len(
+                        data
+                    ),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+                    'limit': int(
+                        response.headers['x-apify-pagination-limit']
+                    ),  # API returns 999999999999 when no limit is used
+                    'desc': bool(response.headers['x-apify-pagination-desc']),
+                }
+            )
+
+        return self._list_iterable_from_callback(
+            callback=_list,
             offset=offset,
             limit=limit,
             desc=desc,
@@ -743,37 +819,15 @@ class DatasetClientAsync(ResourceClientAsync):
             fields=fields,
             omit=omit,
             unwind=unwind,
-            skipEmpty=skip_empty,
-            skipHidden=skip_hidden,
+            skip_empty=skip_empty,
+            skip_hidden=skip_hidden,
             flatten=flatten,
             view=view,
             signature=signature,
+            chunk_size=chunk_size,
         )
 
-        response = await self.http_client.call(
-            url=self._url('items'),
-            method='GET',
-            params=request_params,
-        )
-
-        data = response.json()
-
-        return ListPage(
-            {
-                'items': data,
-                'total': int(response.headers['x-apify-pagination-total']),
-                'offset': int(response.headers['x-apify-pagination-offset']),
-                'count': len(
-                    data
-                ),  # because x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-                'limit': int(
-                    response.headers['x-apify-pagination-limit']
-                ),  # API returns 999999999999 when no limit is used
-                'desc': bool(response.headers['x-apify-pagination-desc']),
-            }
-        )
-
-    async def iterate_items(
+    def iterate_items(
         self,
         *,
         offset: int = 0,
@@ -786,8 +840,8 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         signature: str | None = None,
-    ) -> AsyncIterator[dict]:
-        """Iterate over the items in the dataset.
+    ) -> ListPageProtocolAsync[dict]:
+        """Iterate over the items in the dataset. Deprecated, It is possible to use `list_items` even for iteration.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -820,42 +874,26 @@ class DatasetClientAsync(ResourceClientAsync):
         Yields:
             An item from the dataset.
         """
-        cache_size = 1000
+        warnings.warn(
+            '`DatasetClient.iterate_items()` is deprecated,'
+            ' you can use return value of `DatasetClientAsync.list_items()`.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
-        should_finish = False
-        read_items = 0
-
-        # We can't rely on ListPage.total because that is updated with a delay,
-        # so if you try to read the dataset items right after a run finishes, you could miss some.
-        # Instead, we just read and read until we reach the limit, or until there are no more items to read.
-        while not should_finish:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_items == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_items)
-
-            current_items_page = await self.list_items(
-                offset=offset + read_items,
-                limit=effective_limit,
-                clean=clean,
-                desc=desc,
-                fields=fields,
-                omit=omit,
-                unwind=unwind,
-                skip_empty=skip_empty,
-                skip_hidden=skip_hidden,
-                signature=signature,
-            )
-
-            for item in current_items_page.items:
-                yield item
-
-            current_page_item_count = len(current_items_page.items)
-            read_items += current_page_item_count
-
-            if current_page_item_count < cache_size:
-                should_finish = True
+        return self.list_items(
+            offset=offset,
+            limit=limit,
+            clean=clean,
+            desc=desc,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skip_empty=skip_empty,
+            skip_hidden=skip_hidden,
+            signature=signature,
+            chunk_size=1000,
+        )
 
     async def get_items_as_bytes(
         self,

@@ -1,42 +1,52 @@
+"""Unified tests for key-value store collection (sync + async)."""
+
 from __future__ import annotations
 
-import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
-    from apify_client import ApifyClient
+    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client._models import KeyValueStore, ListOfKeyValueStores
+
+import uuid
+
+from .conftest import maybe_await
 
 
-def test_key_value_stores_list(apify_client: ApifyClient) -> None:
+async def test_key_value_stores_list(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing key-value stores."""
-    kvs_page = apify_client.key_value_stores().list(limit=10)
+    result = await maybe_await(client.key_value_stores().list(limit=10))
+    kvs_page = cast('ListOfKeyValueStores', result)
 
     assert kvs_page is not None
     assert kvs_page.items is not None
     assert isinstance(kvs_page.items, list)
 
 
-def test_key_value_stores_list_pagination(apify_client: ApifyClient) -> None:
+async def test_key_value_stores_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing key-value stores with pagination."""
-    kvs_page = apify_client.key_value_stores().list(limit=5, offset=0)
+    result = await maybe_await(client.key_value_stores().list(limit=5, offset=0))
+    kvs_page = cast('ListOfKeyValueStores', result)
 
     assert kvs_page is not None
     assert kvs_page.items is not None
     assert isinstance(kvs_page.items, list)
 
 
-def test_key_value_stores_get_or_create(apify_client: ApifyClient) -> None:
+async def test_key_value_stores_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:
     """Test get_or_create for key-value stores."""
     unique_name = f'test-kvs-{uuid.uuid4().hex[:8]}'
 
     # Create new KVS
-    kvs = apify_client.key_value_stores().get_or_create(name=unique_name)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=unique_name))
+    kvs = cast('KeyValueStore', result)
     assert kvs is not None
     assert kvs.name == unique_name
 
     # Get same KVS again (should return existing)
-    same_kvs = apify_client.key_value_stores().get_or_create(name=unique_name)
+    result2 = await maybe_await(client.key_value_stores().get_or_create(name=unique_name))
+    same_kvs = cast('KeyValueStore', result2)
     assert same_kvs.id == kvs.id
 
     # Cleanup
-    apify_client.key_value_store(kvs.id).delete()
+    await maybe_await(client.key_value_store(kvs.id).delete())

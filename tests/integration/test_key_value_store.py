@@ -1,15 +1,22 @@
+"""Unified tests for key-value store (sync + async)."""
+
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from apify_client._models import KeyValueStore, ListOfKeys
+
 import json
-import time
 from unittest import mock
 from unittest.mock import Mock
 
 import impit
 import pytest
 
+from .conftest import maybe_await, maybe_sleep
 from .utils import KvsFixture, get_random_resource_name, parametrized_api_urls
-from apify_client import ApifyClient
+from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._config import DEFAULT_API_URL
 from apify_client._utils import create_hmac_signature, create_storage_content_signature
 from apify_client.errors import ApifyApiError
@@ -47,16 +54,21 @@ def _get_mocked_api_kvs_response(signing_key: str | None = None) -> Mock:
     return mock_response
 
 
-def test_key_value_store_should_create_expiring_keys_public_url_with_params(
-    apify_client: ApifyClient,
+async def test_key_value_store_should_create_expiring_keys_public_url_with_params(
+    client: ApifyClient | ApifyClientAsync,
 ) -> None:
-    created_store = apify_client.key_value_stores().get_or_create(name=get_random_resource_name('key-value-store'))
+    store_name = get_random_resource_name('key-value-store')
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
 
-    store = apify_client.key_value_store(created_store.id)
-    keys_public_url = store.create_keys_public_url(
-        expires_in_secs=2000,
-        limit=10,
+    store = client.key_value_store(created_store.id)
+    result = await maybe_await(
+        store.create_keys_public_url(
+            expires_in_secs=2000,
+            limit=10,
+        )
     )
+    keys_public_url = cast('str', result)
 
     assert 'signature=' in keys_public_url
     assert 'limit=10' in keys_public_url
@@ -65,15 +77,21 @@ def test_key_value_store_should_create_expiring_keys_public_url_with_params(
     response = impit_client.get(keys_public_url, timeout=5)
     assert response.status_code == 200
 
-    store.delete()
-    assert apify_client.key_value_store(created_store.id).get() is None
+    await maybe_await(store.delete())
+    result = await maybe_await(client.key_value_store(created_store.id).get())
+    assert result is None
 
 
-def test_key_value_store_should_create_public_keys_non_expiring_url(apify_client: ApifyClient) -> None:
-    created_store = apify_client.key_value_stores().get_or_create(name=get_random_resource_name('key-value-store'))
+async def test_key_value_store_should_create_public_keys_non_expiring_url(
+    client: ApifyClient | ApifyClientAsync,
+) -> None:
+    store_name = get_random_resource_name('key-value-store')
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
 
-    store = apify_client.key_value_store(created_store.id)
-    keys_public_url = store.create_keys_public_url()
+    store = client.key_value_store(created_store.id)
+    result = await maybe_await(store.create_keys_public_url())
+    keys_public_url = cast('str', result)
 
     assert 'signature=' in keys_public_url
 
@@ -81,23 +99,34 @@ def test_key_value_store_should_create_public_keys_non_expiring_url(apify_client
     response = impit_client.get(keys_public_url, timeout=5)
     assert response.status_code == 200
 
-    store.delete()
-    assert apify_client.key_value_store(created_store.id).get() is None
+    await maybe_await(store.delete())
+    result = await maybe_await(client.key_value_store(created_store.id).get())
+    assert result is None
 
 
 @pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
 @parametrized_api_urls
-def test_public_url(api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
-    apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-    kvs = apify_client.key_value_store(MOCKED_ID)
+async def test_public_url(
+    client: ApifyClient | ApifyClientAsync, api_token: str, api_url: str, api_public_url: str, signing_key: str
+) -> None:
+    """Test public URL generation for key-value stores (runs for both sync and async clients)."""
+    # Create a fresh client with the parametrized URL settings
+    if isinstance(client, ApifyClientAsync):
+        test_client: ApifyClient | ApifyClientAsync = ApifyClientAsync(
+            token=api_token, api_url=api_url, api_public_url=api_public_url
+        )
+    else:
+        test_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
+
+    kvs = test_client.key_value_store(MOCKED_ID)
 
     # Mock the API call to return predefined response
     with mock.patch.object(
-        apify_client._http_client,
+        test_client._http_client,
         'call',
         return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
     ):
-        public_url = kvs.create_keys_public_url()
+        public_url = await maybe_await(kvs.create_keys_public_url())
         if signing_key:
             signature_value = create_storage_content_signature(
                 resource_id=MOCKED_ID, url_signing_secret_key=signing_key
@@ -112,18 +141,28 @@ def test_public_url(api_token: str, api_url: str, api_public_url: str, signing_k
 
 @pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
 @parametrized_api_urls
-def test_record_public_url(api_token: str, api_url: str, api_public_url: str, signing_key: str) -> None:
-    apify_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
+async def test_record_public_url(
+    client: ApifyClient | ApifyClientAsync, api_token: str, api_url: str, api_public_url: str, signing_key: str
+) -> None:
+    """Test record public URL generation for key-value stores (runs for both sync and async clients)."""
+    # Create a fresh client with the parametrized URL settings
+    if isinstance(client, ApifyClientAsync):
+        test_client: ApifyClient | ApifyClientAsync = ApifyClientAsync(
+            token=api_token, api_url=api_url, api_public_url=api_public_url
+        )
+    else:
+        test_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
+
     key = 'some_key'
-    kvs = apify_client.key_value_store(MOCKED_ID)
+    kvs = test_client.key_value_store(MOCKED_ID)
 
     # Mock the API call to return predefined response
     with mock.patch.object(
-        apify_client._http_client,
+        test_client._http_client,
         'call',
         return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
     ):
-        public_url = kvs.get_record_public_url(key=key)
+        public_url = await maybe_await(kvs.get_record_public_url(key=key))
         expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
         assert public_url == (
             f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
@@ -131,8 +170,10 @@ def test_record_public_url(api_token: str, api_url: str, api_public_url: str, si
         )
 
 
-def test_list_keys_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
-    kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+async def test_list_keys_signature(
+    client: ApifyClient | ApifyClientAsync, test_kvs_of_another_user: KvsFixture
+) -> None:
+    kvs = client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
     # Permission error without valid signature
     with pytest.raises(
@@ -140,18 +181,21 @@ def test_list_keys_signature(apify_client: ApifyClient, test_kvs_of_another_user
         match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
         r' API token and that it has the required permissions.',
     ):
-        kvs.list_keys()
+        await maybe_await(kvs.list_keys())
 
     # Kvs content retrieved with correct signature
-    response = kvs.list_keys(signature=test_kvs_of_another_user.signature)
+    result = await maybe_await(kvs.list_keys(signature=test_kvs_of_another_user.signature))
+    response = cast('ListOfKeys', result)
     raw_items = response.items
 
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
 
 
-def test_get_record_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
+async def test_get_record_signature(
+    client: ApifyClient | ApifyClientAsync, test_kvs_of_another_user: KvsFixture
+) -> None:
     key = 'key1'
-    kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+    kvs = client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
     # Permission error without valid signature
     with pytest.raises(
@@ -159,17 +203,20 @@ def test_get_record_signature(apify_client: ApifyClient, test_kvs_of_another_use
         match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
         r' API token and that it has the required permissions.',
     ):
-        kvs.get_record(key=key)
+        await maybe_await(kvs.get_record(key=key))
 
     # Kvs content retrieved with correct signature
-    record = kvs.get_record(key=key, signature=test_kvs_of_another_user.keys_signature[key])
+    result = await maybe_await(kvs.get_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]))
+    record = cast('dict', result)
     assert record
     assert test_kvs_of_another_user.expected_content[key] == record['value']
 
 
-def test_get_record_as_bytes_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
+async def test_get_record_as_bytes_signature(
+    client: ApifyClient | ApifyClientAsync, test_kvs_of_another_user: KvsFixture
+) -> None:
     key = 'key1'
-    kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+    kvs = client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
     # Permission error without valid signature
     with pytest.raises(
@@ -177,33 +224,50 @@ def test_get_record_as_bytes_signature(apify_client: ApifyClient, test_kvs_of_an
         match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
         r' API token and that it has the required permissions.',
     ):
-        kvs.get_record_as_bytes(key=key)
+        await maybe_await(kvs.get_record_as_bytes(key=key))
 
     # Kvs content retrieved with correct signature
-    item = kvs.get_record_as_bytes(key=key, signature=test_kvs_of_another_user.keys_signature[key])
+    result = await maybe_await(kvs.get_record_as_bytes(key=key, signature=test_kvs_of_another_user.keys_signature[key]))
+    item = cast('dict', result)
     assert item
     assert test_kvs_of_another_user.expected_content[key] == json.loads(item['value'].decode('utf-8'))
 
 
-def test_stream_record_signature(apify_client: ApifyClient, test_kvs_of_another_user: KvsFixture) -> None:
+async def test_stream_record_signature(
+    client: ApifyClient | ApifyClientAsync,
+    is_async: bool,  # noqa: FBT001
+    test_kvs_of_another_user: KvsFixture,
+) -> None:
     key = 'key1'
-    kvs = apify_client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
+    kvs = client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
 
     # Permission error without valid signature
-    with (
-        pytest.raises(
-            ApifyApiError,
-            match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
-            r' API token and that it has the required permissions.',
-        ),
-        kvs.stream_record(key=key),
-    ):
-        pass
+    # Note: stream_record returns a context manager, so we need to handle it differently
+    # For sync/async unification, we can't use 'with await maybe_await(...)' directly
+    # We'll test the error condition separately based on client type
+    try:
+        if is_async:
+            async with kvs.stream_record(key=key) as stream:  # type: ignore[union-attr]
+                pass
+            pytest.fail('Expected ApifyApiError')
+        else:
+            with kvs.stream_record(key=key) as stream:  # type: ignore[union-attr]
+                pass
+            pytest.fail('Expected ApifyApiError')
+    except ApifyApiError:
+        pass  # Expected
 
     # Kvs content retrieved with correct signature
-    with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:
-        assert stream
-        value = json.loads(stream['value'].content.decode('utf-8'))
+    if is_async:
+        async with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:  # type: ignore[union-attr]
+            assert stream
+            stream_dict = cast('dict', stream)
+            value = json.loads(stream_dict['value'].content.decode('utf-8'))
+    else:
+        with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:  # type: ignore[union-attr]
+            assert stream
+            stream_dict = cast('dict', stream)
+            value = json.loads(stream_dict['value'].content.decode('utf-8'))
     assert test_kvs_of_another_user.expected_content[key] == value
 
 
@@ -212,116 +276,127 @@ def test_stream_record_signature(apify_client: ApifyClient, test_kvs_of_another_
 #############
 
 
-def test_key_value_store_get_or_create_and_get(apify_client: ApifyClient) -> None:
+async def test_key_value_store_get_or_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:
     """Test creating a key-value store and retrieving it."""
     store_name = get_random_resource_name('kvs')
 
     # Create store
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
     assert created_store is not None
     assert created_store.id is not None
     assert created_store.name == store_name
 
     # Get the same store
-    store_client = apify_client.key_value_store(created_store.id)
-    retrieved_store = store_client.get()
+    store_client = client.key_value_store(created_store.id)
+    result = await maybe_await(store_client.get())
+    retrieved_store = cast('KeyValueStore', result)
     assert retrieved_store is not None
     assert retrieved_store.id == created_store.id
     assert retrieved_store.name == store_name
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_update(apify_client: ApifyClient) -> None:
+async def test_key_value_store_update(client: ApifyClient | ApifyClientAsync) -> None:
     """Test updating key-value store properties."""
     store_name = get_random_resource_name('kvs')
     new_name = get_random_resource_name('kvs-updated')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Update the name
-    updated_store = store_client.update(name=new_name)
+    result = await maybe_await(store_client.update(name=new_name))
+    updated_store = cast('KeyValueStore', result)
     assert updated_store is not None
     assert updated_store.name == new_name
     assert updated_store.id == created_store.id
 
     # Verify the update persisted
-    retrieved_store = store_client.get()
+    result = await maybe_await(store_client.get())
+    retrieved_store = cast('KeyValueStore', result)
     assert retrieved_store is not None
     assert retrieved_store.name == new_name
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_set_and_get_record(apify_client: ApifyClient) -> None:
+async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
     """Test setting and getting records from key-value store."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Set a JSON record
     test_value = {'name': 'Test Item', 'value': 123, 'nested': {'data': 'value'}}
-    store_client.set_record('test-key', test_value)
+    await maybe_await(store_client.set_record('test-key', test_value))
 
     # Wait briefly for eventual consistency
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # Get the record
-    record = store_client.get_record('test-key')
+    result = await maybe_await(store_client.get_record('test-key'))
+    record = cast('dict', result)
     assert record is not None
     assert record['key'] == 'test-key'
     assert record['value'] == test_value
     assert 'application/json' in record['content_type']
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_set_and_get_text_record(apify_client: ApifyClient) -> None:
+async def test_key_value_store_set_and_get_text_record(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
     """Test setting and getting text records."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Set a text record
     test_text = 'Hello, this is a test text!'
-    store_client.set_record('text-key', test_text, content_type='text/plain')
+    await maybe_await(store_client.set_record('text-key', test_text, content_type='text/plain'))
 
     # Wait briefly for eventual consistency
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # Get the record
-    record = store_client.get_record('text-key')
+    result = await maybe_await(store_client.get_record('text-key'))
+    record = cast('dict', result)
     assert record is not None
     assert record['key'] == 'text-key'
     assert record['value'] == test_text
     assert 'text/plain' in record['content_type']
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_list_keys(apify_client: ApifyClient) -> None:
+async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
     """Test listing keys in the key-value store."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Set multiple records
     for i in range(5):
-        store_client.set_record(f'key-{i}', {'index': i})
+        await maybe_await(store_client.set_record(f'key-{i}', {'index': i}))
 
     # Wait briefly for eventual consistency
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # List keys
-    keys_response = store_client.list_keys()
+    result = await maybe_await(store_client.list_keys())
+    keys_response = cast('ListOfKeys', result)
     assert keys_response is not None
     assert len(keys_response.items) == 5
 
@@ -331,92 +406,102 @@ def test_key_value_store_list_keys(apify_client: ApifyClient) -> None:
         assert f'key-{i}' in key_names
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_list_keys_with_limit(apify_client: ApifyClient) -> None:
+async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
     """Test listing keys with limit parameter."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Set multiple records
     for i in range(10):
-        store_client.set_record(f'item-{i:02d}', {'index': i})
+        await maybe_await(store_client.set_record(f'item-{i:02d}', {'index': i}))
 
     # Wait briefly for eventual consistency
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # List with limit
-    keys_response = store_client.list_keys(limit=5)
+    result = await maybe_await(store_client.list_keys(limit=5))
+    keys_response = cast('ListOfKeys', result)
     assert keys_response is not None
     assert len(keys_response.items) == 5
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_record_exists(apify_client: ApifyClient) -> None:
+async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
     """Test checking if a record exists."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Set a record
-    store_client.set_record('exists-key', {'data': 'value'})
+    await maybe_await(store_client.set_record('exists-key', {'data': 'value'}))
 
     # Wait briefly for eventual consistency
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # Check existence
-    assert store_client.record_exists('exists-key') is True
-    assert store_client.record_exists('non-existent-key') is False
+    result = await maybe_await(store_client.record_exists('exists-key'))
+    assert result is True
+    result = await maybe_await(store_client.record_exists('non-existent-key'))
+    assert result is False
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_delete_record(apify_client: ApifyClient) -> None:
+async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
     """Test deleting a record from the store."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Set a record
-    store_client.set_record('delete-me', {'data': 'value'})
+    await maybe_await(store_client.set_record('delete-me', {'data': 'value'}))
 
     # Wait briefly for eventual consistency
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # Verify it exists
-    assert store_client.get_record('delete-me') is not None
+    result = await maybe_await(store_client.get_record('delete-me'))
+    assert result is not None
 
     # Delete the record
-    store_client.delete_record('delete-me')
+    await maybe_await(store_client.delete_record('delete-me'))
 
     # Wait briefly
-    time.sleep(1)
+    await maybe_sleep(1, is_async=is_async)
 
     # Verify it's gone
-    assert store_client.get_record('delete-me') is None
+    result = await maybe_await(store_client.get_record('delete-me'))
+    assert result is None
 
     # Cleanup
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
 
-def test_key_value_store_delete_nonexistent(apify_client: ApifyClient) -> None:
+async def test_key_value_store_delete_nonexistent(client: ApifyClient | ApifyClientAsync) -> None:
     """Test that getting a deleted store returns None."""
     store_name = get_random_resource_name('kvs')
 
-    created_store = apify_client.key_value_stores().get_or_create(name=store_name)
-    store_client = apify_client.key_value_store(created_store.id)
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
 
     # Delete store
-    store_client.delete()
+    await maybe_await(store_client.delete())
 
     # Verify it's gone
-    retrieved_store = store_client.get()
+    result = await maybe_await(store_client.get())
+    retrieved_store = cast('KeyValueStore | None', result)
     assert retrieved_store is None

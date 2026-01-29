@@ -1,32 +1,42 @@
+"""Unified tests for store (sync + async)."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
-    from apify_client import ApifyClient
+    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client._models import ListOfStoreActors
 
 
-def test_store_list(apify_client: ApifyClient) -> None:
-    """Test listing public actors in the store."""
-    actors_list = apify_client.store().list(limit=10)
+from .conftest import maybe_await
+
+
+async def test_store_list(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing public Actors in the store."""
+    result = await maybe_await(client.store().list(limit=10))
+    actors_list = cast('ListOfStoreActors', result)
     assert actors_list is not None
     assert actors_list.items is not None
     assert len(actors_list.items) > 0  # Store always has actors
 
 
-def test_store_list_with_search(apify_client: ApifyClient) -> None:
+async def test_store_list_with_search(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing store with search filter."""
-    store_page = apify_client.store().list(limit=5, search='web scraper')
+    result = await maybe_await(client.store().list(limit=5, search='web scraper'))
+    store_page = cast('ListOfStoreActors', result)
 
     assert store_page is not None
     assert store_page.items is not None
     assert isinstance(store_page.items, list)
 
 
-def test_store_list_pagination(apify_client: ApifyClient) -> None:
+async def test_store_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test store listing pagination."""
-    page1 = apify_client.store().list(limit=5, offset=0)
-    page2 = apify_client.store().list(limit=5, offset=5)
+    result1 = await maybe_await(client.store().list(limit=5, offset=0))
+    result2 = await maybe_await(client.store().list(limit=5, offset=5))
+    page1 = cast('ListOfStoreActors', result1)
+    page2 = cast('ListOfStoreActors', result2)
 
     assert page1 is not None
     assert page2 is not None

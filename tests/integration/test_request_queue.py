@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import (
         BatchAddResult,
         BatchDeleteResult,
+        ListOfRequestQueues,
         ListOfRequests,
         LockedRequestQueueHead,
         Request,
@@ -21,6 +22,45 @@ if TYPE_CHECKING:
 
 
 from .conftest import get_random_resource_name, get_random_string, maybe_await, maybe_sleep
+
+
+async def test_request_queue_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing request queues."""
+    result = await maybe_await(client.request_queues().list(limit=10))
+    rq_page = cast('ListOfRequestQueues', result)
+
+    assert rq_page is not None
+    assert rq_page.items is not None
+    assert isinstance(rq_page.items, list)
+
+
+async def test_request_queue_collection_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing request queues with pagination."""
+    result = await maybe_await(client.request_queues().list(limit=5, offset=0))
+    rq_page = cast('ListOfRequestQueues', result)
+
+    assert rq_page is not None
+    assert rq_page.items is not None
+    assert isinstance(rq_page.items, list)
+
+
+async def test_request_queue_collection_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test get_or_create for request queues."""
+    unique_name = get_random_resource_name('rq')
+
+    # Create new RQ
+    result = await maybe_await(client.request_queues().get_or_create(name=unique_name))
+    rq = cast('RequestQueue', result)
+    assert rq is not None
+    assert rq.name == unique_name
+
+    # Get same RQ again (should return existing)
+    result2 = await maybe_await(client.request_queues().get_or_create(name=unique_name))
+    same_rq = cast('RequestQueue', result2)
+    assert same_rq.id == rq.id
+
+    # Cleanup
+    await maybe_await(client.request_queue(rq.id).delete())
 
 
 async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> None:

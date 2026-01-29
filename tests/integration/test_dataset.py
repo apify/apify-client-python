@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from impit import Response
 
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Dataset
+    from apify_client._models import Dataset, ListOfDatasets
     from apify_client._resource_clients.dataset import DatasetItemsPage
 
 import json
@@ -21,6 +21,45 @@ import pytest
 
 from .conftest import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
 from apify_client.errors import ApifyApiError
+
+
+async def test_dataset_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing datasets."""
+    result = await maybe_await(client.datasets().list(limit=10))
+    datasets_page = cast('ListOfDatasets', result)
+
+    assert datasets_page is not None
+    assert datasets_page.items is not None
+    assert isinstance(datasets_page.items, list)
+
+
+async def test_dataset_collection_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing datasets with pagination."""
+    result = await maybe_await(client.datasets().list(limit=5, offset=0))
+    datasets_page = cast('ListOfDatasets', result)
+
+    assert datasets_page is not None
+    assert datasets_page.items is not None
+    assert isinstance(datasets_page.items, list)
+
+
+async def test_dataset_collection_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test get_or_create for datasets."""
+    unique_name = get_random_resource_name('dataset')
+
+    # Create new dataset
+    result = await maybe_await(client.datasets().get_or_create(name=unique_name))
+    dataset = cast('Dataset', result)
+    assert dataset is not None
+    assert dataset.name == unique_name
+
+    # Get same dataset again (should return existing)
+    result2 = await maybe_await(client.datasets().get_or_create(name=unique_name))
+    same_dataset = cast('Dataset', result2)
+    assert same_dataset.id == dataset.id
+
+    # Cleanup
+    await maybe_await(client.dataset(dataset.id).delete())
 
 
 async def test_dataset_should_create_public_items_expiring_url_with_params(

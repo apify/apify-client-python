@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import KeyValueStore, ListOfKeys
+    from apify_client._models import KeyValueStore, ListOfKeys, ListOfKeyValueStores
 
 import json
 
@@ -15,6 +15,45 @@ import pytest
 
 from .conftest import KvsFixture, get_random_resource_name, maybe_await, maybe_sleep
 from apify_client.errors import ApifyApiError
+
+
+async def test_key_value_store_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing key-value stores."""
+    result = await maybe_await(client.key_value_stores().list(limit=10))
+    kvs_page = cast('ListOfKeyValueStores', result)
+
+    assert kvs_page is not None
+    assert kvs_page.items is not None
+    assert isinstance(kvs_page.items, list)
+
+
+async def test_key_value_store_collection_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test listing key-value stores with pagination."""
+    result = await maybe_await(client.key_value_stores().list(limit=5, offset=0))
+    kvs_page = cast('ListOfKeyValueStores', result)
+
+    assert kvs_page is not None
+    assert kvs_page.items is not None
+    assert isinstance(kvs_page.items, list)
+
+
+async def test_key_value_store_collection_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test get_or_create for key-value stores."""
+    unique_name = get_random_resource_name('kvs')
+
+    # Create new KVS
+    result = await maybe_await(client.key_value_stores().get_or_create(name=unique_name))
+    kvs = cast('KeyValueStore', result)
+    assert kvs is not None
+    assert kvs.name == unique_name
+
+    # Get same KVS again (should return existing)
+    result2 = await maybe_await(client.key_value_stores().get_or_create(name=unique_name))
+    same_kvs = cast('KeyValueStore', result2)
+    assert same_kvs.id == kvs.id
+
+    # Cleanup
+    await maybe_await(client.key_value_store(kvs.id).delete())
 
 
 async def test_key_value_store_should_create_expiring_keys_public_url_with_params(

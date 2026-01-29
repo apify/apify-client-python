@@ -40,7 +40,7 @@ class StoreCollectionClient(ResourceClient):
             pricing_model: Filter by this pricing model.
 
         Returns:
-            The list of available actors matching the specified filters.
+            The list of available Actors matching the specified filters.
         """
         response = self._http_client.call(
             url=self._build_url(),
@@ -92,7 +92,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             pricing_model: Filter by this pricing model.
 
         Returns:
-            The list of available actors matching the specified filters.
+            The list of available Actors matching the specified filters.
         """
         response = await self._http_client.call(
             url=self._build_url(),

@@ -333,7 +333,7 @@ class ActorClient(ResourceClient):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -409,7 +409,7 @@ class ActorClient(ResourceClient):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -605,7 +605,7 @@ class ActorClient(ResourceClient):
 
         Args:
             run_input: The input to validate.
-            build_tag: The actor's build tag.
+            build_tag: The Actor's build tag.
             content_type: The content type of the input.
 
         Returns:
@@ -811,7 +811,7 @@ class ActorClientAsync(ResourceClientAsync):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -887,7 +887,7 @@ class ActorClientAsync(ResourceClientAsync):
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
-            max_total_charge_usd: A limit on the total charged amount for pay-per-event actors.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             restart_on_error: If true, the Actor run process will be restarted whenever it exits with
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
@@ -1092,7 +1092,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         Args:
             run_input: The input to validate.
-            build_tag: The actor's build tag.
+            build_tag: The Actor's build tag.
             content_type: The content type of the input.
 
         Returns:

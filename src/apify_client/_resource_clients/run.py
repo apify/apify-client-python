@@ -331,9 +331,9 @@ class RunClient(ResourceClient):
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
-            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+            from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
-                logs for long-running actors in stand-by.
+                logs for long-running Actors in stand-by.
 
         Returns:
             `StreamedLog` instance for redirected logs.
@@ -734,9 +734,9 @@ class RunClientAsync(ResourceClientAsync):
 
         Args:
             to_logger: `Logger` used for logging the redirected messages. If not provided, a new logger is created
-            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+            from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
-                logs for long-running actors in stand-by.
+                logs for long-running Actors in stand-by.
 
         Returns:
             `StreamedLog` instance for redirected logs.

@@ -209,7 +209,7 @@ class StreamedLog:
     arrives, the buffer is processed, logged and emptied.
 
     This works only if the logs have datetime marker in ISO format. For example, `2025-05-12T15:35:59.429Z` This is the
-    default log standard for the actors.
+    default log standard for the Actors.
     """
 
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
@@ -220,9 +220,9 @@ class StreamedLog:
 
         Args:
             to_logger: The logger to which the logs will be redirected.
-            from_start: If `True`, all logs from the start of the actor run will be redirected. If `False`, only newly
+            from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
-                logs for long-running actors in stand-by.
+                logs for long-running Actors in stand-by.
 
         """
         if self._force_propagate:

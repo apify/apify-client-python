@@ -11,11 +11,11 @@ from urllib.parse import urlencode
 
 import impit
 
+from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS, DEFAULT_TIMEOUT_SECS
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
-    from apify_client._config import ClientConfig
     from apify_client._consts import JsonSerializable
 
 
@@ -25,14 +25,27 @@ class BaseHttpClient:
     Subclasses should call `super().__init__()` and create their specific impit client using the `_headers` attribute.
     """
 
-    def __init__(self, config: ClientConfig, statistics: ClientStatistics | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        token: str | None = None,
+        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+        statistics: ClientStatistics | None = None,
+    ) -> None:
         """Initialize the base HTTP client.
 
         Args:
-            config: Client configuration with API URL, token, timeout, and retry settings.
+            token: Apify API token for authentication.
+            timeout_secs: Request timeout in seconds.
+            max_retries: Maximum number of retries for failed requests.
+            min_delay_between_retries_millis: Minimum delay between retries in milliseconds.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
         """
-        self._config = config
+        self._timeout_secs = timeout_secs
+        self._max_retries = max_retries
+        self._min_delay_between_retries_millis = min_delay_between_retries_millis
         self._statistics = statistics or ClientStatistics()
 
         # Build headers for subclasses to use when creating their impit clients.
@@ -49,8 +62,8 @@ class BaseHttpClient:
         user_agent = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
         headers['User-Agent'] = user_agent
 
-        if config.token is not None:
-            headers['Authorization'] = f'Bearer {config.token}'
+        if token is not None:
+            headers['Authorization'] = f'Bearer {token}'
 
         self._headers = headers
 
@@ -136,4 +149,4 @@ class BaseHttpClient:
 
     def _calculate_timeout(self, attempt: int, timeout_secs: int | None = None) -> int:
         """Calculate timeout for a request attempt with exponential increase, bounded by client timeout."""
-        return min(self._config.timeout_secs, (timeout_secs or self._config.timeout_secs) * 2 ** (attempt - 1))
+        return min(self._timeout_secs, (timeout_secs or self._timeout_secs) * 2 ** (attempt - 1))

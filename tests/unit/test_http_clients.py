@@ -7,8 +7,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from apify_client._config import ClientConfig
-from apify_client._http_clients import HttpClient, HttpClientAsync
+from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
@@ -43,7 +42,7 @@ def test_retry_with_exp_backoff() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = HttpClient._retry_with_exp_backoff(
+    result = SyncHttpClient._retry_with_exp_backoff(
         returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
@@ -55,13 +54,13 @@ def test_retry_with_exp_backoff() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        HttpClient._retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
+        SyncHttpClient._retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
     assert attempt_counter == 4
 
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        HttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
+        SyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
     assert attempt_counter == 3
 
 
@@ -94,7 +93,7 @@ async def test_retry_with_exp_backoff_async() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = await HttpClientAsync._retry_with_exp_backoff(
+    result = await AsyncHttpClient._retry_with_exp_backoff(
         returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
@@ -106,43 +105,42 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        await HttpClientAsync._retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
+        await AsyncHttpClient._retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
     assert attempt_counter == 4
 
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        await HttpClientAsync._retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
+        await AsyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
     assert attempt_counter == 3
 
 
 def test_base_http_client_initialization() -> None:
     """Test BaseHttpClient initialization with various configurations."""
-    config = ClientConfig.from_user_params(
-        token='test_token',
-        api_url='https://api.test.com',
-        timeout_secs=30,
-        max_retries=5,
-    )
     statistics = ClientStatistics()
 
-    client = BaseHttpClient(config=config, statistics=statistics)
+    client = BaseHttpClient(
+        token='test_token',
+        timeout_secs=30,
+        max_retries=5,
+        statistics=statistics,
+    )
 
-    assert client._config == config
+    assert client._timeout_secs == 30
+    assert client._max_retries == 5
     assert client._statistics == statistics
     assert client._headers is not None
     assert 'Authorization' in client._headers
     assert client._headers['Authorization'] == 'Bearer test_token'
 
     # Test without statistics (should create default)
-    client2 = BaseHttpClient(config=config)
+    client2 = BaseHttpClient(token='test_token')
     assert isinstance(client2._statistics, ClientStatistics)
 
 
 def test_http_client_creates_sync_impit_client() -> None:
     """Test that HttpClient creates sync impit client correctly."""
-    config = ClientConfig.from_user_params(token='test_token_123')
-    client = HttpClient(config=config)
+    client = SyncHttpClient(token='test_token_123')
 
     # Check that sync impit client is created
     assert client._impit_client is not None
@@ -151,8 +149,7 @@ def test_http_client_creates_sync_impit_client() -> None:
 
 def test_http_client_async_creates_async_impit_client() -> None:
     """Test that HttpClientAsync creates async impit client correctly."""
-    config = ClientConfig.from_user_params(token='test_token_123')
-    client = HttpClientAsync(config=config)
+    client = AsyncHttpClient(token='test_token_123')
 
     # Check that async impit client is created
     assert client._impit_async_client is not None
@@ -229,8 +226,7 @@ def test_is_retryable_error() -> None:
 
 def test_prepare_request_call_basic() -> None:
     """Test _prepare_request_call with basic parameters."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     headers, params, data = client._prepare_request_call()
     assert headers == {}
@@ -240,8 +236,7 @@ def test_prepare_request_call_basic() -> None:
 
 def test_prepare_request_call_with_json() -> None:
     """Test _prepare_request_call with JSON data."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     json_data = {'key': 'value', 'number': 42}
     headers, _params, data = client._prepare_request_call(json=json_data)
@@ -254,8 +249,7 @@ def test_prepare_request_call_with_json() -> None:
 
 def test_prepare_request_call_with_string_data() -> None:
     """Test _prepare_request_call with string data."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     headers, _params, data = client._prepare_request_call(data='test string')
 
@@ -265,8 +259,7 @@ def test_prepare_request_call_with_string_data() -> None:
 
 def test_prepare_request_call_with_bytes_data() -> None:
     """Test _prepare_request_call with bytes data."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     headers, _params, data = client._prepare_request_call(data=b'test bytes')
 
@@ -276,8 +269,7 @@ def test_prepare_request_call_with_bytes_data() -> None:
 
 def test_prepare_request_call_json_and_data_error() -> None:
     """Test _prepare_request_call raises error when both json and data are provided."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     with pytest.raises(ValueError, match='Cannot pass both "json" and "data" parameters'):
         client._prepare_request_call(json={'key': 'value'}, data='string')
@@ -285,8 +277,7 @@ def test_prepare_request_call_json_and_data_error() -> None:
 
 def test_prepare_request_call_with_params() -> None:
     """Test _prepare_request_call parses params correctly."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     _headers, params, _data = client._prepare_request_call(params={'limit': 10, 'flag': True})
 
@@ -295,8 +286,7 @@ def test_prepare_request_call_with_params() -> None:
 
 def test_build_url_with_params_none() -> None:
     """Test _build_url_with_params with None params."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     url = client._build_url_with_params('https://api.test.com/endpoint')
     assert url == 'https://api.test.com/endpoint'
@@ -304,8 +294,7 @@ def test_build_url_with_params_none() -> None:
 
 def test_build_url_with_params_simple() -> None:
     """Test _build_url_with_params with simple params."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     url = client._build_url_with_params('https://api.test.com/endpoint', {'key': 'value', 'limit': 10})
     assert 'key=value' in url
@@ -315,8 +304,7 @@ def test_build_url_with_params_simple() -> None:
 
 def test_build_url_with_params_list() -> None:
     """Test _build_url_with_params with list values."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     url = client._build_url_with_params('https://api.test.com/endpoint', {'tags': ['tag1', 'tag2', 'tag3']})
     assert 'tags=tag1' in url
@@ -326,8 +314,7 @@ def test_build_url_with_params_list() -> None:
 
 def test_build_url_with_params_mixed() -> None:
     """Test _build_url_with_params with mixed param types."""
-    config = ClientConfig.from_user_params()
-    client = BaseHttpClient(config=config)
+    client = BaseHttpClient()
 
     url = client._build_url_with_params(
         'https://api.test.com/endpoint', {'limit': 10, 'tags': ['a', 'b'], 'name': 'test'}

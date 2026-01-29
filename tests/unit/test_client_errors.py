@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 from werkzeug import Response
 
-from apify_client._config import ClientConfig
-from apify_client._http_clients import HttpClient, HttpClientAsync
+from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -36,11 +35,6 @@ RAW_ERROR = (
 
 
 @pytest.fixture
-def test_config() -> ClientConfig:
-    return ClientConfig.from_user_params()
-
-
-@pytest.fixture
 def test_endpoint(httpserver: HTTPServer) -> str:
     httpserver.expect_request(_TEST_PATH).respond_with_json(
         {'error': {'message': _EXPECTED_MESSAGE, 'type': _EXPECTED_TYPE, 'data': _EXPECTED_DATA}}, status=400
@@ -64,9 +58,9 @@ def streaming_handler(_request: Request) -> Response:
     )
 
 
-def test_client_apify_api_error_with_data(test_endpoint: str, test_config: ClientConfig) -> None:
+def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
     """Test that client correctly throws ApifyApiError with error data from response."""
-    client = HttpClient(config=test_config)
+    client = SyncHttpClient()
 
     with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=test_endpoint)
@@ -76,9 +70,9 @@ def test_client_apify_api_error_with_data(test_endpoint: str, test_config: Clien
     assert exc.value.data == _EXPECTED_DATA
 
 
-async def test_async_client_apify_api_error_with_data(test_endpoint: str, test_config: ClientConfig) -> None:
+async def test_async_client_apify_api_error_with_data(test_endpoint: str) -> None:
     """Test that async client correctly throws ApifyApiError with error data from response."""
-    client = HttpClientAsync(config=test_config)
+    client = AsyncHttpClient()
 
     with pytest.raises(ApifyApiError) as exc:
         await client.call(method='GET', url=test_endpoint)
@@ -88,12 +82,12 @@ async def test_async_client_apify_api_error_with_data(test_endpoint: str, test_c
     assert exc.value.data == _EXPECTED_DATA
 
 
-def test_client_apify_api_error_streamed(httpserver: HTTPServer, test_config: ClientConfig) -> None:
+def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
     """Test that client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = HttpClient(config=test_config)
+    client = SyncHttpClient()
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
@@ -104,12 +98,12 @@ def test_client_apify_api_error_streamed(httpserver: HTTPServer, test_config: Cl
     assert exc.value.type == error['error']['type']
 
 
-async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer, test_config: ClientConfig) -> None:
+async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
     """Test that async client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = HttpClientAsync(config=test_config)
+    client = AsyncHttpClient()
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 

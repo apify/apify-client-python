@@ -3,6 +3,21 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+DEFAULT_API_URL = 'https://api.apify.com'
+"""Default base URL for the Apify API."""
+
+API_VERSION = 'v2'
+"""Current Apify API version."""
+
+DEFAULT_TIMEOUT_SECS = 360
+"""Default request timeout in seconds."""
+
+DEFAULT_MAX_RETRIES = 8
+"""Default maximum number of retries for failed requests."""
+
+DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS = 500
+"""Default minimum delay between retries in milliseconds."""
+
 # Type aliases
 JsonSerializable = str | int | float | bool | None | dict[str, Any] | list[Any]
 """Type for representing json-serializable values. It's close enough to the real thing supported by json.parse.

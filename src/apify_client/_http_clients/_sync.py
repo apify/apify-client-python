@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import impit
 
+from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS, DEFAULT_TIMEOUT_SECS
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._logging import log_context, logger_name
 from apify_client.errors import ApifyApiError
@@ -15,7 +16,6 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._config import ClientConfig
     from apify_client._consts import JsonSerializable
     from apify_client._statistics import ClientStatistics
 
@@ -24,22 +24,39 @@ T = TypeVar('T')
 logger = logging.getLogger(logger_name)
 
 
-class HttpClient(BaseHttpClient):
+class SyncHttpClient(BaseHttpClient):
     """Synchronous HTTP client for Apify API with automatic retries and exponential backoff."""
 
-    def __init__(self, config: ClientConfig, statistics: ClientStatistics | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        token: str | None = None,
+        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+        statistics: ClientStatistics | None = None,
+    ) -> None:
         """Initialize the synchronous HTTP client.
 
         Args:
-            config: Client configuration with API URL, token, timeout, and retry settings.
+            token: Apify API token for authentication.
+            timeout_secs: Request timeout in seconds.
+            max_retries: Maximum number of retries for failed requests.
+            min_delay_between_retries_millis: Minimum delay between retries in milliseconds.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
         """
-        super().__init__(config, statistics)
+        super().__init__(
+            token=token,
+            timeout_secs=timeout_secs,
+            max_retries=max_retries,
+            min_delay_between_retries_millis=min_delay_between_retries_millis,
+            statistics=statistics,
+        )
 
         self._impit_client = impit.Client(
             headers=self._headers,
             follow_redirects=True,
-            timeout=self._config.timeout_secs,
+            timeout=self._timeout_secs,
         )
 
     def call(
@@ -92,8 +109,8 @@ class HttpClient(BaseHttpClient):
                 stream=stream,
                 timeout_secs=timeout_secs,
             ),
-            max_retries=self._config.max_retries,
-            backoff_base_millis=self._config.min_delay_between_retries_millis,
+            max_retries=self._max_retries,
+            backoff_base_millis=self._min_delay_between_retries_millis,
         )
 
     def _make_request(

@@ -28,6 +28,8 @@ def httpserver(make_httpserver: HTTPServer) -> Iterable[HTTPServer]:
 @pytest.fixture
 def patch_basic_url(httpserver: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     server_url = httpserver.url_for('/').removesuffix('/')
-    monkeypatch.setattr('apify_client._config.DEFAULT_API_URL', server_url)
+    # Patch in both the source module and where it's imported
+    monkeypatch.setattr('apify_client._consts.DEFAULT_API_URL', server_url)
+    monkeypatch.setattr('apify_client._apify_client.DEFAULT_API_URL', server_url)
     yield
     monkeypatch.undo()

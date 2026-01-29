@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 import pytest
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils import create_hmac_signature, create_storage_content_signature
 
 if TYPE_CHECKING:
@@ -150,7 +151,8 @@ def api_token_2() -> str:
 @pytest.fixture(scope='session')
 def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
     """Dataset owned by secondary user for testing cross-user access restrictions."""
-    client = ApifyClient(api_token_2, api_url=os.getenv(API_URL_ENV_VAR))
+    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    client = ApifyClient(api_token_2, api_url=api_url)
 
     # Create dataset with test data
     dataset_name = f'API-test-permissions-{get_crypto_random_object_id()}'
@@ -178,7 +180,8 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
 @pytest.fixture(scope='session')
 def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     """Key-value store owned by secondary user for testing cross-user access restrictions."""
-    client = ApifyClient(api_token_2, api_url=os.getenv(API_URL_ENV_VAR))
+    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    client = ApifyClient(api_token_2, api_url=api_url)
 
     # Create key-value store with test data
     kvs_name = f'API-test-permissions-{get_crypto_random_object_id()}'
@@ -212,13 +215,15 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
 @pytest.fixture
 def apify_client(api_token: str) -> ApifyClient:
     """Sync Apify client instance."""
-    return ApifyClient(api_token, api_url=os.getenv(API_URL_ENV_VAR))
+    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    return ApifyClient(api_token, api_url=api_url)
 
 
 @pytest.fixture
 def apify_client_async(api_token: str) -> ApifyClientAsync:
     """Async Apify client instance."""
-    return ApifyClientAsync(api_token, api_url=os.getenv(API_URL_ENV_VAR))
+    api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
+    return ApifyClientAsync(api_token, api_url=api_url)
 
 
 @pytest.fixture(params=['sync', 'async'])

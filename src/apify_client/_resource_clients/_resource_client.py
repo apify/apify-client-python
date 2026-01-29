@@ -15,7 +15,7 @@ from apify_client.errors import ApifyApiError, ApifyClientError
 
 if TYPE_CHECKING:
     from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
-    from apify_client._http_clients import HttpClient, HttpClientAsync
+    from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
 
 
 class ResourceClient(metaclass=WithLogDetailsClient):
@@ -30,7 +30,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         *,
         base_url: str,
         public_base_url: str,
-        http_client: HttpClient,
+        http_client: SyncHttpClient,
         resource_path: str,
         client_registry: ClientRegistry,
         resource_id: str | None = None,
@@ -213,7 +213,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         *,
         base_url: str,
         public_base_url: str,
-        http_client: HttpClientAsync,
+        http_client: AsyncHttpClient,
         resource_path: str,
         client_registry: ClientRegistryAsync,
         resource_id: str | None = None,

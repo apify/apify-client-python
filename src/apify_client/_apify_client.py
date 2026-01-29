@@ -3,8 +3,14 @@ from __future__ import annotations
 from functools import cached_property
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
-from apify_client._config import ClientConfig
-from apify_client._http_clients import HttpClient, HttpClientAsync
+from apify_client._consts import (
+    API_VERSION,
+    DEFAULT_API_URL,
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+    DEFAULT_TIMEOUT_SECS,
+)
+from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,
@@ -71,11 +77,11 @@ class ApifyClient:
         self,
         token: str | None = None,
         *,
-        api_url: str | None = None,
-        api_public_url: str | None = None,
-        max_retries: int | None = 8,
-        min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = 360,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
     ) -> None:
         """Initialize a new instance.
 
@@ -84,26 +90,37 @@ class ApifyClient:
             api_url: The URL of the Apify API server to which to connect. Defaults to https://api.apify.com. It can
                 be an internal URL that is not globally accessible, in such case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
-                is an internal URL that is not globally accessible.
+                is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
-        self._config = ClientConfig.from_user_params(
-            token=token,
-            api_url=api_url,
-            api_public_url=api_public_url,
-            max_retries=max_retries,
-            min_delay_between_retries_millis=min_delay_between_retries_millis,
-            timeout_secs=timeout_secs,
-        )
-        """Resolved client configuration."""
+        # We need to do this because of mocking in tests and default mutable arguments.
+        api_url = DEFAULT_API_URL if api_url is None else api_url
+        api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        self._token = token
+        """Apify API token for authentication."""
+
+        self._base_url = f'{api_url.rstrip("/")}/{API_VERSION}'
+        """Base URL of the Apify API."""
+
+        self._public_base_url = f'{api_public_url.rstrip("/")}/{API_VERSION}'
+        """Public base URL for CDN access."""
 
         self._statistics = ClientStatistics()
         """Collector for client request statistics."""
 
-        self._http_client = HttpClient(config=self._config, statistics=self._statistics)
+        self._http_client = SyncHttpClient(
+            token=token,
+            timeout_secs=timeout_secs or DEFAULT_TIMEOUT_SECS,
+            max_retries=max_retries or DEFAULT_MAX_RETRIES,
+            min_delay_between_retries_millis=(
+                min_delay_between_retries_millis or DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS
+            ),
+            statistics=self._statistics,
+        )
         """HTTP client used to communicate with the Apify API."""
 
         self._client_registry = ClientRegistry(
@@ -130,8 +147,8 @@ class ApifyClient:
     def _base_kwargs(self) -> dict:
         """Base keyword arguments for resource client construction."""
         return {
-            'base_url': self._config.base_url,
-            'public_base_url': self._config.public_base_url,
+            'base_url': self._base_url,
+            'public_base_url': self._public_base_url,
             'http_client': self._http_client,
             'client_registry': self._client_registry,
         }
@@ -139,7 +156,7 @@ class ApifyClient:
     @property
     def token(self) -> str | None:
         """The Apify API token used by the client."""
-        return self._config.token
+        return self._token
 
     def actor(self, actor_id: str) -> ActorClient:
         """Retrieve the sub-client for manipulating a single Actor.
@@ -290,11 +307,11 @@ class ApifyClientAsync:
         self,
         token: str | None = None,
         *,
-        api_url: str | None = None,
-        api_public_url: str | None = None,
-        max_retries: int | None = 8,
-        min_delay_between_retries_millis: int | None = 500,
-        timeout_secs: int | None = 360,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
     ) -> None:
         """Initialize a new instance.
 
@@ -303,26 +320,37 @@ class ApifyClientAsync:
             api_url: The URL of the Apify API server to which to connect. Defaults to https://api.apify.com. It can
                 be an internal URL that is not globally accessible, in such case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
-                is an internal URL that is not globally accessible.
+                is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
         """
-        self._config = ClientConfig.from_user_params(
-            token=token,
-            api_url=api_url,
-            api_public_url=api_public_url,
-            max_retries=max_retries,
-            min_delay_between_retries_millis=min_delay_between_retries_millis,
-            timeout_secs=timeout_secs,
-        )
-        """Resolved client configuration."""
+        # We need to do this because of mocking in tests and default mutable arguments.
+        api_url = DEFAULT_API_URL if api_url is None else api_url
+        api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        self._token = token
+        """Apify API token for authentication."""
+
+        self._base_url = f'{api_url.rstrip("/")}/{API_VERSION}'
+        """Base URL of the Apify API."""
+
+        self._public_base_url = f'{api_public_url.rstrip("/")}/{API_VERSION}'
+        """Public base URL for CDN access."""
 
         self._statistics = ClientStatistics()
         """Collector for client request statistics."""
 
-        self._http_client = HttpClientAsync(config=self._config, statistics=self._statistics)
+        self._http_client = AsyncHttpClient(
+            token=token,
+            timeout_secs=timeout_secs or DEFAULT_TIMEOUT_SECS,
+            max_retries=max_retries or DEFAULT_MAX_RETRIES,
+            min_delay_between_retries_millis=(
+                min_delay_between_retries_millis or DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS
+            ),
+            statistics=self._statistics,
+        )
         """HTTP client used to communicate with the Apify API."""
 
         self._client_registry = ClientRegistryAsync(
@@ -349,8 +377,8 @@ class ApifyClientAsync:
     def _base_kwargs(self) -> dict:
         """Base keyword arguments for resource client construction."""
         return {
-            'base_url': self._config.base_url,
-            'public_base_url': self._config.public_base_url,
+            'base_url': self._base_url,
+            'public_base_url': self._public_base_url,
             'http_client': self._http_client,
             'client_registry': self._client_registry,
         }
@@ -358,7 +386,7 @@ class ApifyClientAsync:
     @property
     def token(self) -> str | None:
         """The Apify API token used by the client."""
-        return self._config.token
+        return self._token
 
     def actor(self, actor_id: str) -> ActorClientAsync:
         """Retrieve the sub-client for manipulating a single Actor.

@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING, cast
 from .conftest import get_random_resource_name, maybe_await
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, Task
+    from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, Task, TaskShort
 
 # Use a simple, fast public actor for testing
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -369,3 +371,48 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     finally:
         # Cleanup task
         await maybe_await(task_client.delete())
+
+
+async def test_task_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over tasks in the collection."""
+    task_name = get_random_resource_name('task')
+
+    # Get the actor ID for hello-world
+    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    actor = cast('Actor', result)
+    assert actor is not None
+
+    # Create a task so we have something to iterate over
+    result = await maybe_await(
+        client.tasks().create(
+            actor_id=actor.id,
+            name=task_name,
+        )
+    )
+    created_task = cast('Task', result)
+
+    try:
+        # Iterate over tasks (desc=True to get newest first, so our task appears in results)
+        if is_async:
+            collected_tasks = [
+                task async for task in cast('AsyncIterator[TaskShort]', client.tasks().iterate(limit=10, desc=True))
+            ]
+        else:
+            collected_tasks = list(cast('Iterator[TaskShort]', client.tasks().iterate(limit=10, desc=True)))
+
+        # Should have at least our created task
+        assert isinstance(collected_tasks, list)
+        assert len(collected_tasks) >= 1
+        assert len(collected_tasks) <= 10
+
+        # Verify our task is in the list (should be first since desc=True and it's newest)
+        task_ids = [t.id for t in collected_tasks]
+        assert created_task.id in task_ids
+
+        # Verify each item is a TaskShort
+        for task in collected_tasks:
+            assert task.id is not None
+            assert task.name is not None
+
+    finally:
+        await maybe_await(client.task(created_task.id).delete())

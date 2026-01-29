@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from apify_client._models import Actor, CreateActorResponse, GetListOfActorsResponse, ListOfActors
+from apify_client._models import Actor, ActorShort, CreateActorResponse, GetListOfActorsResponse, ListOfActors
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor import get_actor_representation
 from apify_client._utils import filter_none_values, response_to_dict
@@ -45,6 +48,52 @@ class ActorCollectionClient(ResourceClient):
         )
         response_as_dict = response_to_dict(response)
         return GetListOfActorsResponse.model_validate(response_as_dict).data
+
+    def iterate(
+        self,
+        *,
+        my: bool | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+    ) -> Iterator[ActorShort]:
+        """Iterate over the Actors the user has created or used.
+
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
+
+        Args:
+            my: If True, will return only Actors which the user has created themselves.
+            limit: Maximum number of Actors to return. By default there is no limit.
+            desc: Whether to sort the Actors in descending order based on their creation date.
+
+        Yields:
+            An Actor from the collection.
+        """
+        cache_size = 1000
+        read_items = 0
+        offset = 0
+
+        while True:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_items == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_items)
+
+            current_page = self.list(
+                my=my,
+                limit=effective_limit,
+                offset=offset,
+                desc=desc,
+            )
+
+            yield from current_page.items
+
+            current_page_item_count = len(current_page.items)
+            read_items += current_page_item_count
+            offset += current_page_item_count
+
+            if current_page_item_count < cache_size:
+                break
 
     def create(
         self,
@@ -184,6 +233,53 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         )
         response_as_dict = response_to_dict(response)
         return GetListOfActorsResponse.model_validate(response_as_dict).data
+
+    async def iterate(
+        self,
+        *,
+        my: bool | None = None,
+        limit: int | None = None,
+        desc: bool | None = None,
+    ) -> AsyncIterator[ActorShort]:
+        """Iterate over the Actors the user has created or used.
+
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
+
+        Args:
+            my: If True, will return only Actors which the user has created themselves.
+            limit: Maximum number of Actors to return. By default there is no limit.
+            desc: Whether to sort the Actors in descending order based on their creation date.
+
+        Yields:
+            An Actor from the collection.
+        """
+        cache_size = 1000
+        read_items = 0
+        offset = 0
+
+        while True:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_items == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_items)
+
+            current_page = await self.list(
+                my=my,
+                limit=effective_limit,
+                offset=offset,
+                desc=desc,
+            )
+
+            for item in current_page.items:
+                yield item
+
+            current_page_item_count = len(current_page.items)
+            read_items += current_page_item_count
+            offset += current_page_item_count
+
+            if current_page_item_count < cache_size:
+                break
 
     async def create(
         self,

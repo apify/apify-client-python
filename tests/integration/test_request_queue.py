@@ -162,7 +162,7 @@ async def test_request_queue_update(client: ApifyClient | ApifyClientAsync) -> N
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test adding and getting a request from the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -196,7 +196,7 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test listing requests from the head of the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -228,7 +228,7 @@ async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync, i
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test listing all requests in the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -260,7 +260,7 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test deleting a request from the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -300,7 +300,7 @@ async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsy
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test adding multiple requests in batch."""
     rq_name = get_random_resource_name('queue')
 
@@ -328,7 +328,7 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test deleting multiple requests in batch."""
     rq_name = get_random_resource_name('queue')
 
@@ -389,7 +389,7 @@ async def test_request_queue_delete_nonexistent(client: ApifyClient | ApifyClien
     assert retrieved_rq is None
 
 
-async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test locking requests from the head of the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -419,7 +419,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test prolonging a request lock."""
     rq_name = get_random_resource_name('queue')
 
@@ -451,7 +451,7 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test deleting a request lock."""
     rq_name = get_random_resource_name('queue')
 
@@ -483,7 +483,7 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test unlocking all requests locked by the client."""
     rq_name = get_random_resource_name('queue')
 
@@ -513,7 +513,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
     await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test updating a request in the queue."""
     rq_name = get_random_resource_name('queue')
 

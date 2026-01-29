@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING, cast
 from .conftest import get_random_resource_name, maybe_await
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, Build, ListOfActors, Run
+    from apify_client._models import Actor, ActorShort, Build, ListOfActors, Run
     from apify_client._resource_clients import BuildClient, BuildClientAsync
 
 
@@ -169,7 +171,6 @@ async def test_actor_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         assert last_run.id is not None
 
     finally:
-        # Cleanup
         await maybe_await(client.run(run.id).delete())
 
 
@@ -181,3 +182,22 @@ async def test_actor_validate_input(client: ApifyClient | ApifyClientAsync) -> N
     # Valid input (hello-world accepts empty input or simple input)
     is_valid = await maybe_await(actor_client.validate_input({}))
     assert is_valid is True
+
+
+async def test_actor_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over all Actors (public + owned)."""
+    # Iterate over all actors (public + owned) with small limit
+    if is_async:
+        collected_actors = [
+            actor async for actor in cast('AsyncIterator[ActorShort]', client.actors().iterate(limit=3))
+        ]
+    else:
+        collected_actors = list(cast('Iterator[ActorShort]', client.actors().iterate(limit=3)))
+
+    # Should have some actors available (at least public ones)
+    assert isinstance(collected_actors, list)
+
+    # We can't guarantee there are actors, but the structure should be correct
+    for actor in collected_actors:
+        assert actor.id is not None
+        assert actor.name is not None

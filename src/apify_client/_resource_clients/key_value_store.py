@@ -7,7 +7,13 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
-from apify_client._models import GetKeyValueStoreResponse, GetListOfKeysResponse, KeyValueStore, ListOfKeys
+from apify_client._models import (
+    GetKeyValueStoreResponse,
+    GetListOfKeysResponse,
+    KeyValueStore,
+    KeyValueStoreKey,
+    ListOfKeys,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -171,6 +177,55 @@ class KeyValueStoreClient(ResourceClient):
 
         result = response.json()
         return GetListOfKeysResponse.model_validate(result).data
+
+    def iterate_keys(
+        self,
+        *,
+        limit: int | None = None,
+        collection: str | None = None,
+        prefix: str | None = None,
+        signature: str | None = None,
+    ) -> Iterator[KeyValueStoreKey]:
+        """Iterate over the keys in the key-value store.
+
+        https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
+
+        Args:
+            limit: Maximum number of keys to return. By default there is no limit.
+            collection: The name of the collection in store schema to list keys from.
+            prefix: The prefix of the keys to be listed.
+            signature: Signature used to access the items.
+
+        Yields:
+            A key from the key-value store.
+        """
+        cache_size = 1000
+        read_keys = 0
+        exclusive_start_key: str | None = None
+
+        while True:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_keys == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_keys)
+
+            current_keys_page = self.list_keys(
+                limit=effective_limit,
+                exclusive_start_key=exclusive_start_key,
+                collection=collection,
+                prefix=prefix,
+                signature=signature,
+            )
+
+            yield from current_keys_page.items
+
+            read_keys += len(current_keys_page.items)
+
+            if not current_keys_page.is_truncated:
+                break
+
+            exclusive_start_key = current_keys_page.next_exclusive_start_key
 
     def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -528,6 +583,56 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         result = response.json()
         return GetListOfKeysResponse.model_validate(result).data
+
+    async def iterate_keys(
+        self,
+        *,
+        limit: int | None = None,
+        collection: str | None = None,
+        prefix: str | None = None,
+        signature: str | None = None,
+    ) -> AsyncIterator[KeyValueStoreKey]:
+        """Iterate over the keys in the key-value store.
+
+        https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
+
+        Args:
+            limit: Maximum number of keys to return. By default there is no limit.
+            collection: The name of the collection in store schema to list keys from.
+            prefix: The prefix of the keys to be listed.
+            signature: Signature used to access the items.
+
+        Yields:
+            A key from the key-value store.
+        """
+        cache_size = 1000
+        read_keys = 0
+        exclusive_start_key: str | None = None
+
+        while True:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_keys == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_keys)
+
+            current_keys_page = await self.list_keys(
+                limit=effective_limit,
+                exclusive_start_key=exclusive_start_key,
+                collection=collection,
+                prefix=prefix,
+                signature=signature,
+            )
+
+            for key in current_keys_page.items:
+                yield key
+
+            read_keys += len(current_keys_page.items)
+
+            if not current_keys_page.is_truncated:
+                break
+
+            exclusive_start_key = current_keys_page.next_exclusive_start_key
 
     async def get_record(self, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.

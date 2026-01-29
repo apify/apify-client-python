@@ -177,5 +177,4 @@ async def test_schedule_get_log(client: ApifyClient | ApifyClientAsync) -> None:
         assert log is None or isinstance(log, list)
 
     finally:
-        # Cleanup
         await maybe_await(schedule_client.delete())

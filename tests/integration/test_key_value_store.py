@@ -5,8 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import KeyValueStore, ListOfKeys, ListOfKeyValueStores
+    from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 
 import json
 
@@ -171,8 +173,9 @@ async def test_get_record_as_bytes_signature(
 
 async def test_stream_record_signature(
     client: ApifyClient | ApifyClientAsync,
-    is_async: bool,  # noqa: FBT001
     test_kvs_of_another_user: KvsFixture,
+    *,
+    is_async: bool,
 ) -> None:
     key = 'key1'
     kvs = client.key_value_store(key_value_store_id=test_kvs_of_another_user.id)
@@ -256,7 +259,7 @@ async def test_key_value_store_update(client: ApifyClient | ApifyClientAsync) ->
     await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test setting and getting records from key-value store."""
     store_name = get_random_resource_name('kvs')
 
@@ -283,7 +286,9 @@ async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyCli
     await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_set_and_get_text_record(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_key_value_store_set_and_get_text_record(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
     """Test setting and getting text records."""
     store_name = get_random_resource_name('kvs')
 
@@ -310,7 +315,7 @@ async def test_key_value_store_set_and_get_text_record(client: ApifyClient | Api
     await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test listing keys in the key-value store."""
     store_name = get_random_resource_name('kvs')
 
@@ -340,7 +345,7 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync,
     await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test listing keys with limit parameter."""
     store_name = get_random_resource_name('kvs')
 
@@ -365,7 +370,7 @@ async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyC
     await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test checking if a record exists."""
     store_name = get_random_resource_name('kvs')
 
@@ -389,7 +394,7 @@ async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAs
     await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test deleting a record from the store."""
     store_name = get_random_resource_name('kvs')
 
@@ -436,3 +441,101 @@ async def test_key_value_store_delete_nonexistent(client: ApifyClient | ApifyCli
     result = await maybe_await(store_client.get())
     retrieved_store = cast('KeyValueStore | None', result)
     assert retrieved_store is None
+
+
+async def test_key_value_store_iterate_keys(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over keys in the key-value store."""
+    store_name = get_random_resource_name('kvs')
+
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
+
+    # Set multiple records
+    for i in range(5):
+        await maybe_await(store_client.set_record(f'key-{i}', {'index': i}))
+
+    # Wait briefly for eventual consistency
+    await maybe_sleep(1, is_async=is_async)
+
+    # Iterate over keys
+    if is_async:
+        collected_keys = [key async for key in cast('AsyncIterator[KeyValueStoreKey]', store_client.iterate_keys())]
+    else:
+        collected_keys = list(cast('Iterator[KeyValueStoreKey]', store_client.iterate_keys()))
+
+    assert len(collected_keys) == 5
+
+    # Verify key names
+    key_names = [key.key for key in collected_keys]
+    for i in range(5):
+        assert f'key-{i}' in key_names
+
+    # Cleanup
+    await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_iterate_keys_with_limit(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test iterating over keys with limit parameter."""
+    store_name = get_random_resource_name('kvs')
+
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
+
+    # Set multiple records
+    for i in range(10):
+        await maybe_await(store_client.set_record(f'item-{i:02d}', {'index': i}))
+
+    # Wait briefly for eventual consistency
+    await maybe_sleep(1, is_async=is_async)
+
+    # Iterate with limit
+    if is_async:
+        collected_keys = [
+            key async for key in cast('AsyncIterator[KeyValueStoreKey]', store_client.iterate_keys(limit=5))
+        ]
+    else:
+        collected_keys = list(cast('Iterator[KeyValueStoreKey]', store_client.iterate_keys(limit=5)))
+
+    assert len(collected_keys) == 5
+
+    # Cleanup
+    await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_iterate_keys_with_prefix(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test iterating over keys with prefix filter."""
+    store_name = get_random_resource_name('kvs')
+
+    result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    created_store = cast('KeyValueStore', result)
+    store_client = client.key_value_store(created_store.id)
+
+    # Set records with different prefixes
+    for i in range(3):
+        await maybe_await(store_client.set_record(f'prefix-a-{i}', {'type': 'a', 'index': i}))
+    for i in range(2):
+        await maybe_await(store_client.set_record(f'prefix-b-{i}', {'type': 'b', 'index': i}))
+
+    # Wait briefly for eventual consistency
+    await maybe_sleep(1, is_async=is_async)
+
+    # Iterate with prefix filter
+    if is_async:
+        collected_keys = [
+            key async for key in cast('AsyncIterator[KeyValueStoreKey]', store_client.iterate_keys(prefix='prefix-a-'))
+        ]
+    else:
+        collected_keys = list(cast('Iterator[KeyValueStoreKey]', store_client.iterate_keys(prefix='prefix-a-')))
+
+    assert len(collected_keys) == 3
+    for key in collected_keys:
+        assert key.key.startswith('prefix-a-')
+
+    # Cleanup
+    await maybe_await(store_client.delete())

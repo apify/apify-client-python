@@ -55,7 +55,6 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
         assert version.build_tag == 'latest'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())
 
 
@@ -101,7 +100,6 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
         assert retrieved_version.build_tag == 'test'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())
 
 
@@ -160,7 +158,6 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
         assert retrieved_version.build_tag == 'updated'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())
 
 
@@ -219,5 +216,4 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert remaining_version.version_number == '0.2'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task
+from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task, TaskShort
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.task import get_task_representation
 from apify_client._utils import filter_none_values, response_to_dict
@@ -41,6 +44,49 @@ class TaskCollectionClient(ResourceClient):
         )
         response_as_dict = response_to_dict(response)
         return GetListOfTasksResponse.model_validate(response_as_dict).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        desc: bool | None = None,
+    ) -> Iterator[TaskShort]:
+        """Iterate over the available tasks.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
+
+        Args:
+            limit: Maximum number of tasks to return. By default there is no limit.
+            desc: Whether to sort the tasks in descending order based on their creation date.
+
+        Yields:
+            A task from the collection.
+        """
+        cache_size = 1000
+        read_items = 0
+        offset = 0
+
+        while True:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_items == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_items)
+
+            current_page = self.list(
+                limit=effective_limit,
+                offset=offset,
+                desc=desc,
+            )
+
+            yield from current_page.items
+
+            current_page_item_count = len(current_page.items)
+            read_items += current_page_item_count
+            offset += current_page_item_count
+
+            if current_page_item_count < cache_size:
+                break
 
     def create(
         self,
@@ -152,6 +198,50 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         )
         response_as_dict = response_to_dict(response)
         return GetListOfTasksResponse.model_validate(response_as_dict).data
+
+    async def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        desc: bool | None = None,
+    ) -> AsyncIterator[TaskShort]:
+        """Iterate over the available tasks.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
+
+        Args:
+            limit: Maximum number of tasks to return. By default there is no limit.
+            desc: Whether to sort the tasks in descending order based on their creation date.
+
+        Yields:
+            A task from the collection.
+        """
+        cache_size = 1000
+        read_items = 0
+        offset = 0
+
+        while True:
+            effective_limit = cache_size
+            if limit is not None:
+                if read_items == limit:
+                    break
+                effective_limit = min(cache_size, limit - read_items)
+
+            current_page = await self.list(
+                limit=effective_limit,
+                offset=offset,
+                desc=desc,
+            )
+
+            for item in current_page.items:
+                yield item
+
+            current_page_item_count = len(current_page.items)
+            read_items += current_page_item_count
+            offset += current_page_item_count
+
+            if current_page_item_count < cache_size:
+                break
 
     async def create(
         self,

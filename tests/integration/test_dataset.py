@@ -136,8 +136,9 @@ async def test_list_items_signature(
 
 async def test_iterate_items_signature(
     client: ApifyClient | ApifyClientAsync,
-    is_async: bool,  # noqa: FBT001
     test_dataset_of_another_user: DatasetFixture,
+    *,
+    is_async: bool,
 ) -> None:
     dataset = client.dataset(dataset_id=test_dataset_of_another_user.id)
 
@@ -234,7 +235,7 @@ async def test_dataset_update(client: ApifyClient | ApifyClientAsync) -> None:
     await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test pushing items to dataset and listing them."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -271,7 +272,7 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
     await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test listing items with pagination parameters."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -308,7 +309,7 @@ async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyCli
     await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test listing items with field filtering."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -342,7 +343,7 @@ async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientA
     await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_iterate_items(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_dataset_iterate_items(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test iterating over dataset items."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -388,7 +389,7 @@ async def test_dataset_delete_nonexistent(client: ApifyClient | ApifyClientAsync
     assert retrieved_dataset is None
 
 
-async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test getting dataset statistics."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -415,11 +416,10 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, is
         assert statistics is not None
 
     finally:
-        # Cleanup
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test streaming dataset items."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -460,5 +460,4 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, is_a
                 assert items[0]['id'] == 1
 
     finally:
-        # Cleanup
         await maybe_await(dataset_client.delete())

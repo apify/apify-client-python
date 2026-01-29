@@ -5,8 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
+    from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
 
 
 from datetime import datetime, timezone
@@ -126,7 +128,6 @@ async def test_run_dataset(client: ApifyClient | ApifyClientAsync) -> None:
     assert dataset is not None
     assert dataset.id == run.default_dataset_id
 
-    # Cleanup
     await maybe_await(run_client.delete())
 
 
@@ -148,7 +149,6 @@ async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> No
     assert kvs is not None
     assert kvs.id == run.default_key_value_store_id
 
-    # Cleanup
     await maybe_await(run_client.delete())
 
 
@@ -170,7 +170,6 @@ async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None
     assert rq is not None
     assert rq.id == run.default_request_queue_id
 
-    # Cleanup
     await maybe_await(run_client.delete())
 
 
@@ -198,7 +197,6 @@ async def test_run_abort(client: ApifyClient | ApifyClientAsync) -> None:
     assert final_run is not None
     assert final_run.status.value in ['ABORTED', 'SUCCEEDED']
 
-    # Cleanup
     await maybe_await(run_client.delete())
 
 
@@ -225,7 +223,6 @@ async def test_run_update(client: ApifyClient | ApifyClientAsync) -> None:
         assert updated_run.status_message == 'Test status message'
 
     finally:
-        # Cleanup
         await maybe_await(run_client.delete())
 
 
@@ -257,7 +254,7 @@ async def test_run_resurrect(client: ApifyClient | ApifyClientAsync) -> None:
     finally:
         # Wait for run to finish before cleanup (resurrected run might still be running)
         await maybe_await(run_client.wait_for_finish())
-        await maybe_await(run_client.delete())
+    await maybe_await(run_client.delete())
 
 
 async def test_run_log(client: ApifyClient | ApifyClientAsync) -> None:
@@ -282,7 +279,6 @@ async def test_run_log(client: ApifyClient | ApifyClientAsync) -> None:
         assert len(log_content) > 0
 
     finally:
-        # Cleanup
         await maybe_await(run_client.delete())
 
 
@@ -301,7 +297,7 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
         assert first_run.act_id is not None
 
 
-async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test metamorphing a run into another Actor."""
     # Start an actor that will run long enough to metamorph. We use hello-world and try to metamorph it into itself
     actor = client.actor(HELLO_WORLD_ACTOR)
@@ -339,12 +335,11 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, is_async: b
                 raise
 
     finally:
-        # Cleanup
         await maybe_await(run_client.wait_for_finish())
-        await maybe_await(run_client.delete())
+    await maybe_await(run_client.delete())
 
 
-async def test_run_reboot(client: ApifyClient | ApifyClientAsync, is_async: bool) -> None:  # noqa: FBT001
+async def test_run_reboot(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test rebooting a running Actor."""
     # Start an actor
     actor = client.actor(HELLO_WORLD_ACTOR)
@@ -380,9 +375,8 @@ async def test_run_reboot(client: ApifyClient | ApifyClientAsync, is_async: bool
         assert final_run is not None
 
     finally:
-        # Cleanup
         await maybe_await(run_client.wait_for_finish())
-        await maybe_await(run_client.delete())
+    await maybe_await(run_client.delete())
 
 
 async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
@@ -411,5 +405,33 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
                 raise
 
     finally:
-        # Cleanup
         await maybe_await(run_client.delete())
+
+
+async def test_run_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over runs in the collection."""
+    # Run an actor so we have something to iterate over
+    actor = client.actor(HELLO_WORLD_ACTOR)
+    result = await maybe_await(actor.call())
+    run = cast('Run', result)
+    assert run is not None
+
+    try:
+        # Iterate over runs
+        if is_async:
+            collected_runs = [r async for r in cast('AsyncIterator[RunShort]', client.runs().iterate(limit=10))]
+        else:
+            collected_runs = list(cast('Iterator[RunShort]', client.runs().iterate(limit=10)))
+
+        # Should have at least our created run
+        assert isinstance(collected_runs, list)
+        assert len(collected_runs) >= 1
+        assert len(collected_runs) <= 10
+
+        # Verify each item is a RunShort
+        for r in collected_runs:
+            assert r.id is not None
+            assert r.act_id is not None
+
+    finally:
+        await maybe_await(client.run(run.id).delete())

@@ -62,7 +62,6 @@ async def test_actor_env_var_list(client: ApifyClient | ApifyClientAsync) -> Non
         assert env_var.value == 'test_value'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())
 
 
@@ -120,7 +119,6 @@ async def test_actor_env_var_create_and_get(client: ApifyClient | ApifyClientAsy
         assert retrieved_env_var.value == 'my_value'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())
 
 
@@ -181,7 +179,6 @@ async def test_actor_env_var_update(client: ApifyClient | ApifyClientAsync) -> N
         assert retrieved_env_var.value == 'updated_value'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())
 
 
@@ -241,5 +238,4 @@ async def test_actor_env_var_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert remaining_env_var.name == 'VAR_TO_KEEP'
 
     finally:
-        # Cleanup
         await maybe_await(actor_client.delete())

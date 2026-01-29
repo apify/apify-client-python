@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import cached_property
+
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._config import ClientConfig
 from apify_client._http_clients import HttpClient, HttpClientAsync
@@ -96,10 +98,14 @@ class ApifyClient:
             min_delay_between_retries_millis=min_delay_between_retries_millis,
             timeout_secs=timeout_secs,
         )
-        self._statistics = ClientStatistics()
-        self._http_client = HttpClient(config=self._config, statistics=self._statistics)
+        """Resolved client configuration."""
 
-        # Create client classes config for dependency injection
+        self._statistics = ClientStatistics()
+        """Collector for client request statistics."""
+
+        self._http_client = HttpClient(config=self._config, statistics=self._statistics)
+        """HTTP client used to communicate with the Apify API."""
+
         self._client_registry = ClientRegistry(
             actor_client=ActorClient,
             actor_version_client=ActorVersionClient,
@@ -118,9 +124,11 @@ class ApifyClient:
             webhook_dispatch_collection_client=WebhookDispatchCollectionClient,
             log_client=LogClient,
         )
+        """Registry of resource client classes used for dependency injection."""
 
-    @property
+    @cached_property
     def _base_kwargs(self) -> dict:
+        """Base keyword arguments for resource client construction."""
         return {
             'base_url': self._config.base_url,
             'public_base_url': self._config.public_base_url,
@@ -304,10 +312,14 @@ class ApifyClientAsync:
             min_delay_between_retries_millis=min_delay_between_retries_millis,
             timeout_secs=timeout_secs,
         )
-        self._statistics = ClientStatistics()
-        self._http_client = HttpClientAsync(config=self._config, statistics=self._statistics)
+        """Resolved client configuration."""
 
-        # Create async client classes config for dependency injection
+        self._statistics = ClientStatistics()
+        """Collector for client request statistics."""
+
+        self._http_client = HttpClientAsync(config=self._config, statistics=self._statistics)
+        """HTTP client used to communicate with the Apify API."""
+
         self._client_registry = ClientRegistryAsync(
             actor_client=ActorClientAsync,
             actor_version_client=ActorVersionClientAsync,
@@ -326,9 +338,11 @@ class ApifyClientAsync:
             webhook_dispatch_collection_client=WebhookDispatchCollectionClientAsync,
             log_client=LogClientAsync,
         )
+        """Registry of resource client classes used for dependency injection."""
 
-    @property
+    @cached_property
     def _base_kwargs(self) -> dict:
+        """Base keyword arguments for resource client construction."""
         return {
             'base_url': self._config.base_url,
             'public_base_url': self._config.public_base_url,

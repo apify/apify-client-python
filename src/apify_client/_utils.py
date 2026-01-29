@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import io
 import json
 import string
 import time
+from base64 import b64encode, urlsafe_b64encode
 from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -19,6 +19,9 @@ if TYPE_CHECKING:
     from impit import Response
 
 T = TypeVar('T')
+
+_BASE62_CHARSET = string.digits + string.ascii_letters
+"""Module-level constant for base62 encoding."""
 
 
 def catch_not_found_or_throw(exc: ApifyApiError) -> None:
@@ -41,32 +44,62 @@ def filter_none_values(
     *,
     remove_empty_dicts: bool | None = None,
 ) -> dict:
-    """Remove None values from a dictionary recursively.
+    """Recursively remove None values from a dictionary.
 
-    The Apify API ignores missing fields but may reject fields explicitly set to None. This function prepares request
-    payloads by recursively removing None values from nested dictionaries.
+    The Apify API ignores missing fields but may reject fields explicitly set to None. This helper prepares
+    request payloads by stripping None values from nested dictionaries.
+
+    Uses an iterative, stack-based approach for better performance on deeply nested structures.
 
     Args:
-        data: The dictionary to clean.
-        remove_empty_dicts: If True, also remove empty dictionaries after filtering None values.
+        data: Dictionary to clean.
+        remove_empty_dicts: Whether to remove empty dictionaries after filtering.
 
     Returns:
-        A new dictionary with None values removed at all nesting levels.
+        A new dictionary with all None values removed.
     """
+    # Use an explicit stack to avoid recursion overhead
+    result = {}
 
-    def _internal(dictionary: dict, *, remove_empty: bool | None = None) -> dict | None:
-        result = {}
-        for key, val in dictionary.items():
+    # Stack entries are (source_dict, target_dict)
+    stack: list[tuple[dict, dict]] = [(data, result)]
+
+    while stack:
+        source, target = stack.pop()
+
+        for key, val in source.items():
+            if val is None:
+                continue
+
             if isinstance(val, dict):
-                val = _internal(val, remove_empty=remove_empty)  # noqa: PLW2901
-            if val is not None:
-                result[key] = val
-        if not result and remove_empty:
-            return None
-        return result
+                nested = {}
+                target[key] = nested
+                stack.append((val, nested))
+            else:
+                target[key] = val
 
-    result = _internal(data, remove_empty=remove_empty_dicts)
-    return result if result is not None else {}
+    # Optionally remove empty dictionaries
+    if remove_empty_dicts:
+        _remove_empty_dicts_inplace(result)
+
+    return result
+
+
+def _remove_empty_dicts_inplace(data: dict[str, Any]) -> None:
+    """Recursively remove empty dictionaries from a dict in place.
+
+    This is a helper function for filter_none_values.
+    """
+    keys_to_remove = list[str]()
+
+    for key, val in data.items():
+        if isinstance(val, dict):
+            _remove_empty_dicts_inplace(val)
+            if not val:
+                keys_to_remove.append(key)
+
+    for key in keys_to_remove:
+        del data[key]
 
 
 def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
@@ -79,6 +112,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
         A base64-encoded JSON string.
     """
     data = list[dict]()
+
     for webhook in webhooks:
         webhook_representation = {
             'eventTypes': [enum_to_value(event_type) for event_type in webhook['event_types']],
@@ -90,7 +124,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
             webhook_representation['headersTemplate'] = webhook['headers_template']
         data.append(webhook_representation)
 
-    return base64.b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
+    return b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
 def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:
@@ -116,7 +150,13 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
         and not isinstance(value, (bytes, bytearray, io.IOBase))
         and not isinstance(value, str)
     ):
-        value = json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
+        # Don't use indentation to reduce size.
+        value = json.dumps(
+            value,
+            ensure_ascii=False,
+            allow_nan=False,
+            default=str,
+        ).encode('utf-8')
 
     return (value, content_type)
 
@@ -196,16 +236,17 @@ def encode_base62(num: int) -> str:
     Returns:
         The base62-encoded string.
     """
-    charset = string.digits + string.ascii_letters
-
     if num == 0:
-        return charset[0]
+        return _BASE62_CHARSET[0]
 
-    res = ''
+    # Use list to build result for O(n) complexity instead of O(n^2) string concatenation.
+    parts = []
     while num > 0:
         num, remainder = divmod(num, 62)
-        res = charset[remainder] + res
-    return res
+        parts.append(_BASE62_CHARSET[remainder])
+
+    # Reverse and join once at the end.
+    return ''.join(reversed(parts))
 
 
 def create_hmac_signature(secret_key: str, message: str) -> str:
@@ -253,5 +294,5 @@ def create_storage_content_signature(
     message_to_sign = f'{version}.{expires_at}.{resource_id}'
     hmac_sig = create_hmac_signature(url_signing_secret_key, message_to_sign)
 
-    base64url_encoded_payload = base64.urlsafe_b64encode(f'{version}.{expires_at}.{hmac_sig}'.encode())
+    base64url_encoded_payload = urlsafe_b64encode(f'{version}.{expires_at}.{hmac_sig}'.encode())
     return base64url_encoded_payload.decode('utf-8')

@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from .conftest import maybe_await
-from .utils import get_random_resource_name
+from .conftest import get_random_resource_name, maybe_await
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync

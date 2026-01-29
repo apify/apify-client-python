@@ -9,8 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import Actor, EnvVar, ListOfEnvVars
 
 
-from .conftest import maybe_await
-from .utils import get_random_resource_name
+from .conftest import get_random_resource_name, maybe_await
 
 
 async def test_actor_env_var_list(client: ApifyClient | ApifyClientAsync) -> None:

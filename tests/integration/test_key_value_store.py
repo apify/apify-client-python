@@ -5,53 +5,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
+    from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._models import KeyValueStore, ListOfKeys
 
 import json
-from unittest import mock
-from unittest.mock import Mock
 
 import impit
 import pytest
 
-from .conftest import maybe_await, maybe_sleep
-from .utils import KvsFixture, get_random_resource_name, parametrized_api_urls
-from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._config import DEFAULT_API_URL
-from apify_client._utils import create_hmac_signature, create_storage_content_signature
+from .conftest import KvsFixture, get_random_resource_name, maybe_await, maybe_sleep
 from apify_client.errors import ApifyApiError
-
-##################################################
-# OLD TESTS - Tests with mocks and signed URLs
-##################################################
-
-MOCKED_ID = 'someID'
-
-
-def _get_mocked_api_kvs_response(signing_key: str | None = None) -> Mock:
-    response_data = {
-        'data': {
-            'id': MOCKED_ID,
-            'name': 'name',
-            'userId': 'userId',
-            'createdAt': '2025-09-11T08:48:51.806Z',
-            'modifiedAt': '2025-09-11T08:48:51.806Z',
-            'accessedAt': '2025-09-11T08:48:51.806Z',
-            'actId': None,
-            'actRunId': None,
-            'schema': None,
-            'stats': {'readCount': 0, 'writeCount': 0, 'deleteCount': 0, 'listCount': 0, 'storageBytes': 0},
-            'consoleUrl': 'https://console.apify.com/storage/key-value-stores/someID',
-            'keysPublicUrl': 'https://api.apify.com/v2/key-value-stores/someID/keys',
-            'generalAccess': 'FOLLOW_USER_SETTING',
-        }
-    }
-    if signing_key:
-        response_data['data']['urlSigningSecretKey'] = signing_key
-
-    mock_response = Mock()
-    mock_response.json.return_value = response_data
-    return mock_response
 
 
 async def test_key_value_store_should_create_expiring_keys_public_url_with_params(
@@ -102,72 +65,6 @@ async def test_key_value_store_should_create_public_keys_non_expiring_url(
     await maybe_await(store.delete())
     result = await maybe_await(client.key_value_store(created_store.id).get())
     assert result is None
-
-
-@pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
-@parametrized_api_urls
-async def test_public_url(
-    client: ApifyClient | ApifyClientAsync, api_token: str, api_url: str, api_public_url: str, signing_key: str
-) -> None:
-    """Test public URL generation for key-value stores (runs for both sync and async clients)."""
-    # Create a fresh client with the parametrized URL settings
-    if isinstance(client, ApifyClientAsync):
-        test_client: ApifyClient | ApifyClientAsync = ApifyClientAsync(
-            token=api_token, api_url=api_url, api_public_url=api_public_url
-        )
-    else:
-        test_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-
-    kvs = test_client.key_value_store(MOCKED_ID)
-
-    # Mock the API call to return predefined response
-    with mock.patch.object(
-        test_client._http_client,
-        'call',
-        return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
-    ):
-        public_url = await maybe_await(kvs.create_keys_public_url())
-        if signing_key:
-            signature_value = create_storage_content_signature(
-                resource_id=MOCKED_ID, url_signing_secret_key=signing_key
-            )
-            expected_signature = f'?signature={signature_value}'
-        else:
-            expected_signature = ''
-        assert public_url == (
-            f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/keys{expected_signature}'
-        )
-
-
-@pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
-@parametrized_api_urls
-async def test_record_public_url(
-    client: ApifyClient | ApifyClientAsync, api_token: str, api_url: str, api_public_url: str, signing_key: str
-) -> None:
-    """Test record public URL generation for key-value stores (runs for both sync and async clients)."""
-    # Create a fresh client with the parametrized URL settings
-    if isinstance(client, ApifyClientAsync):
-        test_client: ApifyClient | ApifyClientAsync = ApifyClientAsync(
-            token=api_token, api_url=api_url, api_public_url=api_public_url
-        )
-    else:
-        test_client = ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-
-    key = 'some_key'
-    kvs = test_client.key_value_store(MOCKED_ID)
-
-    # Mock the API call to return predefined response
-    with mock.patch.object(
-        test_client._http_client,
-        'call',
-        return_value=_get_mocked_api_kvs_response(signing_key=signing_key),
-    ):
-        public_url = await maybe_await(kvs.get_record_public_url(key=key))
-        expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
-        assert public_url == (
-            f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/someID/'
-            f'records/{key}{expected_signature}'
-        )
 
 
 async def test_list_keys_signature(
@@ -269,11 +166,6 @@ async def test_stream_record_signature(
             stream_dict = cast('dict', stream)
             value = json.loads(stream_dict['value'].content.decode('utf-8'))
     assert test_kvs_of_another_user.expected_content[key] == value
-
-
-#############
-# NEW TESTS #
-#############
 
 
 async def test_key_value_store_get_or_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:

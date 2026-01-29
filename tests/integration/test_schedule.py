@@ -9,8 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import ListOfSchedules, Schedule
 
 
-from .conftest import maybe_await
-from .utils import get_random_resource_name
+from .conftest import get_random_resource_name, maybe_await
 
 
 async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:

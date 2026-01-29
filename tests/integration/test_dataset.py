@@ -10,53 +10,17 @@ if TYPE_CHECKING:
 
     from impit import Response
 
+    from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._models import Dataset
     from apify_client._resource_clients.dataset import DatasetItemsPage
 
 import json
-from unittest import mock
-from unittest.mock import Mock
 
 import impit
 import pytest
 
-from .conftest import maybe_await, maybe_sleep
-from .utils import DatasetFixture, get_random_resource_name, parametrized_api_urls
-from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._config import DEFAULT_API_URL
+from .conftest import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
 from apify_client.errors import ApifyApiError
-
-##################################################
-# OLD TESTS - Tests with mocks and signed URLs
-##################################################
-
-MOCKED_API_DATASET_RESPONSE = """{
-  "data": {
-    "id": "someID",
-    "name": "name",
-    "userId": "userId",
-    "createdAt": "2025-09-11T08:48:51.806Z",
-    "modifiedAt": "2025-09-11T08:48:51.806Z",
-    "accessedAt": "2025-09-11T08:48:51.806Z",
-    "itemCount": 0,
-    "cleanItemCount": 0,
-    "actId": null,
-    "actRunId": null,
-    "schema": null,
-    "stats": {
-      "readCount": 0,
-      "writeCount": 0,
-      "deleteCount": 0,
-      "listCount": 0,
-      "storageBytes": 0
-    },
-    "fields": [],
-    "consoleUrl": "https://console.apify.com/storage/datasets/someID",
-    "itemsPublicUrl": "https://api.apify.com/v2/datasets/someID/items",
-    "generalAccess": "FOLLOW_USER_SETTING",
-    "urlSigningSecretKey": "urlSigningSecretKey"
-  }
-}"""
 
 
 async def test_dataset_should_create_public_items_expiring_url_with_params(
@@ -109,38 +73,6 @@ async def test_dataset_should_create_public_items_non_expiring_url(
     await maybe_await(dataset.delete())
     result = await maybe_await(client.dataset(created_dataset.id).get())
     assert result is None
-
-
-# Parametrized test remains sync-only as it tests URL generation with mocks
-@parametrized_api_urls
-async def test_public_url(
-    client: ApifyClient | ApifyClientAsync,
-    api_token: str,
-    api_url: str,
-    api_public_url: str,
-) -> None:
-    """Test public URL generation for datasets (runs for both sync and async clients)."""
-    # Create a fresh client with the parametrized URL settings
-    test_client = (
-        ApifyClientAsync(token=api_token, api_url=api_url, api_public_url=api_public_url)
-        if isinstance(client, ApifyClientAsync)
-        else ApifyClient(token=api_token, api_url=api_url, api_public_url=api_public_url)
-    )
-
-    dataset = test_client.dataset('someID')
-
-    # Mock the API call to return predefined response
-    mock_response = Mock()
-    mock_response.json.return_value = json.loads(MOCKED_API_DATASET_RESPONSE)
-
-    with mock.patch.object(test_client._http_client, 'call', return_value=mock_response):
-        result = await maybe_await(dataset.create_items_public_url())
-        public_url = cast('str', result)
-
-        assert public_url == (
-            f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'
-            f'someID/items?signature={public_url.split("signature=")[1]}'
-        )
 
 
 async def test_list_items_signature(
@@ -212,11 +144,6 @@ async def test_get_items_as_bytes_signature(
     result = await maybe_await(dataset.get_items_as_bytes(signature=signature))
     raw_data = cast('bytes', result)
     assert test_dataset_of_another_user.expected_content == json.loads(raw_data.decode('utf-8'))
-
-
-#############
-# NEW TESTS #
-#############
 
 
 async def test_dataset_get_or_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:

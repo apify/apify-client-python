@@ -20,12 +20,7 @@ if TYPE_CHECKING:
     )
 
 
-from .conftest import maybe_await, maybe_sleep
-from .utils import get_random_resource_name, get_random_string
-
-##################################################
-# OLD TESTS - Tests with mocks and signed URLs
-##################################################
+from .conftest import get_random_resource_name, get_random_string, maybe_await, maybe_sleep
 
 
 async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> None:
@@ -76,11 +71,6 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> Non
     await maybe_await(rq.delete())
     result = await maybe_await(client.request_queue(created_rq.id).get())
     assert result is None
-
-
-#############
-# NEW TESTS #
-#############
 
 
 async def test_request_queue_get_or_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:

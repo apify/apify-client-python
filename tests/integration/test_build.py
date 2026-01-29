@@ -9,8 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import Actor, Build, ListOfBuilds
 
 
-from .conftest import maybe_await
-from .utils import get_random_resource_name
+from .conftest import get_random_resource_name, maybe_await
 
 # Use a public actor that has builds available
 HELLO_WORLD_ACTOR = 'apify/hello-world'

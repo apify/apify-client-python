@@ -16,6 +16,7 @@ from apify_client._utils import (
     filter_none_values,
     response_to_dict,
     to_safe_id,
+    to_seconds,
 )
 from apify_client.errors import ApifyApiError
 
@@ -244,7 +245,7 @@ class RunClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=int(timeout.total_seconds()) if timeout is not None else None,
+            timeout=to_seconds(timeout),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
@@ -647,7 +648,7 @@ class RunClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=int(timeout.total_seconds()) if timeout is not None else None,
+            timeout=to_seconds(timeout),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,

@@ -22,6 +22,7 @@ from apify_client._utils import (
     enum_to_value,
     filter_none_values,
     response_to_dict,
+    to_seconds,
 )
 from apify_client.errors import ApifyApiError
 
@@ -266,7 +267,7 @@ class ActorClient(ResourceClient):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=int(timeout.total_seconds()) if timeout is not None else None,
+            timeout=to_seconds(timeout),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -744,7 +745,7 @@ class ActorClientAsync(ResourceClientAsync):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=int(timeout.total_seconds()) if timeout is not None else None,
+            timeout=to_seconds(timeout),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,

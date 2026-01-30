@@ -164,12 +164,17 @@ async def test_kvs_public_url_async(api_url: str, api_public_url: str | None, si
     client = ApifyClientAsync(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
     kvs = client.key_value_store(MOCKED_KVS_ID)
 
-    with mock.patch.object(client._http_client, 'call', return_value=_get_mocked_kvs_response(signing_key=signing_key)):
+    with mock.patch.object(
+        client._http_client,
+        'call',
+        return_value=_get_mocked_kvs_response(signing_key=signing_key),
+    ):
         public_url = await kvs.create_keys_public_url()
 
         if signing_key:
             signature_value = create_storage_content_signature(
-                resource_id=MOCKED_KVS_ID, url_signing_secret_key=signing_key
+                resource_id=MOCKED_KVS_ID,
+                url_signing_secret_key=signing_key,
             )
             expected_signature = f'?signature={signature_value}'
         else:

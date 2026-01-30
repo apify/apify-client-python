@@ -11,15 +11,37 @@ from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from apify_client.errors import ApifyApiError  # noqa: TC001 - Used at runtime in catch_not_found_or_throw
+from typing_extensions import overload
 
 if TYPE_CHECKING:
+    from datetime import timedelta
+
     from impit import Response
+
+    from apify_client.errors import ApifyApiError
 
 T = TypeVar('T')
 
 _BASE62_CHARSET = string.digits + string.ascii_letters
 """Module-level constant for base62 encoding."""
+
+
+@overload
+def to_seconds(td: timedelta) -> int: ...
+@overload
+def to_seconds(td: None) -> None: ...
+
+
+def to_seconds(td: timedelta | None) -> int | None:
+    """Convert timedelta to seconds.
+
+    Args:
+        td: The timedelta to convert, or None.
+
+    Returns:
+        The total seconds as an integer, or None if input is None.
+    """
+    return int(td.total_seconds()) if td is not None else None
 
 
 def catch_not_found_or_throw(exc: ApifyApiError) -> None:
@@ -269,7 +291,7 @@ def create_hmac_signature(secret_key: str, message: str) -> str:
 def create_storage_content_signature(
     resource_id: str,
     url_signing_secret_key: str,
-    expires_in_millis: int | None = None,
+    expires_in: timedelta | None = None,
     version: int = 0,
 ) -> str:
     """Create a secure signature for a storage resource like a dataset or key-value store.
@@ -281,13 +303,13 @@ def create_storage_content_signature(
     Args:
         resource_id: The unique identifier of the storage resource.
         url_signing_secret_key: The secret key for signing the URL.
-        expires_in_millis: Optional expiration time in milliseconds from now; if None, the signature never expires.
+        expires_in: Optional expiration duration; if None, the signature never expires.
         version: The signature version number (default: 0).
 
     Returns:
         The base64url-encoded signature string.
     """
-    expires_at = int(time.time() * 1000) + expires_in_millis if expires_in_millis else 0
+    expires_at = int(time.time() * 1000) + int(to_seconds(expires_in) * 1000) if expires_in is not None else 0
 
     message_to_sign = f'{version}.{expires_at}.{resource_id}'
     hmac_sig = create_hmac_signature(url_signing_secret_key, message_to_sign)

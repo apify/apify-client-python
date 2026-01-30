@@ -12,6 +12,7 @@ import impit
 from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._logging import log_context, logger_name
+from apify_client._utils import to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -57,7 +58,7 @@ class SyncHttpClient(BaseHttpClient):
         self._impit_client = impit.Client(
             headers=self._headers,
             follow_redirects=True,
-            timeout=self._timeout.total_seconds(),
+            timeout=to_seconds(self._timeout),
         )
 
     def call(
@@ -230,7 +231,7 @@ class SyncHttpClient(BaseHttpClient):
                     raise
 
             random_sleep_factor = random.uniform(1, 1 + random_factor)
-            backoff_base_secs = backoff_base.total_seconds()
+            backoff_base_secs = to_seconds(backoff_base)
             backoff_exp_factor = backoff_factor ** (attempt - 1)
 
             sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor

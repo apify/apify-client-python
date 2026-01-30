@@ -685,7 +685,7 @@ class DatasetClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=dataset.id,
                 url_signing_secret_key=dataset.url_signing_secret_key,
-                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
+                expires_in=expires_in,
             )
             request_params['signature'] = signature
 
@@ -1233,7 +1233,7 @@ class DatasetClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=dataset.id,
                 url_signing_secret_key=dataset.url_signing_secret_key,
-                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
+                expires_in=expires_in,
             )
             request_params['signature'] = signature
 

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, cast
 from typing_extensions import Self
 
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw
+from apify_client._utils import catch_not_found_or_throw, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -403,7 +403,7 @@ class StatusMessageWatcher:
         if self._force_propagate:
             to_logger.propagate = True
         self._to_logger = to_logger
-        self._check_period = check_period.total_seconds()
+        self._check_period = to_seconds(check_period)
         self._last_status_message = ''
 
     def _log_run_data(self, run_data: Run | None) -> bool:

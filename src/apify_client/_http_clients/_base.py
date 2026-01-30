@@ -13,6 +13,7 @@ import impit
 
 from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
 from apify_client._statistics import ClientStatistics
+from apify_client._utils import to_seconds
 from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -149,6 +150,6 @@ class BaseHttpClient:
 
     def _calculate_timeout(self, attempt: int, timeout: timedelta | None = None) -> float:
         """Calculate timeout for a request attempt with exponential increase, bounded by client timeout."""
-        timeout_secs = (timeout or self._timeout).total_seconds()
-        client_timeout_secs = self._timeout.total_seconds()
+        timeout_secs = to_seconds(timeout or self._timeout)
+        client_timeout_secs = to_seconds(self._timeout)
         return min(client_timeout_secs, timeout_secs * 2 ** (attempt - 1))

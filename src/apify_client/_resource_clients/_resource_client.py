@@ -9,8 +9,7 @@ from urllib.parse import urlencode
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, ActorJobStatus
 from apify_client._logging import WithLogDetailsClient
-from apify_client._representations import to_seconds
-from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id
+from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id, to_seconds
 from apify_client.errors import ApifyApiError, ApifyClientError
 
 if TYPE_CHECKING:
@@ -171,7 +170,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
                 )
                 job_response = response_to_dict(response)
                 job = job_response.get('data') if isinstance(job_response, dict) else job_response
-                seconds_elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+                seconds_elapsed = to_seconds(datetime.now(timezone.utc) - started_at)
 
                 if not isinstance(job, dict):
                     raise ApifyClientError(
@@ -193,7 +192,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
-                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST.total_seconds():
+                if seconds_elapsed > to_seconds(DEFAULT_WAIT_WHEN_JOB_NOT_EXIST):
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -340,10 +339,10 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         should_repeat = True
         job: dict | None = None
         seconds_elapsed = 0.0
-        wait_secs = wait_duration.total_seconds() if wait_duration is not None else None
+        wait_secs = to_seconds(wait_duration)
 
         while should_repeat:
-            wait_for_finish = int(DEFAULT_WAIT_FOR_FINISH.total_seconds())
+            wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH)
             if wait_secs is not None:
                 wait_for_finish = int(wait_secs - seconds_elapsed)
 
@@ -362,7 +361,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
                         f'Expected dict with "status" field, got: {type(job).__name__}'
                     )
 
-                seconds_elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+                seconds_elapsed = to_seconds(datetime.now(timezone.utc) - started_at)
                 is_terminal = ActorJobStatus(job['status']).is_terminal
                 is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
                 if is_terminal or is_timed_out:
@@ -377,7 +376,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
-                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST.total_seconds():
+                if seconds_elapsed > to_seconds(DEFAULT_WAIT_WHEN_JOB_NOT_EXIST):
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying

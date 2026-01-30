@@ -36,7 +36,7 @@ from apify_client._models import (
     UnlockRequestsResult,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -169,9 +169,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._build_params(
-            lockSecs=int(lock_duration.total_seconds()), limit=limit, clientKey=self.client_key
-        )
+        request_params = self._build_params(lockSecs=to_seconds(lock_duration), limit=limit, clientKey=self.client_key)
 
         response = self._http_client.call(
             url=self._build_url('head/lock'),
@@ -297,7 +295,7 @@ class RequestQueueClient(ResourceClient):
             lock_duration: By how much to prolong the lock.
         """
         request_params = self._build_params(
-            clientKey=self.client_key, forefront=forefront, lockSecs=int(lock_duration.total_seconds())
+            clientKey=self.client_key, forefront=forefront, lockSecs=to_seconds(lock_duration)
         )
 
         response = self._http_client.call(
@@ -598,9 +596,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._build_params(
-            lockSecs=int(lock_duration.total_seconds()), limit=limit, clientKey=self.client_key
-        )
+        request_params = self._build_params(lockSecs=to_seconds(lock_duration), limit=limit, clientKey=self.client_key)
 
         response = await self._http_client.call(
             url=self._build_url('head/lock'),
@@ -724,7 +720,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             lock_duration: By how much to prolong the lock.
         """
         request_params = self._build_params(
-            clientKey=self.client_key, forefront=forefront, lockSecs=int(lock_duration.total_seconds())
+            clientKey=self.client_key, forefront=forefront, lockSecs=to_seconds(lock_duration)
         )
 
         response = await self._http_client.call(

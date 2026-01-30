@@ -8,33 +8,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from typing_extensions import overload
-
-from apify_client._utils import enum_to_value
+from apify_client._utils import enum_to_value, to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._consts import WebhookEventType
     from apify_client._models import ActorPermissionLevel, VersionSourceType
-
-
-@overload
-def to_seconds(td: timedelta) -> int: ...
-@overload
-def to_seconds(td: None) -> None: ...
-
-
-def to_seconds(td: timedelta | None) -> int | None:
-    """Convert timedelta to seconds.
-
-    Args:
-        td: The timedelta to convert, or None.
-
-    Returns:
-        The total seconds as an integer, or None if input is None.
-    """
-    return int(td.total_seconds()) if td is not None else None
 
 
 def build_actor_standby_dict(

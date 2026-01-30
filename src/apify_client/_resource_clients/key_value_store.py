@@ -456,7 +456,7 @@ class KeyValueStoreClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=metadata.id,
                 url_signing_secret_key=metadata.url_signing_secret_key,
-                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
+                expires_in=expires_in,
             )
             request_params['signature'] = signature
 
@@ -865,7 +865,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=metadata.id,
                 url_signing_secret_key=metadata.url_signing_secret_key,
-                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
+                expires_in=expires_in,
             )
             request_params['signature'] = signature
 

@@ -1,4 +1,5 @@
 import io
+from datetime import timedelta
 from enum import Enum
 from http import HTTPStatus
 from unittest.mock import Mock
@@ -223,15 +224,20 @@ def test_create_hmac_signature() -> None:
     assert signature != signature4
 
 
-def test_create_storage_content_signature() -> None:
-    """Test storage content signature creation."""
+def test_create_storage_signature() -> None:
+    """Test storage signature creation."""
     # Non-expiring signature
     signature = create_storage_content_signature('resource_123', 'secret_key')
     assert isinstance(signature, str)
     assert len(signature) > 0
 
     # Expiring signature
-    signature_expiring = create_storage_content_signature('resource_123', 'secret_key', expires_in_millis=60000)
+    signature_expiring = create_storage_content_signature(
+        'resource_123',
+        'secret_key',
+        expires_in=timedelta(seconds=60),
+    )
+
     assert isinstance(signature_expiring, str)
     assert len(signature_expiring) > 0
     assert signature != signature_expiring  # Different because of expiration

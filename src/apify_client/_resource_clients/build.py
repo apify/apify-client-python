@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import Build, GetBuildResponse, PostAbortBuildResponse
@@ -94,11 +95,11 @@ class BuildClient(ResourceClient):
 
         return response_as_dict
 
-    def wait_for_finish(self, *, wait_secs: int | None = None) -> Build | None:
+    def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
-            wait_secs: How long does the client wait for build to finish. None for indefinite.
+            wait_duration: How long does the client wait for build to finish. None for indefinite.
 
         Returns:
             The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -107,7 +108,7 @@ class BuildClient(ResourceClient):
         result = self._wait_for_finish(
             url=self._build_url(),
             params=self._build_params(),
-            wait_secs=wait_secs,
+            wait_duration=wait_duration,
         )
         return Build.model_validate(result) if result is not None else None
 
@@ -208,11 +209,11 @@ class BuildClientAsync(ResourceClientAsync):
 
         return response_as_dict
 
-    async def wait_for_finish(self, *, wait_secs: int | None = None) -> Build | None:
+    async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
-            wait_secs: How long does the client wait for build to finish. None for indefinite.
+            wait_duration: How long does the client wait for build to finish. None for indefinite.
 
         Returns:
             The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -221,7 +222,7 @@ class BuildClientAsync(ResourceClientAsync):
         result = await self._wait_for_finish(
             url=self._build_url(),
             params=self._build_params(),
-            wait_secs=wait_secs,
+            wait_duration=wait_duration,
         )
         return Build.model_validate(result) if result is not None else None
 

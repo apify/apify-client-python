@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-import math
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
-from apify_client._consts import DEFAULT_WAIT_FOR_FINISH_SEC, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, ActorJobStatus
+from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, ActorJobStatus
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id
 from apify_client.errors import ApifyApiError, ApifyClientError
@@ -133,7 +132,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         self,
         url: str,
         params: dict,
-        wait_secs: int | None = None,
+        wait_duration: timedelta | None = None,
     ) -> dict | None:
         """Wait synchronously for an Actor job (run or build) to finish.
 
@@ -143,11 +142,11 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         Args:
             url: Full URL to the job endpoint.
             params: Base query parameters to include in each request.
-            wait_secs: Maximum seconds to wait (None = indefinite).
+            wait_duration: Maximum time to wait (None = indefinite).
 
         Returns:
             Job data dict when finished, or None if job doesn't exist after
-            DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC seconds.
+            DEFAULT_WAIT_WHEN_JOB_NOT_EXIST seconds.
 
         Raises:
             ApifyApiError: If API returns errors other than 404.
@@ -155,12 +154,13 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: dict | None = None
-        seconds_elapsed = 0
+        seconds_elapsed = 0.0
+        wait_secs = wait_duration.total_seconds() if wait_duration is not None else None
 
         while should_repeat:
-            wait_for_finish = DEFAULT_WAIT_FOR_FINISH_SEC
+            wait_for_finish = int(DEFAULT_WAIT_FOR_FINISH.total_seconds())
             if wait_secs is not None:
-                wait_for_finish = wait_secs - seconds_elapsed
+                wait_for_finish = int(wait_secs - seconds_elapsed)
 
             try:
                 response = self._http_client.call(
@@ -170,7 +170,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
                 )
                 job_response = response_to_dict(response)
                 job = job_response.get('data') if isinstance(job_response, dict) else job_response
-                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+                seconds_elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
 
                 if not isinstance(job, dict):
                     raise ApifyClientError(
@@ -190,9 +190,9 @@ class ResourceClient(metaclass=WithLogDetailsClient):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up
+                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
-                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
+                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST.total_seconds():
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -316,7 +316,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         self,
         url: str,
         params: dict,
-        wait_secs: int | None = None,
+        wait_duration: timedelta | None = None,
     ) -> dict | None:
         """Wait synchronously for an Actor job (run or build) to finish.
 
@@ -326,11 +326,11 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         Args:
             url: Full URL to the job endpoint.
             params: Base query parameters to include in each request.
-            wait_secs: Maximum seconds to wait (None = indefinite).
+            wait_duration: Maximum time to wait (None = indefinite).
 
         Returns:
             Job data dict when finished, or None if job doesn't exist after
-            DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC seconds.
+            DEFAULT_WAIT_WHEN_JOB_NOT_EXIST seconds.
 
         Raises:
             ApifyApiError: If API returns errors other than 404.
@@ -338,12 +338,13 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         started_at = datetime.now(timezone.utc)
         should_repeat = True
         job: dict | None = None
-        seconds_elapsed = 0
+        seconds_elapsed = 0.0
+        wait_secs = wait_duration.total_seconds() if wait_duration is not None else None
 
         while should_repeat:
-            wait_for_finish = DEFAULT_WAIT_FOR_FINISH_SEC
+            wait_for_finish = int(DEFAULT_WAIT_FOR_FINISH.total_seconds())
             if wait_secs is not None:
-                wait_for_finish = wait_secs - seconds_elapsed
+                wait_for_finish = int(wait_secs - seconds_elapsed)
 
             try:
                 response = await self._http_client.call(
@@ -360,7 +361,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
                         f'Expected dict with "status" field, got: {type(job).__name__}'
                     )
 
-                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
+                seconds_elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
                 is_terminal = ActorJobStatus(job['status']).is_terminal
                 is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
                 if is_terminal or is_timed_out:
@@ -373,9 +374,9 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC, we give up
+                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
-                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
+                if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST.total_seconds():
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying

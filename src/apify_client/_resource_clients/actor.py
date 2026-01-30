@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._models import (
@@ -63,14 +64,14 @@ def get_actor_representation(
     default_run_build: str | None = None,
     default_run_max_items: int | None = None,
     default_run_memory_mbytes: int | None = None,
-    default_run_timeout_secs: int | None = None,
+    default_run_timeout: timedelta | None = None,
     default_run_force_permission_level: ActorPermissionLevel | None = None,
     example_run_input_body: Any = None,
     example_run_input_content_type: str | None = None,
     actor_standby_is_enabled: bool | None = None,
     actor_standby_desired_requests_per_actor_run: int | None = None,
     actor_standby_max_requests_per_actor_run: int | None = None,
-    actor_standby_idle_timeout_secs: int | None = None,
+    actor_standby_idle_timeout: timedelta | None = None,
     actor_standby_build: str | None = None,
     actor_standby_memory_mbytes: int | None = None,
     pricing_infos: list[dict] | None = None,
@@ -99,7 +100,7 @@ def get_actor_representation(
             default_run_build is not None,
             default_run_max_items is not None,
             default_run_memory_mbytes is not None,
-            default_run_timeout_secs is not None,
+            default_run_timeout is not None,
             restart_on_error is not None,
             default_run_force_permission_level is not None,
         ]
@@ -108,7 +109,7 @@ def get_actor_representation(
             'build': default_run_build,
             'maxItems': default_run_max_items,
             'memoryMbytes': default_run_memory_mbytes,
-            'timeoutSecs': default_run_timeout_secs,
+            'timeoutSecs': int(default_run_timeout.total_seconds()) if default_run_timeout is not None else None,
             'restartOnError': restart_on_error,
             'forcePermissionLevel': default_run_force_permission_level,
         }
@@ -119,7 +120,7 @@ def get_actor_representation(
             actor_standby_is_enabled is not None,
             actor_standby_desired_requests_per_actor_run is not None,
             actor_standby_max_requests_per_actor_run is not None,
-            actor_standby_idle_timeout_secs is not None,
+            actor_standby_idle_timeout is not None,
             actor_standby_build is not None,
             actor_standby_memory_mbytes is not None,
         ]
@@ -128,7 +129,9 @@ def get_actor_representation(
             'isEnabled': actor_standby_is_enabled,
             'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
             'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
-            'idleTimeoutSecs': actor_standby_idle_timeout_secs,
+            'idleTimeoutSecs': (
+                int(actor_standby_idle_timeout.total_seconds()) if actor_standby_idle_timeout is not None else None
+            ),
             'build': actor_standby_build,
             'memoryMbytes': actor_standby_memory_mbytes,
         }
@@ -199,13 +202,13 @@ class ActorClient(ResourceClient):
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
-        default_run_timeout_secs: int | None = None,
+        default_run_timeout: timedelta | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
@@ -233,7 +236,7 @@ class ActorClient(ResourceClient):
             default_run_max_items: Default limit of the number of results that will be returned
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
-            default_run_timeout_secs: Default timeout for the runs of this Actor in seconds.
+            default_run_timeout: Default timeout for the runs of this Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -241,7 +244,7 @@ class ActorClient(ResourceClient):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -269,13 +272,13 @@ class ActorClient(ResourceClient):
             default_run_build=default_run_build,
             default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout_secs=default_run_timeout_secs,
+            default_run_timeout=default_run_timeout,
             example_run_input_body=example_run_input_body,
             example_run_input_content_type=example_run_input_content_type,
             actor_standby_is_enabled=actor_standby_is_enabled,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
             pricing_infos=pricing_infos,
@@ -317,7 +320,7 @@ class ActorClient(ResourceClient):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
@@ -338,7 +341,7 @@ class ActorClient(ResourceClient):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
@@ -363,7 +366,7 @@ class ActorClient(ResourceClient):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=timeout_secs,
+            timeout=int(timeout.total_seconds()) if timeout is not None else None,
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -390,15 +393,15 @@ class ActorClient(ResourceClient):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         webhooks: list[dict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
-        wait_secs: int | None = None,
+        wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
-        It waits indefinitely, unless the wait_secs argument is provided.
+        It waits indefinitely, unless the wait_duration argument is provided.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
@@ -414,14 +417,14 @@ class ActorClient(ResourceClient):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
             webhooks: Optional webhooks (https://docs.apify.com/webhooks) associated with the Actor run, which can
                 be used to receive a notification, e.g. when the Actor finished or failed. If you already have
                 a webhook set up for the Actor, you do not have to add it again here.
-            wait_secs: The maximum number of seconds the server waits for the run to finish. If not provided,
+            wait_duration: The maximum time the server waits for the run to finish. If not provided,
                 waits indefinitely.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
@@ -439,7 +442,7 @@ class ActorClient(ResourceClient):
             max_total_charge_usd=max_total_charge_usd,
             restart_on_error=restart_on_error,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
         )
@@ -452,13 +455,13 @@ class ActorClient(ResourceClient):
         )
 
         if not logger:
-            return run_client.wait_for_finish(wait_secs=wait_secs)
+            return run_client.wait_for_finish(wait_duration=wait_duration)
 
         if logger == 'default':
             logger = None
 
         with run_client.get_status_message_watcher(to_logger=logger), run_client.get_streamed_log(to_logger=logger):
-            return run_client.wait_for_finish(wait_secs=wait_secs)
+            return run_client.wait_for_finish(wait_duration=wait_duration)
 
     def build(
         self,
@@ -677,13 +680,13 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
-        default_run_timeout_secs: int | None = None,
+        default_run_timeout: timedelta | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict] | None = None,
@@ -711,7 +714,7 @@ class ActorClientAsync(ResourceClientAsync):
             default_run_max_items: Default limit of the number of results that will be returned
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
-            default_run_timeout_secs: Default timeout for the runs of this Actor in seconds.
+            default_run_timeout: Default timeout for the runs of this Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -719,7 +722,7 @@ class ActorClientAsync(ResourceClientAsync):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -747,13 +750,13 @@ class ActorClientAsync(ResourceClientAsync):
             default_run_build=default_run_build,
             default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout_secs=default_run_timeout_secs,
+            default_run_timeout=default_run_timeout,
             example_run_input_body=example_run_input_body,
             example_run_input_content_type=example_run_input_content_type,
             actor_standby_is_enabled=actor_standby_is_enabled,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
             pricing_infos=pricing_infos,
@@ -795,7 +798,7 @@ class ActorClientAsync(ResourceClientAsync):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
@@ -816,7 +819,7 @@ class ActorClientAsync(ResourceClientAsync):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
@@ -841,7 +844,7 @@ class ActorClientAsync(ResourceClientAsync):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=timeout_secs,
+            timeout=int(timeout.total_seconds()) if timeout is not None else None,
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -868,15 +871,15 @@ class ActorClientAsync(ResourceClientAsync):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         webhooks: list[dict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
-        wait_secs: int | None = None,
+        wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
-        It waits indefinitely, unless the wait_secs argument is provided.
+        It waits indefinitely, unless the wait_duration argument is provided.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
@@ -892,14 +895,14 @@ class ActorClientAsync(ResourceClientAsync):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
             webhooks: Optional webhooks (https://docs.apify.com/webhooks) associated with the Actor run, which can
                 be used to receive a notification, e.g. when the Actor finished or failed. If you already have
                 a webhook set up for the Actor, you do not have to add it again here.
-            wait_secs: The maximum number of seconds the server waits for the run to finish. If not provided,
+            wait_duration: The maximum time the server waits for the run to finish. If not provided,
                 waits indefinitely.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
@@ -917,7 +920,7 @@ class ActorClientAsync(ResourceClientAsync):
             max_total_charge_usd=max_total_charge_usd,
             restart_on_error=restart_on_error,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
         )
@@ -931,7 +934,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         if not logger:
-            return await run_client.wait_for_finish(wait_secs=wait_secs)
+            return await run_client.wait_for_finish(wait_duration=wait_duration)
 
         if logger == 'default':
             logger = None
@@ -940,7 +943,7 @@ class ActorClientAsync(ResourceClientAsync):
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 
         async with status_redirector, streamed_log:
-            return await run_client.wait_for_finish(wait_secs=wait_secs)
+            return await run_client.wait_for_finish(wait_duration=wait_duration)
 
     async def build(
         self,

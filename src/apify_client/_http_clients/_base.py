@@ -4,14 +4,14 @@ import gzip
 import json as jsonlib
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from importlib import metadata
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
 import impit
 
-from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS, DEFAULT_TIMEOUT_SECS
+from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 
@@ -29,23 +29,23 @@ class BaseHttpClient:
         self,
         *,
         token: str | None = None,
-        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
+        timeout: timedelta = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
-        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+        min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
     ) -> None:
         """Initialize the base HTTP client.
 
         Args:
             token: Apify API token for authentication.
-            timeout_secs: Request timeout in seconds.
+            timeout: Request timeout.
             max_retries: Maximum number of retries for failed requests.
-            min_delay_between_retries_millis: Minimum delay between retries in milliseconds.
+            min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
         """
-        self._timeout_secs = timeout_secs
+        self._timeout = timeout
         self._max_retries = max_retries
-        self._min_delay_between_retries_millis = min_delay_between_retries_millis
+        self._min_delay_between_retries = min_delay_between_retries
         self._statistics = statistics or ClientStatistics()
 
         # Build headers for subclasses to use when creating their impit clients.
@@ -147,6 +147,8 @@ class BaseHttpClient:
 
         return f'{url}?{query_string}'
 
-    def _calculate_timeout(self, attempt: int, timeout_secs: int | None = None) -> int:
+    def _calculate_timeout(self, attempt: int, timeout: timedelta | None = None) -> float:
         """Calculate timeout for a request attempt with exponential increase, bounded by client timeout."""
-        return min(self._timeout_secs, (timeout_secs or self._timeout_secs) * 2 ** (attempt - 1))
+        timeout_secs = (timeout or self._timeout).total_seconds()
+        client_timeout_secs = self._timeout.total_seconds()
+        return min(client_timeout_secs, timeout_secs * 2 ** (attempt - 1))

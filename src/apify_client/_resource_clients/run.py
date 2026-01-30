@@ -144,11 +144,11 @@ class RunClient(ResourceClient):
         result = response_to_dict(response)
         return GetRunResponse.model_validate(result).data
 
-    def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
+    def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
-            wait_secs: How long does the client wait for run to finish. None for indefinite.
+            wait_duration: How long does the client wait for run to finish. None for indefinite.
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -157,7 +157,7 @@ class RunClient(ResourceClient):
         response = self._wait_for_finish(
             url=self._build_url(),
             params=self._build_params(),
-            wait_secs=wait_secs,
+            wait_duration=wait_duration,
         )
 
         if response is None:
@@ -210,7 +210,7 @@ class RunClient(ResourceClient):
         *,
         build: str | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
@@ -227,7 +227,7 @@ class RunClient(ResourceClient):
                 By default, the resurrected run uses the same build as before.
             memory_mbytes: New memory limit for the resurrected run, in megabytes. By default, the resurrected run
                 uses the same memory limit as before.
-            timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
+            timeout: New timeout for the resurrected run. By default, the resurrected run uses the
                 same timeout as before.
             max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
@@ -242,7 +242,7 @@ class RunClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=timeout_secs,
+            timeout=int(timeout.total_seconds()) if timeout is not None else None,
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
@@ -532,11 +532,11 @@ class RunClientAsync(ResourceClientAsync):
         result = response_to_dict(response)
         return GetRunResponse.model_validate(result).data
 
-    async def wait_for_finish(self, *, wait_secs: int | None = None) -> Run | None:
+    async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
-            wait_secs: How long does the client wait for run to finish. None for indefinite.
+            wait_duration: How long does the client wait for run to finish. None for indefinite.
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -545,7 +545,7 @@ class RunClientAsync(ResourceClientAsync):
         response = await self._wait_for_finish(
             url=self._build_url(),
             params=self._build_params(),
-            wait_secs=wait_secs,
+            wait_duration=wait_duration,
         )
         return Run.model_validate(response) if response is not None else None
 
@@ -611,7 +611,7 @@ class RunClientAsync(ResourceClientAsync):
         *,
         build: str | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
@@ -628,7 +628,7 @@ class RunClientAsync(ResourceClientAsync):
                 By default, the resurrected run uses the same build as before.
             memory_mbytes: New memory limit for the resurrected run, in megabytes. By default, the resurrected run
                 uses the same memory limit as before.
-            timeout_secs: New timeout for the resurrected run, in seconds. By default, the resurrected run uses the
+            timeout: New timeout for the resurrected run. By default, the resurrected run uses the
                 same timeout as before.
             max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
@@ -643,7 +643,7 @@ class RunClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=timeout_secs,
+            timeout=int(timeout.total_seconds()) if timeout is not None else None,
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,

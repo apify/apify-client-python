@@ -1,6 +1,6 @@
 import time
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import Mock
 
@@ -43,7 +43,7 @@ def test_retry_with_exp_backoff() -> None:
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
     result = SyncHttpClient._retry_with_exp_backoff(
-        returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0
+        returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
     assert result == 'SUCCESS'
@@ -54,13 +54,15 @@ def test_retry_with_exp_backoff() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        SyncHttpClient._retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
+        SyncHttpClient._retry_with_exp_backoff(
+            returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
+        )
     assert attempt_counter == 4
 
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        SyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
+        SyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -94,7 +96,7 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
     result = await AsyncHttpClient._retry_with_exp_backoff(
-        returns_on_fifth_attempt, backoff_base_millis=100, backoff_factor=2, random_factor=0
+        returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
     assert result == 'SUCCESS'
@@ -105,13 +107,15 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        await AsyncHttpClient._retry_with_exp_backoff(returns_on_fifth_attempt, max_retries=3, backoff_base_millis=1)
+        await AsyncHttpClient._retry_with_exp_backoff(
+            returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
+        )
     assert attempt_counter == 4
 
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        await AsyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base_millis=1)
+        await AsyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -121,12 +125,12 @@ def test_base_http_client_initialization() -> None:
 
     client = BaseHttpClient(
         token='test_token',
-        timeout_secs=30,
+        timeout=timedelta(seconds=30),
         max_retries=5,
         statistics=statistics,
     )
 
-    assert client._timeout_secs == 30
+    assert client._timeout == timedelta(seconds=30)
     assert client._max_retries == 5
     assert client._statistics == statistics
     assert client._headers is not None

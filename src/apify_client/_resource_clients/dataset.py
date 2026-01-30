@@ -3,10 +3,11 @@ from __future__ import annotations
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_client._consts import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
+from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
 from apify_client._models import CreateDatasetResponse, Dataset, DatasetStatistics, GetDatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -74,7 +75,7 @@ class DatasetClient(ResourceClient):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
             return CreateDatasetResponse.model_validate(result).data
@@ -105,7 +106,7 @@ class DatasetClient(ResourceClient):
             method='PUT',
             params=self._build_params(),
             json=cleaned,
-            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)
         return CreateDatasetResponse.model_validate(result).data
@@ -120,7 +121,7 @@ class DatasetClient(ResourceClient):
                 url=self._build_url(),
                 method='DELETE',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -609,7 +610,7 @@ class DatasetClient(ResourceClient):
             params=self._build_params(),
             data=data,
             json=json,
-            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
+            timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
     def get_statistics(self) -> DatasetStatistics | None:
@@ -625,7 +626,7 @@ class DatasetClient(ResourceClient):
                 url=self._build_url('statistics'),
                 method='GET',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response.json()
             return GetDatasetStatisticsResponse.model_validate(result).data if result is not None else None
@@ -648,15 +649,15 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
         view: str | None = None,
-        expires_in_secs: int | None = None,
+        expires_in: timedelta | None = None,
     ) -> str:
         """Generate a URL that can be used to access dataset items.
 
         If the client has permission to access the dataset's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
-        This value sets the expiration duration in seconds from the time the URL is generated.
+        You can optionally control how long the signed URL should be valid using the `expires_in` option.
+        This value sets the expiration duration from the time the URL is generated.
         If not provided, the URL will not expire.
 
         Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
@@ -684,7 +685,7 @@ class DatasetClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=dataset.id,
                 url_signing_secret_key=dataset.url_signing_secret_key,
-                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
+                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
             )
             request_params['signature'] = signature
 
@@ -716,7 +717,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
             return CreateDatasetResponse.model_validate(result).data
@@ -747,7 +748,7 @@ class DatasetClientAsync(ResourceClientAsync):
             method='PUT',
             params=self._build_params(),
             json=cleaned,
-            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)
         return CreateDatasetResponse.model_validate(result).data
@@ -762,7 +763,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 url=self._build_url(),
                 method='DELETE',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -1157,7 +1158,7 @@ class DatasetClientAsync(ResourceClientAsync):
             params=self._build_params(),
             data=data,
             json=json,
-            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
+            timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
     async def get_statistics(self) -> DatasetStatistics | None:
@@ -1173,7 +1174,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 url=self._build_url('statistics'),
                 method='GET',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response.json()
             return GetDatasetStatisticsResponse.model_validate(result).data if result is not None else None
@@ -1196,15 +1197,15 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         flatten: list[str] | None = None,
         view: str | None = None,
-        expires_in_secs: int | None = None,
+        expires_in: timedelta | None = None,
     ) -> str:
         """Generate a URL that can be used to access dataset items.
 
         If the client has permission to access the dataset's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
-        This value sets the expiration duration in seconds from the time the URL is generated.
+        You can optionally control how long the signed URL should be valid using the `expires_in` option.
+        This value sets the expiration duration from the time the URL is generated.
         If not provided, the URL will not expire.
 
         Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
@@ -1232,7 +1233,7 @@ class DatasetClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=dataset.id,
                 url_signing_secret_key=dataset.url_signing_secret_key,
-                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
+                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
             )
             request_params['signature'] = signature
 

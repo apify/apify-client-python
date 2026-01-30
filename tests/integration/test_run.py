@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
 
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from .conftest import maybe_await, maybe_sleep
 from apify_client._models import ActorJobStatus, Run
@@ -29,7 +29,7 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
         successful_run = cast('Run', result)
         created_runs.append(successful_run)
 
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(timeout_secs=1))
+    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(timeout=timedelta(seconds=1)))
     if result is not None:
         timed_out_run = cast('Run', result)
         created_runs.append(timed_out_run)
@@ -63,7 +63,7 @@ async def test_run_collection_list_accept_date_range(client: ApifyClient | Apify
         successful_run = cast('Run', result)
         created_runs.append(successful_run)
 
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(timeout_secs=1))
+    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(timeout=timedelta(seconds=1)))
     if result is not None:
         timed_out_run = cast('Run', result)
         created_runs.append(timed_out_run)

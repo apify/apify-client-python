@@ -3,12 +3,13 @@ from __future__ import annotations
 import logging
 import random
 import time
+from datetime import timedelta
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import impit
 
-from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS, DEFAULT_TIMEOUT_SECS
+from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._logging import log_context, logger_name
 from apify_client.errors import ApifyApiError
@@ -31,32 +32,32 @@ class SyncHttpClient(BaseHttpClient):
         self,
         *,
         token: str | None = None,
-        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
+        timeout: timedelta = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
-        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
+        min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
     ) -> None:
         """Initialize the synchronous HTTP client.
 
         Args:
             token: Apify API token for authentication.
-            timeout_secs: Request timeout in seconds.
+            timeout: Request timeout.
             max_retries: Maximum number of retries for failed requests.
-            min_delay_between_retries_millis: Minimum delay between retries in milliseconds.
+            min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
         """
         super().__init__(
             token=token,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             max_retries=max_retries,
-            min_delay_between_retries_millis=min_delay_between_retries_millis,
+            min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
         )
 
         self._impit_client = impit.Client(
             headers=self._headers,
             follow_redirects=True,
-            timeout=self._timeout_secs,
+            timeout=self._timeout.total_seconds(),
         )
 
     def call(
@@ -69,7 +70,7 @@ class SyncHttpClient(BaseHttpClient):
         data: Any = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
     ) -> impit.Response:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -81,7 +82,7 @@ class SyncHttpClient(BaseHttpClient):
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
-            timeout_secs: Timeout override for this request.
+            timeout: Timeout override for this request.
 
         Returns:
             The HTTP response object.
@@ -107,10 +108,10 @@ class SyncHttpClient(BaseHttpClient):
                 params=prepared_params,
                 content=content,
                 stream=stream,
-                timeout_secs=timeout_secs,
+                timeout=timeout,
             ),
             max_retries=self._max_retries,
-            backoff_base_millis=self._min_delay_between_retries_millis,
+            backoff_base=self._min_delay_between_retries,
         )
 
     def _make_request(
@@ -124,7 +125,7 @@ class SyncHttpClient(BaseHttpClient):
         params: dict[str, Any] | None,
         content: Any,
         stream: bool | None,
-        timeout_secs: int | None,
+        timeout: timedelta | None,
     ) -> impit.Response:
         """Execute a single HTTP request attempt.
 
@@ -137,7 +138,7 @@ class SyncHttpClient(BaseHttpClient):
             params: Query parameters.
             content: Request body content.
             stream: Whether to stream the response.
-            timeout_secs: Timeout override for this request.
+            timeout: Timeout override for this request.
 
         Returns:
             The HTTP response object.
@@ -158,7 +159,7 @@ class SyncHttpClient(BaseHttpClient):
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._calculate_timeout(attempt, timeout_secs),
+                timeout=self._calculate_timeout(attempt, timeout),
                 stream=stream or False,
             )
 
@@ -194,7 +195,7 @@ class SyncHttpClient(BaseHttpClient):
         func: Callable[[Callable[[], None], int], T],
         *,
         max_retries: int = 8,
-        backoff_base_millis: int = 500,
+        backoff_base: timedelta = timedelta(milliseconds=500),
         backoff_factor: float = 2,
         random_factor: float = 1,
     ) -> T:
@@ -203,7 +204,7 @@ class SyncHttpClient(BaseHttpClient):
         Args:
             func: Function to retry. Receives (stop_retrying callback, attempt number).
             max_retries: Maximum retry attempts.
-            backoff_base_millis: Base delay in milliseconds.
+            backoff_base: Base delay.
             backoff_factor: Exponential multiplier (clamped to 1-10).
             random_factor: Jitter factor (clamped to 0-1).
 
@@ -229,7 +230,7 @@ class SyncHttpClient(BaseHttpClient):
                     raise
 
             random_sleep_factor = random.uniform(1, 1 + random_factor)
-            backoff_base_secs = backoff_base_millis / 1000
+            backoff_base_secs = backoff_base.total_seconds()
             backoff_exp_factor = backoff_factor ** (attempt - 1)
 
             sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor

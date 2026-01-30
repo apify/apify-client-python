@@ -9,6 +9,8 @@ if TYPE_CHECKING:
     from apify_client._models import Actor, Build, ListOfBuilds
 
 
+from datetime import timedelta
+
 from .conftest import get_random_resource_name, maybe_await
 
 # Use a public actor that has builds available
@@ -116,7 +118,7 @@ async def test_build_wait_for_finish(client: ApifyClient | ApifyClientAsync) -> 
         completed_build = builds_page.items[0]
 
     # Wait for finish on already completed build (should return immediately)
-    result = await maybe_await(client.build(completed_build.id).wait_for_finish(wait_secs=5))
+    result = await maybe_await(client.build(completed_build.id).wait_for_finish(wait_duration=timedelta(seconds=5)))
     build = cast('Build | None', result)
 
     assert build is not None

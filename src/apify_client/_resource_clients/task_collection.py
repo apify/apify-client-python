@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task, TaskShort
@@ -94,7 +95,7 @@ class TaskCollectionClient(ResourceClient):
         actor_id: str,
         name: str,
         build: str | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
@@ -102,7 +103,7 @@ class TaskCollectionClient(ResourceClient):
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> Task:
@@ -119,7 +120,7 @@ class TaskCollectionClient(ResourceClient):
                 in the task settings.
             max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
                 is charged per result, you will not be charged for more results than the given limit.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -129,7 +130,7 @@ class TaskCollectionClient(ResourceClient):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -144,12 +145,12 @@ class TaskCollectionClient(ResourceClient):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
@@ -249,7 +250,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         actor_id: str,
         name: str,
         build: str | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
@@ -257,7 +258,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> Task:
@@ -274,7 +275,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 in the task settings.
             max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
                 is charged per result, you will not be charged for more results than the given limit.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -284,7 +285,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -299,12 +300,12 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )

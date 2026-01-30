@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import re
 from contextlib import asynccontextmanager, contextmanager
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_client._consts import FAST_OPERATION_TIMEOUT_SECS, STANDARD_OPERATION_TIMEOUT_SECS
+from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
 from apify_client._models import (
     GetKeyValueStoreResponse,
     GetListOfKeysResponse,
@@ -87,7 +88,7 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
             return GetKeyValueStoreResponse.model_validate(result).data
@@ -132,7 +133,7 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._build_url(),
                 method='DELETE',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -172,7 +173,7 @@ class KeyValueStoreClient(ResourceClient):
             url=self._build_url('keys'),
             method='GET',
             params=request_params,
-            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
+            timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
         result = response.json()
@@ -386,7 +387,7 @@ class KeyValueStoreClient(ResourceClient):
             url=self._build_url(f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
-            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            timeout=FAST_OPERATION_TIMEOUT,
         )
 
     def get_record_public_url(self, key: str) -> str:
@@ -426,15 +427,15 @@ class KeyValueStoreClient(ResourceClient):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
-        expires_in_secs: int | None = None,
+        expires_in: timedelta | None = None,
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
         If the client has permission to access the key-value store's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
-        This value sets the expiration duration in seconds from the time the URL is generated.
+        You can optionally control how long the signed URL should be valid using the `expires_in` option.
+        This value sets the expiration duration from the time the URL is generated.
         If not provided, the URL will not expire.
 
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
@@ -455,7 +456,7 @@ class KeyValueStoreClient(ResourceClient):
             signature = create_storage_content_signature(
                 resource_id=metadata.id,
                 url_signing_secret_key=metadata.url_signing_secret_key,
-                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
+                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
             )
             request_params['signature'] = signature
 
@@ -488,7 +489,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
             return GetKeyValueStoreResponse.model_validate(result).data
@@ -538,7 +539,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._build_url(),
                 method='DELETE',
                 params=self._build_params(),
-                timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+                timeout=FAST_OPERATION_TIMEOUT,
             )
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -578,7 +579,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             url=self._build_url('keys'),
             method='GET',
             params=request_params,
-            timeout_secs=STANDARD_OPERATION_TIMEOUT_SECS,
+            timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
         result = response.json()
@@ -793,7 +794,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             url=self._build_url(f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
-            timeout_secs=FAST_OPERATION_TIMEOUT_SECS,
+            timeout=FAST_OPERATION_TIMEOUT,
         )
 
     async def get_record_public_url(self, key: str) -> str:
@@ -833,15 +834,15 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
-        expires_in_secs: int | None = None,
+        expires_in: timedelta | None = None,
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
         If the client has permission to access the key-value store's URL signing key,
         the URL will include a signature to verify its authenticity.
 
-        You can optionally control how long the signed URL should be valid using the `expires_in_secs` option.
-        This value sets the expiration duration in seconds from the time the URL is generated.
+        You can optionally control how long the signed URL should be valid using the `expires_in` option.
+        This value sets the expiration duration from the time the URL is generated.
         If not provided, the URL will not expire.
 
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
@@ -864,7 +865,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             signature = create_storage_content_signature(
                 resource_id=metadata.id,
                 url_signing_secret_key=metadata.url_signing_secret_key,
-                expires_in_millis=expires_in_secs * 1000 if expires_in_secs is not None else None,
+                expires_in_millis=int(expires_in.total_seconds() * 1000) if expires_in is not None else None,
             )
             request_params['signature'] = signature
 

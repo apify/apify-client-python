@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
@@ -57,8 +58,8 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await AsyncHttpClient(timeout_secs=client_timeout).call(
-        method='GET', url='http://placeholder.url/async_timeout', timeout_secs=call_timeout
+    response = await AsyncHttpClient(timeout=timedelta(seconds=client_timeout)).call(
+        method='GET', url='http://placeholder.url/async_timeout', timeout=timedelta(seconds=call_timeout)
     )
 
     # Check that the retry counter was called the expected number of times
@@ -93,8 +94,8 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr('impit.Client.request', mock_request)
 
-    response = SyncHttpClient(timeout_secs=client_timeout).call(
-        method='GET', url='http://placeholder.url/sync_timeout', timeout_secs=call_timeout
+    response = SyncHttpClient(timeout=timedelta(seconds=client_timeout)).call(
+        method='GET', url='http://placeholder.url/sync_timeout', timeout=timedelta(seconds=call_timeout)
     )
 
     # Check that the retry counter was called the expected number of times

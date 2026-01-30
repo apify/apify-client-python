@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 
 import json
+from datetime import timedelta
 
 import impit
 import pytest
@@ -68,7 +69,7 @@ async def test_key_value_store_should_create_expiring_keys_public_url_with_param
     store = client.key_value_store(created_store.id)
     result = await maybe_await(
         store.create_keys_public_url(
-            expires_in_secs=2000,
+            expires_in=timedelta(seconds=2000),
             limit=10,
         )
     )

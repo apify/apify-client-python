@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._models import Actor, ActorShort, CreateActorResponse, GetListOfActorsResponse, ListOfActors
@@ -112,13 +113,13 @@ class ActorCollectionClient(ResourceClient):
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
-        default_run_timeout_secs: int | None = None,
+        default_run_timeout: timedelta | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> Actor:
@@ -143,7 +144,7 @@ class ActorCollectionClient(ResourceClient):
             default_run_max_items: Default limit of the number of results that will be returned by runs
                 of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
-            default_run_timeout_secs: Default timeout for the runs of this Actor in seconds.
+            default_run_timeout: Default timeout for the runs of this Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -151,7 +152,7 @@ class ActorCollectionClient(ResourceClient):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -174,13 +175,13 @@ class ActorCollectionClient(ResourceClient):
             default_run_build=default_run_build,
             default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout_secs=default_run_timeout_secs,
+            default_run_timeout=default_run_timeout,
             example_run_input_body=example_run_input_body,
             example_run_input_content_type=example_run_input_content_type,
             actor_standby_is_enabled=actor_standby_is_enabled,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
@@ -298,13 +299,13 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
-        default_run_timeout_secs: int | None = None,
+        default_run_timeout: timedelta | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> Actor:
@@ -329,7 +330,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             default_run_max_items: Default limit of the number of results that will be returned by runs
                 of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
-            default_run_timeout_secs: Default timeout for the runs of this Actor in seconds.
+            default_run_timeout: Default timeout for the runs of this Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -337,7 +338,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -360,13 +361,13 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             default_run_build=default_run_build,
             default_run_max_items=default_run_max_items,
             default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout_secs=default_run_timeout_secs,
+            default_run_timeout=default_run_timeout,
             example_run_input_body=example_run_input_body,
             example_run_input_content_type=example_run_input_content_type,
             actor_standby_is_enabled=actor_standby_is_enabled,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )

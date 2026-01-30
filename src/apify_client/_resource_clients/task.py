@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
@@ -30,11 +31,11 @@ def get_task_representation(
     build: str | None = None,
     max_items: int | None = None,
     memory_mbytes: int | None = None,
-    timeout_secs: int | None = None,
+    timeout: timedelta | None = None,
     title: str | None = None,
     actor_standby_desired_requests_per_actor_run: int | None = None,
     actor_standby_max_requests_per_actor_run: int | None = None,
-    actor_standby_idle_timeout_secs: int | None = None,
+    actor_standby_idle_timeout: timedelta | None = None,
     actor_standby_build: str | None = None,
     actor_standby_memory_mbytes: int | None = None,
     *,
@@ -48,7 +49,7 @@ def get_task_representation(
             'build': build,
             'maxItems': max_items,
             'memoryMbytes': memory_mbytes,
-            'timeoutSecs': timeout_secs,
+            'timeoutSecs': int(timeout.total_seconds()) if timeout is not None else None,
             'restartOnError': restart_on_error,
         },
         'input': task_input,
@@ -60,7 +61,7 @@ def get_task_representation(
         [
             actor_standby_desired_requests_per_actor_run is not None,
             actor_standby_max_requests_per_actor_run is not None,
-            actor_standby_idle_timeout_secs is not None,
+            actor_standby_idle_timeout is not None,
             actor_standby_build is not None,
             actor_standby_memory_mbytes is not None,
         ]
@@ -68,7 +69,9 @@ def get_task_representation(
         task_dict['actorStandby'] = {
             'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
             'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
-            'idleTimeoutSecs': actor_standby_idle_timeout_secs,
+            'idleTimeoutSecs': (
+                int(actor_standby_idle_timeout.total_seconds()) if actor_standby_idle_timeout is not None else None
+            ),
             'build': actor_standby_build,
             'memoryMbytes': actor_standby_memory_mbytes,
         }
@@ -116,12 +119,12 @@ class TaskClient(ResourceClient):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> Task:
@@ -137,7 +140,7 @@ class TaskClient(ResourceClient):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -147,7 +150,7 @@ class TaskClient(ResourceClient):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -161,12 +164,12 @@ class TaskClient(ResourceClient):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
@@ -202,7 +205,7 @@ class TaskClient(ResourceClient):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
@@ -219,7 +222,7 @@ class TaskClient(ResourceClient):
                 per result, you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -240,7 +243,7 @@ class TaskClient(ResourceClient):
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
-            timeout=timeout_secs,
+            timeout=int(timeout.total_seconds()) if timeout is not None else None,
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -264,14 +267,14 @@ class TaskClient(ResourceClient):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
-        wait_secs: int | None = None,
+        wait_duration: timedelta | None = None,
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
-        It waits indefinitely, unless the wait_secs argument is provided.
+        It waits indefinitely, unless the wait_duration argument is provided.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
@@ -283,14 +286,14 @@ class TaskClient(ResourceClient):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
             webhooks: Specifies optional webhooks associated with the Actor run, which can be used to receive
                 a notification e.g. when the Actor finished or failed. Note: if you already have a webhook set up for
                 the Actor or task, you do not have to add it again here.
-            wait_secs: The maximum number of seconds the server waits for the task run to finish. If not provided,
+            wait_duration: The maximum time the server waits for the task run to finish. If not provided,
                 waits indefinitely.
 
         Returns:
@@ -301,7 +304,7 @@ class TaskClient(ResourceClient):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
@@ -313,7 +316,7 @@ class TaskClient(ResourceClient):
             http_client=self._http_client,
             client_registry=self._client_registry,
         )
-        return run_client.wait_for_finish(wait_secs=wait_secs)
+        return run_client.wait_for_finish(wait_duration=wait_duration)
 
     def get_input(self) -> dict | None:
         """Retrieve the default input for this task.
@@ -427,12 +430,12 @@ class TaskClientAsync(ResourceClientAsync):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
-        actor_standby_idle_timeout_secs: int | None = None,
+        actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
     ) -> Task:
@@ -448,7 +451,7 @@ class TaskClientAsync(ResourceClientAsync):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -458,7 +461,7 @@ class TaskClientAsync(ResourceClientAsync):
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
                 a single Actor Standby run.
-            actor_standby_idle_timeout_secs: If the Actor run does not receive any requests for this time,
+            actor_standby_idle_timeout: If the Actor run does not receive any requests for this time,
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
@@ -472,12 +475,12 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             restart_on_error=restart_on_error,
             title=title,
             actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
             actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout_secs=actor_standby_idle_timeout_secs,
+            actor_standby_idle_timeout=actor_standby_idle_timeout,
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
@@ -513,7 +516,7 @@ class TaskClientAsync(ResourceClientAsync):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
@@ -530,7 +533,7 @@ class TaskClientAsync(ResourceClientAsync):
                 per result, you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -551,7 +554,7 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
-            timeout=timeout_secs,
+            timeout=int(timeout.total_seconds()) if timeout is not None else None,
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -575,14 +578,14 @@ class TaskClientAsync(ResourceClientAsync):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout_secs: int | None = None,
+        timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
-        wait_secs: int | None = None,
+        wait_duration: timedelta | None = None,
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
-        It waits indefinitely, unless the wait_secs argument is provided.
+        It waits indefinitely, unless the wait_duration argument is provided.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
@@ -594,14 +597,14 @@ class TaskClientAsync(ResourceClientAsync):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout_secs: Optional timeout for the run, in seconds. By default, the run uses timeout specified
+            timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
             webhooks: Specifies optional webhooks associated with the Actor run, which can be used to receive
                 a notification e.g. when the Actor finished or failed. Note: if you already have a webhook set up for
                 the Actor or task, you do not have to add it again here.
-            wait_secs: The maximum number of seconds the server waits for the task run to finish. If not provided,
+            wait_duration: The maximum time the server waits for the task run to finish. If not provided,
                 waits indefinitely.
 
         Returns:
@@ -612,7 +615,7 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout_secs=timeout_secs,
+            timeout=timeout,
             restart_on_error=restart_on_error,
             webhooks=webhooks,
         )
@@ -623,7 +626,7 @@ class TaskClientAsync(ResourceClientAsync):
             http_client=self._http_client,
             client_registry=self._client_registry,
         )
-        return await run_client.wait_for_finish(wait_secs=wait_secs)
+        return await run_client.wait_for_finish(wait_duration=wait_duration)
 
     async def get_input(self) -> dict | None:
         """Retrieve the default input for this task.

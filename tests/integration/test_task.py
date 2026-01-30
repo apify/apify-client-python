@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
 from .conftest import get_random_resource_name, maybe_await
@@ -75,7 +76,7 @@ async def test_task_update(client: ApifyClient | ApifyClientAsync) -> None:
     result = await maybe_await(
         task_client.update(
             name=new_name,
-            timeout_secs=300,
+            timeout=timedelta(seconds=300),
         )
     )
     updated_task = cast('Task', result)

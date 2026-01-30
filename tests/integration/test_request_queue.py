@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     )
 
 
+from datetime import timedelta
+
 from .conftest import get_random_resource_name, get_random_string, maybe_await, maybe_sleep
 
 
@@ -74,7 +76,7 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> Non
             rq.add_request({'url': f'http://test-lock.com/{i}', 'uniqueKey': f'http://test-lock.com/{i}'})
         )
 
-    result = await maybe_await(rq.list_and_lock_head(limit=10, lock_secs=10))
+    result = await maybe_await(rq.list_and_lock_head(limit=10, lock_duration=timedelta(seconds=10)))
     get_head_and_lock_response = cast('LockedRequestQueueHead', result)
 
     for locked_request in get_head_and_lock_response.items:
@@ -101,7 +103,7 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> Non
     result = await maybe_await(
         rq.prolong_request_lock(
             get_head_and_lock_response.items[3].id,
-            lock_secs=15,
+            lock_duration=timedelta(seconds=15),
         )
     )
     prolong_request_lock_response = cast('RequestLockInfo', result)
@@ -405,7 +407,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
     await maybe_sleep(1, is_async=is_async)
 
     # Lock head requests
-    result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_secs=60))
+    result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
     lock_response = cast('LockedRequestQueueHead', result)
     assert lock_response is not None
     assert len(lock_response.items) == 3
@@ -434,14 +436,14 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
     await maybe_sleep(1, is_async=is_async)
 
     # Lock the request
-    result = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_secs=60))
+    result = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
     lock_response = cast('LockedRequestQueueHead', result)
     assert len(lock_response.items) == 1
     locked_request = lock_response.items[0]
     original_lock_expires = locked_request.lock_expires_at
 
     # Prolong the lock
-    result = await maybe_await(rq_client.prolong_request_lock(locked_request.id, lock_secs=120))
+    result = await maybe_await(rq_client.prolong_request_lock(locked_request.id, lock_duration=timedelta(seconds=120)))
     prolong_response = cast('RequestLockInfo', result)
     assert prolong_response is not None
     assert prolong_response.lock_expires_at is not None
@@ -466,7 +468,7 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
     await maybe_sleep(1, is_async=is_async)
 
     # Lock the request
-    result = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_secs=60))
+    result = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
     lock_response = cast('LockedRequestQueueHead', result)
     assert len(lock_response.items) == 1
     locked_request = lock_response.items[0]
@@ -499,7 +501,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
     await maybe_sleep(1, is_async=is_async)
 
     # Lock some requests
-    result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_secs=60))
+    result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
     lock_response = cast('LockedRequestQueueHead', result)
     assert len(lock_response.items) == 3
 

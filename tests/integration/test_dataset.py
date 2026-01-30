@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from apify_client._resource_clients.dataset import DatasetItemsPage
 
 import json
+from datetime import timedelta
 
 import impit
 import pytest
@@ -72,7 +73,7 @@ async def test_dataset_should_create_public_items_expiring_url_with_params(
     dataset = client.dataset(created_dataset.id)
     result = await maybe_await(
         dataset.create_items_public_url(
-            expires_in_secs=2000,
+            expires_in=timedelta(seconds=2000),
             limit=10,
             offset=0,
         )

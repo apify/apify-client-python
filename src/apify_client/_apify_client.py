@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import timedelta  # noqa: TC003 - Used at runtime
 from functools import cached_property
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
@@ -7,8 +8,8 @@ from apify_client._consts import (
     API_VERSION,
     DEFAULT_API_URL,
     DEFAULT_MAX_RETRIES,
-    DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
-    DEFAULT_TIMEOUT_SECS,
+    DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+    DEFAULT_TIMEOUT,
 )
 from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
 from apify_client._resource_clients import (
@@ -80,8 +81,8 @@ class ApifyClient:
         api_url: str = DEFAULT_API_URL,
         api_public_url: str | None = DEFAULT_API_URL,
         max_retries: int = DEFAULT_MAX_RETRIES,
-        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
-        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
+        min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+        timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize a new instance.
 
@@ -92,9 +93,9 @@ class ApifyClient:
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
                 is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
             max_retries: How many times to retry a failed request at most.
-            min_delay_between_retries_millis: How long will the client wait between retrying requests
+            min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
-            timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
+            timeout: The socket timeout of the HTTP requests sent to the Apify API.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -114,11 +115,9 @@ class ApifyClient:
 
         self._http_client = SyncHttpClient(
             token=token,
-            timeout_secs=timeout_secs or DEFAULT_TIMEOUT_SECS,
+            timeout=timeout or DEFAULT_TIMEOUT,
             max_retries=max_retries or DEFAULT_MAX_RETRIES,
-            min_delay_between_retries_millis=(
-                min_delay_between_retries_millis or DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS
-            ),
+            min_delay_between_retries=min_delay_between_retries or DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
             statistics=self._statistics,
         )
         """HTTP client used to communicate with the Apify API."""
@@ -310,8 +309,8 @@ class ApifyClientAsync:
         api_url: str = DEFAULT_API_URL,
         api_public_url: str | None = DEFAULT_API_URL,
         max_retries: int = DEFAULT_MAX_RETRIES,
-        min_delay_between_retries_millis: int = DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS,
-        timeout_secs: int = DEFAULT_TIMEOUT_SECS,
+        min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+        timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
         """Initialize a new instance.
 
@@ -322,9 +321,9 @@ class ApifyClientAsync:
             api_public_url: The globally accessible URL of the Apify API server. It should be set only if the `api_url`
                 is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
             max_retries: How many times to retry a failed request at most.
-            min_delay_between_retries_millis: How long will the client wait between retrying requests
+            min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
-            timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
+            timeout: The socket timeout of the HTTP requests sent to the Apify API.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -344,11 +343,9 @@ class ApifyClientAsync:
 
         self._http_client = AsyncHttpClient(
             token=token,
-            timeout_secs=timeout_secs or DEFAULT_TIMEOUT_SECS,
+            timeout=timeout or DEFAULT_TIMEOUT,
             max_retries=max_retries or DEFAULT_MAX_RETRIES,
-            min_delay_between_retries_millis=(
-                min_delay_between_retries_millis or DEFAULT_MIN_DELAY_BETWEEN_RETRIES_MILLIS
-            ),
+            min_delay_between_retries=min_delay_between_retries or DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
             statistics=self._statistics,
         )
         """HTTP client used to communicate with the Apify API."""

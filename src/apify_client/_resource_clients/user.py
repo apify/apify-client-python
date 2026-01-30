@@ -4,9 +4,9 @@ from typing import Any
 
 from apify_client._models import (
     AccountLimits,
-    GetPrivateUserDataResponse,
-    GetPublicUserDataResponse,
     MonthlyUsage,
+    PrivateUserDataResponse,
+    PublicUserDataResponse,
     UserPrivateInfo,
     UserPublicInfo,
 )
@@ -44,9 +44,9 @@ class UserClient(ResourceClient):
             result = response_to_dict(response)
             # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
             try:
-                return GetPrivateUserDataResponse.model_validate(result).data
+                return PrivateUserDataResponse.model_validate(result).data
             except Exception:
-                return GetPublicUserDataResponse.model_validate(result).data
+                return PublicUserDataResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -157,9 +157,9 @@ class UserClientAsync(ResourceClientAsync):
             result = response_to_dict(response)
             # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
             try:
-                return GetPrivateUserDataResponse.model_validate(result).data
+                return PrivateUserDataResponse.model_validate(result).data
             except Exception:
-                return GetPublicUserDataResponse.model_validate(result).data
+                return PublicUserDataResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None

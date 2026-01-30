@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import GetVersionResponse, Version, VersionSourceType
+from apify_client._models import Version, VersionResponse, VersionSourceType
 from apify_client._representations import get_actor_version_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
@@ -48,7 +48,7 @@ class ActorVersionClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetVersionResponse.model_validate(result).data
+            return VersionResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -107,7 +107,7 @@ class ActorVersionClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetVersionResponse.model_validate(result).data
+        return VersionResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the Actor version.
@@ -173,7 +173,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetVersionResponse.model_validate(result).data
+            return VersionResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -232,7 +232,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetVersionResponse.model_validate(result).data
+        return VersionResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the Actor version.

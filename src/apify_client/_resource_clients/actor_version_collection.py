@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import (
-    GetListOfVersionsResponse,
-    GetVersionResponse,
     ListOfVersions,
+    ListOfVersionsResponse,
     Version,
+    VersionResponse,
     VersionSourceType,
 )
 from apify_client._representations import get_actor_version_repr
@@ -35,7 +35,7 @@ class ActorVersionCollectionClient(ResourceClient):
             params=self._build_params(),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfVersionsResponse.model_validate(response_as_dict).data
+        return ListOfVersionsResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -94,7 +94,7 @@ class ActorVersionCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return GetVersionResponse.model_validate(result).data
+        return VersionResponse.model_validate(result).data
 
 
 class ActorVersionCollectionClientAsync(ResourceClientAsync):
@@ -118,7 +118,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfVersionsResponse.model_validate(response_as_dict).data
+        return ListOfVersionsResponse.model_validate(response_as_dict).data
 
     async def create(
         self,
@@ -177,4 +177,4 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return GetVersionResponse.model_validate(result).data
+        return VersionResponse.model_validate(result).data

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
+from apify_client._models import ListOfWebhooks, ListOfWebhooksResponse, Webhook, WebhookResponse
 from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
@@ -43,7 +43,7 @@ class WebhookCollectionClient(ResourceClient):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfWebhooksResponse.model_validate(response_as_dict).data
+        return ListOfWebhooksResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -106,7 +106,7 @@ class WebhookCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return CreateWebhookResponse.model_validate(result).data
+        return WebhookResponse.model_validate(result).data
 
 
 class WebhookCollectionClientAsync(ResourceClientAsync):
@@ -141,7 +141,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfWebhooksResponse.model_validate(response_as_dict).data
+        return ListOfWebhooksResponse.model_validate(response_as_dict).data
 
     async def create(
         self,
@@ -204,4 +204,4 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         )
 
         response = response_to_dict(response_obj)
-        return CreateWebhookResponse.model_validate(response).data
+        return WebhookResponse.model_validate(response).data

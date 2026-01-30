@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetWebhookDispatchResponse, WebhookDispatch
+from apify_client._models import WebhookDispatch, WebhookDispatchResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
@@ -30,7 +30,7 @@ class WebhookDispatchClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetWebhookDispatchResponse.model_validate(result).data
+            return WebhookDispatchResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -58,7 +58,7 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetWebhookDispatchResponse.model_validate(result).data
+            return WebhookDispatchResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None

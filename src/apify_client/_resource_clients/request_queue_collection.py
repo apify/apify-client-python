@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import (
-    CreateRequestQueueResponse,
-    GetListOfRequestQueuesResponse,
     ListOfRequestQueues,
+    ListOfRequestQueuesResponse,
     RequestQueue,
+    RequestQueueResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import response_to_dict
@@ -46,7 +46,7 @@ class RequestQueueCollectionClient(ResourceClient):
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfRequestQueuesResponse.model_validate(response_as_dict).data
+        return ListOfRequestQueuesResponse.model_validate(response_as_dict).data
 
     def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -65,7 +65,7 @@ class RequestQueueCollectionClient(ResourceClient):
             params=self._build_params(name=name),
         )
         result = response_to_dict(response)
-        return CreateRequestQueueResponse.model_validate(result).data
+        return RequestQueueResponse.model_validate(result).data
 
 
 class RequestQueueCollectionClientAsync(ResourceClientAsync):
@@ -102,7 +102,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfRequestQueuesResponse.model_validate(response_as_dict).data
+        return ListOfRequestQueuesResponse.model_validate(response_as_dict).data
 
     async def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -121,4 +121,4 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(name=name),
         )
         result = response_to_dict(response)
-        return CreateRequestQueueResponse.model_validate(result).data
+        return RequestQueueResponse.model_validate(result).data

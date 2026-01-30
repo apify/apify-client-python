@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import (
-    CreateKeyValueStoreResponse,
-    GetListOfKeyValueStoresResponse,
     KeyValueStore,
+    KeyValueStoreResponse,
     ListOfKeyValueStores,
+    ListOfKeyValueStoresResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
@@ -46,7 +46,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfKeyValueStoresResponse.model_validate(response_as_dict).data
+        return ListOfKeyValueStoresResponse.model_validate(response_as_dict).data
 
     def get_or_create(
         self,
@@ -73,7 +73,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return CreateKeyValueStoreResponse.model_validate(result).data
+        return KeyValueStoreResponse.model_validate(result).data
 
 
 class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
@@ -110,7 +110,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfKeyValueStoresResponse.model_validate(response_as_dict).data
+        return ListOfKeyValueStoresResponse.model_validate(response_as_dict).data
 
     async def get_or_create(
         self,
@@ -137,4 +137,4 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return CreateKeyValueStoreResponse.model_validate(result).data
+        return KeyValueStoreResponse.model_validate(result).data

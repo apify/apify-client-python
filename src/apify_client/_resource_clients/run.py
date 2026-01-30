@@ -8,7 +8,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from apify_client._logging import create_redirect_logger
-from apify_client._models import GetRunResponse, Run
+from apify_client._models import Run, RunResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -72,7 +72,7 @@ class RunClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetRunResponse.model_validate(result).data
+            return RunResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -110,7 +110,7 @@ class RunClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetRunResponse.model_validate(result).data
+        return RunResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the run.
@@ -145,7 +145,7 @@ class RunClient(ResourceClient):
             params=self._build_params(gracefully=gracefully),
         )
         result = response_to_dict(response)
-        return GetRunResponse.model_validate(result).data
+        return RunResponse.model_validate(result).data
 
     def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
@@ -206,7 +206,7 @@ class RunClient(ResourceClient):
         )
 
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     def resurrect(
         self,
@@ -258,7 +258,7 @@ class RunClient(ResourceClient):
         )
 
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -273,7 +273,7 @@ class RunClient(ResourceClient):
             method='POST',
         )
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -476,7 +476,7 @@ class RunClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetRunResponse.model_validate(result).data
+            return RunResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -514,7 +514,7 @@ class RunClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetRunResponse.model_validate(result).data
+        return RunResponse.model_validate(result).data
 
     async def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
@@ -535,7 +535,7 @@ class RunClientAsync(ResourceClientAsync):
             params=self._build_params(gracefully=gracefully),
         )
         result = response_to_dict(response)
-        return GetRunResponse.model_validate(result).data
+        return RunResponse.model_validate(result).data
 
     async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
         """Wait asynchronously until the run finishes or the server times out.
@@ -609,7 +609,7 @@ class RunClientAsync(ResourceClientAsync):
         )
 
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     async def resurrect(
         self,
@@ -661,7 +661,7 @@ class RunClientAsync(ResourceClientAsync):
         )
 
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     async def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -676,7 +676,7 @@ class RunClientAsync(ResourceClientAsync):
             method='POST',
         )
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.

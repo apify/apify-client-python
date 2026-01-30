@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetListOfBuildsResponse, ListOfBuilds
+from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import response_to_dict
 
@@ -43,7 +43,7 @@ class BuildCollectionClient(ResourceClient):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfBuildsResponse.model_validate(response_as_dict).data
+        return ListOfBuildsResponse.model_validate(response_as_dict).data
 
 
 class BuildCollectionClientAsync(ResourceClientAsync):
@@ -82,4 +82,4 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfBuildsResponse.model_validate(response_as_dict).data
+        return ListOfBuildsResponse.model_validate(response_as_dict).data

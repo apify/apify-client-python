@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from apify_client._models import Actor, ActorShort, CreateActorResponse, GetListOfActorsResponse, ListOfActors
+from apify_client._models import Actor, ActorResponse, ActorShort, ListOfActors, ListOfActorsResponse
 from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
@@ -48,7 +48,7 @@ class ActorCollectionClient(ResourceClient):
             params=self._build_params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfActorsResponse.model_validate(response_as_dict).data
+        return ListOfActorsResponse.model_validate(response_as_dict).data
 
     def iterate(
         self,
@@ -194,7 +194,7 @@ class ActorCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return CreateActorResponse.model_validate(result).data
+        return ActorResponse.model_validate(result).data
 
 
 class ActorCollectionClientAsync(ResourceClientAsync):
@@ -233,7 +233,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfActorsResponse.model_validate(response_as_dict).data
+        return ListOfActorsResponse.model_validate(response_as_dict).data
 
     async def iterate(
         self,
@@ -380,4 +380,4 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return CreateActorResponse.model_validate(result).data
+        return ActorResponse.model_validate(result).data

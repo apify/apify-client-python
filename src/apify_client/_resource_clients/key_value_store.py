@@ -8,11 +8,11 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
 from apify_client._models import (
-    GetKeyValueStoreResponse,
-    GetListOfKeysResponse,
     KeyValueStore,
     KeyValueStoreKey,
+    KeyValueStoreResponse,
     ListOfKeys,
+    ListOfKeysResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -91,7 +91,7 @@ class KeyValueStoreClient(ResourceClient):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
-            return GetKeyValueStoreResponse.model_validate(result).data
+            return KeyValueStoreResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -121,7 +121,7 @@ class KeyValueStoreClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetKeyValueStoreResponse.model_validate(result).data
+        return KeyValueStoreResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the key-value store.
@@ -177,7 +177,7 @@ class KeyValueStoreClient(ResourceClient):
         )
 
         result = response.json()
-        return GetListOfKeysResponse.model_validate(result).data
+        return ListOfKeysResponse.model_validate(result).data
 
     def iterate_keys(
         self,
@@ -492,7 +492,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
-            return GetKeyValueStoreResponse.model_validate(result).data
+            return KeyValueStoreResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -527,7 +527,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetKeyValueStoreResponse.model_validate(result).data
+        return KeyValueStoreResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the key-value store.
@@ -583,7 +583,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetListOfKeysResponse.model_validate(result).data
+        return ListOfKeysResponse.model_validate(result).data
 
     async def iterate_keys(
         self,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetScheduleLogResponse, GetScheduleResponse, Schedule, ScheduleInvoked
+from apify_client._models import Schedule, ScheduleInvoked, ScheduleLogResponse, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
@@ -31,7 +31,7 @@ class ScheduleClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetScheduleResponse.model_validate(result).data
+            return ScheduleResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -86,7 +86,7 @@ class ScheduleClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetScheduleResponse.model_validate(result).data
+        return ScheduleResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the schedule.
@@ -119,7 +119,7 @@ class ScheduleClient(ResourceClient):
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
                 return None
-            return GetScheduleLogResponse.model_validate(response_as_dict).data
+            return ScheduleLogResponse.model_validate(response_as_dict).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -148,7 +148,7 @@ class ScheduleClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetScheduleResponse.model_validate(result).data
+            return ScheduleResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -203,7 +203,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetScheduleResponse.model_validate(result).data
+        return ScheduleResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the schedule.
@@ -236,7 +236,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             response_as_dict = response_to_dict(response)
             if response_as_dict is None:
                 return None
-            return GetScheduleLogResponse.model_validate(response_as_dict).data
+            return ScheduleLogResponse.model_validate(response_as_dict).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

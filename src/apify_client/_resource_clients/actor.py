@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Any, Literal
 from apify_client._models import (
     Actor,
     ActorPermissionLevel,
+    ActorResponse,
     Build,
-    BuildActorResponse,
-    GetActorResponse,
-    GetRunResponse,
+    BuildResponse,
     Run,
     RunOrigin,
-    UpdateActorResponse,
+    RunResponse,
 )
 from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -81,7 +80,7 @@ class ActorClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetActorResponse.model_validate(result).data
+            return ActorResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -195,7 +194,7 @@ class ActorClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return UpdateActorResponse.model_validate(result).data
+        return ActorResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the Actor.
@@ -282,7 +281,7 @@ class ActorClient(ResourceClient):
         )
 
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     def call(
         self,
@@ -406,7 +405,7 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return BuildActorResponse.model_validate(response_to_dict(response)).data
+        return BuildResponse.model_validate(response_to_dict(response)).data
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -559,7 +558,7 @@ class ActorClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetActorResponse.model_validate(result).data
+            return ActorResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -673,7 +672,7 @@ class ActorClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return UpdateActorResponse.model_validate(result).data
+        return ActorResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the Actor.
@@ -760,7 +759,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         response_as_dict = response_to_dict(response)
-        return GetRunResponse.model_validate(response_as_dict).data
+        return RunResponse.model_validate(response_as_dict).data
 
     async def call(
         self,
@@ -889,7 +888,7 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         response_as_dict = response_to_dict(response)
-        return BuildActorResponse.model_validate(response_as_dict).data
+        return BuildResponse.model_validate(response_as_dict).data
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""

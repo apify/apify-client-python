@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import CreateDatasetResponse, Dataset, GetListOfDatasetsResponse, ListOfDatasets
+from apify_client._models import Dataset, DatasetResponse, ListOfDatasets, ListOfDatasetsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
 
@@ -41,7 +41,7 @@ class DatasetCollectionClient(ResourceClient):
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfDatasetsResponse.model_validate(response_as_dict).data
+        return ListOfDatasetsResponse.model_validate(response_as_dict).data
 
     def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
@@ -63,7 +63,7 @@ class DatasetCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return CreateDatasetResponse.model_validate(result).data
+        return DatasetResponse.model_validate(result).data
 
 
 class DatasetCollectionClientAsync(ResourceClientAsync):
@@ -100,7 +100,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfDatasetsResponse.model_validate(response_as_dict).data
+        return ListOfDatasetsResponse.model_validate(response_as_dict).data
 
     async def get_or_create(
         self,
@@ -127,4 +127,4 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return CreateDatasetResponse.model_validate(result).data
+        return DatasetResponse.model_validate(result).data

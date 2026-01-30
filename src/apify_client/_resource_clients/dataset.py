@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
-from apify_client._models import CreateDatasetResponse, Dataset, DatasetStatistics, GetDatasetStatisticsResponse
+from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -79,7 +79,7 @@ class DatasetClient(ResourceClient):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
-            return CreateDatasetResponse.model_validate(result).data
+            return DatasetResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -110,7 +110,7 @@ class DatasetClient(ResourceClient):
             timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)
-        return CreateDatasetResponse.model_validate(result).data
+        return DatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the dataset.
@@ -630,7 +630,7 @@ class DatasetClient(ResourceClient):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response.json()
-            return GetDatasetStatisticsResponse.model_validate(result).data if result is not None else None
+            return DatasetStatisticsResponse.model_validate(result).data if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -721,7 +721,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
-            return CreateDatasetResponse.model_validate(result).data
+            return DatasetResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -752,7 +752,7 @@ class DatasetClientAsync(ResourceClientAsync):
             timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)
-        return CreateDatasetResponse.model_validate(result).data
+        return DatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the dataset.
@@ -1178,7 +1178,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response.json()
-            return GetDatasetStatisticsResponse.model_validate(result).data if result is not None else None
+            return DatasetStatisticsResponse.model_validate(result).data if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

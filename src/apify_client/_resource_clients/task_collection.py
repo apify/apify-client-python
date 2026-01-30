@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task, TaskShort
+from apify_client._models import ListOfTasks, ListOfTasksResponse, Task, TaskResponse, TaskShort
 from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
@@ -44,7 +44,7 @@ class TaskCollectionClient(ResourceClient):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfTasksResponse.model_validate(response_as_dict).data
+        return ListOfTasksResponse.model_validate(response_as_dict).data
 
     def iterate(
         self,
@@ -163,7 +163,7 @@ class TaskCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return CreateTaskResponse.model_validate(result).data
+        return TaskResponse.model_validate(result).data
 
 
 class TaskCollectionClientAsync(ResourceClientAsync):
@@ -198,7 +198,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfTasksResponse.model_validate(response_as_dict).data
+        return ListOfTasksResponse.model_validate(response_as_dict).data
 
     async def iterate(
         self,
@@ -318,4 +318,4 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return CreateTaskResponse.model_validate(result).data
+        return TaskResponse.model_validate(result).data

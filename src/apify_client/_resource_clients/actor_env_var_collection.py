@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import EnvVar, GetEnvVarResponse, GetListOfEnvVarsResponse, ListOfEnvVars
+from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
 from apify_client._utils import filter_none_values, response_to_dict
@@ -29,7 +29,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             params=self._build_params(),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfEnvVarsResponse.model_validate(response_as_dict).data
+        return ListOfEnvVarsResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -64,7 +64,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return GetEnvVarResponse.model_validate(result).data
+        return EnvVarResponse.model_validate(result).data
 
 
 class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
@@ -88,7 +88,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfEnvVarsResponse.model_validate(response_as_dict).data
+        return ListOfEnvVarsResponse.model_validate(response_as_dict).data
 
     async def create(
         self,
@@ -123,4 +123,4 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return GetEnvVarResponse.model_validate(result).data
+        return EnvVarResponse.model_validate(result).data

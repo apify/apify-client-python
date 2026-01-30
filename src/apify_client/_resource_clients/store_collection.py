@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetListOfActorsInStoreResponse, ListOfStoreActors
+from apify_client._models import ListOfActorsInStoreResponse, ListOfStoreActors
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import response_to_dict
 
@@ -56,7 +56,7 @@ class StoreCollectionClient(ResourceClient):
             ),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfActorsInStoreResponse.model_validate(response_as_dict).data
+        return ListOfActorsInStoreResponse.model_validate(response_as_dict).data
 
 
 class StoreCollectionClientAsync(ResourceClientAsync):
@@ -108,4 +108,4 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             ),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfActorsInStoreResponse.model_validate(response_as_dict).data
+        return ListOfActorsInStoreResponse.model_validate(response_as_dict).data

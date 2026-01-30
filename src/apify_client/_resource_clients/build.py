@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import Build, GetBuildResponse, PostAbortBuildResponse
+from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
@@ -44,7 +44,7 @@ class BuildClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetBuildResponse.model_validate(result).data
+            return BuildResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -77,7 +77,7 @@ class BuildClient(ResourceClient):
             params=self._build_params(),
         )
         result = response_to_dict(response)
-        return PostAbortBuildResponse.model_validate(result).data
+        return BuildResponse.model_validate(result).data
 
     def get_open_api_definition(self) -> dict | None:
         """Return OpenAPI definition of the Actor's build.
@@ -158,7 +158,7 @@ class BuildClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetBuildResponse.model_validate(result).data
+            return BuildResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -177,7 +177,7 @@ class BuildClientAsync(ResourceClientAsync):
             params=self._build_params(),
         )
         result = response_to_dict(response)
-        return PostAbortBuildResponse.model_validate(result).data
+        return BuildResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the build.

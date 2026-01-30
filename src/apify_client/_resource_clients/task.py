@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
+from apify_client._models import Run, RunOrigin, RunResponse, Task, TaskResponse
 from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -56,7 +56,7 @@ class TaskClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return CreateTaskResponse.model_validate(result).data
+            return TaskResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -132,7 +132,7 @@ class TaskClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return CreateTaskResponse.model_validate(result).data
+        return TaskResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the task.
@@ -208,7 +208,7 @@ class TaskClient(ResourceClient):
         )
 
         result = response.json()
-        return GetRunResponse.model_validate(result).data
+        return RunResponse.model_validate(result).data
 
     def call(
         self,
@@ -367,7 +367,7 @@ class TaskClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return CreateTaskResponse.model_validate(result).data
+            return TaskResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -443,7 +443,7 @@ class TaskClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return CreateTaskResponse.model_validate(result).data
+        return TaskResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the task.
@@ -519,7 +519,7 @@ class TaskClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetRunResponse.model_validate(result).data
+        return RunResponse.model_validate(result).data
 
     async def call(
         self,

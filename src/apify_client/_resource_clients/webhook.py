@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import (
-    GetWebhookResponse,
     TestWebhookResponse,
-    UpdateWebhookResponse,
     Webhook,
     WebhookDispatch,
+    WebhookResponse,
 )
 from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -41,7 +40,7 @@ class WebhookClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetWebhookResponse.model_validate(result).data
+            return WebhookResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -101,7 +100,7 @@ class WebhookClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return UpdateWebhookResponse.model_validate(result).data
+        return WebhookResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the webhook.
@@ -178,7 +177,7 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetWebhookResponse.model_validate(result).data
+            return WebhookResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -238,7 +237,7 @@ class WebhookClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return UpdateWebhookResponse.model_validate(result).data
+        return WebhookResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the webhook.

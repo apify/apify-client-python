@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import EnvVar, GetEnvVarResponse
+from apify_client._models import EnvVar, EnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
@@ -44,7 +44,7 @@ class ActorEnvVarClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetEnvVarResponse.model_validate(result).data
+            return EnvVarResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -82,7 +82,7 @@ class ActorEnvVarClient(ResourceClient):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetEnvVarResponse.model_validate(result).data
+        return EnvVarResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the Actor environment variable.
@@ -121,7 +121,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            return GetEnvVarResponse.model_validate(result).data
+            return EnvVarResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -159,7 +159,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             json=cleaned,
         )
         result = response_to_dict(response)
-        return GetEnvVarResponse.model_validate(result).data
+        return EnvVarResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the Actor environment variable.

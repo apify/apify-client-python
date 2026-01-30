@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import GetListOfRunsResponse, ListOfRuns, RunShort
+from apify_client._models import ListOfRuns, ListOfRunsResponse, RunShort
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import enum_to_value, response_to_dict
 
@@ -64,7 +64,7 @@ class RunCollectionClient(ResourceClient):
             ),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfRunsResponse.model_validate(response_as_dict).data
+        return ListOfRunsResponse.model_validate(response_as_dict).data
 
     def iterate(
         self,
@@ -174,7 +174,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
             ),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfRunsResponse.model_validate(response_as_dict).data
+        return ListOfRunsResponse.model_validate(response_as_dict).data
 
     async def iterate(
         self,

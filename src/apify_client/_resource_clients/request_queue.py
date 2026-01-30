@@ -18,12 +18,10 @@ from apify_client._models import (
     BatchAddResult,
     BatchDeleteResponse,
     BatchDeleteResult,
-    GetHeadAndLockResponse,
-    GetHeadResponse,
-    GetListOfRequestsResponse,
-    GetRequestQueueResponse,
-    GetRequestResponse,
+    HeadAndLockResponse,
+    HeadResponse,
     ListOfRequests,
+    ListOfRequestsResponse,
     LockedRequestQueueHead,
     ProlongRequestLockResponse,
     Request,
@@ -31,7 +29,9 @@ from apify_client._models import (
     RequestLockInfo,
     RequestQueue,
     RequestQueueHead,
+    RequestQueueResponse,
     RequestRegistration,
+    RequestResponse,
     UnlockRequestsResponse,
     UnlockRequestsResult,
 )
@@ -86,7 +86,7 @@ class RequestQueueClient(ResourceClient):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
-            return GetRequestQueueResponse.model_validate(result).data
+            return RequestQueueResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -117,7 +117,7 @@ class RequestQueueClient(ResourceClient):
             timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)
-        return GetRequestQueueResponse.model_validate(result).data
+        return RequestQueueResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the request queue.
@@ -155,7 +155,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return GetHeadResponse.model_validate(result).data
+        return HeadResponse.model_validate(result).data
 
     def list_and_lock_head(self, *, lock_duration: timedelta, limit: int | None = None) -> LockedRequestQueueHead:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
@@ -183,7 +183,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return GetHeadAndLockResponse.model_validate(result).data
+        return HeadAndLockResponse.model_validate(result).data
 
     def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Add a request to the queue.
@@ -229,7 +229,7 @@ class RequestQueueClient(ResourceClient):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response.json()
-            return GetRequestResponse.model_validate(result).data
+            return RequestResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -458,7 +458,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response.json()
-        return GetListOfRequestsResponse.model_validate(result).data
+        return ListOfRequestsResponse.model_validate(result).data
 
     def unlock_requests(self: RequestQueueClient) -> UnlockRequestsResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
@@ -514,7 +514,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response_to_dict(response)
-            return GetRequestQueueResponse.model_validate(result).data
+            return RequestQueueResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -550,7 +550,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)
-        return GetRequestQueueResponse.model_validate(result).data
+        return RequestQueueResponse.model_validate(result).data
 
     async def delete(self) -> None:
         """Delete the request queue.
@@ -588,7 +588,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetHeadResponse.model_validate(result).data
+        return HeadResponse.model_validate(result).data
 
     async def list_and_lock_head(self, *, lock_duration: timedelta, limit: int | None = None) -> LockedRequestQueueHead:
         """Retrieve a given number of unlocked requests from the beginning of the queue and lock them for a given time.
@@ -616,7 +616,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetHeadAndLockResponse.model_validate(result).data
+        return HeadAndLockResponse.model_validate(result).data
 
     async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Add a request to the queue.
@@ -662,7 +662,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout=FAST_OPERATION_TIMEOUT,
             )
             result = response.json()
-            validated_response = GetRequestResponse.model_validate(result) if result is not None else None
+            validated_response = RequestResponse.model_validate(result) if result is not None else None
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
@@ -941,7 +941,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response.json()
-        return GetListOfRequestsResponse.model_validate(result).data
+        return ListOfRequestsResponse.model_validate(result).data
 
     async def unlock_requests(self: RequestQueueClientAsync) -> UnlockRequestsResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.

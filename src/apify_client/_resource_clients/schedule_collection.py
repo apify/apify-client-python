@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import GetListOfSchedulesResponse, GetScheduleResponse, ListOfSchedules, Schedule
+from apify_client._models import ListOfSchedules, ListOfSchedulesResponse, Schedule, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
@@ -40,7 +40,7 @@ class ScheduleCollectionClient(ResourceClient):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfSchedulesResponse.model_validate(response_as_dict).data
+        return ListOfSchedulesResponse.model_validate(response_as_dict).data
 
     def create(
         self,
@@ -95,7 +95,7 @@ class ScheduleCollectionClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return GetScheduleResponse.model_validate(result).data
+        return ScheduleResponse.model_validate(result).data
 
 
 class ScheduleCollectionClientAsync(ResourceClientAsync):
@@ -130,7 +130,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             params=self._build_params(limit=limit, offset=offset, desc=desc),
         )
         response_as_dict = response_to_dict(response)
-        return GetListOfSchedulesResponse.model_validate(response_as_dict).data
+        return ListOfSchedulesResponse.model_validate(response_as_dict).data
 
     async def create(
         self,
@@ -185,4 +185,4 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return GetScheduleResponse.model_validate(result).data
+        return ScheduleResponse.model_validate(result).data

@@ -7,6 +7,18 @@ import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+from apify_client._logging import create_redirect_logger
+from apify_client._models import GetRunResponse, Run
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils import (
+    catch_not_found_or_throw,
+    encode_key_value_store_record_value,
+    filter_none_values,
+    response_to_dict,
+    to_safe_id,
+)
+from apify_client.errors import ApifyApiError
+
 if TYPE_CHECKING:
     import logging
     from decimal import Decimal
@@ -23,19 +35,6 @@ if TYPE_CHECKING:
         StreamedLogSync,
     )
     from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
-
-
-from apify_client._logging import create_redirect_logger
-from apify_client._models import GetRunResponse, Run
-from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    encode_key_value_store_record_value,
-    filter_none_values,
-    response_to_dict,
-    to_safe_id,
-)
-from apify_client.errors import ApifyApiError
 
 
 class RunClient(ResourceClient):
@@ -358,10 +357,7 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        # Import inline to avoid circular dependency with log.py
-        from apify_client._resource_clients.log import StreamedLogSync  # noqa: PLC0415
-
-        return StreamedLogSync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
+        return self._client_registry.streamed_log(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     def charge(
         self,
@@ -385,10 +381,10 @@ class RunClient(ResourceClient):
         if not event_name:
             raise ValueError('event_name is required for charging an event')
 
-        idempotency_key = (
-            idempotency_key
-            or f'{self._resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
-        )
+        if idempotency_key is None:
+            random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+            timestamp_ms = int(time.time() * 1000)
+            idempotency_key = f'{self._resource_id}-{event_name}-{timestamp_ms}-{random_suffix}'
 
         self._http_client.call(
             url=self._build_url('charge'),
@@ -440,10 +436,9 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        # Import inline to avoid circular dependency with log.py
-        from apify_client._resource_clients.log import StatusMessageWatcherSync  # noqa: PLC0415
-
-        return StatusMessageWatcherSync(run_client=self, to_logger=to_logger, check_period=check_period)
+        return self._client_registry.status_message_watcher(
+            run_client=self, to_logger=to_logger, check_period=check_period
+        )
 
 
 class RunClientAsync(ResourceClientAsync):
@@ -767,10 +762,7 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        # Import inline to avoid circular dependency with log.py
-        from apify_client._resource_clients.log import StreamedLogAsync  # noqa: PLC0415
-
-        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
+        return self._client_registry.streamed_log(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     async def charge(
         self,
@@ -794,9 +786,10 @@ class RunClientAsync(ResourceClientAsync):
         if not event_name:
             raise ValueError('event_name is required for charging an event')
 
-        idempotency_key = idempotency_key or (
-            f'{self._resource_id}-{event_name}-{int(time.time() * 1000)}-{"".join(random.choices(string.ascii_letters + string.digits, k=6))}'  # noqa: E501
-        )
+        if idempotency_key is None:
+            random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+            timestamp_ms = int(time.time() * 1000)
+            idempotency_key = f'{self._resource_id}-{event_name}-{timestamp_ms}-{random_suffix}'
 
         await self._http_client.call(
             url=self._build_url('charge'),
@@ -851,7 +844,6 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        # Import inline to avoid circular dependency with log.py
-        from apify_client._resource_clients.log import StatusMessageWatcherAsync  # noqa: PLC0415
-
-        return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)
+        return self._client_registry.status_message_watcher(
+            run_client=self, to_logger=to_logger, check_period=check_period
+        )

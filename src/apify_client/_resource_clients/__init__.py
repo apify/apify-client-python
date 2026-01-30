@@ -10,7 +10,14 @@ from .dataset import DatasetClient, DatasetClientAsync
 from .dataset_collection import DatasetCollectionClient, DatasetCollectionClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
 from .key_value_store_collection import KeyValueStoreCollectionClient, KeyValueStoreCollectionClientAsync
-from .log import LogClient, LogClientAsync
+from .log import (
+    LogClient,
+    LogClientAsync,
+    StatusMessageWatcherAsync,
+    StatusMessageWatcherSync,
+    StreamedLogAsync,
+    StreamedLogSync,
+)
 from .request_queue import RequestQueueClient, RequestQueueClientAsync
 from .request_queue_collection import RequestQueueCollectionClient, RequestQueueCollectionClientAsync
 from .run import RunClient, RunClientAsync
@@ -65,8 +72,12 @@ __all__ = [
     'ScheduleClientAsync',
     'ScheduleCollectionClient',
     'ScheduleCollectionClientAsync',
+    'StatusMessageWatcherAsync',
+    'StatusMessageWatcherSync',
     'StoreCollectionClient',
     'StoreCollectionClientAsync',
+    'StreamedLogAsync',
+    'StreamedLogSync',
     'TaskClient',
     'TaskClientAsync',
     'TaskCollectionClient',

@@ -9,13 +9,13 @@ from apify_client._models import (
     Webhook,
     WebhookDispatch,
 )
-from apify_client._representations import get_webhook_representation
+from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_client._consts import WebhookEventType
+    from apify_client._models import WebhookEventType
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
 
@@ -80,7 +80,7 @@ class WebhookClient(ResourceClient):
         Returns:
             The updated webhook.
         """
-        webhook_representation = get_webhook_representation(
+        webhook_representation = get_webhook_repr(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
@@ -217,7 +217,7 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             The updated webhook.
         """
-        webhook_representation = get_webhook_representation(
+        webhook_representation = get_webhook_repr(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,

@@ -13,8 +13,7 @@ from apify_client._utils import enum_to_value, to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._consts import WebhookEventType
-    from apify_client._models import ActorPermissionLevel, VersionSourceType
+    from apify_client._models import ActorPermissionLevel, VersionSourceType, WebhookEventType
 
 
 def build_actor_standby_dict(
@@ -26,21 +25,7 @@ def build_actor_standby_dict(
     build: str | None = None,
     memory_mbytes: int | None = None,
 ) -> dict:
-    """Build actor standby configuration dictionary.
-
-    This is used by both Actor and Task representations.
-
-    Args:
-        is_enabled: Whether the Actor Standby is enabled.
-        desired_requests_per_actor_run: The desired number of concurrent HTTP requests.
-        max_requests_per_actor_run: The maximum number of concurrent HTTP requests.
-        idle_timeout: Idle timeout before the Actor run is shut down.
-        build: The build tag or number to run in Standby mode.
-        memory_mbytes: The memory in megabytes for Standby mode.
-
-    Returns:
-        Dictionary with actor standby configuration.
-    """
+    """Build Actor standby configuration dictionary."""
     return {
         'isEnabled': is_enabled,
         'desiredRequestsPerActorRun': desired_requests_per_actor_run,
@@ -60,19 +45,7 @@ def build_default_run_options_dict(
     restart_on_error: bool | None = None,
     force_permission_level: ActorPermissionLevel | None = None,
 ) -> dict:
-    """Build default run options dictionary for Actor.
-
-    Args:
-        build: Tag or number of the build to run by default.
-        max_items: Default limit of results returned by runs.
-        memory_mbytes: Default memory allocated for runs, in megabytes.
-        timeout: Default timeout for runs.
-        restart_on_error: Whether to restart on non-zero exit code.
-        force_permission_level: Permission level to force for runs.
-
-    Returns:
-        Dictionary with default run options.
-    """
+    """Build default run options dictionary for Actor."""
     return {
         'build': build,
         'maxItems': max_items,
@@ -91,18 +64,7 @@ def build_task_options_dict(
     timeout: timedelta | None = None,
     restart_on_error: bool | None = None,
 ) -> dict:
-    """Build task options dictionary.
-
-    Args:
-        build: Actor build to run.
-        max_items: Maximum number of results returned by the run.
-        memory_mbytes: Memory limit for the run, in megabytes.
-        timeout: Timeout for the run.
-        restart_on_error: Whether to restart on non-zero exit code.
-
-    Returns:
-        Dictionary with task options.
-    """
+    """Build task options dictionary."""
     return {
         'build': build,
         'maxItems': max_items,
@@ -117,15 +79,7 @@ def build_example_run_input_dict(
     body: Any = None,
     content_type: str | None = None,
 ) -> dict:
-    """Build example run input dictionary for Actor.
-
-    Args:
-        body: Input to be prefilled as default input.
-        content_type: The content type of the example run input.
-
-    Returns:
-        Dictionary with example run input.
-    """
+    """Build example run input dictionary for Actor."""
     return {
         'body': body,
         'contentType': content_type,
@@ -138,16 +92,7 @@ def build_webhook_condition_dict(
     actor_task_id: str | None = None,
     actor_run_id: str | None = None,
 ) -> dict:
-    """Build webhook condition dictionary.
-
-    Args:
-        actor_id: The Actor ID to filter webhook events.
-        actor_task_id: The Actor task ID to filter webhook events.
-        actor_run_id: The Actor run ID to filter webhook events.
-
-    Returns:
-        Dictionary with webhook condition.
-    """
+    """Build webhook condition dictionary."""
     return {
         'actorRunId': actor_run_id,
         'actorTaskId': actor_task_id,
@@ -155,7 +100,7 @@ def build_webhook_condition_dict(
     }
 
 
-def get_actor_representation(
+def get_actor_repr(
     *,
     name: str | None,
     title: str | None = None,
@@ -228,7 +173,7 @@ def get_actor_representation(
     return actor_dict
 
 
-def get_task_representation(
+def get_task_repr(
     actor_id: str | None = None,
     name: str | None = None,
     task_input: dict | None = None,
@@ -268,7 +213,7 @@ def get_task_representation(
     }
 
 
-def get_actor_version_representation(
+def get_actor_version_repr(
     *,
     version_number: str | None = None,
     build_tag: str | None = None,
@@ -294,7 +239,7 @@ def get_actor_version_representation(
     }
 
 
-def get_schedule_representation(
+def get_schedule_repr(
     cron_expression: str | None = None,
     name: str | None = None,
     actions: list[dict] | None = None,
@@ -318,7 +263,7 @@ def get_schedule_representation(
     }
 
 
-def get_webhook_representation(
+def get_webhook_repr(
     *,
     event_types: list[WebhookEventType] | None = None,
     request_url: str | None = None,

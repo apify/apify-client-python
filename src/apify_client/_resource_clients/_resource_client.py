@@ -7,7 +7,12 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
-from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, ActorJobStatus
+from apify_client._consts import (
+    DEFAULT_WAIT_FOR_FINISH,
+    DEFAULT_WAIT_WHEN_JOB_NOT_EXIST,
+    TERMINAL_STATUSES,
+    ActorJobStatus,
+)
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id, to_seconds
 from apify_client.errors import ApifyApiError, ApifyClientError
@@ -178,7 +183,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
                         f'Expected dict with "status" field, got: {type(job).__name__}'
                     )
 
-                is_terminal = ActorJobStatus(job['status']).is_terminal
+                is_terminal = ActorJobStatus(job['status']) in TERMINAL_STATUSES
                 is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
                 if is_terminal or is_timed_out:
                     should_repeat = False
@@ -362,7 +367,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
                     )
 
                 seconds_elapsed = to_seconds(datetime.now(timezone.utc) - started_at)
-                is_terminal = ActorJobStatus(job['status']).is_terminal
+                is_terminal = ActorJobStatus(job['status']) in TERMINAL_STATUSES
                 is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
                 if is_terminal or is_timed_out:
                     should_repeat = False

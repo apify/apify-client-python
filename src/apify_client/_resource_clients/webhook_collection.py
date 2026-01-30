@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
-from apify_client._representations import get_webhook_representation
+from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
 
 if TYPE_CHECKING:
-    from apify_client._consts import WebhookEventType
+    from apify_client._models import WebhookEventType
 
 
 class WebhookCollectionClient(ResourceClient):
@@ -84,7 +84,7 @@ class WebhookCollectionClient(ResourceClient):
         Returns:
            The created webhook.
         """
-        webhook_representation = get_webhook_representation(
+        webhook_representation = get_webhook_repr(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,
@@ -182,7 +182,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         Returns:
            The created webhook.
         """
-        webhook_representation = get_webhook_representation(
+        webhook_representation = get_webhook_repr(
             event_types=event_types,
             request_url=request_url,
             payload_template=payload_template,

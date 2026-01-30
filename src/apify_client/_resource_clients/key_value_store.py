@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
     from impit import Response
 
-    from apify_client._consts import StorageGeneralAccess
+    from apify_client._models import GeneralAccessEnum
 
 
 def _parse_get_record_response(response: Response) -> Any:
@@ -96,7 +96,7 @@ class KeyValueStoreClient(ResourceClient):
             catch_not_found_or_throw(exc)
             return None
 
-    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> KeyValueStore:
+    def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> KeyValueStore:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -501,7 +501,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
-        general_access: StorageGeneralAccess | None = None,
+        general_access: GeneralAccessEnum | None = None,
     ) -> KeyValueStore:
         """Update the key-value store with specified fields.
 

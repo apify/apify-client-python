@@ -13,7 +13,7 @@ from apify_client._models import (
     RunOrigin,
     UpdateActorResponse,
 )
-from apify_client._representations import get_actor_representation
+from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -158,7 +158,7 @@ class ActorClient(ResourceClient):
         Returns:
             The updated Actor.
         """
-        actor_representation = get_actor_representation(
+        actor_representation = get_actor_repr(
             name=name,
             title=title,
             description=description,
@@ -636,7 +636,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor.
         """
-        actor_representation = get_actor_representation(
+        actor_representation = get_actor_repr(
             name=name,
             title=title,
             description=description,

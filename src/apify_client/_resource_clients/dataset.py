@@ -24,7 +24,8 @@ if TYPE_CHECKING:
 
     import impit
 
-    from apify_client._consts import JsonSerializable, StorageGeneralAccess
+    from apify_client._consts import JsonSerializable
+    from apify_client._models import GeneralAccessEnum
 
 
 @dataclass
@@ -83,7 +84,7 @@ class DatasetClient(ResourceClient):
             catch_not_found_or_throw(exc)
             return None
 
-    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
+    def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -725,7 +726,7 @@ class DatasetClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
             return None
 
-    async def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> Dataset:
+    async def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset

@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from apify_client._consts import WebhookEventType
+from apify_client._models import WebhookEventType
 from apify_client._utils import (
     catch_not_found_or_throw,
     create_hmac_signature,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._models import Actor, ActorShort, CreateActorResponse, GetListOfActorsResponse, ListOfActors
-from apify_client._representations import get_actor_representation
+from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
 
@@ -160,7 +160,7 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The created Actor.
         """
-        actor_representation = get_actor_representation(
+        actor_representation = get_actor_repr(
             name=name,
             title=title,
             description=description,
@@ -346,7 +346,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created Actor.
         """
-        actor_representation = get_actor_representation(
+        actor_representation = get_actor_repr(
             name=name,
             title=title,
             description=description,

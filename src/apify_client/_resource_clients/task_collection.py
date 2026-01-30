@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task, TaskShort
-from apify_client._representations import get_task_representation
+from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values, response_to_dict
 
@@ -138,7 +138,7 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The created task.
         """
-        task_representation = get_task_representation(
+        task_representation = get_task_repr(
             actor_id=actor_id,
             name=name,
             task_input=task_input,
@@ -293,7 +293,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created task.
         """
-        task_representation = get_task_representation(
+        task_representation = get_task_repr(
             actor_id=actor_id,
             name=name,
             task_input=task_input,

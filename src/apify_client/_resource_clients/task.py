@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
-from apify_client._representations import get_task_representation
+from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -108,7 +108,7 @@ class TaskClient(ResourceClient):
         Returns:
             The updated task.
         """
-        task_representation = get_task_representation(
+        task_representation = get_task_repr(
             name=name,
             task_input=task_input,
             build=build,
@@ -419,7 +419,7 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The updated task.
         """
-        task_representation = get_task_representation(
+        task_representation = get_task_repr(
             name=name,
             task_input=task_input,
             build=build,

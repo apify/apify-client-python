@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import GetVersionResponse, Version, VersionSourceType
-from apify_client._representations import get_actor_version_representation
+from apify_client._representations import get_actor_version_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
@@ -88,7 +88,7 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The updated Actor version.
         """
-        actor_version_representation = get_actor_version_representation(
+        actor_version_representation = get_actor_version_repr(
             build_tag=build_tag,
             env_vars=env_vars,
             apply_env_vars_to_build=apply_env_vars_to_build,
@@ -213,7 +213,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor version.
         """
-        actor_version_representation = get_actor_version_representation(
+        actor_version_representation = get_actor_version_repr(
             build_tag=build_tag,
             env_vars=env_vars,
             apply_env_vars_to_build=apply_env_vars_to_build,

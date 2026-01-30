@@ -42,7 +42,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._consts import StorageGeneralAccess
+    from apify_client._models import GeneralAccessEnum
 
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class RequestQueueClient(ResourceClient):
             catch_not_found_or_throw(exc)
             return None
 
-    def update(self, *, name: str | None = None, general_access: StorageGeneralAccess | None = None) -> RequestQueue:
+    def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> RequestQueue:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -517,7 +517,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
-        general_access: StorageGeneralAccess | None = None,
+        general_access: GeneralAccessEnum | None = None,
     ) -> RequestQueue:
         """Update the request queue with specified fields.
 

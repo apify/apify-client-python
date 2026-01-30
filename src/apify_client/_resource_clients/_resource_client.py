@@ -7,15 +7,11 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
-from apify_client._consts import (
-    DEFAULT_WAIT_FOR_FINISH,
-    DEFAULT_WAIT_WHEN_JOB_NOT_EXIST,
-    TERMINAL_STATUSES,
-    ActorJobStatus,
-)
+from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, TERMINAL_STATUSES
+from apify_client._internal_models import ActorJobResponse
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id, to_seconds
-from apify_client.errors import ApifyApiError, ApifyClientError
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
@@ -158,7 +154,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         """
         started_at = datetime.now(timezone.utc)
         should_repeat = True
-        job: dict | None = None
+        actor_job: dict = {}
         seconds_elapsed = 0.0
         wait_secs = to_seconds(wait_duration)
 
@@ -173,24 +169,20 @@ class ResourceClient(metaclass=WithLogDetailsClient):
                     method='GET',
                     params={**params, 'waitForFinish': wait_for_finish},
                 )
-                job_response = response_to_dict(response)
-                job = job_response.get('data') if isinstance(job_response, dict) else job_response
+                response_as_dict = response_to_dict(response)
+                actor_job_response = ActorJobResponse.model_validate(response_as_dict)
+                actor_job = actor_job_response.data.model_dump()
                 seconds_elapsed = to_seconds(datetime.now(timezone.utc) - started_at)
 
-                if not isinstance(job, dict):
-                    raise ApifyClientError(
-                        f'Unexpected response format received from the API. '
-                        f'Expected dict with "status" field, got: {type(job).__name__}'
-                    )
-
-                is_terminal = ActorJobStatus(job['status']) in TERMINAL_STATUSES
+                is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
                 is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
+
                 if is_terminal or is_timed_out:
                     should_repeat = False
 
                 if not should_repeat:
                     # Early return here so that we avoid the sleep below if not needed
-                    return job
+                    return actor_job
 
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
@@ -203,7 +195,7 @@ class ResourceClient(metaclass=WithLogDetailsClient):
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
             time.sleep(0.25)
 
-        return job
+        return actor_job
 
 
 class ResourceClientAsync(metaclass=WithLogDetailsClient):
@@ -342,7 +334,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         """
         started_at = datetime.now(timezone.utc)
         should_repeat = True
-        job: dict | None = None
+        job: dict = {}
         seconds_elapsed = 0.0
         wait_secs = to_seconds(wait_duration)
 
@@ -357,24 +349,20 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
                     method='GET',
                     params={**params, 'waitForFinish': wait_for_finish},
                 )
-                job_response = response_to_dict(response)
-                job = job_response.get('data') if isinstance(job_response, dict) else job_response
-
-                if not isinstance(job, dict):
-                    raise ApifyClientError(
-                        f'Unexpected response format received from the API. '
-                        f'Expected dict with "status" field, got: {type(job).__name__}'
-                    )
-
+                response_as_dict = response_to_dict(response)
+                actor_job_response = ActorJobResponse.model_validate(response_as_dict)
+                actor_job = actor_job_response.data.model_dump()
                 seconds_elapsed = to_seconds(datetime.now(timezone.utc) - started_at)
-                is_terminal = ActorJobStatus(job['status']) in TERMINAL_STATUSES
+
+                is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
                 is_timed_out = wait_secs is not None and seconds_elapsed >= wait_secs
+
                 if is_terminal or is_timed_out:
                     should_repeat = False
 
                 if not should_repeat:
                     # Early return here so that we avoid the sleep below if not needed
-                    return job
+                    return actor_job
 
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)

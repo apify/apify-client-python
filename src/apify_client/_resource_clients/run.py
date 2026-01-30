@@ -24,17 +24,20 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from apify_client._consts import RunGeneralAccess
-    from apify_client._resource_clients.dataset import DatasetClient, DatasetClientAsync
-    from apify_client._resource_clients.key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
-    from apify_client._resource_clients.log import (
+    from apify_client._resource_clients import (
+        DatasetClient,
+        DatasetClientAsync,
+        KeyValueStoreClient,
+        KeyValueStoreClientAsync,
         LogClient,
         LogClientAsync,
+        RequestQueueClient,
+        RequestQueueClientAsync,
         StatusMessageWatcherAsync,
         StatusMessageWatcherSync,
         StreamedLogAsync,
         StreamedLogSync,
     )
-    from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
 
 
 class RunClient(ResourceClient):

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from contextlib import asynccontextmanager, contextmanager
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
@@ -28,6 +27,7 @@ from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from datetime import timedelta
 
     from impit import Response
 

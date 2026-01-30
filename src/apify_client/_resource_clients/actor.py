@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._models import (
@@ -26,6 +25,7 @@ from apify_client._utils import (
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
+    from datetime import timedelta
     from decimal import Decimal
     from logging import Logger
 

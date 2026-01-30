@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from functools import cached_property
+from typing import TYPE_CHECKING
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
@@ -73,6 +73,9 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
+
+if TYPE_CHECKING:
+    from datetime import timedelta
 
 
 class ApifyClient:

@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.run import RunClient, RunClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_webhook_list_to_base64,
@@ -16,9 +14,14 @@ from apify_client._utils import (
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
+    from datetime import timedelta
+
     from apify_client._consts import ActorJobStatus
-    from apify_client._resource_clients.run_collection import RunCollectionClient, RunCollectionClientAsync
-    from apify_client._resource_clients.webhook_collection import (
+    from apify_client._resource_clients import (
+        RunClient,
+        RunClientAsync,
+        RunCollectionClient,
+        RunCollectionClientAsync,
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
@@ -375,17 +378,14 @@ class TaskClient(ResourceClient):
         Returns:
             The resource client for the last run of this task.
         """
-        return RunClient(
+        return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
             base_url=self._resource_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
             client_registry=self._client_registry,
-            params=self._build_params(
-                status=enum_to_value(status),
-                origin=enum_to_value(origin),
-            ),
+            params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
         )
 
     def webhooks(self) -> WebhookCollectionClient:
@@ -688,17 +688,14 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The resource client for the last run of this task.
         """
-        return RunClientAsync(
+        return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
             base_url=self._resource_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
             client_registry=self._client_registry,
-            params=self._build_params(
-                status=enum_to_value(status),
-                origin=enum_to_value(origin),
-            ),
+            params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
         )
 
     def webhooks(self) -> WebhookCollectionClientAsync:

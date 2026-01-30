@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     import impit
 
     from apify_client._models import Run
-    from apify_client._resource_clients.run import RunClient, RunClientAsync
+    from apify_client._resource_clients import RunClient, RunClientAsync
 
 
 class LogClient(ResourceClient):

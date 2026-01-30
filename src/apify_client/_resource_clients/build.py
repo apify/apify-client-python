@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import Build, GetBuildResponse, PostAbortBuildResponse
@@ -9,7 +8,9 @@ from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_client._resource_clients.log import LogClient, LogClientAsync
+    from datetime import timedelta
+
+    from apify_client._resource_clients import LogClient, LogClientAsync
 
 
 class BuildClient(ResourceClient):

@@ -3,7 +3,6 @@ from __future__ import annotations
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode, urlparse, urlunparse
 
@@ -21,6 +20,7 @@ from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from datetime import timedelta
 
     import impit
 

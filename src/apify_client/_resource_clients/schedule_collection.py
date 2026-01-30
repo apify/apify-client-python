@@ -2,12 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from apify_client._models import (
-    GetListOfSchedulesResponse,
-    GetScheduleResponse,
-    ListOfSchedules,
-    Schedule,
-)
+from apify_client._models import GetListOfSchedulesResponse, GetScheduleResponse, ListOfSchedules, Schedule
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.schedule import _get_schedule_representation
 from apify_client._utils import filter_none_values, response_to_dict

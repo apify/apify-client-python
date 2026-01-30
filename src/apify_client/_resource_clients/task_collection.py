@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from datetime import timedelta  # noqa: TC003 - Used at runtime
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateTaskResponse, GetListOfTasksResponse, ListOfTasks, Task, TaskShort
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.task import get_task_representation
 from apify_client._utils import filter_none_values, response_to_dict
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+    from datetime import timedelta
 
 
 class TaskCollectionClient(ResourceClient):

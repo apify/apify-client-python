@@ -10,20 +10,12 @@ from apify_client._models import (
     WebhookDispatch,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    enum_to_value,
-    filter_none_values,
-    response_to_dict,
-)
+from apify_client._utils import catch_not_found_or_throw, enum_to_value, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client._consts import WebhookEventType
-    from apify_client._resource_clients.webhook_dispatch_collection import (
-        WebhookDispatchCollectionClient,
-        WebhookDispatchCollectionClientAsync,
-    )
+    from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
 
 def get_webhook_representation(

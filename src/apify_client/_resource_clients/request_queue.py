@@ -36,11 +36,7 @@ from apify_client._models import (
     UnlockRequestsResult,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    filter_none_values,
-    response_to_dict,
-)
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:

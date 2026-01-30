@@ -8,8 +8,9 @@ from apify_client._utils import catch_not_found_or_throw, enum_to_value, filter_
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from apify_client._resource_clients.actor_env_var import ActorEnvVarClient, ActorEnvVarClientAsync
-    from apify_client._resource_clients.actor_env_var_collection import (
+    from apify_client._resource_clients import (
+        ActorEnvVarClient,
+        ActorEnvVarClientAsync,
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
     )

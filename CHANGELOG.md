@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.4.1 - **not yet released**
+## [2.4.1](https://github.com/apify/apify-client-python/releases/tag/v2.4.1) (2026-01-30)
 
 ### 🐛 Bug Fixes
 
@@ -12,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Add missing tagged_builds parameter to Actor update method ([#596](https://github.com/apify/apify-client-python/pull/596)) ([6210e80](https://github.com/apify/apify-client-python/commit/6210e80fc5037d57c969a16458c13b68b61ddd07)) by [@vdusek](https://github.com/vdusek), closes [#585](https://github.com/apify/apify-client-python/issues/585)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.4.0](https://github.com/apify/apify-client-python/releases/tag/v2.4.0) (2026-01-09)
 
 ### 🚀 Features

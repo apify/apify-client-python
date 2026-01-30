@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import CreateWebhookResponse, GetListOfWebhooksResponse, ListOfWebhooks, Webhook
+from apify_client._representations import get_webhook_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.webhook import get_webhook_representation
 from apify_client._utils import filter_none_values, response_to_dict
 
 if TYPE_CHECKING:
@@ -102,7 +102,7 @@ class WebhookCollectionClient(ResourceClient):
             url=self._build_url(),
             method='POST',
             params=self._build_params(),
-            json=filter_none_values(webhook_representation),
+            json=filter_none_values(webhook_representation, remove_empty_dicts=True),
         )
 
         result = response_to_dict(response)
@@ -200,7 +200,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             url=self._build_url(),
             method='POST',
             params=self._build_params(),
-            json=filter_none_values(webhook_representation),
+            json=filter_none_values(webhook_representation, remove_empty_dicts=True),
         )
 
         response = response_to_dict(response_obj)

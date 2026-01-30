@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, ActorJobStatus
 from apify_client._logging import WithLogDetailsClient
+from apify_client._representations import to_seconds
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id
 from apify_client.errors import ApifyApiError, ApifyClientError
 
@@ -155,10 +156,10 @@ class ResourceClient(metaclass=WithLogDetailsClient):
         should_repeat = True
         job: dict | None = None
         seconds_elapsed = 0.0
-        wait_secs = wait_duration.total_seconds() if wait_duration is not None else None
+        wait_secs = to_seconds(wait_duration)
 
         while should_repeat:
-            wait_for_finish = int(DEFAULT_WAIT_FOR_FINISH.total_seconds())
+            wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH)
             if wait_secs is not None:
                 wait_for_finish = int(wait_secs - seconds_elapsed)
 

@@ -9,8 +9,8 @@ from apify_client._models import (
     Version,
     VersionSourceType,
 )
+from apify_client._representations import get_actor_version_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.actor_version import _get_actor_version_representation
 from apify_client._utils import filter_none_values, response_to_dict
 
 
@@ -74,7 +74,7 @@ class ActorVersionCollectionClient(ResourceClient):
         Returns:
             The created Actor version.
         """
-        actor_version_representation = _get_actor_version_representation(
+        actor_version_representation = get_actor_version_representation(
             version_number=version_number,
             build_tag=build_tag,
             env_vars=env_vars,
@@ -157,7 +157,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created Actor version.
         """
-        actor_version_representation = _get_actor_version_representation(
+        actor_version_representation = get_actor_version_representation(
             version_number=version_number,
             build_tag=build_tag,
             env_vars=env_vars,

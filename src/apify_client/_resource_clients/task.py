@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._models import CreateTaskResponse, GetRunResponse, Run, RunOrigin, Task
+from apify_client._representations import get_task_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -25,61 +26,6 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-
-
-def get_task_representation(
-    actor_id: str | None = None,
-    name: str | None = None,
-    task_input: dict | None = None,
-    build: str | None = None,
-    max_items: int | None = None,
-    memory_mbytes: int | None = None,
-    timeout: timedelta | None = None,
-    title: str | None = None,
-    actor_standby_desired_requests_per_actor_run: int | None = None,
-    actor_standby_max_requests_per_actor_run: int | None = None,
-    actor_standby_idle_timeout: timedelta | None = None,
-    actor_standby_build: str | None = None,
-    actor_standby_memory_mbytes: int | None = None,
-    *,
-    restart_on_error: bool | None = None,
-) -> dict:
-    """Get the dictionary representation of a task."""
-    task_dict = {
-        'actId': actor_id,
-        'name': name,
-        'options': {
-            'build': build,
-            'maxItems': max_items,
-            'memoryMbytes': memory_mbytes,
-            'timeoutSecs': int(timeout.total_seconds()) if timeout is not None else None,
-            'restartOnError': restart_on_error,
-        },
-        'input': task_input,
-        'title': title,
-    }
-
-    # Only include actorStandby if at least one field is provided
-    if any(
-        [
-            actor_standby_desired_requests_per_actor_run is not None,
-            actor_standby_max_requests_per_actor_run is not None,
-            actor_standby_idle_timeout is not None,
-            actor_standby_build is not None,
-            actor_standby_memory_mbytes is not None,
-        ]
-    ):
-        task_dict['actorStandby'] = {
-            'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
-            'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
-            'idleTimeoutSecs': (
-                int(actor_standby_idle_timeout.total_seconds()) if actor_standby_idle_timeout is not None else None
-            ),
-            'build': actor_standby_build,
-            'memoryMbytes': actor_standby_memory_mbytes,
-        }
-
-    return task_dict
 
 
 class TaskClient(ResourceClient):
@@ -176,7 +122,7 @@ class TaskClient(ResourceClient):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
-        cleaned = filter_none_values(task_representation)
+        cleaned = filter_none_values(task_representation, remove_empty_dicts=True)
 
         response = self._http_client.call(
             url=self._build_url(),
@@ -487,7 +433,7 @@ class TaskClientAsync(ResourceClientAsync):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
-        cleaned = filter_none_values(task_representation)
+        cleaned = filter_none_values(task_representation, remove_empty_dicts=True)
 
         response = await self._http_client.call(
             url=self._build_url(),

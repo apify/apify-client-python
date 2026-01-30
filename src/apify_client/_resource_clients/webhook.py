@@ -9,52 +9,14 @@ from apify_client._models import (
     Webhook,
     WebhookDispatch,
 )
+from apify_client._representations import get_webhook_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, enum_to_value, filter_none_values, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client._consts import WebhookEventType
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
-
-
-def get_webhook_representation(
-    *,
-    event_types: list[WebhookEventType] | None = None,
-    request_url: str | None = None,
-    payload_template: str | None = None,
-    headers_template: str | None = None,
-    actor_id: str | None = None,
-    actor_task_id: str | None = None,
-    actor_run_id: str | None = None,
-    ignore_ssl_errors: bool | None = None,
-    do_not_retry: bool | None = None,
-    idempotency_key: str | None = None,
-    is_ad_hoc: bool | None = None,
-) -> dict:
-    """Prepare webhook dictionary representation for clients."""
-    webhook: dict = {
-        'requestUrl': request_url,
-        'payloadTemplate': payload_template,
-        'headersTemplate': headers_template,
-        'ignoreSslErrors': ignore_ssl_errors,
-        'doNotRetry': do_not_retry,
-        'idempotencyKey': idempotency_key,
-        'isAdHoc': is_ad_hoc,
-        'condition': {
-            'actorRunId': actor_run_id,
-            'actorTaskId': actor_task_id,
-            'actorId': actor_id,
-        },
-    }
-
-    if actor_run_id is not None:
-        webhook['isAdHoc'] = True
-
-    if event_types is not None:
-        webhook['eventTypes'] = [enum_to_value(event_type) for event_type in event_types]
-
-    return webhook
 
 
 class WebhookClient(ResourceClient):
@@ -130,7 +92,7 @@ class WebhookClient(ResourceClient):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
-        cleaned = filter_none_values(webhook_representation)
+        cleaned = filter_none_values(webhook_representation, remove_empty_dicts=True)
 
         response = self._http_client.call(
             url=self._build_url(),
@@ -267,7 +229,7 @@ class WebhookClientAsync(ResourceClientAsync):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
-        cleaned = filter_none_values(webhook_representation)
+        cleaned = filter_none_values(webhook_representation, remove_empty_dicts=True)
 
         response = await self._http_client.call(
             url=self._build_url(),

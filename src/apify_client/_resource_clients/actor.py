@@ -13,6 +13,7 @@ from apify_client._models import (
     RunOrigin,
     UpdateActorResponse,
 )
+from apify_client._representations import get_actor_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -46,107 +47,6 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-
-
-def get_actor_representation(
-    *,
-    name: str | None,
-    title: str | None = None,
-    description: str | None = None,
-    seo_title: str | None = None,
-    seo_description: str | None = None,
-    versions: list[dict] | None = None,
-    restart_on_error: bool | None = None,
-    is_public: bool | None = None,
-    is_deprecated: bool | None = None,
-    is_anonymously_runnable: bool | None = None,
-    categories: list[str] | None = None,
-    default_run_build: str | None = None,
-    default_run_max_items: int | None = None,
-    default_run_memory_mbytes: int | None = None,
-    default_run_timeout: timedelta | None = None,
-    default_run_force_permission_level: ActorPermissionLevel | None = None,
-    example_run_input_body: Any = None,
-    example_run_input_content_type: str | None = None,
-    actor_standby_is_enabled: bool | None = None,
-    actor_standby_desired_requests_per_actor_run: int | None = None,
-    actor_standby_max_requests_per_actor_run: int | None = None,
-    actor_standby_idle_timeout: timedelta | None = None,
-    actor_standby_build: str | None = None,
-    actor_standby_memory_mbytes: int | None = None,
-    pricing_infos: list[dict] | None = None,
-    actor_permission_level: ActorPermissionLevel | None = None,
-    tagged_builds: dict[str, None | dict[str, str]] | None = None,
-) -> dict:
-    """Get dictionary representation of the Actor."""
-    actor_dict = {
-        'name': name,
-        'title': title,
-        'description': description,
-        'seoTitle': seo_title,
-        'seoDescription': seo_description,
-        'versions': versions,
-        'isPublic': is_public,
-        'isDeprecated': is_deprecated,
-        'isAnonymouslyRunnable': is_anonymously_runnable,
-        'categories': categories,
-        'pricingInfos': pricing_infos,
-        'actorPermissionLevel': actor_permission_level,
-    }
-
-    # Only include defaultRunOptions if at least one field is provided
-    if any(
-        [
-            default_run_build is not None,
-            default_run_max_items is not None,
-            default_run_memory_mbytes is not None,
-            default_run_timeout is not None,
-            restart_on_error is not None,
-            default_run_force_permission_level is not None,
-        ]
-    ):
-        actor_dict['defaultRunOptions'] = {
-            'build': default_run_build,
-            'maxItems': default_run_max_items,
-            'memoryMbytes': default_run_memory_mbytes,
-            'timeoutSecs': int(default_run_timeout.total_seconds()) if default_run_timeout is not None else None,
-            'restartOnError': restart_on_error,
-            'forcePermissionLevel': default_run_force_permission_level,
-        }
-
-    # Only include actorStandby if at least one field is provided
-    if any(
-        [
-            actor_standby_is_enabled is not None,
-            actor_standby_desired_requests_per_actor_run is not None,
-            actor_standby_max_requests_per_actor_run is not None,
-            actor_standby_idle_timeout is not None,
-            actor_standby_build is not None,
-            actor_standby_memory_mbytes is not None,
-        ]
-    ):
-        actor_dict['actorStandby'] = {
-            'isEnabled': actor_standby_is_enabled,
-            'desiredRequestsPerActorRun': actor_standby_desired_requests_per_actor_run,
-            'maxRequestsPerActorRun': actor_standby_max_requests_per_actor_run,
-            'idleTimeoutSecs': (
-                int(actor_standby_idle_timeout.total_seconds()) if actor_standby_idle_timeout is not None else None
-            ),
-            'build': actor_standby_build,
-            'memoryMbytes': actor_standby_memory_mbytes,
-        }
-
-    # Only include exampleRunInput if at least one field is provided
-    if example_run_input_body is not None or example_run_input_content_type is not None:
-        actor_dict['exampleRunInput'] = {
-            'body': example_run_input_body,
-            'contentType': example_run_input_content_type,
-        }
-
-    # Include taggedBuilds if provided
-    if tagged_builds is not None:
-        actor_dict['taggedBuilds'] = tagged_builds
-    return actor_dict
 
 
 class ActorClient(ResourceClient):
@@ -285,7 +185,7 @@ class ActorClient(ResourceClient):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_none_values(actor_representation)
+        cleaned = filter_none_values(actor_representation, remove_empty_dicts=True)
 
         response = self._http_client.call(
             url=self._build_url(),
@@ -763,7 +663,7 @@ class ActorClientAsync(ResourceClientAsync):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_none_values(actor_representation)
+        cleaned = filter_none_values(actor_representation, remove_empty_dicts=True)
 
         response = await self._http_client.call(
             url=self._build_url(),

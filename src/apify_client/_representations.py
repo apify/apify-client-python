@@ -1,0 +1,377 @@
+"""Helper functions for building API request representations.
+
+This module provides utilities for constructing dictionary representations of API resources. These representations
+are used when creating or updating resources via the Apify API.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from typing_extensions import overload
+
+from apify_client._utils import enum_to_value
+
+if TYPE_CHECKING:
+    from datetime import timedelta
+
+    from apify_client._consts import WebhookEventType
+    from apify_client._models import ActorPermissionLevel, VersionSourceType
+
+
+@overload
+def to_seconds(td: timedelta) -> int: ...
+@overload
+def to_seconds(td: None) -> None: ...
+
+
+def to_seconds(td: timedelta | None) -> int | None:
+    """Convert timedelta to seconds.
+
+    Args:
+        td: The timedelta to convert, or None.
+
+    Returns:
+        The total seconds as an integer, or None if input is None.
+    """
+    return int(td.total_seconds()) if td is not None else None
+
+
+def build_actor_standby_dict(
+    *,
+    is_enabled: bool | None = None,
+    desired_requests_per_actor_run: int | None = None,
+    max_requests_per_actor_run: int | None = None,
+    idle_timeout: timedelta | None = None,
+    build: str | None = None,
+    memory_mbytes: int | None = None,
+) -> dict:
+    """Build actor standby configuration dictionary.
+
+    This is used by both Actor and Task representations.
+
+    Args:
+        is_enabled: Whether the Actor Standby is enabled.
+        desired_requests_per_actor_run: The desired number of concurrent HTTP requests.
+        max_requests_per_actor_run: The maximum number of concurrent HTTP requests.
+        idle_timeout: Idle timeout before the Actor run is shut down.
+        build: The build tag or number to run in Standby mode.
+        memory_mbytes: The memory in megabytes for Standby mode.
+
+    Returns:
+        Dictionary with actor standby configuration.
+    """
+    return {
+        'isEnabled': is_enabled,
+        'desiredRequestsPerActorRun': desired_requests_per_actor_run,
+        'maxRequestsPerActorRun': max_requests_per_actor_run,
+        'idleTimeoutSecs': to_seconds(idle_timeout),
+        'build': build,
+        'memoryMbytes': memory_mbytes,
+    }
+
+
+def build_default_run_options_dict(
+    *,
+    build: str | None = None,
+    max_items: int | None = None,
+    memory_mbytes: int | None = None,
+    timeout: timedelta | None = None,
+    restart_on_error: bool | None = None,
+    force_permission_level: ActorPermissionLevel | None = None,
+) -> dict:
+    """Build default run options dictionary for Actor.
+
+    Args:
+        build: Tag or number of the build to run by default.
+        max_items: Default limit of results returned by runs.
+        memory_mbytes: Default memory allocated for runs, in megabytes.
+        timeout: Default timeout for runs.
+        restart_on_error: Whether to restart on non-zero exit code.
+        force_permission_level: Permission level to force for runs.
+
+    Returns:
+        Dictionary with default run options.
+    """
+    return {
+        'build': build,
+        'maxItems': max_items,
+        'memoryMbytes': memory_mbytes,
+        'timeoutSecs': to_seconds(timeout),
+        'restartOnError': restart_on_error,
+        'forcePermissionLevel': force_permission_level,
+    }
+
+
+def build_task_options_dict(
+    *,
+    build: str | None = None,
+    max_items: int | None = None,
+    memory_mbytes: int | None = None,
+    timeout: timedelta | None = None,
+    restart_on_error: bool | None = None,
+) -> dict:
+    """Build task options dictionary.
+
+    Args:
+        build: Actor build to run.
+        max_items: Maximum number of results returned by the run.
+        memory_mbytes: Memory limit for the run, in megabytes.
+        timeout: Timeout for the run.
+        restart_on_error: Whether to restart on non-zero exit code.
+
+    Returns:
+        Dictionary with task options.
+    """
+    return {
+        'build': build,
+        'maxItems': max_items,
+        'memoryMbytes': memory_mbytes,
+        'timeoutSecs': to_seconds(timeout),
+        'restartOnError': restart_on_error,
+    }
+
+
+def build_example_run_input_dict(
+    *,
+    body: Any = None,
+    content_type: str | None = None,
+) -> dict:
+    """Build example run input dictionary for Actor.
+
+    Args:
+        body: Input to be prefilled as default input.
+        content_type: The content type of the example run input.
+
+    Returns:
+        Dictionary with example run input.
+    """
+    return {
+        'body': body,
+        'contentType': content_type,
+    }
+
+
+def build_webhook_condition_dict(
+    *,
+    actor_id: str | None = None,
+    actor_task_id: str | None = None,
+    actor_run_id: str | None = None,
+) -> dict:
+    """Build webhook condition dictionary.
+
+    Args:
+        actor_id: The Actor ID to filter webhook events.
+        actor_task_id: The Actor task ID to filter webhook events.
+        actor_run_id: The Actor run ID to filter webhook events.
+
+    Returns:
+        Dictionary with webhook condition.
+    """
+    return {
+        'actorRunId': actor_run_id,
+        'actorTaskId': actor_task_id,
+        'actorId': actor_id,
+    }
+
+
+def get_actor_representation(
+    *,
+    name: str | None,
+    title: str | None = None,
+    description: str | None = None,
+    seo_title: str | None = None,
+    seo_description: str | None = None,
+    versions: list[dict] | None = None,
+    restart_on_error: bool | None = None,
+    is_public: bool | None = None,
+    is_deprecated: bool | None = None,
+    is_anonymously_runnable: bool | None = None,
+    categories: list[str] | None = None,
+    default_run_build: str | None = None,
+    default_run_max_items: int | None = None,
+    default_run_memory_mbytes: int | None = None,
+    default_run_timeout: timedelta | None = None,
+    default_run_force_permission_level: ActorPermissionLevel | None = None,
+    example_run_input_body: Any = None,
+    example_run_input_content_type: str | None = None,
+    actor_standby_is_enabled: bool | None = None,
+    actor_standby_desired_requests_per_actor_run: int | None = None,
+    actor_standby_max_requests_per_actor_run: int | None = None,
+    actor_standby_idle_timeout: timedelta | None = None,
+    actor_standby_build: str | None = None,
+    actor_standby_memory_mbytes: int | None = None,
+    pricing_infos: list[dict] | None = None,
+    actor_permission_level: ActorPermissionLevel | None = None,
+    tagged_builds: dict[str, None | dict[str, str]] | None = None,
+) -> dict:
+    """Get dictionary representation of the Actor."""
+    actor_dict: dict[str, Any] = {
+        'name': name,
+        'title': title,
+        'description': description,
+        'seoTitle': seo_title,
+        'seoDescription': seo_description,
+        'versions': versions,
+        'isPublic': is_public,
+        'isDeprecated': is_deprecated,
+        'isAnonymouslyRunnable': is_anonymously_runnable,
+        'categories': categories,
+        'pricingInfos': pricing_infos,
+        'actorPermissionLevel': actor_permission_level,
+        'defaultRunOptions': build_default_run_options_dict(
+            build=default_run_build,
+            max_items=default_run_max_items,
+            memory_mbytes=default_run_memory_mbytes,
+            timeout=default_run_timeout,
+            restart_on_error=restart_on_error,
+            force_permission_level=default_run_force_permission_level,
+        ),
+        'actorStandby': build_actor_standby_dict(
+            is_enabled=actor_standby_is_enabled,
+            desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+            max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+            idle_timeout=actor_standby_idle_timeout,
+            build=actor_standby_build,
+            memory_mbytes=actor_standby_memory_mbytes,
+        ),
+        'exampleRunInput': build_example_run_input_dict(
+            body=example_run_input_body,
+            content_type=example_run_input_content_type,
+        ),
+    }
+
+    # Include taggedBuilds if provided
+    if tagged_builds is not None:
+        actor_dict['taggedBuilds'] = tagged_builds
+
+    return actor_dict
+
+
+def get_task_representation(
+    actor_id: str | None = None,
+    name: str | None = None,
+    task_input: dict | None = None,
+    build: str | None = None,
+    max_items: int | None = None,
+    memory_mbytes: int | None = None,
+    timeout: timedelta | None = None,
+    title: str | None = None,
+    actor_standby_desired_requests_per_actor_run: int | None = None,
+    actor_standby_max_requests_per_actor_run: int | None = None,
+    actor_standby_idle_timeout: timedelta | None = None,
+    actor_standby_build: str | None = None,
+    actor_standby_memory_mbytes: int | None = None,
+    *,
+    restart_on_error: bool | None = None,
+) -> dict:
+    """Get the dictionary representation of a task."""
+    return {
+        'actId': actor_id,
+        'name': name,
+        'title': title,
+        'input': task_input,
+        'options': build_task_options_dict(
+            build=build,
+            max_items=max_items,
+            memory_mbytes=memory_mbytes,
+            timeout=timeout,
+            restart_on_error=restart_on_error,
+        ),
+        'actorStandby': build_actor_standby_dict(
+            desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+            max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+            idle_timeout=actor_standby_idle_timeout,
+            build=actor_standby_build,
+            memory_mbytes=actor_standby_memory_mbytes,
+        ),
+    }
+
+
+def get_actor_version_representation(
+    *,
+    version_number: str | None = None,
+    build_tag: str | None = None,
+    env_vars: list[dict] | None = None,
+    apply_env_vars_to_build: bool | None = None,
+    source_type: VersionSourceType | None = None,
+    source_files: list[dict] | None = None,
+    git_repo_url: str | None = None,
+    tarball_url: str | None = None,
+    github_gist_url: str | None = None,
+) -> dict:
+    """Get dictionary representation of an Actor version."""
+    return {
+        'versionNumber': version_number,
+        'buildTag': build_tag,
+        'envVars': env_vars,
+        'applyEnvVarsToBuild': apply_env_vars_to_build,
+        'sourceType': enum_to_value(source_type),
+        'sourceFiles': source_files,
+        'gitRepoUrl': git_repo_url,
+        'tarballUrl': tarball_url,
+        'gitHubGistUrl': github_gist_url,
+    }
+
+
+def get_schedule_representation(
+    cron_expression: str | None = None,
+    name: str | None = None,
+    actions: list[dict] | None = None,
+    description: str | None = None,
+    timezone: str | None = None,
+    title: str | None = None,
+    *,
+    is_enabled: bool | None = None,
+    is_exclusive: bool | None = None,
+) -> dict:
+    """Get dictionary representation of a schedule."""
+    return {
+        'cronExpression': cron_expression,
+        'isEnabled': is_enabled,
+        'isExclusive': is_exclusive,
+        'name': name,
+        'actions': actions,
+        'description': description,
+        'timezone': timezone,
+        'title': title,
+    }
+
+
+def get_webhook_representation(
+    *,
+    event_types: list[WebhookEventType] | None = None,
+    request_url: str | None = None,
+    payload_template: str | None = None,
+    headers_template: str | None = None,
+    actor_id: str | None = None,
+    actor_task_id: str | None = None,
+    actor_run_id: str | None = None,
+    ignore_ssl_errors: bool | None = None,
+    do_not_retry: bool | None = None,
+    idempotency_key: str | None = None,
+    is_ad_hoc: bool | None = None,
+) -> dict:
+    """Prepare webhook dictionary representation for clients."""
+    webhook: dict[str, Any] = {
+        'requestUrl': request_url,
+        'payloadTemplate': payload_template,
+        'headersTemplate': headers_template,
+        'ignoreSslErrors': ignore_ssl_errors,
+        'doNotRetry': do_not_retry,
+        'idempotencyKey': idempotency_key,
+        'isAdHoc': is_ad_hoc,
+        'condition': build_webhook_condition_dict(
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+        ),
+    }
+
+    if actor_run_id is not None:
+        webhook['isAdHoc'] = True
+
+    if event_types is not None:
+        webhook['eventTypes'] = [enum_to_value(event_type) for event_type in event_types]
+
+    return webhook

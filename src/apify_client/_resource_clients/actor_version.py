@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import GetVersionResponse, Version, VersionSourceType
+from apify_client._representations import get_actor_version_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, enum_to_value, filter_none_values, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -14,31 +15,6 @@ if TYPE_CHECKING:
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
     )
-
-
-def _get_actor_version_representation(
-    *,
-    version_number: str | None = None,
-    build_tag: str | None = None,
-    env_vars: list[dict] | None = None,
-    apply_env_vars_to_build: bool | None = None,
-    source_type: VersionSourceType | None = None,
-    source_files: list[dict] | None = None,
-    git_repo_url: str | None = None,
-    tarball_url: str | None = None,
-    github_gist_url: str | None = None,
-) -> dict:
-    return {
-        'versionNumber': version_number,
-        'buildTag': build_tag,
-        'envVars': env_vars,
-        'applyEnvVarsToBuild': apply_env_vars_to_build,
-        'sourceType': enum_to_value(source_type),
-        'sourceFiles': source_files,
-        'gitRepoUrl': git_repo_url,
-        'tarballUrl': tarball_url,
-        'gitHubGistUrl': github_gist_url,
-    }
 
 
 class ActorVersionClient(ResourceClient):
@@ -112,7 +88,7 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The updated Actor version.
         """
-        actor_version_representation = _get_actor_version_representation(
+        actor_version_representation = get_actor_version_representation(
             build_tag=build_tag,
             env_vars=env_vars,
             apply_env_vars_to_build=apply_env_vars_to_build,
@@ -237,7 +213,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor version.
         """
-        actor_version_representation = _get_actor_version_representation(
+        actor_version_representation = get_actor_version_representation(
             build_tag=build_tag,
             env_vars=env_vars,
             apply_env_vars_to_build=apply_env_vars_to_build,

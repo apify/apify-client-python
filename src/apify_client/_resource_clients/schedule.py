@@ -3,32 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._models import GetScheduleLogResponse, GetScheduleResponse, Schedule, ScheduleInvoked
+from apify_client._representations import get_schedule_representation
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
-
-
-def _get_schedule_representation(
-    cron_expression: str | None = None,
-    name: str | None = None,
-    actions: list[dict] | None = None,
-    description: str | None = None,
-    timezone: str | None = None,
-    title: str | None = None,
-    *,
-    is_enabled: bool | None = None,
-    is_exclusive: bool | None = None,
-) -> dict:
-    return {
-        'cronExpression': cron_expression,
-        'isEnabled': is_enabled,
-        'isExclusive': is_exclusive,
-        'name': name,
-        'actions': actions,
-        'description': description,
-        'timezone': timezone,
-        'title': title,
-    }
 
 
 class ScheduleClient(ResourceClient):
@@ -89,7 +67,7 @@ class ScheduleClient(ResourceClient):
         Returns:
             The updated schedule.
         """
-        schedule_representation = _get_schedule_representation(
+        schedule_representation = get_schedule_representation(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
@@ -206,7 +184,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         Returns:
             The updated schedule.
         """
-        schedule_representation = _get_schedule_representation(
+        schedule_representation = get_schedule_representation(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,

@@ -342,8 +342,11 @@ class TaskClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
+        Args:
+            task_input: The new default input for this task.
+
         Returns:
-            Retrieved task input.
+            The updated task input.
         """
         response = self._http_client.call(
             url=self._build_url('input'),
@@ -652,8 +655,11 @@ class TaskClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
+        Args:
+            task_input: The new default input for this task.
+
         Returns:
-            Retrieved task input.
+            The updated task input.
         """
         response = await self._http_client.call(
             url=self._build_url('input'),

@@ -45,7 +45,11 @@ def set_current_package_version(version: str) -> None:
 # Generate convert a docstring from a sync resource client method
 # into a doctring for its async resource client analogue
 def sync_to_async_docstring(docstring: str) -> str:
-    substitutions = [(r'Client', r'ClientAsync')]
+    substitutions = [
+        (r'Client', r'ClientAsync'),
+        (r'\bsynchronously\b', r'asynchronously'),
+        (r'\bSynchronously\b', r'Asynchronously'),
+    ]
     res = docstring
     for pattern, replacement in substitutions:
         res = re.sub(pattern, replacement, res, flags=re.MULTILINE)

@@ -38,6 +38,10 @@ for client_source_path in clients_path.glob('**/*.py'):
             if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
                 continue
 
+            # Skip methods that don't exist in the sync class
+            if sync_method is None:
+                continue
+
             # If the sync method has a docstring, copy it to the async method (with adjustments)
             if isinstance(sync_method.value[0].value, str):
                 sync_docstring = sync_method.value[0].value

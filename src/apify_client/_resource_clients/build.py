@@ -210,7 +210,7 @@ class BuildClientAsync(ResourceClientAsync):
         return response_as_dict
 
     async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
-        """Wait synchronously until the build finishes or the server times out.
+        """Wait asynchronously until the build finishes or the server times out.
 
         Args:
             wait_duration: How long does the client wait for build to finish. None for indefinite.

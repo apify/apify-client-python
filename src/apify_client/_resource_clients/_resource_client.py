@@ -318,7 +318,7 @@ class ResourceClientAsync(metaclass=WithLogDetailsClient):
         params: dict,
         wait_duration: timedelta | None = None,
     ) -> dict | None:
-        """Wait synchronously for an Actor job (run or build) to finish.
+        """Wait asynchronously for an Actor job (run or build) to finish.
 
         Polls the job status until it reaches a terminal state or timeout.
         Handles 404 errors gracefully (job might not exist yet in replicas).

@@ -373,8 +373,14 @@ class RunClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/charge-events-in-run
 
-        Returns:
-            Status and message of the charge event.
+        Args:
+            event_name: The name of the event to charge for.
+            count: The number of events to charge. Defaults to 1 if not provided.
+            idempotency_key: A unique key to ensure idempotent charging. If not provided,
+                one will be auto-generated.
+
+        Raises:
+            ValueError: If event_name is empty or not provided.
         """
         if not event_name:
             raise ValueError('event_name is required for charging an event')
@@ -533,7 +539,7 @@ class RunClientAsync(ResourceClientAsync):
         return GetRunResponse.model_validate(result).data
 
     async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
-        """Wait synchronously until the run finishes or the server times out.
+        """Wait asynchronously until the run finishes or the server times out.
 
         Args:
             wait_duration: How long does the client wait for run to finish. None for indefinite.
@@ -776,8 +782,14 @@ class RunClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/charge-events-in-run
 
-        Returns:
-            Status and message of the charge event.
+        Args:
+            event_name: The name of the event to charge for.
+            count: The number of events to charge. Defaults to 1 if not provided.
+            idempotency_key: A unique key to ensure idempotent charging. If not provided,
+                one will be auto-generated.
+
+        Raises:
+            ValueError: If event_name is empty or not provided.
         """
         if not event_name:
             raise ValueError('event_name is required for charging an event')

@@ -242,4 +242,6 @@ set_default_enum_member = true
 use_annotated = true
 wrap_string_literal = true
 snake_case_field = true
+use_subclass_enum = true
+extra_fields = "allow"
 formatters = ["ruff-check", "ruff-format"]

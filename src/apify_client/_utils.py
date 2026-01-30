@@ -27,21 +27,29 @@ _BASE62_CHARSET = string.digits + string.ascii_letters
 
 
 @overload
-def to_seconds(td: timedelta) -> int: ...
+def to_seconds(td: timedelta, *, as_int: bool = True) -> int: ...
 @overload
-def to_seconds(td: None) -> None: ...
+def to_seconds(td: timedelta, *, as_int: bool = False) -> float: ...
+@overload
+def to_seconds(td: None, *, as_int: bool = True) -> None: ...
+@overload
+def to_seconds(td: None, *, as_int: bool = False) -> None: ...
 
 
-def to_seconds(td: timedelta | None) -> int | None:
+def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | None:
     """Convert timedelta to seconds.
 
     Args:
         td: The timedelta to convert, or None.
+        as_int: If True, round and return as int. Defaults to False.
 
     Returns:
-        The total seconds as an integer, or None if input is None.
+        The total seconds as a float (or int if as_int=True), or None if input is None.
     """
-    return int(td.total_seconds()) if td is not None else None
+    if td is None:
+        return None
+    seconds = td.total_seconds()
+    return int(seconds) if as_int else seconds
 
 
 def catch_not_found_or_throw(exc: ApifyApiError) -> None:

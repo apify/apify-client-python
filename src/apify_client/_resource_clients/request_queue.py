@@ -169,7 +169,11 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._build_params(lockSecs=to_seconds(lock_duration), limit=limit, clientKey=self.client_key)
+        request_params = self._build_params(
+            lockSecs=to_seconds(lock_duration, as_int=True),
+            limit=limit,
+            clientKey=self.client_key,
+        )
 
         response = self._http_client.call(
             url=self._build_url('head/lock'),
@@ -295,7 +299,9 @@ class RequestQueueClient(ResourceClient):
             lock_duration: By how much to prolong the lock.
         """
         request_params = self._build_params(
-            clientKey=self.client_key, forefront=forefront, lockSecs=to_seconds(lock_duration)
+            clientKey=self.client_key,
+            forefront=forefront,
+            lockSecs=to_seconds(lock_duration, as_int=True),
         )
 
         response = self._http_client.call(
@@ -596,7 +602,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The desired number of locked requests from the beginning of the queue.
         """
-        request_params = self._build_params(lockSecs=to_seconds(lock_duration), limit=limit, clientKey=self.client_key)
+        request_params = self._build_params(
+            lockSecs=to_seconds(lock_duration, as_int=True),
+            limit=limit,
+            clientKey=self.client_key,
+        )
 
         response = await self._http_client.call(
             url=self._build_url('head/lock'),
@@ -720,7 +730,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
             lock_duration: By how much to prolong the lock.
         """
         request_params = self._build_params(
-            clientKey=self.client_key, forefront=forefront, lockSecs=to_seconds(lock_duration)
+            clientKey=self.client_key,
+            forefront=forefront,
+            lockSecs=to_seconds(lock_duration, as_int=True),
         )
 
         response = await self._http_client.call(

@@ -245,7 +245,7 @@ class RunClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout),
+            timeout=to_seconds(timeout, as_int=True),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
@@ -648,7 +648,7 @@ class RunClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout),
+            timeout=to_seconds(timeout, as_int=True),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,

@@ -30,7 +30,7 @@ def build_actor_standby_dict(
         'isEnabled': is_enabled,
         'desiredRequestsPerActorRun': desired_requests_per_actor_run,
         'maxRequestsPerActorRun': max_requests_per_actor_run,
-        'idleTimeoutSecs': to_seconds(idle_timeout),
+        'idleTimeoutSecs': to_seconds(idle_timeout, as_int=True),
         'build': build,
         'memoryMbytes': memory_mbytes,
     }
@@ -50,7 +50,7 @@ def build_default_run_options_dict(
         'build': build,
         'maxItems': max_items,
         'memoryMbytes': memory_mbytes,
-        'timeoutSecs': to_seconds(timeout),
+        'timeoutSecs': to_seconds(timeout, as_int=True),
         'restartOnError': restart_on_error,
         'forcePermissionLevel': force_permission_level,
     }
@@ -69,7 +69,7 @@ def build_task_options_dict(
         'build': build,
         'maxItems': max_items,
         'memoryMbytes': memory_mbytes,
-        'timeoutSecs': to_seconds(timeout),
+        'timeoutSecs': to_seconds(timeout, as_int=True),
         'restartOnError': restart_on_error,
     }
 

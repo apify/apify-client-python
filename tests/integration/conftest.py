@@ -95,7 +95,7 @@ async def maybe_await(value: T | Coroutine[Any, Any, T]) -> T:
         result = await maybe_await(client.datasets().list())
     """
     if hasattr(value, '__await__'):
-        return await value  # type: ignore[misc,return-value]
+        return await value  # ty: ignore[invalid-await]
     return value
 
 

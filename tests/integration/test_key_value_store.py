@@ -186,11 +186,11 @@ async def test_stream_record_signature(
     # We'll test the error condition separately based on client type
     try:
         if is_async:
-            async with kvs.stream_record(key=key) as stream:  # type: ignore[union-attr]
+            async with kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
                 pass
             pytest.fail('Expected ApifyApiError')
         else:
-            with kvs.stream_record(key=key) as stream:  # type: ignore[union-attr]
+            with kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
                 pass
             pytest.fail('Expected ApifyApiError')
     except ApifyApiError:
@@ -198,15 +198,22 @@ async def test_stream_record_signature(
 
     # Kvs content retrieved with correct signature
     if is_async:
-        async with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:  # type: ignore[union-attr]
+        async with kvs.stream_record(
+            key=key,
+            signature=test_kvs_of_another_user.keys_signature[key],
+        ) as stream:  # ty: ignore[invalid-context-manager]
             assert stream
             stream_dict = cast('dict', stream)
             value = json.loads(stream_dict['value'].content.decode('utf-8'))
     else:
-        with kvs.stream_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]) as stream:  # type: ignore[union-attr]
+        with kvs.stream_record(
+            key=key,
+            signature=test_kvs_of_another_user.keys_signature[key],
+        ) as stream:  # ty: ignore[invalid-context-manager]
             assert stream
             stream_dict = cast('dict', stream)
             value = json.loads(stream_dict['value'].content.decode('utf-8'))
+
     assert test_kvs_of_another_user.expected_content[key] == value
 
 

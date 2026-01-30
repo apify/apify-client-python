@@ -1,9 +1,3 @@
-"""Unit tests for URL generation logic.
-
-Tests public URL generation for datasets and key-value stores using mocks.
-These tests verify URL construction with various API URL configurations.
-"""
-
 from __future__ import annotations
 
 import json

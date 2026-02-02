@@ -113,6 +113,7 @@ class ApifyClient(_BaseApifyClient):
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = DEFAULT_TIMEOUT,
+        extra_headers: dict | None = None,
     ) -> None:
         """Initialize a new instance.
 
@@ -126,6 +127,7 @@ class ApifyClient(_BaseApifyClient):
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
+            extra_headers: Additional headers to include in all requests.
         """
         super().__init__(
             token,
@@ -143,6 +145,7 @@ class ApifyClient(_BaseApifyClient):
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
             stats=self.stats,
+            extra_headers=extra_headers,
         )
 
     def actor(self, actor_id: str) -> ActorClient:
@@ -301,6 +304,7 @@ class ApifyClientAsync(_BaseApifyClient):
         max_retries: int | None = 8,
         min_delay_between_retries_millis: int | None = 500,
         timeout_secs: int | None = DEFAULT_TIMEOUT,
+        extra_headers: dict | None = None,
     ) -> None:
         """Initialize a new instance.
 
@@ -314,6 +318,7 @@ class ApifyClientAsync(_BaseApifyClient):
             min_delay_between_retries_millis: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_secs: The socket timeout of the HTTP requests sent to the Apify API.
+            extra_headers: Additional headers to include in all requests.
         """
         super().__init__(
             token,
@@ -331,6 +336,7 @@ class ApifyClientAsync(_BaseApifyClient):
             min_delay_between_retries_millis=self.min_delay_between_retries_millis,
             timeout_secs=self.timeout_secs,
             stats=self.stats,
+            extra_headers=extra_headers,
         )
 
     def actor(self, actor_id: str) -> ActorClientAsync:

@@ -38,6 +38,7 @@ class _BaseHTTPClient:
         min_delay_between_retries_millis: int = 500,
         timeout_secs: int = 360,
         stats: Statistics | None = None,
+        extra_headers: dict | None = None,
     ) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
@@ -59,8 +60,10 @@ class _BaseHTTPClient:
         if token is not None:
             headers['Authorization'] = f'Bearer {token}'
 
-        self.impit_client = impit.Client(headers=headers, follow_redirects=True, timeout=timeout_secs)
-        self.impit_async_client = impit.AsyncClient(headers=headers, follow_redirects=True, timeout=timeout_secs)
+        init_headers = {**(extra_headers or {}), **headers}
+
+        self.impit_client = impit.Client(headers=init_headers, follow_redirects=True, timeout=timeout_secs)
+        self.impit_async_client = impit.AsyncClient(headers=init_headers, follow_redirects=True, timeout=timeout_secs)
 
         self.stats = stats or Statistics()
 

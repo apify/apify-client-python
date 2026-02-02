@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 2.4.2 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Resolve tar security vulnerability in website ([#600](https://github.com/apify/apify-client-python/pull/600)) ([3087d6b](https://github.com/apify/apify-client-python/commit/3087d6b557afec5fe846a8a9e4f73ff4cbc2ebe2)) by [@B4nan](https://github.com/B4nan)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [2.4.1](https://github.com/apify/apify-client-python/releases/tag/v2.4.1) (2026-01-30)
 
 ### 🐛 Bug Fixes

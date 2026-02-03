@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 2.4.2 - **not yet released**
 
+### 🚀 Features
+
+- Add `headers` argument to allow setting additional user headers ([#601](https://github.com/apify/apify-client-python/pull/601)) ([9e3ec03](https://github.com/apify/apify-client-python/commit/9e3ec03d8873acbbb809d5acc392c8df27981b88)) by [@Mantisus](https://github.com/Mantisus)
+
 ### 🐛 Bug Fixes
 
 - Resolve tar security vulnerability in website ([#600](https://github.com/apify/apify-client-python/pull/600)) ([3087d6b](https://github.com/apify/apify-client-python/commit/3087d6b557afec5fe846a8a9e4f73ff4cbc2ebe2)) by [@B4nan](https://github.com/B4nan)

@@ -38,29 +38,29 @@ class _BaseHTTPClient:
         min_delay_between_retries_millis: int = 500,
         timeout_secs: int = 360,
         stats: Statistics | None = None,
-        extra_headers: dict | None = None,
+        headers: dict | None = None,
     ) -> None:
         self.max_retries = max_retries
         self.min_delay_between_retries_millis = min_delay_between_retries_millis
         self.timeout_secs = timeout_secs
 
-        headers = {'Accept': 'application/json, */*'}
+        default_headers = {'Accept': 'application/json, */*'}
 
         workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
         if workflow_key is not None:
-            headers['X-Apify-Workflow-Key'] = workflow_key
+            default_headers['X-Apify-Workflow-Key'] = workflow_key
 
         is_at_home = 'APIFY_IS_AT_HOME' in os.environ
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
         client_version = metadata.version('apify-client')
 
         user_agent = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
-        headers['User-Agent'] = user_agent
+        default_headers['User-Agent'] = user_agent
 
         if token is not None:
-            headers['Authorization'] = f'Bearer {token}'
+            default_headers['Authorization'] = f'Bearer {token}'
 
-        init_headers = {**(extra_headers or {}), **headers}
+        init_headers = {**default_headers, **(headers or {})}
 
         self.impit_client = impit.Client(headers=init_headers, follow_redirects=True, timeout=timeout_secs)
         self.impit_async_client = impit.AsyncClient(headers=init_headers, follow_redirects=True, timeout=timeout_secs)

@@ -6,8 +6,10 @@ import sys
 from importlib import metadata
 from typing import TYPE_CHECKING
 
+import pytest
 from werkzeug import Request, Response
 
+from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._http_client import HTTPClient, HTTPClientAsync
 
 if TYPE_CHECKING:
@@ -69,14 +71,13 @@ def test_default_headers_sync(httpserver: HTTPServer) -> None:
     }
 
 
-async def test_extra_headers_async(httpserver: HTTPServer) -> None:
-    """Test that extra headers are sent with each request."""
+async def test_headers_async(httpserver: HTTPServer) -> None:
+    """Test that custom headers are sent with each request."""
 
-    extra_headers = {
-        'Test-Header': 'blah',
-        'User-Agent': 'CustomUserAgent/1.0',  # Do not override Apify User-Agent
-    }
-    client = HTTPClientAsync(token='placeholder_token', extra_headers=extra_headers)
+    client = HTTPClientAsync(
+        token='placeholder_token',
+        headers={'Test-Header': 'blah', 'User-Agent': 'CustomUserAgent/1.0', 'Authorization': 'strange_value'},
+    )
     httpserver.expect_request('/').respond_with_handler(_header_handler)
     api_url = httpserver.url_for('/').removesuffix('/')
 
@@ -86,22 +87,25 @@ async def test_extra_headers_async(httpserver: HTTPServer) -> None:
 
     assert request_headers == {
         'Test-Header': 'blah',
-        'User-Agent': _get_user_agent(),  # Do not override Apify User-Agent
+        'User-Agent': 'CustomUserAgent/1.0',
         'Accept': 'application/json, */*',
-        'Authorization': 'Bearer placeholder_token',
+        'Authorization': 'strange_value',
         'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
 
 
-def test_extra_headers_sync(httpserver: HTTPServer) -> None:
-    """Test that extra headers are sent with each request."""
+def test_headers_sync(httpserver: HTTPServer) -> None:
+    """Test that custom headers are sent with each request."""
 
-    extra_headers = {
-        'Test-Header': 'blah',
-        'User-Agent': 'CustomUserAgent/1.0',  # Do not override Apify User-Agent
-    }
-    client = HTTPClient(token='placeholder_token', extra_headers=extra_headers)
+    client = HTTPClient(
+        token='placeholder_token',
+        headers={
+            'Test-Header': 'blah',
+            'User-Agent': 'CustomUserAgent/1.0',
+            'Authorization': 'strange_value',
+        },
+    )
     httpserver.expect_request('/').respond_with_handler(_header_handler)
     api_url = httpserver.url_for('/').removesuffix('/')
 
@@ -111,9 +115,35 @@ def test_extra_headers_sync(httpserver: HTTPServer) -> None:
 
     assert request_headers == {
         'Test-Header': 'blah',
-        'User-Agent': _get_user_agent(),  # Do not override Apify User-Agent
+        'User-Agent': 'CustomUserAgent/1.0',
         'Accept': 'application/json, */*',
-        'Authorization': 'Bearer placeholder_token',
+        'Authorization': 'strange_value',
         'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
+
+
+def test_warning_on_overridden_headers_sync() -> None:
+    """Test that warning is raised when default headers are overridden."""
+
+    with pytest.warns(UserWarning, match='User-Agent, Authorization headers of ApifyClient'):
+        ApifyClient(
+            token='placeholder_token',
+            headers={
+                'User-Agent': 'CustomUserAgent/1.0',
+                'Authorization': 'strange_value',
+            },
+        )
+
+
+async def test_warning_on_overridden_headers_async() -> None:
+    """Test that warning is raised when default headers are overridden."""
+
+    with pytest.warns(UserWarning, match='User-Agent, Authorization headers of ApifyClientAsync'):
+        ApifyClientAsync(
+            token='placeholder_token',
+            headers={
+                'User-Agent': 'CustomUserAgent/1.0',
+                'Authorization': 'strange_value',
+            },
+        )

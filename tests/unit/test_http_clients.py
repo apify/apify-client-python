@@ -1,3 +1,4 @@
+import gzip
 import time
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
@@ -249,6 +250,81 @@ def test_prepare_request_call_with_json() -> None:
     assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
+
+
+def test_prepare_request_call_with_empty_dict_json() -> None:
+    """Test _prepare_request_call with empty dict JSON (falsy but valid)."""
+    client = BaseHttpClient()
+
+    headers, _params, data = client._prepare_request_call(json={})
+
+    assert headers['Content-Type'] == 'application/json'
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert isinstance(data, bytes)
+    # Verify the gzipped data contains the JSON
+    decompressed = gzip.decompress(data)
+    assert decompressed == b'{}'
+
+
+def test_prepare_request_call_with_empty_list_json() -> None:
+    """Test _prepare_request_call with empty list JSON (falsy but valid)."""
+    client = BaseHttpClient()
+
+    headers, _params, data = client._prepare_request_call(json=[])
+
+    assert headers['Content-Type'] == 'application/json'
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert isinstance(data, bytes)
+    # Verify the gzipped data contains the JSON
+    decompressed = gzip.decompress(data)
+    assert decompressed == b'[]'
+
+
+def test_prepare_request_call_with_zero_json() -> None:
+    """Test _prepare_request_call with zero JSON (falsy but valid)."""
+    client = BaseHttpClient()
+
+    headers, _params, data = client._prepare_request_call(json=0)
+
+    assert headers['Content-Type'] == 'application/json'
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert isinstance(data, bytes)
+    # Verify the gzipped data contains the JSON
+    decompressed = gzip.decompress(data)
+    assert decompressed == b'0'
+
+
+def test_prepare_request_call_with_false_json() -> None:
+    """Test _prepare_request_call with False JSON (falsy but valid)."""
+    client = BaseHttpClient()
+
+    headers, _params, data = client._prepare_request_call(json=False)
+
+    assert headers['Content-Type'] == 'application/json'
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert isinstance(data, bytes)
+    # Verify the gzipped data contains the JSON
+    decompressed = gzip.decompress(data)
+    assert decompressed == b'false'
+
+
+def test_prepare_request_call_with_empty_string_json() -> None:
+    """Test _prepare_request_call with empty string JSON (falsy but valid)."""
+    client = BaseHttpClient()
+
+    headers, _params, data = client._prepare_request_call(json='')
+
+    assert headers['Content-Type'] == 'application/json'
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert isinstance(data, bytes)
+    # Verify the gzipped data contains the JSON
+    decompressed = gzip.decompress(data)
+    assert decompressed == b'""'
 
 
 def test_prepare_request_call_with_string_data() -> None:

@@ -342,7 +342,7 @@ class StreamedLogAsync(StreamedLog):
 
     def start(self) -> Task:
         """Start the streaming task. The caller has to handle any cleanup by manually calling the `stop` method."""
-        if self._streaming_task:
+        if self._streaming_task and not self._streaming_task.done():
             raise RuntimeError('Streaming task already active')
         self._streaming_task = asyncio.create_task(self._stream_log())
         return self._streaming_task
@@ -356,6 +356,8 @@ class StreamedLogAsync(StreamedLog):
         try:
             await self._streaming_task
         except asyncio.CancelledError:
+            pass
+        finally:
             self._streaming_task = None
 
     async def __aenter__(self) -> Self:
@@ -447,7 +449,7 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
 
     def start(self) -> Task:
         """Start the logging task. The caller has to handle any cleanup by manually calling the `stop` method."""
-        if self._logging_task:
+        if self._logging_task and not self._logging_task.done():
             raise RuntimeError('Logging task already active')
         self._logging_task = asyncio.create_task(self._log_changed_status_message())
         return self._logging_task
@@ -461,6 +463,8 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
         try:
             await self._logging_task
         except asyncio.CancelledError:
+            pass
+        finally:
             self._logging_task = None
 
     async def __aenter__(self) -> Self:

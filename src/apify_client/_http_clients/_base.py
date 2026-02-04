@@ -113,14 +113,14 @@ class BaseHttpClient:
         json: JsonSerializable | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, Any]:
         """Prepare headers, params, and body for an HTTP request. Serializes JSON and applies gzip compression."""
-        if json and data:
+        if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         if not headers:
             headers = {}
 
         # Dump JSON data to string so it can be gzipped.
-        if json:
+        if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
 

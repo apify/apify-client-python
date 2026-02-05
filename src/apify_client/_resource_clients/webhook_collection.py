@@ -1,0 +1,207 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from apify_client._models import ListOfWebhooks, ListOfWebhooksResponse, Webhook, WebhookResponse
+from apify_client._representations import get_webhook_repr
+from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._utils import filter_none_values, response_to_dict
+
+if TYPE_CHECKING:
+    from apify_client._models import WebhookEventType
+
+
+class WebhookCollectionClient(ResourceClient):
+    """Sub-client for manipulating webhooks."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        resource_path = kwargs.pop('resource_path', 'webhooks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    def list(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListOfWebhooks:
+        """List the available webhooks.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
+
+        Args:
+            limit: How many webhooks to retrieve.
+            offset: What webhook to include as first when retrieving the list.
+            desc: Whether to sort the webhooks in descending order based on their date of creation.
+
+        Returns:
+            The list of available webhooks matching the specified filters.
+        """
+        response = self._http_client.call(
+            url=self._build_url(),
+            method='GET',
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
+        )
+        response_as_dict = response_to_dict(response)
+        return ListOfWebhooksResponse.model_validate(response_as_dict).data
+
+    def create(
+        self,
+        *,
+        event_types: list[WebhookEventType],  # ty: ignore[invalid-type-form]
+        request_url: str,
+        payload_template: str | None = None,
+        headers_template: str | None = None,
+        actor_id: str | None = None,
+        actor_task_id: str | None = None,
+        actor_run_id: str | None = None,
+        ignore_ssl_errors: bool | None = None,
+        do_not_retry: bool | None = None,
+        idempotency_key: str | None = None,
+        is_ad_hoc: bool | None = None,
+    ) -> Webhook:
+        """Create a new webhook.
+
+        You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/create-webhook
+
+        Args:
+            event_types: List of event types that should trigger the webhook. At least one is required.
+            request_url: URL that will be invoked once the webhook is triggered.
+            payload_template: Specification of the payload that will be sent to request_url.
+            headers_template: Headers that will be sent to the request_url.
+            actor_id: Id of the Actor whose runs should trigger the webhook.
+            actor_task_id: Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id: Id of the Actor run which should trigger the webhook.
+            ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
+            do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            idempotency_key: A unique identifier of a webhook. You can use it to ensure that you won't create
+                the same webhook multiple times.
+            is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
+                is fulfilled. Only applicable when actor_run_id is filled.
+
+        Returns:
+           The created webhook.
+        """
+        webhook_representation = get_webhook_repr(
+            event_types=event_types,
+            request_url=request_url,
+            payload_template=payload_template,
+            headers_template=headers_template,
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+            ignore_ssl_errors=ignore_ssl_errors,
+            do_not_retry=do_not_retry,
+            idempotency_key=idempotency_key,
+            is_ad_hoc=is_ad_hoc,
+        )
+
+        response = self._http_client.call(
+            url=self._build_url(),
+            method='POST',
+            params=self._build_params(),
+            json=filter_none_values(webhook_representation, remove_empty_dicts=True),
+        )
+
+        result = response_to_dict(response)
+        return WebhookResponse.model_validate(result).data
+
+
+class WebhookCollectionClientAsync(ResourceClientAsync):
+    """Async sub-client for manipulating webhooks."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        resource_path = kwargs.pop('resource_path', 'webhooks')
+        super().__init__(*args, resource_path=resource_path, **kwargs)
+
+    async def list(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+    ) -> ListOfWebhooks:
+        """List the available webhooks.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
+
+        Args:
+            limit: How many webhooks to retrieve.
+            offset: What webhook to include as first when retrieving the list.
+            desc: Whether to sort the webhooks in descending order based on their date of creation.
+
+        Returns:
+            The list of available webhooks matching the specified filters.
+        """
+        response = await self._http_client.call(
+            url=self._build_url(),
+            method='GET',
+            params=self._build_params(limit=limit, offset=offset, desc=desc),
+        )
+        response_as_dict = response_to_dict(response)
+        return ListOfWebhooksResponse.model_validate(response_as_dict).data
+
+    async def create(
+        self,
+        *,
+        event_types: list[WebhookEventType],  # ty: ignore[invalid-type-form]
+        request_url: str,
+        payload_template: str | None = None,
+        headers_template: str | None = None,
+        actor_id: str | None = None,
+        actor_task_id: str | None = None,
+        actor_run_id: str | None = None,
+        ignore_ssl_errors: bool | None = None,
+        do_not_retry: bool | None = None,
+        idempotency_key: str | None = None,
+        is_ad_hoc: bool | None = None,
+    ) -> Webhook:
+        """Create a new webhook.
+
+        You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/create-webhook
+
+        Args:
+            event_types: List of event types that should trigger the webhook. At least one is required.
+            request_url: URL that will be invoked once the webhook is triggered.
+            payload_template: Specification of the payload that will be sent to request_url.
+            headers_template: Headers that will be sent to the request_url.
+            actor_id: Id of the Actor whose runs should trigger the webhook.
+            actor_task_id: Id of the Actor task whose runs should trigger the webhook.
+            actor_run_id: Id of the Actor run which should trigger the webhook.
+            ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
+            do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            idempotency_key: A unique identifier of a webhook. You can use it to ensure that you won't create
+                the same webhook multiple times.
+            is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
+                is fulfilled. Only applicable when actor_run_id is filled.
+
+        Returns:
+           The created webhook.
+        """
+        webhook_representation = get_webhook_repr(
+            event_types=event_types,
+            request_url=request_url,
+            payload_template=payload_template,
+            headers_template=headers_template,
+            actor_id=actor_id,
+            actor_task_id=actor_task_id,
+            actor_run_id=actor_run_id,
+            ignore_ssl_errors=ignore_ssl_errors,
+            do_not_retry=do_not_retry,
+            idempotency_key=idempotency_key,
+            is_ad_hoc=is_ad_hoc,
+        )
+
+        response_obj = await self._http_client.call(
+            url=self._build_url(),
+            method='POST',
+            params=self._build_params(),
+            json=filter_none_values(webhook_representation, remove_empty_dicts=True),
+        )
+
+        response = response_to_dict(response_obj)
+        return WebhookResponse.model_validate(response).data

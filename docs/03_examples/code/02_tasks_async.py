@@ -1,22 +1,22 @@
 import asyncio
 
 from apify_client import ApifyClientAsync
-from apify_client.clients.resource_clients import TaskClientAsync
+from apify_client._models import Run, Task
+from apify_client._resource_clients import TaskClientAsync
 
 TOKEN = 'MY-APIFY-TOKEN'
 HASHTAGS = ['zebra', 'lion', 'hippo']
 
 
-async def run_apify_task(client: TaskClientAsync) -> dict:
-    result = await client.call()
-    return result or {}
+async def run_apify_task(client: TaskClientAsync) -> Run | None:
+    return await client.call()
 
 
 async def main() -> None:
     apify_client = ApifyClientAsync(token=TOKEN)
 
     # Create Apify tasks
-    apify_tasks = list[dict]()
+    apify_tasks = list[Task]()
     apify_tasks_client = apify_client.tasks()
 
     for hashtag in HASHTAGS:
@@ -34,7 +34,7 @@ async def main() -> None:
     apify_task_clients = list[TaskClientAsync]()
 
     for apify_task in apify_tasks:
-        task_id = apify_task['id']
+        task_id = apify_task.id
         apify_task_client = apify_client.task(task_id)
         apify_task_clients.append(apify_task_client)
 

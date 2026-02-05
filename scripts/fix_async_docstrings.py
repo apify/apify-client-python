@@ -11,6 +11,10 @@ clients_path = Path(__file__).parent.resolve() / '../src/apify_client'
 
 # Go through every Python file in that directory
 for client_source_path in clients_path.glob('**/*.py'):
+    # Skip _http_clients package - sync and async are in separate files there
+    if '_http_clients' in str(client_source_path):
+        continue
+
     with open(client_source_path, 'r+', encoding='utf-8') as source_file:
         # Read the source file and parse the code using Red Baron
         red = RedBaron(source_code=source_file.read())
@@ -22,6 +26,8 @@ for client_source_path in clients_path.glob('**/*.py'):
 
         # Find the corresponding sync classes (same name, but without -Async)
         sync_class = red.find('ClassNode', name=async_class.name.replace('ClientAsync', 'Client'))
+        if not sync_class:
+            continue
 
         # Go through all methods in the async class
         for async_method in async_class.find_all('DefNode'):
@@ -30,6 +36,10 @@ for client_source_path in clients_path.glob('**/*.py'):
 
             # Skip methods with @ignore_docs decorator
             if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
+                continue
+
+            # Skip methods that don't exist in the sync class
+            if sync_method is None:
                 continue
 
             # If the sync method has a docstring, copy it to the async method (with adjustments)

@@ -1,238 +1,149 @@
 from __future__ import annotations
 
-import asyncio
-import base64
-import contextlib
+import hashlib
+import hmac
 import io
 import json
-import json as jsonlib
-import random
-import re
+import string
 import time
-from collections.abc import Callable
-from datetime import datetime, timezone
+from base64 import b64encode, urlsafe_b64encode
 from enum import Enum
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, TypeVar
 
-import impit
-
-from apify_client.errors import InvalidResponseBodyError
+from typing_extensions import overload
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable
+    from datetime import timedelta
 
     from impit import Response
 
     from apify_client.errors import ApifyApiError
 
-PARSE_DATE_FIELDS_MAX_DEPTH = 3
-PARSE_DATE_FIELDS_KEY_SUFFIX = 'At'
-RECORD_NOT_FOUND_EXCEPTION_TYPES = ['record-not-found', 'record-or-token-not-found']
-
 T = TypeVar('T')
-StopRetryingType = Callable[[], None]
+
+_BASE62_CHARSET = string.digits + string.ascii_letters
+"""Module-level constant for base62 encoding."""
 
 
-def filter_out_none_values_recursively(dictionary: dict) -> dict:
-    """Return copy of the dictionary, recursively omitting all keys for which values are None."""
-    return cast('dict', filter_out_none_values_recursively_internal(dictionary))
+@overload
+def to_seconds(td: timedelta, *, as_int: bool = True) -> int: ...
+@overload
+def to_seconds(td: timedelta, *, as_int: bool = False) -> float: ...
+@overload
+def to_seconds(td: None, *, as_int: bool = True) -> None: ...
+@overload
+def to_seconds(td: None, *, as_int: bool = False) -> None: ...
 
 
-def filter_out_none_values_recursively_internal(
-    dictionary: dict,
-    *,
-    remove_empty_dicts: bool | None = None,
-) -> dict | None:
-    """Recursively filters out None values from a dictionary.
+def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | None:
+    """Convert timedelta to seconds.
 
-    Unfortunately, it's necessary to have an internal function for the correct result typing,
-    without having to create complicated overloads
+    Args:
+        td: The timedelta to convert, or None.
+        as_int: If True, round and return as int. Defaults to False.
+
+    Returns:
+        The total seconds as a float (or int if as_int=True), or None if input is None.
     """
-    result = {}
-    for k, v in dictionary.items():
-        if isinstance(v, dict):
-            v = filter_out_none_values_recursively_internal(  # noqa: PLW2901
-                v, remove_empty_dicts=remove_empty_dicts is True or remove_empty_dicts is None
-            )
-        if v is not None:
-            result[k] = v
-    if not result and remove_empty_dicts:
+    if td is None:
         return None
-    return result
-
-
-@overload
-def parse_date_fields(data: list, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> list: ...
-
-
-@overload
-def parse_date_fields(data: dict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> dict: ...
-
-
-def parse_date_fields(data: list | dict, max_depth: int = PARSE_DATE_FIELDS_MAX_DEPTH) -> list | dict:
-    """Recursively parse date fields in a list or dictionary up to the specified depth."""
-    if max_depth < 0:
-        return data
-
-    if isinstance(data, list):
-        return [parse_date_fields(item, max_depth - 1) for item in data]
-
-    if isinstance(data, dict):
-
-        def parse(key: str, value: object) -> object:
-            parsed_value = value
-            if key.endswith(PARSE_DATE_FIELDS_KEY_SUFFIX) and isinstance(value, str):
-                with contextlib.suppress(ValueError):
-                    parsed_value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
-            elif isinstance(value, dict):
-                parsed_value = parse_date_fields(value, max_depth - 1)
-            elif isinstance(value, list):
-                parsed_value = parse_date_fields(value, max_depth)
-            return parsed_value
-
-        return {key: parse(key, value) for (key, value) in data.items()}
-
-    return data
-
-
-def is_content_type_json(content_type: str) -> bool:
-    """Check if the given content type is JSON."""
-    return bool(re.search(r'^application/json', content_type, flags=re.IGNORECASE))
-
-
-def is_content_type_xml(content_type: str) -> bool:
-    """Check if the given content type is XML."""
-    return bool(re.search(r'^application/.*xml$', content_type, flags=re.IGNORECASE))
-
-
-def is_content_type_text(content_type: str) -> bool:
-    """Check if the given content type is text."""
-    return bool(re.search(r'^text/', content_type, flags=re.IGNORECASE))
-
-
-def is_file_or_bytes(value: Any) -> bool:
-    """Check if the input value is a file-like object or bytes.
-
-    The check for IOBase is not ideal, it would be better to use duck typing,
-    but then the check would be super complex, judging from how the 'requests' library does it.
-    This way should be good enough for the vast majority of use cases, if it causes issues, we can improve it later.
-    """
-    return isinstance(value, (bytes, bytearray, io.IOBase))
-
-
-def json_dumps(obj: Any) -> str:
-    """Dump JSON to a string with the correct settings and serializer."""
-    return json.dumps(obj, ensure_ascii=False, indent=2, default=str)
-
-
-def maybe_extract_enum_member_value(maybe_enum_member: Any) -> Any:
-    """Extract the value of an enumeration member if it is an Enum, otherwise return the original value."""
-    if isinstance(maybe_enum_member, Enum):
-        return maybe_enum_member.value
-    return maybe_enum_member
-
-
-def to_safe_id(id: str) -> str:
-    # Identificators of resources in the API are either in the format `resource_id` or `username/resource_id`.
-    # Since the `/` character has a special meaning in URL paths,
-    # we replace it with `~` for proper route parsing on the API, where after parsing the URL it's replaced back to `/`.
-    return id.replace('/', '~')
-
-
-def pluck_data(parsed_response: Any) -> dict:
-    if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast('dict', parsed_response['data'])
-
-    raise ValueError('The "data" property is missing in the response.')
-
-
-def pluck_data_as_list(parsed_response: Any) -> list:
-    if isinstance(parsed_response, dict) and 'data' in parsed_response:
-        return cast('list', parsed_response['data'])
-
-    raise ValueError('The "data" property is missing in the response.')
-
-
-def retry_with_exp_backoff(
-    func: Callable[[StopRetryingType, int], T],
-    *,
-    max_retries: int = 8,
-    backoff_base_millis: int = 500,
-    backoff_factor: float = 2,
-    random_factor: float = 1,
-) -> T:
-    random_factor = min(max(0, random_factor), 1)
-    backoff_factor = min(max(1, backoff_factor), 10)
-    swallow = True
-
-    def stop_retrying() -> None:
-        nonlocal swallow
-        swallow = False
-
-    for attempt in range(1, max_retries + 1):
-        try:
-            return func(stop_retrying, attempt)
-        except Exception:
-            if not swallow:
-                raise
-
-        random_sleep_factor = random.uniform(1, 1 + random_factor)
-        backoff_base_secs = backoff_base_millis / 1000
-        backoff_exp_factor = backoff_factor ** (attempt - 1)
-
-        sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
-        time.sleep(sleep_time_secs)
-
-    return func(stop_retrying, max_retries + 1)
-
-
-async def retry_with_exp_backoff_async(
-    async_func: Callable[[StopRetryingType, int], Awaitable[T]],
-    *,
-    max_retries: int = 8,
-    backoff_base_millis: int = 500,
-    backoff_factor: float = 2,
-    random_factor: float = 1,
-) -> T:
-    random_factor = min(max(0, random_factor), 1)
-    backoff_factor = min(max(1, backoff_factor), 10)
-    swallow = True
-
-    def stop_retrying() -> None:
-        nonlocal swallow
-        swallow = False
-
-    for attempt in range(1, max_retries + 1):
-        try:
-            return await async_func(stop_retrying, attempt)
-        except Exception:
-            if not swallow:
-                raise
-
-        random_sleep_factor = random.uniform(1, 1 + random_factor)
-        backoff_base_secs = backoff_base_millis / 1000
-        backoff_exp_factor = backoff_factor ** (attempt - 1)
-
-        sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
-        await asyncio.sleep(sleep_time_secs)
-
-    return await async_func(stop_retrying, max_retries + 1)
+    seconds = td.total_seconds()
+    return int(seconds) if as_int else seconds
 
 
 def catch_not_found_or_throw(exc: ApifyApiError) -> None:
+    """Suppress 404 Not Found errors and re-raise all other API errors.
+
+    Args:
+        exc: The API error to check.
+
+    Raises:
+        ApifyApiError: If the error is not a 404 Not Found error.
+    """
     is_not_found_status = exc.status_code == HTTPStatus.NOT_FOUND
-    is_not_found_type = exc.type in RECORD_NOT_FOUND_EXCEPTION_TYPES
+    is_not_found_type = exc.type in ['record-not-found', 'record-or-token-not-found']
     if not (is_not_found_status and is_not_found_type):
         raise exc
 
 
+def filter_none_values(
+    data: dict,
+    *,
+    remove_empty_dicts: bool | None = None,
+) -> dict:
+    """Recursively remove None values from a dictionary.
+
+    The Apify API ignores missing fields but may reject fields explicitly set to None. This helper prepares
+    request payloads by stripping None values from nested dictionaries.
+
+    Uses an iterative, stack-based approach for better performance on deeply nested structures.
+
+    Args:
+        data: Dictionary to clean.
+        remove_empty_dicts: Whether to remove empty dictionaries after filtering.
+
+    Returns:
+        A new dictionary with all None values removed.
+    """
+    # Use an explicit stack to avoid recursion overhead
+    result = {}
+
+    # Stack entries are (source_dict, target_dict)
+    stack: list[tuple[dict, dict]] = [(data, result)]
+
+    while stack:
+        source, target = stack.pop()
+
+        for key, val in source.items():
+            if val is None:
+                continue
+
+            if isinstance(val, dict):
+                nested = {}
+                target[key] = nested
+                stack.append((val, nested))
+            else:
+                target[key] = val
+
+    # Optionally remove empty dictionaries
+    if remove_empty_dicts:
+        _remove_empty_dicts_inplace(result)
+
+    return result
+
+
+def _remove_empty_dicts_inplace(data: dict[str, Any]) -> None:
+    """Recursively remove empty dictionaries from a dict in place.
+
+    This is a helper function for filter_none_values.
+    """
+    keys_to_remove = list[str]()
+
+    for key, val in data.items():
+        if isinstance(val, dict):
+            _remove_empty_dicts_inplace(val)
+            if not val:
+                keys_to_remove.append(key)
+
+    for key in keys_to_remove:
+        del data[key]
+
+
 def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
-    """Encode a list of dictionaries representing webhooks to their base64-encoded representation for the API."""
-    data = []
+    """Encode a list of webhook dictionaries to base64 for API transmission.
+
+    Args:
+        webhooks: A list of webhook dictionaries with keys like "event_types", "request_url", etc.
+
+    Returns:
+        A base64-encoded JSON string.
+    """
+    data = list[dict]()
+
     for webhook in webhooks:
         webhook_representation = {
-            'eventTypes': [maybe_extract_enum_member_value(event_type) for event_type in webhook['event_types']],
+            'eventTypes': [enum_to_value(event_type) for event_type in webhook['event_types']],
             'requestUrl': webhook['request_url'],
         }
         if 'payload_template' in webhook:
@@ -241,53 +152,175 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
             webhook_representation['headersTemplate'] = webhook['headers_template']
         data.append(webhook_representation)
 
-    return base64.b64encode(jsonlib.dumps(data).encode('utf-8')).decode('ascii')
+    return b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
 def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:
+    """Encode a value for storage in a key-value store record.
+
+    Args:
+        value: The value to encode (can be dict, str, bytes, or file-like object).
+        content_type: The content type; if None, it's inferred from the value type.
+
+    Returns:
+        A tuple of (encoded_value, content_type).
+    """
     if not content_type:
-        if is_file_or_bytes(value):
+        if isinstance(value, (bytes, bytearray, io.IOBase)):
             content_type = 'application/octet-stream'
         elif isinstance(value, str):
             content_type = 'text/plain; charset=utf-8'
         else:
             content_type = 'application/json; charset=utf-8'
 
-    if 'application/json' in content_type and not is_file_or_bytes(value) and not isinstance(value, str):
-        value = jsonlib.dumps(value, ensure_ascii=False, indent=2, allow_nan=False, default=str).encode('utf-8')
+    if (
+        'application/json' in content_type
+        and not isinstance(value, (bytes, bytearray, io.IOBase))
+        and not isinstance(value, str)
+    ):
+        # Don't use indentation to reduce size.
+        value = json.dumps(
+            value,
+            ensure_ascii=False,
+            allow_nan=False,
+            default=str,
+        ).encode('utf-8')
 
     return (value, content_type)
 
 
-def maybe_parse_response(response: Response) -> Any:
-    if response.status_code == HTTPStatus.NO_CONTENT:
-        return None
+def enum_to_value(value: Any) -> Any:
+    """Convert an Enum member to its value, or return the value unchanged if not an Enum.
 
-    content_type = ''
-    if 'content-type' in response.headers:
-        content_type = response.headers['content-type'].split(';')[0].strip()
+    Ensures Enum instances are converted to primitive values suitable for API transmission.
 
-    try:
-        if is_content_type_json(content_type):
-            response_data = response.json()
-        elif is_content_type_xml(content_type) or is_content_type_text(content_type):
-            response_data = response.text
-        else:
-            response_data = response.content
-    except ValueError as err:
-        raise InvalidResponseBodyError(response) from err
-    else:
-        return response_data
+    Args:
+        value: The value to potentially convert (Enum member or any other type).
+
+    Returns:
+        The Enum's value if the input is an Enum; otherwise returns the input unchanged.
+    """
+    if isinstance(value, Enum):
+        return value.value
+    return value
 
 
-def is_retryable_error(exc: Exception) -> bool:
-    """Check if the given error is retryable."""
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            impit.NetworkError,
-            impit.TimeoutException,
-            impit.RemoteProtocolError,
-        ),
-    )
+def to_safe_id(id: str) -> str:
+    """Convert a resource ID to URL-safe format by replacing forward slashes with tildes.
+
+    Args:
+        id: The resource identifier in format `resource_id` or `username/resource_id`.
+
+    Returns:
+        The resource identifier with `/` characters replaced by `~`.
+    """
+    return id.replace('/', '~')
+
+
+def response_to_dict(response: Response) -> dict:
+    """Parse the API response as a dictionary and validate its type.
+
+    Args:
+        response: The HTTP response object from the API.
+
+    Returns:
+        The parsed response as a dictionary.
+
+    Raises:
+        ValueError: If the response is not a dictionary.
+    """
+    data = response.json()
+    if isinstance(data, dict):
+        return data
+
+    raise ValueError(f'The response is not a dictionary. Got: {type(data).__name__}')
+
+
+def response_to_list(response: Response) -> list:
+    """Parse the API response as a list and validate its type.
+
+    Args:
+        response: The HTTP response object from the API.
+
+    Returns:
+        The parsed response as a list.
+
+    Raises:
+        ValueError: If the response is not a list.
+    """
+    data = response.json()
+    if isinstance(data, list):
+        return data
+
+    raise ValueError(f'The response is not a list. Got: {type(data).__name__}')
+
+
+def encode_base62(num: int) -> str:
+    """Encode an integer to a base62 string.
+
+    Args:
+        num: The number to encode.
+
+    Returns:
+        The base62-encoded string.
+    """
+    if num == 0:
+        return _BASE62_CHARSET[0]
+
+    # Use list to build result for O(n) complexity instead of O(n^2) string concatenation.
+    parts = []
+    while num > 0:
+        num, remainder = divmod(num, 62)
+        parts.append(_BASE62_CHARSET[remainder])
+
+    # Reverse and join once at the end.
+    return ''.join(reversed(parts))
+
+
+def create_hmac_signature(secret_key: str, message: str) -> str:
+    """Generate an HMAC-SHA256 signature and encode it using base62.
+
+    The HMAC signature is truncated to 30 characters and then encoded in base62 to reduce the signature length.
+
+    Args:
+        secret_key: The secret key used for signing.
+        message: The message to be signed.
+
+    Returns:
+        The base62-encoded signature.
+    """
+    signature = hmac.new(secret_key.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()[:30]
+
+    decimal_signature = int(signature, 16)
+
+    return encode_base62(decimal_signature)
+
+
+def create_storage_content_signature(
+    resource_id: str,
+    url_signing_secret_key: str,
+    expires_in: timedelta | None = None,
+    version: int = 0,
+) -> str:
+    """Create a secure signature for a storage resource like a dataset or key-value store.
+
+    This signature is used to generate a signed URL for authenticated access, which can be expiring or permanent.
+    The signature is created using HMAC with the provided secret key and includes the resource ID, expiration time,
+    and version.
+
+    Args:
+        resource_id: The unique identifier of the storage resource.
+        url_signing_secret_key: The secret key for signing the URL.
+        expires_in: Optional expiration duration; if None, the signature never expires.
+        version: The signature version number (default: 0).
+
+    Returns:
+        The base64url-encoded signature string.
+    """
+    expires_at = int(time.time() * 1000) + int(to_seconds(expires_in) * 1000) if expires_in is not None else 0
+
+    message_to_sign = f'{version}.{expires_at}.{resource_id}'
+    hmac_sig = create_hmac_signature(url_signing_secret_key, message_to_sign)
+
+    base64url_encoded_payload = urlsafe_b64encode(f'{version}.{expires_at}.{hmac_sig}'.encode())
+    return base64url_encoded_payload.decode('utf-8')

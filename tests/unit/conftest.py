@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from logging import getLogger
 
 import pytest
@@ -23,11 +23,3 @@ def httpserver(make_httpserver: HTTPServer) -> Iterable[HTTPServer]:
     server = make_httpserver
     yield server
     server.clear()
-
-
-@pytest.fixture
-def patch_basic_url(httpserver: HTTPServer, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    server_url = httpserver.url_for('/').removesuffix('/')
-    monkeypatch.setattr('apify_client.client.DEFAULT_API_URL', server_url)
-    yield
-    monkeypatch.undo()

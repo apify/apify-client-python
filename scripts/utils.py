@@ -25,7 +25,7 @@ def get_current_package_version() -> str:
 # It replaces the version number on the line with the format `version = "1.2.3"`
 def set_current_package_version(version: str) -> None:
     with open(PYPROJECT_TOML_FILE_PATH, 'r+', encoding='utf-8') as pyproject_toml_file:
-        updated_pyproject_toml_file_lines = []
+        updated_pyproject_toml_file_lines = list[str]()
         version_string_found = False
         for line in pyproject_toml_file:
             line_processed = line
@@ -45,7 +45,11 @@ def set_current_package_version(version: str) -> None:
 # Generate convert a docstring from a sync resource client method
 # into a doctring for its async resource client analogue
 def sync_to_async_docstring(docstring: str) -> str:
-    substitutions = [(r'Client', r'ClientAsync')]
+    substitutions = [
+        (r'Client', r'ClientAsync'),
+        (r'\bsynchronously\b', r'asynchronously'),
+        (r'\bSynchronously\b', r'Asynchronously'),
+    ]
     res = docstring
     for pattern, replacement in substitutions:
         res = re.sub(pattern, replacement, res, flags=re.MULTILINE)
@@ -59,8 +63,8 @@ def get_published_package_versions() -> list:
         package_data = json.load(urlopen(package_info_url))  # noqa: S310
         published_versions = list(package_data['releases'].keys())
     # If the URL returns 404, it means the package has no releases yet (which is okay in our case)
-    except HTTPError as e:
-        if e.code != 404:
+    except HTTPError as exc:
+        if exc.code != 404:
             raise
         published_versions = []
     return published_versions

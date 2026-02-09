@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from apify_client import ApifyClient
 
 TOKEN = 'MY-APIFY-TOKEN'
@@ -14,7 +16,7 @@ def main() -> None:
 
     # Run the Actor and wait for it to finish up to 60 seconds.
     # Input is not persisted for next runs.
-    run_result = actor_client.call(run_input=input_data, timeout_secs=60)
+    run_result = actor_client.call(run_input=input_data, timeout=timedelta(seconds=60))
 
 
 if __name__ == '__main__':

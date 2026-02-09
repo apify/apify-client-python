@@ -17,6 +17,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@algolia/autocomplete-core@npm:1.19.2":
+  version: 1.19.2
+  resolution: "@algolia/autocomplete-core@npm:1.19.2"
+  dependencies:
+    "@algolia/autocomplete-plugin-algolia-insights": "npm:1.19.2"
+    "@algolia/autocomplete-shared": "npm:1.19.2"
+  checksum: 10c0/383952bc43a31f0771987416c350471824e480fcd15e1db8ae13386cd387879f1c81eadafceffa69f87e6b8e59fb1aa713da375fc07a30c5d8edb16a157b5f45
+  languageName: node
+  linkType: hard
+
 "@algolia/autocomplete-core@npm:1.19.4":
   version: 1.19.4
   resolution: "@algolia/autocomplete-core@npm:1.19.4"
@@ -43,6 +53,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@algolia/autocomplete-plugin-algolia-insights@npm:1.19.2":
+  version: 1.19.2
+  resolution: "@algolia/autocomplete-plugin-algolia-insights@npm:1.19.2"
+  dependencies:
+    "@algolia/autocomplete-shared": "npm:1.19.2"
+  peerDependencies:
+    search-insights: ">= 1 < 3"
+  checksum: 10c0/8548b6514004dbf6fb34d6da176ac911371f3e84724ef6b94600cd84d29339d2f44cead03d7c0d507b130da0d9acc61f6e4c9a0fba6f967a5ae2a42eea93f0c1
+  languageName: node
+  linkType: hard
+
 "@algolia/autocomplete-plugin-algolia-insights@npm:1.19.4":
   version: 1.19.4
   resolution: "@algolia/autocomplete-plugin-algolia-insights@npm:1.19.4"
@@ -63,6 +84,16 @@ __metadata:
     "@algolia/client-search": ">= 4.9.1 < 6"
     algoliasearch: ">= 4.9.1 < 6"
   checksum: 10c0/03d6d0572e4db7b61cd2cb6cf921745eb8b0c82eb7fd08b18827df420f5e33fac11ffa651c7485d6e0ed2313b4aacbe9215788ae5a29ae5f1f1dd291570ccccd
+  languageName: node
+  linkType: hard
+
+"@algolia/autocomplete-shared@npm:1.19.2":
+  version: 1.19.2
+  resolution: "@algolia/autocomplete-shared@npm:1.19.2"
+  peerDependencies:
+    "@algolia/client-search": ">= 4.9.1 < 6"
+    algoliasearch: ">= 4.9.1 < 6"
+  checksum: 10c0/eee6615e6d9e6db7727727e442b876a554a6eda6f14c1d55d667ed2d14702c4c888a34b9bfb18f66ccc6d402995b2c7c37ace9f19ce9fc9c83bbb623713efbc4
   languageName: node
   linkType: hard
 
@@ -432,10 +463,12 @@ __metadata:
   linkType: hard
 
 "@apify/docusaurus-plugin-typedoc-api@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "@apify/docusaurus-plugin-typedoc-api@npm:5.0.0"
+  version: 5.1.0
+  resolution: "@apify/docusaurus-plugin-typedoc-api@npm:5.1.0"
   dependencies:
+    "@docusaurus/theme-common": "npm:^3.9.2"
     "@vscode/codicons": "npm:^0.0.35"
+    cheerio: "npm:^1.2.0"
     html-entities: "npm:2.3.2"
     marked: "npm:^9.1.6"
     marked-smartypants: "npm:^1.1.5"
@@ -452,7 +485,7 @@ __metadata:
     react: ">=18.0.0 || >=19.0.0"
     react-dom: ^18.2.0 || >=19.0.0
     typescript: ^5.0.0
-  checksum: 10c0/47da5403fb24790873fb0ccc822e0c7bf521041d5f0d0e5b87eba89dbc1579d12f49d4f5710c609edc152833ce42db39a664c94987566af624b239a642e53698
+  checksum: 10c0/aa7ae1b833f74d70290f6d4b9dcae43ff57e769b9357a76fed49d13efc06f8dcfdb2b5d3faa131be6ad7ca353721789f8b9630a1686f2bfd563f780f132dab83
   languageName: node
   linkType: hard
 
@@ -511,7 +544,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apify/ui-library@npm:*, @apify/ui-library@npm:^1.97.2":
+"@apify/ui-library@npm:<1.120.0":
   version: 1.119.0
   resolution: "@apify/ui-library@npm:1.119.0"
   dependencies:
@@ -3024,9 +3057,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docsearch/core@npm:4.5.3":
-  version: 4.5.3
-  resolution: "@docsearch/core@npm:4.5.3"
+"@docsearch/core@npm:4.5.4":
+  version: 4.5.4
+  resolution: "@docsearch/core@npm:4.5.4"
   peerDependencies:
     "@types/react": ">= 16.8.0 < 20.0.0"
     react: ">= 16.8.0 < 20.0.0"
@@ -3038,23 +3071,24 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: 10c0/0e158032ec5024986c84d77f7c84b21b6ad37ad43c405a8204456103c5b0aa843db7e725c82eb7a092680e7d0af1ccd70bcb28a3021d8d8deae6a00f1cad31fc
+  checksum: 10c0/d629fbc9db3ace56e3b0940e01f33b08f1e388f03dec29a0e25564d5d496c40cd55b37314419cff4a896128a7e4bc3f66f15faa681162011dbb82b84b9245b8c
   languageName: node
   linkType: hard
 
-"@docsearch/css@npm:4.5.3":
-  version: 4.5.3
-  resolution: "@docsearch/css@npm:4.5.3"
-  checksum: 10c0/1ed0d50c52f5c43e91321a6b15d83d03c76208beadb359fa83537ab553d8be91cbfe0793f2b2a32ea3fb4a0e177e80af6e2b09c7fe59342870cd65c9ef953966
+"@docsearch/css@npm:4.5.4":
+  version: 4.5.4
+  resolution: "@docsearch/css@npm:4.5.4"
+  checksum: 10c0/2f9f69d6d87f47a1c750cde0597eb9be6b57796bcffccacaf4221969f8dfc73a460b3cf86e40ec3570dd6509854caf8bbaa2a25d01e40daef012d8ce0344f6e1
   languageName: node
   linkType: hard
 
 "@docsearch/react@npm:^3.9.0 || ^4.1.0":
-  version: 4.5.3
-  resolution: "@docsearch/react@npm:4.5.3"
+  version: 4.5.4
+  resolution: "@docsearch/react@npm:4.5.4"
   dependencies:
-    "@docsearch/core": "npm:4.5.3"
-    "@docsearch/css": "npm:4.5.3"
+    "@algolia/autocomplete-core": "npm:1.19.2"
+    "@docsearch/core": "npm:4.5.4"
+    "@docsearch/css": "npm:4.5.4"
   peerDependencies:
     "@types/react": ">= 16.8.0 < 20.0.0"
     react: ">= 16.8.0 < 20.0.0"
@@ -3069,7 +3103,7 @@ __metadata:
       optional: true
     search-insights:
       optional: true
-  checksum: 10c0/a5e5137298402a685557f88957c9ad8f8fe86b7937e8f0c3b84b523f28ceb4173a0c7ca04e2d1d0aca4edc1f5bcc679aa1f9d08ee790854f06fa0d0241e96916
+  checksum: 10c0/744f48956ad64a8b62e65645d81282a9ab42e882f2e394ab07ee2a83806f5e6fa14300effd87f6fd873b441df5daafc97cd5501e61faa557c501d5fcd374f2a7
   languageName: node
   linkType: hard
 
@@ -3558,7 +3592,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docusaurus/theme-common@npm:3.9.2, @docusaurus/theme-common@npm:^3.7.0":
+"@docusaurus/theme-common@npm:3.9.2, @docusaurus/theme-common@npm:^3.7.0, @docusaurus/theme-common@npm:^3.9.2":
   version: 3.9.2
   resolution: "@docusaurus/theme-common@npm:3.9.2"
   dependencies:
@@ -7339,6 +7373,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cheerio@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "cheerio@npm:1.2.0"
+  dependencies:
+    cheerio-select: "npm:^2.1.0"
+    dom-serializer: "npm:^2.0.0"
+    domhandler: "npm:^5.0.3"
+    domutils: "npm:^3.2.2"
+    encoding-sniffer: "npm:^0.2.1"
+    htmlparser2: "npm:^10.1.0"
+    parse5: "npm:^7.3.0"
+    parse5-htmlparser2-tree-adapter: "npm:^7.1.0"
+    parse5-parser-stream: "npm:^7.1.2"
+    undici: "npm:^7.19.0"
+    whatwg-mimetype: "npm:^4.0.0"
+  checksum: 10c0/91a566aabfa9962f28056045bb7d92d79c0f8f3abb1fb86a852a9d1760556adddeb01a36b6f08fa7c133282375d387ae450a181a659e76c6a64016c30cc3f611
+  languageName: node
+  linkType: hard
+
 "chokidar@npm:^3.5.3, chokidar@npm:^3.6.0":
   version: 3.6.0
   resolution: "chokidar@npm:3.6.0"
@@ -8424,7 +8477,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"domutils@npm:^3.0.1":
+"domutils@npm:^3.0.1, domutils@npm:^3.2.2":
   version: 3.2.2
   resolution: "domutils@npm:3.2.2"
   dependencies:
@@ -8542,6 +8595,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"encoding-sniffer@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "encoding-sniffer@npm:0.2.1"
+  dependencies:
+    iconv-lite: "npm:^0.6.3"
+    whatwg-encoding: "npm:^3.1.1"
+  checksum: 10c0/d6b591880788f3baf8dd1744636dd189d24a1ec93e6f9817267c60ac3458a5191ca70ab1a186fb67731beff1c3489c6527dfdc4718158ed8460ab2f400dd5e7d
+  languageName: node
+  linkType: hard
+
 "encoding@npm:^0.1.13":
   version: 0.1.13
   resolution: "encoding@npm:0.1.13"
@@ -8579,6 +8642,13 @@ __metadata:
   version: 6.0.1
   resolution: "entities@npm:6.0.1"
   checksum: 10c0/ed836ddac5acb34341094eb495185d527bd70e8632b6c0d59548cbfa23defdbae70b96f9a405c82904efa421230b5b3fd2283752447d737beffd3f3e6ee74414
+  languageName: node
+  linkType: hard
+
+"entities@npm:^7.0.1":
+  version: 7.0.1
+  resolution: "entities@npm:7.0.1"
+  checksum: 10c0/b4fb9937bb47ecb00aaaceb9db9cdd1cc0b0fb649c0e843d05cf5dbbd2e9d2df8f98721d8b1b286445689c72af7b54a7242fc2d63ef7c9739037a8c73363e7ca
   languageName: node
   linkType: hard
 
@@ -10529,6 +10599,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"htmlparser2@npm:^10.1.0":
+  version: 10.1.0
+  resolution: "htmlparser2@npm:10.1.0"
+  dependencies:
+    domelementtype: "npm:^2.3.0"
+    domhandler: "npm:^5.0.3"
+    domutils: "npm:^3.2.2"
+    entities: "npm:^7.0.1"
+  checksum: 10c0/36394e29b80cfcc5e78e0fa4d3aa21fdaac3e6778d23e5c933e625c290987cd9a724a2eb0753ab60ed0c69dfaba0ab115f0ee50fb112fd8f0c4d522e7e0089a2
+  languageName: node
+  linkType: hard
+
 "htmlparser2@npm:^6.1.0":
   version: 6.1.0
   resolution: "htmlparser2@npm:6.1.0"
@@ -10673,7 +10755,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:^0.6.2":
+"iconv-lite@npm:0.6.3, iconv-lite@npm:^0.6.2, iconv-lite@npm:^0.6.3":
   version: 0.6.3
   resolution: "iconv-lite@npm:0.6.3"
   dependencies:
@@ -13575,7 +13657,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"parse5-htmlparser2-tree-adapter@npm:^7.0.0":
+"parse5-htmlparser2-tree-adapter@npm:^7.0.0, parse5-htmlparser2-tree-adapter@npm:^7.1.0":
   version: 7.1.0
   resolution: "parse5-htmlparser2-tree-adapter@npm:7.1.0"
   dependencies:
@@ -13585,7 +13667,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"parse5@npm:^7.0.0":
+"parse5-parser-stream@npm:^7.1.2":
+  version: 7.1.2
+  resolution: "parse5-parser-stream@npm:7.1.2"
+  dependencies:
+    parse5: "npm:^7.0.0"
+  checksum: 10c0/e236c61000d38ecad369e725a48506b051cebad8abb00e6d4e8bff7aa85c183820fcb45db1559cc90955bdbbdbd665ea94c41259594e74566fff411478dc7fcb
+  languageName: node
+  linkType: hard
+
+"parse5@npm:^7.0.0, parse5@npm:^7.3.0":
   version: 7.3.0
   resolution: "parse5@npm:7.3.0"
   dependencies:
@@ -17264,6 +17355,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"undici@npm:^7.19.0":
+  version: 7.21.0
+  resolution: "undici@npm:7.21.0"
+  checksum: 10c0/ec5d7524125ac9c392a8a67b84fe4f9301936ca6b2afd7be12e73ab98726e55761dc9624ac10361d2f346e6fdaf66043381a62f7d0b565facd61bbfda975a586
+  languageName: node
+  linkType: hard
+
 "unicode-canonical-property-names-ecmascript@npm:^2.0.0":
   version: 2.0.1
   resolution: "unicode-canonical-property-names-ecmascript@npm:2.0.1"
@@ -17847,6 +17945,22 @@ __metadata:
   version: 0.1.4
   resolution: "websocket-extensions@npm:0.1.4"
   checksum: 10c0/bbc8c233388a0eb8a40786ee2e30d35935cacbfe26ab188b3e020987e85d519c2009fe07cfc37b7f718b85afdba7e54654c9153e6697301f72561bfe429177e0
+  languageName: node
+  linkType: hard
+
+"whatwg-encoding@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "whatwg-encoding@npm:3.1.1"
+  dependencies:
+    iconv-lite: "npm:0.6.3"
+  checksum: 10c0/273b5f441c2f7fda3368a496c3009edbaa5e43b71b09728f90425e7f487e5cef9eb2b846a31bd760dd8077739c26faf6b5ca43a5f24033172b003b72cf61a93e
+  languageName: node
+  linkType: hard
+
+"whatwg-mimetype@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "whatwg-mimetype@npm:4.0.0"
+  checksum: 10c0/a773cdc8126b514d790bdae7052e8bf242970cebd84af62fb2f35a33411e78e981f6c0ab9ed1fe6ec5071b09d5340ac9178e05b52d35a9c4bcf558ba1b1551df
   languageName: node
   linkType: hard
 

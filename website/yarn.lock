@@ -544,15 +544,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apify/ui-library@npm:<1.120.0":
-  version: 1.119.0
-  resolution: "@apify/ui-library@npm:1.119.0"
+"@apify/ui-library@npm:<1.123.0":
+  version: 1.122.0
+  resolution: "@apify/ui-library@npm:1.122.0"
   dependencies:
     "@apify/ui-icons": "npm:^1.27.2"
     "@floating-ui/react": "npm:^0.26.2"
     "@react-hook/resize-observer": "npm:^2.0.2"
     clsx: "npm:^2.0.0"
     dayjs: "npm:1.11.9"
+    emoji-regex: "npm:^9.2.2"
     fast-average-color: "npm:^9.4.0"
     history: "npm:^5.3.0"
     lodash: "npm:^4.17.21"
@@ -570,7 +571,7 @@ __metadata:
     react: 17.x || 18.x || 19.x
     react-dom: 17.x || 18.x || 19.x
     styled-components: ^6.1.19
-  checksum: 10c0/a22a2d72e49fe3e0cecacb76b710ea22056db04f0e4ae7daaa5bcfd25ffece6bcd535c5b40c5e5d3df89efe6dd5e5722e7926c4427bed88277a66e9156fa1a9e
+  checksum: 10c0/1400f1c086cfb9d996b489c300b6d30a7a9c33accaf6965013b997d5b91ec9039e3ef9c2faf3a854e995f916fcf7e36a6ecdf28ee5d6b0074a8e4f2f45907ac0
   languageName: node
   linkType: hard
 

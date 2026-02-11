@@ -48,7 +48,7 @@
         "typescript": "^5.0.0"
     },
     "resolutions": {
-        "@apify/ui-library": "<1.120.0"
+        "@apify/ui-library": "<1.124.0"
     },
     "packageManager": "yarn@4.12.0"
 }

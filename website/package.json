@@ -47,8 +47,5 @@
         "rimraf": "^6.0.0",
         "typescript": "^5.0.0"
     },
-    "resolutions": {
-        "@apify/ui-library": "<1.120.0"
-    },
     "packageManager": "yarn@4.12.0"
 }

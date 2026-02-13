@@ -7,7 +7,7 @@ from apify_client.clients.base import ResourceCollectionClient, ResourceCollecti
 from apify_client.clients.resource_clients.schedule import _get_schedule_representation
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class ScheduleCollectionClient(ResourceCollectionClient):
@@ -23,7 +23,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -36,7 +36,7 @@ class ScheduleCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        return self._list(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(self._list, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -93,13 +93,13 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'schedules')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocolAsync[dict]:
         """List the available schedules.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
@@ -112,7 +112,7 @@ class ScheduleCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        return await self._list(limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(callback=self._list, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

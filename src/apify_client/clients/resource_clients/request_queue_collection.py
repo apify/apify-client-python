@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client.clients.base import ResourceCollectionClient, ResourceCollectionClientAsync
 
 if TYPE_CHECKING:
-    from apify_client.clients.base.resource_collection_client import ListPage
+    from apify_client.clients.base.base_client import ListPageProtocol, ListPageProtocolAsync
 
 
 class RequestQueueCollectionClient(ResourceCollectionClient):
@@ -22,7 +22,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocol[dict]:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -36,7 +36,7 @@ class RequestQueueCollectionClient(ResourceCollectionClient):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        return self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(self._list, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(self, *, name: str | None = None) -> dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -59,14 +59,14 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         resource_path = kwargs.pop('resource_path', 'request-queues')
         super().__init__(*args, resource_path=resource_path, **kwargs)
 
-    async def list(
+    def list(
         self,
         *,
         unnamed: bool | None = None,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-    ) -> ListPage[dict]:
+    ) -> ListPageProtocolAsync[dict]:
         """List the available request queues.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
@@ -80,7 +80,9 @@ class RequestQueueCollectionClientAsync(ResourceCollectionClientAsync):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        return await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return self._list_iterable_from_callback(
+            callback=self._list, unnamed=unnamed, limit=limit, offset=offset, desc=desc
+        )
 
     async def get_or_create(self, *, name: str | None = None) -> dict:
         """Retrieve a named request queue, or create a new one when it doesn't exist.

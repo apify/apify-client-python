@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import pytest
-from impit import Response, TimeoutException
+from impit import HTTPError, Response, TimeoutException
 
 from apify_client import ApifyClient
 from apify_client._http_client import HTTPClient, HTTPClientAsync
@@ -73,6 +73,32 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
     assert retry_counter_mock.call_count == 4
     assert timeouts == expected_timeouts
     # Check that the response is successful
+    assert response.status_code == 200
+
+
+async def test_retry_on_http_error_async_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests that bare impit.HTTPError (e.g. body decode errors) are retried.
+
+    This reproduces the scenario where the HTTP response body is truncated mid-stream
+    (e.g. "unexpected EOF during chunk size line"), which impit raises as a generic HTTPError.
+    """
+    should_raise_error = iter((True, True, False))
+    retry_counter_mock = Mock()
+
+    async def mock_request(*_args: Any, **_kwargs: Any) -> Response:
+        retry_counter_mock()
+        should_raise = next(should_raise_error)
+        if should_raise:
+            raise HTTPError('The internal HTTP library has thrown an error: unexpected EOF during chunk size line')
+
+        return Response(status_code=200)
+
+    monkeypatch.setattr('impit.AsyncClient.request', mock_request)
+
+    response = await HTTPClientAsync(timeout_secs=5).call(method='GET', url='http://placeholder.url/http_error')
+
+    # 3 attempts: 2 failures + 1 success
+    assert retry_counter_mock.call_count == 3
     assert response.status_code == 200
 
 

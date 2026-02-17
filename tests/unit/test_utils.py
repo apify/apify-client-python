@@ -2,16 +2,19 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+import impit
 import pytest
 from apify_shared.consts import WebhookEventType
 
 from apify_client._utils import (
     encode_webhook_list_to_base64,
+    is_retryable_error,
     pluck_data,
     retry_with_exp_backoff,
     retry_with_exp_backoff_async,
     to_safe_id,
 )
+from apify_client.errors import InvalidResponseBodyError
 
 
 def test__to_safe_id() -> None:
@@ -154,3 +157,33 @@ def test__encode_webhook_list_to_base64() -> None:
         )
         == 'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
     )
+
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        InvalidResponseBodyError(impit.Response(status_code=200)),
+        impit.HTTPError('generic http error'),
+        impit.NetworkError('network error'),
+        impit.TimeoutException('timeout'),
+        impit.RemoteProtocolError('remote protocol error'),
+        impit.ReadError('read error'),
+        impit.ConnectError('connect error'),
+        impit.WriteError('write error'),
+        impit.DecodingError('decoding error'),
+    ],
+)
+def test__is_retryable_error(exc: Exception) -> None:
+    assert is_retryable_error(exc) is True
+
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        Exception('generic exception'),
+        ValueError('value error'),
+        RuntimeError('runtime error'),
+    ],
+)
+def test__is_not_retryable_error(exc: Exception) -> None:
+    assert is_retryable_error(exc) is False

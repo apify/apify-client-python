@@ -281,13 +281,16 @@ def maybe_parse_response(response: Response) -> Any:
 
 
 def is_retryable_error(exc: Exception) -> bool:
-    """Check if the given error is retryable."""
+    """Check if the given error is retryable.
+
+    All ``impit.HTTPError`` subclasses are considered retryable because they represent transport-level failures
+    (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
+    code errors are handled separately in ``_make_request`` based on the response status code, not here.
+    """
     return isinstance(
         exc,
         (
             InvalidResponseBodyError,
-            impit.NetworkError,
-            impit.TimeoutException,
-            impit.RemoteProtocolError,
+            impit.HTTPError,
         ),
     )

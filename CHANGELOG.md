@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Resolve tar security vulnerability in website ([#600](https://github.com/apify/apify-client-python/pull/600)) ([3087d6b](https://github.com/apify/apify-client-python/commit/3087d6b557afec5fe846a8a9e4f73ff4cbc2ebe2)) by [@B4nan](https://github.com/B4nan)
 - Prevent infinite loop in _wait_for_finish on persistent 404s ([#619](https://github.com/apify/apify-client-python/pull/619)) ([00e8621](https://github.com/apify/apify-client-python/commit/00e86213227631b9ea3d39e8f9d736e9a9b028f1)) by [@vdusek](https://github.com/vdusek)
 - Remove erroneous async keyword from sync ActorClient.default_build ([#620](https://github.com/apify/apify-client-python/pull/620)) ([b2b1103](https://github.com/apify/apify-client-python/commit/b2b110364ddd97640268fe6b6727273d0e1739d5)) by [@vdusek](https://github.com/vdusek)
+- Use explicit None checks for client config to respect zero values ([#623](https://github.com/apify/apify-client-python/pull/623)) ([416fd98](https://github.com/apify/apify-client-python/commit/416fd98d54b5ba9535afe157dcc354464c902ed5)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

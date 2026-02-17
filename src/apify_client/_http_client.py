@@ -101,14 +101,14 @@ class _BaseHTTPClient:
         data: Any = None,
         json: JSONSerializable | None = None,
     ) -> tuple[dict, dict | None, Any]:
-        if json and data:
+        if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         if not headers:
             headers = {}
 
         # dump JSON data to string, so they can be gzipped
-        if json:
+        if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
 

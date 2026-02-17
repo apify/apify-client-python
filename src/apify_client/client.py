@@ -89,9 +89,11 @@ class _BaseApifyClient:
         self.base_url = f'{api_url}/{API_VERSION}'
         api_public_url = (api_public_url or DEFAULT_API_URL).rstrip('/')
         self.public_base_url = f'{api_public_url}/{API_VERSION}'
-        self.max_retries = max_retries or 8
-        self.min_delay_between_retries_millis = min_delay_between_retries_millis or 500
-        self.timeout_secs = timeout_secs or DEFAULT_TIMEOUT
+        self.max_retries = max_retries if max_retries is not None else 8
+        self.min_delay_between_retries_millis = (
+            min_delay_between_retries_millis if min_delay_between_retries_millis is not None else 500
+        )
+        self.timeout_secs = timeout_secs if timeout_secs is not None else DEFAULT_TIMEOUT
 
     def _options(self) -> dict:
         return {

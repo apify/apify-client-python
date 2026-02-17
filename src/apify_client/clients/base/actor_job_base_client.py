@@ -39,7 +39,6 @@ class ActorJobBaseClient(ResourceClient):
                 )
                 job = parse_date_fields(pluck_data(response.json()))
 
-                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
                     wait_secs is not None and seconds_elapsed >= wait_secs
                 ):
@@ -56,6 +55,9 @@ class ActorJobBaseClient(ResourceClient):
                 # and return None. In such case, the requested record probably really doesn't exist.
                 if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
                     return None
+
+            finally:
+                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
             time.sleep(0.25)
@@ -93,7 +95,6 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 )
                 job = parse_date_fields(pluck_data(response.json()))
 
-                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
                 if ActorJobStatus(job['status']).is_terminal or (
                     wait_secs is not None and seconds_elapsed >= wait_secs
                 ):
@@ -110,6 +111,9 @@ class ActorJobBaseClientAsync(ResourceClientAsync):
                 # and return None. In such case, the requested record probably really doesn't exist.
                 if seconds_elapsed > DEFAULT_WAIT_WHEN_JOB_NOT_EXIST_SEC:
                     return None
+
+            finally:
+                seconds_elapsed = math.floor((datetime.now(timezone.utc) - started_at).total_seconds())
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
             await asyncio.sleep(0.25)

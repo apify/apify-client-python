@@ -156,7 +156,7 @@ class DatasetClient(ResourceClient):
                 'limit': int(
                     response.headers['x-apify-pagination-limit']
                 ),  # API returns 999999999999 when no limit is used
-                'desc': bool(response.headers['x-apify-pagination-desc']),
+                'desc': response.headers['x-apify-pagination-desc'].lower() == 'true',
             }
         )
 
@@ -769,7 +769,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 'limit': int(
                     response.headers['x-apify-pagination-limit']
                 ),  # API returns 999999999999 when no limit is used
-                'desc': bool(response.headers['x-apify-pagination-desc']),
+                'desc': response.headers['x-apify-pagination-desc'].lower() == 'true',
             }
         )
 

@@ -8,4 +8,4 @@ They must not require:
 - production or test API tokens
 - network access at all
 
-Any test that calls the Apify API belong to integration tests.
+Any test that calls the Apify API belongs to integration tests.

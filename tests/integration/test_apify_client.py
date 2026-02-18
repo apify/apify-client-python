@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import UserPrivateInfo, UserPublicInfo
 
 
-from .conftest import maybe_await
+from ._utils import maybe_await
 
 
 async def test_apify_client(client: ApifyClient | ApifyClientAsync) -> None:

@@ -11,14 +11,12 @@ from apify_client._logging import create_redirect_logger
 from apify_client._models import Run, RunResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
-    catch_not_found_or_throw,
     encode_key_value_store_record_value,
     filter_none_values,
     response_to_dict,
     to_safe_id,
     to_seconds,
 )
-from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     import logging
@@ -65,17 +63,10 @@ class RunClient(ResourceClient):
         Returns:
             The retrieved Actor run data.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return RunResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get()
+        if result is None:
             return None
+        return RunResponse.model_validate(result).data
 
     def update(
         self,
@@ -103,13 +94,7 @@ class RunClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-        )
-        result = response_to_dict(response)
+        result = self._update(cleaned)
         return RunResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -117,14 +102,7 @@ class RunClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
-        try:
-            self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        self._delete()
 
     def abort(self, *, gracefully: bool | None = None) -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
@@ -469,17 +447,10 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor run data.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return RunResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get()
+        if result is None:
             return None
+        return RunResponse.model_validate(result).data
 
     async def update(
         self,
@@ -507,13 +478,7 @@ class RunClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-        )
-        result = response_to_dict(response)
+        result = await self._update(cleaned)
         return RunResponse.model_validate(result).data
 
     async def abort(self, *, gracefully: bool | None = None) -> Run:
@@ -559,14 +524,7 @@ class RunClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
         """
-        try:
-            await self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        await self._delete()
 
     async def metamorph(
         self,

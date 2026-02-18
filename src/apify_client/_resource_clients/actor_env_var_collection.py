@@ -5,7 +5,7 @@ from typing import Any
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
-from apify_client._utils import filter_none_values, response_to_dict
+from apify_client._utils import filter_none_values
 
 
 class ActorEnvVarCollectionClient(ResourceClient):
@@ -23,13 +23,8 @@ class ActorEnvVarCollectionClient(ResourceClient):
         Returns:
             The list of available Actor environment variables.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfEnvVarsResponse.model_validate(response_as_dict).data
+        result = self._list()
+        return ListOfEnvVarsResponse.model_validate(result).data
 
     def create(
         self,
@@ -56,14 +51,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             value=value,
         )
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(actor_env_var_representation),
-        )
-
-        result = response_to_dict(response)
+        result = self._create(filter_none_values(actor_env_var_representation))
         return EnvVarResponse.model_validate(result).data
 
 
@@ -82,13 +70,8 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actor environment variables.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfEnvVarsResponse.model_validate(response_as_dict).data
+        result = await self._list()
+        return ListOfEnvVarsResponse.model_validate(result).data
 
     async def create(
         self,
@@ -115,12 +98,5 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             value=value,
         )
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(actor_env_var_representation),
-        )
-
-        result = response_to_dict(response)
+        result = await self._create(filter_none_values(actor_env_var_representation))
         return EnvVarResponse.model_validate(result).data

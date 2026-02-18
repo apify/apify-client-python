@@ -72,7 +72,7 @@ def test_actor_start_passes_timeout_param_sync(httpserver: HTTPServer) -> None:
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(token='test_token', api_url=api_url)
 
-    # Call start with timeout_secs
+    # Call start with timeout (timedelta) parameter
     client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
 
     # Verify the request was made with correct timeout parameter
@@ -105,7 +105,7 @@ async def test_actor_start_passes_timeout_param_async(httpserver: HTTPServer) ->
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
-    # Call start with timeout_secs
+    # Call start with timeout (timedelta) parameter
     await client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
 
     # Verify the request was made with correct timeout parameter

@@ -4,7 +4,6 @@ from typing import Any
 
 from apify_client._models import ListOfWebhookDispatches, WebhookDispatchList
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import response_to_dict
 
 
 class WebhookDispatchCollectionClient(ResourceClient):
@@ -33,13 +32,8 @@ class WebhookDispatchCollectionClient(ResourceClient):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return WebhookDispatchList.model_validate(response_as_dict).data
+        result = self._list(limit=limit, offset=offset, desc=desc)
+        return WebhookDispatchList.model_validate(result).data
 
 
 class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
@@ -68,10 +62,5 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return WebhookDispatchList.model_validate(response_as_dict).data
+        result = await self._list(limit=limit, offset=offset, desc=desc)
+        return WebhookDispatchList.model_validate(result).data

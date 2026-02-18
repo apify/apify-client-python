@@ -5,15 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
-
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
+    from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
 
 
 from datetime import datetime, timedelta, timezone
 
-from .conftest import maybe_await, maybe_sleep
+from ._utils import maybe_await, maybe_sleep
 from apify_client._models import ActorJobStatus, Run
 from apify_client.errors import ApifyApiError
 
@@ -404,32 +402,3 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
 
     finally:
         await maybe_await(run_client.delete())
-
-
-async def test_run_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
-    """Test iterating over runs in the collection."""
-    # Run an actor so we have something to iterate over
-    actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.call())
-    run = cast('Run', result)
-    assert run is not None
-
-    try:
-        # Iterate over runs
-        if is_async:
-            collected_runs = [r async for r in cast('AsyncIterator[RunShort]', client.runs().iterate(limit=10))]
-        else:
-            collected_runs = list(cast('Iterator[RunShort]', client.runs().iterate(limit=10)))
-
-        # Should have at least our created run
-        assert isinstance(collected_runs, list)
-        assert len(collected_runs) >= 1
-        assert len(collected_runs) <= 10
-
-        # Verify each item is a RunShort
-        for r in collected_runs:
-            assert r.id is not None
-            assert r.act_id is not None
-
-    finally:
-        await maybe_await(client.run(run.id).delete())

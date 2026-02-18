@@ -71,18 +71,10 @@ class DatasetClient(ResourceClient):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-            result = response_to_dict(response)
-            return DatasetResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get(timeout=FAST_OPERATION_TIMEOUT)
+        if result is None:
             return None
+        return DatasetResponse.model_validate(result).data
 
     def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -102,14 +94,7 @@ class DatasetClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-            timeout=FAST_OPERATION_TIMEOUT,
-        )
-        result = response_to_dict(response)
+        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return DatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -117,15 +102,7 @@ class DatasetClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        try:
-            self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        self._delete(timeout=FAST_OPERATION_TIMEOUT)
 
     def list_items(
         self,
@@ -713,18 +690,10 @@ class DatasetClientAsync(ResourceClientAsync):
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-            result = response_to_dict(response)
-            return DatasetResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get(timeout=FAST_OPERATION_TIMEOUT)
+        if result is None:
             return None
+        return DatasetResponse.model_validate(result).data
 
     async def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> Dataset:
         """Update the dataset with specified fields.
@@ -744,14 +713,7 @@ class DatasetClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-            timeout=FAST_OPERATION_TIMEOUT,
-        )
-        result = response_to_dict(response)
+        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return DatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -759,15 +721,7 @@ class DatasetClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
         """
-        try:
-            await self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        await self._delete(timeout=FAST_OPERATION_TIMEOUT)
 
     async def list_items(
         self,

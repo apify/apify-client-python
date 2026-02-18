@@ -4,7 +4,6 @@ from typing import Any
 
 from apify_client._models import ListOfActorsInStoreResponse, ListOfStoreActors
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import response_to_dict
 
 
 class StoreCollectionClient(ResourceClient):
@@ -42,21 +41,16 @@ class StoreCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(
-                limit=limit,
-                offset=offset,
-                search=search,
-                sortBy=sort_by,
-                category=category,
-                username=username,
-                pricingModel=pricing_model,
-            ),
+        result = self._list(
+            limit=limit,
+            offset=offset,
+            search=search,
+            sortBy=sort_by,
+            category=category,
+            username=username,
+            pricingModel=pricing_model,
         )
-        response_as_dict = response_to_dict(response)
-        return ListOfActorsInStoreResponse.model_validate(response_as_dict).data
+        return ListOfActorsInStoreResponse.model_validate(result).data
 
 
 class StoreCollectionClientAsync(ResourceClientAsync):
@@ -94,18 +88,13 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(
-                limit=limit,
-                offset=offset,
-                search=search,
-                sortBy=sort_by,
-                category=category,
-                username=username,
-                pricingModel=pricing_model,
-            ),
+        result = await self._list(
+            limit=limit,
+            offset=offset,
+            search=search,
+            sortBy=sort_by,
+            category=category,
+            username=username,
+            pricingModel=pricing_model,
         )
-        response_as_dict = response_to_dict(response)
-        return ListOfActorsInStoreResponse.model_validate(response_as_dict).data
+        return ListOfActorsInStoreResponse.model_validate(result).data

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._models import ListOfWebhooks, ListOfWebhooksResponse, Webhook, WebhookResponse
 from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values, response_to_dict
+from apify_client._utils import filter_none_values
 
 if TYPE_CHECKING:
     from apify_client._models import WebhookEventType
@@ -37,13 +37,8 @@ class WebhookCollectionClient(ResourceClient):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfWebhooksResponse.model_validate(response_as_dict).data
+        result = self._list(limit=limit, offset=offset, desc=desc)
+        return ListOfWebhooksResponse.model_validate(result).data
 
     def create(
         self,
@@ -98,14 +93,7 @@ class WebhookCollectionClient(ResourceClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(webhook_representation, remove_empty_dicts=True),
-        )
-
-        result = response_to_dict(response)
+        result = self._create(filter_none_values(webhook_representation, remove_empty_dicts=True))
         return WebhookResponse.model_validate(result).data
 
 
@@ -135,13 +123,8 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfWebhooksResponse.model_validate(response_as_dict).data
+        result = await self._list(limit=limit, offset=offset, desc=desc)
+        return ListOfWebhooksResponse.model_validate(result).data
 
     async def create(
         self,
@@ -196,12 +179,5 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        response_obj = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(webhook_representation, remove_empty_dicts=True),
-        )
-
-        response = response_to_dict(response_obj)
-        return WebhookResponse.model_validate(response).data
+        result = await self._create(filter_none_values(webhook_representation, remove_empty_dicts=True))
+        return WebhookResponse.model_validate(result).data

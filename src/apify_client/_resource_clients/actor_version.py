@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._models import Version, VersionResponse, VersionSourceType
 from apify_client._representations import get_actor_version_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
-from apify_client.errors import ApifyApiError
+from apify_client._utils import filter_none_values
 
 if TYPE_CHECKING:
     from apify_client._resource_clients import (
@@ -41,17 +40,10 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The retrieved Actor version data.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return VersionResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get()
+        if result is None:
             return None
+        return VersionResponse.model_validate(result).data
 
     def update(
         self,
@@ -100,13 +92,7 @@ class ActorVersionClient(ResourceClient):
         )
         cleaned = filter_none_values(actor_version_representation)
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-        )
-        result = response_to_dict(response)
+        result = self._update(cleaned)
         return VersionResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -114,14 +100,7 @@ class ActorVersionClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
-        try:
-            self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        self._delete()
 
     def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
@@ -166,17 +145,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor version data.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return VersionResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get()
+        if result is None:
             return None
+        return VersionResponse.model_validate(result).data
 
     async def update(
         self,
@@ -225,13 +197,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         )
         cleaned = filter_none_values(actor_version_representation)
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-        )
-        result = response_to_dict(response)
+        result = await self._update(cleaned)
         return VersionResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -239,14 +205,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
         """
-        try:
-            await self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        await self._delete()
 
     def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""

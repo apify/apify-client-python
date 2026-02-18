@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import Actor, ListOfWebhookDispatches, ListOfWebhooks, Webhook, WebhookDispatch
 
 
-from .conftest import maybe_await
+from ._utils import maybe_await
 from apify_client._models import WebhookEventType
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'

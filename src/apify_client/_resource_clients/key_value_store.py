@@ -21,7 +21,6 @@ from apify_client._utils import (
     create_storage_content_signature,
     encode_key_value_store_record_value,
     filter_none_values,
-    response_to_dict,
 )
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
@@ -83,18 +82,10 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-            result = response_to_dict(response)
-            return KeyValueStoreResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get(timeout=FAST_OPERATION_TIMEOUT)
+        if result is None:
             return None
+        return KeyValueStoreResponse.model_validate(result).data
 
     def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> KeyValueStore:
         """Update the key-value store with specified fields.
@@ -114,13 +105,7 @@ class KeyValueStoreClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-        )
-        result = response_to_dict(response)
+        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return KeyValueStoreResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -128,15 +113,7 @@ class KeyValueStoreClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        try:
-            self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        self._delete(timeout=FAST_OPERATION_TIMEOUT)
 
     def list_keys(
         self,
@@ -484,18 +461,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-            result = response_to_dict(response)
-            return KeyValueStoreResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get(timeout=FAST_OPERATION_TIMEOUT)
+        if result is None:
             return None
+        return KeyValueStoreResponse.model_validate(result).data
 
     async def update(
         self,
@@ -520,13 +489,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-        )
-        result = response_to_dict(response)
+        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return KeyValueStoreResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -534,15 +497,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
         """
-        try:
-            await self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        await self._delete(timeout=FAST_OPERATION_TIMEOUT)
 
     async def list_keys(
         self,

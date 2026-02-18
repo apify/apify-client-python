@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 from datetime import timedelta
 
-from .conftest import get_random_resource_name, get_random_string, maybe_await, maybe_sleep
+from ._utils import get_random_resource_name, get_random_string, maybe_await, maybe_sleep
 
 
 async def test_request_queue_collection_list(client: ApifyClient | ApifyClientAsync) -> None:

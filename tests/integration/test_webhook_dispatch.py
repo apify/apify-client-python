@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import ListOfWebhookDispatches, WebhookDispatch
 
 
-from .conftest import maybe_await
+from ._utils import maybe_await
 
 
 async def test_webhook_dispatch_list(client: ApifyClient | ApifyClientAsync) -> None:

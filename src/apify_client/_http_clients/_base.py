@@ -34,6 +34,7 @@ class BaseHttpClient:
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the base HTTP client.
 
@@ -43,6 +44,7 @@ class BaseHttpClient:
             max_retries: Maximum number of retries for failed requests.
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
+            headers: Additional HTTP headers to include in all requests.
         """
         self._timeout = timeout
         self._max_retries = max_retries
@@ -50,23 +52,23 @@ class BaseHttpClient:
         self._statistics = statistics or ClientStatistics()
 
         # Build headers for subclasses to use when creating their impit clients.
-        headers: dict[str, str] = {'Accept': 'application/json, */*'}
+        default_headers: dict[str, str] = {'Accept': 'application/json, */*'}
 
         workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
         if workflow_key is not None:
-            headers['X-Apify-Workflow-Key'] = workflow_key
+            default_headers['X-Apify-Workflow-Key'] = workflow_key
 
         is_at_home = 'APIFY_IS_AT_HOME' in os.environ
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
         client_version = metadata.version('apify-client')
 
         user_agent = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
-        headers['User-Agent'] = user_agent
+        default_headers['User-Agent'] = user_agent
 
         if token is not None:
-            headers['Authorization'] = f'Bearer {token}'
+            default_headers['Authorization'] = f'Bearer {token}'
 
-        self._headers = headers
+        self._headers = {**default_headers, **(headers or {})}
 
     @staticmethod
     def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -109,9 +111,9 @@ class BaseHttpClient:
         self,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: Any = None,
+        data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
-    ) -> tuple[dict[str, str], dict[str, Any] | None, Any]:
+    ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
         """Prepare headers, params, and body for an HTTP request. Serializes JSON and applies gzip compression."""
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')

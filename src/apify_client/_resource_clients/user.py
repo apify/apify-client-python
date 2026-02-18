@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import ValidationError
+
 from apify_client._models import (
     AccountLimits,
     MonthlyUsage,
@@ -35,21 +37,13 @@ class UserClient(ResourceClient):
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
-            try:
-                return PrivateUserDataResponse.model_validate(result).data
-            except Exception:
-                return PublicUserDataResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get()
+        if result is None:
             return None
+        try:
+            return PrivateUserDataResponse.model_validate(result).data
+        except ValidationError:
+            return PublicUserDataResponse.model_validate(result).data
 
     def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.
@@ -148,21 +142,13 @@ class UserClientAsync(ResourceClientAsync):
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            # Try to parse as UserPrivateInfo first (has more fields), fall back to UserPublicInfo
-            try:
-                return PrivateUserDataResponse.model_validate(result).data
-            except Exception:
-                return PublicUserDataResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get()
+        if result is None:
             return None
+        try:
+            return PrivateUserDataResponse.model_validate(result).data
+        except ValidationError:
+            return PublicUserDataResponse.model_validate(result).data
 
     async def monthly_usage(self) -> MonthlyUsage | None:
         """Return monthly usage of the user account.

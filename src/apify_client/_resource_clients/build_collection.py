@@ -4,7 +4,6 @@ from typing import Any
 
 from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import response_to_dict
 
 
 class BuildCollectionClient(ResourceClient):
@@ -37,13 +36,8 @@ class BuildCollectionClient(ResourceClient):
         Returns:
             The retrieved Actor builds.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfBuildsResponse.model_validate(response_as_dict).data
+        result = self._list(limit=limit, offset=offset, desc=desc)
+        return ListOfBuildsResponse.model_validate(result).data
 
 
 class BuildCollectionClientAsync(ResourceClientAsync):
@@ -76,10 +70,5 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor builds.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfBuildsResponse.model_validate(response_as_dict).data
+        result = await self._list(limit=limit, offset=offset, desc=desc)
+        return ListOfBuildsResponse.model_validate(result).data

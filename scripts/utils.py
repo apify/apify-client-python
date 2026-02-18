@@ -49,6 +49,10 @@ def sync_to_async_docstring(docstring: str) -> str:
         (r'Client', r'ClientAsync'),
         (r'\bsynchronously\b', r'asynchronously'),
         (r'\bSynchronously\b', r'Asynchronously'),
+        (r'\bsynchronous\b', r'asynchronous'),
+        (r'\bSynchronous\b', r'Asynchronous'),
+        (r'Retry a function', r'Retry an async function'),
+        (r'Function to retry', r'Async function to retry'),
     ]
     res = docstring
     for pattern, replacement in substitutions:

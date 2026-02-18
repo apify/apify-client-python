@@ -61,8 +61,6 @@ __all__ = [
     'KeyValueStoreCollectionClient',
     'KeyValueStoreCollectionClientAsync',
     'LogClient',
-    'LogClient',
-    'LogClientAsync',
     'LogClientAsync',
     'RequestQueueClient',
     'RequestQueueClientAsync',

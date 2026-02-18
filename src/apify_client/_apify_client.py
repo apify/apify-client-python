@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from functools import cached_property
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
@@ -11,7 +12,7 @@ from apify_client._consts import (
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
     DEFAULT_TIMEOUT,
 )
-from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
+from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,
@@ -81,6 +82,8 @@ if TYPE_CHECKING:
 class ApifyClient:
     """The Apify API client."""
 
+    _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
+
     def __init__(
         self,
         token: str | None = None,
@@ -90,6 +93,7 @@ class ApifyClient:
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         timeout: timedelta = DEFAULT_TIMEOUT,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize a new instance.
 
@@ -103,10 +107,14 @@ class ApifyClient:
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout: The socket timeout of the HTTP requests sent to the Apify API.
+            headers: Additional HTTP headers to include in all API requests.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        if headers:
+            self._check_custom_headers(headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -120,12 +128,13 @@ class ApifyClient:
         self._statistics = ClientStatistics()
         """Collector for client request statistics."""
 
-        self._http_client = SyncHttpClient(
+        self._http_client = HttpClient(
             token=token,
             timeout=timeout or DEFAULT_TIMEOUT,
             max_retries=max_retries or DEFAULT_MAX_RETRIES,
             min_delay_between_retries=min_delay_between_retries or DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
             statistics=self._statistics,
+            headers=headers,
         )
         """HTTP client used to communicate with the Apify API."""
 
@@ -171,6 +180,18 @@ class ApifyClient:
             'http_client': self._http_client,
             'client_registry': self._client_registry,
         }
+
+    def _check_custom_headers(self, headers: dict[str, str]) -> None:
+        """Warn if custom headers override important default headers."""
+        overwrite_headers = [key for key in headers if key.title() in self._OVERRIDABLE_DEFAULT_HEADERS]
+        if overwrite_headers:
+            warnings.warn(
+                f'{", ".join(overwrite_headers)} headers of {self.__class__.__name__} was overridden with an '
+                'explicit value. A wrong header value can lead to API errors, it is recommended to use the default '
+                f'value for following headers: {", ".join(self._OVERRIDABLE_DEFAULT_HEADERS)}.',
+                category=UserWarning,
+                stacklevel=3,
+            )
 
     @property
     def token(self) -> str | None:
@@ -322,6 +343,8 @@ class ApifyClient:
 class ApifyClientAsync:
     """The asynchronous version of the Apify API client."""
 
+    _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
+
     def __init__(
         self,
         token: str | None = None,
@@ -331,6 +354,7 @@ class ApifyClientAsync:
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         timeout: timedelta = DEFAULT_TIMEOUT,
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize a new instance.
 
@@ -344,10 +368,14 @@ class ApifyClientAsync:
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout: The socket timeout of the HTTP requests sent to the Apify API.
+            headers: Additional HTTP headers to include in all API requests.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        if headers:
+            self._check_custom_headers(headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -361,12 +389,13 @@ class ApifyClientAsync:
         self._statistics = ClientStatistics()
         """Collector for client request statistics."""
 
-        self._http_client = AsyncHttpClient(
+        self._http_client = HttpClientAsync(
             token=token,
             timeout=timeout or DEFAULT_TIMEOUT,
             max_retries=max_retries or DEFAULT_MAX_RETRIES,
             min_delay_between_retries=min_delay_between_retries or DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
             statistics=self._statistics,
+            headers=headers,
         )
         """HTTP client used to communicate with the Apify API."""
 
@@ -412,6 +441,18 @@ class ApifyClientAsync:
             'http_client': self._http_client,
             'client_registry': self._client_registry,
         }
+
+    def _check_custom_headers(self, headers: dict[str, str]) -> None:
+        """Warn if custom headers override important default headers."""
+        overwrite_headers = [key for key in headers if key.title() in self._OVERRIDABLE_DEFAULT_HEADERS]
+        if overwrite_headers:
+            warnings.warn(
+                f'{", ".join(overwrite_headers)} headers of {self.__class__.__name__} was overridden with an '
+                'explicit value. A wrong header value can lead to API errors, it is recommended to use the default '
+                f'value for following headers: {", ".join(self._OVERRIDABLE_DEFAULT_HEADERS)}.',
+                category=UserWarning,
+                stacklevel=3,
+            )
 
     @property
     def token(self) -> str | None:

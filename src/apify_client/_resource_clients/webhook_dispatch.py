@@ -4,8 +4,6 @@ from typing import Any
 
 from apify_client._models import WebhookDispatch, WebhookDispatchResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, response_to_dict
-from apify_client.errors import ApifyApiError
 
 
 class WebhookDispatchClient(ResourceClient):
@@ -23,17 +21,10 @@ class WebhookDispatchClient(ResourceClient):
         Returns:
             The retrieved webhook dispatch, or None if it does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return WebhookDispatchResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get()
+        if result is None:
             return None
+        return WebhookDispatchResponse.model_validate(result).data
 
 
 class WebhookDispatchClientAsync(ResourceClientAsync):
@@ -51,14 +42,7 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
         Returns:
             The retrieved webhook dispatch, or None if it does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return WebhookDispatchResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get()
+        if result is None:
             return None
+        return WebhookDispatchResponse.model_validate(result).data

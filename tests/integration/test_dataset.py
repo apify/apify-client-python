@@ -20,7 +20,7 @@ from datetime import timedelta
 import impit
 import pytest
 
-from .conftest import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
+from ._utils import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
 from apify_client.errors import ApifyApiError
 
 

@@ -11,9 +11,9 @@ from colorama import Fore, Style
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from apify_client._resource_clients._resource_client import ResourceClient
+    from apify_client._resource_clients._resource_client import ResourceClientBase
 
-    _BaseClient = ResourceClient
+    _BaseClient = ResourceClientBase
 
 
 logger_name = __name__.split('.')[0]
@@ -67,7 +67,8 @@ class RedirectLogFormatter(logging.Formatter):
             Formatted log message with colored logger name prefix.
         """
         formatted_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL}'
-        return f'{formatted_logger_name} -> {record.msg}'
+        message = record.getMessage()
+        return f'{formatted_logger_name} -> {message}'
 
 
 def create_redirect_logger(name: str) -> logging.Logger:
@@ -83,9 +84,9 @@ def create_redirect_logger(name: str) -> logging.Logger:
     to_logger.propagate = False
 
     # Remove filters and handlers in case this logger already exists and was set up in some way.
-    for handler in to_logger.handlers:
+    for handler in list(to_logger.handlers):
         to_logger.removeHandler(handler)
-    for log_filter in to_logger.filters:
+    for log_filter in list(to_logger.filters):
         to_logger.removeFilter(log_filter)
 
     handler = logging.StreamHandler()

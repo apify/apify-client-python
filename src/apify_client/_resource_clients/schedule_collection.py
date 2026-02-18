@@ -5,7 +5,7 @@ from typing import Any
 from apify_client._models import ListOfSchedules, ListOfSchedulesResponse, Schedule, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values, response_to_dict
+from apify_client._utils import filter_none_values
 
 
 class ScheduleCollectionClient(ResourceClient):
@@ -34,13 +34,8 @@ class ScheduleCollectionClient(ResourceClient):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfSchedulesResponse.model_validate(response_as_dict).data
+        result = self._list(limit=limit, offset=offset, desc=desc)
+        return ListOfSchedulesResponse.model_validate(result).data
 
     def create(
         self,
@@ -87,14 +82,7 @@ class ScheduleCollectionClient(ResourceClient):
             title=title,
         )
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(schedule_representation),
-        )
-
-        result = response_to_dict(response)
+        result = self._create(filter_none_values(schedule_representation))
         return ScheduleResponse.model_validate(result).data
 
 
@@ -124,13 +112,8 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfSchedulesResponse.model_validate(response_as_dict).data
+        result = await self._list(limit=limit, offset=offset, desc=desc)
+        return ListOfSchedulesResponse.model_validate(result).data
 
     async def create(
         self,
@@ -177,12 +160,5 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             title=title,
         )
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(schedule_representation),
-        )
-
-        result = response_to_dict(response)
+        result = await self._create(filter_none_values(schedule_representation))
         return ScheduleResponse.model_validate(result).data

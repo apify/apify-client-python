@@ -16,7 +16,7 @@ from datetime import timedelta
 import impit
 import pytest
 
-from .conftest import KvsFixture, get_random_resource_name, maybe_await, maybe_sleep
+from ._utils import KvsFixture, get_random_resource_name, maybe_await, maybe_sleep
 from apify_client.errors import ApifyApiError
 
 

@@ -9,7 +9,7 @@ from apify_client._models import (
     ListOfKeyValueStoresResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values, response_to_dict
+from apify_client._utils import filter_none_values
 
 
 class KeyValueStoreCollectionClient(ResourceClient):
@@ -40,13 +40,8 @@ class KeyValueStoreCollectionClient(ResourceClient):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfKeyValueStoresResponse.model_validate(response_as_dict).data
+        result = self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return ListOfKeyValueStoresResponse.model_validate(result).data
 
     def get_or_create(
         self,
@@ -65,14 +60,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(name=name),
-            json=filter_none_values({'schema': schema}),
-        )
-
-        result = response_to_dict(response)
+        result = self._get_or_create(name=name, resource_fields=filter_none_values({'schema': schema}))
         return KeyValueStoreResponse.model_validate(result).data
 
 
@@ -104,13 +92,8 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfKeyValueStoresResponse.model_validate(response_as_dict).data
+        result = await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return ListOfKeyValueStoresResponse.model_validate(result).data
 
     async def get_or_create(
         self,
@@ -129,12 +112,5 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(name=name),
-            json=filter_none_values({'schema': schema}),
-        )
-
-        result = response_to_dict(response)
+        result = await self._get_or_create(name=name, resource_fields=filter_none_values({'schema': schema}))
         return KeyValueStoreResponse.model_validate(result).data

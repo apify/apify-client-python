@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
+from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
@@ -43,7 +43,7 @@ def test_retry_with_exp_backoff() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = SyncHttpClient._retry_with_exp_backoff(
+    result = HttpClient._retry_with_exp_backoff(
         returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
@@ -55,7 +55,7 @@ def test_retry_with_exp_backoff() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        SyncHttpClient._retry_with_exp_backoff(
+        HttpClient._retry_with_exp_backoff(
             returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
         )
     assert attempt_counter == 4
@@ -63,7 +63,7 @@ def test_retry_with_exp_backoff() -> None:
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        SyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
+        HttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -96,7 +96,7 @@ async def test_retry_with_exp_backoff_async() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = await AsyncHttpClient._retry_with_exp_backoff(
+    result = await HttpClientAsync._retry_with_exp_backoff(
         returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
@@ -108,7 +108,7 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        await AsyncHttpClient._retry_with_exp_backoff(
+        await HttpClientAsync._retry_with_exp_backoff(
             returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
         )
     assert attempt_counter == 4
@@ -116,7 +116,7 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        await AsyncHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
+        await HttpClientAsync._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -145,7 +145,7 @@ def test_base_http_client_initialization() -> None:
 
 def test_http_client_creates_sync_impit_client() -> None:
     """Test that HttpClient creates sync impit client correctly."""
-    client = SyncHttpClient(token='test_token_123')
+    client = HttpClient(token='test_token_123')
 
     # Check that sync impit client is created
     assert client._impit_client is not None
@@ -154,7 +154,7 @@ def test_http_client_creates_sync_impit_client() -> None:
 
 def test_http_client_async_creates_async_impit_client() -> None:
     """Test that HttpClientAsync creates async impit client correctly."""
-    client = AsyncHttpClient(token='test_token_123')
+    client = HttpClientAsync(token='test_token_123')
 
     # Check that async impit client is created
     assert client._impit_async_client is not None

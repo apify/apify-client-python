@@ -9,7 +9,6 @@ from apify_client._models import (
     RequestQueueResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import response_to_dict
 
 
 class RequestQueueCollectionClient(ResourceClient):
@@ -40,13 +39,8 @@ class RequestQueueCollectionClient(ResourceClient):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfRequestQueuesResponse.model_validate(response_as_dict).data
+        result = self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return ListOfRequestQueuesResponse.model_validate(result).data
 
     def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -59,12 +53,7 @@ class RequestQueueCollectionClient(ResourceClient):
         Returns:
             The retrieved or newly-created request queue.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(name=name),
-        )
-        result = response_to_dict(response)
+        result = self._get_or_create(name=name)
         return RequestQueueResponse.model_validate(result).data
 
 
@@ -96,13 +85,8 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(unnamed=unnamed, limit=limit, offset=offset, desc=desc),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfRequestQueuesResponse.model_validate(response_as_dict).data
+        result = await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        return ListOfRequestQueuesResponse.model_validate(result).data
 
     async def get_or_create(self, *, name: str | None = None) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
@@ -115,10 +99,5 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved or newly-created request queue.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(name=name),
-        )
-        result = response_to_dict(response)
+        result = await self._get_or_create(name=name)
         return RequestQueueResponse.model_validate(result).data

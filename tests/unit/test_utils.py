@@ -82,121 +82,124 @@ def test__is_not_retryable_error(exc: Exception) -> None:
     assert is_retryable_error(exc) is False
 
 
-def test_catch_not_found_or_throw() -> None:
+@pytest.mark.parametrize(
+    ('status_code', 'error_type', 'should_suppress'),
+    [
+        pytest.param(HTTPStatus.NOT_FOUND, 'record-not-found', True, id='404 record-not-found'),
+        pytest.param(HTTPStatus.NOT_FOUND, 'record-or-token-not-found', True, id='404 token-not-found'),
+        pytest.param(HTTPStatus.NOT_FOUND, 'some-other-error', False, id='404 other error type'),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, 'record-not-found', False, id='500 record-not-found'),
+    ],
+)
+def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, should_suppress: bool) -> None:
     """Test that catch_not_found_or_throw suppresses 404 errors correctly."""
-    # Mock response for 404 Not Found
     mock_response = Mock()
-    mock_response.status_code = HTTPStatus.NOT_FOUND
-    mock_response.text = '{"error":{"type":"record-not-found"}}'
+    mock_response.status_code = status_code
+    mock_response.text = f'{{"error":{{"type":"{error_type}"}}}}'
 
-    # Should not raise for record-not-found
-    error_404_record = ApifyApiError(mock_response, 1)
-    error_404_record.type = 'record-not-found'
-    catch_not_found_or_throw(error_404_record)
+    error = ApifyApiError(mock_response, 1)
+    error.type = error_type
 
-    # Should not raise for record-or-token-not-found
-    error_404_token = ApifyApiError(mock_response, 1)
-    error_404_token.type = 'record-or-token-not-found'
-    catch_not_found_or_throw(error_404_token)
-
-    # Should raise for other error types with 404
-    error_404_other = ApifyApiError(mock_response, 1)
-    error_404_other.type = 'some-other-error'
-    with pytest.raises(ApifyApiError):
-        catch_not_found_or_throw(error_404_other)
-
-    # Should raise for non-404 status codes
-    mock_response_500 = Mock()
-    mock_response_500.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
-    mock_response_500.text = '{"error":{"type":"record-not-found"}}'
-    error_500 = ApifyApiError(mock_response_500, 1)
-    error_500.type = 'record-not-found'
-    with pytest.raises(ApifyApiError):
-        catch_not_found_or_throw(error_500)
+    if should_suppress:
+        catch_not_found_or_throw(error)
+    else:
+        with pytest.raises(ApifyApiError):
+            catch_not_found_or_throw(error)
 
 
-def test_filter_none_values() -> None:
+@pytest.mark.parametrize(
+    ('input_dict', 'remove_empty_dicts', 'expected'),
+    [
+        pytest.param({'a': 1, 'b': None, 'c': 3}, False, {'a': 1, 'c': 3}, id='Simple case'),
+        pytest.param({'a': {'b': None, 'c': 2}, 'd': None}, False, {'a': {'c': 2}}, id='Nested dictionaries'),
+        pytest.param({'a': {'b': {'c': None, 'd': 4}}}, False, {'a': {'b': {'d': 4}}}, id='Deep nesting'),
+        pytest.param({'a': None, 'b': None}, False, {}, id='Empty dict after filtering'),
+        pytest.param({'a': {'b': None}, 'c': 3}, True, {'c': 3}, id='Remove empty dicts'),
+        pytest.param({'a': {'b': None}, 'c': 3}, False, {'a': {}, 'c': 3}, id='Keep empty dicts by default'),
+        pytest.param(
+            {'a': 0, 'b': '', 'c': False}, False, {'a': 0, 'b': '', 'c': False}, id='Keep falsy non-None values'
+        ),
+    ],
+)
+def test_filter_none_values(input_dict: dict, *, remove_empty_dicts: bool, expected: dict) -> None:
     """Test filtering None values from dictionaries."""
-    # Simple case
-    assert filter_none_values({'a': 1, 'b': None, 'c': 3}) == {'a': 1, 'c': 3}
-
-    # Nested dictionaries
-    assert filter_none_values({'a': {'b': None, 'c': 2}, 'd': None}) == {'a': {'c': 2}}
-
-    # Deep nesting
-    assert filter_none_values({'a': {'b': {'c': None, 'd': 4}}}) == {'a': {'b': {'d': 4}}}
-
-    # Empty dict after filtering
-    assert filter_none_values({'a': None, 'b': None}) == {}
-
-    # Remove empty dicts
-    assert filter_none_values({'a': {'b': None}, 'c': 3}, remove_empty_dicts=True) == {'c': 3}
-
-    # Don't remove empty dicts by default
-    assert filter_none_values({'a': {'b': None}, 'c': 3}) == {'a': {}, 'c': 3}
-
-    # Keep zero values
-    assert filter_none_values({'a': 0, 'b': '', 'c': False}) == {'a': 0, 'b': '', 'c': False}
+    assert filter_none_values(input_dict, remove_empty_dicts=remove_empty_dicts) == expected
 
 
-def test_encode_key_value_store_record_value() -> None:
-    """Test encoding of key-value store record values."""
-    # Dictionary should be encoded as JSON
+def test_encode_key_value_store_record_value_dict() -> None:
+    """Test that dictionaries are encoded as JSON."""
     value, content_type = encode_key_value_store_record_value({'key': 'value'})
     assert b'"key"' in value
     assert b'"value"' in value
     assert content_type == 'application/json; charset=utf-8'
 
-    # String should be text/plain
-    value, content_type = encode_key_value_store_record_value('hello')
-    assert value == 'hello'
-    assert content_type == 'text/plain; charset=utf-8'
 
-    # Bytes should be octet-stream
-    value, content_type = encode_key_value_store_record_value(b'binary data')
-    assert value == b'binary data'
-    assert content_type == 'application/octet-stream'
+@pytest.mark.parametrize(
+    ('input_value', 'input_content_type', 'expected_value', 'expected_content_type'),
+    [
+        pytest.param('hello', None, 'hello', 'text/plain; charset=utf-8', id='String is text/plain'),
+        pytest.param(b'binary data', None, b'binary data', 'application/octet-stream', id='Bytes is octet-stream'),
+        pytest.param('hello', 'text/html', 'hello', 'text/html', id='Custom content type is preserved'),
+    ],
+)
+def test_encode_key_value_store_record_value(
+    input_value: str | bytes, input_content_type: str | None, expected_value: str | bytes, expected_content_type: str
+) -> None:
+    """Test encoding of key-value store record values."""
+    if input_content_type is not None:
+        value, content_type = encode_key_value_store_record_value(input_value, input_content_type)
+    else:
+        value, content_type = encode_key_value_store_record_value(input_value)
+    assert value == expected_value
+    assert content_type == expected_content_type
 
-    # Custom content type should be preserved
-    value, content_type = encode_key_value_store_record_value('hello', 'text/html')
-    assert value == 'hello'
-    assert content_type == 'text/html'
 
-    # BytesIO should be octet-stream
+def test_encode_key_value_store_record_value_bytesio() -> None:
+    """Test that BytesIO is encoded as octet-stream."""
     buffer = io.BytesIO(b'buffer data')
     value, content_type = encode_key_value_store_record_value(buffer)
     assert value == buffer
     assert content_type == 'application/octet-stream'
 
 
-def test_enum_to_value() -> None:
+class _TestEnum(Enum):
+    VALUE1 = 'val1'
+    VALUE2 = 42
+
+
+@pytest.mark.parametrize(
+    ('input_value', 'expected'),
+    [
+        pytest.param(_TestEnum.VALUE1, 'val1', id='Enum string value'),
+        pytest.param(_TestEnum.VALUE2, 42, id='Enum int value'),
+        pytest.param('not_an_enum', 'not_an_enum', id='Plain string passthrough'),
+        pytest.param(123, 123, id='Plain int passthrough'),
+        pytest.param(None, None, id='None passthrough'),
+    ],
+)
+def test_enum_to_value(input_value: _TestEnum | str | int | None, expected: str | int | None) -> None:
     """Test enum to value conversion."""
-
-    class TestEnum(Enum):
-        VALUE1 = 'val1'
-        VALUE2 = 42
-
-    assert enum_to_value(TestEnum.VALUE1) == 'val1'
-    assert enum_to_value(TestEnum.VALUE2) == 42
-    assert enum_to_value('not_an_enum') == 'not_an_enum'
-    assert enum_to_value(123) == 123
-    assert enum_to_value(None) is None
+    assert enum_to_value(input_value) == expected
 
 
 def test_response_to_dict() -> None:
     """Test parsing response as dictionary."""
     mock_response = Mock()
     mock_response.json.return_value = {'key': 'value'}
+    assert response_to_dict(mock_response) == {'key': 'value'}
 
-    result = response_to_dict(mock_response)
-    assert result == {'key': 'value'}
 
-    # Should raise for non-dict responses
-    mock_response.json.return_value = ['list', 'response']
-    with pytest.raises(ValueError, match='The response is not a dictionary'):
-        response_to_dict(mock_response)
-
-    mock_response.json.return_value = 'string'
+@pytest.mark.parametrize(
+    'json_return_value',
+    [
+        pytest.param(['list', 'response'], id='List response'),
+        pytest.param('string', id='String response'),
+    ],
+)
+def test_response_to_dict_raises_for_non_dict(json_return_value: object) -> None:
+    """Test that response_to_dict raises for non-dict responses."""
+    mock_response = Mock()
+    mock_response.json.return_value = json_return_value
     with pytest.raises(ValueError, match='The response is not a dictionary'):
         response_to_dict(mock_response)
 
@@ -205,36 +208,42 @@ def test_response_to_list() -> None:
     """Test parsing response as list."""
     mock_response = Mock()
     mock_response.json.return_value = ['item1', 'item2']
+    assert response_to_list(mock_response) == ['item1', 'item2']
 
-    result = response_to_list(mock_response)
-    assert result == ['item1', 'item2']
 
-    # Should raise for non-list responses
-    mock_response.json.return_value = {'dict': 'response'}
+@pytest.mark.parametrize(
+    'json_return_value',
+    [
+        pytest.param({'dict': 'response'}, id='Dict response'),
+        pytest.param('string', id='String response'),
+    ],
+)
+def test_response_to_list_raises_for_non_list(json_return_value: object) -> None:
+    """Test that response_to_list raises for non-list responses."""
+    mock_response = Mock()
+    mock_response.json.return_value = json_return_value
     with pytest.raises(ValueError, match='The response is not a list'):
         response_to_list(mock_response)
 
-    mock_response.json.return_value = 'string'
-    with pytest.raises(ValueError, match='The response is not a list'):
-        response_to_list(mock_response)
 
-
-def test_encode_base62() -> None:
-    """Test base62 encoding.
-
-    charset = string.digits + string.ascii_letters
-    So: 0-9 (0-9), a-z (10-35), A-Z (36-61)
-    """
-    assert encode_base62(0) == '0'
-    assert encode_base62(1) == '1'
-    assert encode_base62(9) == '9'
-    assert encode_base62(10) == 'a'
-    assert encode_base62(35) == 'z'
-    assert encode_base62(36) == 'A'
-    assert encode_base62(61) == 'Z'
-    assert encode_base62(62) == '10'
-    assert encode_base62(100) == '1C'
-    assert encode_base62(123456) == 'w7e'
+@pytest.mark.parametrize(
+    ('input_value', 'expected'),
+    [
+        pytest.param(0, '0', id='Zero'),
+        pytest.param(1, '1', id='One'),
+        pytest.param(9, '9', id='Last digit'),
+        pytest.param(10, 'a', id='First lowercase letter'),
+        pytest.param(35, 'z', id='Last lowercase letter'),
+        pytest.param(36, 'A', id='First uppercase letter'),
+        pytest.param(61, 'Z', id='Last uppercase letter'),
+        pytest.param(62, '10', id='First two-char encoding'),
+        pytest.param(100, '1C', id='100'),
+        pytest.param(123456, 'w7e', id='Large number'),
+    ],
+)
+def test_encode_base62(input_value: int, expected: str) -> None:
+    """Test base62 encoding."""
+    assert encode_base62(input_value) == expected
 
 
 def test_create_hmac_signature() -> None:

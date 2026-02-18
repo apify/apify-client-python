@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
 
 
-from .conftest import maybe_await
+from ._utils import maybe_await
 from apify_client.errors import ApifyApiError
 
 

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from datetime import timedelta
 
-from .conftest import get_random_resource_name, maybe_await
+from ._utils import get_random_resource_name, maybe_await
 
 # Use a public actor that has builds available
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -219,5 +219,4 @@ async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAs
 
     # OpenAPI definition should be a dict with standard OpenAPI fields
     # Note: May be None if the actor doesn't have an OpenAPI definition
-    if openapi_def is not None:
-        assert isinstance(openapi_def, dict)
+    assert isinstance(openapi_def, dict)

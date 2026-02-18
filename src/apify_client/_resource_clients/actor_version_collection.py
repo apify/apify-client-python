@@ -11,7 +11,7 @@ from apify_client._models import (
 )
 from apify_client._representations import get_actor_version_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values, response_to_dict
+from apify_client._utils import filter_none_values
 
 
 class ActorVersionCollectionClient(ResourceClient):
@@ -29,13 +29,8 @@ class ActorVersionCollectionClient(ResourceClient):
         Returns:
             The list of available Actor versions.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfVersionsResponse.model_validate(response_as_dict).data
+        result = self._list()
+        return ListOfVersionsResponse.model_validate(result).data
 
     def create(
         self,
@@ -86,14 +81,7 @@ class ActorVersionCollectionClient(ResourceClient):
             github_gist_url=github_gist_url,
         )
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(actor_version_representation),
-        )
-
-        result = response_to_dict(response)
+        result = self._create(filter_none_values(actor_version_representation))
         return VersionResponse.model_validate(result).data
 
 
@@ -112,13 +100,8 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actor versions.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfVersionsResponse.model_validate(response_as_dict).data
+        result = await self._list()
+        return ListOfVersionsResponse.model_validate(result).data
 
     async def create(
         self,
@@ -169,12 +152,5 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(actor_version_representation),
-        )
-
-        result = response_to_dict(response)
+        result = await self._create(filter_none_values(actor_version_representation))
         return VersionResponse.model_validate(result).data

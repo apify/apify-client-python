@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, response_to_dict
-from apify_client.errors import ApifyApiError
+from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -37,31 +36,17 @@ class BuildClient(ResourceClient):
         Returns:
             The retrieved Actor build data.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return BuildResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get()
+        if result is None:
             return None
+        return BuildResponse.model_validate(result).data
 
     def delete(self) -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
-        try:
-            self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        self._delete()
 
     def abort(self) -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
@@ -151,17 +136,10 @@ class BuildClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor build data.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-            )
-            result = response_to_dict(response)
-            return BuildResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get()
+        if result is None:
             return None
+        return BuildResponse.model_validate(result).data
 
     async def abort(self) -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
@@ -184,14 +162,7 @@ class BuildClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
         """
-        try:
-            await self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        await self._delete()
 
     async def get_open_api_definition(self) -> dict | None:
         """Return OpenAPI definition of the Actor's build.

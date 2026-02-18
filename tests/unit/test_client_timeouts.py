@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 from impit import HTTPError, Response, TimeoutException
 
-from apify_client._http_clients import AsyncHttpClient, SyncHttpClient
+from apify_client._http_clients import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -58,7 +58,7 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await AsyncHttpClient(timeout=timedelta(seconds=client_timeout)).call(
+    response = await HttpClientAsync(timeout=timedelta(seconds=client_timeout)).call(
         method='GET', url='http://placeholder.url/async_timeout', timeout=timedelta(seconds=call_timeout)
     )
 
@@ -120,7 +120,7 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr('impit.Client.request', mock_request)
 
-    response = SyncHttpClient(timeout=timedelta(seconds=client_timeout)).call(
+    response = HttpClient(timeout=timedelta(seconds=client_timeout)).call(
         method='GET', url='http://placeholder.url/sync_timeout', timeout=timedelta(seconds=call_timeout)
     )
 

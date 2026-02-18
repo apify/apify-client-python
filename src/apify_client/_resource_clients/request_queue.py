@@ -36,7 +36,7 @@ from apify_client._models import (
     UnlockRequestsResult,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict, to_seconds
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -78,18 +78,10 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-            result = response_to_dict(response)
-            return RequestQueueResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = self._get(timeout=FAST_OPERATION_TIMEOUT)
+        if result is None:
             return None
+        return RequestQueueResponse.model_validate(result).data
 
     def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> RequestQueue:
         """Update the request queue with specified fields.
@@ -109,14 +101,7 @@ class RequestQueueClient(ResourceClient):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-            timeout=FAST_OPERATION_TIMEOUT,
-        )
-        result = response_to_dict(response)
+        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return RequestQueueResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -124,15 +109,7 @@ class RequestQueueClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        try:
-            self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        self._delete(timeout=FAST_OPERATION_TIMEOUT)
 
     def list_head(self, *, limit: int | None = None) -> RequestQueueHead:
         """Retrieve a given number of requests from the beginning of the queue.
@@ -506,18 +483,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The retrieved request queue, or None, if it does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url(),
-                method='GET',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-            result = response_to_dict(response)
-            return RequestQueueResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        result = await self._get(timeout=FAST_OPERATION_TIMEOUT)
+        if result is None:
             return None
+        return RequestQueueResponse.model_validate(result).data
 
     async def update(
         self,
@@ -542,14 +511,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         }
         cleaned = filter_none_values(updated_fields)
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='PUT',
-            params=self._build_params(),
-            json=cleaned,
-            timeout=FAST_OPERATION_TIMEOUT,
-        )
-        result = response_to_dict(response)
+        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return RequestQueueResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -557,15 +519,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/delete-request-queue
         """
-        try:
-            await self._http_client.call(
-                url=self._build_url(),
-                method='DELETE',
-                params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
-            )
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+        await self._delete(timeout=FAST_OPERATION_TIMEOUT)
 
     async def list_head(self, *, limit: int | None = None) -> RequestQueueHead:
         """Retrieve a given number of requests from the beginning of the queue.

@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from apify_client._models import Actor, ActorResponse, ActorShort, ListOfActors, ListOfActorsResponse
+from apify_client._models import Actor, ActorResponse, ListOfActors, ListOfActorsResponse
 from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values, response_to_dict
+from apify_client._utils import filter_none_values
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
 
@@ -42,59 +41,8 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfActorsResponse.model_validate(response_as_dict).data
-
-    def iterate(
-        self,
-        *,
-        my: bool | None = None,
-        limit: int | None = None,
-        desc: bool | None = None,
-    ) -> Iterator[ActorShort]:
-        """Iterate over the Actors the user has created or used.
-
-        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
-
-        Args:
-            my: If True, will return only Actors which the user has created themselves.
-            limit: Maximum number of Actors to return. By default there is no limit.
-            desc: Whether to sort the Actors in descending order based on their creation date.
-
-        Yields:
-            An Actor from the collection.
-        """
-        cache_size = 1000
-        read_items = 0
-        offset = 0
-
-        while True:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_items == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_items)
-
-            current_page = self.list(
-                my=my,
-                limit=effective_limit,
-                offset=offset,
-                desc=desc,
-            )
-
-            yield from current_page.items
-
-            current_page_item_count = len(current_page.items)
-            read_items += current_page_item_count
-            offset += current_page_item_count
-
-            if current_page_item_count < cache_size:
-                break
+        result = self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        return ListOfActorsResponse.model_validate(result).data
 
     def create(
         self,
@@ -186,14 +134,7 @@ class ActorCollectionClient(ResourceClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        response = self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(actor_representation, remove_empty_dicts=True),
-        )
-
-        result = response_to_dict(response)
+        result = self._create(filter_none_values(actor_representation, remove_empty_dicts=True))
         return ActorResponse.model_validate(result).data
 
 
@@ -227,60 +168,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='GET',
-            params=self._build_params(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by),
-        )
-        response_as_dict = response_to_dict(response)
-        return ListOfActorsResponse.model_validate(response_as_dict).data
-
-    async def iterate(
-        self,
-        *,
-        my: bool | None = None,
-        limit: int | None = None,
-        desc: bool | None = None,
-    ) -> AsyncIterator[ActorShort]:
-        """Iterate over the Actors the user has created or used.
-
-        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
-
-        Args:
-            my: If True, will return only Actors which the user has created themselves.
-            limit: Maximum number of Actors to return. By default there is no limit.
-            desc: Whether to sort the Actors in descending order based on their creation date.
-
-        Yields:
-            An Actor from the collection.
-        """
-        cache_size = 1000
-        read_items = 0
-        offset = 0
-
-        while True:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_items == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_items)
-
-            current_page = await self.list(
-                my=my,
-                limit=effective_limit,
-                offset=offset,
-                desc=desc,
-            )
-
-            for item in current_page.items:
-                yield item
-
-            current_page_item_count = len(current_page.items)
-            read_items += current_page_item_count
-            offset += current_page_item_count
-
-            if current_page_item_count < cache_size:
-                break
+        result = await self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        return ListOfActorsResponse.model_validate(result).data
 
     async def create(
         self,
@@ -372,12 +261,5 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        response = await self._http_client.call(
-            url=self._build_url(),
-            method='POST',
-            params=self._build_params(),
-            json=filter_none_values(actor_representation, remove_empty_dicts=True),
-        )
-
-        result = response_to_dict(response)
+        result = await self._create(filter_none_values(actor_representation, remove_empty_dicts=True))
         return ActorResponse.model_validate(result).data

@@ -94,7 +94,7 @@ def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> No
         rq_client.batch_add_requests(requests=requests)
 
 
-async def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
+def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
     server_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(
         token='placeholder_token',

@@ -11,23 +11,15 @@ clients_path = Path(__file__).parent.resolve() / '../src/apify_client'
 
 # Go through every Python file in that directory
 for client_source_path in clients_path.glob('**/*.py'):
-    # Skip _http_clients package - sync and async are in separate files there
-    if '_http_clients' in str(client_source_path):
-        continue
-
     with open(client_source_path, 'r+', encoding='utf-8') as source_file:
         # Read the source file and parse the code using Red Baron
         red = RedBaron(source_code=source_file.read())
 
         # Find all classes which end with "ClientAsync" (there should be at most 1 per file)
         async_class = red.find('ClassNode', name=re.compile('.*ClientAsync$'))
-        if not async_class:
-            continue
 
         # Find the corresponding sync classes (same name, but without -Async)
         sync_class = red.find('ClassNode', name=async_class.name.replace('ClientAsync', 'Client'))
-        if not sync_class:
-            continue
 
         # Go through all methods in the async class
         for async_method in async_class.find_all('DefNode'):

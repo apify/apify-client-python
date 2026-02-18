@@ -101,3 +101,16 @@ jobs:
       # Publishes the package to PyPI using PyPA official GitHub action with OIDC authentication.
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  doc_release:
+    name: Doc release
+    needs: [changelog_update, pypi_publish]
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/_release_docs.yaml
+    with:
+      # Use the ref from the changelog update to include the updated changelog.
+      ref: ${{ needs.changelog_update.outputs.changelog_commitish }}
+    secrets: inherit

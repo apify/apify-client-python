@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.4.2 - **not yet released**
+## [2.5.0](https://github.com/apify/apify-client-python/releases/tag/v2.5.0) (2026-02-18)
 
 ### 🚀 Features
 
@@ -19,7 +18,6 @@ All notable changes to this project will be documented in this file.
 - Retry on all impit.HTTPError exceptions, not just specific subclasses ([#624](https://github.com/apify/apify-client-python/pull/624)) ([03b0e9c](https://github.com/apify/apify-client-python/commit/03b0e9c8c82ae58e17c6e068c149aedff178c397)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.4.1](https://github.com/apify/apify-client-python/releases/tag/v2.4.1) (2026-01-30)
 
 ### 🐛 Bug Fixes

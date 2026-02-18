@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Remove erroneous async keyword from sync ActorClient.default_build ([#620](https://github.com/apify/apify-client-python/pull/620)) ([b2b1103](https://github.com/apify/apify-client-python/commit/b2b110364ddd97640268fe6b6727273d0e1739d5)) by [@vdusek](https://github.com/vdusek)
 - Use explicit None checks for client config to respect zero values ([#623](https://github.com/apify/apify-client-python/pull/623)) ([416fd98](https://github.com/apify/apify-client-python/commit/416fd98d54b5ba9535afe157dcc354464c902ed5)) by [@vdusek](https://github.com/vdusek)
 - Correct boolean parsing of pagination desc header in list_items ([#621](https://github.com/apify/apify-client-python/pull/621)) ([9ca9d44](https://github.com/apify/apify-client-python/commit/9ca9d4415f287705b0eb2528b69fa31232090691)) by [@vdusek](https://github.com/vdusek)
+- Retry on all impit.HTTPError exceptions, not just specific subclasses ([#624](https://github.com/apify/apify-client-python/pull/624)) ([03b0e9c](https://github.com/apify/apify-client-python/commit/03b0e9c8c82ae58e17c6e068c149aedff178c397)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

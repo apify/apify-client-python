@@ -24,6 +24,11 @@ jobs:
 
   integration_tests:
     name: Integration tests
+    if: >-
+      ${{
+        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'apify') ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/master')
+      }}
     uses: apify/workflows/.github/workflows/python_integration_tests.yaml@main
     secrets: inherit
     with:

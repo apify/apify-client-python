@@ -63,11 +63,9 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._build_params(),
             )
-            response_as_dict = response_to_dict(response)
-            if response_as_dict is None:
-                return None
+            result = response_to_dict(response)
             # API returns {data: {...}} structure
-            return MonthlyUsage.model_validate(response_as_dict.get('data', {}))
+            return MonthlyUsage.model_validate(result.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -80,10 +78,10 @@ class UserClient(ResourceClient):
         It is the same information which is available on the account's Limits page. The returned data includes
         the current usage cycle, a summary of the account's limits, and the current usage.
 
-        https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
+        https://docs.apify.com/api/v2#/reference/users/account-limits/get-account-limits
 
         Returns:
-            The retrieved request, or None, if it did not exist.
+            The account limits, or None, if they could not be retrieved.
         """
         try:
             response = self._http_client.call(
@@ -91,11 +89,9 @@ class UserClient(ResourceClient):
                 method='GET',
                 params=self._build_params(),
             )
-            response_as_dict = response_to_dict(response)
-            if response_as_dict is None:
-                return None
+            result = response_to_dict(response)
             # API returns {data: {...}} structure
-            return AccountLimits.model_validate(response_as_dict.get('data', {}))
+            return AccountLimits.model_validate(result.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -168,11 +164,9 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._build_params(),
             )
-            response_as_dict = response_to_dict(response)
-            if response_as_dict is None:
-                return None
+            result = response_to_dict(response)
             # API returns {data: {...}} structure
-            return MonthlyUsage.model_validate(response_as_dict.get('data', {}))
+            return MonthlyUsage.model_validate(result.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -185,10 +179,10 @@ class UserClientAsync(ResourceClientAsync):
         It is the same information which is available on the account's Limits page. The returned data includes
         the current usage cycle, a summary of the account's limits, and the current usage.
 
-        https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
+        https://docs.apify.com/api/v2#/reference/users/account-limits/get-account-limits
 
         Returns:
-            The retrieved request, or None, if it did not exist.
+            The account limits, or None, if they could not be retrieved.
         """
         try:
             response = await self._http_client.call(
@@ -196,11 +190,9 @@ class UserClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._build_params(),
             )
-            response_as_dict = response_to_dict(response)
-            if response_as_dict is None:
-                return None
+            result = response_to_dict(response)
             # API returns {data: {...}} structure
-            return AccountLimits.model_validate(response_as_dict.get('data', {}))
+            return AccountLimits.model_validate(result.get('data', {}))
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

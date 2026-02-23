@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
@@ -177,10 +177,7 @@ class DatasetClient(ResourceClient):
         )
 
         # When using signature, API returns items as list directly
-        try:
-            items = response_to_list(response)
-        except ValueError:
-            items = cast('list', response_to_dict(response))
+        items = response_to_list(response)
 
         return DatasetItemsPage(
             items=items,
@@ -606,8 +603,8 @@ class DatasetClient(ResourceClient):
                 params=self._build_params(),
                 timeout=FAST_OPERATION_TIMEOUT,
             )
-            result = response.json()
-            return DatasetStatisticsResponse.model_validate(result).data if result is not None else None
+            result = response_to_dict(response)
+            return DatasetStatisticsResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -796,10 +793,7 @@ class DatasetClientAsync(ResourceClientAsync):
         )
 
         # When using signature, API returns items as list directly
-        try:
-            items = response_to_list(response)
-        except ValueError:
-            items = cast('list', response_to_dict(response))
+        items = response_to_list(response)
 
         return DatasetItemsPage(
             items=items,
@@ -1131,8 +1125,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 params=self._build_params(),
                 timeout=FAST_OPERATION_TIMEOUT,
             )
-            result = response.json()
-            return DatasetStatisticsResponse.model_validate(result).data if result is not None else None
+            result = response_to_dict(response)
+            return DatasetStatisticsResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

@@ -32,24 +32,27 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
         timed_out_run = cast('Run', result)
         created_runs.append(timed_out_run)
 
-    run_collection = client.actor(HELLO_WORLD_ACTOR).runs()
+    try:
+        run_collection = client.actor(HELLO_WORLD_ACTOR).runs()
 
-    result = await maybe_await(run_collection.list(status=[ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT]))
-    multiple_status_runs = cast('ListOfRuns', result)
+        result = await maybe_await(run_collection.list(status=[ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT]))
+        multiple_status_runs = cast('ListOfRuns', result)
 
-    result = await maybe_await(run_collection.list(status=ActorJobStatus.SUCCEEDED))
-    single_status_runs = cast('ListOfRuns', result)
+        result = await maybe_await(run_collection.list(status=ActorJobStatus.SUCCEEDED))
+        single_status_runs = cast('ListOfRuns', result)
 
-    assert multiple_status_runs is not None
-    assert single_status_runs is not None
+        assert multiple_status_runs is not None
+        assert single_status_runs is not None
 
-    assert all(run.status in [ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT] for run in multiple_status_runs.items)
-    assert all(run.status == ActorJobStatus.SUCCEEDED for run in single_status_runs.items)
-
-    for run in created_runs:
-        run_id = run.id
-        if isinstance(run_id, str):
-            await maybe_await(client.run(run_id).delete())
+        assert all(
+            run.status in [ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT] for run in multiple_status_runs.items
+        )
+        assert all(run.status == ActorJobStatus.SUCCEEDED for run in single_status_runs.items)
+    finally:
+        for run in created_runs:
+            run_id = run.id
+            if isinstance(run_id, str):
+                await maybe_await(client.run(run_id).delete())
 
 
 async def test_run_collection_list_accept_date_range(client: ApifyClient | ApifyClientAsync) -> None:
@@ -66,20 +69,21 @@ async def test_run_collection_list_accept_date_range(client: ApifyClient | Apify
         timed_out_run = cast('Run', result)
         created_runs.append(timed_out_run)
 
-    run_collection = client.runs()
+    try:
+        run_collection = client.runs()
 
-    date_obj = datetime(2100, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    iso_date_str = date_obj.strftime('%Y-%m-%dT%H:%M:%SZ')
+        date_obj = datetime(2100, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        iso_date_str = date_obj.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    # Here we test that date fields can be passed both as datetime objects and as ISO 8601 strings
-    await maybe_await(run_collection.list(started_before=date_obj, started_after=date_obj))
+        # Here we test that date fields can be passed both as datetime objects and as ISO 8601 strings
+        await maybe_await(run_collection.list(started_before=date_obj, started_after=date_obj))
 
-    await maybe_await(run_collection.list(started_before=iso_date_str, started_after=iso_date_str))
-
-    for run in created_runs:
-        run_id = run.id
-        if isinstance(run_id, str):
-            await maybe_await(client.run(run_id).delete())
+        await maybe_await(run_collection.list(started_before=iso_date_str, started_after=iso_date_str))
+    finally:
+        for run in created_runs:
+            run_id = run.id
+            if isinstance(run_id, str):
+                await maybe_await(client.run(run_id).delete())
 
 
 async def test_run_get_and_delete(client: ApifyClient | ApifyClientAsync) -> None:
@@ -116,15 +120,17 @@ async def test_run_dataset(client: ApifyClient | ApifyClientAsync) -> None:
 
     # Access run's dataset
     run_client = client.run(run.id)
-    dataset_client = run_client.dataset()
 
-    # Get dataset info
-    result = await maybe_await(dataset_client.get())
-    dataset = cast('Dataset', result)
-    assert dataset is not None
-    assert dataset.id == run.default_dataset_id
+    try:
+        dataset_client = run_client.dataset()
 
-    await maybe_await(run_client.delete())
+        # Get dataset info
+        result = await maybe_await(dataset_client.get())
+        dataset = cast('Dataset', result)
+        assert dataset is not None
+        assert dataset.id == run.default_dataset_id
+    finally:
+        await maybe_await(run_client.delete())
 
 
 async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> None:
@@ -137,15 +143,17 @@ async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> No
 
     # Access run's key-value store
     run_client = client.run(run.id)
-    kvs_client = run_client.key_value_store()
 
-    # Get KVS info
-    result = await maybe_await(kvs_client.get())
-    kvs = cast('KeyValueStore', result)
-    assert kvs is not None
-    assert kvs.id == run.default_key_value_store_id
+    try:
+        kvs_client = run_client.key_value_store()
 
-    await maybe_await(run_client.delete())
+        # Get KVS info
+        result = await maybe_await(kvs_client.get())
+        kvs = cast('KeyValueStore', result)
+        assert kvs is not None
+        assert kvs.id == run.default_key_value_store_id
+    finally:
+        await maybe_await(run_client.delete())
 
 
 async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None:
@@ -158,15 +166,17 @@ async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None
 
     # Access run's request queue
     run_client = client.run(run.id)
-    rq_client = run_client.request_queue()
 
-    # Get RQ info
-    result = await maybe_await(rq_client.get())
-    rq = cast('RequestQueue', result)
-    assert rq is not None
-    assert rq.id == run.default_request_queue_id
+    try:
+        rq_client = run_client.request_queue()
 
-    await maybe_await(run_client.delete())
+        # Get RQ info
+        result = await maybe_await(rq_client.get())
+        rq = cast('RequestQueue', result)
+        assert rq is not None
+        assert rq.id == run.default_request_queue_id
+    finally:
+        await maybe_await(run_client.delete())
 
 
 async def test_run_abort(client: ApifyClient | ApifyClientAsync) -> None:
@@ -180,20 +190,23 @@ async def test_run_abort(client: ApifyClient | ApifyClientAsync) -> None:
 
     # Abort the run
     run_client = client.run(run.id)
-    result = await maybe_await(run_client.abort())
-    aborted_run = cast('Run', result)
 
-    assert aborted_run is not None
-    # Status should be ABORTING or ABORTED (or SUCCEEDED if too fast)
-    assert aborted_run.status.value in ['ABORTING', 'ABORTED', 'SUCCEEDED']
+    try:
+        result = await maybe_await(run_client.abort())
+        aborted_run = cast('Run', result)
 
-    # Wait for abort to complete
-    result = await maybe_await(run_client.wait_for_finish())
-    final_run = cast('Run', result)
-    assert final_run is not None
-    assert final_run.status.value in ['ABORTED', 'SUCCEEDED']
+        assert aborted_run is not None
+        # Status should be ABORTING or ABORTED (or SUCCEEDED if too fast)
+        assert aborted_run.status.value in ['ABORTING', 'ABORTED', 'SUCCEEDED']
 
-    await maybe_await(run_client.delete())
+        # Wait for abort to complete
+        result = await maybe_await(run_client.wait_for_finish())
+        final_run = cast('Run', result)
+        assert final_run is not None
+        assert final_run.status.value in ['ABORTED', 'SUCCEEDED']
+    finally:
+        await maybe_await(run_client.wait_for_finish())
+        await maybe_await(run_client.delete())
 
 
 async def test_run_update(client: ApifyClient | ApifyClientAsync) -> None:

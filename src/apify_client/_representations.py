@@ -174,6 +174,7 @@ def get_actor_repr(
 
 
 def get_task_repr(
+    *,
     actor_id: str | None = None,
     name: str | None = None,
     task_input: dict | None = None,
@@ -187,7 +188,6 @@ def get_task_repr(
     actor_standby_idle_timeout: timedelta | None = None,
     actor_standby_build: str | None = None,
     actor_standby_memory_mbytes: int | None = None,
-    *,
     restart_on_error: bool | None = None,
 ) -> dict:
     """Get the dictionary representation of a task."""
@@ -240,13 +240,13 @@ def get_actor_version_repr(
 
 
 def get_schedule_repr(
+    *,
     cron_expression: str | None = None,
     name: str | None = None,
     actions: list[dict] | None = None,
     description: str | None = None,
     timezone: str | None = None,
     title: str | None = None,
-    *,
     is_enabled: bool | None = None,
     is_exclusive: bool | None = None,
 ) -> dict:
@@ -293,7 +293,7 @@ def get_webhook_repr(
         ),
     }
 
-    if actor_run_id is not None:
+    if actor_run_id is not None and is_ad_hoc is None:
         webhook['isAdHoc'] = True
 
     if event_types is not None:

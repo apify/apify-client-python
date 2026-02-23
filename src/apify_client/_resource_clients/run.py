@@ -183,8 +183,8 @@ class RunClient(ResourceClient):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     def resurrect(
         self,
@@ -235,8 +235,8 @@ class RunClient(ResourceClient):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -250,8 +250,8 @@ class RunClient(ResourceClient):
             url=self._build_url('reboot'),
             method='POST',
         )
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     def dataset(self) -> DatasetClient:
         """Get the client for the default dataset of the Actor run.
@@ -566,8 +566,8 @@ class RunClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     async def resurrect(
         self,
@@ -618,8 +618,8 @@ class RunClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     async def reboot(self) -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
@@ -633,8 +633,8 @@ class RunClientAsync(ResourceClientAsync):
             url=self._build_url('reboot'),
             method='POST',
         )
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     def dataset(self) -> DatasetClientAsync:
         """Get the client for the default dataset of the Actor run.

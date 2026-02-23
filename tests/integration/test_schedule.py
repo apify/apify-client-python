@@ -26,23 +26,24 @@ async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -
         )
     )
     created_schedule = cast('Schedule', result)
-    assert created_schedule is not None
-    assert created_schedule.id is not None
-    assert created_schedule.name == schedule_name
-    assert created_schedule.cron_expression == '0 0 * * *'
-    assert created_schedule.is_enabled is False
-    assert created_schedule.is_exclusive is False
-
-    # Get the same schedule
     schedule_client = client.schedule(created_schedule.id)
-    result = await maybe_await(schedule_client.get())
-    retrieved_schedule = cast('Schedule', result)
-    assert retrieved_schedule is not None
-    assert retrieved_schedule.id == created_schedule.id
-    assert retrieved_schedule.name == schedule_name
 
-    # Cleanup
-    await maybe_await(schedule_client.delete())
+    try:
+        assert created_schedule is not None
+        assert created_schedule.id is not None
+        assert created_schedule.name == schedule_name
+        assert created_schedule.cron_expression == '0 0 * * *'
+        assert created_schedule.is_enabled is False
+        assert created_schedule.is_exclusive is False
+
+        # Get the same schedule
+        result = await maybe_await(schedule_client.get())
+        retrieved_schedule = cast('Schedule', result)
+        assert retrieved_schedule is not None
+        assert retrieved_schedule.id == created_schedule.id
+        assert retrieved_schedule.name == schedule_name
+    finally:
+        await maybe_await(schedule_client.delete())
 
 
 async def test_schedule_update(client: ApifyClient | ApifyClientAsync) -> None:
@@ -62,30 +63,30 @@ async def test_schedule_update(client: ApifyClient | ApifyClientAsync) -> None:
     created_schedule = cast('Schedule', result)
     schedule_client = client.schedule(created_schedule.id)
 
-    # Update the schedule
-    result = await maybe_await(
-        schedule_client.update(
-            name=new_name,
-            cron_expression='0 12 * * *',
-            is_enabled=True,
+    try:
+        # Update the schedule
+        result = await maybe_await(
+            schedule_client.update(
+                name=new_name,
+                cron_expression='0 12 * * *',
+                is_enabled=True,
+            )
         )
-    )
-    updated_schedule = cast('Schedule', result)
-    assert updated_schedule is not None
-    assert updated_schedule.name == new_name
-    assert updated_schedule.cron_expression == '0 12 * * *'
-    assert updated_schedule.is_enabled is True
-    assert updated_schedule.id == created_schedule.id
+        updated_schedule = cast('Schedule', result)
+        assert updated_schedule is not None
+        assert updated_schedule.name == new_name
+        assert updated_schedule.cron_expression == '0 12 * * *'
+        assert updated_schedule.is_enabled is True
+        assert updated_schedule.id == created_schedule.id
 
-    # Verify the update persisted
-    result = await maybe_await(schedule_client.get())
-    retrieved_schedule = cast('Schedule', result)
-    assert retrieved_schedule is not None
-    assert retrieved_schedule.name == new_name
-    assert retrieved_schedule.cron_expression == '0 12 * * *'
-
-    # Cleanup
-    await maybe_await(schedule_client.delete())
+        # Verify the update persisted
+        result = await maybe_await(schedule_client.get())
+        retrieved_schedule = cast('Schedule', result)
+        assert retrieved_schedule is not None
+        assert retrieved_schedule.name == new_name
+        assert retrieved_schedule.cron_expression == '0 12 * * *'
+    finally:
+        await maybe_await(schedule_client.delete())
 
 
 async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
@@ -113,20 +114,20 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
     )
     created_2 = cast('Schedule', result)
 
-    # List schedules
-    result = await maybe_await(client.schedules().list(limit=100))
-    schedules_page = cast('ListOfSchedules', result)
-    assert schedules_page is not None
-    assert schedules_page.items is not None
+    try:
+        # List schedules
+        result = await maybe_await(client.schedules().list(limit=100))
+        schedules_page = cast('ListOfSchedules', result)
+        assert schedules_page is not None
+        assert schedules_page.items is not None
 
-    # Verify our schedules are in the list
-    schedule_ids = [s.id for s in schedules_page.items]
-    assert created_1.id in schedule_ids
-    assert created_2.id in schedule_ids
-
-    # Cleanup
-    await maybe_await(client.schedule(created_1.id).delete())
-    await maybe_await(client.schedule(created_2.id).delete())
+        # Verify our schedules are in the list
+        schedule_ids = [s.id for s in schedules_page.items]
+        assert created_1.id in schedule_ids
+        assert created_2.id in schedule_ids
+    finally:
+        await maybe_await(client.schedule(created_1.id).delete())
+        await maybe_await(client.schedule(created_2.id).delete())
 
 
 async def test_schedule_delete(client: ApifyClient | ApifyClientAsync) -> None:

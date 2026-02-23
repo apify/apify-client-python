@@ -67,8 +67,8 @@ class RedirectLogFormatter(logging.Formatter):
             Formatted log message with colored logger name prefix.
         """
         formatted_logger_name = f'{Fore.CYAN}[{record.name}]{Style.RESET_ALL}'
-        message = record.getMessage()
-        return f'{formatted_logger_name} -> {message}'
+        formatted_message = super().format(record)
+        return f'{formatted_logger_name} -> {formatted_message}'
 
 
 def create_redirect_logger(name: str) -> logging.Logger:

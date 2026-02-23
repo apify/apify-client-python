@@ -129,10 +129,10 @@ class ApifyClient:
         """Collector for client request statistics."""
 
         self._http_client = HttpClient(
-            token=token,
-            timeout=timeout or DEFAULT_TIMEOUT,
-            max_retries=max_retries or DEFAULT_MAX_RETRIES,
-            min_delay_between_retries=min_delay_between_retries or DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+            token=self._token,
+            timeout=timeout,
+            max_retries=max_retries,
+            min_delay_between_retries=min_delay_between_retries,
             statistics=self._statistics,
             headers=headers,
         )
@@ -390,10 +390,10 @@ class ApifyClientAsync:
         """Collector for client request statistics."""
 
         self._http_client = HttpClientAsync(
-            token=token,
-            timeout=timeout or DEFAULT_TIMEOUT,
-            max_retries=max_retries or DEFAULT_MAX_RETRIES,
-            min_delay_between_retries=min_delay_between_retries or DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+            token=self._token,
+            timeout=timeout,
+            max_retries=max_retries,
+            min_delay_between_retries=min_delay_between_retries,
             statistics=self._statistics,
             headers=headers,
         )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from apify_client._models import Run, RunOrigin, RunResponse, Task, TaskResponse
 from apify_client._representations import get_task_repr
@@ -10,6 +10,7 @@ from apify_client._utils import (
     encode_webhook_list_to_base64,
     enum_to_value,
     filter_none_values,
+    response_to_dict,
     to_seconds,
 )
 from apify_client.errors import ApifyApiError
@@ -186,7 +187,7 @@ class TaskClient(ResourceClient):
             params=request_params,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
     def call(
@@ -261,7 +262,7 @@ class TaskClient(ResourceClient):
                 method='GET',
                 params=self._build_params(),
             )
-            return cast('dict', response.json())
+            return response_to_dict(response)
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -283,7 +284,7 @@ class TaskClient(ResourceClient):
             params=self._build_params(),
             json=task_input,
         )
-        return cast('dict', response.json())
+        return response_to_dict(response)
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
@@ -307,11 +308,8 @@ class TaskClient(ResourceClient):
         return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
-            base_url=self._resource_url,
-            public_base_url=self._public_base_url,
-            http_client=self._http_client,
-            client_registry=self._client_registry,
             params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
+            **self._base_client_kwargs,
         )
 
     def webhooks(self) -> WebhookCollectionClient:
@@ -477,7 +475,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
     async def call(
@@ -551,7 +549,7 @@ class TaskClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._build_params(),
             )
-            return cast('dict', response.json())
+            return response_to_dict(response)
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
@@ -573,7 +571,7 @@ class TaskClientAsync(ResourceClientAsync):
             params=self._build_params(),
             json=task_input,
         )
-        return cast('dict', response.json())
+        return response_to_dict(response)
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""
@@ -597,11 +595,8 @@ class TaskClientAsync(ResourceClientAsync):
         return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
-            base_url=self._resource_url,
-            public_base_url=self._public_base_url,
-            http_client=self._http_client,
-            client_registry=self._client_registry,
             params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
+            **self._base_client_kwargs,
         )
 
     def webhooks(self) -> WebhookCollectionClientAsync:

@@ -96,10 +96,8 @@ class ScheduleClient(ResourceClient):
                 method='GET',
                 params=self._build_params(),
             )
-            response_as_dict = response_to_dict(response)
-            if response_as_dict is None:
-                return None
-            return ScheduleLogResponse.model_validate(response_as_dict).data
+            result = response_to_dict(response)
+            return ScheduleLogResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 
@@ -193,10 +191,8 @@ class ScheduleClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._build_params(),
             )
-            response_as_dict = response_to_dict(response)
-            if response_as_dict is None:
-                return None
-            return ScheduleLogResponse.model_validate(response_as_dict).data
+            result = response_to_dict(response)
+            return ScheduleLogResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
 

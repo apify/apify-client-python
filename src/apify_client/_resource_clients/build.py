@@ -64,7 +64,7 @@ class BuildClient(ResourceClient):
         result = response_to_dict(response)
         return BuildResponse.model_validate(result).data
 
-    def get_open_api_definition(self) -> dict | None:
+    def get_open_api_definition(self) -> dict:
         """Return OpenAPI definition of the Actor's build.
 
         https://docs.apify.com/api/v2/actor-build-openapi-json-get
@@ -76,10 +76,7 @@ class BuildClient(ResourceClient):
             url=self._build_url('openapi.json'),
             method='GET',
         )
-
-        response_as_dict: dict = response.json()
-
-        return response_as_dict
+        return response_to_dict(response)
 
     def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.
@@ -164,7 +161,7 @@ class BuildClientAsync(ResourceClientAsync):
         """
         await self._delete()
 
-    async def get_open_api_definition(self) -> dict | None:
+    async def get_open_api_definition(self) -> dict:
         """Return OpenAPI definition of the Actor's build.
 
         https://docs.apify.com/api/v2/actor-build-openapi-json-get
@@ -176,10 +173,7 @@ class BuildClientAsync(ResourceClientAsync):
             url=self._build_url('openapi.json'),
             method='GET',
         )
-
-        response_as_dict: dict = response.json()
-
-        return response_as_dict
+        return response_to_dict(response)
 
     async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
         """Wait asynchronously until the build finishes or the server times out.

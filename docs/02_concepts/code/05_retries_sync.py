@@ -5,7 +5,7 @@ from apify_client import ApifyClient
 TOKEN = 'MY-APIFY-TOKEN'
 
 
-async def main() -> None:
+def main() -> None:
     apify_client = ApifyClient(
         token=TOKEN,
         max_retries=8,

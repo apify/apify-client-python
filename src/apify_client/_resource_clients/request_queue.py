@@ -4,7 +4,6 @@ import asyncio
 import logging
 import math
 from collections.abc import Iterable
-from datetime import timedelta
 from queue import Queue
 from typing import TYPE_CHECKING, Any
 
@@ -36,7 +35,7 @@ from apify_client._models import (
     UnlockRequestsResult,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, to_seconds
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -131,7 +130,7 @@ class RequestQueueClient(ResourceClient):
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return HeadResponse.model_validate(result).data
 
     def list_and_lock_head(self, *, lock_duration: timedelta, limit: int | None = None) -> LockedRequestQueueHead:
@@ -159,7 +158,7 @@ class RequestQueueClient(ResourceClient):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return HeadAndLockResponse.model_validate(result).data
 
     def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
@@ -184,7 +183,7 @@ class RequestQueueClient(ResourceClient):
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return AddRequestResponse.model_validate(result).data
 
     def get_request(self, request_id: str) -> Request | None:
@@ -205,7 +204,7 @@ class RequestQueueClient(ResourceClient):
                 params=self._build_params(),
                 timeout=FAST_OPERATION_TIMEOUT,
             )
-            result = response.json()
+            result = response_to_dict(response)
             return RequestResponse.model_validate(result).data
 
         except ApifyApiError as exc:
@@ -237,7 +236,7 @@ class RequestQueueClient(ResourceClient):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return AddRequestResponse.model_validate(result).data
 
     def delete_request(self, request_id: str) -> None:
@@ -288,7 +287,7 @@ class RequestQueueClient(ResourceClient):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return ProlongRequestLockResponse.model_validate(result).data
 
     def delete_request_lock(self, request_id: str, *, forefront: bool | None = None) -> None:
@@ -378,8 +377,8 @@ class RequestQueueClient(ResourceClient):
                 timeout=STANDARD_OPERATION_TIMEOUT,
             )
 
-            response_parsed = response.json()
-            batch_response = BatchAddResponse.model_validate(response_parsed)
+            result = response_to_dict(response)
+            batch_response = BatchAddResponse.model_validate(result)
             processed_requests.extend(batch_response.data.processed_requests)
             unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
@@ -408,7 +407,7 @@ class RequestQueueClient(ResourceClient):
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return BatchDeleteResponse.model_validate(result).data
 
     def list_requests(
@@ -434,7 +433,7 @@ class RequestQueueClient(ResourceClient):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return ListOfRequestsResponse.model_validate(result).data
 
     def unlock_requests(self: RequestQueueClient) -> UnlockRequestsResult:
@@ -453,7 +452,7 @@ class RequestQueueClient(ResourceClient):
             params=request_params,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return UnlockRequestsResponse.model_validate(result).data
 
 
@@ -541,7 +540,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return HeadResponse.model_validate(result).data
 
     async def list_and_lock_head(self, *, lock_duration: timedelta, limit: int | None = None) -> LockedRequestQueueHead:
@@ -569,7 +568,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return HeadAndLockResponse.model_validate(result).data
 
     async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
@@ -594,7 +593,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return AddRequestResponse.model_validate(result).data
 
     async def get_request(self, request_id: str) -> Request | None:
@@ -615,13 +614,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 params=self._build_params(),
                 timeout=FAST_OPERATION_TIMEOUT,
             )
-            result = response.json()
-            validated_response = RequestResponse.model_validate(result) if result is not None else None
+            result = response_to_dict(response)
+            return RequestResponse.model_validate(result).data
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
             return None
-        else:
-            return validated_response.data if validated_response is not None else None
 
     async def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
         """Update a request in the queue.
@@ -647,7 +644,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return AddRequestResponse.model_validate(result).data
 
     async def delete_request(self, request_id: str) -> None:
@@ -696,7 +693,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return ProlongRequestLockResponse.model_validate(result).data
 
     async def delete_request_lock(
@@ -753,8 +750,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     timeout=STANDARD_OPERATION_TIMEOUT,
                 )
 
-                response_parsed = response.json()
-                batch_response = BatchAddResponse.model_validate(response_parsed)
+                result = response_to_dict(response)
+                batch_response = BatchAddResponse.model_validate(result)
                 processed_requests.extend(batch_response.data.processed_requests)
                 unprocessed_requests.extend(batch_response.data.unprocessed_requests)
 
@@ -868,7 +865,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             json=requests,
             timeout=FAST_OPERATION_TIMEOUT,
         )
-        result = response.json()
+        result = response_to_dict(response)
         return BatchDeleteResponse.model_validate(result).data
 
     async def list_requests(
@@ -894,7 +891,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return ListOfRequestsResponse.model_validate(result).data
 
     async def unlock_requests(self: RequestQueueClientAsync) -> UnlockRequestsResult:
@@ -913,5 +910,5 @@ class RequestQueueClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return UnlockRequestsResponse.model_validate(result).data

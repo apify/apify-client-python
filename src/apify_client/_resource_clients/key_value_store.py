@@ -21,6 +21,7 @@ from apify_client._utils import (
     create_storage_content_signature,
     encode_key_value_store_record_value,
     filter_none_values,
+    response_to_dict,
 )
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
@@ -153,7 +154,7 @@ class KeyValueStoreClient(ResourceClient):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return ListOfKeysResponse.model_validate(result).data
 
     def iterate_keys(
@@ -537,7 +538,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response.json()
+        result = response_to_dict(response)
         return ListOfKeysResponse.model_validate(result).data
 
     async def iterate_keys(

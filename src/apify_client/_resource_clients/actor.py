@@ -258,8 +258,8 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     def call(
         self,
@@ -383,7 +383,8 @@ class ActorClient(ResourceClient):
             params=request_params,
         )
 
-        return BuildResponse.model_validate(response_to_dict(response)).data
+        result = response_to_dict(response)
+        return BuildResponse.model_validate(result).data
 
     def builds(self) -> BuildCollectionClient:
         """Retrieve a client for the builds of this Actor."""
@@ -420,10 +421,10 @@ class ActorClient(ResourceClient):
         )
 
         response = self._http_client.call(url=self._build_url('builds/default'), method='GET', params=request_params)
-        response_as_dict = response_to_dict(response)
+        result = response_to_dict(response)
 
         return self._client_registry.build_client(
-            resource_id=response_as_dict['data']['id'],
+            resource_id=result['data']['id'],
             base_url=self._base_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,
@@ -716,8 +717,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return RunResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return RunResponse.model_validate(result).data
 
     async def call(
         self,
@@ -845,8 +846,8 @@ class ActorClientAsync(ResourceClientAsync):
             params=request_params,
         )
 
-        response_as_dict = response_to_dict(response)
-        return BuildResponse.model_validate(response_as_dict).data
+        result = response_to_dict(response)
+        return BuildResponse.model_validate(result).data
 
     def builds(self) -> BuildCollectionClientAsync:
         """Retrieve a client for the builds of this Actor."""
@@ -887,10 +888,10 @@ class ActorClientAsync(ResourceClientAsync):
             method='GET',
             params=request_params,
         )
-        response_as_dict = response_to_dict(response)
+        result = response_to_dict(response)
 
         return self._client_registry.build_client(
-            resource_id=response_as_dict['data']['id'],
+            resource_id=result['data']['id'],
             base_url=self._base_url,
             public_base_url=self._public_base_url,
             http_client=self._http_client,

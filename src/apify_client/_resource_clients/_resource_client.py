@@ -98,7 +98,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         Returns:
             Complete URL with optional path and query string.
         """
-        url = f'{self._resource_url}/{path}' if path else self._resource_url
+        url = f'{self._resource_url}/{path}' if path is not None else self._resource_url
 
         if public:
             if not url.startswith(self._base_url):
@@ -254,7 +254,7 @@ class ResourceClient(ResourceClientBase):
                 remaining_secs = max(0, int(to_seconds(deadline - datetime.now(timezone.utc))))
                 wait_for_finish = remaining_secs
             else:
-                wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH)
+                wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH, as_int=True)
 
             try:
                 response = self._http_client.call(
@@ -262,8 +262,8 @@ class ResourceClient(ResourceClientBase):
                     method='GET',
                     params={**params, 'waitForFinish': wait_for_finish},
                 )
-                response_as_dict = response_to_dict(response)
-                actor_job_response = ActorJobResponse.model_validate(response_as_dict)
+                result = response_to_dict(response)
+                actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
@@ -420,7 +420,7 @@ class ResourceClientAsync(ResourceClientBase):
                 remaining_secs = max(0, int(to_seconds(deadline - datetime.now(timezone.utc))))
                 wait_for_finish = remaining_secs
             else:
-                wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH)
+                wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH, as_int=True)
 
             try:
                 response = await self._http_client.call(
@@ -428,8 +428,8 @@ class ResourceClientAsync(ResourceClientBase):
                     method='GET',
                     params={**params, 'waitForFinish': wait_for_finish},
                 )
-                response_as_dict = response_to_dict(response)
-                actor_job_response = ActorJobResponse.model_validate(response_as_dict)
+                result = response_to_dict(response)
+                actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES

@@ -33,21 +33,22 @@ async def test_task_create_and_get(client: ApifyClient | ApifyClientAsync) -> No
         )
     )
     created_task = cast('Task', result)
-    assert created_task is not None
-    assert created_task.id is not None
-    assert created_task.name == task_name
-    assert created_task.act_id == actor_id
-
-    # Get the same task
     task_client = client.task(created_task.id)
-    result = await maybe_await(task_client.get())
-    retrieved_task = cast('Task', result)
-    assert retrieved_task is not None
-    assert retrieved_task.id == created_task.id
-    assert retrieved_task.name == task_name
 
-    # Cleanup
-    await maybe_await(task_client.delete())
+    try:
+        assert created_task is not None
+        assert created_task.id is not None
+        assert created_task.name == task_name
+        assert created_task.act_id == actor_id
+
+        # Get the same task
+        result = await maybe_await(task_client.get())
+        retrieved_task = cast('Task', result)
+        assert retrieved_task is not None
+        assert retrieved_task.id == created_task.id
+        assert retrieved_task.name == task_name
+    finally:
+        await maybe_await(task_client.delete())
 
 
 async def test_task_update(client: ApifyClient | ApifyClientAsync) -> None:
@@ -70,26 +71,26 @@ async def test_task_update(client: ApifyClient | ApifyClientAsync) -> None:
     created_task = cast('Task', result)
     task_client = client.task(created_task.id)
 
-    # Update the task
-    result = await maybe_await(
-        task_client.update(
-            name=new_name,
-            timeout=timedelta(seconds=300),
+    try:
+        # Update the task
+        result = await maybe_await(
+            task_client.update(
+                name=new_name,
+                timeout=timedelta(seconds=300),
+            )
         )
-    )
-    updated_task = cast('Task', result)
-    assert updated_task is not None
-    assert updated_task.name == new_name
-    assert updated_task.id == created_task.id
+        updated_task = cast('Task', result)
+        assert updated_task is not None
+        assert updated_task.name == new_name
+        assert updated_task.id == created_task.id
 
-    # Verify the update persisted
-    result = await maybe_await(task_client.get())
-    retrieved_task = cast('Task', result)
-    assert retrieved_task is not None
-    assert retrieved_task.name == new_name
-
-    # Cleanup
-    await maybe_await(task_client.delete())
+        # Verify the update persisted
+        result = await maybe_await(task_client.get())
+        retrieved_task = cast('Task', result)
+        assert retrieved_task is not None
+        assert retrieved_task.name == new_name
+    finally:
+        await maybe_await(task_client.delete())
 
 
 async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
@@ -110,18 +111,18 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
     )
     created_task = cast('Task', result)
 
-    # List tasks
-    result = await maybe_await(client.tasks().list(limit=100))
-    tasks_page = cast('ListOfTasks', result)
-    assert tasks_page is not None
-    assert tasks_page.items is not None
+    try:
+        # List tasks
+        result = await maybe_await(client.tasks().list(limit=100))
+        tasks_page = cast('ListOfTasks', result)
+        assert tasks_page is not None
+        assert tasks_page.items is not None
 
-    # Verify our task is in the list
-    task_ids = [t.id for t in tasks_page.items]
-    assert created_task.id in task_ids
-
-    # Cleanup
-    await maybe_await(client.task(created_task.id).delete())
+        # Verify our task is in the list
+        task_ids = [t.id for t in tasks_page.items]
+        assert created_task.id in task_ids
+    finally:
+        await maybe_await(client.task(created_task.id).delete())
 
 
 async def test_task_get_input(client: ApifyClient | ApifyClientAsync) -> None:
@@ -145,21 +146,21 @@ async def test_task_get_input(client: ApifyClient | ApifyClientAsync) -> None:
     created_task = cast('Task', result)
     task_client = client.task(created_task.id)
 
-    # Get input
-    result = await maybe_await(task_client.get_input())
-    assert result is not None
-    retrieved_input = cast('dict', result)
-    assert retrieved_input.get('message') == 'Hello from test'
+    try:
+        # Get input
+        result = await maybe_await(task_client.get_input())
+        assert result is not None
+        retrieved_input = cast('dict', result)
+        assert retrieved_input.get('message') == 'Hello from test'
 
-    # Update input
-    new_input = {'message': 'Updated message'}
-    result = await maybe_await(task_client.update_input(task_input=new_input))
-    assert result is not None
-    updated_input = cast('dict', result)
-    assert updated_input.get('message') == 'Updated message'
-
-    # Cleanup
-    await maybe_await(task_client.delete())
+        # Update input
+        new_input = {'message': 'Updated message'}
+        result = await maybe_await(task_client.update_input(task_input=new_input))
+        assert result is not None
+        updated_input = cast('dict', result)
+        assert updated_input.get('message') == 'Updated message'
+    finally:
+        await maybe_await(task_client.delete())
 
 
 async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
@@ -181,22 +182,24 @@ async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
     created_task = cast('Task', result)
     task_client = client.task(created_task.id)
 
-    # Start the task
-    result = await maybe_await(task_client.start())
-    run = cast('Run', result)
-    assert run is not None
-    assert run.id is not None
-    assert run.act_id == actor.id
+    try:
+        # Start the task
+        result = await maybe_await(task_client.start())
+        run = cast('Run', result)
+        assert run is not None
+        assert run.id is not None
+        assert run.act_id == actor.id
 
-    # Wait for the run to finish
-    result = await maybe_await(client.run(run.id).wait_for_finish())
-    finished_run = cast('Run', result)
-    assert finished_run is not None
-    assert finished_run.status.value == 'SUCCEEDED'
+        # Wait for the run to finish
+        result = await maybe_await(client.run(run.id).wait_for_finish())
+        finished_run = cast('Run', result)
+        assert finished_run is not None
+        assert finished_run.status.value == 'SUCCEEDED'
 
-    # Cleanup
-    await maybe_await(client.run(run.id).delete())
-    await maybe_await(task_client.delete())
+        # Cleanup run
+        await maybe_await(client.run(run.id).delete())
+    finally:
+        await maybe_await(task_client.delete())
 
 
 async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
@@ -218,16 +221,18 @@ async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
     created_task = cast('Task', result)
     task_client = client.task(created_task.id)
 
-    # Call the task (waits for finish)
-    result = await maybe_await(task_client.call())
-    run = cast('Run', result)
-    assert run is not None
-    assert run.id is not None
-    assert run.status.value == 'SUCCEEDED'
+    try:
+        # Call the task (waits for finish)
+        result = await maybe_await(task_client.call())
+        run = cast('Run', result)
+        assert run is not None
+        assert run.id is not None
+        assert run.status.value == 'SUCCEEDED'
 
-    # Cleanup
-    await maybe_await(client.run(run.id).delete())
-    await maybe_await(task_client.delete())
+        # Cleanup run
+        await maybe_await(client.run(run.id).delete())
+    finally:
+        await maybe_await(task_client.delete())
 
 
 async def test_task_delete(client: ApifyClient | ApifyClientAsync) -> None:

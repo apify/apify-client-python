@@ -211,17 +211,17 @@ def test_response_to_list() -> None:
     assert response_to_list(mock_response) == ['item1', 'item2']
 
 
-@pytest.mark.parametrize(
-    'json_return_value',
-    [
-        pytest.param({'dict': 'response'}, id='Dict response'),
-        pytest.param('string', id='String response'),
-    ],
-)
-def test_response_to_list_raises_for_non_list(json_return_value: object) -> None:
-    """Test that response_to_list raises for non-list responses."""
+def test_response_to_list_wraps_dict_in_list() -> None:
+    """Test that response_to_list wraps a dict response in a list."""
     mock_response = Mock()
-    mock_response.json.return_value = json_return_value
+    mock_response.json.return_value = {'dict': 'response'}
+    assert response_to_list(mock_response) == [{'dict': 'response'}]
+
+
+def test_response_to_list_raises_for_non_list() -> None:
+    """Test that response_to_list raises for non-list, non-dict responses."""
+    mock_response = Mock()
+    mock_response.json.return_value = 'string'
     with pytest.raises(ValueError, match='The response is not a list'):
         response_to_list(mock_response)
 

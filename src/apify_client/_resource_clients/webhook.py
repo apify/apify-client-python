@@ -10,7 +10,7 @@ from apify_client._models import (
 )
 from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values
+from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -113,8 +113,8 @@ class WebhookClient(ResourceClient):
                 params=self._build_params(),
             )
 
-            result = response.json()
-            return TestWebhookResponse.model_validate(result).data if result is not None else None
+            result = response_to_dict(response)
+            return TestWebhookResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -230,8 +230,8 @@ class WebhookClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
 
-            result = response.json()
-            return TestWebhookResponse.model_validate(result).data if result is not None else None
+            result = response_to_dict(response)
+            return TestWebhookResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

@@ -9,7 +9,7 @@ import time
 from base64 import b64encode, urlsafe_b64encode
 from enum import Enum
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import impit
 from typing_extensions import overload
@@ -30,13 +30,13 @@ _BASE62_CHARSET = string.digits + string.ascii_letters
 
 
 @overload
-def to_seconds(td: timedelta, *, as_int: bool = True) -> int: ...
+def to_seconds(td: None, *, as_int: bool = ...) -> None: ...
 @overload
-def to_seconds(td: timedelta, *, as_int: bool = False) -> float: ...
+def to_seconds(td: timedelta) -> float: ...
 @overload
-def to_seconds(td: None, *, as_int: bool = True) -> None: ...
+def to_seconds(td: timedelta, *, as_int: Literal[True]) -> int: ...
 @overload
-def to_seconds(td: None, *, as_int: bool = False) -> None: ...
+def to_seconds(td: timedelta, *, as_int: Literal[False]) -> float: ...
 
 
 def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | None:
@@ -249,6 +249,7 @@ def response_to_dict(response: Response) -> dict:
         ValueError: If the response is not a dictionary.
     """
     data = response.json()
+
     if isinstance(data, dict):
         return data
 
@@ -268,8 +269,12 @@ def response_to_list(response: Response) -> list:
         ValueError: If the response is not a list.
     """
     data = response.json()
+
     if isinstance(data, list):
         return data
+
+    if isinstance(data, dict):
+        return [data]
 
     raise ValueError(f'The response is not a list. Got: {type(data).__name__}')
 

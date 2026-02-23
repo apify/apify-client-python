@@ -10,23 +10,16 @@ from .dataset import DatasetClient, DatasetClientAsync
 from .dataset_collection import DatasetCollectionClient, DatasetCollectionClientAsync
 from .key_value_store import KeyValueStoreClient, KeyValueStoreClientAsync
 from .key_value_store_collection import KeyValueStoreCollectionClient, KeyValueStoreCollectionClientAsync
-from .log import (
-    LogClient,
-    LogClientAsync,
-    StatusMessageWatcher,
-    StatusMessageWatcherAsync,
-    StatusMessageWatcherSync,
-    StreamedLog,
-    StreamedLogAsync,
-    StreamedLogSync,
-)
+from .log import LogClient, LogClientAsync
 from .request_queue import RequestQueueClient, RequestQueueClientAsync
 from .request_queue_collection import RequestQueueCollectionClient, RequestQueueCollectionClientAsync
 from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .schedule import ScheduleClient, ScheduleClientAsync
 from .schedule_collection import ScheduleCollectionClient, ScheduleCollectionClientAsync
+from .status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync, StatusMessageWatcherSync
 from .store_collection import StoreCollectionClient, StoreCollectionClientAsync
+from .streamed_log import StreamedLog, StreamedLogAsync, StreamedLogSync
 from .task import TaskClient, TaskClientAsync
 from .task_collection import TaskCollectionClient, TaskCollectionClientAsync
 from .user import UserClient, UserClientAsync

@@ -1,4 +1,9 @@
-"""Unified tests for webhook (sync + async)."""
+"""Unified tests for webhook (sync + async).
+
+Webhook CRUD tests bind to a specific already-completed run (actor_run_id) instead of to an actor (actor_id).
+This prevents webhooks from firing when other integration tests run the same actor, which would cause
+"Webhook was removed" error emails.
+"""
 
 from __future__ import annotations
 
@@ -6,13 +11,26 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, ListOfWebhookDispatches, ListOfWebhooks, Webhook, WebhookDispatch
+    from apify_client._models import ListOfWebhookDispatches, ListOfWebhooks, Run, Webhook, WebhookDispatch
 
 
 from ._utils import maybe_await
-from apify_client._models import WebhookEventType
+from apify_client._models import ActorJobStatus, WebhookEventType
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
+
+
+async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
+    """Get the ID of an already-completed run of the hello-world actor.
+
+    Using a finished run's ID for webhook conditions ensures the webhook will never actually fire,
+    since a completed run won't emit new events.
+    """
+    runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
+    assert runs_page is not None
+    assert len(runs_page.items) > 0, 'No completed runs found for hello-world actor'
+    run = cast('Run', runs_page.items[0])
+    return run.id
 
 
 async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
@@ -38,17 +56,15 @@ async def test_list_webhooks_pagination(client: ApifyClient | ApifyClientAsync) 
 
 async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:
     """Test creating a webhook and retrieving it."""
-    # Get actor ID for webhook condition
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
-    actor = cast('Actor', result)
-    assert actor is not None
+    run_id = await _get_finished_run_id(client)
 
-    # Create webhook (use httpbin as dummy endpoint)
+    # Create webhook bound to a finished run (will never fire)
     result = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
-            actor_id=actor.id,
+            actor_run_id=run_id,
+            is_ad_hoc=True,
         )
     )
     created_webhook = cast('Webhook', result)
@@ -69,27 +85,26 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
 
 async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
     """Test updating a webhook."""
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
-    actor = cast('Actor', result)
-    assert actor is not None
+    run_id = await _get_finished_run_id(client)
 
-    # Create webhook
+    # Create webhook bound to a finished run
     result = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
-            actor_id=actor.id,
+            actor_run_id=run_id,
+            is_ad_hoc=True,
         )
     )
     created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
-        # Update webhook (must include actor_id as condition is required)
+        # Update webhook
         result = await maybe_await(
             webhook_client.update(
                 request_url='https://httpbin.org/anything',
-                actor_id=actor.id,
+                actor_run_id=run_id,
             )
         )
         updated_webhook = cast('Webhook', result)
@@ -100,23 +115,22 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
 
 async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
     """Test the webhook test endpoint."""
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
-    actor = cast('Actor', result)
-    assert actor is not None
+    run_id = await _get_finished_run_id(client)
 
-    # Create webhook
+    # Create webhook bound to a finished run
     result = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
-            actor_id=actor.id,
+            actor_run_id=run_id,
+            is_ad_hoc=True,
         )
     )
     created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
-        # Test webhook (creates a dispatch)
+        # Test webhook (creates a dispatch with dummy payload)
         result = await maybe_await(webhook_client.test())
         dispatch = cast('WebhookDispatch', result)
         assert dispatch is not None
@@ -127,16 +141,15 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
 
 async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhook dispatches."""
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
-    actor = cast('Actor', result)
-    assert actor is not None
+    run_id = await _get_finished_run_id(client)
 
-    # Create webhook
+    # Create webhook bound to a finished run
     result = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
-            actor_id=actor.id,
+            actor_run_id=run_id,
+            is_ad_hoc=True,
         )
     )
     created_webhook = cast('Webhook', result)
@@ -158,16 +171,15 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
 
 async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
     """Test deleting a webhook."""
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
-    actor = cast('Actor', result)
-    assert actor is not None
+    run_id = await _get_finished_run_id(client)
 
-    # Create webhook
+    # Create webhook bound to a finished run
     result = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
-            actor_id=actor.id,
+            actor_run_id=run_id,
+            is_ad_hoc=True,
         )
     )
     created_webhook = cast('Webhook', result)

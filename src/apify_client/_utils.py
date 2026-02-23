@@ -11,7 +11,10 @@ from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
 
+import impit
 from typing_extensions import overload
+
+from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from datetime import timedelta

@@ -189,7 +189,7 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
         result = await maybe_await(second_build_client.abort())
         aborted_build = cast('Build', result)
         assert aborted_build is not None
-        assert aborted_build.status.value in ('SUCCEEDED', 'FAILED', 'ABORTED')
+        assert aborted_build.status.value in ('SUCCEEDED', 'FAILED')
 
         # Delete the first build (not the default/latest)
         await maybe_await(first_build_client.delete())

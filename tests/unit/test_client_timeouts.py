@@ -89,7 +89,9 @@ async def test_retry_on_http_error_async_client(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await HTTPClientAsync(timeout_secs=5).call(method='GET', url='http://placeholder.url/http_error')
+    response = await HttpClientAsync(timeout=timedelta(seconds=5)).call(
+        method='GET', url='http://placeholder.url/http_error'
+    )
 
     # 3 attempts: 2 failures + 1 success
     assert retry_counter_mock.call_count == 3

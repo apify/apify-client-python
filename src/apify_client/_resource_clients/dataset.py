@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     import impit
 
     from apify_client._consts import JsonSerializable
-    from apify_client._models import GeneralAccessEnum
+    from apify_client._models import GeneralAccess
 
 
 @dataclass
@@ -76,7 +76,7 @@ class DatasetClient(ResourceClient):
             return None
         return DatasetResponse.model_validate(result).data
 
-    def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> Dataset:
+    def update(self, *, name: str | None = None, general_access: GeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -695,7 +695,7 @@ class DatasetClientAsync(ResourceClientAsync):
             return None
         return DatasetResponse.model_validate(result).data
 
-    async def update(self, *, name: str | None = None, general_access: GeneralAccessEnum | None = None) -> Dataset:
+    async def update(self, *, name: str | None = None, general_access: GeneralAccess | None = None) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset

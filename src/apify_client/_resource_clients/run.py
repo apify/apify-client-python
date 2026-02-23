@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     import logging
     from decimal import Decimal
 
-    from apify_client._models import GeneralAccessEnum
+    from apify_client._models import GeneralAccess
     from apify_client._resource_clients import (
         DatasetClient,
         DatasetClientAsync,
@@ -73,7 +73,7 @@ class RunClient(ResourceClient):
         *,
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
-        general_access: GeneralAccessEnum | None = None,
+        general_access: GeneralAccess | None = None,
     ) -> Run:
         """Update the run with the specified fields.
 
@@ -457,7 +457,7 @@ class RunClientAsync(ResourceClientAsync):
         *,
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
-        general_access: GeneralAccessEnum | None = None,
+        general_access: GeneralAccess | None = None,
     ) -> Run:
         """Update the run with the specified fields.
 

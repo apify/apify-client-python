@@ -18,6 +18,10 @@ for client_source_path in clients_path.glob('**/*.py'):
         # Find all classes which end with "ClientAsync" (there should be at most 1 per file)
         async_class = red.find('ClassNode', name=re.compile('.*ClientAsync$'))
 
+        if async_class is None:
+            # No async client class in this file, nothing to fix
+            continue
+
         # Find the corresponding sync classes (same name, but without -Async)
         sync_class = red.find('ClassNode', name=async_class.name.replace('ClientAsync', 'Client'))
 

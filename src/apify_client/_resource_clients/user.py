@@ -6,7 +6,9 @@ from pydantic import ValidationError
 
 from apify_client._models import (
     AccountLimits,
+    LimitsResponse,
     MonthlyUsage,
+    MonthlyUsageResponse,
     PrivateUserDataResponse,
     PublicUserDataResponse,
     UserPrivateInfo,
@@ -64,8 +66,7 @@ class UserClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            # API returns {data: {...}} structure
-            return MonthlyUsage.model_validate(result.get('data', {}))
+            return MonthlyUsageResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -90,8 +91,7 @@ class UserClient(ResourceClient):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            # API returns {data: {...}} structure
-            return AccountLimits.model_validate(result.get('data', {}))
+            return LimitsResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -165,8 +165,7 @@ class UserClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            # API returns {data: {...}} structure
-            return MonthlyUsage.model_validate(result.get('data', {}))
+            return MonthlyUsageResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
@@ -191,8 +190,7 @@ class UserClientAsync(ResourceClientAsync):
                 params=self._build_params(),
             )
             result = response_to_dict(response)
-            # API returns {data: {...}} structure
-            return AccountLimits.model_validate(result.get('data', {}))
+            return LimitsResponse.model_validate(result).data
 
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)

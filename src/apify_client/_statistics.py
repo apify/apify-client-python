@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass, field
 
 
 @dataclass
-class Statistics:
+class ClientStatistics:
     """Statistics about API client usage and rate limit errors."""
 
     calls: int = 0

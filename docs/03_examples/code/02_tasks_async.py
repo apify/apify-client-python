@@ -1,22 +1,16 @@
 import asyncio
 
 from apify_client import ApifyClientAsync
-from apify_client.clients.resource_clients import TaskClientAsync
 
 TOKEN = 'MY-APIFY-TOKEN'
 HASHTAGS = ['zebra', 'lion', 'hippo']
-
-
-async def run_apify_task(client: TaskClientAsync) -> dict:
-    result = await client.call()
-    return result or {}
 
 
 async def main() -> None:
     apify_client = ApifyClientAsync(token=TOKEN)
 
     # Create Apify tasks
-    apify_tasks = list[dict]()
+    apify_tasks = []
     apify_tasks_client = apify_client.tasks()
 
     for hashtag in HASHTAGS:
@@ -31,20 +25,19 @@ async def main() -> None:
     print('Tasks created:', apify_tasks)
 
     # Create Apify task clients
-    apify_task_clients = list[TaskClientAsync]()
-
-    for apify_task in apify_tasks:
-        task_id = apify_task['id']
-        apify_task_client = apify_client.task(task_id)
-        apify_task_clients.append(apify_task_client)
+    apify_task_clients = [apify_client.task(task.id) for task in apify_tasks]
 
     print('Task clients created:', apify_task_clients)
 
     # Execute Apify tasks
-    run_apify_tasks = [run_apify_task(client) for client in apify_task_clients]
-    task_run_results = await asyncio.gather(*run_apify_tasks)
+    task_run_results = await asyncio.gather(
+        *[client.call() for client in apify_task_clients]
+    )
 
-    print('Task results:', task_run_results)
+    # Filter out None results (tasks that failed to return a run)
+    successful_runs = [run for run in task_run_results if run is not None]
+
+    print('Task results:', successful_runs)
 
 
 if __name__ == '__main__':

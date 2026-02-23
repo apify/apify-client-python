@@ -17,7 +17,9 @@ for client_source_path in clients_path.glob('**/*.py'):
 
         # Find all classes which end with "ClientAsync" (there should be at most 1 per file)
         async_class = red.find('ClassNode', name=re.compile('.*ClientAsync$'))
-        if not async_class:
+
+        if async_class is None:
+            # No async client class in this file, nothing to fix
             continue
 
         # Find the corresponding sync classes (same name, but without -Async)
@@ -30,6 +32,10 @@ for client_source_path in clients_path.glob('**/*.py'):
 
             # Skip methods with @ignore_docs decorator
             if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
+                continue
+
+            # Skip methods that don't exist in the sync class
+            if sync_method is None:
                 continue
 
             # If the sync method has a docstring, copy it to the async method (with adjustments)

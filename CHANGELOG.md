@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 2.5.1 - **not yet released**
+
+### Refactor
+
+- [**breaking**] Introduce fully typed clients ([#604](https://github.com/apify/apify-client-python/pull/604)) ([81ee194](https://github.com/apify/apify-client-python/commit/81ee1943b400b49797868fe4dfa52d1662e09370)) by [@vdusek](https://github.com/vdusek), closes [#21](https://github.com/apify/apify-client-python/issues/21), [#481](https://github.com/apify/apify-client-python/issues/481)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [2.5.0](https://github.com/apify/apify-client-python/releases/tag/v2.5.0) (2026-02-18)
 
 ### 🚀 Features

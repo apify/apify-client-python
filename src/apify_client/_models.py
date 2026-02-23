@@ -566,7 +566,9 @@ class ExampleWebhookDispatch(BaseModel):
         extra='allow',
     )
     status: WebhookDispatchStatus
-    finished_at: Annotated[AwareDatetime, Field(alias='finishedAt', examples=['2019-12-13T08:36:13.202Z'])]
+    finished_at: Annotated[AwareDatetime | None, Field(alias='finishedAt', examples=['2019-12-13T08:36:13.202Z'])] = (
+        None
+    )
 
 
 class WebhookStats(BaseModel):

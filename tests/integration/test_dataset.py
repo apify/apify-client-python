@@ -61,7 +61,7 @@ async def test_dataset_collection_get_or_create(client: ApifyClient | ApifyClien
         same_dataset = cast('Dataset', result2)
         assert same_dataset.id == dataset.id
     finally:
-        await maybe_await(client.dataset(dataset.id).delete())
+        await maybe_await(client.dataset(dataset_id=dataset.id).delete())
 
 
 async def test_dataset_should_create_public_items_expiring_url_with_params(
@@ -71,7 +71,7 @@ async def test_dataset_should_create_public_items_expiring_url_with_params(
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
 
-    dataset = client.dataset(created_dataset.id)
+    dataset = client.dataset(dataset_id=created_dataset.id)
 
     try:
         result = await maybe_await(
@@ -101,7 +101,7 @@ async def test_dataset_should_create_public_items_non_expiring_url(
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
 
-    dataset = client.dataset(created_dataset.id)
+    dataset = client.dataset(dataset_id=created_dataset.id)
 
     try:
         result = await maybe_await(dataset.create_items_public_url())
@@ -202,7 +202,7 @@ async def test_dataset_get_or_create_and_get(client: ApifyClient | ApifyClientAs
     assert created_dataset.name == dataset_name
 
     # Get the same dataset
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         result = await maybe_await(dataset_client.get())
@@ -221,7 +221,7 @@ async def test_dataset_update(client: ApifyClient | ApifyClientAsync) -> None:
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Update the name
@@ -246,7 +246,7 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Push some items
@@ -255,7 +255,7 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
             {'id': 2, 'name': 'Item 2', 'value': 200},
             {'id': 3, 'name': 'Item 3', 'value': 300},
         ]
-        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_await(dataset_client.push_items(items=items_to_push))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -283,12 +283,12 @@ async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyCli
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Push more items
         items_to_push = [{'index': i, 'value': i * 10} for i in range(10)]
-        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_await(dataset_client.push_items(items=items_to_push))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -320,7 +320,7 @@ async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientA
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Push items with multiple fields
@@ -328,7 +328,7 @@ async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientA
             {'id': 1, 'name': 'Item 1', 'value': 100, 'extra': 'data1'},
             {'id': 2, 'name': 'Item 2', 'value': 200, 'extra': 'data2'},
         ]
-        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_await(dataset_client.push_items(items=items_to_push))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -354,12 +354,12 @@ async def test_dataset_iterate_items(client: ApifyClient | ApifyClientAsync, *, 
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Push items
         items_to_push = [{'index': i} for i in range(5)]
-        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_await(dataset_client.push_items(items=items_to_push))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -383,7 +383,7 @@ async def test_dataset_delete_nonexistent(client: ApifyClient | ApifyClientAsync
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     # Delete dataset
     await maybe_await(dataset_client.delete())
@@ -400,7 +400,7 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *,
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Push some items first
@@ -408,7 +408,7 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *,
             {'id': 1, 'name': 'Item 1'},
             {'id': 2, 'name': 'Item 2'},
         ]
-        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_await(dataset_client.push_items(items=items_to_push))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -430,7 +430,7 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
 
     result = await maybe_await(client.datasets().get_or_create(name=dataset_name))
     created_dataset = cast('Dataset', result)
-    dataset_client = client.dataset(created_dataset.id)
+    dataset_client = client.dataset(dataset_id=created_dataset.id)
 
     try:
         # Push some items
@@ -439,7 +439,7 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
             {'id': 2, 'name': 'Item 2', 'value': 200},
             {'id': 3, 'name': 'Item 3', 'value': 300},
         ]
-        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_await(dataset_client.push_items(items=items_to_push))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)

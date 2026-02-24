@@ -176,9 +176,9 @@ class ActorClient(ResourceClient):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_none_values(actor_representation, remove_empty_dicts=True)
+        cleaned = filter_none_values(data=actor_representation, remove_empty_dicts=True)
 
-        result = self._update(cleaned)
+        result = self._update(updated_fields=cleaned)
         return ActorResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -236,7 +236,7 @@ class ActorClient(ResourceClient):
         Returns:
             The run object.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(value=run_input, content_type=content_type)
 
         request_params = self._build_params(
             build=build,
@@ -244,21 +244,21 @@ class ActorClient(ResourceClient):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(td=timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks=webhooks) if webhooks is not None else None,
         )
 
         response = self._http_client.call(
-            url=self._build_url('runs'),
+            url=self._build_url(path='runs'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def call(
@@ -378,12 +378,12 @@ class ActorClient(ResourceClient):
         )
 
         response = self._http_client.call(
-            url=self._build_url('builds'),
+            url=self._build_url(path='builds'),
             method='POST',
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return BuildResponse.model_validate(result).data
 
     def builds(self) -> BuildCollectionClient:
@@ -420,8 +420,10 @@ class ActorClient(ResourceClient):
             waitForFinish=wait_for_finish,
         )
 
-        response = self._http_client.call(url=self._build_url('builds/default'), method='GET', params=request_params)
-        result = response_to_dict(response)
+        response = self._http_client.call(
+            url=self._build_url(path='builds/default'), method='GET', params=request_params
+        )
+        result = response_to_dict(response=response)
 
         return self._client_registry.build_client(
             resource_id=result['data']['id'],
@@ -452,8 +454,8 @@ class ActorClient(ResourceClient):
             resource_id='last',
             resource_path='runs',
             params=self._build_params(
-                status=enum_to_value(status),
-                origin=enum_to_value(origin),
+                status=enum_to_value(value=status),
+                origin=enum_to_value(value=origin),
             ),
             **self._base_client_kwargs,
         )
@@ -462,7 +464,7 @@ class ActorClient(ResourceClient):
         """Retrieve a client for the versions of this Actor."""
         return self._client_registry.actor_version_collection_client(**self._base_client_kwargs)
 
-    def version(self, version_number: str) -> ActorVersionClient:
+    def version(self, *, version_number: str) -> ActorVersionClient:
         """Retrieve the client for the specified version of this Actor.
 
         Args:
@@ -481,7 +483,7 @@ class ActorClient(ResourceClient):
         return self._client_registry.webhook_collection_client(**self._base_client_kwargs)
 
     def validate_input(
-        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+        self, *, run_input: Any = None, build_tag: str | None = None, content_type: str | None = None
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -493,10 +495,10 @@ class ActorClient(ResourceClient):
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(value=run_input, content_type=content_type)
 
         self._http_client.call(
-            url=self._build_url('validate-input'),
+            url=self._build_url(path='validate-input'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
@@ -635,9 +637,9 @@ class ActorClientAsync(ResourceClientAsync):
             actor_permission_level=actor_permission_level,
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_none_values(actor_representation, remove_empty_dicts=True)
+        cleaned = filter_none_values(data=actor_representation, remove_empty_dicts=True)
 
-        result = await self._update(cleaned)
+        result = await self._update(updated_fields=cleaned)
         return ActorResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -695,7 +697,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The run object.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(value=run_input, content_type=content_type)
 
         request_params = self._build_params(
             build=build,
@@ -703,21 +705,21 @@ class ActorClientAsync(ResourceClientAsync):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(td=timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks=webhooks) if webhooks is not None else None,
         )
 
         response = await self._http_client.call(
-            url=self._build_url('runs'),
+            url=self._build_url(path='runs'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     async def call(
@@ -841,12 +843,12 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url('builds'),
+            url=self._build_url(path='builds'),
             method='POST',
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return BuildResponse.model_validate(result).data
 
     def builds(self) -> BuildCollectionClientAsync:
@@ -884,11 +886,11 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url('builds/default'),
+            url=self._build_url(path='builds/default'),
             method='GET',
             params=request_params,
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
 
         return self._client_registry.build_client(
             resource_id=result['data']['id'],
@@ -919,8 +921,8 @@ class ActorClientAsync(ResourceClientAsync):
             resource_id='last',
             resource_path='runs',
             params=self._build_params(
-                status=enum_to_value(status),
-                origin=enum_to_value(origin),
+                status=enum_to_value(value=status),
+                origin=enum_to_value(value=origin),
             ),
             **self._base_client_kwargs,
         )
@@ -929,7 +931,7 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve a client for the versions of this Actor."""
         return self._client_registry.actor_version_collection_client(**self._base_client_kwargs)
 
-    def version(self, version_number: str) -> ActorVersionClientAsync:
+    def version(self, *, version_number: str) -> ActorVersionClientAsync:
         """Retrieve the client for the specified version of this Actor.
 
         Args:
@@ -948,7 +950,7 @@ class ActorClientAsync(ResourceClientAsync):
         return self._client_registry.webhook_collection_client(**self._base_client_kwargs)
 
     async def validate_input(
-        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+        self, *, run_input: Any = None, build_tag: str | None = None, content_type: str | None = None
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -960,10 +962,10 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(value=run_input, content_type=content_type)
 
         await self._http_client.call(
-            url=self._build_url('validate-input'),
+            url=self._build_url(path='validate-input'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,

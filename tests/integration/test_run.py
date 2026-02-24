@@ -22,18 +22,18 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
     """Test listing runs with multiple statuses."""
     created_runs = list[Run]()
 
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).call())
     if result is not None:
         successful_run = cast('Run', result)
         created_runs.append(successful_run)
 
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(timeout=timedelta(seconds=1)))
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).call(timeout=timedelta(seconds=1)))
     if result is not None:
         timed_out_run = cast('Run', result)
         created_runs.append(timed_out_run)
 
     try:
-        run_collection = client.actor(HELLO_WORLD_ACTOR).runs()
+        run_collection = client.actor(actor_id=HELLO_WORLD_ACTOR).runs()
 
         result = await maybe_await(run_collection.list(status=[ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT]))
         multiple_status_runs = cast('ListOfRuns', result)
@@ -52,19 +52,19 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
         for run in created_runs:
             run_id = run.id
             if isinstance(run_id, str):
-                await maybe_await(client.run(run_id).delete())
+                await maybe_await(client.run(run_id=run_id).delete())
 
 
 async def test_run_collection_list_accept_date_range(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing runs with date range parameters."""
     created_runs = list[Run]()
 
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).call())
     if result is not None:
         successful_run = cast('Run', result)
         created_runs.append(successful_run)
 
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(timeout=timedelta(seconds=1)))
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).call(timeout=timedelta(seconds=1)))
     if result is not None:
         timed_out_run = cast('Run', result)
         created_runs.append(timed_out_run)
@@ -83,19 +83,19 @@ async def test_run_collection_list_accept_date_range(client: ApifyClient | Apify
         for run in created_runs:
             run_id = run.id
             if isinstance(run_id, str):
-                await maybe_await(client.run(run_id).delete())
+                await maybe_await(client.run(run_id=run_id).delete())
 
 
 async def test_run_get_and_delete(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting and deleting a run."""
     # Run actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
     # Get the run
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
     result = await maybe_await(run_client.get())
     retrieved_run = cast('Run', result)
     assert retrieved_run is not None
@@ -113,13 +113,13 @@ async def test_run_get_and_delete(client: ApifyClient | ApifyClientAsync) -> Non
 async def test_run_dataset(client: ApifyClient | ApifyClientAsync) -> None:
     """Test accessing run's default dataset."""
     # Run actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
     # Access run's dataset
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         dataset_client = run_client.dataset()
@@ -136,13 +136,13 @@ async def test_run_dataset(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> None:
     """Test accessing run's default key-value store."""
     # Run actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
     # Access run's key-value store
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         kvs_client = run_client.key_value_store()
@@ -159,13 +159,13 @@ async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> No
 async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None:
     """Test accessing run's default request queue."""
     # Run actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
     # Access run's request queue
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         rq_client = run_client.request_queue()
@@ -182,14 +182,14 @@ async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None
 async def test_run_abort(client: ApifyClient | ApifyClientAsync) -> None:
     """Test aborting a running Actor."""
     # Start actor without waiting
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.start())
     run = cast('Run', result)
     assert run is not None
     assert run.id is not None
 
     # Abort the run
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         result = await maybe_await(run_client.abort())
@@ -212,12 +212,12 @@ async def test_run_abort(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_run_update(client: ApifyClient | ApifyClientAsync) -> None:
     """Test updating a run's status message."""
     # Run actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         # Update run status message
@@ -238,13 +238,13 @@ async def test_run_update(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_run_resurrect(client: ApifyClient | ApifyClientAsync) -> None:
     """Test resurrecting a finished run."""
     # Run actor and wait for it to finish
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
     assert run.status.value == 'SUCCEEDED'
 
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         # Resurrect the run
@@ -269,12 +269,12 @@ async def test_run_resurrect(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_run_log(client: ApifyClient | ApifyClientAsync) -> None:
     """Test accessing run's log."""
     # Run actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         # Get log client
@@ -309,13 +309,13 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test metamorphing a run into another Actor."""
     # Start an actor that will run long enough to metamorph. We use hello-world and try to metamorph it into itself
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.start())
     run = cast('Run', result)
     assert run is not None
     assert run.id is not None
 
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         # Wait a bit for the run to start properly
@@ -351,13 +351,13 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, *, is_async
 async def test_run_reboot(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test rebooting a running Actor."""
     # Start an actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.start())
     run = cast('Run', result)
     assert run is not None
     assert run.id is not None
 
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         # Wait a bit and check if the run is still running
@@ -395,12 +395,12 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
     be called correctly.
     """
     # Run an actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
 
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
 
     try:
         # Try to charge - this will fail for non-PPE actors but tests the API call

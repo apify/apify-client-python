@@ -44,7 +44,7 @@ def test_retry_with_exp_backoff() -> None:
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
     result = HttpClient._retry_with_exp_backoff(
-        returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
+        func=returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
     assert result == 'SUCCESS'
@@ -56,14 +56,14 @@ def test_retry_with_exp_backoff() -> None:
     attempt_counter = 0
     with pytest.raises(RetryableError):
         HttpClient._retry_with_exp_backoff(
-            returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
+            func=returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
         )
     assert attempt_counter == 4
 
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        HttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
+        HttpClient._retry_with_exp_backoff(func=bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -97,7 +97,7 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
     result = await HttpClientAsync._retry_with_exp_backoff(
-        returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
+        func=returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
     assert result == 'SUCCESS'
@@ -109,14 +109,16 @@ async def test_retry_with_exp_backoff_async() -> None:
     attempt_counter = 0
     with pytest.raises(RetryableError):
         await HttpClientAsync._retry_with_exp_backoff(
-            returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
+            func=returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
         )
     assert attempt_counter == 4
 
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        await HttpClientAsync._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
+        await HttpClientAsync._retry_with_exp_backoff(
+            func=bails_on_third_attempt, backoff_base=timedelta(milliseconds=1)
+        )
     assert attempt_counter == 3
 
 
@@ -163,31 +165,31 @@ def test_http_client_async_creates_async_impit_client() -> None:
 
 def test_parse_params_none() -> None:
     """Test _parse_params with None input."""
-    assert BaseHttpClient._parse_params(None) is None
+    assert BaseHttpClient._parse_params(params=None) is None
 
 
 def test_parse_params_boolean() -> None:
     """Test _parse_params converts booleans to integers."""
-    result = BaseHttpClient._parse_params({'flag': True, 'disabled': False})
+    result = BaseHttpClient._parse_params(params={'flag': True, 'disabled': False})
     assert result == {'flag': 1, 'disabled': 0}
 
 
 def test_parse_params_list() -> None:
     """Test _parse_params converts lists to comma-separated strings."""
-    result = BaseHttpClient._parse_params({'ids': ['id1', 'id2', 'id3']})
+    result = BaseHttpClient._parse_params(params={'ids': ['id1', 'id2', 'id3']})
     assert result == {'ids': 'id1,id2,id3'}
 
 
 def test_parse_params_datetime() -> None:
     """Test _parse_params converts datetime to Zulu format."""
     dt = datetime(2024, 1, 15, 10, 30, 45, 123000, tzinfo=UTC)
-    result = BaseHttpClient._parse_params({'created_at': dt})
+    result = BaseHttpClient._parse_params(params={'created_at': dt})
     assert result == {'created_at': '2024-01-15T10:30:45.123Z'}
 
 
 def test_parse_params_none_values_filtered() -> None:
     """Test _parse_params filters out None values."""
-    result = BaseHttpClient._parse_params({'a': 1, 'b': None, 'c': 'value'})
+    result = BaseHttpClient._parse_params(params={'a': 1, 'b': None, 'c': 'value'})
     assert result == {'a': 1, 'c': 'value'}
 
 
@@ -195,7 +197,7 @@ def test_parse_params_mixed() -> None:
     """Test _parse_params with mixed types."""
     dt = datetime(2024, 1, 15, 10, 30, 45, 123000, tzinfo=UTC)
     result = BaseHttpClient._parse_params(
-        {
+        params={
             'limit': 10,
             'offset': 0,
             'flag': True,
@@ -218,15 +220,15 @@ def test_parse_params_mixed() -> None:
 def test_is_retryable_error() -> None:
     """Test _is_retryable_error correctly identifies retryable errors."""
     mock_response = Mock()
-    assert BaseHttpClient._is_retryable_error(InvalidResponseBodyError(mock_response))
-    assert BaseHttpClient._is_retryable_error(impit.NetworkError('test'))
-    assert BaseHttpClient._is_retryable_error(impit.TimeoutException('test'))
-    assert BaseHttpClient._is_retryable_error(impit.RemoteProtocolError('test'))
+    assert BaseHttpClient._is_retryable_error(exc=InvalidResponseBodyError(response=mock_response))
+    assert BaseHttpClient._is_retryable_error(exc=impit.NetworkError('test'))
+    assert BaseHttpClient._is_retryable_error(exc=impit.TimeoutException('test'))
+    assert BaseHttpClient._is_retryable_error(exc=impit.RemoteProtocolError('test'))
 
     # Non-retryable errors
-    assert not BaseHttpClient._is_retryable_error(ValueError('test'))
-    assert not BaseHttpClient._is_retryable_error(RuntimeError('test'))
-    assert not BaseHttpClient._is_retryable_error(Exception('test'))
+    assert not BaseHttpClient._is_retryable_error(exc=ValueError('test'))
+    assert not BaseHttpClient._is_retryable_error(exc=RuntimeError('test'))
+    assert not BaseHttpClient._is_retryable_error(exc=Exception('test'))
 
 
 def test_prepare_request_call_basic() -> None:
@@ -368,7 +370,7 @@ def test_build_url_with_params_none() -> None:
     """Test _build_url_with_params with None params."""
     client = BaseHttpClient()
 
-    url = client._build_url_with_params('https://api.test.com/endpoint')
+    url = client._build_url_with_params(url='https://api.test.com/endpoint')
     assert url == 'https://api.test.com/endpoint'
 
 
@@ -376,7 +378,7 @@ def test_build_url_with_params_simple() -> None:
     """Test _build_url_with_params with simple params."""
     client = BaseHttpClient()
 
-    url = client._build_url_with_params('https://api.test.com/endpoint', {'key': 'value', 'limit': 10})
+    url = client._build_url_with_params(url='https://api.test.com/endpoint', params={'key': 'value', 'limit': 10})
     assert 'key=value' in url
     assert 'limit=10' in url
     assert url.startswith('https://api.test.com/endpoint?')
@@ -386,7 +388,7 @@ def test_build_url_with_params_list() -> None:
     """Test _build_url_with_params with list values."""
     client = BaseHttpClient()
 
-    url = client._build_url_with_params('https://api.test.com/endpoint', {'tags': ['tag1', 'tag2', 'tag3']})
+    url = client._build_url_with_params(url='https://api.test.com/endpoint', params={'tags': ['tag1', 'tag2', 'tag3']})
     assert 'tags=tag1' in url
     assert 'tags=tag2' in url
     assert 'tags=tag3' in url
@@ -397,7 +399,7 @@ def test_build_url_with_params_mixed() -> None:
     client = BaseHttpClient()
 
     url = client._build_url_with_params(
-        'https://api.test.com/endpoint', {'limit': 10, 'tags': ['a', 'b'], 'name': 'test'}
+        url='https://api.test.com/endpoint', params={'limit': 10, 'tags': ['a', 'b'], 'name': 'test'}
     )
     assert 'limit=10' in url
     assert 'tags=a' in url

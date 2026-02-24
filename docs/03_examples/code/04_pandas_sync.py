@@ -8,7 +8,7 @@ TOKEN = 'MY-APIFY-TOKEN'
 def main() -> None:
     # Initialize the Apify client
     apify_client = ApifyClient(token=TOKEN)
-    actor_client = apify_client.actor('apify/web-scraper')
+    actor_client = apify_client.actor(actor_id='apify/web-scraper')
     run_client = actor_client.last_run()
     dataset_client = run_client.dataset()
 

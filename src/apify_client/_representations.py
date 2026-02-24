@@ -30,7 +30,7 @@ def build_actor_standby_dict(
         'isEnabled': is_enabled,
         'desiredRequestsPerActorRun': desired_requests_per_actor_run,
         'maxRequestsPerActorRun': max_requests_per_actor_run,
-        'idleTimeoutSecs': to_seconds(idle_timeout, as_int=True),
+        'idleTimeoutSecs': to_seconds(td=idle_timeout, as_int=True),
         'build': build,
         'memoryMbytes': memory_mbytes,
     }
@@ -50,7 +50,7 @@ def build_default_run_options_dict(
         'build': build,
         'maxItems': max_items,
         'memoryMbytes': memory_mbytes,
-        'timeoutSecs': to_seconds(timeout, as_int=True),
+        'timeoutSecs': to_seconds(td=timeout, as_int=True),
         'restartOnError': restart_on_error,
         'forcePermissionLevel': force_permission_level,
     }
@@ -69,7 +69,7 @@ def build_task_options_dict(
         'build': build,
         'maxItems': max_items,
         'memoryMbytes': memory_mbytes,
-        'timeoutSecs': to_seconds(timeout, as_int=True),
+        'timeoutSecs': to_seconds(td=timeout, as_int=True),
         'restartOnError': restart_on_error,
     }
 
@@ -231,7 +231,7 @@ def get_actor_version_repr(
         'buildTag': build_tag,
         'envVars': env_vars,
         'applyEnvVarsToBuild': apply_env_vars_to_build,
-        'sourceType': enum_to_value(source_type),
+        'sourceType': enum_to_value(value=source_type),
         'sourceFiles': source_files,
         'gitRepoUrl': git_repo_url,
         'tarballUrl': tarball_url,
@@ -297,6 +297,6 @@ def get_webhook_repr(
         webhook['isAdHoc'] = True
 
     if event_types is not None:
-        webhook['eventTypes'] = [enum_to_value(event_type) for event_type in event_types]
+        webhook['eventTypes'] = [enum_to_value(value=event_type) for event_type in event_types]
 
     return webhook

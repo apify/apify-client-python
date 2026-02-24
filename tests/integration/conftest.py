@@ -49,14 +49,14 @@ def api_token_2() -> str:
 def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
     """Dataset owned by secondary user for testing cross-user access restrictions."""
     api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
-    client = ApifyClient(api_token_2, api_url=api_url)
+    client = ApifyClient(token=api_token_2, api_url=api_url)
 
     # Create dataset with test data
     dataset_name = f'API-test-permissions-{get_crypto_random_object_id()}'
     dataset = client.datasets().get_or_create(name=dataset_name)
     dataset_client = client.dataset(dataset_id=dataset.id)
     expected_content = [{'item1': 1, 'item2': 2, 'item3': 3}, {'item1': 4, 'item2': 5, 'item3': 6}]
-    dataset_client.push_items(json.dumps(expected_content))
+    dataset_client.push_items(items=json.dumps(expected_content))
 
     # Generate signature for authenticated access
     assert dataset.url_signing_secret_key is not None
@@ -78,7 +78,7 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
 def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     """Key-value store owned by secondary user for testing cross-user access restrictions."""
     api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
-    client = ApifyClient(api_token_2, api_url=api_url)
+    client = ApifyClient(token=api_token_2, api_url=api_url)
 
     # Create key-value store with test data
     kvs_name = f'API-test-permissions-{get_crypto_random_object_id()}'
@@ -86,7 +86,7 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     kvs_client = client.key_value_store(key_value_store_id=kvs.id)
     expected_content = {'key1': 1, 'key2': 2, 'key3': 3}
     for key, value in expected_content.items():
-        kvs_client.set_record(key, value)
+        kvs_client.set_record(key=key, value=value)
 
     # Generate signatures for authenticated access
     signature = create_storage_content_signature(
@@ -98,7 +98,10 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
         id=kvs.id,
         signature=signature,
         expected_content=expected_content,
-        keys_signature={key: create_hmac_signature(kvs.url_signing_secret_key or '', key) for key in expected_content},
+        keys_signature={
+            key: create_hmac_signature(secret_key=kvs.url_signing_secret_key or '', message=key)
+            for key in expected_content
+        },
     )
 
     kvs_client.delete()
@@ -113,14 +116,14 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
 def apify_client(api_token: str) -> ApifyClient:
     """Sync Apify client instance."""
     api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
-    return ApifyClient(api_token, api_url=api_url)
+    return ApifyClient(token=api_token, api_url=api_url)
 
 
 @pytest.fixture
 def apify_client_async(api_token: str) -> ApifyClientAsync:
     """Async Apify client instance."""
     api_url = os.getenv(API_URL_ENV_VAR) or DEFAULT_API_URL
-    return ApifyClientAsync(api_token, api_url=api_url)
+    return ApifyClientAsync(token=api_token, api_url=api_url)
 
 
 @pytest.fixture(params=['sync', 'async'])

@@ -106,7 +106,7 @@ class TaskCollectionClient(ResourceClient):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = self._create(filter_none_values(task_representation, remove_empty_dicts=True))
+        result = self._create(created_fields=filter_none_values(data=task_representation, remove_empty_dicts=True))
         return TaskResponse.model_validate(result).data
 
 
@@ -205,5 +205,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
 
-        result = await self._create(filter_none_values(task_representation, remove_empty_dicts=True))
+        result = await self._create(
+            created_fields=filter_none_values(data=task_representation, remove_empty_dicts=True)
+        )
         return TaskResponse.model_validate(result).data

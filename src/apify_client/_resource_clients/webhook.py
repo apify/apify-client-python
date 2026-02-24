@@ -84,9 +84,9 @@ class WebhookClient(ResourceClient):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
-        cleaned = filter_none_values(webhook_representation, remove_empty_dicts=True)
+        cleaned = filter_none_values(data=webhook_representation, remove_empty_dicts=True)
 
-        result = self._update(cleaned)
+        result = self._update(updated_fields=cleaned)
         return WebhookResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -108,16 +108,16 @@ class WebhookClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url('test'),
+                url=self._build_url(path='test'),
                 method='POST',
                 params=self._build_params(),
             )
 
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return TestWebhookResponse.model_validate(result).data
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -201,9 +201,9 @@ class WebhookClientAsync(ResourceClientAsync):
             do_not_retry=do_not_retry,
             is_ad_hoc=is_ad_hoc,
         )
-        cleaned = filter_none_values(webhook_representation, remove_empty_dicts=True)
+        cleaned = filter_none_values(data=webhook_representation, remove_empty_dicts=True)
 
-        result = await self._update(cleaned)
+        result = await self._update(updated_fields=cleaned)
         return WebhookResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -225,16 +225,16 @@ class WebhookClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url('test'),
+                url=self._build_url(path='test'),
                 method='POST',
                 params=self._build_params(),
             )
 
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return TestWebhookResponse.model_validate(result).data
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 

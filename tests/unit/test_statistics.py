@@ -18,7 +18,7 @@ def test_add_rate_limit_error(attempts: list[int], expected_errors: list[int]) -
     """Test that add_rate_limit_error correctly tracks errors for different attempt sequences."""
     stats = ClientStatistics()
     for attempt in attempts:
-        stats.add_rate_limit_error(attempt)
+        stats.add_rate_limit_error(attempt=attempt)
     assert stats.rate_limit_errors == expected_errors
 
 
@@ -26,7 +26,7 @@ def test_add_rate_limit_error_invalid_attempt() -> None:
     """Test that add_rate_limit_error raises ValueError for invalid attempt."""
     stats = ClientStatistics()
     with pytest.raises(ValueError, match=r'Attempt must be greater than 0'):
-        stats.add_rate_limit_error(0)
+        stats.add_rate_limit_error(attempt=0)
 
 
 def test_statistics_initial_state() -> None:
@@ -41,7 +41,7 @@ def test_add_rate_limit_error_type_validation() -> None:
     """Test type validation in add_rate_limit_error."""
     stats = ClientStatistics()
     with pytest.raises(TypeError):
-        stats.add_rate_limit_error('1')  # ty: ignore[invalid-argument-type]
+        stats.add_rate_limit_error(attempt='1')  # ty: ignore[invalid-argument-type]
 
 
 def test_statistics_calls_and_requests_increment() -> None:
@@ -65,18 +65,18 @@ def test_rate_limit_errors_accumulation() -> None:
     stats = ClientStatistics()
 
     # Add errors to different attempts
-    stats.add_rate_limit_error(1)
-    stats.add_rate_limit_error(2)
-    stats.add_rate_limit_error(3)
+    stats.add_rate_limit_error(attempt=1)
+    stats.add_rate_limit_error(attempt=2)
+    stats.add_rate_limit_error(attempt=3)
 
     assert stats.rate_limit_errors[0] == 1
     assert stats.rate_limit_errors[1] == 1
     assert stats.rate_limit_errors[2] == 1
 
     # Add more errors to same attempts
-    stats.add_rate_limit_error(1)
-    stats.add_rate_limit_error(1)
-    stats.add_rate_limit_error(2)
+    stats.add_rate_limit_error(attempt=1)
+    stats.add_rate_limit_error(attempt=1)
+    stats.add_rate_limit_error(attempt=2)
 
     assert stats.rate_limit_errors[0] == 3
     assert stats.rate_limit_errors[1] == 2
@@ -91,7 +91,7 @@ def test_rate_limit_errors_dict_behavior() -> None:
     assert stats.rate_limit_errors.get(999, 0) == 0
 
     # Adding to high attempt numbers should work
-    stats.add_rate_limit_error(100)
+    stats.add_rate_limit_error(attempt=100)
     assert stats.rate_limit_errors[99] == 1
 
 
@@ -102,7 +102,7 @@ def test_statistics_independent_instances() -> None:
 
     stats1.calls = 10
     stats1.requests = 20
-    stats1.add_rate_limit_error(1)
+    stats1.add_rate_limit_error(attempt=1)
 
     assert stats2.calls == 0
     assert stats2.requests == 0
@@ -113,8 +113,8 @@ def test_add_rate_limit_error_large_attempt() -> None:
     """Test add_rate_limit_error with large attempt numbers."""
     stats = ClientStatistics()
 
-    stats.add_rate_limit_error(1000)
+    stats.add_rate_limit_error(attempt=1000)
     assert stats.rate_limit_errors[999] == 1
 
-    stats.add_rate_limit_error(10000)
+    stats.add_rate_limit_error(attempt=10000)
     assert stats.rate_limit_errors[9999] == 1

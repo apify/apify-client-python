@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 async def test_get_public_actor(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting a public Actor by ID."""
     # Use a well-known public actor (Apify's web scraper)
-    result = await maybe_await(client.actor('apify/web-scraper').get())
+    result = await maybe_await(client.actor(actor_id='apify/web-scraper').get())
     actor = cast('Actor', result)
 
     assert actor is not None
@@ -26,7 +26,7 @@ async def test_get_public_actor(client: ApifyClient | ApifyClientAsync) -> None:
 
 async def test_get_actor_by_full_name(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting an Actor using username/actorname format."""
-    result = await maybe_await(client.actor('apify/hello-world').get())
+    result = await maybe_await(client.actor(actor_id='apify/hello-world').get())
     actor = cast('Actor', result)
 
     assert actor is not None
@@ -99,7 +99,7 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
     assert created_actor.id is not None
     assert created_actor.name == actor_name
 
-    actor_client = client.actor(created_actor.id)
+    actor_client = client.actor(actor_id=created_actor.id)
 
     try:
         # Update actor (only title and description - updating defaultRunOptions requires build to be set)
@@ -134,7 +134,7 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
 async def test_actor_default_build(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting an Actor's default build."""
     # Use a public actor that has builds
-    actor_client = client.actor('apify/hello-world')
+    actor_client = client.actor(actor_id='apify/hello-world')
 
     # Get default build client
     result = await maybe_await(actor_client.default_build())
@@ -152,7 +152,7 @@ async def test_actor_default_build(client: ApifyClient | ApifyClientAsync) -> No
 async def test_actor_last_run(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting an Actor's last run."""
     # First run an actor to ensure there is a last run
-    actor_client = client.actor('apify/hello-world')
+    actor_client = client.actor(actor_id='apify/hello-world')
     result = await maybe_await(actor_client.call())
     run = cast('Run', result)
     assert run is not None
@@ -169,14 +169,14 @@ async def test_actor_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         assert last_run.id is not None
 
     finally:
-        await maybe_await(client.run(run.id).delete())
+        await maybe_await(client.run(run_id=run.id).delete())
 
 
 async def test_actor_validate_input(client: ApifyClient | ApifyClientAsync) -> None:
     """Test validating Actor input."""
     # Use a public actor with an input schema
-    actor_client = client.actor('apify/hello-world')
+    actor_client = client.actor(actor_id='apify/hello-world')
 
     # Valid input (hello-world accepts empty input or simple input)
-    is_valid = await maybe_await(actor_client.validate_input({}))
+    is_valid = await maybe_await(actor_client.validate_input(run_input={}))
     assert is_valid is True

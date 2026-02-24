@@ -29,7 +29,7 @@ class StreamedLog:
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
     _force_propagate = False
 
-    def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
+    def __init__(self, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         """Initialize `StreamedLog`.
 
         Args:
@@ -46,7 +46,7 @@ class StreamedLog:
         self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
         self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=UTC)
 
-    def _process_new_data(self, data: bytes) -> None:
+    def _process_new_data(self, *, data: bytes) -> None:
         new_chunk = data
         self._stream_buffer.append(new_chunk)
         if re.findall(self._split_marker, new_chunk):
@@ -79,10 +79,10 @@ class StreamedLog:
                     # Skip irrelevant logs
                     continue
             message = decoded_marker + decoded_content
-            self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
+            self._to_logger.log(level=self._guess_log_level_from_message(message=message), msg=message.strip())
 
     @staticmethod
-    def _guess_log_level_from_message(message: str) -> int:
+    def _guess_log_level_from_message(*, message: str) -> int:
         """Guess the log level from the message."""
         # Using only levels explicitly mentioned in the logging module
         known_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
@@ -97,7 +97,7 @@ class StreamedLog:
 class StreamedLogSync(StreamedLog):
     """Sync variant of `StreamedLog` that is logging in threads."""
 
-    def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+    def __init__(self, *, log_client: LogClient, to_logger: logging.Logger, from_start: bool = True) -> None:
         super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_thread: Thread | None = None
@@ -137,7 +137,7 @@ class StreamedLogSync(StreamedLog):
             if not log_stream:
                 return
             for data in log_stream.iter_bytes():
-                self._process_new_data(data)
+                self._process_new_data(data=data)
                 if self._stop_logging:
                     break
 
@@ -149,7 +149,7 @@ class StreamedLogSync(StreamedLog):
 class StreamedLogAsync(StreamedLog):
     """Async variant of `StreamedLog` that is logging in tasks."""
 
-    def __init__(self, log_client: LogClientAsync, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+    def __init__(self, *, log_client: LogClientAsync, to_logger: logging.Logger, from_start: bool = True) -> None:
         super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_task: Task | None = None
@@ -190,7 +190,7 @@ class StreamedLogAsync(StreamedLog):
             if not log_stream:
                 return
             async for data in log_stream.aiter_bytes():
-                self._process_new_data(data)
+                self._process_new_data(data=data)
 
             # If the stream is finished, then the last part will be also processed.
             self._log_buffer_content(include_last_part=True)

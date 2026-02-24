@@ -26,7 +26,7 @@ async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -
         )
     )
     created_schedule = cast('Schedule', result)
-    schedule_client = client.schedule(created_schedule.id)
+    schedule_client = client.schedule(schedule_id=created_schedule.id)
 
     try:
         assert created_schedule is not None
@@ -61,7 +61,7 @@ async def test_schedule_update(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_schedule = cast('Schedule', result)
-    schedule_client = client.schedule(created_schedule.id)
+    schedule_client = client.schedule(schedule_id=created_schedule.id)
 
     try:
         # Update the schedule
@@ -126,8 +126,8 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
         assert created_1.id in schedule_ids
         assert created_2.id in schedule_ids
     finally:
-        await maybe_await(client.schedule(created_1.id).delete())
-        await maybe_await(client.schedule(created_2.id).delete())
+        await maybe_await(client.schedule(schedule_id=created_1.id).delete())
+        await maybe_await(client.schedule(schedule_id=created_2.id).delete())
 
 
 async def test_schedule_delete(client: ApifyClient | ApifyClientAsync) -> None:
@@ -144,7 +144,7 @@ async def test_schedule_delete(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_schedule = cast('Schedule', result)
-    schedule_client = client.schedule(created_schedule.id)
+    schedule_client = client.schedule(schedule_id=created_schedule.id)
 
     # Delete schedule
     await maybe_await(schedule_client.delete())
@@ -168,7 +168,7 @@ async def test_schedule_get_log(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_schedule = cast('Schedule', result)
-    schedule_client = client.schedule(created_schedule.id)
+    schedule_client = client.schedule(schedule_id=created_schedule.id)
 
     try:
         # Get schedule log - new schedule has no log entries but the method should work

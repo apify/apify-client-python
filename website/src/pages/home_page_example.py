@@ -2,10 +2,10 @@ from apify_client import ApifyClientAsync
 
 
 async def main() -> None:
-    apify_client = ApifyClientAsync('MY-APIFY-TOKEN')
+    apify_client = ApifyClientAsync(token='MY-APIFY-TOKEN')
 
     # Start an Actor and wait for it to finish.
-    actor_client = apify_client.actor('john-doe/my-cool-actor')
+    actor_client = apify_client.actor(actor_id='john-doe/my-cool-actor')
     call_result = await actor_client.call()
 
     if call_result is None:
@@ -13,6 +13,6 @@ async def main() -> None:
         return
 
     # Fetch results from the Actor run's default dataset.
-    dataset_client = apify_client.dataset(call_result.default_dataset_id)
+    dataset_client = apify_client.dataset(dataset_id=call_result.default_dataset_id)
     list_items_result = await dataset_client.list_items()
     print(f'Dataset: {list_items_result}')

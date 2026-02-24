@@ -23,7 +23,7 @@ def main() -> None:
     print('Tasks created:', apify_tasks)
 
     # Create Apify task clients
-    apify_task_clients = [apify_client.task(task.id) for task in apify_tasks]
+    apify_task_clients = [apify_client.task(task_id=task.id) for task in apify_tasks]
 
     print('Task clients created:', apify_task_clients)
 

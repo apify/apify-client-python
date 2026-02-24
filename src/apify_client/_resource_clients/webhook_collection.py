@@ -93,7 +93,7 @@ class WebhookCollectionClient(ResourceClient):
             is_ad_hoc=is_ad_hoc,
         )
 
-        result = self._create(filter_none_values(webhook_representation, remove_empty_dicts=True))
+        result = self._create(created_fields=filter_none_values(data=webhook_representation, remove_empty_dicts=True))
         return WebhookResponse.model_validate(result).data
 
 
@@ -179,5 +179,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             is_ad_hoc=is_ad_hoc,
         )
 
-        result = await self._create(filter_none_values(webhook_representation, remove_empty_dicts=True))
+        result = await self._create(
+            created_fields=filter_none_values(data=webhook_representation, remove_empty_dicts=True)
+        )
         return WebhookResponse.model_validate(result).data

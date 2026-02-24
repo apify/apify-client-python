@@ -5,10 +5,10 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 def main() -> None:
-    apify_client = ApifyClient(TOKEN)
+    apify_client = ApifyClient(token=TOKEN)
 
     # Start an Actor and wait for it to finish.
-    actor_client = apify_client.actor('john-doe/my-cool-actor')
+    actor_client = apify_client.actor(actor_id='john-doe/my-cool-actor')
     call_result = actor_client.call()
 
     if call_result is None:
@@ -16,6 +16,6 @@ def main() -> None:
         return
 
     # Fetch results from the Actor run's default dataset.
-    dataset_client = apify_client.dataset(call_result.default_dataset_id)
+    dataset_client = apify_client.dataset(dataset_id=call_result.default_dataset_id)
     list_items_result = dataset_client.list_items()
     print(f'Dataset: {list_items_result}')

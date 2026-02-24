@@ -86,8 +86,8 @@ class ApifyClient:
 
     def __init__(
         self,
-        token: str | None = None,
         *,
+        token: str | None = None,
         api_url: str = DEFAULT_API_URL,
         api_public_url: str | None = DEFAULT_API_URL,
         max_retries: int = DEFAULT_MAX_RETRIES,
@@ -114,7 +114,7 @@ class ApifyClient:
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
 
         if headers:
-            self._check_custom_headers(headers)
+            self._check_custom_headers(headers=headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -181,7 +181,7 @@ class ApifyClient:
             'client_registry': self._client_registry,
         }
 
-    def _check_custom_headers(self, headers: dict[str, str]) -> None:
+    def _check_custom_headers(self, *, headers: dict[str, str]) -> None:
         """Warn if custom headers override important default headers."""
         overwrite_headers = [key for key in headers if key.title() in self._OVERRIDABLE_DEFAULT_HEADERS]
         if overwrite_headers:
@@ -198,7 +198,7 @@ class ApifyClient:
         """The Apify API token used by the client."""
         return self._token
 
-    def actor(self, actor_id: str) -> ActorClient:
+    def actor(self, *, actor_id: str) -> ActorClient:
         """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
@@ -210,7 +210,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating Actors."""
         return ActorCollectionClient(**self._base_kwargs)
 
-    def build(self, build_id: str) -> BuildClient:
+    def build(self, *, build_id: str) -> BuildClient:
         """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
@@ -222,7 +222,7 @@ class ApifyClient:
         """Retrieve the sub-client for querying multiple builds of a user."""
         return BuildCollectionClient(**self._base_kwargs)
 
-    def run(self, run_id: str) -> RunClient:
+    def run(self, *, run_id: str) -> RunClient:
         """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
@@ -234,7 +234,7 @@ class ApifyClient:
         """Retrieve the sub-client for querying multiple Actor runs of a user."""
         return RunCollectionClient(**self._base_kwargs)
 
-    def dataset(self, dataset_id: str) -> DatasetClient:
+    def dataset(self, *, dataset_id: str) -> DatasetClient:
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
@@ -246,7 +246,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating datasets."""
         return DatasetCollectionClient(**self._base_kwargs)
 
-    def key_value_store(self, key_value_store_id: str) -> KeyValueStoreClient:
+    def key_value_store(self, *, key_value_store_id: str) -> KeyValueStoreClient:
         """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
@@ -258,7 +258,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating key-value stores."""
         return KeyValueStoreCollectionClient(**self._base_kwargs)
 
-    def request_queue(self, request_queue_id: str, *, client_key: str | None = None) -> RequestQueueClient:
+    def request_queue(self, *, request_queue_id: str, client_key: str | None = None) -> RequestQueueClient:
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
@@ -271,7 +271,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClient(**self._base_kwargs)
 
-    def webhook(self, webhook_id: str) -> WebhookClient:
+    def webhook(self, *, webhook_id: str) -> WebhookClient:
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
@@ -283,7 +283,7 @@ class ApifyClient:
         """Retrieve the sub-client for querying multiple webhooks of a user."""
         return WebhookCollectionClient(**self._base_kwargs)
 
-    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClient:
+    def webhook_dispatch(self, *, webhook_dispatch_id: str) -> WebhookDispatchClient:
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
@@ -295,7 +295,7 @@ class ApifyClient:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClient(**self._base_kwargs)
 
-    def schedule(self, schedule_id: str) -> ScheduleClient:
+    def schedule(self, *, schedule_id: str) -> ScheduleClient:
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
@@ -307,7 +307,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating schedules."""
         return ScheduleCollectionClient(**self._base_kwargs)
 
-    def log(self, build_or_run_id: str) -> LogClient:
+    def log(self, *, build_or_run_id: str) -> LogClient:
         """Retrieve the sub-client for retrieving logs.
 
         Args:
@@ -315,7 +315,7 @@ class ApifyClient:
         """
         return LogClient(resource_id=build_or_run_id, **self._base_kwargs)
 
-    def task(self, task_id: str) -> TaskClient:
+    def task(self, *, task_id: str) -> TaskClient:
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
@@ -327,7 +327,7 @@ class ApifyClient:
         """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClient(**self._base_kwargs)
 
-    def user(self, user_id: str | None = None) -> UserClient:
+    def user(self, *, user_id: str | None = None) -> UserClient:
         """Retrieve the sub-client for querying users.
 
         Args:
@@ -347,8 +347,8 @@ class ApifyClientAsync:
 
     def __init__(
         self,
-        token: str | None = None,
         *,
+        token: str | None = None,
         api_url: str = DEFAULT_API_URL,
         api_public_url: str | None = DEFAULT_API_URL,
         max_retries: int = DEFAULT_MAX_RETRIES,
@@ -375,7 +375,7 @@ class ApifyClientAsync:
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
 
         if headers:
-            self._check_custom_headers(headers)
+            self._check_custom_headers(headers=headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -442,7 +442,7 @@ class ApifyClientAsync:
             'client_registry': self._client_registry,
         }
 
-    def _check_custom_headers(self, headers: dict[str, str]) -> None:
+    def _check_custom_headers(self, *, headers: dict[str, str]) -> None:
         """Warn if custom headers override important default headers."""
         overwrite_headers = [key for key in headers if key.title() in self._OVERRIDABLE_DEFAULT_HEADERS]
         if overwrite_headers:
@@ -459,7 +459,7 @@ class ApifyClientAsync:
         """The Apify API token used by the client."""
         return self._token
 
-    def actor(self, actor_id: str) -> ActorClientAsync:
+    def actor(self, *, actor_id: str) -> ActorClientAsync:
         """Retrieve the sub-client for manipulating a single Actor.
 
         Args:
@@ -471,7 +471,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for manipulating Actors."""
         return ActorCollectionClientAsync(**self._base_kwargs)
 
-    def build(self, build_id: str) -> BuildClientAsync:
+    def build(self, *, build_id: str) -> BuildClientAsync:
         """Retrieve the sub-client for manipulating a single Actor build.
 
         Args:
@@ -483,7 +483,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for querying multiple builds of a user."""
         return BuildCollectionClientAsync(**self._base_kwargs)
 
-    def run(self, run_id: str) -> RunClientAsync:
+    def run(self, *, run_id: str) -> RunClientAsync:
         """Retrieve the sub-client for manipulating a single Actor run.
 
         Args:
@@ -495,7 +495,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for querying multiple Actor runs of a user."""
         return RunCollectionClientAsync(**self._base_kwargs)
 
-    def dataset(self, dataset_id: str) -> DatasetClientAsync:
+    def dataset(self, *, dataset_id: str) -> DatasetClientAsync:
         """Retrieve the sub-client for manipulating a single dataset.
 
         Args:
@@ -507,7 +507,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for manipulating datasets."""
         return DatasetCollectionClientAsync(**self._base_kwargs)
 
-    def key_value_store(self, key_value_store_id: str) -> KeyValueStoreClientAsync:
+    def key_value_store(self, *, key_value_store_id: str) -> KeyValueStoreClientAsync:
         """Retrieve the sub-client for manipulating a single key-value store.
 
         Args:
@@ -519,7 +519,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for manipulating key-value stores."""
         return KeyValueStoreCollectionClientAsync(**self._base_kwargs)
 
-    def request_queue(self, request_queue_id: str, *, client_key: str | None = None) -> RequestQueueClientAsync:
+    def request_queue(self, *, request_queue_id: str, client_key: str | None = None) -> RequestQueueClientAsync:
         """Retrieve the sub-client for manipulating a single request queue.
 
         Args:
@@ -532,7 +532,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for manipulating request queues."""
         return RequestQueueCollectionClientAsync(**self._base_kwargs)
 
-    def webhook(self, webhook_id: str) -> WebhookClientAsync:
+    def webhook(self, *, webhook_id: str) -> WebhookClientAsync:
         """Retrieve the sub-client for manipulating a single webhook.
 
         Args:
@@ -544,7 +544,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for querying multiple webhooks of a user."""
         return WebhookCollectionClientAsync(**self._base_kwargs)
 
-    def webhook_dispatch(self, webhook_dispatch_id: str) -> WebhookDispatchClientAsync:
+    def webhook_dispatch(self, *, webhook_dispatch_id: str) -> WebhookDispatchClientAsync:
         """Retrieve the sub-client for accessing a single webhook dispatch.
 
         Args:
@@ -556,7 +556,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for querying multiple webhook dispatches of a user."""
         return WebhookDispatchCollectionClientAsync(**self._base_kwargs)
 
-    def schedule(self, schedule_id: str) -> ScheduleClientAsync:
+    def schedule(self, *, schedule_id: str) -> ScheduleClientAsync:
         """Retrieve the sub-client for manipulating a single schedule.
 
         Args:
@@ -568,7 +568,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for manipulating schedules."""
         return ScheduleCollectionClientAsync(**self._base_kwargs)
 
-    def log(self, build_or_run_id: str) -> LogClientAsync:
+    def log(self, *, build_or_run_id: str) -> LogClientAsync:
         """Retrieve the sub-client for retrieving logs.
 
         Args:
@@ -576,7 +576,7 @@ class ApifyClientAsync:
         """
         return LogClientAsync(resource_id=build_or_run_id, **self._base_kwargs)
 
-    def task(self, task_id: str) -> TaskClientAsync:
+    def task(self, *, task_id: str) -> TaskClientAsync:
         """Retrieve the sub-client for manipulating a single task.
 
         Args:
@@ -588,7 +588,7 @@ class ApifyClientAsync:
         """Retrieve the sub-client for manipulating tasks."""
         return TaskCollectionClientAsync(**self._base_kwargs)
 
-    def user(self, user_id: str | None = None) -> UserClientAsync:
+    def user(self, *, user_id: str | None = None) -> UserClientAsync:
         """Retrieve the sub-client for querying users.
 
         Args:

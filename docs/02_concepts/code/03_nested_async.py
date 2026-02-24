@@ -4,9 +4,9 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 async def main() -> None:
-    apify_client = ApifyClientAsync(TOKEN)
+    apify_client = ApifyClientAsync(token=TOKEN)
 
-    actor_client = apify_client.actor('username/actor-name')
+    actor_client = apify_client.actor(actor_id='username/actor-name')
     runs_client = actor_client.runs()
 
     # List the last 10 runs of the Actor

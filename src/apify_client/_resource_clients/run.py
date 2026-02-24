@@ -92,9 +92,9 @@ class RunClient(ResourceClient):
             'isStatusMessageTerminal': is_status_message_terminal,
             'generalAccess': general_access,
         }
-        cleaned = filter_none_values(updated_fields)
+        cleaned = filter_none_values(data=updated_fields)
 
-        result = self._update(cleaned)
+        result = self._update(updated_fields=cleaned)
         return RunResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -118,11 +118,11 @@ class RunClient(ResourceClient):
             The data of the aborted Actor run.
         """
         response = self._http_client.call(
-            url=self._build_url('abort'),
+            url=self._build_url(path='abort'),
             method='POST',
             params=self._build_params(gracefully=gracefully),
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
@@ -169,21 +169,21 @@ class RunClient(ResourceClient):
         Returns:
             The Actor run data.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(value=run_input, content_type=content_type)
 
-        safe_target_actor_id = to_safe_id(target_actor_id)
+        safe_target_actor_id = to_safe_id(id=target_actor_id)
 
         request_params = self._build_params(targetActorId=safe_target_actor_id, build=target_actor_build)
 
         response = self._http_client.call(
-            url=self._build_url('metamorph'),
+            url=self._build_url(path='metamorph'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def resurrect(
@@ -223,19 +223,19 @@ class RunClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(td=timeout, as_int=True),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
         )
 
         response = self._http_client.call(
-            url=self._build_url('resurrect'),
+            url=self._build_url(path='resurrect'),
             method='POST',
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def reboot(self) -> Run:
@@ -247,10 +247,10 @@ class RunClient(ResourceClient):
             The Actor run data.
         """
         response = self._http_client.call(
-            url=self._build_url('reboot'),
+            url=self._build_url(path='reboot'),
             method='POST',
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def dataset(self) -> DatasetClient:
@@ -305,7 +305,7 @@ class RunClient(ResourceClient):
             **self._base_client_kwargs,
         )
 
-    def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
+    def get_streamed_log(self, *, to_logger: logging.Logger | None = None, from_start: bool = True) -> StreamedLogSync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
          `StreamedLog` can be explicitly started and stopped or used as a context manager.
@@ -337,12 +337,13 @@ class RunClient(ResourceClient):
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
-            to_logger = create_redirect_logger(f'apify.{name}')
+            to_logger = create_redirect_logger(name=f'apify.{name}')
 
         return self._client_registry.streamed_log(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     def charge(
         self,
+        *,
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
@@ -369,7 +370,7 @@ class RunClient(ResourceClient):
             idempotency_key = f'{self._resource_id}-{event_name}-{timestamp_ms}-{random_suffix}'
 
         self._http_client.call(
-            url=self._build_url('charge'),
+            url=self._build_url(path='charge'),
             method='POST',
             headers={
                 'idempotency-key': idempotency_key,
@@ -384,7 +385,7 @@ class RunClient(ResourceClient):
         )
 
     def get_status_message_watcher(
-        self, to_logger: logging.Logger | None = None, check_period: timedelta = timedelta(seconds=1)
+        self, *, to_logger: logging.Logger | None = None, check_period: timedelta = timedelta(seconds=1)
     ) -> StatusMessageWatcherSync:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
@@ -416,7 +417,7 @@ class RunClient(ResourceClient):
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
-            to_logger = create_redirect_logger(f'apify.{name}')
+            to_logger = create_redirect_logger(name=f'apify.{name}')
 
         return self._client_registry.status_message_watcher(
             run_client=self, to_logger=to_logger, check_period=check_period
@@ -476,9 +477,9 @@ class RunClientAsync(ResourceClientAsync):
             'isStatusMessageTerminal': is_status_message_terminal,
             'generalAccess': general_access,
         }
-        cleaned = filter_none_values(updated_fields)
+        cleaned = filter_none_values(data=updated_fields)
 
-        result = await self._update(cleaned)
+        result = await self._update(updated_fields=cleaned)
         return RunResponse.model_validate(result).data
 
     async def abort(self, *, gracefully: bool | None = None) -> Run:
@@ -495,11 +496,11 @@ class RunClientAsync(ResourceClientAsync):
             The data of the aborted Actor run.
         """
         response = await self._http_client.call(
-            url=self._build_url('abort'),
+            url=self._build_url(path='abort'),
             method='POST',
             params=self._build_params(gracefully=gracefully),
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
@@ -549,9 +550,9 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The Actor run data.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(value=run_input, content_type=content_type)
 
-        safe_target_actor_id = to_safe_id(target_actor_id)
+        safe_target_actor_id = to_safe_id(id=target_actor_id)
 
         request_params = self._build_params(
             targetActorId=safe_target_actor_id,
@@ -559,14 +560,14 @@ class RunClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url('metamorph'),
+            url=self._build_url(path='metamorph'),
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     async def resurrect(
@@ -606,19 +607,19 @@ class RunClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(td=timeout, as_int=True),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
         )
 
         response = await self._http_client.call(
-            url=self._build_url('resurrect'),
+            url=self._build_url(path='resurrect'),
             method='POST',
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     async def reboot(self) -> Run:
@@ -630,10 +631,10 @@ class RunClientAsync(ResourceClientAsync):
             The Actor run data.
         """
         response = await self._http_client.call(
-            url=self._build_url('reboot'),
+            url=self._build_url(path='reboot'),
             method='POST',
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def dataset(self) -> DatasetClientAsync:
@@ -689,7 +690,7 @@ class RunClientAsync(ResourceClientAsync):
         )
 
     async def get_streamed_log(
-        self, to_logger: logging.Logger | None = None, *, from_start: bool = True
+        self, *, to_logger: logging.Logger | None = None, from_start: bool = True
     ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
@@ -722,12 +723,13 @@ class RunClientAsync(ResourceClientAsync):
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
-            to_logger = create_redirect_logger(f'apify.{name}')
+            to_logger = create_redirect_logger(name=f'apify.{name}')
 
         return self._client_registry.streamed_log(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     async def charge(
         self,
+        *,
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
@@ -754,7 +756,7 @@ class RunClientAsync(ResourceClientAsync):
             idempotency_key = f'{self._resource_id}-{event_name}-{timestamp_ms}-{random_suffix}'
 
         await self._http_client.call(
-            url=self._build_url('charge'),
+            url=self._build_url(path='charge'),
             method='POST',
             headers={
                 'idempotency-key': idempotency_key,
@@ -770,6 +772,7 @@ class RunClientAsync(ResourceClientAsync):
 
     async def get_status_message_watcher(
         self,
+        *,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
     ) -> StatusMessageWatcherAsync:
@@ -804,7 +807,7 @@ class RunClientAsync(ResourceClientAsync):
 
         if not to_logger:
             name = ' '.join(part for part in (actor_name, run_id) if part)
-            to_logger = create_redirect_logger(f'apify.{name}')
+            to_logger = create_redirect_logger(name=f'apify.{name}')
 
         return self._client_registry.status_message_watcher(
             run_client=self, to_logger=to_logger, check_period=check_period

@@ -20,7 +20,7 @@ async def test_task_create_and_get(client: ApifyClient | ApifyClientAsync) -> No
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
     actor_id = actor.id
@@ -33,7 +33,7 @@ async def test_task_create_and_get(client: ApifyClient | ApifyClientAsync) -> No
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         assert created_task is not None
@@ -57,7 +57,7 @@ async def test_task_update(client: ApifyClient | ApifyClientAsync) -> None:
     new_name = get_random_resource_name('task-updated')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -69,7 +69,7 @@ async def test_task_update(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Update the task
@@ -98,7 +98,7 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -122,7 +122,7 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
         task_ids = [t.id for t in tasks_page.items]
         assert created_task.id in task_ids
     finally:
-        await maybe_await(client.task(created_task.id).delete())
+        await maybe_await(client.task(task_id=created_task.id).delete())
 
 
 async def test_task_get_input(client: ApifyClient | ApifyClientAsync) -> None:
@@ -131,7 +131,7 @@ async def test_task_get_input(client: ApifyClient | ApifyClientAsync) -> None:
     test_input = {'message': 'Hello from test'}
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -144,7 +144,7 @@ async def test_task_get_input(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Get input
@@ -168,7 +168,7 @@ async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -180,7 +180,7 @@ async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Start the task
@@ -191,13 +191,13 @@ async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
         assert run.act_id == actor.id
 
         # Wait for the run to finish
-        result = await maybe_await(client.run(run.id).wait_for_finish())
+        result = await maybe_await(client.run(run_id=run.id).wait_for_finish())
         finished_run = cast('Run', result)
         assert finished_run is not None
         assert finished_run.status.value == 'SUCCEEDED'
 
         # Cleanup run
-        await maybe_await(client.run(run.id).delete())
+        await maybe_await(client.run(run_id=run.id).delete())
     finally:
         await maybe_await(task_client.delete())
 
@@ -207,7 +207,7 @@ async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -219,7 +219,7 @@ async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Call the task (waits for finish)
@@ -230,7 +230,7 @@ async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
         assert run.status.value == 'SUCCEEDED'
 
         # Cleanup run
-        await maybe_await(client.run(run.id).delete())
+        await maybe_await(client.run(run_id=run.id).delete())
     finally:
         await maybe_await(task_client.delete())
 
@@ -240,7 +240,7 @@ async def test_task_delete(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -252,7 +252,7 @@ async def test_task_delete(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     # Delete task
     await maybe_await(task_client.delete())
@@ -267,7 +267,7 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -279,7 +279,7 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Run the task
@@ -296,7 +296,7 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
         assert len(runs_page.items) >= 1
 
         # Cleanup run
-        await maybe_await(client.run(run.id).delete())
+        await maybe_await(client.run(run_id=run.id).delete())
 
     finally:
         # Cleanup task
@@ -308,7 +308,7 @@ async def test_task_last_run(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -320,7 +320,7 @@ async def test_task_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Run the task
@@ -336,7 +336,7 @@ async def test_task_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         assert last_run.id == run.id
 
         # Cleanup run
-        await maybe_await(client.run(run.id).delete())
+        await maybe_await(client.run(run_id=run.id).delete())
 
     finally:
         # Cleanup task
@@ -348,7 +348,7 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     task_name = get_random_resource_name('task')
 
     # Get the actor ID for hello-world
-    result = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    result = await maybe_await(client.actor(actor_id=HELLO_WORLD_ACTOR).get())
     actor = cast('Actor', result)
     assert actor is not None
 
@@ -360,7 +360,7 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_task = cast('Task', result)
-    task_client = client.task(created_task.id)
+    task_client = client.task(task_id=created_task.id)
 
     try:
         # Get webhooks client

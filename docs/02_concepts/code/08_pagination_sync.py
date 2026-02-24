@@ -4,10 +4,10 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 def main() -> None:
-    apify_client = ApifyClient(TOKEN)
+    apify_client = ApifyClient(token=TOKEN)
 
     # Initialize the dataset client
-    dataset_client = apify_client.dataset('dataset-id')
+    dataset_client = apify_client.dataset(dataset_id='dataset-id')
 
     # Define the pagination parameters
     limit = 1000  # Number of items per page

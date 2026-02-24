@@ -41,7 +41,7 @@ class LogClient(ResourceClient):
             return response.text  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -66,7 +66,7 @@ class LogClient(ResourceClient):
             return response.content  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -93,7 +93,7 @@ class LogClient(ResourceClient):
 
             yield response
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
             yield None
         finally:
             if response:
@@ -128,7 +128,7 @@ class LogClientAsync(ResourceClientAsync):
             return response.text  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -153,7 +153,7 @@ class LogClientAsync(ResourceClientAsync):
             return response.content  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -180,7 +180,7 @@ class LogClientAsync(ResourceClientAsync):
 
             yield response
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
             yield None
         finally:
             if response:

@@ -41,10 +41,10 @@ class StatusMessageWatcher:
         if self._force_propagate:
             to_logger.propagate = True
         self._to_logger = to_logger
-        self._check_period = to_seconds(check_period)
+        self._check_period = to_seconds(td=check_period)
         self._last_status_message = ''
 
-    def _log_run_data(self, run_data: Run | None) -> bool:
+    def _log_run_data(self, *, run_data: Run | None) -> bool:
         """Get relevant run data, log them if changed and return `True` if more data is expected.
 
         Args:
@@ -118,7 +118,7 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
     async def _log_changed_status_message(self) -> None:
         while True:
             run_data = await self._run_client.get()
-            if not self._log_run_data(run_data):
+            if not self._log_run_data(run_data=run_data):
                 break
             await asyncio.sleep(self._check_period)
 
@@ -173,7 +173,7 @@ class StatusMessageWatcherSync(StatusMessageWatcher):
 
     def _log_changed_status_message(self) -> None:
         while True:
-            if not self._log_run_data(self._run_client.get()):
+            if not self._log_run_data(run_data=self._run_client.get()):
                 break
             if self._stop_logging:
                 break

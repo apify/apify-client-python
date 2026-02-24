@@ -116,9 +116,9 @@ class TaskClient(ResourceClient):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
-        cleaned = filter_none_values(task_representation, remove_empty_dicts=True)
+        cleaned = filter_none_values(data=task_representation, remove_empty_dicts=True)
 
-        result = self._update(cleaned)
+        result = self._update(updated_fields=cleaned)
         return TaskResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -173,21 +173,21 @@ class TaskClient(ResourceClient):
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(td=timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks=webhooks) if webhooks is not None else None,
         )
 
         response = self._http_client.call(
-            url=self._build_url('runs'),
+            url=self._build_url(path='runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             json=task_input,
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     def call(
@@ -258,13 +258,13 @@ class TaskClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url('input'),
+                url=self._build_url(path='input'),
                 method='GET',
                 params=self._build_params(),
             )
-            return response_to_dict(response)
+            return response_to_dict(response=response)
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
         return None
 
     def update_input(self, *, task_input: dict) -> dict:
@@ -279,12 +279,12 @@ class TaskClient(ResourceClient):
             The updated task input.
         """
         response = self._http_client.call(
-            url=self._build_url('input'),
+            url=self._build_url(path='input'),
             method='PUT',
             params=self._build_params(),
             json=task_input,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     def runs(self) -> RunCollectionClient:
         """Retrieve a client for the runs of this task."""
@@ -308,7 +308,7 @@ class TaskClient(ResourceClient):
         return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
-            params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
+            params=self._build_params(status=enum_to_value(value=status), origin=enum_to_value(value=origin)),
             **self._base_client_kwargs,
         )
 
@@ -404,9 +404,9 @@ class TaskClientAsync(ResourceClientAsync):
             actor_standby_build=actor_standby_build,
             actor_standby_memory_mbytes=actor_standby_memory_mbytes,
         )
-        cleaned = filter_none_values(task_representation, remove_empty_dicts=True)
+        cleaned = filter_none_values(data=task_representation, remove_empty_dicts=True)
 
-        result = await self._update(cleaned)
+        result = await self._update(updated_fields=cleaned)
         return TaskResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -461,21 +461,21 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(td=timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks=webhooks) if webhooks is not None else None,
         )
 
         response = await self._http_client.call(
-            url=self._build_url('runs'),
+            url=self._build_url(path='runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             json=task_input,
             params=request_params,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return RunResponse.model_validate(result).data
 
     async def call(
@@ -545,13 +545,13 @@ class TaskClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url('input'),
+                url=self._build_url(path='input'),
                 method='GET',
                 params=self._build_params(),
             )
-            return response_to_dict(response)
+            return response_to_dict(response=response)
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
         return None
 
     async def update_input(self, *, task_input: dict) -> dict:
@@ -566,12 +566,12 @@ class TaskClientAsync(ResourceClientAsync):
             The updated task input.
         """
         response = await self._http_client.call(
-            url=self._build_url('input'),
+            url=self._build_url(path='input'),
             method='PUT',
             params=self._build_params(),
             json=task_input,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     def runs(self) -> RunCollectionClientAsync:
         """Retrieve a client for the runs of this task."""
@@ -595,7 +595,7 @@ class TaskClientAsync(ResourceClientAsync):
         return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
-            params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
+            params=self._build_params(status=enum_to_value(value=status), origin=enum_to_value(value=origin)),
             **self._base_client_kwargs,
         )
 

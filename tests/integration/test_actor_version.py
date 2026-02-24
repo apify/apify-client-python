@@ -38,7 +38,7 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
+    actor_client = client.actor(actor_id=actor.id)
 
     try:
         # List versions
@@ -65,7 +65,7 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
     # Create an actor without versions
     result = await maybe_await(client.actors().create(name=actor_name))
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
+    actor_client = client.actor(actor_id=actor.id)
 
     try:
         # Create a new version
@@ -91,7 +91,7 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
         assert created_version.source_type == VersionSourceType.SOURCE_FILES
 
         # Get the same version
-        version_client = actor_client.version('1.0')
+        version_client = actor_client.version(version_number='1.0')
         result = await maybe_await(version_client.get())
         retrieved_version = cast('Version | None', result)
 
@@ -128,8 +128,8 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
-    version_client = actor_client.version('0.1')
+    actor_client = client.actor(actor_id=actor.id)
+    version_client = actor_client.version(version_number='0.1')
 
     try:
         # Update the version
@@ -198,11 +198,11 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
+    actor_client = client.actor(actor_id=actor.id)
 
     try:
         # Delete version 0.1
-        version_client = actor_client.version('0.1')
+        version_client = actor_client.version(version_number='0.1')
         await maybe_await(version_client.delete())
 
         # Verify it's gone
@@ -210,7 +210,7 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert deleted_version is None
 
         # Verify version 0.2 still exists
-        result = await maybe_await(actor_client.version('0.2').get())
+        result = await maybe_await(actor_client.version(version_number='0.2').get())
         remaining_version = cast('Version | None', result)
         assert remaining_version is not None
         assert remaining_version.version_number == '0.2'

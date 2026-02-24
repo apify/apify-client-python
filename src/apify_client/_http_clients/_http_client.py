@@ -62,7 +62,7 @@ class HttpClient(BaseHttpClient):
         self._impit_client = impit.Client(
             headers=self._headers,
             follow_redirects=True,
-            timeout=to_seconds(self._timeout),
+            timeout=to_seconds(td=self._timeout),
         )
 
     def call(
@@ -101,10 +101,12 @@ class HttpClient(BaseHttpClient):
 
         self._statistics.calls += 1
 
-        prepared_headers, prepared_params, content = self._prepare_request_call(headers, params, data, json)
+        prepared_headers, prepared_params, content = self._prepare_request_call(
+            headers=headers, params=params, data=data, json=json
+        )
 
         return self._retry_with_exp_backoff(
-            lambda stop_retrying, attempt: self._make_request(
+            func=lambda stop_retrying, attempt: self._make_request(
                 stop_retrying=stop_retrying,
                 attempt=attempt,
                 method=method,
@@ -157,14 +159,14 @@ class HttpClient(BaseHttpClient):
         self._statistics.requests += 1
 
         try:
-            url_with_params = self._build_url_with_params(url, params)
+            url_with_params = self._build_url_with_params(url=url, params=params)
 
             response = self._impit_client.request(
                 method=method,
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._calculate_timeout(attempt, timeout),
+                timeout=self._calculate_timeout(attempt=attempt, timeout=timeout),
                 stream=stream or False,
             )
 
@@ -173,11 +175,11 @@ class HttpClient(BaseHttpClient):
                 return response
 
             if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-                self._statistics.add_rate_limit_error(attempt)
+                self._statistics.add_rate_limit_error(attempt=attempt)
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            if not self._is_retryable_error(exc):
+            if not self._is_retryable_error(exc=exc):
                 logger.debug('Exception is not retryable', exc_info=exc)
                 stop_retrying()
             raise
@@ -193,12 +195,12 @@ class HttpClient(BaseHttpClient):
 
         # Read the response in case it is a stream, so we can raise the error properly.
         response.read()
-        raise ApifyApiError(response, attempt, method=method)
+        raise ApifyApiError(response=response, attempt=attempt, method=method)
 
     @staticmethod
     def _retry_with_exp_backoff(
-        func: Callable[[Callable[[], None], int], T],
         *,
+        func: Callable[[Callable[[], None], int], T],
         max_retries: int = 8,
         backoff_base: timedelta = timedelta(milliseconds=500),
         backoff_factor: float = 2,
@@ -238,7 +240,7 @@ class HttpClient(BaseHttpClient):
                     raise
 
             random_sleep_factor = random.uniform(1, 1 + random_factor)
-            backoff_base_secs = to_seconds(backoff_base)
+            backoff_base_secs = to_seconds(td=backoff_base)
             backoff_exp_factor = backoff_factor ** (attempt - 1)
 
             sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor
@@ -282,7 +284,7 @@ class HttpClientAsync(BaseHttpClient):
         self._impit_async_client = impit.AsyncClient(
             headers=self._headers,
             follow_redirects=True,
-            timeout=to_seconds(self._timeout),
+            timeout=to_seconds(td=self._timeout),
         )
 
     async def call(
@@ -321,10 +323,12 @@ class HttpClientAsync(BaseHttpClient):
 
         self._statistics.calls += 1
 
-        prepared_headers, prepared_params, content = self._prepare_request_call(headers, params, data, json)
+        prepared_headers, prepared_params, content = self._prepare_request_call(
+            headers=headers, params=params, data=data, json=json
+        )
 
         return await self._retry_with_exp_backoff(
-            lambda stop_retrying, attempt: self._make_request(
+            func=lambda stop_retrying, attempt: self._make_request(
                 stop_retrying=stop_retrying,
                 attempt=attempt,
                 method=method,
@@ -377,14 +381,14 @@ class HttpClientAsync(BaseHttpClient):
         self._statistics.requests += 1
 
         try:
-            url_with_params = self._build_url_with_params(url, params)
+            url_with_params = self._build_url_with_params(url=url, params=params)
 
             response = await self._impit_async_client.request(
                 method=method,
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._calculate_timeout(attempt, timeout),
+                timeout=self._calculate_timeout(attempt=attempt, timeout=timeout),
                 stream=stream or False,
             )
 
@@ -393,11 +397,11 @@ class HttpClientAsync(BaseHttpClient):
                 return response
 
             if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
-                self._statistics.add_rate_limit_error(attempt)
+                self._statistics.add_rate_limit_error(attempt=attempt)
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            if not self._is_retryable_error(exc):
+            if not self._is_retryable_error(exc=exc):
                 logger.debug('Exception is not retryable', exc_info=exc)
                 stop_retrying()
             raise
@@ -413,12 +417,12 @@ class HttpClientAsync(BaseHttpClient):
 
         # Read the response in case it is a stream, so we can raise the error properly.
         await response.aread()
-        raise ApifyApiError(response, attempt, method=method)
+        raise ApifyApiError(response=response, attempt=attempt, method=method)
 
     @staticmethod
     async def _retry_with_exp_backoff(
-        func: Callable[[Callable[[], None], int], Awaitable[T]],
         *,
+        func: Callable[[Callable[[], None], int], Awaitable[T]],
         max_retries: int = 8,
         backoff_base: timedelta = timedelta(milliseconds=500),
         backoff_factor: float = 2,
@@ -458,7 +462,7 @@ class HttpClientAsync(BaseHttpClient):
                     raise
 
             random_sleep_factor = random.uniform(1, 1 + random_factor)
-            backoff_base_secs = to_seconds(backoff_base)
+            backoff_base_secs = to_seconds(td=backoff_base)
             backoff_exp_factor = backoff_factor ** (attempt - 1)
 
             sleep_time_secs = random_sleep_factor * backoff_base_secs * backoff_exp_factor

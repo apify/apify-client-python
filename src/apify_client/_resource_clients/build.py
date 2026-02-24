@@ -57,11 +57,11 @@ class BuildClient(ResourceClient):
             The data of the aborted Actor build.
         """
         response = self._http_client.call(
-            url=self._build_url('abort'),
+            url=self._build_url(path='abort'),
             method='POST',
             params=self._build_params(),
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return BuildResponse.model_validate(result).data
 
     def get_open_api_definition(self) -> dict:
@@ -73,10 +73,10 @@ class BuildClient(ResourceClient):
             OpenAPI definition of the Actor's build.
         """
         response = self._http_client.call(
-            url=self._build_url('openapi.json'),
+            url=self._build_url(path='openapi.json'),
             method='GET',
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.
@@ -147,11 +147,11 @@ class BuildClientAsync(ResourceClientAsync):
             The data of the aborted Actor build.
         """
         response = await self._http_client.call(
-            url=self._build_url('abort'),
+            url=self._build_url(path='abort'),
             method='POST',
             params=self._build_params(),
         )
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return BuildResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -170,10 +170,10 @@ class BuildClientAsync(ResourceClientAsync):
             OpenAPI definition of the Actor's build.
         """
         response = await self._http_client.call(
-            url=self._build_url('openapi.json'),
+            url=self._build_url(path='openapi.json'),
             method='GET',
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
         """Wait asynchronously until the build finishes or the server times out.

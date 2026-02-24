@@ -26,7 +26,9 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     Using a finished run's ID for webhook conditions ensures the webhook will never actually fire,
     since a completed run won't emit new events.
     """
-    runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
+    runs_page = await maybe_await(
+        client.actor(actor_id=HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED)
+    )
     assert runs_page is not None
     assert len(runs_page.items) > 0, 'No completed runs found for hello-world actor'
     run = cast('Run', runs_page.items[0])
@@ -68,7 +70,7 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
         )
     )
     created_webhook = cast('Webhook', result)
-    webhook_client = client.webhook(created_webhook.id)
+    webhook_client = client.webhook(webhook_id=created_webhook.id)
 
     try:
         assert created_webhook is not None
@@ -97,7 +99,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_webhook = cast('Webhook', result)
-    webhook_client = client.webhook(created_webhook.id)
+    webhook_client = client.webhook(webhook_id=created_webhook.id)
 
     try:
         # Update webhook
@@ -127,7 +129,7 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_webhook = cast('Webhook', result)
-    webhook_client = client.webhook(created_webhook.id)
+    webhook_client = client.webhook(webhook_id=created_webhook.id)
 
     try:
         # Test webhook (creates a dispatch with dummy payload)
@@ -153,7 +155,7 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
         )
     )
     created_webhook = cast('Webhook', result)
-    webhook_client = client.webhook(created_webhook.id)
+    webhook_client = client.webhook(webhook_id=created_webhook.id)
 
     try:
         # Test webhook to create a dispatch
@@ -183,7 +185,7 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
         )
     )
     created_webhook = cast('Webhook', result)
-    webhook_client = client.webhook(created_webhook.id)
+    webhook_client = client.webhook(webhook_id=created_webhook.id)
 
     # Delete webhook
     await maybe_await(webhook_client.delete())

@@ -6,12 +6,12 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 async def main() -> None:
-    apify_client = ApifyClientAsync(TOKEN)
-    actor_client = apify_client.actor('my-actor-id')
+    apify_client = ApifyClientAsync(token=TOKEN)
+    actor_client = apify_client.actor(actor_id='my-actor-id')
 
     # Start the Actor and get the run ID
     run_result = await actor_client.start()
-    run_client = apify_client.run(run_result.id)
+    run_client = apify_client.run(run_id=run_result.id)
     log_client = run_client.log()
 
     # Stream the logs

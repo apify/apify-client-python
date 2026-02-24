@@ -90,9 +90,9 @@ class ActorVersionClient(ResourceClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        cleaned = filter_none_values(actor_version_representation)
+        cleaned = filter_none_values(data=actor_version_representation)
 
-        result = self._update(cleaned)
+        result = self._update(updated_fields=cleaned)
         return VersionResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -106,7 +106,7 @@ class ActorVersionClient(ResourceClient):
         """Retrieve a client for the environment variables of this Actor version."""
         return self._client_registry.actor_env_var_collection_client(**self._base_client_kwargs)
 
-    def env_var(self, env_var_name: str) -> ActorEnvVarClient:
+    def env_var(self, *, env_var_name: str) -> ActorEnvVarClient:
         """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:
@@ -195,9 +195,9 @@ class ActorVersionClientAsync(ResourceClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        cleaned = filter_none_values(actor_version_representation)
+        cleaned = filter_none_values(data=actor_version_representation)
 
-        result = await self._update(cleaned)
+        result = await self._update(updated_fields=cleaned)
         return VersionResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -211,7 +211,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         """Retrieve a client for the environment variables of this Actor version."""
         return self._client_registry.actor_env_var_collection_client(**self._base_client_kwargs)
 
-    def env_var(self, env_var_name: str) -> ActorEnvVarClientAsync:
+    def env_var(self, *, env_var_name: str) -> ActorEnvVarClientAsync:
         """Retrieve the client for the specified environment variable of this Actor version.
 
         Args:

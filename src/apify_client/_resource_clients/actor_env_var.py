@@ -65,8 +65,8 @@ class ActorEnvVarClient(ResourceClient):
             name=name,
             value=value,
         )
-        cleaned = filter_none_values(actor_env_var_representation)
-        result = self._update(cleaned)
+        cleaned = filter_none_values(data=actor_env_var_representation)
+        result = self._update(updated_fields=cleaned)
         return EnvVarResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -121,8 +121,8 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             name=name,
             value=value,
         )
-        cleaned = filter_none_values(actor_env_var_representation)
-        result = await self._update(cleaned)
+        cleaned = filter_none_values(data=actor_env_var_representation)
+        result = await self._update(updated_fields=cleaned)
         return EnvVarResponse.model_validate(result).data
 
     async def delete(self) -> None:

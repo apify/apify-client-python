@@ -17,7 +17,7 @@ class ApifyApiError(ApifyClientError):
     retried automatically, while validation errors are thrown immediately for user correction.
     """
 
-    def __init__(self, response: impit.Response, attempt: int, method: str = 'GET') -> None:
+    def __init__(self, *, response: impit.Response, attempt: int, method: str = 'GET') -> None:
         """Initialize an API error from a failed response.
 
         Args:
@@ -61,7 +61,7 @@ class InvalidResponseBodyError(ApifyClientError):
     Commonly occurs when only partial JSON is received. Usually resolved by retrying the request.
     """
 
-    def __init__(self, response: impit.Response) -> None:
+    def __init__(self, *, response: impit.Response) -> None:
         """Initialize a new instance.
 
         Args:

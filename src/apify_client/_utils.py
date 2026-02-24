@@ -29,16 +29,16 @@ _BASE62_CHARSET = string.digits + string.ascii_letters
 
 
 @overload
-def to_seconds(td: None, *, as_int: bool = ...) -> None: ...
+def to_seconds(*, td: None, as_int: bool = ...) -> None: ...
 @overload
-def to_seconds(td: timedelta) -> float: ...
+def to_seconds(*, td: timedelta) -> float: ...
 @overload
-def to_seconds(td: timedelta, *, as_int: Literal[True]) -> int: ...
+def to_seconds(*, td: timedelta, as_int: Literal[True]) -> int: ...
 @overload
-def to_seconds(td: timedelta, *, as_int: Literal[False]) -> float: ...
+def to_seconds(*, td: timedelta, as_int: Literal[False]) -> float: ...
 
 
-def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | None:
+def to_seconds(*, td: timedelta | None, as_int: bool = False) -> float | int | None:
     """Convert timedelta to seconds.
 
     Args:
@@ -54,7 +54,7 @@ def to_seconds(td: timedelta | None, *, as_int: bool = False) -> float | int | N
     return int(seconds) if as_int else seconds
 
 
-def catch_not_found_or_throw(exc: ApifyApiError) -> None:
+def catch_not_found_or_throw(*, exc: ApifyApiError) -> None:
     """Suppress 404 Not Found errors and re-raise all other API errors.
 
     Args:
@@ -70,8 +70,8 @@ def catch_not_found_or_throw(exc: ApifyApiError) -> None:
 
 
 def filter_none_values(
-    data: dict,
     *,
+    data: dict,
     remove_empty_dicts: bool | None = None,
 ) -> dict:
     """Recursively remove None values from a dictionary.
@@ -110,12 +110,12 @@ def filter_none_values(
 
     # Optionally remove empty dictionaries
     if remove_empty_dicts:
-        _remove_empty_dicts_inplace(result)
+        _remove_empty_dicts_inplace(data=result)
 
     return result
 
 
-def _remove_empty_dicts_inplace(data: dict[str, Any]) -> None:
+def _remove_empty_dicts_inplace(*, data: dict[str, Any]) -> None:
     """Recursively remove empty dictionaries from a dict in place.
 
     This is a helper function for filter_none_values.
@@ -124,7 +124,7 @@ def _remove_empty_dicts_inplace(data: dict[str, Any]) -> None:
 
     for key, val in data.items():
         if isinstance(val, dict):
-            _remove_empty_dicts_inplace(val)
+            _remove_empty_dicts_inplace(data=val)
             if not val:
                 keys_to_remove.append(key)
 
@@ -132,7 +132,7 @@ def _remove_empty_dicts_inplace(data: dict[str, Any]) -> None:
         del data[key]
 
 
-def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
+def encode_webhook_list_to_base64(*, webhooks: list[dict]) -> str:
     """Encode a list of webhook dictionaries to base64 for API transmission.
 
     Args:
@@ -145,7 +145,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
 
     for webhook in webhooks:
         webhook_representation = {
-            'eventTypes': [enum_to_value(event_type) for event_type in webhook['event_types']],
+            'eventTypes': [enum_to_value(value=event_type) for event_type in webhook['event_types']],
             'requestUrl': webhook['request_url'],
         }
         if 'payload_template' in webhook:
@@ -157,7 +157,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
     return b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
-def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:
+def encode_key_value_store_record_value(*, value: Any, content_type: str | None = None) -> tuple[Any, str]:
     """Encode a value for storage in a key-value store record.
 
     Args:
@@ -191,7 +191,7 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
     return (value, content_type)
 
 
-def enum_to_value(value: Any) -> Any:
+def enum_to_value(*, value: Any) -> Any:
     """Convert an Enum member to its value, or return the value unchanged if not an Enum.
 
     Ensures Enum instances are converted to primitive values suitable for API transmission.
@@ -207,7 +207,7 @@ def enum_to_value(value: Any) -> Any:
     return value
 
 
-def is_retryable_error(exc: Exception) -> bool:
+def is_retryable_error(*, exc: Exception) -> bool:
     """Check if the given error is retryable.
 
     All ``impit.HTTPError`` subclasses are considered retryable because they represent transport-level failures
@@ -223,7 +223,7 @@ def is_retryable_error(exc: Exception) -> bool:
     )
 
 
-def to_safe_id(id: str) -> str:
+def to_safe_id(*, id: str) -> str:
     """Convert a resource ID to URL-safe format by replacing forward slashes with tildes.
 
     Args:
@@ -235,7 +235,7 @@ def to_safe_id(id: str) -> str:
     return id.replace('/', '~')
 
 
-def response_to_dict(response: Response) -> dict:
+def response_to_dict(*, response: Response) -> dict:
     """Parse the API response as a dictionary and validate its type.
 
     Args:
@@ -255,7 +255,7 @@ def response_to_dict(response: Response) -> dict:
     raise ValueError(f'The response is not a dictionary. Got: {type(data).__name__}')
 
 
-def response_to_list(response: Response) -> list:
+def response_to_list(*, response: Response) -> list:
     """Parse the API response as a list and validate its type.
 
     Args:
@@ -278,7 +278,7 @@ def response_to_list(response: Response) -> list:
     raise ValueError(f'The response is not a list. Got: {type(data).__name__}')
 
 
-def encode_base62(num: int) -> str:
+def encode_base62(*, num: int) -> str:
     """Encode an integer to a base62 string.
 
     Args:
@@ -300,7 +300,7 @@ def encode_base62(num: int) -> str:
     return ''.join(reversed(parts))
 
 
-def create_hmac_signature(secret_key: str, message: str) -> str:
+def create_hmac_signature(*, secret_key: str, message: str) -> str:
     """Generate an HMAC-SHA256 signature and encode it using base62.
 
     The HMAC signature is truncated to 30 characters and then encoded in base62 to reduce the signature length.
@@ -316,10 +316,11 @@ def create_hmac_signature(secret_key: str, message: str) -> str:
 
     decimal_signature = int(signature, 16)
 
-    return encode_base62(decimal_signature)
+    return encode_base62(num=decimal_signature)
 
 
 def create_storage_content_signature(
+    *,
     resource_id: str,
     url_signing_secret_key: str,
     expires_in: timedelta | None = None,
@@ -340,10 +341,10 @@ def create_storage_content_signature(
     Returns:
         The base64url-encoded signature string.
     """
-    expires_at = int(time.time() * 1000) + int(to_seconds(expires_in) * 1000) if expires_in is not None else 0
+    expires_at = int(time.time() * 1000) + int(to_seconds(td=expires_in) * 1000) if expires_in is not None else 0
 
     message_to_sign = f'{version}.{expires_at}.{resource_id}'
-    hmac_sig = create_hmac_signature(url_signing_secret_key, message_to_sign)
+    hmac_sig = create_hmac_signature(secret_key=url_signing_secret_key, message=message_to_sign)
 
     base64url_encoded_payload = urlsafe_b64encode(f'{version}.{expires_at}.{hmac_sig}'.encode())
     return base64url_encoded_payload.decode('utf-8')

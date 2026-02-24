@@ -5,4 +5,4 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 async def main() -> None:
     # Client initialization with the API token.
-    apify_client = ApifyClientAsync(TOKEN)
+    apify_client = ApifyClientAsync(token=TOKEN)

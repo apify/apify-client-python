@@ -18,13 +18,13 @@ HELLO_WORLD_ACTOR = 'apify/hello-world'
 async def test_log_get_from_run(client: ApifyClient | ApifyClientAsync) -> None:
     """Test retrieving log from an Actor run."""
     # Run hello-world actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     assert result is not None
     run = cast('Run', result)
 
     # Get log as text
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
     log = await maybe_await(run_client.log().get())
 
     assert log is not None
@@ -38,14 +38,14 @@ async def test_log_get_from_run(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync) -> None:
     """Test retrieving log from a build."""
     # Get a build from hello-world actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.builds().list(limit=1))
     builds_page = cast('ListOfBuilds', result)
     assert builds_page.items
     build_id = builds_page.items[0].id
 
     # Get log from the build
-    build = client.build(build_id)
+    build = client.build(build_id=build_id)
     log = await maybe_await(build.log().get())
 
     # Build log may be None or empty for some builds
@@ -56,13 +56,13 @@ async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync) -> Non
 async def test_log_get_as_bytes(client: ApifyClient | ApifyClientAsync) -> None:
     """Test retrieving log as raw bytes."""
     # Run hello-world actor
-    actor = client.actor(HELLO_WORLD_ACTOR)
+    actor = client.actor(actor_id=HELLO_WORLD_ACTOR)
     result = await maybe_await(actor.call())
     assert result is not None
     run = cast('Run', result)
 
     # Get log as bytes
-    run_client = client.run(run.id)
+    run_client = client.run(run_id=run.id)
     log_bytes = await maybe_await(run_client.log().get_as_bytes())
 
     assert log_bytes is not None

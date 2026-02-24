@@ -81,7 +81,7 @@ class ActorVersionCollectionClient(ResourceClient):
             github_gist_url=github_gist_url,
         )
 
-        result = self._create(filter_none_values(actor_version_representation))
+        result = self._create(created_fields=filter_none_values(data=actor_version_representation))
         return VersionResponse.model_validate(result).data
 
 
@@ -152,5 +152,5 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             github_gist_url=github_gist_url,
         )
 
-        result = await self._create(filter_none_values(actor_version_representation))
+        result = await self._create(created_fields=filter_none_values(data=actor_version_representation))
         return VersionResponse.model_validate(result).data

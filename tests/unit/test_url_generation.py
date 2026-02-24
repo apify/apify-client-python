@@ -96,7 +96,7 @@ parametrized_api_urls = pytest.mark.parametrize(
 def test_dataset_public_url_sync(api_url: str, api_public_url: str | None) -> None:
     """Test public URL generation for datasets with sync client."""
     client = ApifyClient(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
-    dataset = client.dataset('someID')
+    dataset = client.dataset(dataset_id='someID')
 
     mock_response = Mock()
     mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
@@ -114,7 +114,7 @@ def test_dataset_public_url_sync(api_url: str, api_public_url: str | None) -> No
 async def test_dataset_public_url_async(api_url: str, api_public_url: str | None) -> None:
     """Test public URL generation for datasets with async client."""
     client = ApifyClientAsync(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
-    dataset = client.dataset('someID')
+    dataset = client.dataset(dataset_id='someID')
 
     mock_response = Mock()
     mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
@@ -138,7 +138,7 @@ async def test_dataset_public_url_async(api_url: str, api_public_url: str | None
 def test_kvs_public_url_sync(api_url: str, api_public_url: str | None, signing_key: str | None) -> None:
     """Test public URL generation for key-value stores with sync client."""
     client = ApifyClient(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
-    kvs = client.key_value_store(MOCKED_KVS_ID)
+    kvs = client.key_value_store(key_value_store_id=MOCKED_KVS_ID)
 
     with mock.patch.object(client._http_client, 'call', return_value=_get_mocked_kvs_response(signing_key=signing_key)):
         public_url = kvs.create_keys_public_url()
@@ -162,7 +162,7 @@ def test_kvs_public_url_sync(api_url: str, api_public_url: str | None, signing_k
 async def test_kvs_public_url_async(api_url: str, api_public_url: str | None, signing_key: str | None) -> None:
     """Test public URL generation for key-value stores with async client."""
     client = ApifyClientAsync(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
-    kvs = client.key_value_store(MOCKED_KVS_ID)
+    kvs = client.key_value_store(key_value_store_id=MOCKED_KVS_ID)
 
     with mock.patch.object(
         client._http_client,
@@ -192,12 +192,14 @@ def test_kvs_record_public_url_sync(api_url: str, api_public_url: str | None, si
     """Test record public URL generation for key-value stores with sync client."""
     client = ApifyClient(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
     key = 'some_key'
-    kvs = client.key_value_store(MOCKED_KVS_ID)
+    kvs = client.key_value_store(key_value_store_id=MOCKED_KVS_ID)
 
     with mock.patch.object(client._http_client, 'call', return_value=_get_mocked_kvs_response(signing_key=signing_key)):
         public_url = kvs.get_record_public_url(key=key)
 
-        expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
+        expected_signature = (
+            f'?signature={create_hmac_signature(secret_key=signing_key, message=key)}' if signing_key else ''
+        )
         assert public_url == (
             f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/{MOCKED_KVS_ID}/'
             f'records/{key}{expected_signature}'
@@ -210,12 +212,14 @@ async def test_kvs_record_public_url_async(api_url: str, api_public_url: str | N
     """Test record public URL generation for key-value stores with async client."""
     client = ApifyClientAsync(token='dummy-token', api_url=api_url, api_public_url=api_public_url)
     key = 'some_key'
-    kvs = client.key_value_store(MOCKED_KVS_ID)
+    kvs = client.key_value_store(key_value_store_id=MOCKED_KVS_ID)
 
     with mock.patch.object(client._http_client, 'call', return_value=_get_mocked_kvs_response(signing_key=signing_key)):
         public_url = await kvs.get_record_public_url(key=key)
 
-        expected_signature = f'?signature={create_hmac_signature(signing_key, key)}' if signing_key else ''
+        expected_signature = (
+            f'?signature={create_hmac_signature(secret_key=signing_key, message=key)}' if signing_key else ''
+        )
         assert public_url == (
             f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/{MOCKED_KVS_ID}/'
             f'records/{key}{expected_signature}'

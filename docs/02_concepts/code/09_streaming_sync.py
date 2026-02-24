@@ -4,8 +4,8 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 def main() -> None:
-    apify_client = ApifyClient(TOKEN)
-    run_client = apify_client.run('MY-RUN-ID')
+    apify_client = ApifyClient(token=TOKEN)
+    run_client = apify_client.run(run_id='MY-RUN-ID')
     log_client = run_client.log()
 
     with log_client.stream() as log_stream:

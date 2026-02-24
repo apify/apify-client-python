@@ -4,8 +4,8 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 def main() -> None:
-    apify_client = ApifyClient(TOKEN)
-    actor_client = apify_client.actor('username/actor-name')
+    apify_client = ApifyClient(token=TOKEN)
+    actor_client = apify_client.actor(actor_id='username/actor-name')
 
     # Start an Actor and waits for it to finish
     finished_actor_run = actor_client.call()

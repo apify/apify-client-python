@@ -71,7 +71,7 @@ class BaseHttpClient:
         self._headers = {**default_headers, **(headers or {})}
 
     @staticmethod
-    def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
+    def _parse_params(*, params: dict[str, Any] | None) -> dict[str, Any] | None:
         """Convert request parameters to Apify API-compatible formats.
 
         Converts booleans to 0/1, lists to comma-separated strings, datetimes to ISO 8601 Zulu format.
@@ -95,7 +95,7 @@ class BaseHttpClient:
         return parsed_params
 
     @staticmethod
-    def _is_retryable_error(exc: Exception) -> bool:
+    def _is_retryable_error(*, exc: Exception) -> bool:
         """Check if an exception represents a transient error that should be retried.
 
         All ``impit.HTTPError`` subclasses are considered retryable because they represent transport-level failures
@@ -112,6 +112,7 @@ class BaseHttpClient:
 
     def _prepare_request_call(
         self,
+        *,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         data: str | bytes | bytearray | None = None,
@@ -135,9 +136,9 @@ class BaseHttpClient:
             data = gzip.compress(data)
             headers['Content-Encoding'] = 'gzip'
 
-        return (headers, self._parse_params(params), data)
+        return (headers, self._parse_params(params=params), data)
 
-    def _build_url_with_params(self, url: str, params: dict[str, Any] | None = None) -> str:
+    def _build_url_with_params(self, *, url: str, params: dict[str, Any] | None = None) -> str:
         """Build a URL with query parameters appended. List values are expanded into multiple key=value pairs."""
         if not params:
             return url
@@ -153,8 +154,8 @@ class BaseHttpClient:
 
         return f'{url}?{query_string}'
 
-    def _calculate_timeout(self, attempt: int, timeout: timedelta | None = None) -> float:
+    def _calculate_timeout(self, *, attempt: int, timeout: timedelta | None = None) -> float:
         """Calculate timeout for a request attempt with exponential increase, bounded by client timeout."""
-        timeout_secs = to_seconds(timeout or self._timeout)
-        client_timeout_secs = to_seconds(self._timeout)
+        timeout_secs = to_seconds(td=timeout or self._timeout)
+        client_timeout_secs = to_seconds(td=self._timeout)
         return min(client_timeout_secs, timeout_secs * 2 ** (attempt - 1))

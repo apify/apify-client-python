@@ -92,9 +92,9 @@ class DatasetClient(ResourceClient):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_none_values(updated_fields)
+        cleaned = filter_none_values(data=updated_fields)
 
-        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = self._update(updated_fields=cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return DatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -171,13 +171,13 @@ class DatasetClient(ResourceClient):
         )
 
         response = self._http_client.call(
-            url=self._build_url('items'),
+            url=self._build_url(path='items'),
             method='GET',
             params=request_params,
         )
 
         # When using signature, API returns items as list directly
-        items = response_to_list(response)
+        items = response_to_list(response=response)
 
         return DatasetItemsPage(
             items=items,
@@ -456,7 +456,7 @@ class DatasetClient(ResourceClient):
         )
 
         response = self._http_client.call(
-            url=self._build_url('items'),
+            url=self._build_url(path='items'),
             method='GET',
             params=request_params,
         )
@@ -551,7 +551,7 @@ class DatasetClient(ResourceClient):
             )
 
             response = self._http_client.call(
-                url=self._build_url('items'),
+                url=self._build_url(path='items'),
                 method='GET',
                 params=request_params,
                 stream=True,
@@ -561,7 +561,7 @@ class DatasetClient(ResourceClient):
             if response:
                 response.close()
 
-    def push_items(self, items: JsonSerializable) -> None:
+    def push_items(self, *, items: JsonSerializable) -> None:
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -579,7 +579,7 @@ class DatasetClient(ResourceClient):
             json = items
 
         self._http_client.call(
-            url=self._build_url('items'),
+            url=self._build_url(path='items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             params=self._build_params(),
@@ -598,15 +598,15 @@ class DatasetClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url('statistics'),
+                url=self._build_url(path='statistics'),
                 method='GET',
                 params=self._build_params(),
                 timeout=FAST_OPERATION_TIMEOUT,
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return DatasetStatisticsResponse.model_validate(result).data
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -664,7 +664,7 @@ class DatasetClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._build_url('items', public=True))
+        items_public_url = urlparse(self._build_url(path='items', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))
@@ -708,9 +708,9 @@ class DatasetClientAsync(ResourceClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_none_values(updated_fields)
+        cleaned = filter_none_values(data=updated_fields)
 
-        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._update(updated_fields=cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return DatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -787,13 +787,13 @@ class DatasetClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url('items'),
+            url=self._build_url(path='items'),
             method='GET',
             params=request_params,
         )
 
         # When using signature, API returns items as list directly
-        items = response_to_list(response)
+        items = response_to_list(response=response)
 
         return DatasetItemsPage(
             items=items,
@@ -978,7 +978,7 @@ class DatasetClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url('items'),
+            url=self._build_url(path='items'),
             method='GET',
             params=request_params,
         )
@@ -1073,7 +1073,7 @@ class DatasetClientAsync(ResourceClientAsync):
             )
 
             response = await self._http_client.call(
-                url=self._build_url('items'),
+                url=self._build_url(path='items'),
                 method='GET',
                 params=request_params,
                 stream=True,
@@ -1083,7 +1083,7 @@ class DatasetClientAsync(ResourceClientAsync):
             if response:
                 await response.aclose()
 
-    async def push_items(self, items: JsonSerializable) -> None:
+    async def push_items(self, *, items: JsonSerializable) -> None:
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -1101,7 +1101,7 @@ class DatasetClientAsync(ResourceClientAsync):
             json = items
 
         await self._http_client.call(
-            url=self._build_url('items'),
+            url=self._build_url(path='items'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
             params=self._build_params(),
@@ -1120,15 +1120,15 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url('statistics'),
+                url=self._build_url(path='statistics'),
                 method='GET',
                 params=self._build_params(),
                 timeout=FAST_OPERATION_TIMEOUT,
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return DatasetStatisticsResponse.model_validate(result).data
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -1186,7 +1186,7 @@ class DatasetClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._build_url('items', public=True))
+        items_public_url = urlparse(self._build_url(path='items', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))

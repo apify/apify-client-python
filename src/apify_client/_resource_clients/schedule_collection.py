@@ -82,7 +82,7 @@ class ScheduleCollectionClient(ResourceClient):
             title=title,
         )
 
-        result = self._create(filter_none_values(schedule_representation))
+        result = self._create(created_fields=filter_none_values(data=schedule_representation))
         return ScheduleResponse.model_validate(result).data
 
 
@@ -160,5 +160,5 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             title=title,
         )
 
-        result = await self._create(filter_none_values(schedule_representation))
+        result = await self._create(created_fields=filter_none_values(data=schedule_representation))
         return ScheduleResponse.model_validate(result).data

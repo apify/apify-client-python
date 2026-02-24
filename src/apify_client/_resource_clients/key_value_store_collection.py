@@ -60,7 +60,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        result = self._get_or_create(name=name, resource_fields=filter_none_values({'schema': schema}))
+        result = self._get_or_create(name=name, resource_fields=filter_none_values(data={'schema': schema}))
         return KeyValueStoreResponse.model_validate(result).data
 
 
@@ -112,5 +112,5 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved or newly-created key-value store.
         """
-        result = await self._get_or_create(name=name, resource_fields=filter_none_values({'schema': schema}))
+        result = await self._get_or_create(name=name, resource_fields=filter_none_values(data={'schema': schema}))
         return KeyValueStoreResponse.model_validate(result).data

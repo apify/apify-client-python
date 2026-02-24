@@ -61,15 +61,15 @@ class UserClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url('usage/monthly'),
+                url=self._build_url(path='usage/monthly'),
                 method='GET',
                 params=self._build_params(),
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return MonthlyUsageResponse.model_validate(result).data
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -86,15 +86,15 @@ class UserClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url('limits'),
+                url=self._build_url(path='limits'),
                 method='GET',
                 params=self._build_params(),
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return LimitsResponse.model_validate(result).data
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -106,11 +106,11 @@ class UserClient(ResourceClient):
     ) -> None:
         """Update the account's limits manageable on your account's Limits page."""
         self._http_client.call(
-            url=self._build_url('limits'),
+            url=self._build_url(path='limits'),
             method='PUT',
             params=self._build_params(),
             json=filter_none_values(
-                {
+                data={
                     'maxMonthlyUsageUsd': max_monthly_usage_usd,
                     'dataRetentionDays': data_retention_days,
                 }
@@ -160,15 +160,15 @@ class UserClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url('usage/monthly'),
+                url=self._build_url(path='usage/monthly'),
                 method='GET',
                 params=self._build_params(),
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return MonthlyUsageResponse.model_validate(result).data
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -185,15 +185,15 @@ class UserClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url('limits'),
+                url=self._build_url(path='limits'),
                 method='GET',
                 params=self._build_params(),
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return LimitsResponse.model_validate(result).data
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -205,11 +205,11 @@ class UserClientAsync(ResourceClientAsync):
     ) -> None:
         """Update the account's limits manageable on your account's Limits page."""
         await self._http_client.call(
-            url=self._build_url('limits'),
+            url=self._build_url(path='limits'),
             method='PUT',
             params=self._build_params(),
             json=filter_none_values(
-                {
+                data={
                     'maxMonthlyUsageUsd': max_monthly_usage_usd,
                     'dataRetentionDays': data_retention_days,
                 }

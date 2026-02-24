@@ -11,7 +11,7 @@ async def main() -> None:
     apify_client = ApifyClientAsync(token=TOKEN)
 
     # Get the Actor client
-    actor_client = apify_client.actor('apify/instagram-hashtag-scraper')
+    actor_client = apify_client.actor(actor_id='apify/instagram-hashtag-scraper')
 
     input_data = {'hashtags': ['rainbow'], 'resultsLimit': 20}
 

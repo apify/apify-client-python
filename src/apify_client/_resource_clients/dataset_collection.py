@@ -50,7 +50,7 @@ class DatasetCollectionClient(ResourceClient):
         Returns:
             The retrieved or newly-created dataset.
         """
-        result = self._get_or_create(name=name, resource_fields=filter_none_values({'schema': schema}))
+        result = self._get_or_create(name=name, resource_fields=filter_none_values(data={'schema': schema}))
         return DatasetResponse.model_validate(result).data
 
 
@@ -102,5 +102,5 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved or newly-created dataset.
         """
-        result = await self._get_or_create(name=name, resource_fields=filter_none_values({'schema': schema}))
+        result = await self._get_or_create(name=name, resource_fields=filter_none_values(data={'schema': schema}))
         return DatasetResponse.model_validate(result).data

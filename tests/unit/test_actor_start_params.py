@@ -73,7 +73,7 @@ def test_actor_start_passes_timeout_param_sync(httpserver: HTTPServer) -> None:
     client = ApifyClient(token='test_token', api_url=api_url)
 
     # Call start with timeout (timedelta) parameter
-    client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
+    client.actor(actor_id=_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
 
     # Verify the request was made with correct timeout parameter
     assert len(captured_requests) == 1
@@ -106,7 +106,7 @@ async def test_actor_start_passes_timeout_param_async(httpserver: HTTPServer) ->
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
     # Call start with timeout (timedelta) parameter
-    await client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
+    await client.actor(actor_id=_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
 
     # Verify the request was made with correct timeout parameter
     assert len(captured_requests) == 1
@@ -139,7 +139,7 @@ def test_actor_start_timeout_not_passed_when_none_sync(httpserver: HTTPServer) -
     client = ApifyClient(token='test_token', api_url=api_url)
 
     # Call start without timeout_secs
-    client.actor(_MOCKED_ACTOR_ID).start()
+    client.actor(actor_id=_MOCKED_ACTOR_ID).start()
 
     # Verify timeout parameter is not present
     assert len(captured_requests) == 1
@@ -169,7 +169,7 @@ async def test_actor_start_timeout_not_passed_when_none_async(httpserver: HTTPSe
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
     # Call start without timeout_secs
-    await client.actor(_MOCKED_ACTOR_ID).start()
+    await client.actor(actor_id=_MOCKED_ACTOR_ID).start()
 
     # Verify timeout parameter is not present
     assert len(captured_requests) == 1
@@ -199,7 +199,7 @@ def test_actor_start_various_timeout_values_sync(httpserver: HTTPServer, timeout
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(token='test_token', api_url=api_url)
 
-    client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=timeout_value))
+    client.actor(actor_id=_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=timeout_value))
 
     assert len(captured_requests) == 1
     assert captured_requests[0].args['timeout'] == str(timeout_value)
@@ -226,7 +226,7 @@ async def test_actor_start_various_timeout_values_async(httpserver: HTTPServer, 
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
-    await client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=timeout_value))
+    await client.actor(actor_id=_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=timeout_value))
 
     assert len(captured_requests) == 1
     assert captured_requests[0].args['timeout'] == str(timeout_value)

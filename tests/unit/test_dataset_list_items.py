@@ -45,7 +45,7 @@ def test_list_items_desc_false_sync(httpserver: HTTPServer, desc_header_value: s
     api_url = httpserver.url_for('/').removesuffix('/')
 
     client = ApifyClient(token='test-token', api_url=api_url)
-    result = client.dataset(DATASET_ID).list_items()
+    result = client.dataset(dataset_id=DATASET_ID).list_items()
 
     assert result.desc is False
 
@@ -58,7 +58,7 @@ def test_list_items_desc_true_sync(httpserver: HTTPServer, desc_header_value: st
     api_url = httpserver.url_for('/').removesuffix('/')
 
     client = ApifyClient(token='test-token', api_url=api_url)
-    result = client.dataset(DATASET_ID).list_items()
+    result = client.dataset(dataset_id=DATASET_ID).list_items()
 
     assert result.desc is True
 
@@ -71,7 +71,7 @@ async def test_list_items_desc_false_async(httpserver: HTTPServer, desc_header_v
     api_url = httpserver.url_for('/').removesuffix('/')
 
     client = ApifyClientAsync(token='test-token', api_url=api_url)
-    result = await client.dataset(DATASET_ID).list_items()
+    result = await client.dataset(dataset_id=DATASET_ID).list_items()
 
     assert result.desc is False
 
@@ -84,6 +84,6 @@ async def test_list_items_desc_true_async(httpserver: HTTPServer, desc_header_va
     api_url = httpserver.url_for('/').removesuffix('/')
 
     client = ApifyClientAsync(token='test-token', api_url=api_url)
-    result = await client.dataset(DATASET_ID).list_items()
+    result = await client.dataset(dataset_id=DATASET_ID).list_items()
 
     assert result.desc is True

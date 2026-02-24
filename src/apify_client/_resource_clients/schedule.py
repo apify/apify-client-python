@@ -70,9 +70,9 @@ class ScheduleClient(ResourceClient):
             timezone=timezone,
             title=title,
         )
-        cleaned = filter_none_values(schedule_representation)
+        cleaned = filter_none_values(data=schedule_representation)
 
-        result = self._update(cleaned)
+        result = self._update(updated_fields=cleaned)
         return ScheduleResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -92,14 +92,14 @@ class ScheduleClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url('log'),
+                url=self._build_url(path='log'),
                 method='GET',
                 params=self._build_params(),
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return ScheduleLogResponse.model_validate(result).data
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
@@ -165,9 +165,9 @@ class ScheduleClientAsync(ResourceClientAsync):
             timezone=timezone,
             title=title,
         )
-        cleaned = filter_none_values(schedule_representation)
+        cleaned = filter_none_values(data=schedule_representation)
 
-        result = await self._update(cleaned)
+        result = await self._update(updated_fields=cleaned)
         return ScheduleResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -187,13 +187,13 @@ class ScheduleClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url('log'),
+                url=self._build_url(path='log'),
                 method='GET',
                 params=self._build_params(),
             )
-            result = response_to_dict(response)
+            result = response_to_dict(response=response)
             return ScheduleLogResponse.model_validate(result).data
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None

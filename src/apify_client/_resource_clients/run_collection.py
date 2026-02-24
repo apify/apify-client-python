@@ -48,7 +48,9 @@ class RunCollectionClient(ResourceClient):
         Returns:
             The retrieved Actor runs.
         """
-        status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
+        status_param = (
+            [enum_to_value(value=s) for s in status] if isinstance(status, list) else enum_to_value(value=status)
+        )
 
         result = self._list(
             limit=limit,
@@ -97,7 +99,9 @@ class RunCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor runs.
         """
-        status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
+        status_param = (
+            [enum_to_value(value=s) for s in status] if isinstance(status, list) else enum_to_value(value=status)
+        )
 
         result = await self._list(
             limit=limit,

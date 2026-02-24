@@ -49,7 +49,7 @@ class WithLogDetailsClient(type):
         """Wrap all public methods in the class with logging context injection."""
         for attr_name, attr_value in attrs.items():
             if not attr_name.startswith('_') and inspect.isfunction(attr_value):
-                attrs[attr_name] = _injects_client_details_to_log_context(attr_value)
+                attrs[attr_name] = _injects_client_details_to_log_context(fun=attr_value)
 
         return type.__new__(cls, name, bases, attrs)
 
@@ -71,7 +71,7 @@ class RedirectLogFormatter(logging.Formatter):
         return f'{formatted_logger_name} -> {formatted_message}'
 
 
-def create_redirect_logger(name: str) -> logging.Logger:
+def create_redirect_logger(*, name: str) -> logging.Logger:
     """Create a logger for redirecting logs from another Actor.
 
     Args:
@@ -109,7 +109,7 @@ class _ContextInjectingFilter(logging.Filter):
         return True
 
 
-def _injects_client_details_to_log_context(fun: Callable) -> Callable:
+def _injects_client_details_to_log_context(*, fun: Callable) -> Callable:
     """Wrap a method to inject resource client details into log context before execution."""
     if inspect.iscoroutinefunction(fun):
 

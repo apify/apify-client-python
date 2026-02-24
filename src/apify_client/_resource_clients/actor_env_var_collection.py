@@ -51,7 +51,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             value=value,
         )
 
-        result = self._create(filter_none_values(actor_env_var_representation))
+        result = self._create(created_fields=filter_none_values(data=actor_env_var_representation))
         return EnvVarResponse.model_validate(result).data
 
 
@@ -98,5 +98,5 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             value=value,
         )
 
-        result = await self._create(filter_none_values(actor_env_var_representation))
+        result = await self._create(created_fields=filter_none_values(data=actor_env_var_representation))
         return EnvVarResponse.model_validate(result).data

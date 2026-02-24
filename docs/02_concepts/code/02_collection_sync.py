@@ -4,7 +4,7 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 
 def main() -> None:
-    apify_client = ApifyClient(TOKEN)
+    apify_client = ApifyClient(token=TOKEN)
 
     # Collection clients do not require a parameter
     actor_collection_client = apify_client.actors()

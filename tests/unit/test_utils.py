@@ -26,17 +26,17 @@ from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 
 def test_to_safe_id() -> None:
-    assert to_safe_id('abc') == 'abc'
-    assert to_safe_id('abc/def') == 'abc~def'
-    assert to_safe_id('abc~def') == 'abc~def'
-    assert to_safe_id('user/resource/extra') == 'user~resource~extra'
+    assert to_safe_id(id='abc') == 'abc'
+    assert to_safe_id(id='abc/def') == 'abc~def'
+    assert to_safe_id(id='abc~def') == 'abc~def'
+    assert to_safe_id(id='user/resource/extra') == 'user~resource~extra'
 
 
 def test_encode_webhook_list_to_base64() -> None:
-    assert encode_webhook_list_to_base64([]) == 'W10='
+    assert encode_webhook_list_to_base64(webhooks=[]) == 'W10='
     assert (
         encode_webhook_list_to_base64(
-            [
+            webhooks=[
                 {
                     'event_types': [WebhookEventType.ACTOR_RUN_CREATED],
                     'request_url': 'https://example.com/run-created',
@@ -55,7 +55,7 @@ def test_encode_webhook_list_to_base64() -> None:
 @pytest.mark.parametrize(
     'exc',
     [
-        InvalidResponseBodyError(impit.Response(status_code=200)),
+        InvalidResponseBodyError(response=impit.Response(status_code=200)),
         impit.HTTPError('generic http error'),
         impit.NetworkError('network error'),
         impit.TimeoutException('timeout'),
@@ -67,7 +67,7 @@ def test_encode_webhook_list_to_base64() -> None:
     ],
 )
 def test__is_retryable_error(exc: Exception) -> None:
-    assert is_retryable_error(exc) is True
+    assert is_retryable_error(exc=exc) is True
 
 
 @pytest.mark.parametrize(
@@ -79,7 +79,7 @@ def test__is_retryable_error(exc: Exception) -> None:
     ],
 )
 def test__is_not_retryable_error(exc: Exception) -> None:
-    assert is_retryable_error(exc) is False
+    assert is_retryable_error(exc=exc) is False
 
 
 @pytest.mark.parametrize(
@@ -97,14 +97,14 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
     mock_response.status_code = status_code
     mock_response.text = f'{{"error":{{"type":"{error_type}"}}}}'
 
-    error = ApifyApiError(mock_response, 1)
+    error = ApifyApiError(response=mock_response, attempt=1)
     error.type = error_type
 
     if should_suppress:
-        catch_not_found_or_throw(error)
+        catch_not_found_or_throw(exc=error)
     else:
         with pytest.raises(ApifyApiError):
-            catch_not_found_or_throw(error)
+            catch_not_found_or_throw(exc=error)
 
 
 @pytest.mark.parametrize(
@@ -123,12 +123,12 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
 )
 def test_filter_none_values(input_dict: dict, *, remove_empty_dicts: bool, expected: dict) -> None:
     """Test filtering None values from dictionaries."""
-    assert filter_none_values(input_dict, remove_empty_dicts=remove_empty_dicts) == expected
+    assert filter_none_values(data=input_dict, remove_empty_dicts=remove_empty_dicts) == expected
 
 
 def test_encode_key_value_store_record_value_dict() -> None:
     """Test that dictionaries are encoded as JSON."""
-    value, content_type = encode_key_value_store_record_value({'key': 'value'})
+    value, content_type = encode_key_value_store_record_value(value={'key': 'value'})
     assert b'"key"' in value
     assert b'"value"' in value
     assert content_type == 'application/json; charset=utf-8'
@@ -147,9 +147,9 @@ def test_encode_key_value_store_record_value(
 ) -> None:
     """Test encoding of key-value store record values."""
     if input_content_type is not None:
-        value, content_type = encode_key_value_store_record_value(input_value, input_content_type)
+        value, content_type = encode_key_value_store_record_value(value=input_value, content_type=input_content_type)
     else:
-        value, content_type = encode_key_value_store_record_value(input_value)
+        value, content_type = encode_key_value_store_record_value(value=input_value)
     assert value == expected_value
     assert content_type == expected_content_type
 
@@ -157,7 +157,7 @@ def test_encode_key_value_store_record_value(
 def test_encode_key_value_store_record_value_bytesio() -> None:
     """Test that BytesIO is encoded as octet-stream."""
     buffer = io.BytesIO(b'buffer data')
-    value, content_type = encode_key_value_store_record_value(buffer)
+    value, content_type = encode_key_value_store_record_value(value=buffer)
     assert value == buffer
     assert content_type == 'application/octet-stream'
 
@@ -179,14 +179,14 @@ class _TestEnum(Enum):
 )
 def test_enum_to_value(input_value: _TestEnum | str | int | None, expected: str | int | None) -> None:
     """Test enum to value conversion."""
-    assert enum_to_value(input_value) == expected
+    assert enum_to_value(value=input_value) == expected
 
 
 def test_response_to_dict() -> None:
     """Test parsing response as dictionary."""
     mock_response = Mock()
     mock_response.json.return_value = {'key': 'value'}
-    assert response_to_dict(mock_response) == {'key': 'value'}
+    assert response_to_dict(response=mock_response) == {'key': 'value'}
 
 
 @pytest.mark.parametrize(
@@ -201,21 +201,21 @@ def test_response_to_dict_raises_for_non_dict(json_return_value: object) -> None
     mock_response = Mock()
     mock_response.json.return_value = json_return_value
     with pytest.raises(ValueError, match='The response is not a dictionary'):
-        response_to_dict(mock_response)
+        response_to_dict(response=mock_response)
 
 
 def test_response_to_list() -> None:
     """Test parsing response as list."""
     mock_response = Mock()
     mock_response.json.return_value = ['item1', 'item2']
-    assert response_to_list(mock_response) == ['item1', 'item2']
+    assert response_to_list(response=mock_response) == ['item1', 'item2']
 
 
 def test_response_to_list_wraps_dict_in_list() -> None:
     """Test that response_to_list wraps a dict response in a list."""
     mock_response = Mock()
     mock_response.json.return_value = {'dict': 'response'}
-    assert response_to_list(mock_response) == [{'dict': 'response'}]
+    assert response_to_list(response=mock_response) == [{'dict': 'response'}]
 
 
 def test_response_to_list_raises_for_non_list() -> None:
@@ -223,7 +223,7 @@ def test_response_to_list_raises_for_non_list() -> None:
     mock_response = Mock()
     mock_response.json.return_value = 'string'
     with pytest.raises(ValueError, match='The response is not a list'):
-        response_to_list(mock_response)
+        response_to_list(response=mock_response)
 
 
 @pytest.mark.parametrize(
@@ -243,39 +243,39 @@ def test_response_to_list_raises_for_non_list() -> None:
 )
 def test_encode_base62(input_value: int, expected: str) -> None:
     """Test base62 encoding."""
-    assert encode_base62(input_value) == expected
+    assert encode_base62(num=input_value) == expected
 
 
 def test_create_hmac_signature() -> None:
     """Test HMAC signature creation."""
     # Test with known values
-    signature = create_hmac_signature('secret_key', 'test_message')
+    signature = create_hmac_signature(secret_key='secret_key', message='test_message')
     assert isinstance(signature, str)
     assert len(signature) > 0
 
     # Same inputs should produce same output
-    signature2 = create_hmac_signature('secret_key', 'test_message')
+    signature2 = create_hmac_signature(secret_key='secret_key', message='test_message')
     assert signature == signature2
 
     # Different inputs should produce different output
-    signature3 = create_hmac_signature('different_key', 'test_message')
+    signature3 = create_hmac_signature(secret_key='different_key', message='test_message')
     assert signature != signature3
 
-    signature4 = create_hmac_signature('secret_key', 'different_message')
+    signature4 = create_hmac_signature(secret_key='secret_key', message='different_message')
     assert signature != signature4
 
 
 def test_create_storage_signature() -> None:
     """Test storage signature creation."""
     # Non-expiring signature
-    signature = create_storage_content_signature('resource_123', 'secret_key')
+    signature = create_storage_content_signature(resource_id='resource_123', url_signing_secret_key='secret_key')
     assert isinstance(signature, str)
     assert len(signature) > 0
 
     # Expiring signature
     signature_expiring = create_storage_content_signature(
-        'resource_123',
-        'secret_key',
+        resource_id='resource_123',
+        url_signing_secret_key='secret_key',
         expires_in=timedelta(seconds=60),
     )
 
@@ -284,13 +284,15 @@ def test_create_storage_signature() -> None:
     assert signature != signature_expiring  # Different because of expiration
 
     # Different resource IDs produce different signatures
-    signature2 = create_storage_content_signature('resource_456', 'secret_key')
+    signature2 = create_storage_content_signature(resource_id='resource_456', url_signing_secret_key='secret_key')
     assert signature != signature2
 
     # Same inputs should produce same output (for non-expiring)
-    signature3 = create_storage_content_signature('resource_123', 'secret_key')
+    signature3 = create_storage_content_signature(resource_id='resource_123', url_signing_secret_key='secret_key')
     assert signature == signature3
 
     # Test with version parameter
-    signature_v1 = create_storage_content_signature('resource_123', 'secret_key', version=1)
+    signature_v1 = create_storage_content_signature(
+        resource_id='resource_123', url_signing_secret_key='secret_key', version=1
+    )
     assert signature != signature_v1

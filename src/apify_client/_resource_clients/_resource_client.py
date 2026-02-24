@@ -66,7 +66,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         """Build the full resource URL from base URL, path, and optional ID."""
         url = f'{self._base_url}/{self._resource_path}'
         if self._resource_id is not None:
-            url = f'{url}/{to_safe_id(self._resource_id)}'
+            url = f'{url}/{to_safe_id(id=self._resource_id)}'
         return url
 
     @cached_property
@@ -85,8 +85,8 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
     def _build_url(
         self,
-        path: str | None = None,
         *,
+        path: str | None = None,
         public: bool = False,
     ) -> str:
         """Build complete URL for API request.
@@ -164,12 +164,12 @@ class ResourceClient(ResourceClientBase):
                 params=self._build_params(),
                 timeout=timeout,
             )
-            return response_to_dict(response)
+            return response_to_dict(response=response)
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
             return None
 
-    def _update(self, updated_fields: dict, *, timeout: timedelta | None = None) -> dict:
+    def _update(self, *, updated_fields: dict, timeout: timedelta | None = None) -> dict:
         """Perform a PUT request to update this resource with the given fields."""
         response = self._http_client.call(
             url=self._build_url(),
@@ -178,7 +178,7 @@ class ResourceClient(ResourceClientBase):
             json=updated_fields,
             timeout=timeout,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     def _delete(self, *, timeout: timedelta | None = None) -> None:
         """Perform a DELETE request to delete this resource, ignoring 404 errors."""
@@ -190,7 +190,7 @@ class ResourceClient(ResourceClientBase):
                 timeout=timeout,
             )
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
     def _list(self, **kwargs: Any) -> dict:
         """Perform a GET request to list resources."""
@@ -199,9 +199,9 @@ class ResourceClient(ResourceClientBase):
             method='GET',
             params=self._build_params(**kwargs),
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
-    def _create(self, created_fields: dict) -> dict:
+    def _create(self, *, created_fields: dict) -> dict:
         """Perform a POST request to create a resource."""
         response = self._http_client.call(
             url=self._build_url(),
@@ -209,7 +209,7 @@ class ResourceClient(ResourceClientBase):
             params=self._build_params(),
             json=created_fields,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     def _get_or_create(self, *, name: str | None = None, resource_fields: dict | None = None) -> dict:
         """Perform a POST request to get or create a named resource."""
@@ -219,10 +219,11 @@ class ResourceClient(ResourceClientBase):
             params=self._build_params(name=name),
             json=resource_fields,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     def _wait_for_finish(
         self,
+        *,
         url: str,
         params: dict,
         wait_duration: timedelta | None = None,
@@ -251,10 +252,10 @@ class ResourceClient(ResourceClientBase):
 
         while True:
             if deadline is not None:
-                remaining_secs = max(0, int(to_seconds(deadline - datetime.now(UTC))))
+                remaining_secs = max(0, int(to_seconds(td=deadline - datetime.now(UTC))))
                 wait_for_finish = remaining_secs
             else:
-                wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH, as_int=True)
+                wait_for_finish = to_seconds(td=DEFAULT_WAIT_FOR_FINISH, as_int=True)
 
             try:
                 response = self._http_client.call(
@@ -262,7 +263,7 @@ class ResourceClient(ResourceClientBase):
                     method='GET',
                     params={**params, 'waitForFinish': wait_for_finish},
                 )
-                result = response_to_dict(response)
+                result = response_to_dict(response=response)
                 actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
@@ -273,7 +274,7 @@ class ResourceClient(ResourceClientBase):
                     break
 
             except ApifyApiError as exc:
-                catch_not_found_or_throw(exc)
+                catch_not_found_or_throw(exc=exc)
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
@@ -330,12 +331,12 @@ class ResourceClientAsync(ResourceClientBase):
                 params=self._build_params(),
                 timeout=timeout,
             )
-            return response_to_dict(response)
+            return response_to_dict(response=response)
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
             return None
 
-    async def _update(self, updated_fields: dict, *, timeout: timedelta | None = None) -> dict:
+    async def _update(self, *, updated_fields: dict, timeout: timedelta | None = None) -> dict:
         """Perform a PUT request to update this resource with the given fields."""
         response = await self._http_client.call(
             url=self._build_url(),
@@ -344,7 +345,7 @@ class ResourceClientAsync(ResourceClientBase):
             json=updated_fields,
             timeout=timeout,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     async def _delete(self, *, timeout: timedelta | None = None) -> None:
         """Perform a DELETE request to delete this resource, ignoring 404 errors."""
@@ -356,7 +357,7 @@ class ResourceClientAsync(ResourceClientBase):
                 timeout=timeout,
             )
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
     async def _list(self, **kwargs: Any) -> dict:
         """Perform a GET request to list resources."""
@@ -365,9 +366,9 @@ class ResourceClientAsync(ResourceClientBase):
             method='GET',
             params=self._build_params(**kwargs),
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
-    async def _create(self, created_fields: dict) -> dict:
+    async def _create(self, *, created_fields: dict) -> dict:
         """Perform a POST request to create a resource."""
         response = await self._http_client.call(
             url=self._build_url(),
@@ -375,7 +376,7 @@ class ResourceClientAsync(ResourceClientBase):
             params=self._build_params(),
             json=created_fields,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     async def _get_or_create(self, *, name: str | None = None, resource_fields: dict | None = None) -> dict:
         """Perform a POST request to get or create a named resource."""
@@ -385,10 +386,11 @@ class ResourceClientAsync(ResourceClientBase):
             params=self._build_params(name=name),
             json=resource_fields,
         )
-        return response_to_dict(response)
+        return response_to_dict(response=response)
 
     async def _wait_for_finish(
         self,
+        *,
         url: str,
         params: dict,
         wait_duration: timedelta | None = None,
@@ -417,10 +419,10 @@ class ResourceClientAsync(ResourceClientBase):
 
         while True:
             if deadline is not None:
-                remaining_secs = max(0, int(to_seconds(deadline - datetime.now(UTC))))
+                remaining_secs = max(0, int(to_seconds(td=deadline - datetime.now(UTC))))
                 wait_for_finish = remaining_secs
             else:
-                wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH, as_int=True)
+                wait_for_finish = to_seconds(td=DEFAULT_WAIT_FOR_FINISH, as_int=True)
 
             try:
                 response = await self._http_client.call(
@@ -428,7 +430,7 @@ class ResourceClientAsync(ResourceClientBase):
                     method='GET',
                     params={**params, 'waitForFinish': wait_for_finish},
                 )
-                result = response_to_dict(response)
+                result = response_to_dict(response=response)
                 actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
@@ -439,7 +441,7 @@ class ResourceClientAsync(ResourceClientBase):
                     break
 
             except ApifyApiError as exc:
-                catch_not_found_or_throw(exc)
+                catch_not_found_or_throw(exc=exc)
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.

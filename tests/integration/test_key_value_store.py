@@ -57,7 +57,7 @@ async def test_key_value_store_collection_get_or_create(client: ApifyClient | Ap
         same_kvs = cast('KeyValueStore', result2)
         assert same_kvs.id == kvs.id
     finally:
-        await maybe_await(client.key_value_store(kvs.id).delete())
+        await maybe_await(client.key_value_store(key_value_store_id=kvs.id).delete())
 
 
 async def test_key_value_store_should_create_expiring_keys_public_url_with_params(
@@ -67,7 +67,7 @@ async def test_key_value_store_should_create_expiring_keys_public_url_with_param
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
 
-    store = client.key_value_store(created_store.id)
+    store = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         result = await maybe_await(
@@ -95,7 +95,7 @@ async def test_key_value_store_should_create_public_keys_non_expiring_url(
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
 
-    store = client.key_value_store(created_store.id)
+    store = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         result = await maybe_await(store.create_keys_public_url())
@@ -231,7 +231,7 @@ async def test_key_value_store_get_or_create_and_get(client: ApifyClient | Apify
     assert created_store.name == store_name
 
     # Get the same store
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         result = await maybe_await(store_client.get())
@@ -250,7 +250,7 @@ async def test_key_value_store_update(client: ApifyClient | ApifyClientAsync) ->
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Update the name
@@ -275,18 +275,18 @@ async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyCli
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set a JSON record
         test_value = {'name': 'Test Item', 'value': 123, 'nested': {'data': 'value'}}
-        await maybe_await(store_client.set_record('test-key', test_value))
+        await maybe_await(store_client.set_record(key='test-key', value=test_value))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
 
         # Get the record
-        result = await maybe_await(store_client.get_record('test-key'))
+        result = await maybe_await(store_client.get_record(key='test-key'))
         record = cast('dict', result)
         assert record is not None
         assert record['key'] == 'test-key'
@@ -304,18 +304,18 @@ async def test_key_value_store_set_and_get_text_record(
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set a text record
         test_text = 'Hello, this is a test text!'
-        await maybe_await(store_client.set_record('text-key', test_text, content_type='text/plain'))
+        await maybe_await(store_client.set_record(key='text-key', value=test_text, content_type='text/plain'))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
 
         # Get the record
-        result = await maybe_await(store_client.get_record('text-key'))
+        result = await maybe_await(store_client.get_record(key='text-key'))
         record = cast('dict', result)
         assert record is not None
         assert record['key'] == 'text-key'
@@ -331,12 +331,12 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync,
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set multiple records
         for i in range(5):
-            await maybe_await(store_client.set_record(f'key-{i}', {'index': i}))
+            await maybe_await(store_client.set_record(key=f'key-{i}', value={'index': i}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -361,12 +361,12 @@ async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyC
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set multiple records
         for i in range(10):
-            await maybe_await(store_client.set_record(f'item-{i:02d}', {'index': i}))
+            await maybe_await(store_client.set_record(key=f'item-{i:02d}', value={'index': i}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -386,19 +386,19 @@ async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAs
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set a record
-        await maybe_await(store_client.set_record('exists-key', {'data': 'value'}))
+        await maybe_await(store_client.set_record(key='exists-key', value={'data': 'value'}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
 
         # Check existence
-        result = await maybe_await(store_client.record_exists('exists-key'))
+        result = await maybe_await(store_client.record_exists(key='exists-key'))
         assert result is True
-        result = await maybe_await(store_client.record_exists('non-existent-key'))
+        result = await maybe_await(store_client.record_exists(key='non-existent-key'))
         assert result is False
     finally:
         await maybe_await(store_client.delete())
@@ -410,27 +410,27 @@ async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAs
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set a record
-        await maybe_await(store_client.set_record('delete-me', {'data': 'value'}))
+        await maybe_await(store_client.set_record(key='delete-me', value={'data': 'value'}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
 
         # Verify it exists
-        result = await maybe_await(store_client.get_record('delete-me'))
+        result = await maybe_await(store_client.get_record(key='delete-me'))
         assert result is not None
 
         # Delete the record
-        await maybe_await(store_client.delete_record('delete-me'))
+        await maybe_await(store_client.delete_record(key='delete-me'))
 
         # Wait briefly
         await maybe_sleep(1, is_async=is_async)
 
         # Verify it's gone
-        result = await maybe_await(store_client.get_record('delete-me'))
+        result = await maybe_await(store_client.get_record(key='delete-me'))
         assert result is None
     finally:
         await maybe_await(store_client.delete())
@@ -442,7 +442,7 @@ async def test_key_value_store_delete_nonexistent(client: ApifyClient | ApifyCli
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     # Delete store
     await maybe_await(store_client.delete())
@@ -459,12 +459,12 @@ async def test_key_value_store_iterate_keys(client: ApifyClient | ApifyClientAsy
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set multiple records
         for i in range(5):
-            await maybe_await(store_client.set_record(f'key-{i}', {'index': i}))
+            await maybe_await(store_client.set_record(key=f'key-{i}', value={'index': i}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -493,12 +493,12 @@ async def test_key_value_store_iterate_keys_with_limit(
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set multiple records
         for i in range(10):
-            await maybe_await(store_client.set_record(f'item-{i:02d}', {'index': i}))
+            await maybe_await(store_client.set_record(key=f'item-{i:02d}', value={'index': i}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)
@@ -524,14 +524,14 @@ async def test_key_value_store_iterate_keys_with_prefix(
 
     result = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
     created_store = cast('KeyValueStore', result)
-    store_client = client.key_value_store(created_store.id)
+    store_client = client.key_value_store(key_value_store_id=created_store.id)
 
     try:
         # Set records with different prefixes
         for i in range(3):
-            await maybe_await(store_client.set_record(f'prefix-a-{i}', {'type': 'a', 'index': i}))
+            await maybe_await(store_client.set_record(key=f'prefix-a-{i}', value={'type': 'a', 'index': i}))
         for i in range(2):
-            await maybe_await(store_client.set_record(f'prefix-b-{i}', {'type': 'b', 'index': i}))
+            await maybe_await(store_client.set_record(key=f'prefix-b-{i}', value={'type': 'b', 'index': i}))
 
         # Wait briefly for eventual consistency
         await maybe_sleep(1, is_async=is_async)

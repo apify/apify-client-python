@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from apify_client._models import GeneralAccess
 
 
-def _parse_get_record_response(response: Response) -> Any:
+def _parse_get_record_response(*, response: Response) -> Any:
     """Parse an HTTP response based on its content type.
 
     Args:
@@ -63,7 +63,7 @@ def _parse_get_record_response(response: Response) -> Any:
         else:
             response_data = response.content
     except ValueError as err:
-        raise InvalidResponseBodyError(response) from err
+        raise InvalidResponseBodyError(response=response) from err
     else:
         return response_data
 
@@ -104,9 +104,9 @@ class KeyValueStoreClient(ResourceClient):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_none_values(updated_fields)
+        cleaned = filter_none_values(data=updated_fields)
 
-        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = self._update(updated_fields=cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return KeyValueStoreResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -148,13 +148,13 @@ class KeyValueStoreClient(ResourceClient):
         )
 
         response = self._http_client.call(
-            url=self._build_url('keys'),
+            url=self._build_url(path='keys'),
             method='GET',
             params=request_params,
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return ListOfKeysResponse.model_validate(result).data
 
     def iterate_keys(
@@ -206,7 +206,7 @@ class KeyValueStoreClient(ResourceClient):
 
             exclusive_start_key = current_keys_page.next_exclusive_start_key
 
-    def get_record(self, key: str, signature: str | None = None) -> dict | None:
+    def get_record(self, *, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -220,23 +220,23 @@ class KeyValueStoreClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
 
             return {
                 'key': key,
-                'value': _parse_get_record_response(response),
+                'value': _parse_get_record_response(response=response),
                 'content_type': response.headers['content-type'],
             }
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
-    def record_exists(self, key: str) -> bool:
+    def record_exists(self, *, key: str) -> bool:
         """Check if given record is present in the key-value store.
 
         https://docs.apify.com/api/v2/key-value-store-record-head
@@ -249,7 +249,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='HEAD',
                 params=self._build_params(),
             )
@@ -261,7 +261,7 @@ class KeyValueStoreClient(ResourceClient):
 
         return response.status_code == HTTPStatus.OK
 
-    def get_record_as_bytes(self, key: str, signature: str | None = None) -> dict | None:
+    def get_record_as_bytes(self, *, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -275,7 +275,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
@@ -287,12 +287,12 @@ class KeyValueStoreClient(ResourceClient):
             }
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
     @contextmanager
-    def stream_record(self, key: str, signature: str | None = None) -> Iterator[dict | None]:
+    def stream_record(self, *, key: str, signature: str | None = None) -> Iterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -307,7 +307,7 @@ class KeyValueStoreClient(ResourceClient):
         response = None
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
@@ -320,7 +320,7 @@ class KeyValueStoreClient(ResourceClient):
             }
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
             yield None
         finally:
             if response:
@@ -328,6 +328,7 @@ class KeyValueStoreClient(ResourceClient):
 
     def set_record(
         self,
+        *,
         key: str,
         value: Any,
         content_type: str | None = None,
@@ -341,19 +342,19 @@ class KeyValueStoreClient(ResourceClient):
             value: The value to save into the record.
             content_type: The content type of the saved value.
         """
-        value, content_type = encode_key_value_store_record_value(value, content_type)
+        value, content_type = encode_key_value_store_record_value(value=value, content_type=content_type)
 
         headers = {'content-type': content_type}
 
         self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(path=f'records/{key}'),
             method='PUT',
             params=self._build_params(),
             data=value,
             headers=headers,
         )
 
-    def delete_record(self, key: str) -> None:
+    def delete_record(self, *, key: str) -> None:
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
@@ -362,13 +363,13 @@ class KeyValueStoreClient(ResourceClient):
             key: The key of the record which to delete.
         """
         self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(path=f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-    def get_record_public_url(self, key: str) -> str:
+    def get_record_public_url(self, *, key: str) -> str:
         """Generate a URL that can be used to access key-value store record.
 
         If the client has permission to access the key-value store's URL signing key, the URL will include a signature
@@ -388,9 +389,9 @@ class KeyValueStoreClient(ResourceClient):
         request_params = self._build_params()
 
         if metadata and metadata.url_signing_secret_key:
-            request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
+            request_params['signature'] = create_hmac_signature(secret_key=metadata.url_signing_secret_key, message=key)
 
-        key_public_url = urlparse(self._build_url(f'records/{key}', public=True))
+        key_public_url = urlparse(self._build_url(path=f'records/{key}', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
 
         if filtered_params:
@@ -438,7 +439,7 @@ class KeyValueStoreClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._build_url('keys', public=True))
+        keys_public_url = urlparse(self._build_url(path='keys', public=True))
 
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
@@ -488,9 +489,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             'name': name,
             'generalAccess': general_access,
         }
-        cleaned = filter_none_values(updated_fields)
+        cleaned = filter_none_values(data=updated_fields)
 
-        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._update(updated_fields=cleaned, timeout=FAST_OPERATION_TIMEOUT)
         return KeyValueStoreResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -532,13 +533,13 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url('keys'),
+            url=self._build_url(path='keys'),
             method='GET',
             params=request_params,
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
 
-        result = response_to_dict(response)
+        result = response_to_dict(response=response)
         return ListOfKeysResponse.model_validate(result).data
 
     async def iterate_keys(
@@ -591,7 +592,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             exclusive_start_key = current_keys_page.next_exclusive_start_key
 
-    async def get_record(self, key: str, signature: str | None = None) -> dict | None:
+    async def get_record(self, *, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -605,23 +606,23 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
 
             return {
                 'key': key,
-                'value': _parse_get_record_response(response),
+                'value': _parse_get_record_response(response=response),
                 'content_type': response.headers['content-type'],
             }
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
-    async def record_exists(self, key: str) -> bool:
+    async def record_exists(self, *, key: str) -> bool:
         """Check if given record is present in the key-value store.
 
         https://docs.apify.com/api/v2/key-value-store-record-head
@@ -634,7 +635,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='HEAD',
                 params=self._build_params(),
             )
@@ -646,7 +647,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return response.status_code == HTTPStatus.OK
 
-    async def get_record_as_bytes(self, key: str, signature: str | None = None) -> dict | None:
+    async def get_record_as_bytes(self, *, key: str, signature: str | None = None) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -660,7 +661,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
             )
@@ -672,12 +673,12 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             }
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
 
         return None
 
     @asynccontextmanager
-    async def stream_record(self, key: str, signature: str | None = None) -> AsyncIterator[dict | None]:
+    async def stream_record(self, *, key: str, signature: str | None = None) -> AsyncIterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -692,7 +693,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         response = None
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(path=f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
@@ -705,7 +706,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             }
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_or_throw(exc=exc)
             yield None
         finally:
             if response:
@@ -713,6 +714,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
     async def set_record(
         self,
+        *,
         key: str,
         value: Any,
         content_type: str | None = None,
@@ -726,19 +728,19 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             value: The value to save into the record.
             content_type: The content type of the saved value.
         """
-        value, content_type = encode_key_value_store_record_value(value, content_type)
+        value, content_type = encode_key_value_store_record_value(value=value, content_type=content_type)
 
         headers = {'content-type': content_type}
 
         await self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(path=f'records/{key}'),
             method='PUT',
             params=self._build_params(),
             data=value,
             headers=headers,
         )
 
-    async def delete_record(self, key: str) -> None:
+    async def delete_record(self, *, key: str) -> None:
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
@@ -747,13 +749,13 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             key: The key of the record which to delete.
         """
         await self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(path=f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
-    async def get_record_public_url(self, key: str) -> str:
+    async def get_record_public_url(self, *, key: str) -> str:
         """Generate a URL that can be used to access key-value store record.
 
         If the client has permission to access the key-value store's URL signing key, the URL will include a signature
@@ -773,9 +775,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         request_params = self._build_params()
 
         if metadata and metadata.url_signing_secret_key:
-            request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
+            request_params['signature'] = create_hmac_signature(secret_key=metadata.url_signing_secret_key, message=key)
 
-        key_public_url = urlparse(self._build_url(f'records/{key}', public=True))
+        key_public_url = urlparse(self._build_url(path=f'records/{key}', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
 
         if filtered_params:
@@ -808,7 +810,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         metadata = await self.get()
 
-        keys_public_url = urlparse(self._build_url('keys'))
+        keys_public_url = urlparse(self._build_url(path='keys'))
 
         request_params = self._build_params(
             limit=limit,
@@ -825,7 +827,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._build_url('keys', public=True))
+        keys_public_url = urlparse(self._build_url(path='keys', public=True))
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))

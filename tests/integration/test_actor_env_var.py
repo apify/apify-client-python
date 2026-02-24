@@ -44,8 +44,8 @@ async def test_actor_env_var_list(client: ApifyClient | ApifyClientAsync) -> Non
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
-    version_client = actor_client.version('0.0')
+    actor_client = client.actor(actor_id=actor.id)
+    version_client = actor_client.version(version_number='0.0')
 
     try:
         # List env vars
@@ -90,8 +90,8 @@ async def test_actor_env_var_create_and_get(client: ApifyClient | ApifyClientAsy
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
-    version_client = actor_client.version('1.0')
+    actor_client = client.actor(actor_id=actor.id)
+    version_client = actor_client.version(version_number='1.0')
 
     try:
         # Create a new env var
@@ -110,7 +110,7 @@ async def test_actor_env_var_create_and_get(client: ApifyClient | ApifyClientAsy
         assert created_env_var.is_secret is False
 
         # Get the same env var
-        env_var_client = version_client.env_var('MY_VAR')
+        env_var_client = version_client.env_var(env_var_name='MY_VAR')
         result = await maybe_await(env_var_client.get())
         retrieved_env_var = cast('EnvVar', result)
 
@@ -154,9 +154,9 @@ async def test_actor_env_var_update(client: ApifyClient | ApifyClientAsync) -> N
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
-    version_client = actor_client.version('0.1')
-    env_var_client = version_client.env_var('UPDATE_VAR')
+    actor_client = client.actor(actor_id=actor.id)
+    version_client = actor_client.version(version_number='0.1')
+    env_var_client = version_client.env_var(env_var_name='UPDATE_VAR')
 
     try:
         # Update the env var
@@ -219,12 +219,12 @@ async def test_actor_env_var_delete(client: ApifyClient | ApifyClientAsync) -> N
         )
     )
     actor = cast('Actor', result)
-    actor_client = client.actor(actor.id)
-    version_client = actor_client.version('0.1')
+    actor_client = client.actor(actor_id=actor.id)
+    version_client = actor_client.version(version_number='0.1')
 
     try:
         # Delete the first env var
-        env_var_client = version_client.env_var('VAR_TO_DELETE')
+        env_var_client = version_client.env_var(env_var_name='VAR_TO_DELETE')
         await maybe_await(env_var_client.delete())
 
         # Verify it's gone
@@ -232,7 +232,7 @@ async def test_actor_env_var_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert deleted_env_var is None
 
         # Verify the other env var still exists
-        result = await maybe_await(version_client.env_var('VAR_TO_KEEP').get())
+        result = await maybe_await(version_client.env_var(env_var_name='VAR_TO_KEEP').get())
         remaining_env_var = cast('EnvVar', result)
         assert remaining_env_var is not None
         assert remaining_env_var.name == 'VAR_TO_KEEP'

@@ -22,7 +22,11 @@ from apify_client.errors import ApifyApiError
 
 @docs_group('Resource clients')
 class UserClient(ResourceClient):
-    """Sub-client for querying user data."""
+    """Sub-client for managing user account information.
+
+    Provides methods to get user data, monthly usage, and account limits.
+    Obtain an instance via `ApifyClient.user`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_id = kwargs.pop('resource_id', None)
@@ -122,7 +126,11 @@ class UserClient(ResourceClient):
 
 @docs_group('Resource clients')
 class UserClientAsync(ResourceClientAsync):
-    """Async sub-client for querying user data."""
+    """Sub-client for managing user account information.
+
+    Provides methods to get user data, monthly usage, and account limits.
+    Obtain an instance via `ApifyClientAsync.user`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_id = kwargs.pop('resource_id', None)

@@ -15,7 +15,11 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class BuildClient(ResourceClient):
-    """Sub-client for manipulating a single Actor build."""
+    """Sub-client for managing a specific Actor build.
+
+    Provides methods to get, delete, abort, and wait for finish of an Actor build.
+    Obtain an instance via `ApifyClient.build`.
+    """
 
     def __init__(
         self,
@@ -113,7 +117,11 @@ class BuildClient(ResourceClient):
 
 @docs_group('Resource clients')
 class BuildClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor build."""
+    """Sub-client for managing a specific Actor build.
+
+    Provides methods to get, delete, abort, and wait for finish of an Actor build.
+    Obtain an instance via `ApifyClientAsync.build`.
+    """
 
     def __init__(
         self,

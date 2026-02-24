@@ -10,7 +10,10 @@ from apify_client._utils import filter_none_values
 
 @docs_group('Resource clients')
 class DatasetCollectionClient(ResourceClient):
-    """Sub-client for manipulating datasets."""
+    """Sub-client for the dataset collection.
+
+    Provides methods to list and get or create datasets. Obtain an instance via `ApifyClient.datasets`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')
@@ -58,7 +61,10 @@ class DatasetCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class DatasetCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating datasets."""
+    """Sub-client for the dataset collection.
+
+    Provides methods to list and get or create datasets. Obtain an instance via `ApifyClientAsync.datasets`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')

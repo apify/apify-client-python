@@ -9,7 +9,10 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 
 @docs_group('Resource clients')
 class WebhookDispatchCollectionClient(ResourceClient):
-    """Sub-client for listing webhook dispatches."""
+    """Sub-client for the webhook dispatch collection.
+
+    Provides methods to list webhook dispatches. Obtain an instance via `ApifyClient.webhook_dispatches`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
@@ -40,7 +43,10 @@ class WebhookDispatchCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for listing webhook dispatches."""
+    """Sub-client for the webhook dispatch collection.
+
+    Provides methods to list webhook dispatches. Obtain an instance via `ApifyClientAsync.webhook_dispatches`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')

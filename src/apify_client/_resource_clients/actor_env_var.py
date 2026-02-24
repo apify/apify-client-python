@@ -24,7 +24,11 @@ def get_actor_env_var_representation(
 
 @docs_group('Resource clients')
 class ActorEnvVarClient(ResourceClient):
-    """Sub-client for manipulating a single Actor environment variable."""
+    """Sub-client for managing a specific Actor environment variable.
+
+    Provides methods to get, update, and delete an environment variable.
+    Obtain an instance via `ActorVersionClient.env_var`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')
@@ -81,7 +85,11 @@ class ActorEnvVarClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ActorEnvVarClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor environment variable."""
+    """Sub-client for managing a specific Actor environment variable.
+
+    Provides methods to get, update, and delete an environment variable.
+    Obtain an instance via `ActorVersionClientAsync.env_var`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')

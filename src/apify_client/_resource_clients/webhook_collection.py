@@ -14,7 +14,10 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class WebhookCollectionClient(ResourceClient):
-    """Sub-client for manipulating webhooks."""
+    """Sub-client for the webhook collection.
+
+    Provides methods to list and create webhooks. Obtain an instance via `ApifyClient.webhooks`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhooks')
@@ -101,7 +104,10 @@ class WebhookCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class WebhookCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating webhooks."""
+    """Sub-client for the webhook collection.
+
+    Provides methods to list and create webhooks. Obtain an instance via `ApifyClientAsync.webhooks`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhooks')

@@ -60,7 +60,11 @@ class DatasetItemsPage:
 
 @docs_group('Resource clients')
 class DatasetClient(ResourceClient):
-    """Sub-client for manipulating a single dataset."""
+    """Sub-client for managing a specific dataset.
+
+    Provides methods to get, update, delete, push items, list items, iterate items, and stream items of a dataset.
+    Obtain an instance via `ApifyClient.dataset`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')
@@ -677,7 +681,11 @@ class DatasetClient(ResourceClient):
 
 @docs_group('Resource clients')
 class DatasetClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single dataset."""
+    """Sub-client for managing a specific dataset.
+
+    Provides methods to get, update, delete, push items, list items, iterate items, and stream items of a dataset.
+    Obtain an instance via `ApifyClientAsync.dataset`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')

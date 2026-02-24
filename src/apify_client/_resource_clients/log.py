@@ -16,7 +16,10 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class LogClient(ResourceClient):
-    """Sub-client for manipulating logs."""
+    """Sub-client for managing a specific log.
+
+    Provides methods to get and stream logs. Obtain an instance via `ApifyClient.log`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'logs')
@@ -104,7 +107,10 @@ class LogClient(ResourceClient):
 
 @docs_group('Resource clients')
 class LogClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating logs."""
+    """Sub-client for managing a specific log.
+
+    Provides methods to get and stream logs. Obtain an instance via `ApifyClientAsync.log`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'logs')

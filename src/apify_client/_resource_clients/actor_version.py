@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class ActorVersionClient(ResourceClient):
-    """Sub-client for manipulating a single Actor version."""
+    """Sub-client for managing a specific Actor version.
+
+    Provides methods to get, update, and delete an Actor version.
+    Obtain an instance via `ActorClient.version`.
+    """
 
     def __init__(
         self,
@@ -125,7 +129,11 @@ class ActorVersionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ActorVersionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor version."""
+    """Sub-client for managing a specific Actor version.
+
+    Provides methods to get, update, and delete an Actor version.
+    Obtain an instance via `ActorClientAsync.version`.
+    """
 
     def __init__(
         self,

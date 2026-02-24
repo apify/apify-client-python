@@ -21,9 +21,9 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class StatusMessageWatcher:
-    """Utility class for logging status messages from another Actor run.
+    """Utility class for logging status messages from an Actor run.
 
-    Status message is logged at fixed time intervals, and there is no guarantee that all messages will be logged,
+    The status message is polled at fixed time intervals, and there is no guarantee that all messages will be logged,
     especially in cases of frequent status message changes.
     """
 
@@ -70,7 +70,7 @@ class StatusMessageWatcher:
 
 @docs_group('Resource clients')
 class StatusMessageWatcherAsync(StatusMessageWatcher):
-    """Async variant of `StatusMessageWatcher` that is logging in task."""
+    """Async variant of `StatusMessageWatcher` that polls and logs status messages in an asyncio task."""
 
     def __init__(
         self, *, run_client: RunClientAsync, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
@@ -128,7 +128,7 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
 
 @docs_group('Resource clients')
 class StatusMessageWatcherSync(StatusMessageWatcher):
-    """Sync variant of `StatusMessageWatcher` that is logging in thread."""
+    """Sync variant of `StatusMessageWatcher` that polls and logs status messages in a background thread."""
 
     def __init__(
         self, *, run_client: RunClient, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)

@@ -14,7 +14,10 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class TaskCollectionClient(ResourceClient):
-    """Sub-client for manipulating tasks."""
+    """Sub-client for the task collection.
+
+    Provides methods to list and create tasks. Obtain an instance via `ApifyClient.tasks`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
@@ -114,7 +117,10 @@ class TaskCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class TaskCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating tasks."""
+    """Sub-client for the task collection.
+
+    Provides methods to list and create tasks. Obtain an instance via `ApifyClientAsync.tasks`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-tasks')

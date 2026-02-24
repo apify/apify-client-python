@@ -54,7 +54,11 @@ _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 @docs_group('Resource clients')
 class RequestQueueClient(ResourceClient):
-    """Sub-client for manipulating a single request queue."""
+    """Sub-client for managing a specific request queue.
+
+    Provides methods to get, update, delete, and add/get/list/lock/delete requests of a request queue.
+    Obtain an instance via `ApifyClient.request_queue`.
+    """
 
     def __init__(  # noqa: D417
         self,
@@ -460,7 +464,11 @@ class RequestQueueClient(ResourceClient):
 
 @docs_group('Resource clients')
 class RequestQueueClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single request queue."""
+    """Sub-client for managing a specific request queue.
+
+    Provides methods to get, update, delete, and add/get/list/lock/delete requests of a request queue.
+    Obtain an instance via `ApifyClientAsync.request_queue`.
+    """
 
     def __init__(  # noqa: D417
         self,

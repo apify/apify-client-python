@@ -42,7 +42,11 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class RunClient(ResourceClient):
-    """Sub-client for manipulating a single Actor run."""
+    """Sub-client for managing a specific Actor run.
+
+    Provides methods to get, update, abort, wait for finish, metamorph, resurrect, reboot, and charge an Actor run.
+    Obtain an instance via `ApifyClient.run`.
+    """
 
     def __init__(
         self,
@@ -427,7 +431,11 @@ class RunClient(ResourceClient):
 
 @docs_group('Resource clients')
 class RunClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor run."""
+    """Sub-client for managing a specific Actor run.
+
+    Provides methods to get, update, abort, wait for finish, metamorph, resurrect, reboot, and charge an Actor run.
+    Obtain an instance via `ApifyClientAsync.run`.
+    """
 
     def __init__(
         self,

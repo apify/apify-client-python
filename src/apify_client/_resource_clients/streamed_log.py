@@ -19,14 +19,14 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class StreamedLog:
-    """Utility class for streaming logs from another Actor.
+    """Utility class for streaming logs from an Actor run.
 
-    It uses buffer to deal with possibly chunked logs. Chunked logs are stored in buffer. Chunks are expected to contain
-    specific markers that indicate the start of the log message. Each time a new chunk with complete split marker
-    arrives, the buffer is processed, logged and emptied.
+    It uses a buffer to deal with possibly chunked logs. Chunked logs are stored in the buffer. Chunks are expected
+    to contain specific markers that indicate the start of a log message. Each time a new chunk with a complete split
+    marker arrives, the buffer is processed, logged, and emptied.
 
-    This works only if the logs have datetime marker in ISO format. For example, `2025-05-12T15:35:59.429Z` This is the
-    default log standard for the Actors.
+    This works only if the logs have a datetime marker in ISO format. For example, `2025-05-12T15:35:59.429Z`.
+    This is the default log standard for Actors.
     """
 
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
@@ -99,7 +99,7 @@ class StreamedLog:
 
 @docs_group('Resource clients')
 class StreamedLogSync(StreamedLog):
-    """Sync variant of `StreamedLog` that is logging in threads."""
+    """Sync variant of `StreamedLog` that streams and logs in a background thread."""
 
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         super().__init__(to_logger=to_logger, from_start=from_start)
@@ -152,7 +152,7 @@ class StreamedLogSync(StreamedLog):
 
 @docs_group('Resource clients')
 class StreamedLogAsync(StreamedLog):
-    """Async variant of `StreamedLog` that is logging in tasks."""
+    """Async variant of `StreamedLog` that streams and logs in an asyncio task."""
 
     def __init__(self, log_client: LogClientAsync, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         super().__init__(to_logger=to_logger, from_start=from_start)

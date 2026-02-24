@@ -11,7 +11,11 @@ from apify_client._utils import filter_none_values
 
 @docs_group('Resource clients')
 class ActorEnvVarCollectionClient(ResourceClient):
-    """Sub-client for manipulating Actor env vars."""
+    """Sub-client for the Actor environment variable collection.
+
+    Provides methods to list and create environment variables.
+    Obtain an instance via `ActorVersionClient.env_vars`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')
@@ -59,7 +63,11 @@ class ActorEnvVarCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating Actor env vars."""
+    """Sub-client for the Actor environment variable collection.
+
+    Provides methods to list and create environment variables.
+    Obtain an instance via `ActorVersionClientAsync.env_vars`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')

@@ -71,7 +71,11 @@ def _parse_get_record_response(response: Response) -> Any:
 
 @docs_group('Resource clients')
 class KeyValueStoreClient(ResourceClient):
-    """Sub-client for manipulating a single key-value store."""
+    """Sub-client for managing a specific key-value store.
+
+    Provides methods to get, update, delete, and get/set/delete records of a key-value store.
+    Obtain an instance via `ApifyClient.key_value_store`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'key-value-stores')
@@ -451,7 +455,11 @@ class KeyValueStoreClient(ResourceClient):
 
 @docs_group('Resource clients')
 class KeyValueStoreClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single key-value store."""
+    """Sub-client for managing a specific key-value store.
+
+    Provides methods to get, update, delete, and get/set/delete records of a key-value store.
+    Obtain an instance via `ApifyClientAsync.key_value_store`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'key-value-stores')

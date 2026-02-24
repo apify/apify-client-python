@@ -9,7 +9,10 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 
 @docs_group('Resource clients')
 class BuildCollectionClient(ResourceClient):
-    """Sub-client for listing Actor builds."""
+    """Sub-client for the Actor build collection.
+
+    Provides methods to list Actor builds. Obtain an instance via `ApifyClient.builds`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-builds')
@@ -44,7 +47,10 @@ class BuildCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class BuildCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for listing Actor builds."""
+    """Sub-client for the Actor build collection.
+
+    Provides methods to list Actor builds. Obtain an instance via `ApifyClientAsync.builds`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-builds')

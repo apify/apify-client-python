@@ -32,7 +32,11 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class TaskClient(ResourceClient):
-    """Sub-client for manipulating a single task."""
+    """Sub-client for managing a specific task.
+
+    Provides methods to get, update, delete, and start runs of a task.
+    Obtain an instance via `ApifyClient.task`.
+    """
 
     def __init__(
         self,
@@ -321,7 +325,11 @@ class TaskClient(ResourceClient):
 
 @docs_group('Resource clients')
 class TaskClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single task."""
+    """Sub-client for managing a specific task.
+
+    Provides methods to get, update, delete, and start runs of a task.
+    Obtain an instance via `ApifyClientAsync.task`.
+    """
 
     def __init__(
         self,

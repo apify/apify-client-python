@@ -30,7 +30,12 @@ logger = logging.getLogger(logger_name)
 
 @docs_group('HTTP clients')
 class HttpClient(BaseHttpClient):
-    """Synchronous HTTP client for Apify API with automatic retries and exponential backoff."""
+    """Synchronous HTTP client for the Apify API.
+
+    Handles authentication, request serialization, and automatic retries with exponential backoff
+    for rate-limited (HTTP 429) and server error (HTTP 5xx) responses. Non-retryable errors
+    (e.g. HTTP 4xx client errors) are raised immediately.
+    """
 
     def __init__(
         self,
@@ -46,9 +51,9 @@ class HttpClient(BaseHttpClient):
 
         Args:
             token: Apify API token for authentication.
-            timeout: Request timeout.
-            max_retries: Maximum number of retries for failed requests.
-            min_delay_between_retries: Minimum delay between retries.
+            timeout: Default timeout for HTTP requests.
+            max_retries: Maximum number of retry attempts for failed requests.
+            min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
         """
@@ -251,7 +256,12 @@ class HttpClient(BaseHttpClient):
 
 @docs_group('HTTP clients')
 class HttpClientAsync(BaseHttpClient):
-    """Asynchronous HTTP client for Apify API with automatic retries and exponential backoff."""
+    """Asynchronous HTTP client for the Apify API.
+
+    Handles authentication, request serialization, and automatic retries with exponential backoff
+    for rate-limited (HTTP 429) and server error (HTTP 5xx) responses. Non-retryable errors
+    (e.g. HTTP 4xx client errors) are raised immediately.
+    """
 
     def __init__(
         self,
@@ -267,9 +277,9 @@ class HttpClientAsync(BaseHttpClient):
 
         Args:
             token: Apify API token for authentication.
-            timeout: Request timeout.
-            max_retries: Maximum number of retries for failed requests.
-            min_delay_between_retries: Minimum delay between retries.
+            timeout: Default timeout for HTTP requests.
+            max_retries: Maximum number of retry attempts for failed requests.
+            min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
         """

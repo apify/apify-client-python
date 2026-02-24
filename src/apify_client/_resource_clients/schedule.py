@@ -12,7 +12,11 @@ from apify_client.errors import ApifyApiError
 
 @docs_group('Resource clients')
 class ScheduleClient(ResourceClient):
-    """Sub-client for manipulating a single schedule."""
+    """Sub-client for managing a specific schedule.
+
+    Provides methods to get, update, delete, and get log of a schedule.
+    Obtain an instance via `ApifyClient.schedule`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')
@@ -108,7 +112,11 @@ class ScheduleClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ScheduleClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single schedule."""
+    """Sub-client for managing a specific schedule.
+
+    Provides methods to get, update, delete, and get log of a schedule.
+    Obtain an instance via `ApifyClientAsync.schedule`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')

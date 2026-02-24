@@ -14,7 +14,10 @@ if TYPE_CHECKING:
 
 @docs_group('Resource clients')
 class ActorCollectionClient(ResourceClient):
-    """Sub-client for manipulating Actors."""
+    """Sub-client for the Actor collection.
+
+    Provides methods to list and create Actors. Obtain an instance via `ApifyClient.actors`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')
@@ -142,7 +145,10 @@ class ActorCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ActorCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating Actors."""
+    """Sub-client for the Actor collection.
+
+    Provides methods to list and create Actors. Obtain an instance via `ApifyClientAsync.actors`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')

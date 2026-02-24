@@ -11,7 +11,10 @@ from apify_client._utils import filter_none_values
 
 @docs_group('Resource clients')
 class ScheduleCollectionClient(ResourceClient):
-    """Sub-client for manipulating schedules."""
+    """Sub-client for the schedule collection.
+
+    Provides methods to list and create schedules. Obtain an instance via `ApifyClient.schedules`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')
@@ -90,7 +93,10 @@ class ScheduleCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ScheduleCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating schedules."""
+    """Sub-client for the schedule collection.
+
+    Provides methods to list and create schedules. Obtain an instance via `ApifyClientAsync.schedules`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')

@@ -9,7 +9,10 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 
 @docs_group('Resource clients')
 class StoreCollectionClient(ResourceClient):
-    """Sub-client for Apify store."""
+    """Sub-client for the Apify store collection.
+
+    Provides methods to list Actors in the Apify store. Obtain an instance via `ApifyClient.store`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')
@@ -57,7 +60,10 @@ class StoreCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class StoreCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for Apify store."""
+    """Sub-client for the Apify store collection.
+
+    Provides methods to list Actors in the Apify store. Obtain an instance via `ApifyClientAsync.store`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'store')

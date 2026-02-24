@@ -17,7 +17,11 @@ from apify_client._utils import filter_none_values
 
 @docs_group('Resource clients')
 class ActorVersionCollectionClient(ResourceClient):
-    """Sub-client for manipulating Actor versions."""
+    """Sub-client for the Actor version collection.
+
+    Provides methods to list and create Actor versions.
+    Obtain an instance via `ActorClient.versions`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'versions')
@@ -89,7 +93,11 @@ class ActorVersionCollectionClient(ResourceClient):
 
 @docs_group('Resource clients')
 class ActorVersionCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating Actor versions."""
+    """Sub-client for the Actor version collection.
+
+    Provides methods to list and create Actor versions.
+    Obtain an instance via `ActorClientAsync.versions`.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'versions')

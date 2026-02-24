@@ -83,7 +83,7 @@ class InvalidResponseBodyError(ApifyClientError):
     """
 
     def __init__(self, response: impit.Response) -> None:
-        """Initialize the error from an unparseable response.
+        """Initialize the error from an unparsable response.
 
         Args:
             response: The HTTP response whose body could not be parsed.

@@ -89,6 +89,24 @@ class ApifyClient:
     schedules, webhooks, and more.
 
     The client automatically handles retries with exponential backoff for failed or rate-limited requests.
+
+    ### Usage
+
+    ```python
+    from apify_client import ApifyClient
+
+    client = ApifyClient(token='MY-APIFY-TOKEN')
+
+    # Start an Actor and wait for it to finish.
+    actor_client = client.actor('username/my-actor')
+    run = actor_client.call(run_input={'query': 'web scraping'})
+
+    # Fetch results from the run's default dataset.
+    dataset_client = client.dataset(run['defaultDatasetId'])
+    items = dataset_client.list_items().items
+    for item in items:
+        print(item)
+    ```
     """
 
     _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
@@ -359,6 +377,29 @@ class ApifyClientAsync:
     request queues, schedules, webhooks, and more.
 
     The client automatically handles retries with exponential backoff for failed or rate-limited requests.
+
+    ### Usage
+
+    ```python
+    import asyncio
+
+    from apify_client import ApifyClientAsync
+
+    async def main() -> None:
+        client = ApifyClientAsync(token='MY-APIFY-TOKEN')
+
+        # Start an Actor and wait for it to finish.
+        actor_client = client.actor('username/my-actor')
+        run = await actor_client.call(run_input={'query': 'web scraping'})
+
+        # Fetch results from the run's default dataset.
+        dataset_client = client.dataset(run['defaultDatasetId'])
+        items = (await dataset_client.list_items()).items
+        for item in items:
+            print(item)
+
+    asyncio.run(main())
+    ```
     """
 
     _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}

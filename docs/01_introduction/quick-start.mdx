@@ -1,0 +1,106 @@
+---
+id: quick-start
+title: Quick start
+sidebar_label: Quick start
+description: "Get started with the Apify API client for Python by running an Actor and retrieving results from its dataset."
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import AuthAsyncExample from '!!raw-loader!./code/02_auth_async.py';
+import AuthSyncExample from '!!raw-loader!./code/02_auth_sync.py';
+import InputAsyncExample from '!!raw-loader!./code/03_input_async.py';
+import InputSyncExample from '!!raw-loader!./code/03_input_sync.py';
+import DatasetAsyncExample from '!!raw-loader!./code/03_dataset_async.py';
+import DatasetSyncExample from '!!raw-loader!./code/03_dataset_sync.py';
+
+Learn how to authenticate, run Actors, and retrieve results using the Apify API client for Python.
+
+---
+
+## Step 1: Authenticate the client
+
+To use the client, you need an [API token](/platform/integrations/api#api-token). You can find your token under the [Integrations](https://console.apify.com/account/integrations) tab in Apify Console. Copy the token and initialize the client by providing it as a parameter to the `ApifyClient` constructor.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {AuthAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {AuthSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::warning Secure access
+
+The API token is used to authorize your requests to the Apify API. You can be charged for the usage of the underlying services, so do not share your API token with untrusted parties or expose it on the client side of your applications.
+
+:::
+
+## Step 2: Run an Actor
+
+To start an Actor, you need its ID (e.g., `john-doe/my-cool-actor`) and an API token. The Actor's ID is a combination of the Actor owner's username and the Actor name. You can run both your own Actors and [Actors from Apify Store](https://docs.apify.com/platform/actors/running/actors-in-store).
+
+To define the Actor's input, pass a dictionary to the [`ActorClient.call`](/reference/class/ActorClient#call) method that matches the Actor's [input schema](https://docs.apify.com/platform/actors/development/actor-definition/input-schema). The input can include URLs to scrape, search terms, or other configuration data.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {InputAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {InputSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Step 3: Get results from the dataset
+
+To get the results from the dataset, use the [`DatasetClient`](/reference/class/DatasetClient) ([`ApifyClient.dataset`](/reference/class/ApifyClient#dataset)) and [`DatasetClient.list_items`](/reference/class/DatasetClient#list_items) method. You need to pass the dataset ID to define which dataset you want to access. You can get the dataset ID from the Actor's run dictionary (represented by `defaultDatasetId`).
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {DatasetAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {DatasetSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::note Dataset access
+
+Running an Actor might take time, depending on the Actor's complexity and the amount of data it processes. If you want only to get data and have an immediate response, you should access the existing dataset of the finished [Actor run](https://docs.apify.com/platform/actors/running/runs-and-builds#runs).
+
+:::
+
+## Next steps
+
+### Concepts
+
+To learn more about how the client works, check out the Concepts section in the sidebar:
+
+- [Asyncio support](../02_concepts/01_async_support.mdx) - asynchronous programming with the client
+- [Single and collection clients](../02_concepts/02_single_collection_clients.mdx) - resource clients and collection clients
+- [Error handling](../02_concepts/04_error_handling.mdx) - automatic data extraction and error debugging
+- [Retries](../02_concepts/05_retries.mdx) - automatic retries with exponential backoff
+- [Pagination](../02_concepts/08_pagination.mdx) - iterating through large result sets
+
+### Guides
+
+For practical examples of common tasks, see the Guides section:
+
+- [Pass input to an Actor](../03_guides/01_passing_input_to_actor.mdx)
+- [Retrieve Actor data](../03_guides/03_retrieve_actor_data.mdx)
+- [Integrate with data libraries](../03_guides/04_integration_with_data_libraries.mdx)

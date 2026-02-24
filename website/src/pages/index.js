@@ -5,7 +5,7 @@ export default function Home() {
     const history = useHistory();
 
     useEffect(() => {
-        history.replace('/api/client/python/docs/introduction/overview');
+        history.replace('/api/client/python/docs');
     }, [history]);
 
     return null;

@@ -24,12 +24,18 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     """Get the ID of an already-completed run of the hello-world actor.
 
     Using a finished run's ID for webhook conditions ensures the webhook will never actually fire,
-    since a completed run won't emit new events.
+    since a completed run won't emit new events. If no completed runs exist, starts a new run and
+    waits for it to finish.
     """
     runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
     assert runs_page is not None
-    assert len(runs_page.items) > 0, 'No completed runs found for hello-world actor'
-    run = cast('Run', runs_page.items[0])
+
+    if len(runs_page.items) > 0:
+        run = cast('Run', runs_page.items[0])
+        return run.id
+
+    # No completed runs found - start one and wait for it to finish
+    run = cast('Run', await maybe_await(client.actor(HELLO_WORLD_ACTOR).call()))
     return run.id
 
 

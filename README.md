@@ -14,7 +14,7 @@ If you want to develop Apify Actors in Python, check out the [Apify SDK for Pyth
 
 ## Installation
 
-Requires Python 3.10+
+Requires Python 3.11+
 
 You can install the package from its [PyPI listing](https://pypi.org/project/apify-client). To do that, simply run `pip install apify-client` in your terminal.
 

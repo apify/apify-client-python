@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
@@ -244,14 +244,14 @@ class ResourceClient(ResourceClientBase):
         Raises:
             ApifyApiError: If API returns errors other than 404.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         deadline = (now + wait_duration) if wait_duration is not None else None
         not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
         actor_job: dict = {}
 
         while True:
             if deadline is not None:
-                remaining_secs = max(0, int(to_seconds(deadline - datetime.now(timezone.utc))))
+                remaining_secs = max(0, int(to_seconds(deadline - datetime.now(UTC))))
                 wait_for_finish = remaining_secs
             else:
                 wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH, as_int=True)
@@ -267,7 +267,7 @@ class ResourceClient(ResourceClientBase):
                 actor_job = actor_job_response.data.model_dump()
 
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
-                is_timed_out = deadline is not None and datetime.now(timezone.utc) >= deadline
+                is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
                 if is_terminal or is_timed_out:
                     break
@@ -277,7 +277,7 @@ class ResourceClient(ResourceClientBase):
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
-                if datetime.now(timezone.utc) > not_found_deadline:
+                if datetime.now(UTC) > not_found_deadline:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -410,14 +410,14 @@ class ResourceClientAsync(ResourceClientBase):
         Raises:
             ApifyApiError: If API returns errors other than 404.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         deadline = (now + wait_duration) if wait_duration is not None else None
         not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
         actor_job: dict = {}
 
         while True:
             if deadline is not None:
-                remaining_secs = max(0, int(to_seconds(deadline - datetime.now(timezone.utc))))
+                remaining_secs = max(0, int(to_seconds(deadline - datetime.now(UTC))))
                 wait_for_finish = remaining_secs
             else:
                 wait_for_finish = to_seconds(DEFAULT_WAIT_FOR_FINISH, as_int=True)
@@ -433,7 +433,7 @@ class ResourceClientAsync(ResourceClientBase):
                 actor_job = actor_job_response.data.model_dump()
 
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
-                is_timed_out = deadline is not None and datetime.now(timezone.utc) >= deadline
+                is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
                 if is_terminal or is_timed_out:
                     break
@@ -443,7 +443,7 @@ class ResourceClientAsync(ResourceClientBase):
 
                 # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
                 # and return None. In such case, the requested record probably really doesn't exist.
-                if datetime.now(timezone.utc) > not_found_deadline:
+                if datetime.now(UTC) > not_found_deadline:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying

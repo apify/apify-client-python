@@ -5,11 +5,9 @@ import logging
 import re
 import threading
 from asyncio import Task
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from threading import Thread
-from typing import TYPE_CHECKING, cast
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Self, cast
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -46,7 +44,7 @@ class StreamedLog:
         self._to_logger = to_logger
         self._stream_buffer = list[bytes]()
         self._split_marker = re.compile(rb'(?:\n|^)(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)')
-        self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=timezone.utc)
+        self._relevancy_time_limit: datetime | None = None if from_start else datetime.now(tz=UTC)
 
     def _process_new_data(self, data: bytes) -> None:
         new_chunk = data
@@ -76,7 +74,7 @@ class StreamedLog:
             decoded_marker = marker.decode('utf-8')
             decoded_content = content.decode('utf-8')
             if self._relevancy_time_limit:
-                log_time = datetime.fromisoformat(decoded_marker.replace('Z', '+00:00'))
+                log_time = datetime.fromisoformat(decoded_marker)
                 if log_time < self._relevancy_time_limit:
                     # Skip irrelevant logs
                     continue

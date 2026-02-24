@@ -6,9 +6,7 @@ import time
 from asyncio import Task
 from datetime import timedelta
 from threading import Thread
-from typing import TYPE_CHECKING
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Self
 
 from apify_client._utils import to_seconds
 

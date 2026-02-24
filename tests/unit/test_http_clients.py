@@ -1,7 +1,7 @@
 import gzip
 import time
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import Mock
 
@@ -180,7 +180,7 @@ def test_parse_params_list() -> None:
 
 def test_parse_params_datetime() -> None:
     """Test _parse_params converts datetime to Zulu format."""
-    dt = datetime(2024, 1, 15, 10, 30, 45, 123000, tzinfo=timezone.utc)
+    dt = datetime(2024, 1, 15, 10, 30, 45, 123000, tzinfo=UTC)
     result = BaseHttpClient._parse_params({'created_at': dt})
     assert result == {'created_at': '2024-01-15T10:30:45.123Z'}
 
@@ -193,7 +193,7 @@ def test_parse_params_none_values_filtered() -> None:
 
 def test_parse_params_mixed() -> None:
     """Test _parse_params with mixed types."""
-    dt = datetime(2024, 1, 15, 10, 30, 45, 123000, tzinfo=timezone.utc)
+    dt = datetime(2024, 1, 15, 10, 30, 45, 123000, tzinfo=UTC)
     result = BaseHttpClient._parse_params(
         {
             'limit': 10,

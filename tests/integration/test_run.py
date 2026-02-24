@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
 
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from ._utils import maybe_await, maybe_sleep
 from apify_client._models import ActorJobStatus, Run
@@ -72,7 +72,7 @@ async def test_run_collection_list_accept_date_range(client: ApifyClient | Apify
     try:
         run_collection = client.runs()
 
-        date_obj = datetime(2100, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        date_obj = datetime(2100, 1, 1, 0, 0, 0, tzinfo=UTC)
         iso_date_str = date_obj.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         # Here we test that date fields can be passed both as datetime objects and as ISO 8601 strings

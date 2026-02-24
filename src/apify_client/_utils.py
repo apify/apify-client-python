@@ -9,10 +9,9 @@ import time
 from base64 import b64encode, urlsafe_b64encode
 from enum import Enum
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import impit
-from typing_extensions import overload
 
 from apify_client.errors import InvalidResponseBodyError
 

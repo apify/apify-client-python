@@ -4,7 +4,7 @@ import gzip
 import json as jsonlib
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from importlib import metadata
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
@@ -86,7 +86,7 @@ class BaseHttpClient:
             elif isinstance(value, list):
                 parsed_params[key] = ','.join(value)
             elif isinstance(value, datetime):
-                utc_aware_dt = value.astimezone(timezone.utc)
+                utc_aware_dt = value.astimezone(UTC)
                 iso_str = utc_aware_dt.isoformat(timespec='milliseconds')
                 parsed_params[key] = iso_str.replace('+00:00', 'Z')
             elif value is not None:

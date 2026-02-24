@@ -102,10 +102,11 @@ class ApifyClient:
     run = actor_client.call(run_input={'query': 'web scraping'})
 
     # Fetch results from the run's default dataset.
-    dataset_client = client.dataset(run['defaultDatasetId'])
-    items = dataset_client.list_items().items
-    for item in items:
-        print(item)
+    if run is not None:
+        dataset_client = client.dataset(run.default_dataset_id)
+        items = dataset_client.list_items().items
+        for item in items:
+            print(item)
     ```
     """
 
@@ -393,10 +394,11 @@ class ApifyClientAsync:
         run = await actor_client.call(run_input={'query': 'web scraping'})
 
         # Fetch results from the run's default dataset.
-        dataset_client = client.dataset(run['defaultDatasetId'])
-        items = (await dataset_client.list_items()).items
-        for item in items:
-            print(item)
+        if run is not None:
+            dataset_client = client.dataset(run.default_dataset_id)
+            items = (await dataset_client.list_items()).items
+            for item in items:
+                print(item)
 
     asyncio.run(main())
     ```

@@ -45,7 +45,7 @@ def resolve_shortcuts(shortcuts: dict) -> None:
 
 
 shortcuts = {}
-for module_name in ['apify', 'apify_client', 'apify_shared']:
+for module_name in ['apify', 'apify_client']:
     try:
         module = importlib.import_module(module_name)
         module_shortcuts = get_module_shortcuts(module)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw
 from apify_client.errors import ApifyApiError
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
     import impit
 
 
+@docs_group('Resource clients')
 class LogClient(ResourceClient):
     """Sub-client for manipulating logs."""
 
@@ -100,6 +102,7 @@ class LogClient(ResourceClient):
                 response.close()
 
 
+@docs_group('Resource clients')
 class LogClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating logs."""
 

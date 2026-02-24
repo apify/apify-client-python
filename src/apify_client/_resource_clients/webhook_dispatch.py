@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import WebhookDispatch, WebhookDispatchResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 
+@docs_group('Resource clients')
 class WebhookDispatchClient(ResourceClient):
     """Sub-client for querying information about a webhook dispatch."""
 
@@ -27,6 +29,7 @@ class WebhookDispatchClient(ResourceClient):
         return WebhookDispatchResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class WebhookDispatchClientAsync(ResourceClientAsync):
     """Async sub-client for querying information about a webhook dispatch."""
 

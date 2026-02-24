@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfWebhooks, ListOfWebhooksResponse, Webhook, WebhookResponse
 from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
     from apify_client._models import WebhookEventType
 
 
+@docs_group('Resource clients')
 class WebhookCollectionClient(ResourceClient):
     """Sub-client for manipulating webhooks."""
 
@@ -97,6 +99,7 @@ class WebhookCollectionClient(ResourceClient):
         return WebhookResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class WebhookCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating webhooks."""
 

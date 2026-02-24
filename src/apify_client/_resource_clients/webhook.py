@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     TestWebhookResponse,
     Webhook,
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
 
+@docs_group('Resource clients')
 class WebhookClient(ResourceClient):
     """Sub-client for manipulating a single webhook."""
 
@@ -135,6 +137,7 @@ class WebhookClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class WebhookClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single webhook."""
 

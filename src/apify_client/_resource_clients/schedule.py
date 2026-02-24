@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import Schedule, ScheduleInvoked, ScheduleLogResponse, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -9,6 +10,7 @@ from apify_client._utils import catch_not_found_or_throw, filter_none_values, re
 from apify_client.errors import ApifyApiError
 
 
+@docs_group('Resource clients')
 class ScheduleClient(ResourceClient):
     """Sub-client for manipulating a single schedule."""
 
@@ -104,6 +106,7 @@ class ScheduleClient(ResourceClient):
         return None
 
 
+@docs_group('Resource clients')
 class ScheduleClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single schedule."""
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import Version, VersionResponse, VersionSourceType
 from apify_client._representations import get_actor_version_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
     )
 
 
+@docs_group('Resource clients')
 class ActorVersionClient(ResourceClient):
     """Sub-client for manipulating a single Actor version."""
 
@@ -121,6 +123,7 @@ class ActorVersionClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class ActorVersionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor version."""
 

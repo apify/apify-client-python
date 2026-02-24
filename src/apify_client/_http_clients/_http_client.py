@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import impit
 
 from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
+from apify_client._docs import docs_group
 from apify_client._http_clients._base import BaseHttpClient
 from apify_client._logging import log_context, logger_name
 from apify_client._utils import to_seconds
@@ -27,6 +28,7 @@ T = TypeVar('T')
 logger = logging.getLogger(logger_name)
 
 
+@docs_group('HTTP clients')
 class HttpClient(BaseHttpClient):
     """Synchronous HTTP client for Apify API with automatic retries and exponential backoff."""
 
@@ -247,6 +249,7 @@ class HttpClient(BaseHttpClient):
         return func(stop_retrying, max_retries + 1)
 
 
+@docs_group('HTTP clients')
 class HttpClientAsync(BaseHttpClient):
     """Asynchronous HTTP client for Apify API with automatic retries and exponential backoff."""
 

@@ -8,6 +8,7 @@ from datetime import timedelta
 from threading import Thread
 from typing import TYPE_CHECKING, Self
 
+from apify_client._docs import docs_group
 from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from apify_client._resource_clients import RunClient, RunClientAsync
 
 
+@docs_group('Resource clients')
 class StatusMessageWatcher:
     """Utility class for logging status messages from another Actor run.
 
@@ -66,6 +68,7 @@ class StatusMessageWatcher:
         return True
 
 
+@docs_group('Resource clients')
 class StatusMessageWatcherAsync(StatusMessageWatcher):
     """Async variant of `StatusMessageWatcher` that is logging in task."""
 
@@ -123,6 +126,7 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
             await asyncio.sleep(self._check_period)
 
 
+@docs_group('Resource clients')
 class StatusMessageWatcherSync(StatusMessageWatcher):
     """Sync variant of `StatusMessageWatcher` that is logging in thread."""
 

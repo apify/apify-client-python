@@ -9,12 +9,15 @@ from datetime import UTC, datetime
 from threading import Thread
 from typing import TYPE_CHECKING, Self, cast
 
+from apify_client._docs import docs_group
+
 if TYPE_CHECKING:
     from types import TracebackType
 
     from apify_client._resource_clients import LogClient, LogClientAsync
 
 
+@docs_group('Resource clients')
 class StreamedLog:
     """Utility class for streaming logs from another Actor.
 
@@ -94,6 +97,7 @@ class StreamedLog:
         return logging.INFO
 
 
+@docs_group('Resource clients')
 class StreamedLogSync(StreamedLog):
     """Sync variant of `StreamedLog` that is logging in threads."""
 
@@ -146,6 +150,7 @@ class StreamedLogSync(StreamedLog):
         return
 
 
+@docs_group('Resource clients')
 class StreamedLogAsync(StreamedLog):
     """Async variant of `StreamedLog` that is logging in tasks."""
 

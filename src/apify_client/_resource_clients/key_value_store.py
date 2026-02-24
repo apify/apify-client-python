@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
+from apify_client._docs import docs_group
 from apify_client._models import (
     KeyValueStore,
     KeyValueStoreKey,
@@ -68,6 +69,7 @@ def _parse_get_record_response(response: Response) -> Any:
         return response_data
 
 
+@docs_group('Resource clients')
 class KeyValueStoreClient(ResourceClient):
     """Sub-client for manipulating a single key-value store."""
 
@@ -447,6 +449,7 @@ class KeyValueStoreClient(ResourceClient):
         return urlunparse(keys_public_url)
 
 
+@docs_group('Resource clients')
 class KeyValueStoreClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single key-value store."""
 

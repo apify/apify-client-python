@@ -9,7 +9,10 @@ from typing import Annotated, Any, Literal
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field
 
+from apify_client._docs import docs_group
 
+
+@docs_group('Models')
 class PaginationResponse(BaseModel):
     """Common pagination fields for list responses."""
 
@@ -38,6 +41,7 @@ class PaginationResponse(BaseModel):
     """
 
 
+@docs_group('Models')
 class ActorStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -54,6 +58,7 @@ class ActorStats(BaseModel):
     ] = None
 
 
+@docs_group('Models')
 class ActorShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -67,6 +72,7 @@ class ActorShort(BaseModel):
     stats: ActorStats | None = None
 
 
+@docs_group('Models')
 class ListOfActors(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -74,6 +80,7 @@ class ListOfActors(PaginationResponse):
     items: list[ActorShort]
 
 
+@docs_group('Models')
 class ListOfActorsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -81,6 +88,7 @@ class ListOfActorsResponse(BaseModel):
     data: ListOfActors
 
 
+@docs_group('Models')
 class Error(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -89,6 +97,7 @@ class Error(BaseModel):
     message: Annotated[str, Field(examples=['Actor run did not succeed (run ID: 55uatRrZib4xbZs, status: FAILED)'])]
 
 
+@docs_group('Models')
 class ErrorResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -96,6 +105,7 @@ class ErrorResponse(BaseModel):
     error: Error
 
 
+@docs_group('Models')
 class VersionSourceType(StrEnum):
     SOURCE_FILES = 'SOURCE_FILES'
     GIT_REPO = 'GIT_REPO'
@@ -103,6 +113,7 @@ class VersionSourceType(StrEnum):
     GITHUB_GIST = 'GITHUB_GIST'
 
 
+@docs_group('Models')
 class EnvVar(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -112,11 +123,13 @@ class EnvVar(BaseModel):
     is_secret: Annotated[bool | None, Field(alias='isSecret', examples=[False])] = None
 
 
+@docs_group('Models')
 class SourceCodeFileFormat(StrEnum):
     BASE64 = 'BASE64'
     TEXT = 'TEXT'
 
 
+@docs_group('Models')
 class SourceCodeFile(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -126,6 +139,7 @@ class SourceCodeFile(BaseModel):
     name: Annotated[str, Field(examples=['src/main.js'])]
 
 
+@docs_group('Models')
 class SourceCodeFolder(BaseModel):
     """Represents a folder in the Actor's source code structure. Distinguished from
     SourceCodeFile by the presence of the `folder` property set to `true`.
@@ -145,6 +159,7 @@ class SourceCodeFolder(BaseModel):
     """
 
 
+@docs_group('Models')
 class Version(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -171,6 +186,7 @@ class Version(BaseModel):
     """
 
 
+@docs_group('Models')
 class CommonActorPricingInfo(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -192,6 +208,7 @@ class CommonActorPricingInfo(BaseModel):
     reason_for_change: Annotated[str | None, Field(alias='reasonForChange')] = None
 
 
+@docs_group('Models')
 class PricingModel(StrEnum):
     PAY_PER_EVENT = 'PAY_PER_EVENT'
     PRICE_PER_DATASET_ITEM = 'PRICE_PER_DATASET_ITEM'
@@ -199,6 +216,7 @@ class PricingModel(StrEnum):
     FREE = 'FREE'
 
 
+@docs_group('Models')
 class ActorChargeEvent(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -208,6 +226,7 @@ class ActorChargeEvent(BaseModel):
     event_description: Annotated[str, Field(alias='eventDescription')]
 
 
+@docs_group('Models')
 class PricingPerEvent(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -215,6 +234,7 @@ class PricingPerEvent(BaseModel):
     actor_charge_events: Annotated[dict[str, ActorChargeEvent] | None, Field(alias='actorChargeEvents')] = None
 
 
+@docs_group('Models')
 class PayPerEventActorPricingInfo(CommonActorPricingInfo):
     model_config = ConfigDict(
         extra='allow',
@@ -224,6 +244,7 @@ class PayPerEventActorPricingInfo(CommonActorPricingInfo):
     minimal_max_total_charge_usd: Annotated[float | None, Field(alias='minimalMaxTotalChargeUsd')] = None
 
 
+@docs_group('Models')
 class PricePerDatasetItemActorPricingInfo(CommonActorPricingInfo):
     model_config = ConfigDict(
         extra='allow',
@@ -236,6 +257,7 @@ class PricePerDatasetItemActorPricingInfo(CommonActorPricingInfo):
     price_per_unit_usd: Annotated[float, Field(alias='pricePerUnitUsd')]
 
 
+@docs_group('Models')
 class FlatPricePerMonthActorPricingInfo(CommonActorPricingInfo):
     model_config = ConfigDict(
         extra='allow',
@@ -251,6 +273,7 @@ class FlatPricePerMonthActorPricingInfo(CommonActorPricingInfo):
     """
 
 
+@docs_group('Models')
 class FreeActorPricingInfo(CommonActorPricingInfo):
     model_config = ConfigDict(
         extra='allow',
@@ -258,6 +281,7 @@ class FreeActorPricingInfo(CommonActorPricingInfo):
     pricing_model: Annotated[Literal['FREE'], Field(alias='pricingModel')]
 
 
+@docs_group('Models')
 class DefaultRunOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -268,6 +292,7 @@ class DefaultRunOptions(BaseModel):
     restart_on_error: Annotated[bool | None, Field(alias='restartOnError', examples=[False])] = None
 
 
+@docs_group('Models')
 class CreateActorRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -294,6 +319,7 @@ class CreateActorRequest(BaseModel):
     default_run_options: Annotated[DefaultRunOptions | None, Field(alias='defaultRunOptions')] = None
 
 
+@docs_group('Models')
 class ActorPermissionLevel(StrEnum):
     """Determines permissions that the Actor requires to run. For more information, see the [Actor permissions documentation](https://docs.apify.com/platform/actors/development/permissions)."""
 
@@ -301,6 +327,7 @@ class ActorPermissionLevel(StrEnum):
     FULL_PERMISSIONS = 'FULL_PERMISSIONS'
 
 
+@docs_group('Models')
 class ExampleRunInput(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -309,6 +336,7 @@ class ExampleRunInput(BaseModel):
     content_type: Annotated[str, Field(alias='contentType', examples=['application/json; charset=utf-8'])]
 
 
+@docs_group('Models')
 class TaggedBuildInfo(BaseModel):
     """Information about a tagged build."""
 
@@ -331,6 +359,7 @@ class TaggedBuildInfo(BaseModel):
     """
 
 
+@docs_group('Models')
 class Actor(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -369,6 +398,7 @@ class Actor(BaseModel):
     """
 
 
+@docs_group('Models')
 class ActorResponse(BaseModel):
     """Response containing Actor data."""
 
@@ -378,6 +408,7 @@ class ActorResponse(BaseModel):
     data: Actor
 
 
+@docs_group('Models')
 class CreateOrUpdateVersionRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -404,6 +435,7 @@ class CreateOrUpdateVersionRequest(BaseModel):
     """
 
 
+@docs_group('Models')
 class BuildTag(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -411,6 +443,7 @@ class BuildTag(BaseModel):
     build_id: Annotated[str, Field(alias='buildId')]
 
 
+@docs_group('Models')
 class UpdateActorRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -483,6 +516,7 @@ class UpdateActorRequest(BaseModel):
     """
 
 
+@docs_group('Models')
 class ListOfVersions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -491,6 +525,7 @@ class ListOfVersions(BaseModel):
     items: list[Version]
 
 
+@docs_group('Models')
 class ListOfVersionsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -498,6 +533,7 @@ class ListOfVersionsResponse(BaseModel):
     data: ListOfVersions
 
 
+@docs_group('Models')
 class VersionResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -505,6 +541,7 @@ class VersionResponse(BaseModel):
     data: Version
 
 
+@docs_group('Models')
 class ListOfEnvVars(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -513,6 +550,7 @@ class ListOfEnvVars(BaseModel):
     items: list[EnvVar]
 
 
+@docs_group('Models')
 class ListOfEnvVarsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -520,6 +558,7 @@ class ListOfEnvVarsResponse(BaseModel):
     data: ListOfEnvVars
 
 
+@docs_group('Models')
 class EnvVarResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -527,6 +566,7 @@ class EnvVarResponse(BaseModel):
     data: EnvVar
 
 
+@docs_group('Models')
 class WebhookEventType(StrEnum):
     """Type of event that triggers the webhook."""
 
@@ -544,6 +584,7 @@ class WebhookEventType(StrEnum):
     TEST = 'TEST'
 
 
+@docs_group('Models')
 class WebhookCondition(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -553,6 +594,7 @@ class WebhookCondition(BaseModel):
     actor_run_id: Annotated[str | None, Field(alias='actorRunId', examples=['hgdKZtadYvn4mBpoi'])] = None
 
 
+@docs_group('Models')
 class WebhookDispatchStatus(StrEnum):
     """Status of the webhook dispatch indicating whether the HTTP request was successful."""
 
@@ -561,6 +603,7 @@ class WebhookDispatchStatus(StrEnum):
     FAILED = 'FAILED'
 
 
+@docs_group('Models')
 class ExampleWebhookDispatch(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -571,6 +614,7 @@ class ExampleWebhookDispatch(BaseModel):
     )
 
 
+@docs_group('Models')
 class WebhookStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -578,6 +622,7 @@ class WebhookStats(BaseModel):
     total_dispatches: Annotated[int, Field(alias='totalDispatches', examples=[1])]
 
 
+@docs_group('Models')
 class WebhookShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -597,6 +642,7 @@ class WebhookShort(BaseModel):
     stats: WebhookStats | None = None
 
 
+@docs_group('Models')
 class ListOfWebhooks(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -604,6 +650,7 @@ class ListOfWebhooks(PaginationResponse):
     items: list[WebhookShort]
 
 
+@docs_group('Models')
 class ListOfWebhooksResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -611,6 +658,7 @@ class ListOfWebhooksResponse(BaseModel):
     data: ListOfWebhooks
 
 
+@docs_group('Models')
 class ActorJobStatus(StrEnum):
     """Status of an Actor job (run or build)."""
 
@@ -624,6 +672,7 @@ class ActorJobStatus(StrEnum):
     ABORTED = 'ABORTED'
 
 
+@docs_group('Models')
 class RunOrigin(StrEnum):
     DEVELOPMENT = 'DEVELOPMENT'
     WEB = 'WEB'
@@ -636,6 +685,7 @@ class RunOrigin(StrEnum):
     STANDBY = 'STANDBY'
 
 
+@docs_group('Models')
 class BuildsMeta(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -651,6 +701,7 @@ class BuildsMeta(BaseModel):
     """
 
 
+@docs_group('Models')
 class BuildShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -666,6 +717,7 @@ class BuildShort(BaseModel):
     meta: BuildsMeta | None = None
 
 
+@docs_group('Models')
 class ListOfBuilds(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -673,6 +725,7 @@ class ListOfBuilds(PaginationResponse):
     items: list[BuildShort]
 
 
+@docs_group('Models')
 class ListOfBuildsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -680,6 +733,7 @@ class ListOfBuildsResponse(BaseModel):
     data: ListOfBuilds
 
 
+@docs_group('Models')
 class BuildStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -689,6 +743,7 @@ class BuildStats(BaseModel):
     compute_units: Annotated[float, Field(alias='computeUnits', examples=[0.0126994444444444])]
 
 
+@docs_group('Models')
 class BuildOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -699,6 +754,7 @@ class BuildOptions(BaseModel):
     disk_mbytes: Annotated[int | None, Field(alias='diskMbytes', examples=[2048])] = None
 
 
+@docs_group('Models')
 class BuildUsage(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -706,6 +762,7 @@ class BuildUsage(BaseModel):
     actor_compute_units: Annotated[float | None, Field(alias='ACTOR_COMPUTE_UNITS', examples=[0.08])] = None
 
 
+@docs_group('Models')
 class Storages(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -716,6 +773,7 @@ class Storages(BaseModel):
     """
 
 
+@docs_group('Models')
 class ActorDefinition(BaseModel):
     """The definition of the Actor, the full specification of this field can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/actor-json)"""
 
@@ -781,6 +839,7 @@ class ActorDefinition(BaseModel):
     """
 
 
+@docs_group('Models')
 class Build(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -807,6 +866,7 @@ class Build(BaseModel):
     actor_definition: Annotated[ActorDefinition | None, Field(alias='actorDefinition')] = None
 
 
+@docs_group('Models')
 class BuildResponse(BaseModel):
     """Response containing Actor build data."""
 
@@ -816,6 +876,7 @@ class BuildResponse(BaseModel):
     data: Build
 
 
+@docs_group('Models')
 class RunMeta(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -839,6 +900,7 @@ class RunMeta(BaseModel):
     """
 
 
+@docs_group('Models')
 class RunShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -860,6 +922,7 @@ class RunShort(BaseModel):
     default_request_queue_id: Annotated[str, Field(alias='defaultRequestQueueId', examples=['so93g2shcDzK3pA85'])]
 
 
+@docs_group('Models')
 class ListOfRuns(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -867,6 +930,7 @@ class ListOfRuns(PaginationResponse):
     items: list[RunShort]
 
 
+@docs_group('Models')
 class ListOfRunsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -874,6 +938,7 @@ class ListOfRunsResponse(BaseModel):
     data: ListOfRuns
 
 
+@docs_group('Models')
 class RunStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -897,6 +962,7 @@ class RunStats(BaseModel):
     compute_units: Annotated[float, Field(alias='computeUnits', examples=[0.13804], ge=0.0)]
 
 
+@docs_group('Models')
 class RunOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -909,6 +975,7 @@ class RunOptions(BaseModel):
     max_total_charge_usd: Annotated[float | None, Field(alias='maxTotalChargeUsd', examples=[5], ge=0.0)] = None
 
 
+@docs_group('Models')
 class GeneralAccess(StrEnum):
     """Defines the general access level for the resource."""
 
@@ -918,6 +985,7 @@ class GeneralAccess(StrEnum):
     RESTRICTED = 'RESTRICTED'
 
 
+@docs_group('Models')
 class RunUsage(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -942,6 +1010,7 @@ class RunUsage(BaseModel):
     proxy_serps: Annotated[int | None, Field(alias='PROXY_SERPS', examples=[3])] = None
 
 
+@docs_group('Models')
 class RunUsageUsd(BaseModel):
     """Resource usage costs in USD. All values are monetary amounts in US dollars."""
 
@@ -968,6 +1037,7 @@ class RunUsageUsd(BaseModel):
     proxy_serps: Annotated[float | None, Field(alias='PROXY_SERPS', examples=[0.003])] = None
 
 
+@docs_group('Models')
 class Metamorph(BaseModel):
     """Information about a metamorph event that occurred during the run."""
 
@@ -992,6 +1062,7 @@ class Metamorph(BaseModel):
     """
 
 
+@docs_group('Models')
 class Run(BaseModel):
     """Represents an Actor run and its associated data."""
 
@@ -1126,6 +1197,7 @@ class Run(BaseModel):
     """
 
 
+@docs_group('Models')
 class RunResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1133,6 +1205,7 @@ class RunResponse(BaseModel):
     data: Run
 
 
+@docs_group('Models')
 class TaskStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1140,6 +1213,7 @@ class TaskStats(BaseModel):
     total_runs: Annotated[int | None, Field(alias='totalRuns', examples=[15])] = None
 
 
+@docs_group('Models')
 class TaskShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1156,6 +1230,7 @@ class TaskShort(BaseModel):
     stats: TaskStats | None = None
 
 
+@docs_group('Models')
 class ListOfTasks(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -1163,6 +1238,7 @@ class ListOfTasks(PaginationResponse):
     items: list[TaskShort]
 
 
+@docs_group('Models')
 class ListOfTasksResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1170,6 +1246,7 @@ class ListOfTasksResponse(BaseModel):
     data: ListOfTasks
 
 
+@docs_group('Models')
 class TaskOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1180,6 +1257,7 @@ class TaskOptions(BaseModel):
     restart_on_error: Annotated[bool | None, Field(alias='restartOnError', examples=[False])] = None
 
 
+@docs_group('Models')
 class TaskInput(BaseModel):
     """The input configuration for the Actor task. This is a user-defined JSON object
     that will be passed to the Actor when the task is run.
@@ -1191,6 +1269,7 @@ class TaskInput(BaseModel):
     )
 
 
+@docs_group('Models')
 class CreateTaskRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1201,6 +1280,7 @@ class CreateTaskRequest(BaseModel):
     input: TaskInput | None = None
 
 
+@docs_group('Models')
 class Task(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1219,6 +1299,7 @@ class Task(BaseModel):
     standby_url: Annotated[AnyUrl | None, Field(alias='standbyUrl')] = None
 
 
+@docs_group('Models')
 class TaskResponse(BaseModel):
     """Response containing Actor task data."""
 
@@ -1228,6 +1309,7 @@ class TaskResponse(BaseModel):
     data: Task
 
 
+@docs_group('Models')
 class UpdateTaskRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1245,6 +1327,7 @@ class UpdateTaskRequest(BaseModel):
     input: TaskInput | None = None
 
 
+@docs_group('Models')
 class Webhook(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1271,6 +1354,7 @@ class Webhook(BaseModel):
     stats: WebhookStats | None = None
 
 
+@docs_group('Models')
 class UpdateRunRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1281,6 +1365,7 @@ class UpdateRunRequest(BaseModel):
     general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
 
 
+@docs_group('Models')
 class ChargeRunRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1289,11 +1374,13 @@ class ChargeRunRequest(BaseModel):
     count: Annotated[int, Field(examples=[1])]
 
 
+@docs_group('Models')
 class StorageOwnership(StrEnum):
     OWNED_BY_ME = 'ownedByMe'
     SHARED_WITH_ME = 'sharedWithMe'
 
 
+@docs_group('Models')
 class KeyValueStoreStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1305,6 +1392,7 @@ class KeyValueStoreStats(BaseModel):
     s3_storage_bytes: Annotated[int | None, Field(alias='s3StorageBytes', examples=[18])] = None
 
 
+@docs_group('Models')
 class KeyValueStore(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1340,6 +1428,7 @@ class KeyValueStore(BaseModel):
     stats: KeyValueStoreStats | None = None
 
 
+@docs_group('Models')
 class ListOfKeyValueStores(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -1347,6 +1436,7 @@ class ListOfKeyValueStores(PaginationResponse):
     items: list[KeyValueStore]
 
 
+@docs_group('Models')
 class ListOfKeyValueStoresResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1354,6 +1444,7 @@ class ListOfKeyValueStoresResponse(BaseModel):
     data: ListOfKeyValueStores
 
 
+@docs_group('Models')
 class KeyValueStoreResponse(BaseModel):
     """Response containing key-value store data."""
 
@@ -1363,6 +1454,7 @@ class KeyValueStoreResponse(BaseModel):
     data: KeyValueStore
 
 
+@docs_group('Models')
 class UpdateStoreRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1371,6 +1463,7 @@ class UpdateStoreRequest(BaseModel):
     general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
 
 
+@docs_group('Models')
 class KeyValueStoreKey(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1389,6 +1482,7 @@ class KeyValueStoreKey(BaseModel):
     """
 
 
+@docs_group('Models')
 class ListOfKeys(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1401,6 +1495,7 @@ class ListOfKeys(BaseModel):
     next_exclusive_start_key: Annotated[str | None, Field(alias='nextExclusiveStartKey', examples=['third-key'])] = None
 
 
+@docs_group('Models')
 class ListOfKeysResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1408,6 +1503,7 @@ class ListOfKeysResponse(BaseModel):
     data: ListOfKeys
 
 
+@docs_group('Models')
 class RecordResponse(BaseModel):
     """The response body contains the value of the record. The content type of the response
     is determined by the Content-Type header stored with the record.
@@ -1419,6 +1515,7 @@ class RecordResponse(BaseModel):
     )
 
 
+@docs_group('Models')
 class PutRecordRequest(BaseModel):
     """The request body contains the value to store in the record. The content type
     should be specified in the Content-Type header.
@@ -1430,6 +1527,7 @@ class PutRecordRequest(BaseModel):
     )
 
 
+@docs_group('Models')
 class DatasetListItem(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1446,6 +1544,7 @@ class DatasetListItem(BaseModel):
     act_run_id: Annotated[str | None, Field(alias='actRunId')] = None
 
 
+@docs_group('Models')
 class ListOfDatasets(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -1453,6 +1552,7 @@ class ListOfDatasets(PaginationResponse):
     items: list[DatasetListItem]
 
 
+@docs_group('Models')
 class ListOfDatasetsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1460,6 +1560,7 @@ class ListOfDatasetsResponse(BaseModel):
     data: ListOfDatasets
 
 
+@docs_group('Models')
 class DatasetStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1469,6 +1570,7 @@ class DatasetStats(BaseModel):
     storage_bytes: Annotated[int, Field(alias='storageBytes', examples=[783])]
 
 
+@docs_group('Models')
 class Dataset(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1530,6 +1632,7 @@ class Dataset(BaseModel):
     stats: DatasetStats | None = None
 
 
+@docs_group('Models')
 class DatasetResponse(BaseModel):
     """Response containing dataset metadata."""
 
@@ -1539,6 +1642,7 @@ class DatasetResponse(BaseModel):
     data: Dataset
 
 
+@docs_group('Models')
 class UpdateDatasetRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1547,6 +1651,7 @@ class UpdateDatasetRequest(BaseModel):
     general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
 
 
+@docs_group('Models')
 class PutItemsRequest(BaseModel):
     """The request body containing the item(s) to add to the dataset. Can be a single
     object or an array of objects. Each object represents one dataset item.
@@ -1558,6 +1663,7 @@ class PutItemsRequest(BaseModel):
     )
 
 
+@docs_group('Models')
 class ValidationError(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1584,6 +1690,7 @@ class ValidationError(BaseModel):
     """
 
 
+@docs_group('Models')
 class InvalidItem(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1598,6 +1705,7 @@ class InvalidItem(BaseModel):
     """
 
 
+@docs_group('Models')
 class SchemaValidationErrorData(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1608,6 +1716,7 @@ class SchemaValidationErrorData(BaseModel):
     """
 
 
+@docs_group('Models')
 class DatasetSchemaValidationError(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1623,6 +1732,7 @@ class DatasetSchemaValidationError(BaseModel):
     data: SchemaValidationErrorData | None = None
 
 
+@docs_group('Models')
 class PutItemResponseError(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1630,6 +1740,7 @@ class PutItemResponseError(BaseModel):
     error: DatasetSchemaValidationError
 
 
+@docs_group('Models')
 class DatasetFieldStatistics(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1652,6 +1763,7 @@ class DatasetFieldStatistics(BaseModel):
     """
 
 
+@docs_group('Models')
 class DatasetStatistics(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1662,6 +1774,7 @@ class DatasetStatistics(BaseModel):
     """
 
 
+@docs_group('Models')
 class DatasetStatisticsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1669,6 +1782,7 @@ class DatasetStatisticsResponse(BaseModel):
     data: DatasetStatistics
 
 
+@docs_group('Models')
 class RequestQueueShort(BaseModel):
     """A shortened request queue object for list responses."""
 
@@ -1733,6 +1847,7 @@ class RequestQueueShort(BaseModel):
     """
 
 
+@docs_group('Models')
 class ListOfRequestQueues(PaginationResponse):
     """A paginated list of request queues."""
 
@@ -1745,6 +1860,7 @@ class ListOfRequestQueues(PaginationResponse):
     """
 
 
+@docs_group('Models')
 class ListOfRequestQueuesResponse(BaseModel):
     """Response containing a list of request queues."""
 
@@ -1754,6 +1870,7 @@ class ListOfRequestQueuesResponse(BaseModel):
     data: ListOfRequestQueues
 
 
+@docs_group('Models')
 class RequestQueueStats(BaseModel):
     """Statistics about request queue operations and storage."""
 
@@ -1782,6 +1899,7 @@ class RequestQueueStats(BaseModel):
     """
 
 
+@docs_group('Models')
 class RequestQueue(BaseModel):
     """A request queue object containing metadata and statistics."""
 
@@ -1838,6 +1956,7 @@ class RequestQueue(BaseModel):
     general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
 
 
+@docs_group('Models')
 class RequestQueueResponse(BaseModel):
     """Response containing request queue data."""
 
@@ -1847,6 +1966,7 @@ class RequestQueueResponse(BaseModel):
     data: RequestQueue
 
 
+@docs_group('Models')
 class UpdateRequestQueueRequest(BaseModel):
     """Request object for updating a request queue."""
 
@@ -1860,6 +1980,7 @@ class UpdateRequestQueueRequest(BaseModel):
     general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
 
 
+@docs_group('Models')
 class RequestDraft(BaseModel):
     """A request that failed to be processed during a request queue operation and can be retried."""
 
@@ -1884,6 +2005,7 @@ class RequestDraft(BaseModel):
     """
 
 
+@docs_group('Models')
 class AddedRequest(BaseModel):
     """Information about a request that was successfully added to a request queue."""
 
@@ -1908,6 +2030,7 @@ class AddedRequest(BaseModel):
     """
 
 
+@docs_group('Models')
 class BatchAddResult(BaseModel):
     """Result of a batch add operation containing successfully processed and failed requests."""
 
@@ -1924,6 +2047,7 @@ class BatchAddResult(BaseModel):
     """
 
 
+@docs_group('Models')
 class BatchAddResponse(BaseModel):
     """Response containing the result of a batch add operation."""
 
@@ -1933,6 +2057,7 @@ class BatchAddResponse(BaseModel):
     data: BatchAddResult
 
 
+@docs_group('Models')
 class DeletedRequest(BaseModel):
     """Confirmation of a request that was successfully deleted from a request queue."""
 
@@ -1949,6 +2074,7 @@ class DeletedRequest(BaseModel):
     """
 
 
+@docs_group('Models')
 class BatchDeleteResult(BaseModel):
     """Result of a batch delete operation containing successfully deleted and failed requests."""
 
@@ -1965,6 +2091,7 @@ class BatchDeleteResult(BaseModel):
     """
 
 
+@docs_group('Models')
 class BatchDeleteResponse(BaseModel):
     """Response containing the result of a batch delete operation."""
 
@@ -1974,6 +2101,7 @@ class BatchDeleteResponse(BaseModel):
     data: BatchDeleteResult
 
 
+@docs_group('Models')
 class UnlockRequestsResult(BaseModel):
     """Result of unlocking requests in the request queue."""
 
@@ -1986,6 +2114,7 @@ class UnlockRequestsResult(BaseModel):
     """
 
 
+@docs_group('Models')
 class UnlockRequestsResponse(BaseModel):
     """Response containing the result of unlocking requests."""
 
@@ -1995,6 +2124,7 @@ class UnlockRequestsResponse(BaseModel):
     data: UnlockRequestsResult
 
 
+@docs_group('Models')
 class RequestUserData(BaseModel):
     """Custom user data attached to the request. Can contain arbitrary fields."""
 
@@ -2011,6 +2141,7 @@ class RequestUserData(BaseModel):
     """
 
 
+@docs_group('Models')
 class Request(BaseModel):
     """A request stored in the request queue, including its metadata and processing state."""
 
@@ -2064,6 +2195,7 @@ class Request(BaseModel):
     """
 
 
+@docs_group('Models')
 class ListOfRequests(BaseModel):
     """A paginated list of requests from the request queue."""
 
@@ -2088,6 +2220,7 @@ class ListOfRequests(BaseModel):
     """
 
 
+@docs_group('Models')
 class ListOfRequestsResponse(BaseModel):
     """Response containing a list of requests from the request queue."""
 
@@ -2097,6 +2230,7 @@ class ListOfRequestsResponse(BaseModel):
     data: ListOfRequests
 
 
+@docs_group('Models')
 class RequestRegistration(BaseModel):
     """Result of registering a request in the request queue, either by adding a new request or updating an existing one."""
 
@@ -2117,6 +2251,7 @@ class RequestRegistration(BaseModel):
     """
 
 
+@docs_group('Models')
 class AddRequestResponse(BaseModel):
     """Response containing the result of adding a request to the request queue."""
 
@@ -2126,6 +2261,7 @@ class AddRequestResponse(BaseModel):
     data: RequestRegistration
 
 
+@docs_group('Models')
 class RequestResponse(BaseModel):
     """Response containing a single request from the request queue."""
 
@@ -2135,6 +2271,7 @@ class RequestResponse(BaseModel):
     data: Request
 
 
+@docs_group('Models')
 class UpdateRequestResponse(BaseModel):
     """Response containing the result of updating a request in the request queue."""
 
@@ -2144,6 +2281,7 @@ class UpdateRequestResponse(BaseModel):
     data: RequestRegistration
 
 
+@docs_group('Models')
 class HeadRequest(BaseModel):
     """A request from the request queue head without lock information."""
 
@@ -2172,6 +2310,7 @@ class HeadRequest(BaseModel):
     """
 
 
+@docs_group('Models')
 class RequestQueueHead(BaseModel):
     """A batch of requests from the request queue head without locking."""
 
@@ -2196,6 +2335,7 @@ class RequestQueueHead(BaseModel):
     """
 
 
+@docs_group('Models')
 class HeadResponse(BaseModel):
     """Response containing requests from the request queue head without locking."""
 
@@ -2205,6 +2345,7 @@ class HeadResponse(BaseModel):
     data: RequestQueueHead
 
 
+@docs_group('Models')
 class LockedHeadRequest(BaseModel):
     """A request from the request queue head that has been locked for processing."""
 
@@ -2237,6 +2378,7 @@ class LockedHeadRequest(BaseModel):
     """
 
 
+@docs_group('Models')
 class LockedRequestQueueHead(BaseModel):
     """A batch of locked requests from the request queue head."""
 
@@ -2273,6 +2415,7 @@ class LockedRequestQueueHead(BaseModel):
     """
 
 
+@docs_group('Models')
 class HeadAndLockResponse(BaseModel):
     """Response containing locked requests from the request queue head."""
 
@@ -2282,6 +2425,7 @@ class HeadAndLockResponse(BaseModel):
     data: LockedRequestQueueHead
 
 
+@docs_group('Models')
 class RequestLockInfo(BaseModel):
     """Information about a request lock."""
 
@@ -2294,6 +2438,7 @@ class RequestLockInfo(BaseModel):
     """
 
 
+@docs_group('Models')
 class ProlongRequestLockResponse(BaseModel):
     """Response containing updated lock information after prolonging a request lock."""
 
@@ -2303,6 +2448,7 @@ class ProlongRequestLockResponse(BaseModel):
     data: RequestLockInfo
 
 
+@docs_group('Models')
 class WebhookCreate(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2324,6 +2470,7 @@ class WebhookCreate(BaseModel):
     should_interpolate_strings: Annotated[bool | None, Field(alias='shouldInterpolateStrings', examples=[False])] = None
 
 
+@docs_group('Models')
 class WebhookResponse(BaseModel):
     """Response containing webhook data."""
 
@@ -2333,6 +2480,7 @@ class WebhookResponse(BaseModel):
     data: Webhook
 
 
+@docs_group('Models')
 class WebhookUpdate(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2355,6 +2503,7 @@ class WebhookUpdate(BaseModel):
     should_interpolate_strings: Annotated[bool | None, Field(alias='shouldInterpolateStrings', examples=[False])] = None
 
 
+@docs_group('Models')
 class EventData(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2363,6 +2512,7 @@ class EventData(BaseModel):
     actor_run_id: Annotated[str, Field(alias='actorRunId', examples=['JgwXN9BdwxGcu9MMF'])]
 
 
+@docs_group('Models')
 class Call(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2376,6 +2526,7 @@ class Call(BaseModel):
     response_body: Annotated[str | None, Field(alias='responseBody', examples=['{"foo": "bar"}'])] = None
 
 
+@docs_group('Models')
 class WebhookDispatch(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2390,6 +2541,7 @@ class WebhookDispatch(BaseModel):
     calls: Annotated[list[Call] | None, Field(title='calls')] = None
 
 
+@docs_group('Models')
 class TestWebhookResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2397,6 +2549,7 @@ class TestWebhookResponse(BaseModel):
     data: WebhookDispatch
 
 
+@docs_group('Models')
 class ListOfWebhookDispatches(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -2404,6 +2557,7 @@ class ListOfWebhookDispatches(PaginationResponse):
     items: list[WebhookDispatch]
 
 
+@docs_group('Models')
 class WebhookDispatchList(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2411,6 +2565,7 @@ class WebhookDispatchList(BaseModel):
     data: ListOfWebhookDispatches | None = None
 
 
+@docs_group('Models')
 class WebhookDispatchResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2418,6 +2573,7 @@ class WebhookDispatchResponse(BaseModel):
     data: WebhookDispatch
 
 
+@docs_group('Models')
 class ScheduleActionType(StrEnum):
     """Type of action to perform when the schedule triggers."""
 
@@ -2425,6 +2581,7 @@ class ScheduleActionType(StrEnum):
     RUN_ACTOR_TASK = 'RUN_ACTOR_TASK'
 
 
+@docs_group('Models')
 class ScheduleAction(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2434,6 +2591,7 @@ class ScheduleAction(BaseModel):
     actor_id: Annotated[str, Field(alias='actorId', examples=['HKhKmiCMrDgu9eXeE'])]
 
 
+@docs_group('Models')
 class ScheduleShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2452,6 +2610,7 @@ class ScheduleShort(BaseModel):
     actions: list[ScheduleAction]
 
 
+@docs_group('Models')
 class ListOfSchedules(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -2459,6 +2618,7 @@ class ListOfSchedules(PaginationResponse):
     items: list[ScheduleShort]
 
 
+@docs_group('Models')
 class ListOfSchedulesResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2466,6 +2626,7 @@ class ListOfSchedulesResponse(BaseModel):
     data: ListOfSchedules
 
 
+@docs_group('Models')
 class ScheduleActionsRunInput(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2474,6 +2635,7 @@ class ScheduleActionsRunInput(BaseModel):
     content_type: Annotated[str | None, Field(alias='contentType', examples=['application/json; charset=utf-8'])] = None
 
 
+@docs_group('Models')
 class ScheduleActionsRunOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2484,6 +2646,7 @@ class ScheduleActionsRunOptions(BaseModel):
     restart_on_error: Annotated[bool | None, Field(alias='restartOnError', examples=[False])] = None
 
 
+@docs_group('Models')
 class ScheduleCreateActions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2494,6 +2657,7 @@ class ScheduleCreateActions(BaseModel):
     run_options: Annotated[ScheduleActionsRunOptions | None, Field(alias='runOptions')] = None
 
 
+@docs_group('Models')
 class ScheduleCreate(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2507,6 +2671,7 @@ class ScheduleCreate(BaseModel):
     actions: list[ScheduleCreateActions] | None = None
 
 
+@docs_group('Models')
 class ScheduleActions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2518,6 +2683,7 @@ class ScheduleActions(BaseModel):
     run_options: Annotated[ScheduleActionsRunOptions | None, Field(alias='runOptions')] = None
 
 
+@docs_group('Models')
 class Schedule(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2537,6 +2703,7 @@ class Schedule(BaseModel):
     actions: list[ScheduleActions]
 
 
+@docs_group('Models')
 class ScheduleResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2544,6 +2711,7 @@ class ScheduleResponse(BaseModel):
     data: Schedule
 
 
+@docs_group('Models')
 class ScheduleInvoked(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2553,6 +2721,7 @@ class ScheduleInvoked(BaseModel):
     created_at: Annotated[AwareDatetime, Field(alias='createdAt', examples=['2019-03-26T12:28:00.370Z'])]
 
 
+@docs_group('Models')
 class ScheduleLogResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2560,6 +2729,7 @@ class ScheduleLogResponse(BaseModel):
     data: list[ScheduleInvoked]
 
 
+@docs_group('Models')
 class CurrentPricingInfo(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2567,6 +2737,7 @@ class CurrentPricingInfo(BaseModel):
     pricing_model: Annotated[str, Field(alias='pricingModel', examples=['FREE'])]
 
 
+@docs_group('Models')
 class StoreListActor(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2594,6 +2765,7 @@ class StoreListActor(BaseModel):
     """
 
 
+@docs_group('Models')
 class ListOfStoreActors(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -2601,6 +2773,7 @@ class ListOfStoreActors(PaginationResponse):
     items: list[StoreListActor]
 
 
+@docs_group('Models')
 class ListOfActorsInStoreResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2608,6 +2781,7 @@ class ListOfActorsInStoreResponse(BaseModel):
     data: ListOfStoreActors
 
 
+@docs_group('Models')
 class Profile(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2622,6 +2796,7 @@ class Profile(BaseModel):
     twitter_username: Annotated[str | None, Field(alias='twitterUsername', examples=['@BillGates'])] = None
 
 
+@docs_group('Models')
 class UserPublicInfo(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2630,6 +2805,7 @@ class UserPublicInfo(BaseModel):
     profile: Profile
 
 
+@docs_group('Models')
 class PublicUserDataResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2637,6 +2813,7 @@ class PublicUserDataResponse(BaseModel):
     data: UserPublicInfo
 
 
+@docs_group('Models')
 class ProxyGroup(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2646,6 +2823,7 @@ class ProxyGroup(BaseModel):
     available_count: Annotated[int, Field(alias='availableCount', examples=[10])]
 
 
+@docs_group('Models')
 class Proxy(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2654,6 +2832,7 @@ class Proxy(BaseModel):
     groups: list[ProxyGroup]
 
 
+@docs_group('Models')
 class Plan(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2693,6 +2872,7 @@ class Plan(BaseModel):
     available_add_ons: Annotated[list[str], Field(alias='availableAddOns', examples=[[]])]
 
 
+@docs_group('Models')
 class EffectivePlatformFeature(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2714,6 +2894,7 @@ class EffectivePlatformFeature(BaseModel):
     ] = None
 
 
+@docs_group('Models')
 class EffectivePlatformFeatures(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2730,6 +2911,7 @@ class EffectivePlatformFeatures(BaseModel):
     actors_public_developer: Annotated[EffectivePlatformFeature, Field(alias='ACTORS_PUBLIC_DEVELOPER')]
 
 
+@docs_group('Models')
 class UserPrivateInfo(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2745,6 +2927,7 @@ class UserPrivateInfo(BaseModel):
     is_paying: Annotated[bool, Field(alias='isPaying', examples=[True])]
 
 
+@docs_group('Models')
 class PrivateUserDataResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2752,6 +2935,7 @@ class PrivateUserDataResponse(BaseModel):
     data: UserPrivateInfo
 
 
+@docs_group('Models')
 class UsageCycle(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2760,6 +2944,7 @@ class UsageCycle(BaseModel):
     end_at: Annotated[AwareDatetime, Field(alias='endAt', examples=['2022-11-01T23:59:59.999Z'])]
 
 
+@docs_group('Models')
 class PriceTiers(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2771,6 +2956,7 @@ class PriceTiers(BaseModel):
     price_usd: Annotated[float, Field(alias='priceUsd', examples=[0])]
 
 
+@docs_group('Models')
 class UsageItem(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2784,6 +2970,7 @@ class UsageItem(BaseModel):
     price_tiers: Annotated[list[PriceTiers] | None, Field(alias='priceTiers')] = None
 
 
+@docs_group('Models')
 class DailyServiceUsages(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2793,6 +2980,7 @@ class DailyServiceUsages(BaseModel):
     total_usage_credits_usd: Annotated[float, Field(alias='totalUsageCreditsUsd', examples=[0.0474385791970591])]
 
 
+@docs_group('Models')
 class MonthlyUsage(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2808,6 +2996,7 @@ class MonthlyUsage(BaseModel):
     ]
 
 
+@docs_group('Models')
 class MonthlyUsageResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2815,6 +3004,7 @@ class MonthlyUsageResponse(BaseModel):
     data: MonthlyUsage
 
 
+@docs_group('Models')
 class Limits(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2836,6 +3026,7 @@ class Limits(BaseModel):
     data_retention_days: Annotated[int, Field(alias='dataRetentionDays', examples=[90])]
 
 
+@docs_group('Models')
 class Current(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2854,6 +3045,7 @@ class Current(BaseModel):
     team_account_seat_count: Annotated[int, Field(alias='teamAccountSeatCount', examples=[5])]
 
 
+@docs_group('Models')
 class AccountLimits(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2863,6 +3055,7 @@ class AccountLimits(BaseModel):
     current: Current
 
 
+@docs_group('Models')
 class LimitsResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2870,6 +3063,7 @@ class LimitsResponse(BaseModel):
     data: AccountLimits
 
 
+@docs_group('Models')
 class UpdateLimitsRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',

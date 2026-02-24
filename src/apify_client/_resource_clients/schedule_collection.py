@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfSchedules, ListOfSchedulesResponse, Schedule, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values
 
 
+@docs_group('Resource clients')
 class ScheduleCollectionClient(ResourceClient):
     """Sub-client for manipulating schedules."""
 
@@ -86,6 +88,7 @@ class ScheduleCollectionClient(ResourceClient):
         return ScheduleResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class ScheduleCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating schedules."""
 

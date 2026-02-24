@@ -2,14 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from apify_client._docs import docs_group
+
 if TYPE_CHECKING:
     import impit
 
 
+@docs_group('Errors')
 class ApifyClientError(Exception):
     """Base class for errors specific to the Apify API Client."""
 
 
+@docs_group('Errors')
 class ApifyApiError(ApifyClientError):
     """Error from Apify API responses (rate limits, validation errors, internal errors).
 
@@ -55,6 +59,7 @@ class ApifyApiError(ApifyClientError):
         self.http_method = method
 
 
+@docs_group('Errors')
 class InvalidResponseBodyError(ApifyClientError):
     """Error when response body cannot be parsed (e.g., partial JSON).
 

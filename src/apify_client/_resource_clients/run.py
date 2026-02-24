@@ -7,6 +7,7 @@ import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
 from apify_client._models import Run, RunResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
     )
 
 
+@docs_group('Resource clients')
 class RunClient(ResourceClient):
     """Sub-client for manipulating a single Actor run."""
 
@@ -423,6 +425,7 @@ class RunClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class RunClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor run."""
 

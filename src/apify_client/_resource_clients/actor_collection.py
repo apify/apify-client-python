@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from apify_client._docs import docs_group
 from apify_client._models import Actor, ActorResponse, ListOfActors, ListOfActorsResponse
 from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
 
+@docs_group('Resource clients')
 class ActorCollectionClient(ResourceClient):
     """Sub-client for manipulating Actors."""
 
@@ -138,6 +140,7 @@ class ActorCollectionClient(ResourceClient):
         return ActorResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class ActorCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating Actors."""
 

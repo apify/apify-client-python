@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from more_itertools import constrained_batches
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
+from apify_client._docs import docs_group
 from apify_client._models import (
     AddedRequest,
     AddRequestResponse,
@@ -51,6 +52,7 @@ _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
+@docs_group('Resource clients')
 class RequestQueueClient(ResourceClient):
     """Sub-client for manipulating a single request queue."""
 
@@ -456,6 +458,7 @@ class RequestQueueClient(ResourceClient):
         return UnlockRequestsResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class RequestQueueClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single request queue."""
 

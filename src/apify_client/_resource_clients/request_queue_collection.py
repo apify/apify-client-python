@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     ListOfRequestQueues,
     ListOfRequestQueuesResponse,
@@ -11,6 +12,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 
+@docs_group('Resource clients')
 class RequestQueueCollectionClient(ResourceClient):
     """Sub-client for manipulating request queues."""
 
@@ -57,6 +59,7 @@ class RequestQueueCollectionClient(ResourceClient):
         return RequestQueueResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class RequestQueueCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating request queues."""
 

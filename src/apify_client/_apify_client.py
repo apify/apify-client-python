@@ -12,6 +12,7 @@ from apify_client._consts import (
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
     DEFAULT_TIMEOUT,
 )
+from apify_client._docs import docs_group
 from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
@@ -79,6 +80,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
 
+@docs_group('Apify API clients')
 class ApifyClient:
     """The Apify API client."""
 
@@ -340,6 +342,7 @@ class ApifyClient:
         return StoreCollectionClient(**self._base_kwargs)
 
 
+@docs_group('Apify API clients')
 class ApifyClientAsync:
     """The asynchronous version of the Apify API client."""
 

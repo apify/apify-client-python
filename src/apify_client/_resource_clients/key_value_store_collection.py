@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     KeyValueStore,
     KeyValueStoreResponse,
@@ -12,6 +13,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils import filter_none_values
 
 
+@docs_group('Resource clients')
 class KeyValueStoreCollectionClient(ResourceClient):
     """Sub-client for manipulating key-value stores."""
 
@@ -64,6 +66,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         return KeyValueStoreResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating key-value stores."""
 

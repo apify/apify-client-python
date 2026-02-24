@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
 from apify_client._utils import filter_none_values
 
 
+@docs_group('Resource clients')
 class ActorEnvVarCollectionClient(ResourceClient):
     """Sub-client for manipulating Actor env vars."""
 
@@ -55,6 +57,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
         return EnvVarResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating Actor env vars."""
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values
@@ -21,6 +22,7 @@ def get_actor_env_var_representation(
     }
 
 
+@docs_group('Resource clients')
 class ActorEnvVarClient(ResourceClient):
     """Sub-client for manipulating a single Actor environment variable."""
 
@@ -77,6 +79,7 @@ class ActorEnvVarClient(ResourceClient):
         self._delete()
 
 
+@docs_group('Resource clients')
 class ActorEnvVarClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating a single Actor environment variable."""
 

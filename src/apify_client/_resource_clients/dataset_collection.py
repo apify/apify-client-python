@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, ListOfDatasets, ListOfDatasetsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values
 
 
+@docs_group('Resource clients')
 class DatasetCollectionClient(ResourceClient):
     """Sub-client for manipulating datasets."""
 
@@ -54,6 +56,7 @@ class DatasetCollectionClient(ResourceClient):
         return DatasetResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class DatasetCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating datasets."""
 

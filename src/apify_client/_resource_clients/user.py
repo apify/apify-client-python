@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     AccountLimits,
     LimitsResponse,
@@ -19,6 +20,7 @@ from apify_client._utils import catch_not_found_or_throw, filter_none_values, re
 from apify_client.errors import ApifyApiError
 
 
+@docs_group('Resource clients')
 class UserClient(ResourceClient):
     """Sub-client for querying user data."""
 
@@ -118,6 +120,7 @@ class UserClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class UserClientAsync(ResourceClientAsync):
     """Async sub-client for querying user data."""
 

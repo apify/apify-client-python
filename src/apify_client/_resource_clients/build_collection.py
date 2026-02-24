@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 
+@docs_group('Resource clients')
 class BuildCollectionClient(ResourceClient):
     """Sub-client for listing Actor builds."""
 
@@ -40,6 +42,7 @@ class BuildCollectionClient(ResourceClient):
         return ListOfBuildsResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class BuildCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for listing Actor builds."""
 

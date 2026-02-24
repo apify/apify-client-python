@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfTasks, ListOfTasksResponse, Task, TaskResponse
 from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -11,6 +12,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
 
+@docs_group('Resource clients')
 class TaskCollectionClient(ResourceClient):
     """Sub-client for manipulating tasks."""
 
@@ -110,6 +112,7 @@ class TaskCollectionClient(ResourceClient):
         return TaskResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class TaskCollectionClientAsync(ResourceClientAsync):
     """Async sub-client for manipulating tasks."""
 

@@ -7,11 +7,10 @@ This prevents webhooks from firing when other integration tests run the same act
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import ListOfWebhookDispatches, ListOfWebhooks, Run, Webhook, WebhookDispatch
 
 
 from ._utils import maybe_await
@@ -24,19 +23,24 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     """Get the ID of an already-completed run of the hello-world actor.
 
     Using a finished run's ID for webhook conditions ensures the webhook will never actually fire,
-    since a completed run won't emit new events.
+    since a completed run won't emit new events. If no completed runs exist, starts a new run and
+    waits for it to finish.
     """
     runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
     assert runs_page is not None
-    assert len(runs_page.items) > 0, 'No completed runs found for hello-world actor'
-    run = cast('Run', runs_page.items[0])
+
+    if len(runs_page.items) > 0:
+        return runs_page.items[0].id
+
+    # No completed runs found - start one and wait for it to finish
+    run = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call())
+    assert run is not None
     return run.id
 
 
 async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks."""
-    result = await maybe_await(client.webhooks().list(limit=10))
-    webhooks_page = cast('ListOfWebhooks', result)
+    webhooks_page = await maybe_await(client.webhooks().list(limit=10))
 
     assert webhooks_page is not None
     assert webhooks_page.items is not None
@@ -46,8 +50,7 @@ async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
 
 async def test_list_webhooks_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks with pagination."""
-    result = await maybe_await(client.webhooks().list(limit=5, offset=0))
-    webhooks_page = cast('ListOfWebhooks', result)
+    webhooks_page = await maybe_await(client.webhooks().list(limit=5, offset=0))
 
     assert webhooks_page is not None
     assert webhooks_page.items is not None
@@ -59,7 +62,7 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
     run_id = await _get_finished_run_id(client)
 
     # Create webhook bound to a finished run (will never fire)
-    result = await maybe_await(
+    created_webhook = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
@@ -67,7 +70,6 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
             is_ad_hoc=True,
         )
     )
-    created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -75,8 +77,7 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
         assert created_webhook.id is not None
 
         # Get the same webhook
-        result = await maybe_await(webhook_client.get())
-        retrieved_webhook = cast('Webhook', result)
+        retrieved_webhook = await maybe_await(webhook_client.get())
         assert retrieved_webhook is not None
         assert retrieved_webhook.id == created_webhook.id
     finally:
@@ -88,7 +89,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
     run_id = await _get_finished_run_id(client)
 
     # Create webhook bound to a finished run
-    result = await maybe_await(
+    created_webhook = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
@@ -96,18 +97,16 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
-    created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
         # Update webhook
-        result = await maybe_await(
+        updated_webhook = await maybe_await(
             webhook_client.update(
                 request_url='https://httpbin.org/anything',
                 actor_run_id=run_id,
             )
         )
-        updated_webhook = cast('Webhook', result)
         assert str(updated_webhook.request_url) == 'https://httpbin.org/anything'
     finally:
         await maybe_await(webhook_client.delete())
@@ -118,7 +117,7 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
     run_id = await _get_finished_run_id(client)
 
     # Create webhook bound to a finished run
-    result = await maybe_await(
+    created_webhook = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
@@ -126,13 +125,11 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
-    created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
         # Test webhook (creates a dispatch with dummy payload)
-        result = await maybe_await(webhook_client.test())
-        dispatch = cast('WebhookDispatch', result)
+        dispatch = await maybe_await(webhook_client.test())
         assert dispatch is not None
         assert dispatch.id is not None
     finally:
@@ -144,7 +141,7 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
     run_id = await _get_finished_run_id(client)
 
     # Create webhook bound to a finished run
-    result = await maybe_await(
+    created_webhook = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
@@ -152,7 +149,6 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
             is_ad_hoc=True,
         )
     )
-    created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -160,8 +156,7 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
         await maybe_await(webhook_client.test())
 
         # List dispatches for this webhook
-        result = await maybe_await(webhook_client.dispatches().list())
-        dispatches = cast('ListOfWebhookDispatches', result)
+        dispatches = await maybe_await(webhook_client.dispatches().list())
         assert dispatches is not None
         assert dispatches.items is not None
         assert len(dispatches.items) > 0
@@ -174,7 +169,7 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
     run_id = await _get_finished_run_id(client)
 
     # Create webhook bound to a finished run
-    result = await maybe_await(
+    created_webhook = await maybe_await(
         client.webhooks().create(
             event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
             request_url='https://httpbin.org/post',
@@ -182,7 +177,6 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
-    created_webhook = cast('Webhook', result)
     webhook_client = client.webhook(created_webhook.id)
 
     # Delete webhook

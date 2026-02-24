@@ -9,17 +9,15 @@ const REPO_ROOT_PLACEHOLDER = 'REPO_ROOT_PLACEHOLDER';
 
 const APIFY_CLIENT_REPO_URL = 'https://github.com/apify/apify-client-python';
 const APIFY_SDK_REPO_URL    = 'https://github.com/apify/apify-sdk-python';
-const APIFY_SHARED_REPO_URL = 'https://github.com/apify/apify-shared-python';
 
 const REPO_URL_PER_PACKAGE = {
     'apify': APIFY_SDK_REPO_URL,
     'apify_client': APIFY_CLIENT_REPO_URL,
-    'apify_shared': APIFY_SHARED_REPO_URL,
 };
 
 // For each package, get the installed version, and set the tag to the corresponding version
 const TAG_PER_PACKAGE = {};
-for (const pkg of ['apify', 'apify_client', 'apify_shared']) {
+for (const pkg of ['apify', 'apify_client']) {
     const spawnResult = spawnSync('python', ['-c', `import ${pkg}; print(${pkg}.__version__)`]);
     if (spawnResult.status === 0) {
         TAG_PER_PACKAGE[pkg] = `v${spawnResult.stdout.toString().trim()}`;
@@ -319,15 +317,12 @@ function main() {
         ]
     };
 
-    // Load the docspec dump files of this module and of apify-shared
+    // Load the docspec dump file of this module
     const thisPackageDocspecDump = fs.readFileSync('docspec-dump.jsonl', 'utf8');
     const thisPackageModules = thisPackageDocspecDump.split('\n').filter((line) => line !== '');
 
-    const apifySharedDocspecDump = fs.readFileSync('apify-shared-docspec-dump.jsonl', 'utf8');
-    const apifySharedModules = apifySharedDocspecDump.split('\n').filter((line) => line !== '');
-
     // Convert all the modules, store them in the root object
-    for (const module of [...thisPackageModules, ...apifySharedModules]) {
+    for (const module of thisPackageModules) {
         const parsedModule = JSON.parse(module);
         convertObject(parsedModule, typedocApiReference, parsedModule);
     };

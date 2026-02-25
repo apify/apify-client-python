@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import json
-import time
 from typing import TYPE_CHECKING
 
 import pytest
 from werkzeug import Response
 
-from apify_client._http_clients import HttpClient, HttpClientAsync
+from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
     from pytest_httpserver import HTTPServer
     from werkzeug import Request
 
@@ -44,12 +41,6 @@ def test_endpoint(httpserver: HTTPServer) -> str:
 
 def streaming_handler(_request: Request) -> Response:
     """Handler for streaming log requests."""
-
-    def generate_response() -> Iterator[bytes]:
-        for i in range(len(RAW_ERROR)):
-            yield RAW_ERROR[i : i + 1]
-            time.sleep(0.01)
-
     return Response(
         response=(RAW_ERROR[i : i + 1] for i in range(len(RAW_ERROR))),
         status=403,
@@ -60,7 +51,7 @@ def streaming_handler(_request: Request) -> Response:
 
 def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
     """Test that client correctly throws ApifyApiError with error data from response."""
-    client = HttpClient()
+    client = ImpitHttpClient()
 
     with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=test_endpoint)
@@ -72,7 +63,7 @@ def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
 
 async def test_async_client_apify_api_error_with_data(test_endpoint: str) -> None:
     """Test that async client correctly throws ApifyApiError with error data from response."""
-    client = HttpClientAsync()
+    client = ImpitHttpClientAsync()
 
     with pytest.raises(ApifyApiError) as exc:
         await client.call(method='GET', url=test_endpoint)
@@ -87,7 +78,7 @@ def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = HttpClient()
+    client = ImpitHttpClient()
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
@@ -103,7 +94,7 @@ async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> 
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = HttpClientAsync()
+    client = ImpitHttpClientAsync()
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 

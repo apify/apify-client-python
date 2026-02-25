@@ -168,7 +168,7 @@ class TaskClient(ResourceClient):
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
                 Each webhook is represented by a dictionary containing these items:
-                    * `event_types`: List of ``WebhookEventType`` values which trigger the webhook.
+                    * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
 
@@ -461,7 +461,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
                 Each webhook is represented by a dictionary containing these items:
-                    * `event_types`: List of ``WebhookEventType`` values which trigger the webhook.
+                    * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
 

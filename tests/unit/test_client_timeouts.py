@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 from impit import HTTPError, Response, TimeoutException
 
-from apify_client._http_clients import HttpClient, HttpClientAsync
+from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -58,7 +58,7 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await HttpClientAsync(timeout=timedelta(seconds=client_timeout)).call(
+    response = await ImpitHttpClientAsync(timeout=timedelta(seconds=client_timeout)).call(
         method='GET', url='http://placeholder.url/async_timeout', timeout=timedelta(seconds=call_timeout)
     )
 
@@ -89,7 +89,7 @@ async def test_retry_on_http_error_async_client(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await HttpClientAsync(timeout=timedelta(seconds=5)).call(
+    response = await ImpitHttpClientAsync(timeout=timedelta(seconds=5)).call(
         method='GET', url='http://placeholder.url/http_error'
     )
 
@@ -122,7 +122,7 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr('impit.Client.request', mock_request)
 
-    response = HttpClient(timeout=timedelta(seconds=client_timeout)).call(
+    response = ImpitHttpClient(timeout=timedelta(seconds=client_timeout)).call(
         method='GET', url='http://placeholder.url/sync_timeout', timeout=timedelta(seconds=call_timeout)
     )
 

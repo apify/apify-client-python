@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from apify_client._docs import docs_group
 
 if TYPE_CHECKING:
-    import impit
+    from apify_client._http_clients import HttpResponse
 
 
 @docs_group('Errors')
@@ -35,7 +35,7 @@ class ApifyApiError(ApifyClientError):
         data: Additional error data from the API response.
     """
 
-    def __init__(self, response: impit.Response, attempt: int, method: str = 'GET') -> None:
+    def __init__(self, response: HttpResponse, attempt: int, method: str = 'GET') -> None:
         """Initialize the API error from a failed response.
 
         Args:
@@ -82,7 +82,7 @@ class InvalidResponseBodyError(ApifyClientError):
     is only raised after all retry attempts have been exhausted.
     """
 
-    def __init__(self, response: impit.Response) -> None:
+    def __init__(self, response: HttpResponse) -> None:
         """Initialize the error from an unparsable response.
 
         Args:

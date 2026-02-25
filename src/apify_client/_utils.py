@@ -18,8 +18,7 @@ from apify_client.errors import InvalidResponseBodyError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from impit import Response
-
+    from apify_client._http_clients import HttpResponse
     from apify_client.errors import ApifyApiError
 
 T = TypeVar('T')
@@ -210,9 +209,9 @@ def enum_to_value(value: Any) -> Any:
 def is_retryable_error(exc: Exception) -> bool:
     """Check if the given error is retryable.
 
-    All ``impit.HTTPError`` subclasses are considered retryable because they represent transport-level failures
+    All `impit.HTTPError` subclasses are considered retryable because they represent transport-level failures
     (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
-    code errors are handled separately in ``_make_request`` based on the response status code, not here.
+    code errors are handled separately in `_make_request` based on the response status code, not here.
     """
     return isinstance(
         exc,
@@ -235,7 +234,7 @@ def to_safe_id(id: str) -> str:
     return id.replace('/', '~')
 
 
-def response_to_dict(response: Response) -> dict:
+def response_to_dict(response: HttpResponse) -> dict:
     """Parse the API response as a dictionary and validate its type.
 
     Args:
@@ -255,7 +254,7 @@ def response_to_dict(response: Response) -> dict:
     raise ValueError(f'The response is not a dictionary. Got: {type(data).__name__}')
 
 
-def response_to_list(response: Response) -> list:
+def response_to_list(response: HttpResponse) -> list:
     """Parse the API response as a list and validate its type.
 
     Args:

@@ -11,6 +11,12 @@ from utils import sync_to_async_docstring
 
 found_issues = False
 
+# Methods where the async docstring is intentionally different from the sync one
+# (e.g. because they accept different parameter types).
+SKIPPED_METHODS = {
+    'with_custom_client',
+}
+
 # Get the directory of the source files
 clients_path = Path(__file__).parent.resolve() / '../src/apify_client'
 
@@ -33,18 +39,13 @@ for client_source_path in clients_path.glob('**/*.py'):
             # Find corresponding sync method in the sync class
             sync_method = sync_class.find('DefNode', name=async_method.name)
 
-            # Skip methods with @ignore_docs or @overload decorator
-            if len(async_method.decorators) and str(async_method.decorators[0].value) in ('ignore_docs', 'overload'):
+            # Skip methods with @ignore_docs decorator
+            if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
                 continue
 
-            # When there are overloads, find() may return a stub instead of the implementation.
-            # Find the actual implementation by skipping overload-decorated methods.
-            if sync_method and any(str(d.value) == 'overload' for d in sync_method.decorators):
-                candidates = sync_class.find_all('DefNode', name=async_method.name)
-                sync_method = next(
-                    (m for m in candidates if not any(str(d.value) == 'overload' for d in m.decorators)),
-                    None,
-                )
+            # Skip methods whose docstrings are intentionally different
+            if async_method.name in SKIPPED_METHODS:
+                continue
 
             # If the sync method has a docstring, check if it matches the async dostring
             if sync_method and isinstance(sync_method.value[0].value, str):

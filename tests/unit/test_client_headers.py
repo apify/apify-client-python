@@ -6,10 +6,8 @@ import sys
 from importlib import metadata
 from typing import TYPE_CHECKING
 
-import pytest
 from werkzeug import Request, Response
 
-from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
@@ -117,27 +115,3 @@ def test_headers_sync(httpserver: HTTPServer) -> None:
         'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
-
-
-def test_warning_on_overridden_headers_sync() -> None:
-    """Test that warning is raised when default headers are overridden."""
-    with pytest.warns(UserWarning, match='User-Agent, Authorization headers of ApifyClient'):
-        ApifyClient(
-            token='placeholder_token',
-            headers={
-                'User-Agent': 'CustomUserAgent/1.0',
-                'Authorization': 'strange_value',
-            },
-        )
-
-
-async def test_warning_on_overridden_headers_async() -> None:
-    """Test that warning is raised when default headers are overridden."""
-    with pytest.warns(UserWarning, match='User-Agent, Authorization headers of ApifyClientAsync'):
-        ApifyClientAsync(
-            token='placeholder_token',
-            headers={
-                'User-Agent': 'CustomUserAgent/1.0',
-                'Authorization': 'strange_value',
-            },
-        )

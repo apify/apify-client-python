@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -19,6 +18,7 @@ from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from datetime import timedelta
 
     from pytest_httpserver import HTTPServer
 
@@ -191,13 +191,13 @@ def test_http_client_async_abc_not_instantiable() -> None:
         HttpClientAsync()
 
 
-# -- ApifyClient with custom http_client --
+# -- ApifyClient with custom http_client via classmethod --
 
 
-def test_apify_client_accepts_custom_http_client() -> None:
-    """Test that ApifyClient accepts a custom http_client parameter."""
+def test_apify_client_with_custom_client() -> None:
+    """Test that ApifyClient.with_custom_client accepts a custom http_client."""
     fake_client = FakeHttpClient()
-    client = ApifyClient(token='test_token', http_client=fake_client)
+    client = ApifyClient.with_custom_client(token='test_token', http_client=fake_client)
 
     assert client.http_client is fake_client
 
@@ -212,7 +212,7 @@ def test_apify_client_uses_default_http_client_when_none_provided() -> None:
 def test_apify_client_custom_http_client_receives_requests() -> None:
     """Test that requests flow through the custom HTTP client."""
     fake_client = FakeHttpClient()
-    client = ApifyClient(token='test_token', http_client=fake_client)
+    client = ApifyClient.with_custom_client(token='test_token', http_client=fake_client)
 
     # Use _get() via the dataset client to avoid Pydantic model validation
     # (actor.get() would try to validate against ActorResponse model)
@@ -225,36 +225,10 @@ def test_apify_client_custom_http_client_receives_requests() -> None:
     assert result == {'data': {'id': 'test123'}}
 
 
-def test_apify_client_custom_http_client_rejects_conflicting_params() -> None:
-    """Test that passing config params together with http_client raises ValueError."""
+def test_apify_client_with_custom_client_accepts_url_params() -> None:
+    """Test that with_custom_client can be combined with token, api_url, and api_public_url."""
     fake_client = FakeHttpClient()
-
-    with pytest.raises(ValueError, match=r'Cannot pass .* together with http_client'):
-        ApifyClient(  # ty: ignore[no-matching-overload]
-            token='test_token',
-            http_client=fake_client,
-            timeout=timedelta(seconds=999),
-            max_retries=99,
-            headers={'X-Custom': 'should-not-be-allowed'},
-        )
-
-
-def test_apify_client_custom_http_client_rejects_headers() -> None:
-    """Test that passing headers together with http_client raises ValueError."""
-    fake_client = FakeHttpClient()
-
-    with pytest.raises(ValueError, match=r'headers.*http_client'):
-        ApifyClient(  # ty: ignore[no-matching-overload]
-            token='test_token',
-            http_client=fake_client,
-            headers={'User-Agent': 'Custom/1.0', 'Authorization': 'Bearer custom'},
-        )
-
-
-def test_apify_client_custom_http_client_accepts_only_url_params() -> None:
-    """Test that http_client can be combined with token, api_url, and api_public_url."""
-    fake_client = FakeHttpClient()
-    client = ApifyClient(
+    client = ApifyClient.with_custom_client(
         token='test_token',
         api_url='https://custom.api.example.com',
         api_public_url='https://public.api.example.com',
@@ -263,13 +237,13 @@ def test_apify_client_custom_http_client_accepts_only_url_params() -> None:
     assert client.http_client is fake_client
 
 
-# -- ApifyClientAsync with custom http_client --
+# -- ApifyClientAsync with custom http_client via classmethod --
 
 
-async def test_apify_client_async_accepts_custom_http_client() -> None:
-    """Test that ApifyClientAsync accepts a custom http_client parameter."""
+async def test_apify_client_async_with_custom_client() -> None:
+    """Test that ApifyClientAsync.with_custom_client accepts a custom http_client."""
     fake_client = FakeHttpClientAsync()
-    client = ApifyClientAsync(token='test_token', http_client=fake_client)
+    client = ApifyClientAsync.with_custom_client(token='test_token', http_client=fake_client)
 
     assert client.http_client is fake_client
 
@@ -284,7 +258,7 @@ async def test_apify_client_async_uses_default_http_client_when_none_provided() 
 async def test_apify_client_async_custom_http_client_receives_requests() -> None:
     """Test that async requests flow through the custom HTTP client."""
     fake_client = FakeHttpClientAsync()
-    client = ApifyClientAsync(token='test_token', http_client=fake_client)
+    client = ApifyClientAsync.with_custom_client(token='test_token', http_client=fake_client)
 
     # Use _get() via the dataset client to avoid Pydantic model validation
     result = await client.dataset('test-dataset')._get()
@@ -296,36 +270,10 @@ async def test_apify_client_async_custom_http_client_receives_requests() -> None
     assert result == {'data': {'id': 'test123'}}
 
 
-async def test_apify_client_async_custom_http_client_rejects_conflicting_params() -> None:
-    """Test that passing config params together with http_client raises ValueError for async client."""
+async def test_apify_client_async_with_custom_client_accepts_url_params() -> None:
+    """Test that async with_custom_client can be combined with token, api_url, and api_public_url."""
     fake_client = FakeHttpClientAsync()
-
-    with pytest.raises(ValueError, match=r'Cannot pass .* together with http_client'):
-        ApifyClientAsync(  # ty: ignore[no-matching-overload]
-            token='test_token',
-            http_client=fake_client,
-            timeout=timedelta(seconds=999),
-            max_retries=99,
-            headers={'X-Custom': 'should-not-be-allowed'},
-        )
-
-
-async def test_apify_client_async_custom_http_client_rejects_headers() -> None:
-    """Test that passing headers together with http_client raises ValueError for async client."""
-    fake_client = FakeHttpClientAsync()
-
-    with pytest.raises(ValueError, match=r'headers.*http_client'):
-        ApifyClientAsync(  # ty: ignore[no-matching-overload]
-            token='test_token',
-            http_client=fake_client,
-            headers={'User-Agent': 'Custom/1.0'},
-        )
-
-
-async def test_apify_client_async_custom_http_client_accepts_only_url_params() -> None:
-    """Test that async http_client can be combined with token, api_url, and api_public_url."""
-    fake_client = FakeHttpClientAsync()
-    client = ApifyClientAsync(
+    client = ApifyClientAsync.with_custom_client(
         token='test_token',
         api_url='https://custom.api.example.com',
         api_public_url='https://public.api.example.com',
@@ -357,7 +305,7 @@ def test_apify_client_http_client_property_returns_correct_type() -> None:
 
     # With custom
     fake = FakeHttpClient()
-    client2 = ApifyClient(token='test', http_client=fake)
+    client2 = ApifyClient.with_custom_client(token='test', http_client=fake)
     assert client2.http_client is fake
 
 
@@ -369,7 +317,7 @@ async def test_apify_client_async_http_client_property_returns_correct_type() ->
 
     # With custom
     fake = FakeHttpClientAsync()
-    client2 = ApifyClientAsync(token='test', http_client=fake)
+    client2 = ApifyClientAsync.with_custom_client(token='test', http_client=fake)
     assert client2.http_client is fake
 
 
@@ -391,7 +339,7 @@ class ErrorRaisingHttpClient(HttpClient):
 def test_custom_http_client_error_handling() -> None:
     """Test that ApifyApiError from custom client is handled correctly by resource clients."""
     error_client = ErrorRaisingHttpClient()
-    client = ApifyClient(token='test', http_client=error_client)
+    client = ApifyClient.with_custom_client(token='test', http_client=error_client)
 
     # _get() should catch 404 record-not-found and return None
     result = client.actor('nonexistent').get()
@@ -413,7 +361,7 @@ class ErrorRaisingHttpClientAsync(HttpClientAsync):
 async def test_custom_http_client_async_error_handling() -> None:
     """Test that ApifyApiError from async custom client is handled correctly by resource clients."""
     error_client = ErrorRaisingHttpClientAsync()
-    client = ApifyClientAsync(token='test', http_client=error_client)
+    client = ApifyClientAsync.with_custom_client(token='test', http_client=error_client)
 
     # _get() should catch 404 record-not-found and return None
     result = await client.actor('nonexistent').get()
@@ -440,7 +388,7 @@ def test_custom_http_client_with_real_server(httpserver: HTTPServer) -> None:
             return inner_client.call(method=method, url=url, **kwargs)
 
     api_url = httpserver.url_for('/').removesuffix('/')
-    client = ApifyClient(token='test_token', api_url=api_url, http_client=WrappingHttpClient())
+    client = ApifyClient.with_custom_client(token='test_token', api_url=api_url, http_client=WrappingHttpClient())
 
     # Use _get() to test the raw request flow without Pydantic validation
     result = client.dataset('test-dataset')._get()
@@ -466,7 +414,9 @@ async def test_custom_http_client_async_with_real_server(httpserver: HTTPServer)
             return await inner_client.call(method=method, url=url, **kwargs)
 
     api_url = httpserver.url_for('/').removesuffix('/')
-    client = ApifyClientAsync(token='test_token', api_url=api_url, http_client=WrappingHttpClientAsync())
+    client = ApifyClientAsync.with_custom_client(
+        token='test_token', api_url=api_url, http_client=WrappingHttpClientAsync()
+    )
 
     # Use _get() to test the raw request flow without Pydantic validation
     result = await client.dataset('test-dataset')._get()

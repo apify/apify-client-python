@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 from functools import cached_property
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, overload
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
@@ -113,6 +113,29 @@ class ApifyClient:
 
     _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 
+    @overload
+    def __init__(
+        self,
+        token: str | None = None,
+        *,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+        timeout: timedelta = DEFAULT_TIMEOUT,
+        headers: dict[str, str] | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        token: str | None = None,
+        *,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        http_client: HttpClient,
+    ) -> None: ...
+
     def __init__(
         self,
         token: str | None = None,
@@ -144,12 +167,32 @@ class ApifyClient:
             headers: Additional HTTP headers to include in all API requests. Only used when `http_client` is not
                 provided.
             http_client: A custom HTTP client instance extending `HttpClient`. When provided, the `max_retries`,
-                `min_delay_between_retries`, `timeout`, and `headers` parameters are ignored, as the custom
+                `min_delay_between_retries`, `timeout`, and `headers` parameters must not be set, as the custom
                 client is responsible for its own configuration.
+
+        Raises:
+            ValueError: If `http_client` is provided together with `max_retries`, `min_delay_between_retries`,
+                `timeout`, or `headers`.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        if http_client is not None:
+            conflicting = []
+            if max_retries != DEFAULT_MAX_RETRIES:
+                conflicting.append('max_retries')
+            if min_delay_between_retries != DEFAULT_MIN_DELAY_BETWEEN_RETRIES:
+                conflicting.append('min_delay_between_retries')
+            if timeout != DEFAULT_TIMEOUT:
+                conflicting.append('timeout')
+            if headers is not None:
+                conflicting.append('headers')
+            if conflicting:
+                raise ValueError(
+                    f'Cannot pass {", ".join(conflicting)} together with http_client. When using a custom '
+                    'HTTP client, configure these options directly on the client instance.'
+                )
 
         if headers and not http_client:
             self._check_custom_headers(headers)
@@ -427,6 +470,29 @@ class ApifyClientAsync:
 
     _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 
+    @overload
+    def __init__(
+        self,
+        token: str | None = None,
+        *,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+        timeout: timedelta = DEFAULT_TIMEOUT,
+        headers: dict[str, str] | None = None,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        token: str | None = None,
+        *,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        http_client: HttpClientAsync,
+    ) -> None: ...
+
     def __init__(
         self,
         token: str | None = None,
@@ -458,12 +524,32 @@ class ApifyClientAsync:
             headers: Additional HTTP headers to include in all API requests. Only used when `http_client` is not
                 provided.
             http_client: A custom HTTP client instance extending `HttpClientAsync`. When provided, the `max_retries`,
-                `min_delay_between_retries`, `timeout`, and `headers` parameters are ignored, as the custom
+                `min_delay_between_retries`, `timeout`, and `headers` parameters must not be set, as the custom
                 client is responsible for its own configuration.
+
+        Raises:
+            ValueError: If `http_client` is provided together with `max_retries`, `min_delay_between_retries`,
+                `timeout`, or `headers`.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        if http_client is not None:
+            conflicting = []
+            if max_retries != DEFAULT_MAX_RETRIES:
+                conflicting.append('max_retries')
+            if min_delay_between_retries != DEFAULT_MIN_DELAY_BETWEEN_RETRIES:
+                conflicting.append('min_delay_between_retries')
+            if timeout != DEFAULT_TIMEOUT:
+                conflicting.append('timeout')
+            if headers is not None:
+                conflicting.append('headers')
+            if conflicting:
+                raise ValueError(
+                    f'Cannot pass {", ".join(conflicting)} together with http_client. When using a custom '
+                    'HTTP client, configure these options directly on the client instance.'
+                )
 
         if headers and not http_client:
             self._check_custom_headers(headers)

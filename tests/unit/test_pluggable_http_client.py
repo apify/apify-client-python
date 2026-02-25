@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
@@ -15,7 +14,6 @@ from apify_client import (
     HttpClientAsync,
     HttpResponse,
 )
-from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT
 from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.errors import ApifyApiError
 
@@ -227,38 +225,42 @@ def test_apify_client_custom_http_client_receives_requests() -> None:
     assert result == {'data': {'id': 'test123'}}
 
 
-def test_apify_client_custom_http_client_ignores_other_params() -> None:
-    """Test that timeout/retries/headers params don't affect custom http_client."""
-    fake_client = FakeHttpClient()
-    client = ApifyClient(
-        token='test_token',
-        http_client=fake_client,
-        timeout=timedelta(seconds=999),
-        max_retries=99,
-        headers={'X-Custom': 'should-be-ignored'},
-    )
-
-    # The custom client should be used as-is
-    assert client.http_client is fake_client
-
-    # Verify the custom client retained its own defaults (params were not forwarded)
-    assert fake_client._timeout == DEFAULT_TIMEOUT
-    assert fake_client._max_retries == DEFAULT_MAX_RETRIES
-
-
-def test_apify_client_custom_http_client_no_header_warning() -> None:
-    """Test that no header warning is raised when custom http_client is provided."""
+def test_apify_client_custom_http_client_rejects_conflicting_params() -> None:
+    """Test that passing config params together with http_client raises ValueError."""
     fake_client = FakeHttpClient()
 
-    # This should NOT raise a UserWarning even though we pass overriding headers,
-    # because headers are ignored when http_client is provided.
-    with warnings.catch_warnings():
-        warnings.simplefilter('error')
-        ApifyClient(
+    with pytest.raises(ValueError, match=r'Cannot pass .* together with http_client'):
+        ApifyClient(  # ty: ignore[no-matching-overload]
+            token='test_token',
+            http_client=fake_client,
+            timeout=timedelta(seconds=999),
+            max_retries=99,
+            headers={'X-Custom': 'should-not-be-allowed'},
+        )
+
+
+def test_apify_client_custom_http_client_rejects_headers() -> None:
+    """Test that passing headers together with http_client raises ValueError."""
+    fake_client = FakeHttpClient()
+
+    with pytest.raises(ValueError, match=r'headers.*http_client'):
+        ApifyClient(  # ty: ignore[no-matching-overload]
             token='test_token',
             http_client=fake_client,
             headers={'User-Agent': 'Custom/1.0', 'Authorization': 'Bearer custom'},
         )
+
+
+def test_apify_client_custom_http_client_accepts_only_url_params() -> None:
+    """Test that http_client can be combined with token, api_url, and api_public_url."""
+    fake_client = FakeHttpClient()
+    client = ApifyClient(
+        token='test_token',
+        api_url='https://custom.api.example.com',
+        api_public_url='https://public.api.example.com',
+        http_client=fake_client,
+    )
+    assert client.http_client is fake_client
 
 
 # -- ApifyClientAsync with custom http_client --
@@ -292,6 +294,44 @@ async def test_apify_client_async_custom_http_client_receives_requests() -> None
     assert call['method'] == 'GET'
     assert 'test-dataset' in call['url']
     assert result == {'data': {'id': 'test123'}}
+
+
+async def test_apify_client_async_custom_http_client_rejects_conflicting_params() -> None:
+    """Test that passing config params together with http_client raises ValueError for async client."""
+    fake_client = FakeHttpClientAsync()
+
+    with pytest.raises(ValueError, match=r'Cannot pass .* together with http_client'):
+        ApifyClientAsync(  # ty: ignore[no-matching-overload]
+            token='test_token',
+            http_client=fake_client,
+            timeout=timedelta(seconds=999),
+            max_retries=99,
+            headers={'X-Custom': 'should-not-be-allowed'},
+        )
+
+
+async def test_apify_client_async_custom_http_client_rejects_headers() -> None:
+    """Test that passing headers together with http_client raises ValueError for async client."""
+    fake_client = FakeHttpClientAsync()
+
+    with pytest.raises(ValueError, match=r'headers.*http_client'):
+        ApifyClientAsync(  # ty: ignore[no-matching-overload]
+            token='test_token',
+            http_client=fake_client,
+            headers={'User-Agent': 'Custom/1.0'},
+        )
+
+
+async def test_apify_client_async_custom_http_client_accepts_only_url_params() -> None:
+    """Test that async http_client can be combined with token, api_url, and api_public_url."""
+    fake_client = FakeHttpClientAsync()
+    client = ApifyClientAsync(
+        token='test_token',
+        api_url='https://custom.api.example.com',
+        api_public_url='https://public.api.example.com',
+        http_client=fake_client,
+    )
+    assert client.http_client is fake_client
 
 
 # -- Public exports --

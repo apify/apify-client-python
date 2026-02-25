@@ -33,9 +33,18 @@ for client_source_path in clients_path.glob('**/*.py'):
             # Find corresponding sync method in the sync class
             sync_method = sync_class.find('DefNode', name=async_method.name)
 
-            # Skip methods with @ignore_docs decorator
-            if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
+            # Skip methods with @ignore_docs or @overload decorator
+            if len(async_method.decorators) and str(async_method.decorators[0].value) in ('ignore_docs', 'overload'):
                 continue
+
+            # When there are overloads, find() may return a stub instead of the implementation.
+            # Find the actual implementation by skipping overload-decorated methods.
+            if sync_method and any(str(d.value) == 'overload' for d in sync_method.decorators):
+                candidates = sync_class.find_all('DefNode', name=async_method.name)
+                sync_method = next(
+                    (m for m in candidates if not any(str(d.value) == 'overload' for d in m.decorators)),
+                    None,
+                )
 
             # If the sync method has a docstring, check if it matches the async dostring
             if sync_method and isinstance(sync_method.value[0].value, str):

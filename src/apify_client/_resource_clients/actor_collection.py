@@ -16,7 +16,8 @@ if TYPE_CHECKING:
 class ActorCollectionClient(ResourceClient):
     """Sub-client for the Actor collection.
 
-    Provides methods to list and create Actors. Obtain an instance via `ApifyClient.actors`.
+    Provides methods to manage the Actor collection, e.g. list or create Actors. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -147,7 +148,8 @@ class ActorCollectionClient(ResourceClient):
 class ActorCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the Actor collection.
 
-    Provides methods to list and create Actors. Obtain an instance via `ApifyClientAsync.actors`.
+    Provides methods to manage the Actor collection, e.g. list or create Actors. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

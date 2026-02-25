@@ -73,8 +73,8 @@ def _parse_get_record_response(response: Response) -> Any:
 class KeyValueStoreClient(ResourceClient):
     """Sub-client for managing a specific key-value store.
 
-    Provides methods to get, update, delete, and get/set/delete records of a key-value store.
-    Obtain an instance via `ApifyClient.key_value_store`.
+    Provides methods to manage a specific key-value store, e.g. get it, update it, or manage its records. Obtain an
+    instance via an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -457,8 +457,8 @@ class KeyValueStoreClient(ResourceClient):
 class KeyValueStoreClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific key-value store.
 
-    Provides methods to get, update, delete, and get/set/delete records of a key-value store.
-    Obtain an instance via `ApifyClientAsync.key_value_store`.
+    Provides methods to manage a specific key-value store, e.g. get it, update it, or manage its records. Obtain an
+    instance via an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

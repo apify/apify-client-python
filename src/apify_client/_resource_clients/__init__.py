@@ -17,9 +17,7 @@ from .run import RunClient, RunClientAsync
 from .run_collection import RunCollectionClient, RunCollectionClientAsync
 from .schedule import ScheduleClient, ScheduleClientAsync
 from .schedule_collection import ScheduleCollectionClient, ScheduleCollectionClientAsync
-from .status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync, StatusMessageWatcherSync
 from .store_collection import StoreCollectionClient, StoreCollectionClientAsync
-from .streamed_log import StreamedLog, StreamedLogAsync, StreamedLogSync
 from .task import TaskClient, TaskClientAsync
 from .task_collection import TaskCollectionClient, TaskCollectionClientAsync
 from .user import UserClient, UserClientAsync
@@ -67,14 +65,8 @@ __all__ = [
     'ScheduleClientAsync',
     'ScheduleCollectionClient',
     'ScheduleCollectionClientAsync',
-    'StatusMessageWatcher',
-    'StatusMessageWatcherAsync',
-    'StatusMessageWatcherSync',
     'StoreCollectionClient',
     'StoreCollectionClientAsync',
-    'StreamedLog',
-    'StreamedLogAsync',
-    'StreamedLogSync',
     'TaskClient',
     'TaskClientAsync',
     'TaskCollectionClient',

@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 class TaskClient(ResourceClient):
     """Sub-client for managing a specific task.
 
-    Provides methods to get, update, delete, and start runs of a task.
-    Obtain an instance via `ApifyClient.task`.
+    Provides methods to manage a specific task, e.g. update it, delete it, or start runs. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
     """
 
     def __init__(
@@ -327,8 +327,8 @@ class TaskClient(ResourceClient):
 class TaskClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific task.
 
-    Provides methods to get, update, delete, and start runs of a task.
-    Obtain an instance via `ApifyClientAsync.task`.
+    Provides methods to manage a specific task, e.g. update it, delete it, or start runs. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(

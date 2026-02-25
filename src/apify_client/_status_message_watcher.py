@@ -19,13 +19,8 @@ if TYPE_CHECKING:
     from apify_client._resource_clients import RunClient, RunClientAsync
 
 
-@docs_group('Resource clients')
-class StatusMessageWatcher:
-    """Utility class for logging status messages from an Actor run.
-
-    The status message is polled at fixed time intervals, and there is no guarantee that all messages will be logged,
-    especially in cases of frequent status message changes.
-    """
+class StatusMessageWatcherBase:
+    """Base class for polling and logging Actor run status messages."""
 
     _force_propagate = False
     # This is final sleep time to try to get the last status and status message of finished Actor run.
@@ -34,12 +29,6 @@ class StatusMessageWatcher:
     _final_sleep_time_s = 6
 
     def __init__(self, *, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=5)) -> None:
-        """Initialize `StatusMessageWatcher`.
-
-        Args:
-            to_logger: The logger to which the status message will be redirected.
-            check_period: The period with which the status message will be polled.
-        """
         if self._force_propagate:
             to_logger.propagate = True
         self._to_logger = to_logger
@@ -68,9 +57,17 @@ class StatusMessageWatcher:
         return True
 
 
-@docs_group('Resource clients')
-class StatusMessageWatcherAsync(StatusMessageWatcher):
-    """Async variant of `StatusMessageWatcher` that polls and logs status messages in an asyncio task."""
+@docs_group('Other')
+class StatusMessageWatcherAsync(StatusMessageWatcherBase):
+    """Polls and logs Actor run status messages in an asyncio task.
+
+    The status message and status of the Actor run are polled at a fixed interval and forwarded to the provided logger
+    whenever they change. There is no guarantee that every intermediate status message will be captured, especially
+    when messages change rapidly.
+
+    Can be used as an async context manager, which automatically starts and cancels the polling task. Alternatively,
+    call `start` and `stop` manually. Obtain an instance via `RunClientAsync.get_status_message_watcher`.
+    """
 
     def __init__(
         self, *, run_client: RunClientAsync, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
@@ -78,16 +75,19 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
         """Initialize `StatusMessageWatcherAsync`.
 
         Args:
-            run_client: The client for run that will be used to get a status and message.
-            to_logger: The logger to which the status message will be redirected.
-            check_period: The period with which the status message will be polled.
+            run_client: The run client used to poll the Actor run status and status message.
+            to_logger: The logger to which the status messages will be forwarded.
+            check_period: How often to poll the status message.
         """
         super().__init__(to_logger=to_logger, check_period=check_period)
         self._run_client = run_client
         self._logging_task: Task | None = None
 
     def start(self) -> Task:
-        """Start the logging task. The caller has to handle any cleanup by manually calling the `stop` method."""
+        """Start the polling task.
+
+        The caller is responsible for cleanup by calling the `stop` method when done.
+        """
         if self._logging_task and not self._logging_task.done():
             raise RuntimeError('Logging task already active')
         self._logging_task = asyncio.create_task(self._log_changed_status_message())
@@ -126,19 +126,27 @@ class StatusMessageWatcherAsync(StatusMessageWatcher):
             await asyncio.sleep(self._check_period)
 
 
-@docs_group('Resource clients')
-class StatusMessageWatcherSync(StatusMessageWatcher):
-    """Sync variant of `StatusMessageWatcher` that polls and logs status messages in a background thread."""
+@docs_group('Other')
+class StatusMessageWatcher(StatusMessageWatcherBase):
+    """Polls and logs Actor run status messages in a background thread.
+
+    The status message and status of the Actor run are polled at a fixed interval and forwarded to the provided logger
+    whenever they change. There is no guarantee that every intermediate status message will be captured, especially
+    when messages change rapidly.
+
+    Can be used as a context manager, which automatically starts and stops the polling thread. Alternatively,
+    call `start` and `stop` manually. Obtain an instance via `RunClient.get_status_message_watcher`.
+    """
 
     def __init__(
         self, *, run_client: RunClient, to_logger: logging.Logger, check_period: timedelta = timedelta(seconds=1)
     ) -> None:
-        """Initialize `StatusMessageWatcherSync`.
+        """Initialize `StatusMessageWatcher`.
 
         Args:
-            run_client: The client for run that will be used to get a status and message.
-            to_logger: The logger to which the status message will be redirected.
-            check_period: The period with which the status message will be polled.
+            run_client: The run client used to poll the Actor run status and status message.
+            to_logger: The logger to which the status messages will be forwarded.
+            check_period: How often to poll the status message.
         """
         super().__init__(to_logger=to_logger, check_period=check_period)
         self._run_client = run_client
@@ -146,7 +154,10 @@ class StatusMessageWatcherSync(StatusMessageWatcher):
         self._stop_logging = False
 
     def start(self) -> Thread:
-        """Start the logging thread. The caller has to handle any cleanup by manually calling the `stop` method."""
+        """Start the polling thread.
+
+        The caller is responsible for cleanup by calling the `stop` method when done.
+        """
         if self._logging_thread:
             raise RuntimeError('Logging thread already active')
         self._stop_logging = False
@@ -155,7 +166,7 @@ class StatusMessageWatcherSync(StatusMessageWatcher):
         return self._logging_thread
 
     def stop(self) -> None:
-        """Signal the _logging_thread thread to stop logging and wait for it to finish."""
+        """Signal the logging thread to stop logging and wait for it to finish."""
         if not self._logging_thread:
             raise RuntimeError('Logging thread is not active')
         time.sleep(self._final_sleep_time_s)
@@ -165,14 +176,14 @@ class StatusMessageWatcherSync(StatusMessageWatcher):
         self._stop_logging = False
 
     def __enter__(self) -> Self:
-        """Start the logging task within the context. Exiting the context will cancel the logging task."""
+        """Start the logging thread within the context. Exiting the context will stop the logging thread."""
         self.start()
         return self
 
     def __exit__(
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
-        """Cancel the logging task."""
+        """Stop the logging thread."""
         self.stop()
 
     def _log_changed_status_message(self) -> None:

@@ -16,7 +16,8 @@ if TYPE_CHECKING:
 class TaskCollectionClient(ResourceClient):
     """Sub-client for the task collection.
 
-    Provides methods to list and create tasks. Obtain an instance via `ApifyClient.tasks`.
+    Provides methods to manage the task collection, e.g. list or create tasks. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -119,7 +120,8 @@ class TaskCollectionClient(ResourceClient):
 class TaskCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the task collection.
 
-    Provides methods to list and create tasks. Obtain an instance via `ApifyClientAsync.tasks`.
+    Provides methods to manage the task collection, e.g. list or create tasks. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

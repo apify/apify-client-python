@@ -18,7 +18,8 @@ if TYPE_CHECKING:
 class LogClient(ResourceClient):
     """Sub-client for managing a specific log.
 
-    Provides methods to get and stream logs. Obtain an instance via `ApifyClient.log`.
+    Provides methods to manage logs, e.g. get or stream them. Obtain an instance via an appropriate method on the
+    `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -109,7 +110,8 @@ class LogClient(ResourceClient):
 class LogClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific log.
 
-    Provides methods to get and stream logs. Obtain an instance via `ApifyClientAsync.log`.
+    Provides methods to manage logs, e.g. get or stream them. Obtain an instance via an appropriate method on the
+    `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

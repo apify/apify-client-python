@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 class BuildClient(ResourceClient):
     """Sub-client for managing a specific Actor build.
 
-    Provides methods to get, delete, abort, and wait for finish of an Actor build.
-    Obtain an instance via `ApifyClient.build`.
+    Provides methods to manage a specific Actor build, e.g. get it, abort it, or wait for it to finish. Obtain an
+    instance via an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(
@@ -119,8 +119,8 @@ class BuildClient(ResourceClient):
 class BuildClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific Actor build.
 
-    Provides methods to get, delete, abort, and wait for finish of an Actor build.
-    Obtain an instance via `ApifyClientAsync.build`.
+    Provides methods to manage a specific Actor build, e.g. get it, abort it, or wait for it to finish. Obtain an
+    instance via an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(

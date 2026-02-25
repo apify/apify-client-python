@@ -52,8 +52,8 @@ if TYPE_CHECKING:
 class ActorClient(ResourceClient):
     """Sub-client for managing a specific Actor.
 
-    Provides methods to get, update, delete, build, and start runs of an Actor.
-    Obtain an instance via `ApifyClient.actor`.
+    Provides methods to manage a specific Actor, e.g. update it, delete it, build it, or start runs. Obtain an instance
+    via an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(
@@ -516,8 +516,8 @@ class ActorClient(ResourceClient):
 class ActorClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific Actor.
 
-    Provides methods to get, update, delete, build, and start runs of an Actor.
-    Obtain an instance via `ApifyClientAsync.actor`.
+    Provides methods to manage a specific Actor, e.g. update it, delete it, build it, or start runs. Obtain an instance
+    via an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(

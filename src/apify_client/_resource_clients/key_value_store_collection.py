@@ -17,8 +17,8 @@ from apify_client._utils import filter_none_values
 class KeyValueStoreCollectionClient(ResourceClient):
     """Sub-client for the key-value store collection.
 
-    Provides methods to list and get or create key-value stores.
-    Obtain an instance via `ApifyClient.key_value_stores`.
+    Provides methods to manage the key-value store collection, e.g. list or create key-value stores. Obtain an instance
+    via an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -74,8 +74,8 @@ class KeyValueStoreCollectionClient(ResourceClient):
 class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the key-value store collection.
 
-    Provides methods to list and get or create key-value stores.
-    Obtain an instance via `ApifyClientAsync.key_value_stores`.
+    Provides methods to manage the key-value store collection, e.g. list or create key-value stores. Obtain an instance
+    via an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

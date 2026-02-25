@@ -1,9 +1,4 @@
-"""Unified tests for webhook (sync + async).
-
-Webhook CRUD tests bind to a specific already-completed run (actor_run_id) instead of to an actor (actor_id).
-This prevents webhooks from firing when other integration tests run the same actor, which would cause
-"Webhook was removed" error emails.
-"""
+"""Unified tests for webhook (sync + async)."""
 
 from __future__ import annotations
 
@@ -14,7 +9,15 @@ if TYPE_CHECKING:
 
 
 from ._utils import maybe_await
-from apify_client._models import ActorJobStatus, WebhookEventType
+from apify_client._models import (
+    ActorJobStatus,
+    ListOfRuns,
+    ListOfWebhookDispatches,
+    ListOfWebhooks,
+    Webhook,
+    WebhookDispatch,
+    WebhookEventType,
+)
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
 
@@ -27,14 +30,17 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     waits for it to finish.
     """
     runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
-    assert runs_page is not None
+
+    assert isinstance(runs_page, ListOfRuns)
 
     if len(runs_page.items) > 0:
         return runs_page.items[0].id
 
     # No completed runs found - start one and wait for it to finish
     run = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call())
-    assert run is not None
+
+    assert isinstance(run, ListOfRuns)
+
     return run.id
 
 
@@ -42,9 +48,7 @@ async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=10))
 
-    assert webhooks_page is not None
-    assert webhooks_page.items is not None
-    # User may have 0 webhooks
+    assert isinstance(webhooks_page, ListOfWebhooks)
     assert isinstance(webhooks_page.items, list)
 
 
@@ -52,8 +56,7 @@ async def test_list_webhooks_pagination(client: ApifyClient | ApifyClientAsync) 
     """Test listing webhooks with pagination."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=5, offset=0))
 
-    assert webhooks_page is not None
-    assert webhooks_page.items is not None
+    assert isinstance(webhooks_page, ListOfWebhooks)
     assert isinstance(webhooks_page.items, list)
 
 
@@ -70,15 +73,15 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
             is_ad_hoc=True,
         )
     )
-    webhook_client = client.webhook(created_webhook.id)
 
     try:
-        assert created_webhook is not None
-        assert created_webhook.id is not None
+        assert isinstance(created_webhook, Webhook)
 
         # Get the same webhook
+        webhook_client = client.webhook(created_webhook.id)
         retrieved_webhook = await maybe_await(webhook_client.get())
-        assert retrieved_webhook is not None
+
+        assert isinstance(retrieved_webhook, Webhook)
         assert retrieved_webhook.id == created_webhook.id
     finally:
         await maybe_await(webhook_client.delete())
@@ -97,6 +100,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
+    assert isinstance(created_webhook, Webhook)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -107,6 +111,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
                 actor_run_id=run_id,
             )
         )
+        assert isinstance(updated_webhook, Webhook)
         assert str(updated_webhook.request_url) == 'https://httpbin.org/anything'
     finally:
         await maybe_await(webhook_client.delete())
@@ -125,12 +130,13 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
+    assert isinstance(created_webhook, Webhook)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
         # Test webhook (creates a dispatch with dummy payload)
         dispatch = await maybe_await(webhook_client.test())
-        assert dispatch is not None
+        assert isinstance(dispatch, WebhookDispatch)
         assert dispatch.id is not None
     finally:
         await maybe_await(webhook_client.delete())
@@ -149,6 +155,8 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
             is_ad_hoc=True,
         )
     )
+
+    assert isinstance(created_webhook, Webhook)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -157,9 +165,9 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
 
         # List dispatches for this webhook
         dispatches = await maybe_await(webhook_client.dispatches().list())
-        assert dispatches is not None
-        assert dispatches.items is not None
+        assert isinstance(dispatches, ListOfWebhookDispatches)
         assert len(dispatches.items) > 0
+
     finally:
         await maybe_await(webhook_client.delete())
 
@@ -177,6 +185,7 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
+    assert isinstance(created_webhook, Webhook)
     webhook_client = client.webhook(created_webhook.id)
 
     # Delete webhook

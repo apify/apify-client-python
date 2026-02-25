@@ -3,13 +3,15 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, Literal, TypeVar
 
-# The order of the rendered API groups is defined in the website/docusaurus.config.js file.
+# The order of the rendered API groups is defined by GROUP_ORDER in website/transformDocs.js
+# and applied via groupSort in website/docusaurus.config.js.
 GroupName = Literal[
     'Apify API clients',
-    'Resource clients',
     'HTTP clients',
-    'Models',
+    'Resource clients',
     'Errors',
+    'Models',
+    'Other',
 ]
 
 T = TypeVar('T', bound=Callable[..., Any])

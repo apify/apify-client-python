@@ -14,8 +14,8 @@ from apify_client.errors import ApifyApiError
 class ScheduleClient(ResourceClient):
     """Sub-client for managing a specific schedule.
 
-    Provides methods to get, update, delete, and get log of a schedule.
-    Obtain an instance via `ApifyClient.schedule`.
+    Provides methods to manage a specific schedule, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -114,8 +114,8 @@ class ScheduleClient(ResourceClient):
 class ScheduleClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific schedule.
 
-    Provides methods to get, update, delete, and get log of a schedule.
-    Obtain an instance via `ApifyClientAsync.schedule`.
+    Provides methods to manage a specific schedule, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

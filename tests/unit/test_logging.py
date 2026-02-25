@@ -14,7 +14,8 @@ from werkzeug import Request, Response
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
 from apify_client._models import ActorJobStatus
-from apify_client._resource_clients import StatusMessageWatcher, StreamedLog
+from apify_client._status_message_watcher import StatusMessageWatcherBase
+from apify_client._streamed_log import StreamedLogBase
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -212,18 +213,18 @@ def mock_api(httpserver: HTTPServer) -> None:
 @pytest.fixture
 def propagate_stream_logs() -> None:
     """Enable propagation of logs to the caplog fixture."""
-    StreamedLog._force_propagate = True
-    StatusMessageWatcher._force_propagate = True
+    StreamedLogBase._force_propagate = True
+    StatusMessageWatcherBase._force_propagate = True
     logging.getLogger(f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}').setLevel(logging.DEBUG)
 
 
 @pytest.fixture
 def reduce_final_timeout_for_status_message_redirector() -> None:
-    """Reduce timeout used by the `StatusMessageWatcher`.
+    """Reduce timeout used by the status message watcher.
 
     This timeout makes sense on the platform, but in tests it is better to reduce it to speed up the tests.
     """
-    StatusMessageWatcher._final_sleep_time_s = 2
+    StatusMessageWatcherBase._final_sleep_time_s = 2
 
 
 @pytest.mark.parametrize(
@@ -247,7 +248,7 @@ async def test_redirected_logs_async(
 
     run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client._resource_clients.streamed_log.datetime') as mocked_datetime:
+    with patch('apify_client._streamed_log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
         streamed_log = await run_client.get_streamed_log(from_start=log_from_start)
@@ -287,7 +288,7 @@ def test_redirected_logs_sync(
 
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
 
-    with patch('apify_client._resource_clients.streamed_log.datetime') as mocked_datetime:
+    with patch('apify_client._streamed_log.datetime') as mocked_datetime:
         # Mock `now()` so that it has timestamp bigger than the first 3 logs
         mocked_datetime.now.return_value = datetime.fromisoformat('2025-05-13T07:24:14.132+00:00')
         streamed_log = run_client.get_streamed_log(from_start=log_from_start)

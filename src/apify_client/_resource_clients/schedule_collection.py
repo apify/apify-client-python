@@ -13,7 +13,8 @@ from apify_client._utils import filter_none_values
 class ScheduleCollectionClient(ResourceClient):
     """Sub-client for the schedule collection.
 
-    Provides methods to list and create schedules. Obtain an instance via `ApifyClient.schedules`.
+    Provides methods to manage the schedule collection, e.g. list or create schedules. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -95,7 +96,8 @@ class ScheduleCollectionClient(ResourceClient):
 class ScheduleCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the schedule collection.
 
-    Provides methods to list and create schedules. Obtain an instance via `ApifyClientAsync.schedules`.
+    Provides methods to manage the schedule collection, e.g. list or create schedules. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -16,8 +16,8 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 class RequestQueueCollectionClient(ResourceClient):
     """Sub-client for the request queue collection.
 
-    Provides methods to list and get or create request queues.
-    Obtain an instance via `ApifyClient.request_queues`.
+    Provides methods to manage the request queue collection, e.g. list or create request queues. Obtain an instance
+    via an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -67,8 +67,8 @@ class RequestQueueCollectionClient(ResourceClient):
 class RequestQueueCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the request queue collection.
 
-    Provides methods to list and get or create request queues.
-    Obtain an instance via `ApifyClientAsync.request_queues`.
+    Provides methods to manage the request queue collection, e.g. list or create request queues. Obtain an instance
+    via an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -13,8 +13,8 @@ from apify_client._utils import filter_none_values
 class ActorEnvVarCollectionClient(ResourceClient):
     """Sub-client for the Actor environment variable collection.
 
-    Provides methods to list and create environment variables.
-    Obtain an instance via `ActorVersionClient.env_vars`.
+    Provides methods to manage Actor environment variables, e.g. list or create them. Obtain an instance via an
+    appropriate method on the `ActorVersionClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -65,8 +65,8 @@ class ActorEnvVarCollectionClient(ResourceClient):
 class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the Actor environment variable collection.
 
-    Provides methods to list and create environment variables.
-    Obtain an instance via `ActorVersionClientAsync.env_vars`.
+    Provides methods to manage Actor environment variables, e.g. list or create them. Obtain an instance via an
+    appropriate method on the `ActorVersionClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

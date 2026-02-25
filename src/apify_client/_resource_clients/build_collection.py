@@ -11,7 +11,8 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 class BuildCollectionClient(ResourceClient):
     """Sub-client for the Actor build collection.
 
-    Provides methods to list Actor builds. Obtain an instance via `ApifyClient.builds`.
+    Provides methods to manage Actor builds, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -49,7 +50,8 @@ class BuildCollectionClient(ResourceClient):
 class BuildCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the Actor build collection.
 
-    Provides methods to list Actor builds. Obtain an instance via `ApifyClientAsync.builds`.
+    Provides methods to manage Actor builds, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

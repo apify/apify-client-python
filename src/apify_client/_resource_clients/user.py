@@ -24,8 +24,8 @@ from apify_client.errors import ApifyApiError
 class UserClient(ResourceClient):
     """Sub-client for managing user account information.
 
-    Provides methods to get user data, monthly usage, and account limits.
-    Obtain an instance via `ApifyClient.user`.
+    Provides methods to manage user account information, e.g. get user data or monthly usage. Obtain an instance via
+    an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -128,8 +128,8 @@ class UserClient(ResourceClient):
 class UserClientAsync(ResourceClientAsync):
     """Sub-client for managing user account information.
 
-    Provides methods to get user data, monthly usage, and account limits.
-    Obtain an instance via `ApifyClientAsync.user`.
+    Provides methods to manage user account information, e.g. get user data or monthly usage. Obtain an instance via
+    an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

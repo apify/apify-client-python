@@ -19,8 +19,8 @@ from apify_client._utils import filter_none_values
 class ActorVersionCollectionClient(ResourceClient):
     """Sub-client for the Actor version collection.
 
-    Provides methods to list and create Actor versions.
-    Obtain an instance via `ActorClient.versions`.
+    Provides methods to manage Actor versions, e.g. list or create them. Obtain an instance via an appropriate method
+    on the `ActorClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -95,8 +95,8 @@ class ActorVersionCollectionClient(ResourceClient):
 class ActorVersionCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the Actor version collection.
 
-    Provides methods to list and create Actor versions.
-    Obtain an instance via `ActorClientAsync.versions`.
+    Provides methods to manage Actor versions, e.g. list or create them. Obtain an instance via an appropriate method
+    on the `ActorClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class ApifyClientError(Exception):
     """Base class for all Apify API client errors.
 
-    All exceptions raised by the Apify client inherit from this class, making it convenient
+    All custom exceptions defined by this package inherit from this class, making it convenient
     to catch any client-related error with a single except clause.
     """
 
@@ -28,7 +28,7 @@ class ApifyApiError(ApifyClientError):
 
     Attributes:
         message: The error message from the API response.
-        type: The error type identifier from the API response (e.g. ``record-not-found``).
+        type: The error type identifier from the API response (e.g. `record-not-found`).
         status_code: The HTTP status code of the error response.
         attempt: The attempt number when the error was raised.
         http_method: The HTTP method of the failed request.

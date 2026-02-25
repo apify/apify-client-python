@@ -11,7 +11,8 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 class StoreCollectionClient(ResourceClient):
     """Sub-client for the Apify store collection.
 
-    Provides methods to list Actors in the Apify store. Obtain an instance via `ApifyClient.store`.
+    Provides methods to browse the Apify store, e.g. list available Actors. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -62,7 +63,8 @@ class StoreCollectionClient(ResourceClient):
 class StoreCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the Apify store collection.
 
-    Provides methods to list Actors in the Apify store. Obtain an instance via `ApifyClientAsync.store`.
+    Provides methods to browse the Apify store, e.g. list available Actors. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

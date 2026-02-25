@@ -16,7 +16,8 @@ if TYPE_CHECKING:
 class WebhookCollectionClient(ResourceClient):
     """Sub-client for the webhook collection.
 
-    Provides methods to list and create webhooks. Obtain an instance via `ApifyClient.webhooks`.
+    Provides methods to manage the webhook collection, e.g. list or create webhooks. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -106,7 +107,8 @@ class WebhookCollectionClient(ResourceClient):
 class WebhookCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the webhook collection.
 
-    Provides methods to list and create webhooks. Obtain an instance via `ApifyClientAsync.webhooks`.
+    Provides methods to manage the webhook collection, e.g. list or create webhooks. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -53,12 +53,8 @@ from apify_client._resource_clients import (
     ScheduleClientAsync,
     ScheduleCollectionClient,
     ScheduleCollectionClientAsync,
-    StatusMessageWatcherAsync,
-    StatusMessageWatcherSync,
     StoreCollectionClient,
     StoreCollectionClientAsync,
-    StreamedLogAsync,
-    StreamedLogSync,
     TaskClient,
     TaskClientAsync,
     TaskCollectionClient,
@@ -181,8 +177,6 @@ class ApifyClient:
             key_value_store_client=KeyValueStoreClient,
             key_value_store_collection_client=KeyValueStoreCollectionClient,
             log_client=LogClient,
-            status_message_watcher=StatusMessageWatcherSync,
-            streamed_log=StreamedLogSync,
             request_queue_client=RequestQueueClient,
             request_queue_collection_client=RequestQueueCollectionClient,
             run_client=RunClient,
@@ -386,6 +380,7 @@ class ApifyClientAsync:
 
     from apify_client import ApifyClientAsync
 
+
     async def main() -> None:
         client = ApifyClientAsync(token='MY-APIFY-TOKEN')
 
@@ -399,6 +394,7 @@ class ApifyClientAsync:
             items = (await dataset_client.list_items()).items
             for item in items:
                 print(item)
+
 
     asyncio.run(main())
     ```
@@ -475,8 +471,6 @@ class ApifyClientAsync:
             key_value_store_client=KeyValueStoreClientAsync,
             key_value_store_collection_client=KeyValueStoreCollectionClientAsync,
             log_client=LogClientAsync,
-            status_message_watcher=StatusMessageWatcherAsync,
-            streamed_log=StreamedLogAsync,
             request_queue_client=RequestQueueClientAsync,
             request_queue_collection_client=RequestQueueCollectionClientAsync,
             run_client=RunClientAsync,

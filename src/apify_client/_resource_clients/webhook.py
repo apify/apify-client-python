@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 class WebhookClient(ResourceClient):
     """Sub-client for managing a specific webhook.
 
-    Provides methods to get, update, delete, and test a webhook.
-    Obtain an instance via `ApifyClient.webhook`.
+    Provides methods to manage a specific webhook, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -145,8 +145,8 @@ class WebhookClient(ResourceClient):
 class WebhookClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific webhook.
 
-    Provides methods to get, update, delete, and test a webhook.
-    Obtain an instance via `ApifyClientAsync.webhook`.
+    Provides methods to manage a specific webhook, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

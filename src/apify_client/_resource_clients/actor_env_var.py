@@ -26,8 +26,8 @@ def get_actor_env_var_representation(
 class ActorEnvVarClient(ResourceClient):
     """Sub-client for managing a specific Actor environment variable.
 
-    Provides methods to get, update, and delete an environment variable.
-    Obtain an instance via `ActorVersionClient.env_var`.
+    Provides methods to manage a specific Actor environment variable, e.g. get, update, or delete it. Obtain an instance
+    via an appropriate method on the `ActorVersionClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -87,8 +87,8 @@ class ActorEnvVarClient(ResourceClient):
 class ActorEnvVarClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific Actor environment variable.
 
-    Provides methods to get, update, and delete an environment variable.
-    Obtain an instance via `ActorVersionClientAsync.env_var`.
+    Provides methods to manage a specific Actor environment variable, e.g. get, update, or delete it. Obtain an instance
+    via an appropriate method on the `ActorVersionClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

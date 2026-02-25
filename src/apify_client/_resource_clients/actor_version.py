@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 class ActorVersionClient(ResourceClient):
     """Sub-client for managing a specific Actor version.
 
-    Provides methods to get, update, and delete an Actor version.
-    Obtain an instance via `ActorClient.version`.
+    Provides methods to manage a specific Actor version, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ActorClient` class.
     """
 
     def __init__(
@@ -131,8 +131,8 @@ class ActorVersionClient(ResourceClient):
 class ActorVersionClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific Actor version.
 
-    Provides methods to get, update, and delete an Actor version.
-    Obtain an instance via `ActorClientAsync.version`.
+    Provides methods to manage a specific Actor version, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ActorClientAsync` class.
     """
 
     def __init__(

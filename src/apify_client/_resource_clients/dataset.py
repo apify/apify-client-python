@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from apify_client._models import GeneralAccess
 
 
-@docs_group('Models')
+@docs_group('Other')
 @dataclass
 class DatasetItemsPage:
     """A page of dataset items returned by the `list_items` method.
@@ -62,8 +62,8 @@ class DatasetItemsPage:
 class DatasetClient(ResourceClient):
     """Sub-client for managing a specific dataset.
 
-    Provides methods to get, update, delete, push items, list items, iterate items, and stream items of a dataset.
-    Obtain an instance via `ApifyClient.dataset`.
+    Provides methods to manage a specific dataset, e.g. get it, update it, or download its items. Obtain an instance
+    via an appropriate method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -683,8 +683,8 @@ class DatasetClient(ResourceClient):
 class DatasetClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific dataset.
 
-    Provides methods to get, update, delete, push items, list items, iterate items, and stream items of a dataset.
-    Obtain an instance via `ApifyClientAsync.dataset`.
+    Provides methods to manage a specific dataset, e.g. get it, update it, or download its items. Obtain an instance
+    via an appropriate method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

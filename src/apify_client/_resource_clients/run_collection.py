@@ -17,7 +17,8 @@ if TYPE_CHECKING:
 class RunCollectionClient(ResourceClient):
     """Sub-client for the Actor run collection.
 
-    Provides methods to list Actor runs. Obtain an instance via `ApifyClient.runs`.
+    Provides methods to manage Actor runs, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -70,7 +71,8 @@ class RunCollectionClient(ResourceClient):
 class RunCollectionClientAsync(ResourceClientAsync):
     """Sub-client for the Actor run collection.
 
-    Provides methods to list Actor runs. Obtain an instance via `ApifyClientAsync.runs`.
+    Provides methods to manage Actor runs, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

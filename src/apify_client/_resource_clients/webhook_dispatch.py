@@ -11,7 +11,8 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 class WebhookDispatchClient(ResourceClient):
     """Sub-client for managing a specific webhook dispatch.
 
-    Provides methods to get a webhook dispatch. Obtain an instance via `ApifyClient.webhook_dispatch`.
+    Provides methods to manage a specific webhook dispatch, e.g. get its details. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -36,7 +37,8 @@ class WebhookDispatchClient(ResourceClient):
 class WebhookDispatchClientAsync(ResourceClientAsync):
     """Sub-client for managing a specific webhook dispatch.
 
-    Provides methods to get a webhook dispatch. Obtain an instance via `ApifyClientAsync.webhook_dispatch`.
+    Provides methods to manage a specific webhook dispatch, e.g. get its details. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

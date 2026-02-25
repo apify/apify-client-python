@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values
@@ -21,8 +22,13 @@ def get_actor_env_var_representation(
     }
 
 
+@docs_group('Resource clients')
 class ActorEnvVarClient(ResourceClient):
-    """Sub-client for manipulating a single Actor environment variable."""
+    """Sub-client for managing a specific Actor environment variable.
+
+    Provides methods to manage a specific Actor environment variable, e.g. get, update, or delete it. Obtain an instance
+    via an appropriate method on the `ActorVersionClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')
@@ -77,8 +83,13 @@ class ActorEnvVarClient(ResourceClient):
         self._delete()
 
 
+@docs_group('Resource clients')
 class ActorEnvVarClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor environment variable."""
+    """Sub-client for managing a specific Actor environment variable.
+
+    Provides methods to manage a specific Actor environment variable, e.g. get, update, or delete it. Obtain an instance
+    via an appropriate method on the `ActorVersionClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')

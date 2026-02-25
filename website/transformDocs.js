@@ -55,34 +55,44 @@ const TYPEDOC_KINDS = {
 }
 
 const GROUP_ORDER = [
-    'Main Classes',
-    'Main Clients',
-    'Resource Clients',
-    'Async Resource Clients',
-    'Helper Classes',
+    'Apify API clients',
+    'HTTP clients',
+    'Resource clients',
     'Errors',
-    'Constructors',
-    'Methods',
-    'Properties',
-    'Constants',
-    'Enumeration Members'
+    'Models',
+    'Other',
 ];
 
 const groupSort = (g1, g2) => {
-    if(GROUP_ORDER.includes(g1) && GROUP_ORDER.includes(g2)){
-        return GROUP_ORDER.indexOf(g1) - GROUP_ORDER.indexOf(g2)
-    }
+    const i1 = GROUP_ORDER.indexOf(g1);
+    const i2 = GROUP_ORDER.indexOf(g2);
+    // Both known – sort by defined order
+    if (i1 !== -1 && i2 !== -1) return i1 - i2;
+    // Unknown groups go after known ones
+    if (i1 !== -1) return -1;
+    if (i2 !== -1) return 1;
+    // Both unknown – alphabetical
     return g1.localeCompare(g2);
 };
 
+// Extract the docs_group name from a docspec member's decorators
+function getDocsGroup(member) {
+    const decoration = member.decorations?.find(d => d.name === 'docs_group');
+    if (decoration?.args) {
+        const match = decoration.args.match(/['"](.+?)['"]/);
+        if (match) return match[1];
+    }
+    return undefined;
+}
+
 function getGroupName(object) {
+    // If a docs_group was extracted from the Python decorator, use it
+    if (object.docsGroup) {
+        return object.docsGroup;
+    }
+
+    // Fallback grouping for sub-members (methods, properties, etc.) inside classes
     const groupPredicates = {
-        'Errors': (x) => x.name.toLowerCase().includes('error'),
-        'Main Classes': (x) => ['Actor', 'Dataset', 'KeyValueStore', 'RequestQueue'].includes(x.name),
-        'Main Clients': (x) => ['ApifyClient', 'ApifyClientAsync'].includes(x.name),
-        'Async Resource Clients': (x) => x.name.toLowerCase().includes('async'),
-        'Resource Clients': (x) => x.kindString === 'Class' && x.name.toLowerCase().includes('client'),
-        'Helper Classes': (x) => x.kindString === 'Class',
         'Methods': (x) => x.kindString === 'Method',
         'Constructors': (x) => x.kindString === 'Constructor',
         'Properties': (x) => x.kindString === 'Property',
@@ -90,11 +100,11 @@ function getGroupName(object) {
         'Enumeration Members': (x) => x.kindString === 'Enumeration Member',
     };
 
-    const [group] = Object.entries(groupPredicates).find(
+    const found = Object.entries(groupPredicates).find(
         ([_, predicate]) => predicate(object)
     );
 
-    return group;
+    return found ? found[0] : 'Other';
 }
 
 // Strips the Optional[] type from the type string, and replaces generic types with just the main type
@@ -158,9 +168,17 @@ function extractArgsAndReturns(docstring) {
     return { parameters, returns };
 }
 
-// Objects with decorators named 'ignore_docs' or with empty docstrings will be ignored
+// Objects with decorators named 'ignore_docs' or without docstrings will be ignored,
+// unless they have a 'docs_group' decorator which explicitly marks them for documentation
 function isHidden(member) {
-    return member.decorations?.some(d => d.name === 'ignore_docs') || member.name === 'ignore_docs' || !member.docstring?.content;
+    if (member.decorations?.some(d => d.name === 'ignore_docs') || member.name === 'ignore_docs') {
+        return true;
+    }
+    // Members with @docs_group are always visible (even without docstrings)
+    if (member.decorations?.some(d => d.name === 'docs_group')) {
+        return false;
+    }
+    return !member.docstring?.content;
 }
 
 // Each object in the Typedoc structure has an unique ID,
@@ -205,11 +223,15 @@ function convertObject(obj, parent, module) {
                 moduleName = moduleShortcuts[fullName].replace(`.${member.name}`, '');
             }
 
+            // Extract docs_group from the Python decorator (if present)
+            const docsGroup = getDocsGroup(member);
+
             // Create the Typedoc member object
             let typedocMember = {
                 id: oid++,
                 name: member.name,
                 module: moduleName, // This is an extension to the original Typedoc structure, to support showing where the member is exported from
+                docsGroup,
                 ...typedocKind,
                 flags: {},
                 comment: member.docstring ? {

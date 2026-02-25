@@ -2,14 +2,20 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
 from apify_client._utils import filter_none_values
 
 
+@docs_group('Resource clients')
 class ActorEnvVarCollectionClient(ResourceClient):
-    """Sub-client for manipulating Actor env vars."""
+    """Sub-client for the Actor environment variable collection.
+
+    Provides methods to manage Actor environment variables, e.g. list or create them. Obtain an instance via an
+    appropriate method on the `ActorVersionClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')
@@ -55,8 +61,13 @@ class ActorEnvVarCollectionClient(ResourceClient):
         return EnvVarResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating Actor env vars."""
+    """Sub-client for the Actor environment variable collection.
+
+    Provides methods to manage Actor environment variables, e.g. list or create them. Obtain an instance via an
+    appropriate method on the `ActorVersionClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'env-vars')

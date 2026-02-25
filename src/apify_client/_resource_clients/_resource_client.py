@@ -7,6 +7,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, TERMINAL_STATUSES
+from apify_client._docs import docs_group
 from apify_client._internal_models import ActorJobResponse
 from apify_client._logging import WithLogDetailsClient
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id, to_seconds
@@ -120,6 +121,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         return {k: v for k, v in merged.items() if v is not None}
 
 
+@docs_group('Resource clients')
 class ResourceClient(ResourceClientBase):
     """Base class for synchronous resource clients."""
 
@@ -286,6 +288,7 @@ class ResourceClient(ResourceClientBase):
         return actor_job
 
 
+@docs_group('Resource clients')
 class ResourceClientAsync(ResourceClientBase):
     """Base class for asynchronous resource clients."""
 

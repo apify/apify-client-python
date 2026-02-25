@@ -2,14 +2,20 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfSchedules, ListOfSchedulesResponse, Schedule, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import filter_none_values
 
 
+@docs_group('Resource clients')
 class ScheduleCollectionClient(ResourceClient):
-    """Sub-client for manipulating schedules."""
+    """Sub-client for the schedule collection.
+
+    Provides methods to manage the schedule collection, e.g. list or create schedules. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')
@@ -86,8 +92,13 @@ class ScheduleCollectionClient(ResourceClient):
         return ScheduleResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class ScheduleCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating schedules."""
+    """Sub-client for the schedule collection.
+
+    Provides methods to manage the schedule collection, e.g. list or create schedules. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')

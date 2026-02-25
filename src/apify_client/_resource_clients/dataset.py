@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
+from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
     from apify_client._models import GeneralAccess
 
 
+@docs_group('Other')
 @dataclass
 class DatasetItemsPage:
     """A page of dataset items returned by the `list_items` method.
@@ -56,8 +58,13 @@ class DatasetItemsPage:
     """Whether the items are sorted in descending order."""
 
 
+@docs_group('Resource clients')
 class DatasetClient(ResourceClient):
-    """Sub-client for manipulating a single dataset."""
+    """Sub-client for managing a specific dataset.
+
+    Provides methods to manage a specific dataset, e.g. get it, update it, or download its items. Obtain an instance
+    via an appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')
@@ -672,8 +679,13 @@ class DatasetClient(ResourceClient):
         return urlunparse(items_public_url)
 
 
+@docs_group('Resource clients')
 class DatasetClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single dataset."""
+    """Sub-client for managing a specific dataset.
+
+    Provides methods to manage a specific dataset, e.g. get it, update it, or download its items. Obtain an instance
+    via an appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'datasets')

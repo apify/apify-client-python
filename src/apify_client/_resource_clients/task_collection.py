@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfTasks, ListOfTasksResponse, Task, TaskResponse
 from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -11,8 +12,13 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
 
+@docs_group('Resource clients')
 class TaskCollectionClient(ResourceClient):
-    """Sub-client for manipulating tasks."""
+    """Sub-client for the task collection.
+
+    Provides methods to manage the task collection, e.g. list or create tasks. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-tasks')
@@ -110,8 +116,13 @@ class TaskCollectionClient(ResourceClient):
         return TaskResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class TaskCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating tasks."""
+    """Sub-client for the task collection.
+
+    Provides methods to manage the task collection, e.g. list or create tasks. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-tasks')

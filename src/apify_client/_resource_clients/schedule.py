@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import Schedule, ScheduleInvoked, ScheduleLogResponse, ScheduleResponse
 from apify_client._representations import get_schedule_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -9,8 +10,13 @@ from apify_client._utils import catch_not_found_or_throw, filter_none_values, re
 from apify_client.errors import ApifyApiError
 
 
+@docs_group('Resource clients')
 class ScheduleClient(ResourceClient):
-    """Sub-client for manipulating a single schedule."""
+    """Sub-client for managing a specific schedule.
+
+    Provides methods to manage a specific schedule, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')
@@ -104,8 +110,13 @@ class ScheduleClient(ResourceClient):
         return None
 
 
+@docs_group('Resource clients')
 class ScheduleClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single schedule."""
+    """Sub-client for managing a specific schedule.
+
+    Provides methods to manage a specific schedule, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'schedules')

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from apify_client._docs import docs_group
 from apify_client._models import Actor, ActorResponse, ListOfActors, ListOfActorsResponse
 from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -11,8 +12,13 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
 
+@docs_group('Resource clients')
 class ActorCollectionClient(ResourceClient):
-    """Sub-client for manipulating Actors."""
+    """Sub-client for the Actor collection.
+
+    Provides methods to manage the Actor collection, e.g. list or create Actors. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')
@@ -138,8 +144,13 @@ class ActorCollectionClient(ResourceClient):
         return ActorResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class ActorCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating Actors."""
+    """Sub-client for the Actor collection.
+
+    Provides methods to manage the Actor collection, e.g. list or create Actors. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'acts')

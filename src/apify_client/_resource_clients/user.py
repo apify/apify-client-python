@@ -4,6 +4,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     AccountLimits,
     LimitsResponse,
@@ -19,8 +20,13 @@ from apify_client._utils import catch_not_found_or_throw, filter_none_values, re
 from apify_client.errors import ApifyApiError
 
 
+@docs_group('Resource clients')
 class UserClient(ResourceClient):
-    """Sub-client for querying user data."""
+    """Sub-client for managing user account information.
+
+    Provides methods to manage user account information, e.g. get user data or monthly usage. Obtain an instance via
+    an appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_id = kwargs.pop('resource_id', None)
@@ -118,8 +124,13 @@ class UserClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class UserClientAsync(ResourceClientAsync):
-    """Async sub-client for querying user data."""
+    """Sub-client for managing user account information.
+
+    Provides methods to manage user account information, e.g. get user data or monthly usage. Obtain an instance via
+    an appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_id = kwargs.pop('resource_id', None)

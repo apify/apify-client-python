@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfRuns, ListOfRunsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import enum_to_value
@@ -12,8 +13,13 @@ if TYPE_CHECKING:
     from apify_client._consts import ActorJobStatus
 
 
+@docs_group('Resource clients')
 class RunCollectionClient(ResourceClient):
-    """Sub-client for listing Actor runs."""
+    """Sub-client for the Actor run collection.
+
+    Provides methods to manage Actor runs, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-runs')
@@ -61,8 +67,13 @@ class RunCollectionClient(ResourceClient):
         return ListOfRunsResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class RunCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for listing Actor runs."""
+    """Sub-client for the Actor run collection.
+
+    Provides methods to manage Actor runs, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-runs')

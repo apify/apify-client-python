@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import response_to_dict
@@ -12,8 +13,13 @@ if TYPE_CHECKING:
     from apify_client._resource_clients import LogClient, LogClientAsync
 
 
+@docs_group('Resource clients')
 class BuildClient(ResourceClient):
-    """Sub-client for manipulating a single Actor build."""
+    """Sub-client for managing a specific Actor build.
+
+    Provides methods to manage a specific Actor build, e.g. get it, abort it, or wait for it to finish. Obtain an
+    instance via an appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(
         self,
@@ -109,8 +115,13 @@ class BuildClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class BuildClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor build."""
+    """Sub-client for managing a specific Actor build.
+
+    Provides methods to manage a specific Actor build, e.g. get it, abort it, or wait for it to finish. Obtain an
+    instance via an appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(
         self,

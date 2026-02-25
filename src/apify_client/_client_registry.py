@@ -43,12 +43,8 @@ if TYPE_CHECKING:
         ScheduleClientAsync,
         ScheduleCollectionClient,
         ScheduleCollectionClientAsync,
-        StatusMessageWatcherAsync,
-        StatusMessageWatcherSync,
         StoreCollectionClient,
         StoreCollectionClientAsync,
-        StreamedLogAsync,
-        StreamedLogSync,
         TaskClient,
         TaskClientAsync,
         TaskCollectionClient,
@@ -87,8 +83,6 @@ class ClientRegistry:
     key_value_store_client: type[KeyValueStoreClient]
     key_value_store_collection_client: type[KeyValueStoreCollectionClient]
     log_client: type[LogClient]
-    status_message_watcher: type[StatusMessageWatcherSync]
-    streamed_log: type[StreamedLogSync]
     request_queue_client: type[RequestQueueClient]
     request_queue_collection_client: type[RequestQueueCollectionClient]
     run_client: type[RunClient]
@@ -126,8 +120,6 @@ class ClientRegistryAsync:
     key_value_store_client: type[KeyValueStoreClientAsync]
     key_value_store_collection_client: type[KeyValueStoreCollectionClientAsync]
     log_client: type[LogClientAsync]
-    status_message_watcher: type[StatusMessageWatcherAsync]
-    streamed_log: type[StreamedLogAsync]
     request_queue_client: type[RequestQueueClientAsync]
     request_queue_collection_client: type[RequestQueueCollectionClientAsync]
     run_client: type[RunClientAsync]

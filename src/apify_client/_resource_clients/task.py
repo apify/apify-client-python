@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import Run, RunOrigin, RunResponse, Task, TaskResponse
 from apify_client._representations import get_task_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -29,8 +30,13 @@ if TYPE_CHECKING:
     )
 
 
+@docs_group('Resource clients')
 class TaskClient(ResourceClient):
-    """Sub-client for manipulating a single task."""
+    """Sub-client for managing a specific task.
+
+    Provides methods to manage a specific task, e.g. update it, delete it, or start runs. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(
         self,
@@ -317,8 +323,13 @@ class TaskClient(ResourceClient):
         return self._client_registry.webhook_collection_client(**self._base_client_kwargs)
 
 
+@docs_group('Resource clients')
 class TaskClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single task."""
+    """Sub-client for managing a specific task.
+
+    Provides methods to manage a specific task, e.g. update it, delete it, or start runs. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(
         self,

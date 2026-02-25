@@ -7,9 +7,12 @@ import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
 from apify_client._models import Run, RunResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
+from apify_client._streamed_log import StreamedLog, StreamedLogAsync
 from apify_client._utils import (
     encode_key_value_store_record_value,
     filter_none_values,
@@ -32,15 +35,16 @@ if TYPE_CHECKING:
         LogClientAsync,
         RequestQueueClient,
         RequestQueueClientAsync,
-        StatusMessageWatcherAsync,
-        StatusMessageWatcherSync,
-        StreamedLogAsync,
-        StreamedLogSync,
     )
 
 
+@docs_group('Resource clients')
 class RunClient(ResourceClient):
-    """Sub-client for manipulating a single Actor run."""
+    """Sub-client for managing a specific Actor run.
+
+    Provides methods to manage a specific Actor run, e.g. get it, update it, abort it, or wait for it to finish.
+    Obtain an instance via an appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(
         self,
@@ -305,7 +309,12 @@ class RunClient(ResourceClient):
             **self._base_client_kwargs,
         )
 
-    def get_streamed_log(self, to_logger: logging.Logger | None = None, *, from_start: bool = True) -> StreamedLogSync:
+    def get_streamed_log(
+        self,
+        to_logger: logging.Logger | None = None,
+        *,
+        from_start: bool = True,
+    ) -> StreamedLog:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
          `StreamedLog` can be explicitly started and stopped or used as a context manager.
@@ -339,7 +348,7 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return self._client_registry.streamed_log(log_client=self.log(), to_logger=to_logger, from_start=from_start)
+        return StreamedLog(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     def charge(
         self,
@@ -384,8 +393,10 @@ class RunClient(ResourceClient):
         )
 
     def get_status_message_watcher(
-        self, to_logger: logging.Logger | None = None, check_period: timedelta = timedelta(seconds=1)
-    ) -> StatusMessageWatcherSync:
+        self,
+        to_logger: logging.Logger | None = None,
+        check_period: timedelta = timedelta(seconds=1),
+    ) -> StatusMessageWatcher:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
         `StatusMessageWatcher` can be explicitly started and stopped or used as a context manager.
@@ -418,13 +429,16 @@ class RunClient(ResourceClient):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return self._client_registry.status_message_watcher(
-            run_client=self, to_logger=to_logger, check_period=check_period
-        )
+        return StatusMessageWatcher(run_client=self, to_logger=to_logger, check_period=check_period)
 
 
+@docs_group('Resource clients')
 class RunClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor run."""
+    """Sub-client for managing a specific Actor run.
+
+    Provides methods to manage a specific Actor run, e.g. get it, update it, abort it, or wait for it to finish.
+    Obtain an instance via an appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(
         self,
@@ -689,7 +703,10 @@ class RunClientAsync(ResourceClientAsync):
         )
 
     async def get_streamed_log(
-        self, to_logger: logging.Logger | None = None, *, from_start: bool = True
+        self,
+        to_logger: logging.Logger | None = None,
+        *,
+        from_start: bool = True,
     ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
@@ -724,7 +741,7 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return self._client_registry.streamed_log(log_client=self.log(), to_logger=to_logger, from_start=from_start)
+        return StreamedLogAsync(log_client=self.log(), to_logger=to_logger, from_start=from_start)
 
     async def charge(
         self,
@@ -806,6 +823,4 @@ class RunClientAsync(ResourceClientAsync):
             name = ' '.join(part for part in (actor_name, run_id) if part)
             to_logger = create_redirect_logger(f'apify.{name}')
 
-        return self._client_registry.status_message_watcher(
-            run_client=self, to_logger=to_logger, check_period=check_period
-        )
+        return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)

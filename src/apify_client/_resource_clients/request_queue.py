@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from more_itertools import constrained_batches
 
 from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
+from apify_client._docs import docs_group
 from apify_client._models import (
     AddedRequest,
     AddRequestResponse,
@@ -51,8 +52,13 @@ _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
+@docs_group('Resource clients')
 class RequestQueueClient(ResourceClient):
-    """Sub-client for manipulating a single request queue."""
+    """Sub-client for managing a specific request queue.
+
+    Provides methods to manage a specific request queue, e.g. update it, delete it, or manage its requests. Obtain an
+    instance via an appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(  # noqa: D417
         self,
@@ -456,8 +462,13 @@ class RequestQueueClient(ResourceClient):
         return UnlockRequestsResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class RequestQueueClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single request queue."""
+    """Sub-client for managing a specific request queue.
+
+    Provides methods to manage a specific request queue, e.g. update it, delete it, or manage its requests. Obtain an
+    instance via an appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(  # noqa: D417
         self,

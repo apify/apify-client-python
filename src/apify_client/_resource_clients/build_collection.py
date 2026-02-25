@@ -2,12 +2,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 
+@docs_group('Resource clients')
 class BuildCollectionClient(ResourceClient):
-    """Sub-client for listing Actor builds."""
+    """Sub-client for the Actor build collection.
+
+    Provides methods to manage Actor builds, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-builds')
@@ -40,8 +46,13 @@ class BuildCollectionClient(ResourceClient):
         return ListOfBuildsResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class BuildCollectionClientAsync(ResourceClientAsync):
-    """Async sub-client for listing Actor builds."""
+    """Sub-client for the Actor build collection.
+
+    Provides methods to manage Actor builds, e.g. list them. Obtain an instance via an appropriate method on the
+    `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'actor-builds')

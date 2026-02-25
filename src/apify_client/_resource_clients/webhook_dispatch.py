@@ -2,12 +2,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from apify_client._docs import docs_group
 from apify_client._models import WebhookDispatch, WebhookDispatchResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 
+@docs_group('Resource clients')
 class WebhookDispatchClient(ResourceClient):
-    """Sub-client for querying information about a webhook dispatch."""
+    """Sub-client for managing a specific webhook dispatch.
+
+    Provides methods to manage a specific webhook dispatch, e.g. get its details. Obtain an instance via an appropriate
+    method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')
@@ -27,8 +33,13 @@ class WebhookDispatchClient(ResourceClient):
         return WebhookDispatchResponse.model_validate(result).data
 
 
+@docs_group('Resource clients')
 class WebhookDispatchClientAsync(ResourceClientAsync):
-    """Async sub-client for querying information about a webhook dispatch."""
+    """Sub-client for managing a specific webhook dispatch.
+
+    Provides methods to manage a specific webhook dispatch, e.g. get its details. Obtain an instance via an appropriate
+    method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhook-dispatches')

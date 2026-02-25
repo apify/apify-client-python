@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     Actor,
     ActorPermissionLevel,
@@ -47,8 +48,13 @@ if TYPE_CHECKING:
     )
 
 
+@docs_group('Resource clients')
 class ActorClient(ResourceClient):
-    """Sub-client for manipulating a single Actor."""
+    """Sub-client for managing a specific Actor.
+
+    Provides methods to manage a specific Actor, e.g. update it, delete it, build it, or start runs. Obtain an instance
+    via an appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(
         self,
@@ -506,8 +512,13 @@ class ActorClient(ResourceClient):
         return True
 
 
+@docs_group('Resource clients')
 class ActorClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single Actor."""
+    """Sub-client for managing a specific Actor.
+
+    Provides methods to manage a specific Actor, e.g. update it, delete it, build it, or start runs. Obtain an instance
+    via an appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(
         self,

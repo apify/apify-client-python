@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from apify_client._docs import docs_group
 from apify_client._models import (
     TestWebhookResponse,
     Webhook,
@@ -18,8 +19,13 @@ if TYPE_CHECKING:
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
 
 
+@docs_group('Resource clients')
 class WebhookClient(ResourceClient):
-    """Sub-client for manipulating a single webhook."""
+    """Sub-client for managing a specific webhook.
+
+    Provides methods to manage a specific webhook, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClient` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhooks')
@@ -135,8 +141,13 @@ class WebhookClient(ResourceClient):
         )
 
 
+@docs_group('Resource clients')
 class WebhookClientAsync(ResourceClientAsync):
-    """Async sub-client for manipulating a single webhook."""
+    """Sub-client for managing a specific webhook.
+
+    Provides methods to manage a specific webhook, e.g. get, update, or delete it. Obtain an instance via an
+    appropriate method on the `ApifyClientAsync` class.
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         resource_path = kwargs.pop('resource_path', 'webhooks')

@@ -9,36 +9,21 @@ from datetime import UTC, datetime
 from threading import Thread
 from typing import TYPE_CHECKING, Self, cast
 
+from apify_client._docs import docs_group
+
 if TYPE_CHECKING:
     from types import TracebackType
 
     from apify_client._resource_clients import LogClient, LogClientAsync
 
 
-class StreamedLog:
-    """Utility class for streaming logs from another Actor.
-
-    It uses buffer to deal with possibly chunked logs. Chunked logs are stored in buffer. Chunks are expected to contain
-    specific markers that indicate the start of the log message. Each time a new chunk with complete split marker
-    arrives, the buffer is processed, logged and emptied.
-
-    This works only if the logs have datetime marker in ISO format. For example, `2025-05-12T15:35:59.429Z` This is the
-    default log standard for the Actors.
-    """
+class StreamedLogBase:
+    """Base class for streaming and buffering chunked Actor run logs."""
 
     # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
     _force_propagate = False
 
     def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
-        """Initialize `StreamedLog`.
-
-        Args:
-            to_logger: The logger to which the logs will be redirected.
-            from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
-                arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
-                logs for long-running Actors in stand-by.
-
-        """
         if self._force_propagate:
             to_logger.propagate = True
         self._to_logger = to_logger
@@ -94,17 +79,37 @@ class StreamedLog:
         return logging.INFO
 
 
-class StreamedLogSync(StreamedLog):
-    """Sync variant of `StreamedLog` that is logging in threads."""
+@docs_group('Other')
+class StreamedLog(StreamedLogBase):
+    """Streams Actor run log output to a Python logger in a background thread.
+
+    The log stream is consumed in a background thread and each log message is forwarded to the provided logger with
+    an appropriate log level inferred from the message content.
+
+    Can be used as a context manager, which automatically starts and stops the streaming thread. Alternatively,
+    call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
+    """
 
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+        """Initialize `StreamedLog`.
+
+        Args:
+            log_client: The log client used to stream raw log data from the Actor run.
+            to_logger: The logger to which the log messages will be forwarded.
+            from_start: If `True`, all logs from the start of the Actor run will be streamed. If `False`, only newly
+                arrived logs will be streamed. This can be useful for long-running Actors in stand-by mode where only
+                recent logs are relevant.
+        """
         super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_thread: Thread | None = None
         self._stop_logging = False
 
     def start(self) -> Thread:
-        """Start the streaming thread. The caller has to handle any cleanup by manually calling the `stop` method."""
+        """Start the streaming thread.
+
+        The caller is responsible for cleanup by calling the `stop` method when done.
+        """
         if self._streaming_thread:
             raise RuntimeError('Streaming thread already active')
         self._stop_logging = False
@@ -146,16 +151,36 @@ class StreamedLogSync(StreamedLog):
         return
 
 
-class StreamedLogAsync(StreamedLog):
-    """Async variant of `StreamedLog` that is logging in tasks."""
+@docs_group('Other')
+class StreamedLogAsync(StreamedLogBase):
+    """Streams Actor run log output to a Python logger in an asyncio task.
+
+    The log stream is consumed in a background asyncio task and each log message is forwarded to the provided logger
+    with an appropriate log level inferred from the message content.
+
+    Can be used as an async context manager, which automatically starts and cancels the streaming task. Alternatively,
+    call `start` and `stop` manually. Obtain an instance via `RunClientAsync.get_streamed_log`.
+    """
 
     def __init__(self, log_client: LogClientAsync, *, to_logger: logging.Logger, from_start: bool = True) -> None:
+        """Initialize `StreamedLogAsync`.
+
+        Args:
+            log_client: The async log client used to stream raw log data from the Actor run.
+            to_logger: The logger to which the log messages will be forwarded.
+            from_start: If `True`, all logs from the start of the Actor run will be streamed. If `False`, only newly
+                arrived logs will be streamed. This can be useful for long-running Actors in stand-by mode where only
+                recent logs are relevant.
+        """
         super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_task: Task | None = None
 
     def start(self) -> Task:
-        """Start the streaming task. The caller has to handle any cleanup by manually calling the `stop` method."""
+        """Start the streaming task.
+
+        The caller is responsible for cleanup by calling the `stop` method when done.
+        """
         if self._streaming_task and not self._streaming_task.done():
             raise RuntimeError('Streaming task already active')
         self._streaming_task = asyncio.create_task(self._stream_log())

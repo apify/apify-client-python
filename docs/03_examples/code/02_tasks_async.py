@@ -30,9 +30,10 @@ async def main() -> None:
     print('Task clients created:', apify_task_clients)
 
     # Execute Apify tasks
-    task_run_results = await asyncio.gather(
-        *[client.call() for client in apify_task_clients]
-    )
+    async with asyncio.TaskGroup() as tg:
+        tasks = [tg.create_task(client.call()) for client in apify_task_clients]
+
+    task_run_results = [task.result() for task in tasks]
 
     # Filter out None results (tasks that failed to return a run)
     successful_runs = [run for run in task_run_results if run is not None]

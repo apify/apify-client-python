@@ -798,7 +798,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
         if min_delay_between_unprocessed_requests_retries:
             logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
 
-        tasks = set[asyncio.Task]()
         asyncio_queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
@@ -815,29 +814,31 @@ class RequestQueueClientAsync(ResourceClientAsync):
         for batch in batches:
             await asyncio_queue.put(batch)
 
-        # Start a required number of worker tasks to process the batches.
-        for i in range(max_parallel):
-            coro = self._batch_add_requests_worker(
-                asyncio_queue,
-                request_params,
-            )
-            task = asyncio.create_task(coro, name=f'batch_add_requests_worker_{i}')
-            tasks.add(task)
+        # Use TaskGroup for structured concurrency — automatic cleanup and error propagation.
+        try:
+            async with asyncio.TaskGroup() as tg:
+                workers = [
+                    tg.create_task(
+                        self._batch_add_requests_worker(asyncio_queue, request_params),
+                        name=f'batch_add_requests_worker_{i}',
+                    )
+                    for i in range(max_parallel)
+                ]
 
-        # Wait for all batches to be processed.
-        await asyncio_queue.join()
-
-        # Send cancellation signals to all worker tasks and wait for them to finish.
-        for task in tasks:
-            task.cancel()
-
-        results: list[BatchAddResponse] = await asyncio.gather(*tasks)
+                # Wait for all batches to be processed, then cancel idle workers.
+                await asyncio_queue.join()
+                for worker in workers:
+                    worker.cancel()
+        except ExceptionGroup as eg:
+            # Re-raise the first worker exception directly to maintain backward-compatible error types.
+            raise eg.exceptions[0] from None
 
         # Combine the results from all workers and return them.
         processed_requests = list[AddedRequest]()
         unprocessed_requests = list[RequestDraft]()
 
-        for result in results:
+        for worker in workers:
+            result = worker.result()
             processed_requests.extend(result.data.processed_requests)
             unprocessed_requests.extend(result.data.unprocessed_requests)
 

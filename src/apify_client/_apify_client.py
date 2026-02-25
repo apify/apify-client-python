@@ -12,12 +12,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT,
 )
 from apify_client._docs import docs_group
-from apify_client._http_clients import (
-    HttpClient,
-    HttpClientAsync,
-    ImpitHttpClient,
-    ImpitHttpClientAsync,
-)
+from apify_client._http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,
@@ -75,6 +70,7 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
+from apify_client._utils import check_custom_headers
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -142,6 +138,9 @@ class ApifyClient:
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+
+        if headers:
+            check_custom_headers(self.__class__.__name__, headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -481,6 +480,9 @@ class ApifyClientAsync:
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
 
+        if headers:
+            check_custom_headers(self.__class__.__name__, headers)
+
         self._token = token
         """Apify API token for authentication."""
 
@@ -573,16 +575,6 @@ class ApifyClientAsync:
         instance._http_client = http_client
         return instance
 
-    @cached_property
-    def _base_kwargs(self) -> dict:
-        """Base keyword arguments for resource client construction."""
-        return {
-            'base_url': self._base_url,
-            'public_base_url': self._public_base_url,
-            'http_client': self.http_client,
-            'client_registry': self._client_registry,
-        }
-
     @property
     def token(self) -> str | None:
         """The Apify API token used by the client."""
@@ -605,6 +597,16 @@ class ApifyClientAsync:
                 headers=self._headers,
             )
         return self._http_client
+
+    @cached_property
+    def _base_kwargs(self) -> dict:
+        """Base keyword arguments for resource client construction."""
+        return {
+            'base_url': self._base_url,
+            'public_base_url': self._public_base_url,
+            'http_client': self.http_client,
+            'client_registry': self._client_registry,
+        }
 
     def actor(self, actor_id: str) -> ActorClientAsync:
         """Get the sub-client for a specific Actor.

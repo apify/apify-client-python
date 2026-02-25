@@ -6,6 +6,7 @@ import io
 import json
 import string
 import time
+import warnings
 from base64 import b64encode, urlsafe_b64encode
 from enum import Enum
 from http import HTTPStatus
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import impit
 
+from apify_client._consts import OVERRIDABLE_DEFAULT_HEADERS
 from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -346,3 +348,17 @@ def create_storage_content_signature(
 
     base64url_encoded_payload = urlsafe_b64encode(f'{version}.{expires_at}.{hmac_sig}'.encode())
     return base64url_encoded_payload.decode('utf-8')
+
+
+def check_custom_headers(class_name: str, headers: dict[str, str]) -> None:
+    """Warn if custom headers override important default headers."""
+    overwrite_headers = [key for key in headers if key.title() in OVERRIDABLE_DEFAULT_HEADERS]
+
+    if overwrite_headers:
+        warnings.warn(
+            f'{", ".join(overwrite_headers)} headers of {class_name} was overridden with an '
+            'explicit value. A wrong header value can lead to API errors, it is recommended to use the default '
+            f'value for following headers: {", ".join(OVERRIDABLE_DEFAULT_HEADERS)}.',
+            category=UserWarning,
+            stacklevel=3,
+        )

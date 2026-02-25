@@ -47,3 +47,6 @@ TERMINAL_STATUSES = frozenset(
     }
 )
 """Set of terminal Actor job statuses that indicate the job has finished."""
+
+OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
+"""Headers that can be overridden by users, but will trigger a warning if they do so, as it may lead to API errors."""

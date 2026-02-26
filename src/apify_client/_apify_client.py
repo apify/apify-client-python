@@ -119,7 +119,7 @@ class ApifyClient:
     ) -> None:
         """Initialize the Apify API client.
 
-        To use a custom HTTP client, use the `with_custom_client` class method instead.
+        To use a custom HTTP client, use the `with_custom_http_client` class method instead.
 
         Args:
             token: The Apify API token. You can find your token on the
@@ -195,7 +195,7 @@ class ApifyClient:
         self._headers = headers
 
     @classmethod
-    def with_custom_client(
+    def with_custom_http_client(
         cls,
         token: str | None = None,
         *,
@@ -218,7 +218,7 @@ class ApifyClient:
             def call(self, *, method, url, **kwargs) -> HttpResponse:
                 ...
 
-        client = ApifyClient.with_custom_client(
+        client = ApifyClient.with_custom_http_client(
             token='MY-APIFY-TOKEN',
             http_client=MyHttpClient(),
         )
@@ -243,7 +243,7 @@ class ApifyClient:
     def http_client(self) -> HttpClient:
         """The HTTP client instance used for API communication.
 
-        Returns the custom HTTP client if one was provided via `with_custom_client`,
+        Returns the custom HTTP client if one was provided via `with_custom_http_client`,
         or the default `ImpitHttpClient` otherwise (lazily created on first access).
         """
         if self._http_client is None:
@@ -460,7 +460,7 @@ class ApifyClientAsync:
     ) -> None:
         """Initialize the Apify API client.
 
-        To use a custom HTTP client, use the `with_custom_client` class method instead.
+        To use a custom HTTP client, use the `with_custom_http_client` class method instead.
 
         Args:
             token: The Apify API token. You can find your token on the
@@ -536,7 +536,7 @@ class ApifyClientAsync:
         self._headers = headers
 
     @classmethod
-    def with_custom_client(
+    def with_custom_http_client(
         cls,
         token: str | None = None,
         *,
@@ -559,7 +559,7 @@ class ApifyClientAsync:
             async def call(self, *, method, url, **kwargs) -> HttpResponse:
                 ...
 
-        client = ApifyClientAsync.with_custom_client(
+        client = ApifyClientAsync.with_custom_http_client(
             token='MY-APIFY-TOKEN',
             http_client=MyHttpClient(),
         )
@@ -584,7 +584,7 @@ class ApifyClientAsync:
     def http_client(self) -> HttpClientAsync:
         """The HTTP client instance used for API communication.
 
-        Returns the custom HTTP client if one was provided via `with_custom_client`,
+        Returns the custom HTTP client if one was provided via `with_custom_http_client`,
         or the default `ImpitHttpClientAsync` otherwise (lazily created on first access).
         """
         if self._http_client is None:

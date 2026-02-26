@@ -9,7 +9,7 @@ from utils import sync_to_async_docstring
 # Methods where the async docstring is intentionally different from the sync one
 # (e.g. because they accept different parameter types).
 SKIPPED_METHODS = {
-    'with_custom_client',
+    'with_custom_http_client',
 }
 
 # Get the directory of the source files

@@ -11,6 +11,12 @@ from utils import sync_to_async_docstring
 
 found_issues = False
 
+# Methods where the async docstring is intentionally different from the sync one
+# (e.g. because they accept different parameter types).
+SKIPPED_METHODS = {
+    'with_custom_http_client',
+}
+
 # Get the directory of the source files
 clients_path = Path(__file__).parent.resolve() / '../src/apify_client'
 
@@ -35,6 +41,10 @@ for client_source_path in clients_path.glob('**/*.py'):
 
             # Skip methods with @ignore_docs decorator
             if len(async_method.decorators) and str(async_method.decorators[0].value) == 'ignore_docs':
+                continue
+
+            # Skip methods whose docstrings are intentionally different
+            if async_method.name in SKIPPED_METHODS:
                 continue
 
             # If the sync method has a docstring, check if it matches the async dostring

@@ -12,15 +12,16 @@ import impit
 
 from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
 from apify_client._docs import docs_group
-from apify_client._http_clients._base import BaseHttpClient
+from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._logging import log_context, logger_name
 from apify_client._utils import to_seconds
-from apify_client.errors import ApifyApiError
+from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from apify_client._consts import JsonSerializable
+    from apify_client._http_clients import HttpResponse
     from apify_client._statistics import ClientStatistics
 
 T = TypeVar('T')
@@ -28,13 +29,29 @@ T = TypeVar('T')
 logger = logging.getLogger(logger_name)
 
 
-@docs_group('HTTP clients')
-class HttpClient(BaseHttpClient):
-    """Synchronous HTTP client for the Apify API.
+def _is_retryable_error(exc: Exception) -> bool:
+    """Check if an exception represents a transient error that should be retried.
 
-    Handles authentication, request serialization, and automatic retries with exponential backoff
-    for rate-limited (HTTP 429) and server error (HTTP 5xx) responses. Non-retryable errors
-    (e.g. HTTP 4xx client errors) are raised immediately.
+    All `impit.HTTPError` subclasses are considered retryable because they represent transport-level failures
+    (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
+    code errors are handled separately in `_make_request` based on the response status code, not here.
+    """
+    return isinstance(
+        exc,
+        (
+            InvalidResponseBodyError,
+            impit.HTTPError,
+        ),
+    )
+
+
+@docs_group('HTTP clients')
+class ImpitHttpClient(HttpClient):
+    """Synchronous HTTP client for the Apify API built on top of [Impit](https://github.com/apify/impit).
+
+    Impit is a high-performance HTTP client written in Rust that provides browser-like TLS fingerprints,
+    automatic header ordering, and HTTP/2 support. This client wraps `impit.Client` and adds automatic retries
+    with exponential backoff for rate-limited (HTTP 429) and server error (HTTP 5xx) responses.
     """
 
     def __init__(
@@ -47,7 +64,7 @@ class HttpClient(BaseHttpClient):
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
     ) -> None:
-        """Initialize the synchronous HTTP client.
+        """Initialize the Impit-based synchronous HTTP client.
 
         Args:
             token: Apify API token for authentication.
@@ -83,7 +100,7 @@ class HttpClient(BaseHttpClient):
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: timedelta | None = None,
-    ) -> impit.Response:
+    ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
         Args:
@@ -184,7 +201,7 @@ class HttpClient(BaseHttpClient):
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            if not self._is_retryable_error(exc):
+            if not _is_retryable_error(exc):
                 logger.debug('Exception is not retryable', exc_info=exc)
                 stop_retrying()
             raise
@@ -255,12 +272,12 @@ class HttpClient(BaseHttpClient):
 
 
 @docs_group('HTTP clients')
-class HttpClientAsync(BaseHttpClient):
-    """Asynchronous HTTP client for the Apify API.
+class ImpitHttpClientAsync(HttpClientAsync):
+    """Asynchronous HTTP client for the Apify API built on top of [Impit](https://github.com/apify/impit).
 
-    Handles authentication, request serialization, and automatic retries with exponential backoff
-    for rate-limited (HTTP 429) and server error (HTTP 5xx) responses. Non-retryable errors
-    (e.g. HTTP 4xx client errors) are raised immediately.
+    Impit is a high-performance HTTP client written in Rust that provides browser-like TLS fingerprints,
+    automatic header ordering, and HTTP/2 support. This client wraps `impit.AsyncClient` and adds automatic retries
+    with exponential backoff for rate-limited (HTTP 429) and server error (HTTP 5xx) responses.
     """
 
     def __init__(
@@ -273,7 +290,7 @@ class HttpClientAsync(BaseHttpClient):
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
     ) -> None:
-        """Initialize the asynchronous HTTP client.
+        """Initialize the Impit-based asynchronous HTTP client.
 
         Args:
             token: Apify API token for authentication.
@@ -309,7 +326,7 @@ class HttpClientAsync(BaseHttpClient):
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: timedelta | None = None,
-    ) -> impit.Response:
+    ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
         Args:
@@ -410,7 +427,7 @@ class HttpClientAsync(BaseHttpClient):
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            if not self._is_retryable_error(exc):
+            if not _is_retryable_error(exc):
                 logger.debug('Exception is not retryable', exc_info=exc)
                 stop_retrying()
             raise

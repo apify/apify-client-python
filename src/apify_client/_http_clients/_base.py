@@ -4,26 +4,81 @@ import gzip
 import json as jsonlib
 import os
 import sys
+from abc import ABC, abstractmethod
 from datetime import UTC, datetime, timedelta
 from importlib import metadata
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlencode
 
-import impit
-
 from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
+from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
 from apify_client._utils import to_seconds
-from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator, Mapping
+
     from apify_client._consts import JsonSerializable
 
 
-class BaseHttpClient:
-    """Base class for HTTP clients with shared configuration and utilities.
+@docs_group('HTTP clients')
+@runtime_checkable
+class HttpResponse(Protocol):
+    """Protocol for HTTP response objects returned by HTTP clients.
 
-    Subclasses should call `super().__init__()` and create their specific impit client using the `_headers` attribute.
+    Any object that has the required attributes and methods can be used as an HTTP response
+    (e.g., `impit.Response`). This enables custom HTTP client implementations to return
+    their own response types.
+    """
+
+    @property
+    def status_code(self) -> int:
+        """HTTP status code of the response."""
+
+    @property
+    def text(self) -> str:
+        """Response body decoded as text."""
+
+    @property
+    def content(self) -> bytes:
+        """Raw response body as bytes."""
+
+    @property
+    def headers(self) -> Mapping[str, str]:
+        """Response headers as a mapping."""
+
+    def json(self) -> Any:
+        """Parse response body as JSON."""
+
+    def read(self) -> bytes:
+        """Read the entire response body."""
+
+    async def aread(self) -> bytes:
+        """Read the entire response body asynchronously."""
+
+    def close(self) -> None:
+        """Close the response and release the connection."""
+
+    async def aclose(self) -> None:
+        """Close the response and release the connection asynchronously."""
+
+    def iter_bytes(self) -> Iterator[bytes]:
+        """Iterate over the response body in bytes chunks."""
+
+    def aiter_bytes(self) -> AsyncIterator[bytes]:
+        """Iterate over the response body in bytes chunks asynchronously."""
+
+
+@docs_group('HTTP clients')
+class HttpClientBase:
+    """Shared configuration and utilities for HTTP clients.
+
+    Provides common functionality for both sync and async HTTP clients including:
+    header construction, parameter parsing, request body preparation, URL building,
+    and timeout calculation.
+
+    Subclasses should call `super().__init__()` to initialize shared configuration.
+    The helper methods are then available for use in the `call()` implementation.
     """
 
     def __init__(
@@ -36,7 +91,7 @@ class BaseHttpClient:
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
     ) -> None:
-        """Initialize the base HTTP client.
+        """Initialize the HTTP client base.
 
         Args:
             token: Apify API token for authentication.
@@ -51,7 +106,7 @@ class BaseHttpClient:
         self._min_delay_between_retries = min_delay_between_retries
         self._statistics = statistics or ClientStatistics()
 
-        # Build headers for subclasses to use when creating their impit clients.
+        # Build default headers.
         default_headers: dict[str, str] = {'Accept': 'application/json, */*'}
 
         workflow_key = os.getenv('APIFY_WORKFLOW_KEY')
@@ -93,22 +148,6 @@ class BaseHttpClient:
                 parsed_params[key] = value
 
         return parsed_params
-
-    @staticmethod
-    def _is_retryable_error(exc: Exception) -> bool:
-        """Check if an exception represents a transient error that should be retried.
-
-        All ``impit.HTTPError`` subclasses are considered retryable because they represent transport-level failures
-        (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
-        code errors are handled separately in ``_make_request`` based on the response status code, not here.
-        """
-        return isinstance(
-            exc,
-            (
-                InvalidResponseBodyError,
-                impit.HTTPError,
-            ),
-        )
 
     def _prepare_request_call(
         self,
@@ -158,3 +197,90 @@ class BaseHttpClient:
         timeout_secs = to_seconds(timeout or self._timeout)
         client_timeout_secs = to_seconds(self._timeout)
         return min(client_timeout_secs, timeout_secs * 2 ** (attempt - 1))
+
+
+@docs_group('HTTP clients')
+class HttpClient(HttpClientBase, ABC):
+    """Abstract base class for synchronous HTTP clients used by `ApifyClient`.
+
+    Extend this class to create a custom synchronous HTTP client. Override the `call` method
+    with your implementation. Helper methods from the base class are available for request
+    preparation, URL building, and parameter parsing.
+    """
+
+    @abstractmethod
+    def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        data: str | bytes | bytearray | None = None,
+        json: Any = None,
+        stream: bool | None = None,
+        timeout: timedelta | None = None,
+    ) -> HttpResponse:
+        """Make an HTTP request.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            url: Full URL to make the request to.
+            headers: Additional headers to include in this request.
+            params: Query parameters to append to the URL.
+            data: Raw request body data. Cannot be used together with json.
+            json: JSON-serializable data for the request body. Cannot be used together with data.
+            stream: Whether to stream the response body.
+            timeout: Timeout for this specific request.
+
+        Returns:
+            The HTTP response object.
+
+        Raises:
+            ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
+            ValueError: If both json and data are provided.
+        """
+        ...
+
+
+@docs_group('HTTP clients')
+class HttpClientAsync(HttpClientBase, ABC):
+    """Abstract base class for asynchronous HTTP clients used by `ApifyClientAsync`.
+
+    Extend this class to create a custom asynchronous HTTP client. See `HttpClient`
+    for details on the expected behavior.
+    """
+
+    @abstractmethod
+    async def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        data: str | bytes | bytearray | None = None,
+        json: Any = None,
+        stream: bool | None = None,
+        timeout: timedelta | None = None,
+    ) -> HttpResponse:
+        """Make an HTTP request.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            url: Full URL to make the request to.
+            headers: Additional headers to include in this request.
+            params: Query parameters to append to the URL.
+            data: Raw request body data. Cannot be used together with json.
+            json: JSON-serializable data for the request body. Cannot be used together with data.
+            stream: Whether to stream the response body.
+            timeout: Timeout for this specific request.
+
+        Returns:
+            The HTTP response object.
+
+        Raises:
+            ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
+            ValueError: If both json and data are provided.
+        """
+        ...

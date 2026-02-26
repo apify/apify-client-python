@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import warnings
 from functools import cached_property
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
@@ -13,7 +12,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT,
 )
 from apify_client._docs import docs_group
-from apify_client._http_clients import HttpClient, HttpClientAsync
+from apify_client._http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,
@@ -71,6 +70,7 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
+from apify_client._utils import check_custom_headers
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -94,8 +94,8 @@ class ApifyClient:
     client = ApifyClient(token='MY-APIFY-TOKEN')
 
     # Start an Actor and wait for it to finish.
-    actor_client = client.actor('username/my-actor')
-    run = actor_client.call(run_input={'query': 'web scraping'})
+    actor_client = client.actor('apify/python-example')
+    run = actor_client.call(run_input={'first_number': 1, 'second_number': 2})
 
     # Fetch results from the run's default dataset.
     if run is not None:
@@ -105,8 +105,6 @@ class ApifyClient:
             print(item)
     ```
     """
-
-    _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 
     def __init__(
         self,
@@ -121,6 +119,8 @@ class ApifyClient:
     ) -> None:
         """Initialize the Apify API client.
 
+        To use a custom HTTP client, use the `with_custom_http_client` class method instead.
+
         Args:
             token: The Apify API token. You can find your token on the
                 [Integrations](https://console.apify.com/account/integrations) page in the Apify Console.
@@ -129,9 +129,10 @@ class ApifyClient:
                 as well.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
                 is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
-            max_retries: Maximum number of retry attempts for failed requests.
-            min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
-            timeout: Timeout for HTTP requests sent to the Apify API.
+            max_retries: How many times to retry a failed request at most.
+            min_delay_between_retries: How long will the client wait between retrying requests
+                (increases exponentially from this value).
+            timeout: The socket timeout of the HTTP requests sent to the Apify API.
             headers: Additional HTTP headers to include in all API requests.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
@@ -139,7 +140,7 @@ class ApifyClient:
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
 
         if headers:
-            self._check_custom_headers(headers)
+            check_custom_headers(self.__class__.__name__, headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -153,15 +154,8 @@ class ApifyClient:
         self._statistics = ClientStatistics()
         """Collector for client request statistics."""
 
-        self._http_client = HttpClient(
-            token=self._token,
-            timeout=timeout,
-            max_retries=max_retries,
-            min_delay_between_retries=min_delay_between_retries,
-            statistics=self._statistics,
-            headers=headers,
-        )
-        """HTTP client used to communicate with the Apify API."""
+        self._http_client: HttpClient | None = None
+        """HTTP client used to communicate with the Apify API. Lazily initialized on first access."""
 
         self._client_registry = ClientRegistry(
             actor_client=ActorClient,
@@ -194,32 +188,85 @@ class ApifyClient:
         )
         """Registry of resource client classes used for dependency injection."""
 
+        # Configuration for the default HTTP client (used if a custom client is not provided).
+        self._max_retries = max_retries
+        self._min_delay_between_retries = min_delay_between_retries
+        self._timeout = timeout
+        self._headers = headers
+
+    @classmethod
+    def with_custom_http_client(
+        cls,
+        token: str | None = None,
+        *,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        http_client: HttpClient,
+    ) -> ApifyClient:
+        """Create an `ApifyClient` instance with a custom HTTP client.
+
+        Use this alternative constructor when you want to provide your own HTTP client implementation
+        instead of the default one. The custom client is responsible for its own configuration
+        (retries, timeouts, headers, etc.).
+
+        ### Usage
+
+        ```python
+        from apify_client import ApifyClient, HttpClient, HttpResponse
+
+        class MyHttpClient(HttpClient):
+            def call(self, *, method, url, **kwargs) -> HttpResponse:
+                ...
+
+        client = ApifyClient.with_custom_http_client(
+            token='MY-APIFY-TOKEN',
+            http_client=MyHttpClient(),
+        )
+        ```
+
+        Args:
+            token: The Apify API token.
+            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
+            api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
+            http_client: A custom HTTP client instance extending `HttpClient`.
+        """
+        instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
+        instance._http_client = http_client
+        return instance
+
+    @property
+    def token(self) -> str | None:
+        """The Apify API token used by the client."""
+        return self._token
+
+    @property
+    def http_client(self) -> HttpClient:
+        """The HTTP client instance used for API communication.
+
+        Returns the custom HTTP client if one was provided via `with_custom_http_client`,
+        or the default `ImpitHttpClient` otherwise (lazily created on first access).
+        """
+        if self._http_client is None:
+            self._http_client = ImpitHttpClient(
+                token=self._token,
+                timeout=self._timeout,
+                max_retries=self._max_retries,
+                min_delay_between_retries=self._min_delay_between_retries,
+                statistics=self._statistics,
+                headers=self._headers,
+            )
+
+        return self._http_client
+
     @cached_property
     def _base_kwargs(self) -> dict:
         """Base keyword arguments for resource client construction."""
         return {
             'base_url': self._base_url,
             'public_base_url': self._public_base_url,
-            'http_client': self._http_client,
+            'http_client': self.http_client,
             'client_registry': self._client_registry,
         }
-
-    def _check_custom_headers(self, headers: dict[str, str]) -> None:
-        """Warn if custom headers override important default headers."""
-        overwrite_headers = [key for key in headers if key.title() in self._OVERRIDABLE_DEFAULT_HEADERS]
-        if overwrite_headers:
-            warnings.warn(
-                f'{", ".join(overwrite_headers)} headers of {self.__class__.__name__} was overridden with an '
-                'explicit value. A wrong header value can lead to API errors, it is recommended to use the default '
-                f'value for following headers: {", ".join(self._OVERRIDABLE_DEFAULT_HEADERS)}.',
-                category=UserWarning,
-                stacklevel=3,
-            )
-
-    @property
-    def token(self) -> str | None:
-        """The Apify API token used by the client."""
-        return self._token
 
     def actor(self, actor_id: str) -> ActorClient:
         """Get the sub-client for a specific Actor.
@@ -385,8 +432,8 @@ class ApifyClientAsync:
         client = ApifyClientAsync(token='MY-APIFY-TOKEN')
 
         # Start an Actor and wait for it to finish.
-        actor_client = client.actor('username/my-actor')
-        run = await actor_client.call(run_input={'query': 'web scraping'})
+        actor_client = client.actor('apify/python-example')
+        run = await actor_client.call(run_input={'first_number': 1, 'second_number': 2})
 
         # Fetch results from the run's default dataset.
         if run is not None:
@@ -399,8 +446,6 @@ class ApifyClientAsync:
     asyncio.run(main())
     ```
     """
-
-    _OVERRIDABLE_DEFAULT_HEADERS: ClassVar[set[str]] = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 
     def __init__(
         self,
@@ -415,6 +460,8 @@ class ApifyClientAsync:
     ) -> None:
         """Initialize the Apify API client.
 
+        To use a custom HTTP client, use the `with_custom_http_client` class method instead.
+
         Args:
             token: The Apify API token. You can find your token on the
                 [Integrations](https://console.apify.com/account/integrations) page in the Apify Console.
@@ -423,9 +470,10 @@ class ApifyClientAsync:
                 as well.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
                 is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
-            max_retries: Maximum number of retry attempts for failed requests.
-            min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
-            timeout: Timeout for HTTP requests sent to the Apify API.
+            max_retries: How many times to retry a failed request at most.
+            min_delay_between_retries: How long will the client wait between retrying requests
+                (increases exponentially from this value).
+            timeout: The socket timeout of the HTTP requests sent to the Apify API.
             headers: Additional HTTP headers to include in all API requests.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
@@ -433,7 +481,7 @@ class ApifyClientAsync:
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
 
         if headers:
-            self._check_custom_headers(headers)
+            check_custom_headers(self.__class__.__name__, headers)
 
         self._token = token
         """Apify API token for authentication."""
@@ -447,15 +495,8 @@ class ApifyClientAsync:
         self._statistics = ClientStatistics()
         """Collector for client request statistics."""
 
-        self._http_client = HttpClientAsync(
-            token=self._token,
-            timeout=timeout,
-            max_retries=max_retries,
-            min_delay_between_retries=min_delay_between_retries,
-            statistics=self._statistics,
-            headers=headers,
-        )
-        """HTTP client used to communicate with the Apify API."""
+        self._http_client: HttpClientAsync | None = None
+        """HTTP client used to communicate with the Apify API. Lazily initialized on first access."""
 
         self._client_registry = ClientRegistryAsync(
             actor_client=ActorClientAsync,
@@ -488,32 +529,84 @@ class ApifyClientAsync:
         )
         """Registry of resource client classes used for dependency injection."""
 
+        # Configuration for the default HTTP client (used if a custom client is not provided).
+        self._max_retries = max_retries
+        self._min_delay_between_retries = min_delay_between_retries
+        self._timeout = timeout
+        self._headers = headers
+
+    @classmethod
+    def with_custom_http_client(
+        cls,
+        token: str | None = None,
+        *,
+        api_url: str = DEFAULT_API_URL,
+        api_public_url: str | None = DEFAULT_API_URL,
+        http_client: HttpClientAsync,
+    ) -> ApifyClientAsync:
+        """Create an `ApifyClientAsync` instance with a custom HTTP client.
+
+        Use this alternative constructor when you want to provide your own HTTP client implementation
+        instead of the default one. The custom client is responsible for its own configuration
+        (retries, timeouts, headers, etc.).
+
+        ### Usage
+
+        ```python
+        from apify_client import ApifyClientAsync, HttpClientAsync, HttpResponse
+
+        class MyHttpClient(HttpClientAsync):
+            async def call(self, *, method, url, **kwargs) -> HttpResponse:
+                ...
+
+        client = ApifyClientAsync.with_custom_http_client(
+            token='MY-APIFY-TOKEN',
+            http_client=MyHttpClient(),
+        )
+        ```
+
+        Args:
+            token: The Apify API token.
+            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
+            api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
+            http_client: A custom HTTP client instance extending `HttpClientAsync`.
+        """
+        instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
+        instance._http_client = http_client
+        return instance
+
+    @property
+    def token(self) -> str | None:
+        """The Apify API token used by the client."""
+        return self._token
+
+    @property
+    def http_client(self) -> HttpClientAsync:
+        """The HTTP client instance used for API communication.
+
+        Returns the custom HTTP client if one was provided via `with_custom_http_client`,
+        or the default `ImpitHttpClientAsync` otherwise (lazily created on first access).
+        """
+        if self._http_client is None:
+            self._http_client = ImpitHttpClientAsync(
+                token=self._token,
+                timeout=self._timeout,
+                max_retries=self._max_retries,
+                min_delay_between_retries=self._min_delay_between_retries,
+                statistics=self._statistics,
+                headers=self._headers,
+            )
+        return self._http_client
+
     @cached_property
     def _base_kwargs(self) -> dict:
         """Base keyword arguments for resource client construction."""
         return {
             'base_url': self._base_url,
             'public_base_url': self._public_base_url,
-            'http_client': self._http_client,
+            'http_client': self.http_client,
             'client_registry': self._client_registry,
         }
-
-    def _check_custom_headers(self, headers: dict[str, str]) -> None:
-        """Warn if custom headers override important default headers."""
-        overwrite_headers = [key for key in headers if key.title() in self._OVERRIDABLE_DEFAULT_HEADERS]
-        if overwrite_headers:
-            warnings.warn(
-                f'{", ".join(overwrite_headers)} headers of {self.__class__.__name__} was overridden with an '
-                'explicit value. A wrong header value can lead to API errors, it is recommended to use the default '
-                f'value for following headers: {", ".join(self._OVERRIDABLE_DEFAULT_HEADERS)}.',
-                category=UserWarning,
-                stacklevel=3,
-            )
-
-    @property
-    def token(self) -> str | None:
-        """The Apify API token used by the client."""
-        return self._token
 
     def actor(self, actor_id: str) -> ActorClientAsync:
         """Get the sub-client for a specific Actor.

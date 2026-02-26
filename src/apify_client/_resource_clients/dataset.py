@@ -23,9 +23,8 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    import impit
-
     from apify_client._consts import JsonSerializable
+    from apify_client._http_clients import HttpResponse
     from apify_client._models import GeneralAccess
 
 
@@ -490,7 +489,7 @@ class DatasetClient(ResourceClient):
         xml_root: str | None = None,
         xml_row: str | None = None,
         signature: str | None = None,
-    ) -> Iterator[impit.Response]:
+    ) -> Iterator[HttpResponse]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -1017,7 +1016,7 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_root: str | None = None,
         xml_row: str | None = None,
         signature: str | None = None,
-    ) -> AsyncIterator[impit.Response]:
+    ) -> AsyncIterator[HttpResponse]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items

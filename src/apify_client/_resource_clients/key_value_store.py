@@ -30,12 +30,11 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from impit import Response
-
+    from apify_client._http_clients import HttpResponse
     from apify_client._models import GeneralAccess
 
 
-def _parse_get_record_response(response: Response) -> Any:
+def _parse_get_record_response(response: HttpResponse) -> Any:
     """Parse an HTTP response based on its content type.
 
     Args:

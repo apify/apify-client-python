@@ -11,7 +11,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    import impit
+    from apify_client._http_clients import HttpResponse
 
 
 @docs_group('Resource clients')
@@ -77,7 +77,7 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self, *, raw: bool = False) -> Iterator[impit.Response | None]:
+    def stream(self, *, raw: bool = False) -> Iterator[HttpResponse | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -169,7 +169,7 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self, *, raw: bool = False) -> AsyncIterator[impit.Response | None]:
+    async def stream(self, *, raw: bool = False) -> AsyncIterator[HttpResponse | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log

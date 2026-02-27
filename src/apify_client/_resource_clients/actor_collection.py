@@ -120,7 +120,7 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The created Actor.
         """
-        request = CreateActorRequest(
+        actor_fields = CreateActorRequest(
             name=name,
             title=title,
             description=description,
@@ -150,7 +150,7 @@ class ActorCollectionClient(ResourceClient):
                 content_type=example_run_input_content_type,
             ),
         )
-        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(**actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
 
@@ -254,7 +254,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created Actor.
         """
-        request = CreateActorRequest(
+        actor_fields = CreateActorRequest(
             name=name,
             title=title,
             description=description,
@@ -284,5 +284,5 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 content_type=example_run_input_content_type,
             ),
         )
-        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(**actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data

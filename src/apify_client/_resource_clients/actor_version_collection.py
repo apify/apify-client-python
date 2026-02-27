@@ -81,7 +81,7 @@ class ActorVersionCollectionClient(ResourceClient):
         Returns:
             The created Actor version.
         """
-        request = CreateOrUpdateVersionRequest(
+        version_fields = CreateOrUpdateVersionRequest(
             version_number=version_number,
             build_tag=build_tag,
             env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
@@ -92,7 +92,7 @@ class ActorVersionCollectionClient(ResourceClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(**version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
 
@@ -156,7 +156,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created Actor version.
         """
-        request = CreateOrUpdateVersionRequest(
+        version_fields = CreateOrUpdateVersionRequest(
             version_number=version_number,
             build_tag=build_tag,
             env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
@@ -167,5 +167,5 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(**version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data

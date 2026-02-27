@@ -96,7 +96,7 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The updated Actor version.
         """
-        request = CreateOrUpdateVersionRequest(
+        version_fields = CreateOrUpdateVersionRequest(
             build_tag=build_tag,
             env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
@@ -106,7 +106,7 @@ class ActorVersionClient(ResourceClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(**version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -204,7 +204,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor version.
         """
-        request = CreateOrUpdateVersionRequest(
+        version_fields = CreateOrUpdateVersionRequest(
             build_tag=build_tag,
             env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
@@ -214,7 +214,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = await self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(**version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
     async def delete(self) -> None:

@@ -91,10 +91,7 @@ class WebhookCollectionClient(ResourceClient):
         Returns:
            The created webhook.
         """
-        if actor_run_id is not None and is_ad_hoc is None:
-            is_ad_hoc = True
-
-        request = WebhookCreate(
+        webhook_create = WebhookCreate(
             event_types=list(event_types),
             request_url=AnyUrl(request_url),
             payload_template=payload_template,
@@ -102,14 +99,14 @@ class WebhookCollectionClient(ResourceClient):
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
             idempotency_key=idempotency_key,
-            is_ad_hoc=is_ad_hoc,
+            is_ad_hoc=is_ad_hoc if actor_run_id else None,
             condition=WebhookCondition(
                 actor_run_id=actor_run_id,
                 actor_task_id=actor_task_id,
                 actor_id=actor_id,
             ),
         )
-        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(**webhook_create.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
 
@@ -186,10 +183,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         Returns:
            The created webhook.
         """
-        if actor_run_id is not None and is_ad_hoc is None:
-            is_ad_hoc = True
-
-        request = WebhookCreate(
+        webhook_create = WebhookCreate(
             event_types=list(event_types),
             request_url=AnyUrl(request_url),
             payload_template=payload_template,
@@ -197,12 +191,12 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
             idempotency_key=idempotency_key,
-            is_ad_hoc=is_ad_hoc,
+            is_ad_hoc=is_ad_hoc if actor_run_id else None,
             condition=WebhookCondition(
                 actor_run_id=actor_run_id,
                 actor_task_id=actor_task_id,
                 actor_id=actor_id,
             ),
         )
-        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(**webhook_create.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data

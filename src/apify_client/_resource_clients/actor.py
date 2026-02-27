@@ -168,7 +168,7 @@ class ActorClient(ResourceClient):
         Returns:
             The updated Actor.
         """
-        request = UpdateActorRequest(
+        actor_fields = UpdateActorRequest(
             name=name,
             title=title,
             description=description,
@@ -201,7 +201,7 @@ class ActorClient(ResourceClient):
             ),
             tagged_builds=tagged_builds,
         )
-        result = self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(**actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -633,7 +633,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor.
         """
-        request = UpdateActorRequest(
+        actor_fields = UpdateActorRequest(
             name=name,
             title=title,
             description=description,
@@ -666,7 +666,7 @@ class ActorClientAsync(ResourceClientAsync):
             ),
             tagged_builds=tagged_builds,
         )
-        result = await self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(**actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
     async def delete(self) -> None:

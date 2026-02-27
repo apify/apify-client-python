@@ -81,24 +81,21 @@ class WebhookClient(ResourceClient):
         Returns:
             The updated webhook.
         """
-        if actor_run_id is not None and is_ad_hoc is None:
-            is_ad_hoc = True
-
-        request = WebhookUpdate(
+        webhook_update = WebhookUpdate(
             event_types=list(event_types) if event_types is not None else None,
             request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
             headers_template=headers_template,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
-            is_ad_hoc=is_ad_hoc,
+            is_ad_hoc=is_ad_hoc if actor_run_id else None,
             condition=WebhookCondition(
                 actor_run_id=actor_run_id,
                 actor_task_id=actor_task_id,
                 actor_id=actor_id,
             ),
         )
-        result = self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(**webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -206,24 +203,21 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             The updated webhook.
         """
-        if actor_run_id is not None and is_ad_hoc is None:
-            is_ad_hoc = True
-
-        request = WebhookUpdate(
+        webhook_update = WebhookUpdate(
             event_types=list(event_types) if event_types is not None else None,
             request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
             headers_template=headers_template,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
-            is_ad_hoc=is_ad_hoc,
+            is_ad_hoc=is_ad_hoc if actor_run_id else None,
             condition=WebhookCondition(
                 actor_run_id=actor_run_id,
                 actor_task_id=actor_task_id,
                 actor_id=actor_id,
             ),
         )
-        result = await self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(**webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
     async def delete(self) -> None:

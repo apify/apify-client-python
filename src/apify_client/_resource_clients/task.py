@@ -114,7 +114,7 @@ class TaskClient(ResourceClient):
         Returns:
             The updated task.
         """
-        request = UpdateTaskRequest(
+        task_fields = UpdateTaskRequest(
             name=name,
             title=title,
             input=TaskInput.model_validate(task_input) if task_input else None,
@@ -133,7 +133,7 @@ class TaskClient(ResourceClient):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(**task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -409,7 +409,7 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The updated task.
         """
-        request = UpdateTaskRequest(
+        task_fields = UpdateTaskRequest(
             name=name,
             title=title,
             input=TaskInput.model_validate(task_input) if task_input else None,
@@ -428,7 +428,7 @@ class TaskClientAsync(ResourceClientAsync):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = await self._update(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(**task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
     async def delete(self) -> None:

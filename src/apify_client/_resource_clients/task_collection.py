@@ -103,7 +103,7 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The created task.
         """
-        request = CreateTaskRequest(
+        task_fields = CreateTaskRequest(
             act_id=actor_id,
             name=name,
             title=title,
@@ -123,7 +123,7 @@ class TaskCollectionClient(ResourceClient):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(**task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
 
@@ -210,7 +210,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created task.
         """
-        request = CreateTaskRequest(
+        task_fields = CreateTaskRequest(
             act_id=actor_id,
             name=name,
             title=title,
@@ -230,5 +230,5 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(**task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data

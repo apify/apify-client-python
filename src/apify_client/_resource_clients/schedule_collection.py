@@ -82,7 +82,7 @@ class ScheduleCollectionClient(ResourceClient):
         if not actions:
             actions = []
 
-        request = ScheduleCreate(
+        schedule_fields = ScheduleCreate(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
@@ -92,7 +92,7 @@ class ScheduleCollectionClient(ResourceClient):
             timezone=timezone,
             title=title,
         )
-        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
 
@@ -164,7 +164,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         if not actions:
             actions = []
 
-        request = ScheduleCreate(
+        schedule_fields = ScheduleCreate(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
@@ -174,5 +174,5 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             timezone=timezone,
             title=title,
         )
-        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data

@@ -28,12 +28,18 @@ class UserClient(ResourceClient):
     an appropriate method on the `ApifyClient` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_id = kwargs.pop('resource_id', None)
-        if resource_id is None:
-            resource_id = 'me'
-        resource_path = kwargs.pop('resource_path', 'users')
-        super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str | None = None,
+        resource_path: str = 'users',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id or 'me',
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self) -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
@@ -132,12 +138,18 @@ class UserClientAsync(ResourceClientAsync):
     an appropriate method on the `ApifyClientAsync` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_id = kwargs.pop('resource_id', None)
-        if resource_id is None:
-            resource_id = 'me'
-        resource_path = kwargs.pop('resource_path', 'users')
-        super().__init__(*args, resource_id=resource_id, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str | None = None,
+        resource_path: str = 'users',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id or 'me',
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self) -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.

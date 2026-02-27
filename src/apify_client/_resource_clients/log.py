@@ -22,9 +22,16 @@ class LogClient(ResourceClient):
     `ApifyClient` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'logs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_path: str = 'logs',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self, *, raw: bool = False) -> str | None:
         """Retrieve the log as text.
@@ -114,9 +121,16 @@ class LogClientAsync(ResourceClientAsync):
     `ApifyClientAsync` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'logs')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_path: str = 'logs',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self, *, raw: bool = False) -> str | None:
         """Retrieve the log as text.

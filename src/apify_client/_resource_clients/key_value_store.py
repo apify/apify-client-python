@@ -76,9 +76,18 @@ class KeyValueStoreClient(ResourceClient):
     instance via an appropriate method on the `ApifyClient` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str | None = None,
+        resource_path: str = 'key-value-stores',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self) -> KeyValueStore | None:
         """Retrieve the key-value store.
@@ -460,9 +469,18 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     instance via an appropriate method on the `ApifyClientAsync` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'key-value-stores')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str | None = None,
+        resource_path: str = 'key-value-stores',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self) -> KeyValueStore | None:
         """Retrieve the key-value store.

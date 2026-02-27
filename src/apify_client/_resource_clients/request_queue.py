@@ -62,7 +62,9 @@ class RequestQueueClient(ResourceClient):
 
     def __init__(  # noqa: D417
         self,
-        *args: Any,
+        *,
+        resource_id: str | None = None,
+        resource_path: str = 'request-queues',
         client_key: str | None = None,
         **kwargs: Any,
     ) -> None:
@@ -71,8 +73,11 @@ class RequestQueueClient(ResourceClient):
         Args:
             client_key: A unique identifier of the client accessing the request queue.
         """
-        resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
         self.client_key = client_key
 
     def get(self) -> RequestQueue | None:
@@ -472,7 +477,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     def __init__(  # noqa: D417
         self,
-        *args: Any,
+        *,
+        resource_id: str | None = None,
+        resource_path: str = 'request-queues',
         client_key: str | None = None,
         **kwargs: Any,
     ) -> None:
@@ -481,8 +488,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Args:
             client_key: A unique identifier of the client accessing the request queue.
         """
-        resource_path = kwargs.pop('resource_path', 'request-queues')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
         self.client_key = client_key
 
     async def get(self) -> RequestQueue | None:

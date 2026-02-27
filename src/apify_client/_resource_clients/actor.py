@@ -2,24 +2,32 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from pydantic import TypeAdapter
+
 from apify_client._docs import docs_group
 from apify_client._models import (
     Actor,
     ActorPermissionLevel,
     ActorResponse,
+    ActorStandby,
     Build,
     BuildResponse,
+    CreateOrUpdateVersionRequest,
+    DefaultRunOptions,
+    ExampleRunInput,
+    FlatPricePerMonthActorPricingInfo,
+    FreeActorPricingInfo,
+    PayPerEventActorPricingInfo,
+    PricePerDatasetItemActorPricingInfo,
     Run,
     RunOrigin,
     RunResponse,
+    UpdateActorRequest,
 )
-from apify_client._representations import get_actor_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     encode_key_value_store_record_value,
     encode_webhook_list_to_base64,
-    enum_to_value,
-    filter_none_values,
     response_to_dict,
     to_seconds,
 )
@@ -46,6 +54,14 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
+
+_PricingInfo = (
+    PayPerEventActorPricingInfo
+    | PricePerDatasetItemActorPricingInfo
+    | FlatPricePerMonthActorPricingInfo
+    | FreeActorPricingInfo
+)
+_pricing_info_list_adapter = TypeAdapter(list[_PricingInfo])
 
 
 @docs_group('Resource clients')
@@ -90,11 +106,10 @@ class ActorClient(ResourceClient):
         description: str | None = None,
         seo_title: str | None = None,
         seo_description: str | None = None,
-        versions: list[dict] | None = None,
+        versions: list[dict[str, Any]] | None = None,
         restart_on_error: bool | None = None,
         is_public: bool | None = None,
         is_deprecated: bool | None = None,
-        is_anonymously_runnable: bool | None = None,
         categories: list[str] | None = None,
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
@@ -108,7 +123,7 @@ class ActorClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        pricing_infos: list[dict] | None = None,
+        pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, None | dict[str, str]] | None = None,
     ) -> Actor:
@@ -127,7 +142,6 @@ class ActorClient(ResourceClient):
                 a non-zero status code.
             is_public: Whether the Actor is public.
             is_deprecated: Whether the Actor is deprecated.
-            is_anonymously_runnable: Whether the Actor is anonymously runnable.
             categories: The categories to which the Actor belongs to.
             default_run_build: Tag or number of the build that you want to run by default.
             default_run_max_items: Default limit of the number of results that will be returned
@@ -154,37 +168,40 @@ class ActorClient(ResourceClient):
         Returns:
             The updated Actor.
         """
-        actor_representation = get_actor_repr(
+        request = UpdateActorRequest(
             name=name,
             title=title,
             description=description,
             seo_title=seo_title,
             seo_description=seo_description,
-            versions=versions,
-            restart_on_error=restart_on_error,
+            versions=[CreateOrUpdateVersionRequest.model_validate(v) for v in versions] if versions else None,
             is_public=is_public,
             is_deprecated=is_deprecated,
-            is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
-            default_run_build=default_run_build,
-            default_run_max_items=default_run_max_items,
-            default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout=default_run_timeout,
-            example_run_input_body=example_run_input_body,
-            example_run_input_content_type=example_run_input_content_type,
-            actor_standby_is_enabled=actor_standby_is_enabled,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
-            pricing_infos=pricing_infos,
+            pricing_infos=_pricing_info_list_adapter.validate_python(pricing_infos) if pricing_infos else None,
             actor_permission_level=actor_permission_level,
+            default_run_options=DefaultRunOptions(
+                build=default_run_build,
+                max_items=default_run_max_items,
+                memory_mbytes=default_run_memory_mbytes,
+                timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                is_enabled=actor_standby_is_enabled,
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
+            example_run_input=ExampleRunInput(
+                body=example_run_input_body,
+                content_type=example_run_input_content_type,
+            ),
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_none_values(actor_representation, remove_empty_dicts=True)
-
-        result = self._update(cleaned)
+        result = self._update(**request.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -458,8 +475,8 @@ class ActorClient(ResourceClient):
             resource_id='last',
             resource_path='runs',
             params=self._build_params(
-                status=enum_to_value(status),
-                origin=enum_to_value(origin),
+                status=status,
+                origin=origin,
             ),
             **self._base_client_kwargs,
         )
@@ -554,11 +571,10 @@ class ActorClientAsync(ResourceClientAsync):
         description: str | None = None,
         seo_title: str | None = None,
         seo_description: str | None = None,
-        versions: list[dict] | None = None,
+        versions: list[dict[str, Any]] | None = None,
         restart_on_error: bool | None = None,
         is_public: bool | None = None,
         is_deprecated: bool | None = None,
-        is_anonymously_runnable: bool | None = None,
         categories: list[str] | None = None,
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
@@ -572,7 +588,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        pricing_infos: list[dict] | None = None,
+        pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, None | dict[str, str]] | None = None,
     ) -> Actor:
@@ -591,7 +607,6 @@ class ActorClientAsync(ResourceClientAsync):
                 a non-zero status code.
             is_public: Whether the Actor is public.
             is_deprecated: Whether the Actor is deprecated.
-            is_anonymously_runnable: Whether the Actor is anonymously runnable.
             categories: The categories to which the Actor belongs to.
             default_run_build: Tag or number of the build that you want to run by default.
             default_run_max_items: Default limit of the number of results that will be returned
@@ -618,37 +633,40 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor.
         """
-        actor_representation = get_actor_repr(
+        request = UpdateActorRequest(
             name=name,
             title=title,
             description=description,
             seo_title=seo_title,
             seo_description=seo_description,
-            versions=versions,
-            restart_on_error=restart_on_error,
+            versions=[CreateOrUpdateVersionRequest.model_validate(v) for v in versions] if versions else None,
             is_public=is_public,
             is_deprecated=is_deprecated,
-            is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
-            default_run_build=default_run_build,
-            default_run_max_items=default_run_max_items,
-            default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout=default_run_timeout,
-            example_run_input_body=example_run_input_body,
-            example_run_input_content_type=example_run_input_content_type,
-            actor_standby_is_enabled=actor_standby_is_enabled,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
-            pricing_infos=pricing_infos,
+            pricing_infos=_pricing_info_list_adapter.validate_python(pricing_infos) if pricing_infos else None,
             actor_permission_level=actor_permission_level,
+            default_run_options=DefaultRunOptions(
+                build=default_run_build,
+                max_items=default_run_max_items,
+                memory_mbytes=default_run_memory_mbytes,
+                timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                is_enabled=actor_standby_is_enabled,
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
+            example_run_input=ExampleRunInput(
+                body=example_run_input_body,
+                content_type=example_run_input_content_type,
+            ),
             tagged_builds=tagged_builds,
         )
-        cleaned = filter_none_values(actor_representation, remove_empty_dicts=True)
-
-        result = await self._update(cleaned)
+        result = await self._update(**request.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -930,8 +948,8 @@ class ActorClientAsync(ResourceClientAsync):
             resource_id='last',
             resource_path='runs',
             params=self._build_params(
-                status=enum_to_value(status),
-                origin=enum_to_value(origin),
+                status=status,
+                origin=origin,
             ),
             **self._base_client_kwargs,
         )

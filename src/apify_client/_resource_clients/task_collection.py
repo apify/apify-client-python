@@ -3,10 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import ListOfTasks, ListOfTasksResponse, Task, TaskResponse
-from apify_client._representations import get_task_repr
+from apify_client._models import (
+    ActorStandby,
+    CreateTaskRequest,
+    ListOfTasks,
+    ListOfTasksResponse,
+    Task,
+    TaskInput,
+    TaskOptions,
+    TaskResponse,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values
+from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -95,24 +103,27 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The created task.
         """
-        task_representation = get_task_repr(
-            actor_id=actor_id,
+        request = CreateTaskRequest(
+            act_id=actor_id,
             name=name,
-            task_input=task_input,
-            build=build,
-            max_items=max_items,
-            memory_mbytes=memory_mbytes,
-            timeout=timeout,
-            restart_on_error=restart_on_error,
             title=title,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            input=TaskInput.model_validate(task_input) if task_input else None,
+            options=TaskOptions(
+                build=build,
+                max_items=max_items,
+                memory_mbytes=memory_mbytes,
+                timeout_secs=to_seconds(timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
         )
-
-        result = self._create(filter_none_values(task_representation, remove_empty_dicts=True))
+        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
 
@@ -199,22 +210,25 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created task.
         """
-        task_representation = get_task_repr(
-            actor_id=actor_id,
+        request = CreateTaskRequest(
+            act_id=actor_id,
             name=name,
-            task_input=task_input,
-            build=build,
-            max_items=max_items,
-            memory_mbytes=memory_mbytes,
-            timeout=timeout,
-            restart_on_error=restart_on_error,
             title=title,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            input=TaskInput.model_validate(task_input) if task_input else None,
+            options=TaskOptions(
+                build=build,
+                max_items=max_items,
+                memory_mbytes=memory_mbytes,
+                timeout_secs=to_seconds(timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
         )
-
-        result = await self._create(filter_none_values(task_representation, remove_empty_dicts=True))
+        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data

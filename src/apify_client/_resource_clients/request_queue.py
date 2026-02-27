@@ -36,7 +36,7 @@ from apify_client._models import (
     UnlockRequestsResult,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict, to_seconds
+from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -100,13 +100,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The updated request queue.
         """
-        updated_fields = {
-            'name': name,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
         return RequestQueueResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -515,13 +509,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The updated request queue.
         """
-        updated_fields = {
-            'name': name,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
         return RequestQueueResponse.model_validate(result).data
 
     async def delete(self) -> None:

@@ -5,8 +5,6 @@ from typing import Any
 from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._resource_clients.actor_env_var import get_actor_env_var_representation
-from apify_client._utils import filter_none_values
 
 
 @docs_group('Resource clients')
@@ -51,13 +49,9 @@ class ActorEnvVarCollectionClient(ResourceClient):
         Returns:
             The created Actor environment variable.
         """
-        actor_env_var_representation = get_actor_env_var_representation(
-            is_secret=is_secret,
-            name=name,
-            value=value,
+        result = self._create(
+            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True)
         )
-
-        result = self._create(filter_none_values(actor_env_var_representation))
         return EnvVarResponse.model_validate(result).data
 
 
@@ -103,11 +97,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created Actor environment variable.
         """
-        actor_env_var_representation = get_actor_env_var_representation(
-            is_secret=is_secret,
-            name=name,
-            value=value,
+        result = await self._create(
+            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True)
         )
-
-        result = await self._create(filter_none_values(actor_env_var_representation))
         return EnvVarResponse.model_validate(result).data

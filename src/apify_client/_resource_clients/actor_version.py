@@ -2,11 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from pydantic import TypeAdapter
+
 from apify_client._docs import docs_group
-from apify_client._models import Version, VersionResponse, VersionSourceType
-from apify_client._representations import get_actor_version_repr
+from apify_client._models import (
+    CreateOrUpdateVersionRequest,
+    EnvVar,
+    SourceCodeFile,
+    SourceCodeFolder,
+    Version,
+    VersionResponse,
+    VersionSourceType,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values
 
 if TYPE_CHECKING:
     from apify_client._resource_clients import (
@@ -15,6 +23,8 @@ if TYPE_CHECKING:
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
     )
+
+_source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])
 
 
 @docs_group('Resource clients')
@@ -55,10 +65,10 @@ class ActorVersionClient(ResourceClient):
         self,
         *,
         build_tag: str | None = None,
-        env_vars: list[dict] | None = None,
+        env_vars: list[dict[str, Any]] | None = None,
         apply_env_vars_to_build: bool | None = None,
         source_type: VersionSourceType | None = None,
-        source_files: list[dict] | None = None,
+        source_files: list[dict[str, Any]] | None = None,
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
@@ -86,19 +96,17 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The updated Actor version.
         """
-        actor_version_representation = get_actor_version_repr(
+        request = CreateOrUpdateVersionRequest(
             build_tag=build_tag,
-            env_vars=env_vars,
+            env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
             source_type=source_type,
-            source_files=source_files,
+            source_files=_source_file_list_adapter.validate_python(source_files) if source_files else None,
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        cleaned = filter_none_values(actor_version_representation)
-
-        result = self._update(cleaned)
+        result = self._update(**request.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -165,10 +173,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
         self,
         *,
         build_tag: str | None = None,
-        env_vars: list[dict] | None = None,
+        env_vars: list[dict[str, Any]] | None = None,
         apply_env_vars_to_build: bool | None = None,
         source_type: VersionSourceType | None = None,
-        source_files: list[dict] | None = None,
+        source_files: list[dict[str, Any]] | None = None,
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
@@ -196,19 +204,17 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor version.
         """
-        actor_version_representation = get_actor_version_repr(
+        request = CreateOrUpdateVersionRequest(
             build_tag=build_tag,
-            env_vars=env_vars,
+            env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
             source_type=source_type,
-            source_files=source_files,
+            source_files=_source_file_list_adapter.validate_python(source_files) if source_files else None,
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        cleaned = filter_none_values(actor_version_representation)
-
-        result = await self._update(cleaned)
+        result = await self._update(**request.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
     async def delete(self) -> None:

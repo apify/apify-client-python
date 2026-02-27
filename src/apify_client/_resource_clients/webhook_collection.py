@@ -2,14 +2,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from pydantic import AnyUrl
+
 from apify_client._docs import docs_group
-from apify_client._models import ListOfWebhooks, ListOfWebhooksResponse, Webhook, WebhookResponse
-from apify_client._representations import get_webhook_repr
+from apify_client._models import (
+    ListOfWebhooks,
+    ListOfWebhooksResponse,
+    WebhookCondition,
+    WebhookCreate,
+    WebhookResponse,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values
 
 if TYPE_CHECKING:
-    from apify_client._models import WebhookEventType
+    from apify_client._models import Webhook, WebhookEventType
 
 
 @docs_group('Resource clients')
@@ -85,21 +91,25 @@ class WebhookCollectionClient(ResourceClient):
         Returns:
            The created webhook.
         """
-        webhook_representation = get_webhook_repr(
-            event_types=event_types,
-            request_url=request_url,
+        if actor_run_id is not None and is_ad_hoc is None:
+            is_ad_hoc = True
+
+        request = WebhookCreate(
+            event_types=list(event_types),
+            request_url=AnyUrl(request_url),
             payload_template=payload_template,
             headers_template=headers_template,
-            actor_id=actor_id,
-            actor_task_id=actor_task_id,
-            actor_run_id=actor_run_id,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
             idempotency_key=idempotency_key,
             is_ad_hoc=is_ad_hoc,
+            condition=WebhookCondition(
+                actor_run_id=actor_run_id,
+                actor_task_id=actor_task_id,
+                actor_id=actor_id,
+            ),
         )
-
-        result = self._create(filter_none_values(webhook_representation, remove_empty_dicts=True))
+        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
 
@@ -176,19 +186,23 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         Returns:
            The created webhook.
         """
-        webhook_representation = get_webhook_repr(
-            event_types=event_types,
-            request_url=request_url,
+        if actor_run_id is not None and is_ad_hoc is None:
+            is_ad_hoc = True
+
+        request = WebhookCreate(
+            event_types=list(event_types),
+            request_url=AnyUrl(request_url),
             payload_template=payload_template,
             headers_template=headers_template,
-            actor_id=actor_id,
-            actor_task_id=actor_task_id,
-            actor_run_id=actor_run_id,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
             idempotency_key=idempotency_key,
             is_ad_hoc=is_ad_hoc,
+            condition=WebhookCondition(
+                actor_run_id=actor_run_id,
+                actor_task_id=actor_task_id,
+                actor_id=actor_id,
+            ),
         )
-
-        result = await self._create(filter_none_values(webhook_representation, remove_empty_dicts=True))
+        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data

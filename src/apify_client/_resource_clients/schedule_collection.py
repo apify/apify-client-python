@@ -3,10 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._docs import docs_group
-from apify_client._models import ListOfSchedules, ListOfSchedulesResponse, Schedule, ScheduleResponse
-from apify_client._representations import get_schedule_repr
+from apify_client._models import (
+    ListOfSchedules,
+    ListOfSchedulesResponse,
+    Schedule,
+    ScheduleCreate,
+    ScheduleCreateActions,
+    ScheduleResponse,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values
 
 
 @docs_group('Resource clients')
@@ -50,7 +55,7 @@ class ScheduleCollectionClient(ResourceClient):
         is_enabled: bool,
         is_exclusive: bool,
         name: str | None = None,
-        actions: list[dict] | None = None,  # ty: ignore[invalid-type-form]
+        actions: list[dict[str, Any]] | None = None,  # ty: ignore[invalid-type-form]
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -77,18 +82,17 @@ class ScheduleCollectionClient(ResourceClient):
         if not actions:
             actions = []
 
-        schedule_representation = get_schedule_repr(
+        request = ScheduleCreate(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,
+            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
             description=description,
             timezone=timezone,
             title=title,
         )
-
-        result = self._create(filter_none_values(schedule_representation))
+        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
 
@@ -133,7 +137,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         is_enabled: bool,
         is_exclusive: bool,
         name: str | None = None,
-        actions: list[dict] | None = None,  # ty: ignore[invalid-type-form]
+        actions: list[dict[str, Any]] | None = None,  # ty: ignore[invalid-type-form]
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -160,16 +164,15 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         if not actions:
             actions = []
 
-        schedule_representation = get_schedule_repr(
+        request = ScheduleCreate(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,
+            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
             description=description,
             timezone=timezone,
             title=title,
         )
-
-        result = await self._create(filter_none_values(schedule_representation))
+        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data

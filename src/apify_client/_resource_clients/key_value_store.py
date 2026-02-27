@@ -21,7 +21,6 @@ from apify_client._utils import (
     create_hmac_signature,
     create_storage_content_signature,
     encode_key_value_store_record_value,
-    filter_none_values,
     response_to_dict,
 )
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
@@ -105,13 +104,7 @@ class KeyValueStoreClient(ResourceClient):
         Returns:
             The updated key-value store.
         """
-        updated_fields = {
-            'name': name,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
         return KeyValueStoreResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -494,13 +487,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Returns:
             The updated key-value store.
         """
-        updated_fields = {
-            'name': name,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
         return KeyValueStoreResponse.model_validate(result).data
 
     async def delete(self) -> None:

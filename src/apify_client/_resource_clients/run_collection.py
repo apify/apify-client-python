@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import ListOfRuns, ListOfRunsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import enum_to_value
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -54,7 +53,7 @@ class RunCollectionClient(ResourceClient):
         Returns:
             The retrieved Actor runs.
         """
-        status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
+        status_param = list(status) if isinstance(status, list) else status
 
         result = self._list(
             limit=limit,
@@ -108,7 +107,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         Returns:
             The retrieved Actor runs.
         """
-        status_param = [enum_to_value(s) for s in status] if isinstance(status, list) else enum_to_value(status)
+        status_param = list(status) if isinstance(status, list) else status
 
         result = await self._list(
             limit=limit,

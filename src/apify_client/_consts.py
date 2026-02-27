@@ -25,7 +25,6 @@ DEFAULT_MAX_RETRIES = 8
 DEFAULT_MIN_DELAY_BETWEEN_RETRIES = timedelta(milliseconds=500)
 """Default minimum delay between retries."""
 
-
 DEFAULT_WAIT_FOR_FINISH = timedelta(seconds=999999)
 """Default maximum wait time for job completion (effectively infinite)."""
 

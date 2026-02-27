@@ -3,10 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
-from apify_client._models import Actor, ActorResponse, ListOfActors, ListOfActorsResponse
-from apify_client._representations import get_actor_repr
+from apify_client._models import (
+    Actor,
+    ActorResponse,
+    ActorStandby,
+    CreateActorRequest,
+    DefaultRunOptions,
+    ExampleRunInput,
+    ListOfActors,
+    ListOfActorsResponse,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values
+from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -58,11 +66,10 @@ class ActorCollectionClient(ResourceClient):
         description: str | None = None,
         seo_title: str | None = None,
         seo_description: str | None = None,
-        versions: list[dict] | None = None,  # ty: ignore[invalid-type-form]
+        versions: list[dict[str, Any]] | None = None,  # ty: ignore[invalid-type-form]
         restart_on_error: bool | None = None,
         is_public: bool | None = None,
         is_deprecated: bool | None = None,
-        is_anonymously_runnable: bool | None = None,
         categories: list[str] | None = None,  # ty: ignore[invalid-type-form]
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
@@ -92,7 +99,6 @@ class ActorCollectionClient(ResourceClient):
                 a non-zero status code.
             is_public: Whether the Actor is public.
             is_deprecated: Whether the Actor is deprecated.
-            is_anonymously_runnable: Whether the Actor is anonymously runnable.
             categories: The categories to which the Actor belongs to.
             default_run_build: Tag or number of the build that you want to run by default.
             default_run_max_items: Default limit of the number of results that will be returned by runs
@@ -114,33 +120,37 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The created Actor.
         """
-        actor_representation = get_actor_repr(
+        request = CreateActorRequest(
             name=name,
             title=title,
             description=description,
             seo_title=seo_title,
             seo_description=seo_description,
             versions=versions,
-            restart_on_error=restart_on_error,
             is_public=is_public,
             is_deprecated=is_deprecated,
-            is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
-            default_run_build=default_run_build,
-            default_run_max_items=default_run_max_items,
-            default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout=default_run_timeout,
-            example_run_input_body=example_run_input_body,
-            example_run_input_content_type=example_run_input_content_type,
-            actor_standby_is_enabled=actor_standby_is_enabled,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            default_run_options=DefaultRunOptions(
+                build=default_run_build,
+                max_items=default_run_max_items,
+                memory_mbytes=default_run_memory_mbytes,
+                timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                is_enabled=actor_standby_is_enabled,
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
+            example_run_input=ExampleRunInput(
+                body=example_run_input_body,
+                content_type=example_run_input_content_type,
+            ),
         )
-
-        result = self._create(filter_none_values(actor_representation, remove_empty_dicts=True))
+        result = self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
 
@@ -190,11 +200,10 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         description: str | None = None,
         seo_title: str | None = None,
         seo_description: str | None = None,
-        versions: list[dict] | None = None,  # ty: ignore[invalid-type-form]
+        versions: list[dict[str, Any]] | None = None,  # ty: ignore[invalid-type-form]
         restart_on_error: bool | None = None,
         is_public: bool | None = None,
         is_deprecated: bool | None = None,
-        is_anonymously_runnable: bool | None = None,
         categories: list[str] | None = None,  # ty: ignore[invalid-type-form]
         default_run_build: str | None = None,
         default_run_max_items: int | None = None,
@@ -224,7 +233,6 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 a non-zero status code.
             is_public: Whether the Actor is public.
             is_deprecated: Whether the Actor is deprecated.
-            is_anonymously_runnable: Whether the Actor is anonymously runnable.
             categories: The categories to which the Actor belongs to.
             default_run_build: Tag or number of the build that you want to run by default.
             default_run_max_items: Default limit of the number of results that will be returned by runs
@@ -246,31 +254,35 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created Actor.
         """
-        actor_representation = get_actor_repr(
+        request = CreateActorRequest(
             name=name,
             title=title,
             description=description,
             seo_title=seo_title,
             seo_description=seo_description,
             versions=versions,
-            restart_on_error=restart_on_error,
             is_public=is_public,
             is_deprecated=is_deprecated,
-            is_anonymously_runnable=is_anonymously_runnable,
             categories=categories,
-            default_run_build=default_run_build,
-            default_run_max_items=default_run_max_items,
-            default_run_memory_mbytes=default_run_memory_mbytes,
-            default_run_timeout=default_run_timeout,
-            example_run_input_body=example_run_input_body,
-            example_run_input_content_type=example_run_input_content_type,
-            actor_standby_is_enabled=actor_standby_is_enabled,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            default_run_options=DefaultRunOptions(
+                build=default_run_build,
+                max_items=default_run_max_items,
+                memory_mbytes=default_run_memory_mbytes,
+                timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                is_enabled=actor_standby_is_enabled,
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
+            example_run_input=ExampleRunInput(
+                body=example_run_input_body,
+                content_type=example_run_input_content_type,
+            ),
         )
-
-        result = await self._create(filter_none_values(actor_representation, remove_empty_dicts=True))
+        result = await self._create(**request.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data

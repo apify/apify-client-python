@@ -3,14 +3,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import Run, RunOrigin, RunResponse, Task, TaskResponse
-from apify_client._representations import get_task_repr
+from apify_client._models import (
+    ActorStandby,
+    Run,
+    RunOrigin,
+    RunResponse,
+    Task,
+    TaskInput,
+    TaskOptions,
+    TaskResponse,
+    UpdateTaskRequest,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
     encode_webhook_list_to_base64,
-    enum_to_value,
-    filter_none_values,
     response_to_dict,
     to_seconds,
 )
@@ -107,24 +114,26 @@ class TaskClient(ResourceClient):
         Returns:
             The updated task.
         """
-        task_representation = get_task_repr(
+        task_fields = UpdateTaskRequest(
             name=name,
-            task_input=task_input,
-            build=build,
-            max_items=max_items,
-            memory_mbytes=memory_mbytes,
-            timeout=timeout,
-            restart_on_error=restart_on_error,
             title=title,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            input=TaskInput.model_validate(task_input) if task_input else None,
+            options=TaskOptions(
+                build=build,
+                max_items=max_items,
+                memory_mbytes=memory_mbytes,
+                timeout_secs=to_seconds(timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
         )
-        cleaned = filter_none_values(task_representation, remove_empty_dicts=True)
-
-        result = self._update(cleaned)
+        result = self._update(**task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -314,7 +323,7 @@ class TaskClient(ResourceClient):
         return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
-            params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
+            params=self._build_params(status=status, origin=origin),
             **self._base_client_kwargs,
         )
 
@@ -400,24 +409,26 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The updated task.
         """
-        task_representation = get_task_repr(
+        task_fields = UpdateTaskRequest(
             name=name,
-            task_input=task_input,
-            build=build,
-            max_items=max_items,
-            memory_mbytes=memory_mbytes,
-            timeout=timeout,
-            restart_on_error=restart_on_error,
             title=title,
-            actor_standby_desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
-            actor_standby_max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
-            actor_standby_idle_timeout=actor_standby_idle_timeout,
-            actor_standby_build=actor_standby_build,
-            actor_standby_memory_mbytes=actor_standby_memory_mbytes,
+            input=TaskInput.model_validate(task_input) if task_input else None,
+            options=TaskOptions(
+                build=build,
+                max_items=max_items,
+                memory_mbytes=memory_mbytes,
+                timeout_secs=to_seconds(timeout, as_int=True),
+                restart_on_error=restart_on_error,
+            ),
+            actor_standby=ActorStandby(
+                desired_requests_per_actor_run=actor_standby_desired_requests_per_actor_run,
+                max_requests_per_actor_run=actor_standby_max_requests_per_actor_run,
+                idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
+                build=actor_standby_build,
+                memory_mbytes=actor_standby_memory_mbytes,
+            ),
         )
-        cleaned = filter_none_values(task_representation, remove_empty_dicts=True)
-
-        result = await self._update(cleaned)
+        result = await self._update(**task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
     async def delete(self) -> None:
@@ -606,7 +617,7 @@ class TaskClientAsync(ResourceClientAsync):
         return self._client_registry.run_client(
             resource_id='last',
             resource_path='runs',
-            params=self._build_params(status=enum_to_value(status), origin=enum_to_value(origin)),
+            params=self._build_params(status=status, origin=origin),
             **self._base_client_kwargs,
         )
 

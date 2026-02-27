@@ -3,10 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 from apify_client._docs import docs_group
-from apify_client._models import Schedule, ScheduleInvoked, ScheduleLogResponse, ScheduleResponse
-from apify_client._representations import get_schedule_repr
+from apify_client._models import (
+    Schedule,
+    ScheduleCreate,
+    ScheduleCreateActions,
+    ScheduleInvoked,
+    ScheduleLogResponse,
+    ScheduleResponse,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -51,7 +57,7 @@ class ScheduleClient(ResourceClient):
         is_enabled: bool | None = None,
         is_exclusive: bool | None = None,
         name: str | None = None,
-        actions: list[dict] | None = None,
+        actions: list[dict[str, Any]] | None = None,
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -75,19 +81,17 @@ class ScheduleClient(ResourceClient):
         Returns:
             The updated schedule.
         """
-        schedule_representation = get_schedule_repr(
+        schedule_fields = ScheduleCreate(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,
+            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
             description=description,
             timezone=timezone,
             title=title,
         )
-        cleaned = filter_none_values(schedule_representation)
-
-        result = self._update(cleaned)
+        result = self._update(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -160,7 +164,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         is_enabled: bool | None = None,
         is_exclusive: bool | None = None,
         name: str | None = None,
-        actions: list[dict] | None = None,
+        actions: list[dict[str, Any]] | None = None,
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
@@ -184,19 +188,17 @@ class ScheduleClientAsync(ResourceClientAsync):
         Returns:
             The updated schedule.
         """
-        schedule_representation = get_schedule_repr(
+        schedule_fields = ScheduleCreate(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions,
+            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
             description=description,
             timezone=timezone,
             title=title,
         )
-        cleaned = filter_none_values(schedule_representation)
-
-        result = await self._update(cleaned)
+        result = await self._update(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
     async def delete(self) -> None:

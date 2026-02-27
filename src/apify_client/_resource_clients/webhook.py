@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from pydantic import AnyUrl
+
 from apify_client._docs import docs_group
 from apify_client._models import (
     TestWebhookResponse,
     Webhook,
+    WebhookCondition,
     WebhookDispatch,
     WebhookResponse,
+    WebhookUpdate,
 )
-from apify_client._representations import get_webhook_repr
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -87,21 +90,21 @@ class WebhookClient(ResourceClient):
         Returns:
             The updated webhook.
         """
-        webhook_representation = get_webhook_repr(
-            event_types=event_types,
-            request_url=request_url,
+        webhook_update = WebhookUpdate(
+            event_types=list(event_types) if event_types is not None else None,
+            request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
             headers_template=headers_template,
-            actor_id=actor_id,
-            actor_task_id=actor_task_id,
-            actor_run_id=actor_run_id,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
-            is_ad_hoc=is_ad_hoc,
+            is_ad_hoc=is_ad_hoc if actor_run_id else None,
+            condition=WebhookCondition(
+                actor_run_id=actor_run_id,
+                actor_task_id=actor_task_id,
+                actor_id=actor_id,
+            ),
         )
-        cleaned = filter_none_values(webhook_representation, remove_empty_dicts=True)
-
-        result = self._update(cleaned)
+        result = self._update(**webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -218,21 +221,21 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             The updated webhook.
         """
-        webhook_representation = get_webhook_repr(
-            event_types=event_types,
-            request_url=request_url,
+        webhook_update = WebhookUpdate(
+            event_types=list(event_types) if event_types is not None else None,
+            request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
             headers_template=headers_template,
-            actor_id=actor_id,
-            actor_task_id=actor_task_id,
-            actor_run_id=actor_run_id,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
-            is_ad_hoc=is_ad_hoc,
+            is_ad_hoc=is_ad_hoc if actor_run_id else None,
+            condition=WebhookCondition(
+                actor_run_id=actor_run_id,
+                actor_task_id=actor_task_id,
+                actor_id=actor_id,
+            ),
         )
-        cleaned = filter_none_values(webhook_representation, remove_empty_dicts=True)
-
-        result = await self._update(cleaned)
+        result = await self._update(**webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
     async def delete(self) -> None:

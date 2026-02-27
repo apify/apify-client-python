@@ -13,7 +13,6 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils import (
     catch_not_found_or_throw,
     create_storage_content_signature,
-    filter_none_values,
     response_to_dict,
     response_to_list,
 )
@@ -103,13 +102,7 @@ class DatasetClient(ResourceClient):
         Returns:
             The updated dataset.
         """
-        updated_fields = {
-            'name': name,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
         return DatasetResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -733,13 +726,7 @@ class DatasetClientAsync(ResourceClientAsync):
         Returns:
             The updated dataset.
         """
-        updated_fields = {
-            'name': name,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = await self._update(cleaned, timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
         return DatasetResponse.model_validate(result).data
 
     async def delete(self) -> None:

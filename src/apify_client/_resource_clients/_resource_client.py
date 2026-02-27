@@ -120,6 +120,41 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         merged = {**self._default_params, **kwargs}
         return {k: v for k, v in merged.items() if v is not None}
 
+    @staticmethod
+    def _clean_json_payload(data: dict) -> dict:
+        """Remove None values and empty nested dicts from an API request payload.
+
+        The Apify API ignores missing fields but may reject fields explicitly set to None.
+        Nested sub-models serialized by Pydantic may produce empty dicts when all their
+        fields are None — these are also removed.
+
+        Uses an iterative stack-based approach, analogous to _build_params for query params.
+        """
+        result: dict = {}
+        stack: list[tuple[dict, dict]] = [(data, result)]
+
+        while stack:
+            source, target = stack.pop()
+            for key, val in source.items():
+                if val is None:
+                    continue
+                if isinstance(val, dict):
+                    nested: dict = {}
+                    target[key] = nested
+                    stack.append((val, nested))
+                else:
+                    target[key] = val
+
+        # Remove dicts that became empty after None filtering
+        def _remove_empty(d: dict) -> None:
+            for key in [k for k, v in d.items() if isinstance(v, dict)]:
+                _remove_empty(d[key])
+                if not d[key]:
+                    del d[key]
+
+        _remove_empty(result)
+        return result
+
 
 @docs_group('Resource clients')
 class ResourceClient(ResourceClientBase):
@@ -171,13 +206,13 @@ class ResourceClient(ResourceClientBase):
             catch_not_found_or_throw(exc)
             return None
 
-    def _update(self, updated_fields: dict, *, timeout: timedelta | None = None) -> dict:
+    def _update(self, *, timeout: timedelta | None = None, **kwargs: Any) -> dict:
         """Perform a PUT request to update this resource with the given fields."""
         response = self._http_client.call(
             url=self._build_url(),
             method='PUT',
             params=self._build_params(),
-            json=updated_fields,
+            json=self._clean_json_payload(kwargs),
             timeout=timeout,
         )
         return response_to_dict(response)
@@ -203,13 +238,13 @@ class ResourceClient(ResourceClientBase):
         )
         return response_to_dict(response)
 
-    def _create(self, created_fields: dict) -> dict:
+    def _create(self, **kwargs: Any) -> dict:
         """Perform a POST request to create a resource."""
         response = self._http_client.call(
             url=self._build_url(),
             method='POST',
             params=self._build_params(),
-            json=created_fields,
+            json=self._clean_json_payload(kwargs),
         )
         return response_to_dict(response)
 
@@ -219,7 +254,7 @@ class ResourceClient(ResourceClientBase):
             url=self._build_url(),
             method='POST',
             params=self._build_params(name=name),
-            json=resource_fields,
+            json=self._clean_json_payload(resource_fields) if resource_fields is not None else None,
         )
         return response_to_dict(response)
 
@@ -338,13 +373,13 @@ class ResourceClientAsync(ResourceClientBase):
             catch_not_found_or_throw(exc)
             return None
 
-    async def _update(self, updated_fields: dict, *, timeout: timedelta | None = None) -> dict:
+    async def _update(self, *, timeout: timedelta | None = None, **kwargs: Any) -> dict:
         """Perform a PUT request to update this resource with the given fields."""
         response = await self._http_client.call(
             url=self._build_url(),
             method='PUT',
             params=self._build_params(),
-            json=updated_fields,
+            json=self._clean_json_payload(kwargs),
             timeout=timeout,
         )
         return response_to_dict(response)
@@ -370,13 +405,13 @@ class ResourceClientAsync(ResourceClientBase):
         )
         return response_to_dict(response)
 
-    async def _create(self, created_fields: dict) -> dict:
+    async def _create(self, **kwargs: Any) -> dict:
         """Perform a POST request to create a resource."""
         response = await self._http_client.call(
             url=self._build_url(),
             method='POST',
             params=self._build_params(),
-            json=created_fields,
+            json=self._clean_json_payload(kwargs),
         )
         return response_to_dict(response)
 
@@ -386,7 +421,7 @@ class ResourceClientAsync(ResourceClientBase):
             url=self._build_url(),
             method='POST',
             params=self._build_params(name=name),
-            json=resource_fields,
+            json=self._clean_json_payload(resource_fields) if resource_fields is not None else None,
         )
         return response_to_dict(response)
 

@@ -1,6 +1,5 @@
 import io
 from datetime import timedelta
-from enum import Enum
 from http import HTTPStatus
 from unittest.mock import Mock
 
@@ -8,6 +7,7 @@ import impit
 import pytest
 
 from apify_client._models import WebhookEventType
+from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils import (
     catch_not_found_or_throw,
     create_hmac_signature,
@@ -15,8 +15,6 @@ from apify_client._utils import (
     encode_base62,
     encode_key_value_store_record_value,
     encode_webhook_list_to_base64,
-    enum_to_value,
-    filter_none_values,
     is_retryable_error,
     response_to_dict,
     response_to_list,
@@ -108,22 +106,19 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
 
 
 @pytest.mark.parametrize(
-    ('input_dict', 'remove_empty_dicts', 'expected'),
+    ('input_dict', 'expected'),
     [
-        pytest.param({'a': 1, 'b': None, 'c': 3}, False, {'a': 1, 'c': 3}, id='Simple case'),
-        pytest.param({'a': {'b': None, 'c': 2}, 'd': None}, False, {'a': {'c': 2}}, id='Nested dictionaries'),
-        pytest.param({'a': {'b': {'c': None, 'd': 4}}}, False, {'a': {'b': {'d': 4}}}, id='Deep nesting'),
-        pytest.param({'a': None, 'b': None}, False, {}, id='Empty dict after filtering'),
-        pytest.param({'a': {'b': None}, 'c': 3}, True, {'c': 3}, id='Remove empty dicts'),
-        pytest.param({'a': {'b': None}, 'c': 3}, False, {'a': {}, 'c': 3}, id='Keep empty dicts by default'),
-        pytest.param(
-            {'a': 0, 'b': '', 'c': False}, False, {'a': 0, 'b': '', 'c': False}, id='Keep falsy non-None values'
-        ),
+        pytest.param({'a': 1, 'b': None, 'c': 3}, {'a': 1, 'c': 3}, id='Simple case'),
+        pytest.param({'a': {'b': None, 'c': 2}, 'd': None}, {'a': {'c': 2}}, id='Nested dictionaries'),
+        pytest.param({'a': {'b': {'c': None, 'd': 4}}}, {'a': {'b': {'d': 4}}}, id='Deep nesting'),
+        pytest.param({'a': None, 'b': None}, {}, id='Empty dict after filtering'),
+        pytest.param({'a': {'b': None}, 'c': 3}, {'c': 3}, id='Remove empty dicts'),
+        pytest.param({'a': 0, 'b': '', 'c': False}, {'a': 0, 'b': '', 'c': False}, id='Keep falsy non-None values'),
     ],
 )
-def test_filter_none_values(input_dict: dict, *, remove_empty_dicts: bool, expected: dict) -> None:
-    """Test filtering None values from dictionaries."""
-    assert filter_none_values(input_dict, remove_empty_dicts=remove_empty_dicts) == expected
+def test__clean_json_payload(input_dict: dict, expected: dict) -> None:
+    """Test cleaning None values and empty dicts from API request payloads."""
+    assert ResourceClientBase._clean_json_payload(input_dict) == expected
 
 
 def test_encode_key_value_store_record_value_dict() -> None:
@@ -160,26 +155,6 @@ def test_encode_key_value_store_record_value_bytesio() -> None:
     value, content_type = encode_key_value_store_record_value(buffer)
     assert value == buffer
     assert content_type == 'application/octet-stream'
-
-
-class _TestEnum(Enum):
-    VALUE1 = 'val1'
-    VALUE2 = 42
-
-
-@pytest.mark.parametrize(
-    ('input_value', 'expected'),
-    [
-        pytest.param(_TestEnum.VALUE1, 'val1', id='Enum string value'),
-        pytest.param(_TestEnum.VALUE2, 42, id='Enum int value'),
-        pytest.param('not_an_enum', 'not_an_enum', id='Plain string passthrough'),
-        pytest.param(123, 123, id='Plain int passthrough'),
-        pytest.param(None, None, id='None passthrough'),
-    ],
-)
-def test_enum_to_value(input_value: _TestEnum | str | int | None, expected: str | int | None) -> None:
-    """Test enum to value conversion."""
-    assert enum_to_value(input_value) == expected
 
 
 def test_response_to_dict() -> None:

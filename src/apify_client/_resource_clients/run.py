@@ -15,7 +15,6 @@ from apify_client._status_message_watcher import StatusMessageWatcher, StatusMes
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
 from apify_client._utils import (
     encode_key_value_store_record_value,
-    filter_none_values,
     response_to_dict,
     to_safe_id,
     to_seconds,
@@ -91,14 +90,11 @@ class RunClient(ResourceClient):
         Returns:
             The updated run.
         """
-        updated_fields = {
-            'statusMessage': status_message,
-            'isStatusMessageTerminal': is_status_message_terminal,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = self._update(cleaned)
+        result = self._update(
+            statusMessage=status_message,
+            isStatusMessageTerminal=is_status_message_terminal,
+            generalAccess=general_access,
+        )
         return RunResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -485,14 +481,11 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The updated run.
         """
-        updated_fields = {
-            'statusMessage': status_message,
-            'isStatusMessageTerminal': is_status_message_terminal,
-            'generalAccess': general_access,
-        }
-        cleaned = filter_none_values(updated_fields)
-
-        result = await self._update(cleaned)
+        result = await self._update(
+            statusMessage=status_message,
+            isStatusMessageTerminal=is_status_message_terminal,
+            generalAccess=general_access,
+        )
         return RunResponse.model_validate(result).data
 
     async def abort(self, *, gracefully: bool | None = None) -> Run:

@@ -16,7 +16,7 @@ from apify_client._models import (
     UserPublicInfo,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, filter_none_values, response_to_dict
+from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
 
 
@@ -121,7 +121,7 @@ class UserClient(ResourceClient):
             url=self._build_url('limits'),
             method='PUT',
             params=self._build_params(),
-            json=filter_none_values(
+            json=self._clean_json_payload(
                 {
                     'maxMonthlyUsageUsd': max_monthly_usage_usd,
                     'dataRetentionDays': data_retention_days,
@@ -231,7 +231,7 @@ class UserClientAsync(ResourceClientAsync):
             url=self._build_url('limits'),
             method='PUT',
             params=self._build_params(),
-            json=filter_none_values(
+            json=self._clean_json_payload(
                 {
                     'maxMonthlyUsageUsd': max_monthly_usage_usd,
                     'dataRetentionDays': data_retention_days,

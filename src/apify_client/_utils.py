@@ -8,7 +8,6 @@ import string
 import time
 import warnings
 from base64 import b64encode, urlsafe_b64encode
-from enum import Enum
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
@@ -70,69 +69,6 @@ def catch_not_found_or_throw(exc: ApifyApiError) -> None:
         raise exc
 
 
-def filter_none_values(
-    data: dict,
-    *,
-    remove_empty_dicts: bool | None = None,
-) -> dict:
-    """Recursively remove None values from a dictionary.
-
-    The Apify API ignores missing fields but may reject fields explicitly set to None. This helper prepares
-    request payloads by stripping None values from nested dictionaries.
-
-    Uses an iterative, stack-based approach for better performance on deeply nested structures.
-
-    Args:
-        data: Dictionary to clean.
-        remove_empty_dicts: Whether to remove empty dictionaries after filtering.
-
-    Returns:
-        A new dictionary with all None values removed.
-    """
-    # Use an explicit stack to avoid recursion overhead
-    result = {}
-
-    # Stack entries are (source_dict, target_dict)
-    stack: list[tuple[dict, dict]] = [(data, result)]
-
-    while stack:
-        source, target = stack.pop()
-
-        for key, val in source.items():
-            if val is None:
-                continue
-
-            if isinstance(val, dict):
-                nested = {}
-                target[key] = nested
-                stack.append((val, nested))
-            else:
-                target[key] = val
-
-    # Optionally remove empty dictionaries
-    if remove_empty_dicts:
-        _remove_empty_dicts_inplace(result)
-
-    return result
-
-
-def _remove_empty_dicts_inplace(data: dict[str, Any]) -> None:
-    """Recursively remove empty dictionaries from a dict in place.
-
-    This is a helper function for filter_none_values.
-    """
-    keys_to_remove = list[str]()
-
-    for key, val in data.items():
-        if isinstance(val, dict):
-            _remove_empty_dicts_inplace(val)
-            if not val:
-                keys_to_remove.append(key)
-
-    for key in keys_to_remove:
-        del data[key]
-
-
 def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
     """Encode a list of webhook dictionaries to base64 for API transmission.
 
@@ -146,7 +82,7 @@ def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
 
     for webhook in webhooks:
         webhook_representation = {
-            'eventTypes': [enum_to_value(event_type) for event_type in webhook['event_types']],
+            'eventTypes': list(webhook['event_types']),
             'requestUrl': webhook['request_url'],
         }
         if 'payload_template' in webhook:
@@ -190,22 +126,6 @@ def encode_key_value_store_record_value(value: Any, content_type: str | None = N
         ).encode('utf-8')
 
     return (value, content_type)
-
-
-def enum_to_value(value: Any) -> Any:
-    """Convert an Enum member to its value, or return the value unchanged if not an Enum.
-
-    Ensures Enum instances are converted to primitive values suitable for API transmission.
-
-    Args:
-        value: The value to potentially convert (Enum member or any other type).
-
-    Returns:
-        The Enum's value if the input is an Enum; otherwise returns the input unchanged.
-    """
-    if isinstance(value, Enum):
-        return value.value
-    return value
 
 
 def is_retryable_error(exc: Exception) -> bool:

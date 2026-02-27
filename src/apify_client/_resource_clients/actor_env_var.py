@@ -5,21 +5,6 @@ from typing import Any
 from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import filter_none_values
-
-
-def get_actor_env_var_representation(
-    *,
-    is_secret: bool | None = None,
-    name: str | None = None,
-    value: str | None = None,
-) -> dict:
-    """Return an environment variable representation of the Actor in a dictionary."""
-    return {
-        'isSecret': is_secret,
-        'name': name,
-        'value': value,
-    }
 
 
 @docs_group('Resource clients')
@@ -75,13 +60,9 @@ class ActorEnvVarClient(ResourceClient):
         Returns:
             The updated Actor environment variable.
         """
-        actor_env_var_representation = get_actor_env_var_representation(
-            is_secret=is_secret,
-            name=name,
-            value=value,
+        result = self._update(
+            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True)
         )
-        cleaned = filter_none_values(actor_env_var_representation)
-        result = self._update(cleaned)
         return EnvVarResponse.model_validate(result).data
 
     def delete(self) -> None:
@@ -145,13 +126,9 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor environment variable.
         """
-        actor_env_var_representation = get_actor_env_var_representation(
-            is_secret=is_secret,
-            name=name,
-            value=value,
+        result = await self._update(
+            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True)
         )
-        cleaned = filter_none_values(actor_env_var_representation)
-        result = await self._update(cleaned)
         return EnvVarResponse.model_validate(result).data
 
     async def delete(self) -> None:

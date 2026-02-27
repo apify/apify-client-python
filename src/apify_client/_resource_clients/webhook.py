@@ -27,9 +27,18 @@ class WebhookClient(ResourceClient):
     appropriate method on the `ApifyClient` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'webhooks',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def get(self) -> Webhook | None:
         """Retrieve the webhook.
@@ -149,9 +158,18 @@ class WebhookClientAsync(ResourceClientAsync):
     appropriate method on the `ApifyClientAsync` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'webhooks')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_id: str,
+        resource_path: str = 'webhooks',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_id=resource_id,
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def get(self) -> Webhook | None:
         """Retrieve the webhook.

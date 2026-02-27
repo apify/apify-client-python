@@ -23,9 +23,16 @@ class ActorVersionCollectionClient(ResourceClient):
     on the `ActorClient` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_path: str = 'versions',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     def list(self) -> ListOfVersions:
         """List the available Actor versions.
@@ -99,9 +106,16 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
     on the `ActorClientAsync` class.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        resource_path = kwargs.pop('resource_path', 'versions')
-        super().__init__(*args, resource_path=resource_path, **kwargs)
+    def __init__(
+        self,
+        *,
+        resource_path: str = 'versions',
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            resource_path=resource_path,
+            **kwargs,
+        )
 
     async def list(self) -> ListOfVersions:
         """List the available Actor versions.

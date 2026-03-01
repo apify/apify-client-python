@@ -186,17 +186,13 @@ async def test_stream_record_signature(
     # Note: stream_record returns a context manager, so we need to handle it differently
     # For sync/async unification, we can't use 'with await maybe_await(...)' directly
     # We'll test the error condition separately based on client type
-    try:
-        if is_async:
+    if is_async:
+        with pytest.raises(ApifyApiError):
             async with kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
                 pass
-            pytest.fail('Expected ApifyApiError')
-        else:
-            with kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
-                pass
-            pytest.fail('Expected ApifyApiError')
-    except ApifyApiError:
-        pass  # Expected
+    else:
+        with pytest.raises(ApifyApiError), kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
+            pass
 
     # Kvs content retrieved with correct signature
     if is_async:

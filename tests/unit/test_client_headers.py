@@ -14,6 +14,11 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
 
+def _parse_accept_encoding(header: str) -> set[str]:
+    """Parse Accept-Encoding header into a set of encoding names, ignoring order and whitespace."""
+    return {enc.strip() for enc in header.split(',')}
+
+
 def _header_handler(request: Request) -> Response:
     return Response(
         status=200,
@@ -39,13 +44,14 @@ async def test_default_headers_async(httpserver: HTTPServer) -> None:
 
     request_headers = json.loads(response.text)['received_headers']
 
-    assert request_headers == {
+    expected_headers = {
         'User-Agent': _get_user_agent(),
         'Accept': 'application/json, */*',
         'Authorization': 'Bearer placeholder_token',
-        'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
+    assert {k: v for k, v in request_headers.items() if k != 'Accept-Encoding'} == expected_headers
+    assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
 def test_default_headers_sync(httpserver: HTTPServer) -> None:
@@ -58,13 +64,14 @@ def test_default_headers_sync(httpserver: HTTPServer) -> None:
 
     request_headers = json.loads(response.text)['received_headers']
 
-    assert request_headers == {
+    expected_headers = {
         'User-Agent': _get_user_agent(),
         'Accept': 'application/json, */*',
         'Authorization': 'Bearer placeholder_token',
-        'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
+    assert {k: v for k, v in request_headers.items() if k != 'Accept-Encoding'} == expected_headers
+    assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
 async def test_headers_async(httpserver: HTTPServer) -> None:
@@ -80,14 +87,15 @@ async def test_headers_async(httpserver: HTTPServer) -> None:
 
     request_headers = json.loads(response.text)['received_headers']
 
-    assert request_headers == {
+    expected_headers = {
         'Test-Header': 'blah',
         'User-Agent': 'CustomUserAgent/1.0',
         'Accept': 'application/json, */*',
         'Authorization': 'strange_value',
-        'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
+    assert {k: v for k, v in request_headers.items() if k != 'Accept-Encoding'} == expected_headers
+    assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
 def test_headers_sync(httpserver: HTTPServer) -> None:
@@ -107,11 +115,12 @@ def test_headers_sync(httpserver: HTTPServer) -> None:
 
     request_headers = json.loads(response.text)['received_headers']
 
-    assert request_headers == {
+    expected_headers = {
         'Test-Header': 'blah',
         'User-Agent': 'CustomUserAgent/1.0',
         'Accept': 'application/json, */*',
         'Authorization': 'strange_value',
-        'Accept-Encoding': 'gzip, br, zstd, deflate',
         'Host': f'{httpserver.host}:{httpserver.port}',
     }
+    assert {k: v for k, v in request_headers.items() if k != 'Accept-Encoding'} == expected_headers
+    assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}

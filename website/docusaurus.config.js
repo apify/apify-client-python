@@ -45,7 +45,7 @@ module.exports = {
                     title: 'API Client for Python',
                     items: [
                         {
-                            to: 'docs/overview',
+                            to: 'docs',
                             label: 'Docs',
                             position: 'left',
                             activeBaseRegex: '/docs(?!/changelog)',
@@ -139,7 +139,7 @@ module.exports = {
             ...config.themeConfig.footer,
             logo: {
                 ...config.themeConfig.footer.logo,
-                href: 'docs/introduction/overview',
+                href: 'docs',
             },
         },
     },

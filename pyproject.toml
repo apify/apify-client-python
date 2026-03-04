@@ -144,6 +144,12 @@ indent-style = "space"
     "N999",   # Invalid module name
     "T201",   # print found
 ]
+"**/docs/02_concepts/code/10_architecture_imports.py" = [
+    "F401",   # Imported but unused
+]
+"**/docs/03_guides/code/05_custom_http_client_{async,sync}.py" = [
+    "ARG002", # Unused method argument
+]
 "src/apify_client/_models.py" = [
     "D",      # Everything from the pydocstyle
     "E501",   # Line too long
@@ -178,9 +184,18 @@ include = ["src", "tests", "scripts", "docs", "website"]
 
 [[tool.ty.overrides]]
 include = ["docs/**/*.py", "website/**/*.py"]
-
 [tool.ty.overrides.rules]
 unresolved-import = "ignore"
+
+[[tool.ty.overrides]]
+include = ["docs/**/10_plugging_in_async.py", "docs/**/10_plugging_in_sync.py"]
+[tool.ty.overrides.rules]
+empty-body = "ignore"
+
+[[tool.ty.overrides]]
+include = ["docs/**/05_custom_http_client_async.py", "docs/**/05_custom_http_client_sync.py"]
+[tool.ty.overrides.rules]
+invalid-argument-type = "ignore"
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert_never()"]

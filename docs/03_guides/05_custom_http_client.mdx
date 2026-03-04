@@ -1,0 +1,61 @@
+---
+id: custom-http-client-httpx
+title: Using HTTPX as the HTTP client
+---
+
+import ApiLink from '@site/src/components/ApiLink';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import CustomHttpClientAsyncExample from '!!raw-loader!./code/05_custom_http_client_async.py';
+import CustomHttpClientSyncExample from '!!raw-loader!./code/05_custom_http_client_sync.py';
+
+This guide shows how to replace the default <ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> and <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink> with one based on [HTTPX](https://www.python-httpx.org/). The same approach works for any HTTP library — see [Custom HTTP clients](/api/client/python/docs/concepts/custom-http-clients) for the underlying architecture.
+
+## Why HTTPX?
+
+You might want to use [HTTPX](https://www.python-httpx.org/) instead of the default [Impit](https://github.com/apify/impit)-based client for reasons like:
+
+- You already use HTTPX in your project and want a single HTTP stack.
+- You need HTTPX-specific features.
+- You want fine-grained control over connection pooling or proxy routing.
+
+## Implementation
+
+The implementation involves two steps:
+
+1. **Extend <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> (sync) or <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> (async)** and implement the `call` method that delegates to HTTPX.
+2. **Pass it to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>** to create a client that uses your implementation.
+
+The `call` method receives parameters like `method`, `url`, `headers`, `params`, `data`, `json`, `stream`, and `timeout`. Map them to the corresponding HTTPX arguments — most map directly, except `data` which becomes HTTPX's `content` parameter and `timeout` which needs conversion from `timedelta` to seconds.
+
+A convenient property of HTTPX is that its `httpx.Response` object already satisfies the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol, so you can return it directly without wrapping.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {CustomHttpClientAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {CustomHttpClientSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::warning
+When using a custom HTTP client, you are responsible for handling retries, timeouts, and error handling yourself. The built-in retry logic with exponential backoff is part of the default <ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> and is not applied to custom implementations.
+:::
+
+## Going further
+
+The example above is minimal on purpose. In a production setup, you might want to extend it with:
+
+- **Retry logic** - Use [HTTPX's event hooks](https://www.python-httpx.org/advanced/event-hooks/) or utilize library like [tenacity](https://tenacity.readthedocs.io/) to retry failed requests.
+- **Custom headers** - You can add headers in the `call` method before delegating to HTTPX.
+- **Connection lifecycle** - Close the underlying `httpx.Client` when done by adding a `close()` method to your custom client.
+- **Proxy support** - You can pass `proxy=...` when creating the `httpx.Client`.
+- **Metrics collection** - Track request latency, error rates, or other metrics by adding instrumentation in the `call` method.
+- **Logging** - Log requests and responses for debugging or auditing purposes.

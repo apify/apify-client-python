@@ -1,0 +1,130 @@
+---
+id: custom-http-clients
+title: Custom HTTP clients
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@site/src/components/ApiLink';
+
+import DefaultHttpClientAsyncExample from '!!raw-loader!./code/10_default_http_client_async.py';
+import DefaultHttpClientSyncExample from '!!raw-loader!./code/10_default_http_client_sync.py';
+
+import ArchitectureImportsExample from '!!raw-loader!./code/10_architecture_imports.py';
+
+import PluggingInAsyncExample from '!!raw-loader!./code/10_plugging_in_async.py';
+import PluggingInSyncExample from '!!raw-loader!./code/10_plugging_in_sync.py';
+
+The Apify API client uses a pluggable HTTP client architecture. By default, it ships with an [Impit](https://github.com/apify/impit)-based HTTP client that handles retries, timeouts, passing headers, and more. You can replace it with your own implementation for use cases like custom logging, proxying, request modification, or integrating with a different HTTP library.
+
+## Default HTTP client
+
+When you create an <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> instance, it automatically uses the built-in <ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> (or <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink>). This default client provides:
+
+- Automatic retries with exponential backoff for network errors, HTTP 429, and HTTP 5xx responses.
+- Configurable timeouts.
+- Preparing request data and headers according to the API requirements, including authentication.
+- Collecting requests statistics for monitoring and debugging.
+
+You can configure the default client through the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {DefaultHttpClientAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {DefaultHttpClientSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Architecture
+
+The HTTP client system is built on three components:
+
+- <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> / <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> - Abstract base classes that define the interface. Extend one of these to create a custom HTTP client by implementing the `call` method.
+- <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> - A [runtime-checkable protocol](https://docs.python.org/3/library/typing.html#typing.runtime_checkable) that defines the expected response shape. Any object with the required attributes and methods satisfies the protocol — no inheritance needed.
+- <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink> - A class method to create a client instance with a custom HTTP client implementation.
+
+All of these are available as top-level imports from the `apify_client` package:
+
+<CodeBlock className="language-python">
+    {ArchitectureImportsExample}
+</CodeBlock>
+
+### The call method
+
+The `call` method receives all the information needed to make an HTTP request:
+
+- `method` - HTTP method (`GET`, `POST`, `PUT`, `DELETE`, etc.).
+- `url` - Full URL to make the request to.
+- `headers` - Additional headers to include.
+- `params` - Query parameters to append to the URL.
+- `data` - Raw request body (mutually exclusive with `json`).
+- `json` - JSON-serializable request body (mutually exclusive with `data`).
+- `stream` - Whether to stream the response body.
+- `timeout` - Timeout for the request as a `timedelta`.
+
+It must return an object satisfying the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol.
+
+### The HTTP response protocol
+
+<ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> is not a concrete class. Any object with the following attributes and methods will work:
+
+| Property / Method | Description |
+|---|---|
+| `status_code: int` | HTTP status code |
+| `text: str` | Response body as text |
+| `content: bytes` | Raw response body |
+| `headers: Mapping[str, str]` | Response headers |
+| `json() -> Any` | Parse body as JSON |
+| `read() -> bytes` | Read entire response body |
+| `aread() -> bytes` | Read entire response body (async) |
+| `close() -> None` | Close the response |
+| `aclose() -> None` | Close the response (async) |
+| `iter_bytes() -> Iterator[bytes]` | Iterate body in chunks |
+| `aiter_bytes() -> AsyncIterator[bytes]` | Iterate body in chunks (async) |
+
+:::note
+Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://www.python-httpx.org/) already satisfy this protocol out of the box.
+:::
+
+### Plugging it in
+
+Use the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink> (or <ApiLink to="class/ApifyClientAsync#with_custom_http_client">`ApifyClientAsync.with_custom_http_client`</ApiLink>) class method to create a client with your custom implementation:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {PluggingInAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {PluggingInSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+After that, all API calls made through the client will go through your custom HTTP client.
+
+:::warning
+When using a custom HTTP client, you are responsible for constructing the request, handling retries, timeouts, and errors yourself. The default retry logic is not applied.
+:::
+
+## Use cases
+
+Custom HTTP clients might be useful when you need to:
+
+- **Use a different HTTP library** - Swap Impit for [httpx](https://www.python-httpx.org/), [requests](https://requests.readthedocs.io/), or [aiohttp](https://docs.aiohttp.org/).
+- **Route through a proxy** - Add proxy support or request routing.
+- **Implement custom retry logic** - Use different backoff strategies or retry conditions.
+- **Log requests and responses** - Track API calls for debugging or auditing.
+- **Modify requests** - Add custom fields, modify the body, or change headers.
+- **Collect custom metrics** - Measure request latency, track error rates, or count API calls.
+
+For a step-by-step walkthrough of building a custom HTTP client, see the [Using HTTPX as the HTTP client](/api/client/python/docs/guides/custom-http-client-httpx) guide.

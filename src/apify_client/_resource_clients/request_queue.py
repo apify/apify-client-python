@@ -828,6 +828,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         queue: asyncio.Queue[Iterable[dict]],
         request_params: dict,
+        timeout: Timeout,
     ) -> BatchAddResponse:
         """Worker function to process a batch of requests.
 
@@ -852,7 +853,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                     method='POST',
                     params=request_params,
                     json=list(request_batch),
-                    timeout='medium',
+                    timeout=timeout,
                 )
 
                 result = response_to_dict(response)
@@ -879,7 +880,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         max_parallel: int = 5,
         max_unprocessed_requests_retries: int | None = None,
         min_delay_between_unprocessed_requests_retries: timedelta | None = None,
-        timeout: Timeout = 'medium',  # noqa: ARG002
+        timeout: Timeout = 'medium',
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
 
@@ -926,7 +927,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             async with asyncio.TaskGroup() as tg:
                 workers = [
                     tg.create_task(
-                        self._batch_add_requests_worker(asyncio_queue, request_params),
+                        self._batch_add_requests_worker(asyncio_queue, request_params, timeout),
                         name=f'batch_add_requests_worker_{i}',
                     )
                     for i in range(max_parallel)

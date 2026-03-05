@@ -34,24 +34,24 @@ def patch_request(monkeypatch: pytest.MonkeyPatch) -> Iterator[list]:
     monkeypatch.undo()
 
 
-def test_no_timeout_passes_none_to_impit_sync(patch_request: list) -> None:
-    """Test that `'no_timeout'` passes `timeout=None` to impit (uses client-level default)."""
+def test_no_timeout_passes_large_value_to_impit_sync(patch_request: list) -> None:
+    """Test that `no_timeout` passes a large timeout to impit to effectively disable the timeout."""
     client = ImpitHttpClient(timeout_short=timedelta(seconds=10))
 
     with pytest.raises(EndOfTestError):
         client.call(method='GET', url='http://placeholder.url/no_timeout', timeout='no_timeout')
 
-    assert patch_request == [None]
+    assert patch_request == [86_400]
 
 
-async def test_no_timeout_passes_none_to_impit_async(patch_request: list) -> None:
-    """Test that `'no_timeout'` passes `timeout=None` to impit (uses client-level default)."""
+async def test_no_timeout_passes_large_value_to_impit_async(patch_request: list) -> None:
+    """Test that `no_timeout` passes a large timeout to impit to effectively disable the timeout."""
     client = ImpitHttpClientAsync(timeout_short=timedelta(seconds=10))
 
     with pytest.raises(EndOfTestError):
         await client.call(method='GET', url='http://placeholder.url/no_timeout', timeout='no_timeout')
 
-    assert patch_request == [None]
+    assert patch_request == [86_400]
 
 
 def test_default_timeout_uses_medium_tier_sync(patch_request: list) -> None:

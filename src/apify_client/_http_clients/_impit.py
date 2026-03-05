@@ -200,12 +200,18 @@ class ImpitHttpClient(HttpClient):
         try:
             url_with_params = self._build_url_with_params(url, params)
 
+            # Impit treats timeout=None as "use client default (30s)", not "no timeout".
+            # Use a large value (24 hours) to effectively disable the timeout.
+            # This can be removed once impit updates its behaviour: https://github.com/apify/impit/issues/401
+            computed_timeout = self._compute_timeout(timeout, attempt)
+            impit_timeout = 86_400 if computed_timeout is None else computed_timeout
+
             response = self._impit_client.request(
                 method=method,
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._compute_timeout(timeout, attempt),
+                timeout=impit_timeout,
                 stream=stream or False,
             )
 
@@ -436,12 +442,18 @@ class ImpitHttpClientAsync(HttpClientAsync):
         try:
             url_with_params = self._build_url_with_params(url, params)
 
+            # Impit treats timeout=None as "use client default (30s)", not "no timeout".
+            # Use a large value (24 hours) to effectively disable the timeout.
+            # This can be removed once impit updates its behaviour: https://github.com/apify/impit/issues/401
+            computed_timeout = self._compute_timeout(timeout, attempt)
+            impit_timeout = 86_400 if computed_timeout is None else computed_timeout
+
             response = await self._impit_async_client.request(
                 method=method,
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._compute_timeout(timeout, attempt),
+                timeout=impit_timeout,
                 stream=stream or False,
             )
 

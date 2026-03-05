@@ -168,15 +168,15 @@ class HttpClientBase:
     def _compute_timeout(self, timeout: Timeout, attempt: int) -> int | float | None:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
-        For `'no_timeout'`, returns `None`. For tier literals and explicit `timedelta` values, doubles the timeout
-        with each attempt but caps at `timeout_max`.
+        For `no_timeout`, returns `None` to indicate no timeout. For tier literals and explicit `timedelta` values,
+        doubles the timeout with each attempt but caps at `timeout_max`.
 
         Args:
             timeout: The timeout specification to resolve (tier literal or explicit `timedelta`).
             attempt: Current attempt number (1-indexed).
 
         Returns:
-            Timeout in seconds, or `None` for `'no_timeout'`.
+            Timeout in seconds, or `None` for no timeout.
         """
         if timeout == 'no_timeout':
             return None

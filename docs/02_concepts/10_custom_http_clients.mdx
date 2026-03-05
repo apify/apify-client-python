@@ -44,11 +44,12 @@ You can configure the default client through the <ApiLink to="class/ApifyClient"
 
 ## Architecture
 
-The HTTP client system is built on three components:
+The HTTP client system is built on two key abstractions:
 
 - <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> / <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> - Abstract base classes that define the interface. Extend one of these to create a custom HTTP client by implementing the `call` method.
 - <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> - A [runtime-checkable protocol](https://docs.python.org/3/library/typing.html#typing.runtime_checkable) that defines the expected response shape. Any object with the required attributes and methods satisfies the protocol — no inheritance needed.
-- <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink> - A class method to create a client instance with a custom HTTP client implementation.
+
+To plug in your custom implementation, use the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink> class method.
 
 All of these are available as top-level imports from the `apify_client` package:
 

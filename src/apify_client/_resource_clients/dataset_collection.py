@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, ListOfDatasets, ListOfDatasetsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -33,6 +36,7 @@ class DatasetCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfDatasets:
         """List the available datasets.
 
@@ -43,14 +47,21 @@ class DatasetCollectionClient(ResourceClient):
             limit: How many datasets to retrieve.
             offset: What dataset to include as first when retrieving the list.
             desc: Whether to sort the datasets in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available datasets matching the specified filters.
         """
-        result = self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
         return ListOfDatasetsResponse.model_validate(result).data
 
-    def get_or_create(self, *, name: str | None = None, schema: dict | None = None) -> Dataset:
+    def get_or_create(
+        self,
+        *,
+        name: str | None = None,
+        schema: dict | None = None,
+        timeout: Timeout = 'long',
+    ) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
@@ -58,11 +69,12 @@ class DatasetCollectionClient(ResourceClient):
         Args:
             name: The name of the dataset to retrieve or create.
             schema: The schema of the dataset.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved or newly-created dataset.
         """
-        result = self._get_or_create(name=name, resource_fields={'schema': schema})
+        result = self._get_or_create(timeout=timeout, name=name, resource_fields={'schema': schema})
         return DatasetResponse.model_validate(result).data
 
 
@@ -92,6 +104,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfDatasets:
         """List the available datasets.
 
@@ -102,11 +115,12 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             limit: How many datasets to retrieve.
             offset: What dataset to include as first when retrieving the list.
             desc: Whether to sort the datasets in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available datasets matching the specified filters.
         """
-        result = await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
         return ListOfDatasetsResponse.model_validate(result).data
 
     async def get_or_create(
@@ -114,6 +128,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         *,
         name: str | None = None,
         schema: dict | None = None,
+        timeout: Timeout = 'long',
     ) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
@@ -122,9 +137,10 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         Args:
             name: The name of the dataset to retrieve or create.
             schema: The schema of the dataset.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved or newly-created dataset.
         """
-        result = await self._get_or_create(name=name, resource_fields={'schema': schema})
+        result = await self._get_or_create(timeout=timeout, name=name, resource_fields={'schema': schema})
         return DatasetResponse.model_validate(result).data

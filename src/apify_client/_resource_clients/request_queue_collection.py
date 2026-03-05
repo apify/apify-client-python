@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -10,6 +10,9 @@ from apify_client._models import (
     RequestQueueResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -38,6 +41,7 @@ class RequestQueueCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfRequestQueues:
         """List the available request queues.
 
@@ -48,25 +52,32 @@ class RequestQueueCollectionClient(ResourceClient):
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
             desc: Whether to sort therequest queues in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available request queues matching the specified filters.
         """
-        result = self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
         return ListOfRequestQueuesResponse.model_validate(result).data
 
-    def get_or_create(self, *, name: str | None = None) -> RequestQueue:
+    def get_or_create(
+        self,
+        *,
+        name: str | None = None,
+        timeout: Timeout = 'long',
+    ) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
 
         Args:
             name: The name of the request queue to retrieve or create.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved or newly-created request queue.
         """
-        result = self._get_or_create(name=name)
+        result = self._get_or_create(timeout=timeout, name=name)
         return RequestQueueResponse.model_validate(result).data
 
 
@@ -96,6 +107,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfRequestQueues:
         """List the available request queues.
 
@@ -106,23 +118,30 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
             desc: Whether to sort therequest queues in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available request queues matching the specified filters.
         """
-        result = await self._list(unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
         return ListOfRequestQueuesResponse.model_validate(result).data
 
-    async def get_or_create(self, *, name: str | None = None) -> RequestQueue:
+    async def get_or_create(
+        self,
+        *,
+        name: str | None = None,
+        timeout: Timeout = 'long',
+    ) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
 
         Args:
             name: The name of the request queue to retrieve or create.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved or newly-created request queue.
         """
-        result = await self._get_or_create(name=name)
+        result = await self._get_or_create(timeout=timeout, name=name)
         return RequestQueueResponse.model_validate(result).data

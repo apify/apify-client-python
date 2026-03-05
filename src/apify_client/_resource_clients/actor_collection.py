@@ -19,6 +19,8 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._types import Timeout
+
 
 @docs_group('Resource clients')
 class ActorCollectionClient(ResourceClient):
@@ -47,6 +49,7 @@ class ActorCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        timeout: Timeout = 'long',
     ) -> ListOfActors:
         """List the Actors the user has created or used.
 
@@ -58,11 +61,12 @@ class ActorCollectionClient(ResourceClient):
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
             sort_by: Field to sort the results by.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available Actors matching the specified filters.
         """
-        result = self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
         return ListOfActorsResponse.model_validate(result).data
 
     def create(
@@ -90,6 +94,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Actor:
         """Create a new Actor.
 
@@ -123,6 +128,7 @@ class ActorCollectionClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created Actor.
@@ -157,7 +163,7 @@ class ActorCollectionClient(ResourceClient):
                 content_type=example_run_input_content_type,
             ),
         )
-        result = self._create(**actor_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
 
@@ -188,6 +194,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        timeout: Timeout = 'long',
     ) -> ListOfActors:
         """List the Actors the user has created or used.
 
@@ -199,11 +206,12 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
             sort_by: Field to sort the results by.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available Actors matching the specified filters.
         """
-        result = await self._list(my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
+        result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
         return ListOfActorsResponse.model_validate(result).data
 
     async def create(
@@ -231,6 +239,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Actor:
         """Create a new Actor.
 
@@ -264,6 +273,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created Actor.
@@ -298,5 +308,5 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 content_type=example_run_input_content_type,
             ),
         )
-        result = await self._create(**actor_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data

@@ -10,7 +10,14 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import impit
 
-from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
+from apify_client._consts import (
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+    DEFAULT_TIMEOUT_LONG,
+    DEFAULT_TIMEOUT_MAX,
+    DEFAULT_TIMEOUT_MEDIUM,
+    DEFAULT_TIMEOUT_SHORT,
+)
 from apify_client._docs import docs_group
 from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._logging import log_context, logger_name
@@ -20,9 +27,9 @@ from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from apify_client._consts import JsonSerializable
     from apify_client._http_clients import HttpResponse
     from apify_client._statistics import ClientStatistics
+    from apify_client._types import JsonSerializable, Timeout
 
 T = TypeVar('T')
 
@@ -58,7 +65,10 @@ class ImpitHttpClient(HttpClient):
         self,
         *,
         token: str | None = None,
-        timeout: timedelta = DEFAULT_TIMEOUT,
+        timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
+        timeout_medium: timedelta = DEFAULT_TIMEOUT_MEDIUM,
+        timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
+        timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
@@ -68,7 +78,10 @@ class ImpitHttpClient(HttpClient):
 
         Args:
             token: Apify API token for authentication.
-            timeout: Default timeout for HTTP requests.
+            timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
+            timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
+            timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
+            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             max_retries: Maximum number of retry attempts for failed requests.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -76,7 +89,10 @@ class ImpitHttpClient(HttpClient):
         """
         super().__init__(
             token=token,
-            timeout=timeout,
+            timeout_short=timeout_short,
+            timeout_medium=timeout_medium,
+            timeout_long=timeout_long,
+            timeout_max=timeout_max,
             max_retries=max_retries,
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
@@ -86,7 +102,6 @@ class ImpitHttpClient(HttpClient):
         self._impit_client = impit.Client(
             headers=self._headers,
             follow_redirects=True,
-            timeout=to_seconds(self._timeout),
         )
 
     def call(
@@ -99,7 +114,7 @@ class ImpitHttpClient(HttpClient):
         data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -111,7 +126,9 @@ class ImpitHttpClient(HttpClient):
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
-            timeout: Timeout override for this request.
+            timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
+                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
+                the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -154,7 +171,7 @@ class ImpitHttpClient(HttpClient):
         params: dict[str, Any] | None,
         content: bytes | None,
         stream: bool | None,
-        timeout: timedelta | None,
+        timeout: Timeout,
     ) -> impit.Response:
         """Execute a single HTTP request attempt.
 
@@ -167,7 +184,7 @@ class ImpitHttpClient(HttpClient):
             params: Query parameters.
             content: Request body content.
             stream: Whether to stream the response.
-            timeout: Timeout override for this request.
+            timeout: Timeout for this request.
 
         Returns:
             The HTTP response object.
@@ -188,7 +205,7 @@ class ImpitHttpClient(HttpClient):
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._calculate_timeout(attempt, timeout),
+                timeout=self._compute_timeout(timeout, attempt),
                 stream=stream or False,
             )
 
@@ -284,7 +301,10 @@ class ImpitHttpClientAsync(HttpClientAsync):
         self,
         *,
         token: str | None = None,
-        timeout: timedelta = DEFAULT_TIMEOUT,
+        timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
+        timeout_medium: timedelta = DEFAULT_TIMEOUT_MEDIUM,
+        timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
+        timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
@@ -294,7 +314,10 @@ class ImpitHttpClientAsync(HttpClientAsync):
 
         Args:
             token: Apify API token for authentication.
-            timeout: Default timeout for HTTP requests.
+            timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
+            timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
+            timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
+            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             max_retries: Maximum number of retry attempts for failed requests.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -302,7 +325,10 @@ class ImpitHttpClientAsync(HttpClientAsync):
         """
         super().__init__(
             token=token,
-            timeout=timeout,
+            timeout_short=timeout_short,
+            timeout_medium=timeout_medium,
+            timeout_long=timeout_long,
+            timeout_max=timeout_max,
             max_retries=max_retries,
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
@@ -312,7 +338,6 @@ class ImpitHttpClientAsync(HttpClientAsync):
         self._impit_async_client = impit.AsyncClient(
             headers=self._headers,
             follow_redirects=True,
-            timeout=to_seconds(self._timeout),
         )
 
     async def call(
@@ -325,7 +350,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
         data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -337,7 +362,9 @@ class ImpitHttpClientAsync(HttpClientAsync):
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
-            timeout: Timeout override for this request.
+            timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
+                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
+                the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -380,7 +407,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
         params: dict[str, Any] | None,
         content: bytes | None,
         stream: bool | None,
-        timeout: timedelta | None,
+        timeout: Timeout,
     ) -> impit.Response:
         """Execute a single HTTP request attempt.
 
@@ -393,7 +420,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             params: Query parameters.
             content: Request body content.
             stream: Whether to stream the response.
-            timeout: Timeout override for this request.
+            timeout: Timeout for this request.
 
         Returns:
             The HTTP response object.
@@ -414,7 +441,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
                 url=url_with_params,
                 headers=headers,
                 content=content,
-                timeout=self._calculate_timeout(attempt, timeout),
+                timeout=self._compute_timeout(timeout, attempt),
                 stream=stream or False,
             )
 

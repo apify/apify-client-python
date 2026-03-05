@@ -20,6 +20,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from apify_client._models import WebhookEventType
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -43,15 +44,18 @@ class WebhookClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Webhook | None:
+    def get(self, *, timeout: Timeout = 'long') -> Webhook | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved webhook, or None if it does not exist.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return WebhookResponse.model_validate(result).data
@@ -69,6 +73,7 @@ class WebhookClient(ResourceClient):
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> Webhook:
         """Update the webhook.
 
@@ -86,6 +91,7 @@ class WebhookClient(ResourceClient):
             do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
             is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
                 is fulfilled. Only applicable when actor_run_id is filled.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated webhook.
@@ -104,22 +110,28 @@ class WebhookClient(ResourceClient):
                 actor_id=actor_id,
             ),
         )
-        result = self._update(**webhook_update.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(timeout=timeout, **webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
-        """
-        self._delete()
 
-    def test(self) -> WebhookDispatch | None:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        self._delete(timeout=timeout)
+
+    def test(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The webhook dispatch created by the test.
@@ -129,6 +141,7 @@ class WebhookClient(ResourceClient):
                 url=self._build_url('test'),
                 method='POST',
                 params=self._build_params(),
+                timeout=timeout,
             )
 
             result = response_to_dict(response)
@@ -174,15 +187,18 @@ class WebhookClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Webhook | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Webhook | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved webhook, or None if it does not exist.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return WebhookResponse.model_validate(result).data
@@ -200,6 +216,7 @@ class WebhookClientAsync(ResourceClientAsync):
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> Webhook:
         """Update the webhook.
 
@@ -217,6 +234,7 @@ class WebhookClientAsync(ResourceClientAsync):
             do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
             is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
                 is fulfilled. Only applicable when actor_run_id is filled.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated webhook.
@@ -235,22 +253,28 @@ class WebhookClientAsync(ResourceClientAsync):
                 actor_id=actor_id,
             ),
         )
-        result = await self._update(**webhook_update.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(timeout=timeout, **webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
-        """
-        await self._delete()
 
-    async def test(self) -> WebhookDispatch | None:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        await self._delete(timeout=timeout)
+
+    async def test(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-test/test-webhook
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The webhook dispatch created by the test.
@@ -260,6 +284,7 @@ class WebhookClientAsync(ResourceClientAsync):
                 url=self._build_url('test'),
                 method='POST',
                 params=self._build_params(),
+                timeout=timeout,
             )
 
             result = response_to_dict(response)

@@ -142,12 +142,12 @@ def test_base_http_client_initialization() -> None:
 
     client = _ConcreteHttpClient(
         token='test_token',
-        timeout=timedelta(seconds=30),
+        timeout_short=timedelta(seconds=30),
         max_retries=5,
         statistics=statistics,
     )
 
-    assert client._timeout == timedelta(seconds=30)
+    assert client._timeout_short == timedelta(seconds=30)
     assert client._max_retries == 5
     assert client._statistics == statistics
     assert client._headers is not None

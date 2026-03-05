@@ -10,7 +10,14 @@ from importlib import metadata
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlencode
 
-from apify_client._consts import DEFAULT_MAX_RETRIES, DEFAULT_MIN_DELAY_BETWEEN_RETRIES, DEFAULT_TIMEOUT
+from apify_client._consts import (
+    DEFAULT_MAX_RETRIES,
+    DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
+    DEFAULT_TIMEOUT_LONG,
+    DEFAULT_TIMEOUT_MAX,
+    DEFAULT_TIMEOUT_MEDIUM,
+    DEFAULT_TIMEOUT_SHORT,
+)
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
 from apify_client._utils import to_seconds
@@ -18,7 +25,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator, Mapping
 
-    from apify_client._consts import JsonSerializable
+    from apify_client._types import JsonSerializable, Timeout
 
 
 @docs_group('HTTP clients')
@@ -85,7 +92,10 @@ class HttpClientBase:
         self,
         *,
         token: str | None = None,
-        timeout: timedelta = DEFAULT_TIMEOUT,
+        timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
+        timeout_medium: timedelta = DEFAULT_TIMEOUT_MEDIUM,
+        timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
+        timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
@@ -95,13 +105,19 @@ class HttpClientBase:
 
         Args:
             token: Apify API token for authentication.
-            timeout: Request timeout.
+            timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
+            timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
+            timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
+            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             max_retries: Maximum number of retries for failed requests.
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
         """
-        self._timeout = timeout
+        self._timeout_short = timeout_short
+        self._timeout_medium = timeout_medium
+        self._timeout_long = timeout_long
+        self._timeout_max = timeout_max
         self._max_retries = max_retries
         self._min_delay_between_retries = min_delay_between_retries
         self._statistics = statistics or ClientStatistics()
@@ -149,6 +165,34 @@ class HttpClientBase:
 
         return parsed_params
 
+    def _compute_timeout(self, timeout: Timeout, attempt: int) -> int | float | None:
+        """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
+
+        For `'no_timeout'`, returns `None`. For tier literals and explicit `timedelta` values, doubles the timeout
+        with each attempt but caps at `timeout_max`.
+
+        Args:
+            timeout: The timeout specification to resolve (tier literal or explicit `timedelta`).
+            attempt: Current attempt number (1-indexed).
+
+        Returns:
+            Timeout in seconds, or `None` for `'no_timeout'`.
+        """
+        if timeout == 'no_timeout':
+            return None
+
+        if timeout == 'short':
+            resolved = self._timeout_short
+        elif timeout == 'medium':
+            resolved = self._timeout_medium
+        elif timeout == 'long':
+            resolved = self._timeout_long
+        else:
+            resolved = timeout
+
+        new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
+        return to_seconds(new_timeout)
+
     def _prepare_request_call(
         self,
         headers: dict[str, str] | None = None,
@@ -192,12 +236,6 @@ class HttpClientBase:
 
         return f'{url}?{query_string}'
 
-    def _calculate_timeout(self, attempt: int, timeout: timedelta | None = None) -> float:
-        """Calculate timeout for a request attempt with exponential increase, bounded by client timeout."""
-        timeout_secs = to_seconds(timeout or self._timeout)
-        client_timeout_secs = to_seconds(self._timeout)
-        return min(client_timeout_secs, timeout_secs * 2 ** (attempt - 1))
-
 
 @docs_group('HTTP clients')
 class HttpClient(HttpClientBase, ABC):
@@ -219,7 +257,7 @@ class HttpClient(HttpClientBase, ABC):
         data: str | bytes | bytearray | None = None,
         json: Any = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> HttpResponse:
         """Make an HTTP request.
 
@@ -231,7 +269,9 @@ class HttpClient(HttpClientBase, ABC):
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
-            timeout: Timeout for this specific request.
+            timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
+                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
+                the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -240,7 +280,6 @@ class HttpClient(HttpClientBase, ABC):
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
         """
-        ...
 
 
 @docs_group('HTTP clients')
@@ -262,7 +301,7 @@ class HttpClientAsync(HttpClientBase, ABC):
         data: str | bytes | bytearray | None = None,
         json: Any = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> HttpResponse:
         """Make an HTTP request.
 
@@ -274,7 +313,9 @@ class HttpClientAsync(HttpClientBase, ABC):
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
-            timeout: Timeout for this specific request.
+            timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
+                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
+                the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -283,4 +324,3 @@ class HttpClientAsync(HttpClientBase, ABC):
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
         """
-        ...

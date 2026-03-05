@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import WebhookDispatch, WebhookDispatchResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -28,15 +31,18 @@ class WebhookDispatchClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> WebhookDispatch | None:
+    def get(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved webhook dispatch, or None if it does not exist.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return WebhookDispatchResponse.model_validate(result).data
@@ -63,15 +69,18 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> WebhookDispatch | None:
+    async def get(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved webhook dispatch, or None if it does not exist.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return WebhookDispatchResponse.model_validate(result).data

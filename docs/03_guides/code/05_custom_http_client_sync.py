@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import httpx
 
-from apify_client import ApifyClient, HttpClient, HttpResponse
-
-if TYPE_CHECKING:
-    from datetime import timedelta
+from apify_client import ApifyClient, HttpClient, HttpResponse, Timeout
 
 TOKEN = 'MY-APIFY-TOKEN'
 
@@ -29,9 +26,9 @@ class HttpxClient(HttpClient):
         data: str | bytes | bytearray | None = None,
         json: Any = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> HttpResponse:
-        timeout_secs = timeout.total_seconds() if timeout else 0
+        timeout_secs = self._compute_timeout(timeout, attempt=1) or 0
 
         # httpx.Response satisfies the HttpResponse protocol,
         # so it can be returned directly.

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import ListOfActorsInStoreResponse, ListOfStoreActors
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -36,6 +39,7 @@ class StoreCollectionClient(ResourceClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfStoreActors:
         """List Actors in Apify store.
 
@@ -50,11 +54,13 @@ class StoreCollectionClient(ResourceClient):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available Actors matching the specified filters.
         """
         result = self._list(
+            timeout=timeout,
             limit=limit,
             offset=offset,
             search=search,
@@ -95,6 +101,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfStoreActors:
         """List Actors in Apify store.
 
@@ -109,11 +116,13 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available Actors matching the specified filters.
         """
         result = await self._list(
+            timeout=timeout,
             limit=limit,
             offset=offset,
             search=search,

@@ -34,15 +34,130 @@ def patch_request(monkeypatch: pytest.MonkeyPatch) -> Iterator[list]:
     monkeypatch.undo()
 
 
+def test_no_timeout_passes_none_to_impit_sync(patch_request: list) -> None:
+    """Test that `'no_timeout'` passes `timeout=None` to impit (uses client-level default)."""
+    client = ImpitHttpClient(timeout_short=timedelta(seconds=10))
+
+    with pytest.raises(EndOfTestError):
+        client.call(method='GET', url='http://placeholder.url/no_timeout', timeout='no_timeout')
+
+    assert patch_request == [None]
+
+
+async def test_no_timeout_passes_none_to_impit_async(patch_request: list) -> None:
+    """Test that `'no_timeout'` passes `timeout=None` to impit (uses client-level default)."""
+    client = ImpitHttpClientAsync(timeout_short=timedelta(seconds=10))
+
+    with pytest.raises(EndOfTestError):
+        await client.call(method='GET', url='http://placeholder.url/no_timeout', timeout='no_timeout')
+
+    assert patch_request == [None]
+
+
+def test_default_timeout_uses_medium_tier_sync(patch_request: list) -> None:
+    """Test that omitting timeout uses the 'medium' tier (sync client)."""
+    client = ImpitHttpClient(timeout_medium=timedelta(seconds=30))
+
+    with pytest.raises(EndOfTestError):
+        client.call(method='GET', url='http://placeholder.url/default_timeout')
+
+    assert patch_request == [30.0]
+
+
+async def test_default_timeout_uses_medium_tier_async(patch_request: list) -> None:
+    """Test that omitting timeout uses the 'medium' tier (async client)."""
+    client = ImpitHttpClientAsync(timeout_medium=timedelta(seconds=30))
+
+    with pytest.raises(EndOfTestError):
+        await client.call(method='GET', url='http://placeholder.url/default_timeout')
+
+    assert patch_request == [30.0]
+
+
+def test_short_tier_resolves_correctly_sync(patch_request: list) -> None:
+    """Test that `'short'` tier resolves to timeout_short value."""
+    client = ImpitHttpClient(timeout_short=timedelta(seconds=5))
+
+    with pytest.raises(EndOfTestError):
+        client.call(method='GET', url='http://placeholder.url/short_tier', timeout='short')
+
+    assert patch_request == [5.0]
+
+
+def test_medium_tier_resolves_correctly_sync(patch_request: list) -> None:
+    """Test that `'medium'` tier resolves to the configured timeout value."""
+    client = ImpitHttpClient(timeout_medium=timedelta(seconds=30))
+
+    with pytest.raises(EndOfTestError):
+        client.call(method='GET', url='http://placeholder.url/timeout_tier', timeout='medium')
+
+    assert patch_request == [30.0]
+
+
+def test_long_tier_resolves_correctly_sync(patch_request: list) -> None:
+    """Test that `'long'` tier resolves to timeout_long value."""
+    client = ImpitHttpClient(timeout_long=timedelta(seconds=300))
+
+    with pytest.raises(EndOfTestError):
+        client.call(method='GET', url='http://placeholder.url/long_tier', timeout='long')
+
+    assert patch_request == [300.0]
+
+
+async def test_medium_tier_resolves_correctly_async(patch_request: list) -> None:
+    """Test that `'medium'` tier resolves to the configured timeout value (async)."""
+    client = ImpitHttpClientAsync(timeout_medium=timedelta(seconds=30))
+
+    with pytest.raises(EndOfTestError):
+        await client.call(method='GET', url='http://placeholder.url/timeout_tier', timeout='medium')
+
+    assert patch_request == [30.0]
+
+
+async def test_long_tier_resolves_correctly_async(patch_request: list) -> None:
+    """Test that `'long'` tier resolves to timeout_long value (async)."""
+    client = ImpitHttpClientAsync(timeout_long=timedelta(seconds=300))
+
+    with pytest.raises(EndOfTestError):
+        await client.call(method='GET', url='http://placeholder.url/long_tier', timeout='long')
+
+    assert patch_request == [300.0]
+
+
+def test_compute_timeout_with_timedelta() -> None:
+    """Test _compute_timeout with a concrete timedelta doubles per attempt, capped at max."""
+    client = ImpitHttpClient(timeout_max=timedelta(seconds=600))
+
+    assert client._compute_timeout(timedelta(seconds=5), 1) == 5.0
+    assert client._compute_timeout(timedelta(seconds=5), 2) == 10.0
+    assert client._compute_timeout(timedelta(seconds=5), 3) == 20.0
+    assert client._compute_timeout(timedelta(seconds=5), 4) == 40.0
+
+
+def test_compute_timeout_caps_at_max() -> None:
+    """Test _compute_timeout caps at timeout_max."""
+    client = ImpitHttpClient(timeout_max=timedelta(seconds=10))
+
+    assert client._compute_timeout(timedelta(seconds=5), 1) == 5.0
+    assert client._compute_timeout(timedelta(seconds=5), 2) == 10.0
+    assert client._compute_timeout(timedelta(seconds=5), 3) == 10.0  # capped
+
+
+def test_compute_timeout_no_timeout_returns_none() -> None:
+    """Test _compute_timeout with 'no_timeout' returns None."""
+    client = ImpitHttpClient()
+    assert client._compute_timeout('no_timeout', 1) is None
+
+
 async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests timeout values for request with retriable errors.
 
-    Values should increase with each attempt, starting from initial call value and bounded by the client timeout value.
+    Values should increase with each attempt, starting from initial call value and bounded by timeout_max.
     """
     should_raise_error = iter((True, True, True, False))
     call_timeout = 1
-    client_timeout = 5
-    expected_timeouts = [call_timeout, 2, 4, client_timeout]
+    timeout_max = 5
+    expected_timeouts = [call_timeout, 2, 4, timeout_max]
     retry_counter_mock = Mock()
 
     timeouts = []
@@ -58,9 +173,10 @@ async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await ImpitHttpClientAsync(timeout=timedelta(seconds=client_timeout)).call(
-        method='GET', url='http://placeholder.url/async_timeout', timeout=timedelta(seconds=call_timeout)
-    )
+    response = await ImpitHttpClientAsync(
+        timeout_short=timedelta(seconds=call_timeout),
+        timeout_max=timedelta(seconds=timeout_max),
+    ).call(method='GET', url='http://placeholder.url/async_timeout', timeout=timedelta(seconds=call_timeout))
 
     # Check that the retry counter was called the expected number of times
     # (4 times: 3 retries + 1 final successful call)
@@ -89,7 +205,7 @@ async def test_retry_on_http_error_async_client(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setattr('impit.AsyncClient.request', mock_request)
 
-    response = await ImpitHttpClientAsync(timeout=timedelta(seconds=5)).call(
+    response = await ImpitHttpClientAsync(timeout_short=timedelta(seconds=5)).call(
         method='GET', url='http://placeholder.url/http_error'
     )
 
@@ -101,12 +217,12 @@ async def test_retry_on_http_error_async_client(monkeypatch: pytest.MonkeyPatch)
 def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests timeout values for request with retriable errors.
 
-    Values should increase with each attempt, starting from initial call value and bounded by the client timeout value.
+    Values should increase with each attempt, starting from initial call value and bounded by timeout_max.
     """
     should_raise_error = iter((True, True, True, False))
     call_timeout = 1
-    client_timeout = 5
-    expected_timeouts = [call_timeout, 2, 4, client_timeout]
+    timeout_max = 5
+    expected_timeouts = [call_timeout, 2, 4, timeout_max]
     retry_counter_mock = Mock()
 
     timeouts = []
@@ -122,9 +238,10 @@ def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr('impit.Client.request', mock_request)
 
-    response = ImpitHttpClient(timeout=timedelta(seconds=client_timeout)).call(
-        method='GET', url='http://placeholder.url/sync_timeout', timeout=timedelta(seconds=call_timeout)
-    )
+    response = ImpitHttpClient(
+        timeout_short=timedelta(seconds=call_timeout),
+        timeout_max=timedelta(seconds=timeout_max),
+    ).call(method='GET', url='http://placeholder.url/sync_timeout', timeout=timedelta(seconds=call_timeout))
 
     # Check that the retry counter was called the expected number of times
     # (4 times: 3 retries + 1 final successful call)

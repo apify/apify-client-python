@@ -1,7 +1,6 @@
-from datetime import timedelta
 from typing import Any
 
-from apify_client import ApifyClient, HttpClient, HttpResponse
+from apify_client import ApifyClient, HttpClient, HttpResponse, Timeout
 
 TOKEN = 'MY-APIFY-TOKEN'
 
@@ -19,7 +18,7 @@ class MyHttpClient(HttpClient):
         data: str | bytes | bytearray | None = None,
         json: Any = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> HttpResponse: ...
 
 

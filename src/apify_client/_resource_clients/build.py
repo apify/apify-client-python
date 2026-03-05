@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._resource_clients import LogClient, LogClientAsync
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -34,30 +35,39 @@ class BuildClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Build | None:
+    def get(self, *, timeout: Timeout = 'long') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor build data.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return BuildResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
-        """
-        self._delete()
 
-    def abort(self) -> Build:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        self._delete(timeout=timeout)
+
+    def abort(self, *, timeout: Timeout = 'long') -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The data of the aborted Actor build.
@@ -66,14 +76,18 @@ class BuildClient(ResourceClient):
             url=self._build_url('abort'),
             method='POST',
             params=self._build_params(),
+            timeout=timeout,
         )
         result = response_to_dict(response)
         return BuildResponse.model_validate(result).data
 
-    def get_open_api_definition(self) -> dict:
+    def get_open_api_definition(self, *, timeout: Timeout = 'long') -> dict:
         """Return OpenAPI definition of the Actor's build.
 
         https://docs.apify.com/api/v2/actor-build-openapi-json-get
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             OpenAPI definition of the Actor's build.
@@ -81,14 +95,18 @@ class BuildClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url('openapi.json'),
             method='GET',
+            timeout=timeout,
         )
         return response_to_dict(response)
 
-    def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
+    def wait_for_finish(
+        self, *, wait_duration: timedelta | None = None, timeout: Timeout = 'no_timeout'
+    ) -> Build | None:
         """Wait synchronously until the build finishes or the server times out.
 
         Args:
             wait_duration: How long does the client wait for build to finish. None for indefinite.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -98,6 +116,7 @@ class BuildClient(ResourceClient):
             url=self._build_url(),
             params=self._build_params(),
             wait_duration=wait_duration,
+            timeout=timeout,
         )
         return Build.model_validate(result) if result is not None else None
 
@@ -136,23 +155,29 @@ class BuildClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Build | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor build data.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return BuildResponse.model_validate(result).data
 
-    async def abort(self) -> Build:
+    async def abort(self, *, timeout: Timeout = 'long') -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The data of the aborted Actor build.
@@ -161,21 +186,28 @@ class BuildClientAsync(ResourceClientAsync):
             url=self._build_url('abort'),
             method='POST',
             params=self._build_params(),
+            timeout=timeout,
         )
         result = response_to_dict(response)
         return BuildResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
-        """
-        await self._delete()
 
-    async def get_open_api_definition(self) -> dict:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        await self._delete(timeout=timeout)
+
+    async def get_open_api_definition(self, *, timeout: Timeout = 'long') -> dict:
         """Return OpenAPI definition of the Actor's build.
 
         https://docs.apify.com/api/v2/actor-build-openapi-json-get
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             OpenAPI definition of the Actor's build.
@@ -183,14 +215,18 @@ class BuildClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url('openapi.json'),
             method='GET',
+            timeout=timeout,
         )
         return response_to_dict(response)
 
-    async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Build | None:
+    async def wait_for_finish(
+        self, *, wait_duration: timedelta | None = None, timeout: Timeout = 'no_timeout'
+    ) -> Build | None:
         """Wait asynchronously until the build finishes or the server times out.
 
         Args:
             wait_duration: How long does the client wait for build to finish. None for indefinite.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -200,6 +236,7 @@ class BuildClientAsync(ResourceClientAsync):
             url=self._build_url(),
             params=self._build_params(),
             wait_duration=wait_duration,
+            timeout=timeout,
         )
         return Build.model_validate(result) if result is not None else None
 

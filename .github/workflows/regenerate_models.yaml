@@ -1,0 +1,130 @@
+name: Regenerate models from OpenAPI spec
+
+on:
+  workflow_dispatch:
+    inputs:
+      docs_pr_number:
+        description: "PR number in apify/apify-docs that triggered this workflow"
+        required: true
+        type: string
+      docs_pr_branch:
+        description: "Branch name in apify/apify-docs PR"
+        required: true
+        type: string
+
+concurrency:
+  group: regenerate-models-${{ inputs.docs_pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  regenerate-models:
+    name: Regenerate models
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout apify-client-python
+        uses: actions/checkout@v6
+
+      - name: Checkout apify-docs at PR branch
+        uses: actions/checkout@v6
+        with:
+          repository: apify/apify-docs
+          ref: ${{ inputs.docs_pr_branch }}
+          path: apify-docs
+          token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apify-docs/package-lock.json
+
+      - name: Build OpenAPI spec bundle
+        run: |
+          cd apify-docs
+          corepack enable
+          npm ci --force
+          npm run openapi:build:json
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Generate models from local spec
+        run: |
+          # Temporarily point datamodel-codegen to the local spec instead of the remote URL
+          sed -i 's|^url = ".*"|input = "apify-docs/static/api/openapi.json"|' pyproject.toml
+          uv run datamodel-codegen
+          git checkout -- pyproject.toml
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --exit-code src/apify_client/_models.py; then
+            echo "No changes in generated models"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Models have changed"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure git
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "apify-service-account"
+          git config user.email "apify-service-account@users.noreply.github.com"
+
+      - name: Create or update PR
+        if: steps.changes.outputs.changed == 'true'
+        id: pr
+        run: |
+          BRANCH="chore/update-models-docs-pr-${{ inputs.docs_pr_number }}"
+          DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${{ inputs.docs_pr_number }}"
+
+          git checkout -b "$BRANCH"
+          git add src/apify_client/_models.py
+          git commit -m "chore: update generated models from apify-docs PR #${{ inputs.docs_pr_number }}"
+          git push --force origin "$BRANCH"
+
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url' 2>/dev/null || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: $EXISTING_PR"
+            echo "pr_url=$EXISTING_PR" >> "$GITHUB_OUTPUT"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            BODY="This PR updates the auto-generated Pydantic models based on OpenAPI specification changes in [apify-docs PR #${{ inputs.docs_pr_number }}]($DOCS_PR_URL).
+
+          ## Changes
+
+          - Regenerated \`src/apify_client/_models.py\` using \`datamodel-codegen\`
+
+          ## Source
+
+          - apify-docs PR: $DOCS_PR_URL"
+
+            PR_URL=$(gh pr create \
+              --title "chore: update generated models from apify-docs PR #${{ inputs.docs_pr_number }}" \
+              --body "$BODY" \
+              --head "$BRANCH" \
+              --base master)
+            echo "Created PR: $PR_URL"
+            echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+
+      - name: Comment on apify-docs PR
+        if: steps.changes.outputs.changed == 'true' && steps.pr.outputs.created == 'true'
+        run: |
+          gh pr comment "${{ inputs.docs_pr_number }}" \
+            --repo apify/apify-docs \
+            --body "A PR to update the Python client models has been created in apify-client-python: ${{ steps.pr.outputs.pr_url }}
+
+          This was automatically triggered by OpenAPI specification changes in this PR."
+        env:
+          GITHUB_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}

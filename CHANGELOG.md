@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 
 - [**breaking**] Make HTTP client pluggable with abstract base classes ([#641](https://github.com/apify/apify-client-python/pull/641)) ([5ae33a0](https://github.com/apify/apify-client-python/commit/5ae33a0a801fdacd0c456a8630fea053f9df6550)) by [@vdusek](https://github.com/vdusek), closes [#416](https://github.com/apify/apify-client-python/issues/416)
 
-### Refactor
+### 🚜 Refactor
 
 - [**breaking**] Introduce fully typed clients ([#604](https://github.com/apify/apify-client-python/pull/604)) ([81ee194](https://github.com/apify/apify-client-python/commit/81ee1943b400b49797868fe4dfa52d1662e09370)) by [@vdusek](https://github.com/vdusek), closes [#21](https://github.com/apify/apify-client-python/issues/21), [#481](https://github.com/apify/apify-client-python/issues/481)
 - [**breaking**] Drop support for Python 3.10 ([#636](https://github.com/apify/apify-client-python/pull/636)) ([7895a4e](https://github.com/apify/apify-client-python/commit/7895a4e60145f490911044da4aa7e3c1c424d416)) by [@vdusek](https://github.com/vdusek)
@@ -100,11 +100,11 @@ All notable changes to this project will be documented in this file.
 - Expose apify_client.errors module ([#468](https://github.com/apify/apify-client-python/pull/468)) ([c0cc147](https://github.com/apify/apify-client-python/commit/c0cc147fd0c5a60e5a025db6b6c761e811efe1da)) by [@Mantisus](https://github.com/Mantisus), closes [#158](https://github.com/apify/apify-client-python/issues/158)
 - Add dataset.create_items_public_url and key_value_store.create_keys_public_url ([#453](https://github.com/apify/apify-client-python/pull/453)) ([2b1e110](https://github.com/apify/apify-client-python/commit/2b1e1104c15c987b0024010df41d6d356ea37dd3)) by [@danpoletaev](https://github.com/danpoletaev)
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - [**breaking**] Bump minimum Python version to 3.10 ([#469](https://github.com/apify/apify-client-python/pull/469)) ([92b4789](https://github.com/apify/apify-client-python/commit/92b47895eb48635e2d573b99d59bb077999c5b27)) by [@vdusek](https://github.com/vdusek)
 
-### Refactor
+### 🚜 Refactor
 
 - [**breaking**] Remove support for passing a single string to the `unwind` parameter in `DatasetClient` ([#467](https://github.com/apify/apify-client-python/pull/467)) ([e8aea2c](https://github.com/apify/apify-client-python/commit/e8aea2c8f3833082bf78562f3fa981a1f8e88b26)) by [@Mantisus](https://github.com/Mantisus), closes [#255](https://github.com/apify/apify-client-python/issues/255)
 - [**breaking**] Remove deprecated constant re-exports from `consts.py` ([#466](https://github.com/apify/apify-client-python/pull/466)) ([7731f0b](https://github.com/apify/apify-client-python/commit/7731f0b3a4ca8c99be9392517d36f841cb293ed5)) by [@Mantisus](https://github.com/Mantisus), closes [#163](https://github.com/apify/apify-client-python/issues/163)
@@ -251,7 +251,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.6.2](https://github.com/apify/apify-client-python/releases/tag/v1.6.2) (2023-01-08)
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Relative imports were replaced for absolute imports
 
@@ -265,7 +265,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.6.0](https://github.com/apify/apify-client-python/releases/tag/v1.6.0) (2023-11-16)
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Migrate from Autopep8 and Flake8 to Ruff
 
@@ -278,7 +278,7 @@ All notable changes to this project will be documented in this file.
 - Add DELETE to Actor runs
 - Add DELETE to Actor builds
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Rewrite documentation publication to use Docusaurus
 - Remove PR Toolkit workflow
@@ -291,7 +291,7 @@ All notable changes to this project will be documented in this file.
 - Add `StoreCollectionClient` for listing Actors in the Apify Store
 - Add support for specifying the `max_items` parameter for pay-per result Actors and their runs
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Improve logging of HTTP requests
 - Remove `pytest-randomly` Pytest plugin
@@ -303,7 +303,7 @@ All notable changes to this project will be documented in this file.
 
 - Add `RunClient.reboot` method to reboot Actor runs
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Simplify code via `flake8-simplify`
 - Unify indentation in configuration files
@@ -311,7 +311,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.3.1](https://github.com/apify/apify-client-python/releases/tag/v1.3.1) (2023-07-28)
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Start importing general constants and utilities from the `apify-shared` library
 
@@ -344,14 +344,14 @@ All notable changes to this project will be documented in this file.
 
 - Add option to change the build, memory limit and timeout when resurrecting a run
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Update dependencies
 
 
 ## [1.1.1](https://github.com/apify/apify-client-python/releases/tag/v1.1.1) (2023-05-05)
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Change GitHub workflows to use new secrets
 
@@ -362,18 +362,18 @@ All notable changes to this project will be documented in this file.
 
 - Add support for `is_status_message_terminal` flag in Actor run status message update
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Switch from `setup.py` to `pyproject.toml` for specifying project setup
 
 
 ## [1.0.0](https://github.com/apify/apify-client-python/releases/tag/v1.0.0) (2023-03-13)
 
-### Breaking changes
+### ⚙️ Miscellaneous Tasks
 
-- Drop support for Python 3.7, add support for Python 3.11
-- Unify methods for streaming resources
-- Switch underlying HTTP library from `requests` to `httpx`
+- [**breaking**] Drop support for Python 3.7, add support for Python 3.11
+- [**breaking**] Unify methods for streaming resources
+- [**breaking**] Switch underlying HTTP library from `requests` to `httpx`
 
 ### 🚀 Features
 
@@ -394,7 +394,7 @@ All notable changes to this project will be documented in this file.
 
 - Disallow `NaN` and `Infinity` values in JSONs sent to the Apify API
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Simplify retrying with exponential backoff
 - Improve checks for "not found" errors
@@ -414,11 +414,11 @@ All notable changes to this project will be documented in this file.
 
 ## [0.6.0](https://github.com/apify/apify-client-python/releases/tag/v0.6.0) (2022-06-27)
 
-### Removed
+### 🚜 Refactor
 
 - Drop support for single-file Actors
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Update dependencies
 - Fix some lint issues in shell scripts and `setup.py`
@@ -427,7 +427,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.5.0](https://github.com/apify/apify-client-python/releases/tag/v0.5.0) (2021-09-16)
 
-### Changed
+### 🚜 Refactor
 
 - Improve retrying broken API server connections
 
@@ -435,14 +435,14 @@ All notable changes to this project will be documented in this file.
 
 - Fix timeout value in actively waiting for a run to finish
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Update development dependencies
 
 
 ## [0.4.0](https://github.com/apify/apify-client-python/releases/tag/v0.4.0) (2021-09-07)
 
-### Changed
+### 🚜 Refactor
 
 - Improve handling of `Enum` arguments
 - Improve support for storing more data types in key-value stores
@@ -459,7 +459,7 @@ All notable changes to this project will be documented in this file.
 - Add the `test()` method to the webhook client
 - Add support for indicating the pagination direction in the `ListPage` objects
 
-### Changed
+### 🚜 Refactor
 
 - Improve support for storing more data types in datasets
 
@@ -467,7 +467,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix return type in the `DatasetClient.list_items()` method docs
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Add human-friendly names to the jobs in Github Action workflows
 - Update development dependencies
@@ -479,11 +479,11 @@ All notable changes to this project will be documented in this file.
 
 - Add the `gracefully` parameter to the "Abort run" method
 
-### Changed
+### 🚜 Refactor
 
 - Replace `base_url` with `api_url` in the client constructor to enable easier passing of the API server url from environment variables available to Actors on the Apify platform
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Change tags for Actor images with this client on Docker Hub to be aligned with the Apify SDK Node.js images
 - Update the `requests` dependency to 2.26.0
@@ -492,12 +492,12 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.0](https://github.com/apify/apify-client-python/releases/tag/v0.1.0) (2021-08-02)
 
-### Changed
+### 🚜 Refactor
 
 - Methods using specific option values for arguments now use well-defined and documented `Enum`s for those arguments instead of generic strings
 - Make the submodule `apify_client.consts` containing those `Enum`s available
 
-### Chore
+### ⚙️ Miscellaneous Tasks
 
 - Update development dependencies
 - Enforce unified use of single quotes and double quotes

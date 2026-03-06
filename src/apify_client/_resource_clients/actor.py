@@ -23,6 +23,7 @@ from apify_client._models import (
     RunOrigin,
     RunResponse,
     UpdateActorRequest,
+    WebhookCreate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -224,7 +225,7 @@ class ActorClient(ResourceClient):
         timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
     ) -> Run:
         """Start the Actor and immediately return the Run object.
 
@@ -251,7 +252,7 @@ class ActorClient(ResourceClient):
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                Each webhook is represented by a dictionary containing these items:
+                Each webhook is represented by a dictionary or `WebhookCreate` model containing these items:
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
@@ -270,7 +271,7 @@ class ActorClient(ResourceClient):
             timeout=to_seconds(timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks),
         )
 
         response = self._http_client.call(
@@ -295,7 +296,7 @@ class ActorClient(ResourceClient):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         timeout: timedelta | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
@@ -689,7 +690,7 @@ class ActorClientAsync(ResourceClientAsync):
         timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
     ) -> Run:
         """Start the Actor and immediately return the Run object.
 
@@ -716,7 +717,7 @@ class ActorClientAsync(ResourceClientAsync):
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                Each webhook is represented by a dictionary containing these items:
+                Each webhook is represented by a dictionary or `WebhookCreate` model containing these items:
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
@@ -735,7 +736,7 @@ class ActorClientAsync(ResourceClientAsync):
             timeout=to_seconds(timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks),
         )
 
         response = await self._http_client.call(
@@ -760,7 +761,7 @@ class ActorClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         timeout: timedelta | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',

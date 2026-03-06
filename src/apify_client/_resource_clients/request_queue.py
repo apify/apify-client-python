@@ -166,24 +166,27 @@ class RequestQueueClient(ResourceClient):
         result = response_to_dict(response)
         return HeadAndLockResponse.model_validate(result).data
 
-    def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
+    def add_request(self, request: dict | RequestDraft, *, forefront: bool | None = None) -> RequestRegistration:
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue.
+            request: The request to add to the queue, as a dictionary or `RequestDraft` model.
             forefront: Whether to add the request to the head or the end of the queue.
 
         Returns:
             The added request.
         """
+        if isinstance(request, dict):
+            request = RequestDraft.model_validate(request)
+
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
         response = self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request,
+            json=request.model_dump(by_alias=True, exclude_none=True),
             params=request_params,
             timeout=FAST_OPERATION_TIMEOUT,
         )
@@ -217,26 +220,29 @@ class RequestQueueClient(ResourceClient):
 
         return None
 
-    def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
+    def update_request(self, request: dict | Request, *, forefront: bool | None = None) -> RequestRegistration:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request.
+            request: The updated request, as a dictionary or `Request` model.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
 
         Returns:
             The updated request.
         """
-        request_id = request['id']
+        if isinstance(request, dict):
+            request = Request.model_validate(request)
+
+        request_id = request.id
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
         response = self._http_client.call(
             url=self._build_url(f'requests/{request_id}'),
             method='PUT',
-            json=request,
+            json=request.model_dump(by_alias=True, exclude_none=True),
             params=request_params,
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
@@ -315,7 +321,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_add_requests(
         self,
-        requests: list[dict],
+        requests: list[dict | RequestDraft],
         *,
         forefront: bool = False,
         max_parallel: int = 1,
@@ -329,7 +335,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue.
+            requests: List of requests to be added to the queue, each as a dictionary or `RequestDraft` model.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -348,6 +354,11 @@ class RequestQueueClient(ResourceClient):
         if max_parallel != 1:
             raise NotImplementedError('max_parallel is only supported in async client')
 
+        requests_as_dicts: list[dict] = [
+            (RequestDraft.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
+            for r in requests
+        ]
+
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
         # Compute the payload size limit to ensure it doesn't exceed the maximum allowed size.
@@ -355,7 +366,7 @@ class RequestQueueClient(ResourceClient):
 
         # Split the requests into batches, constrained by the max payload size and max requests per batch.
         batches = constrained_batches(
-            requests,
+            requests_as_dicts,
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
         )
@@ -580,24 +591,27 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response_to_dict(response)
         return HeadAndLockResponse.model_validate(result).data
 
-    async def add_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
+    async def add_request(self, request: dict | RequestDraft, *, forefront: bool | None = None) -> RequestRegistration:
         """Add a request to the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue.
+            request: The request to add to the queue, as a dictionary or `RequestDraft` model.
             forefront: Whether to add the request to the head or the end of the queue.
 
         Returns:
             The added request.
         """
+        if isinstance(request, dict):
+            request = RequestDraft.model_validate(request)
+
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
         response = await self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request,
+            json=request.model_dump(by_alias=True, exclude_none=True),
             params=request_params,
             timeout=FAST_OPERATION_TIMEOUT,
         )
@@ -629,26 +643,29 @@ class RequestQueueClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
             return None
 
-    async def update_request(self, request: dict, *, forefront: bool | None = None) -> RequestRegistration:
+    async def update_request(self, request: dict | Request, *, forefront: bool | None = None) -> RequestRegistration:
         """Update a request in the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request.
+            request: The updated request, as a dictionary or `Request` model.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
 
         Returns:
             The updated request.
         """
-        request_id = request['id']
+        if isinstance(request, dict):
+            request = Request.model_validate(request)
+
+        request_id = request.id
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
         response = await self._http_client.call(
             url=self._build_url(f'requests/{request_id}'),
             method='PUT',
-            json=request,
+            json=request.model_dump(by_alias=True, exclude_none=True),
             params=request_params,
             timeout=STANDARD_OPERATION_TIMEOUT,
         )
@@ -777,7 +794,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_add_requests(
         self,
-        requests: list[dict],
+        requests: list[dict | RequestDraft],
         *,
         forefront: bool = False,
         max_parallel: int = 5,
@@ -791,7 +808,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue.
+            requests: List of requests to be added to the queue, each as a dictionary or `RequestDraft` model.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -807,6 +824,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         if min_delay_between_unprocessed_requests_retries:
             logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
 
+        requests_as_dicts: list[dict] = [
+            (RequestDraft.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
+            for r in requests
+        ]
+
         asyncio_queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
@@ -815,7 +837,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         # Split the requests into batches, constrained by the max payload size and max requests per batch.
         batches = constrained_batches(
-            requests,
+            requests_as_dicts,
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
         )

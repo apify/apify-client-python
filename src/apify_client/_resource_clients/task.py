@@ -13,6 +13,7 @@ from apify_client._models import (
     TaskOptions,
     TaskResponse,
     UpdateTaskRequest,
+    WebhookCreate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -71,7 +72,7 @@ class TaskClient(ResourceClient):
         self,
         *,
         name: str | None = None,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
@@ -100,7 +101,7 @@ class TaskClient(ResourceClient):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            task_input: Task input dictionary.
+            task_input: Task input dictionary or `TaskInput` model.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
@@ -114,10 +115,13 @@ class TaskClient(ResourceClient):
         Returns:
             The updated task.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         task_fields = UpdateTaskRequest(
             name=name,
             title=title,
-            input=TaskInput.model_validate(task_input) if task_input else None,
+            input=task_input,
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -146,21 +150,21 @@ class TaskClient(ResourceClient):
     def start(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
     ) -> Run:
         """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary.
+            task_input: Task input dictionary or `TaskInput` model.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
@@ -176,7 +180,7 @@ class TaskClient(ResourceClient):
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                Each webhook is represented by a dictionary containing these items:
+                Each webhook is represented by a dictionary or `WebhookCreate` model containing these items:
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
@@ -184,6 +188,9 @@ class TaskClient(ResourceClient):
         Returns:
             The run object.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -191,14 +198,14 @@ class TaskClient(ResourceClient):
             timeout=to_seconds(timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks),
         )
 
         response = self._http_client.call(
             url=self._build_url('runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
-            json=task_input,
+            json=task_input.model_dump() if task_input is not None else None,
             params=request_params,
         )
 
@@ -208,13 +215,13 @@ class TaskClient(ResourceClient):
     def call(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         wait_duration: timedelta | None = None,
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
@@ -224,7 +231,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary.
+            task_input: Task input dictionary or `TaskInput` model.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
@@ -282,22 +289,25 @@ class TaskClient(ResourceClient):
             catch_not_found_or_throw(exc)
         return None
 
-    def update_input(self, *, task_input: dict) -> dict:
+    def update_input(self, *, task_input: dict | TaskInput) -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Args:
-            task_input: The new default input for this task.
+            task_input: The new default input for this task, as a dictionary or `TaskInput` model.
 
         Returns:
             The updated task input.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         response = self._http_client.call(
             url=self._build_url('input'),
             method='PUT',
             params=self._build_params(),
-            json=task_input,
+            json=task_input.model_dump(),
         )
         return response_to_dict(response)
 
@@ -366,7 +376,7 @@ class TaskClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
@@ -395,7 +405,7 @@ class TaskClientAsync(ResourceClientAsync):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            task_input: Task input dictionary.
+            task_input: Task input dictionary or `TaskInput` model.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
@@ -409,10 +419,13 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The updated task.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         task_fields = UpdateTaskRequest(
             name=name,
             title=title,
-            input=TaskInput.model_validate(task_input) if task_input else None,
+            input=task_input,
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -441,21 +454,21 @@ class TaskClientAsync(ResourceClientAsync):
     async def start(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
     ) -> Run:
         """Start the task and immediately return the Run object.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary.
+            task_input: Task input dictionary or `TaskInput` model.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
@@ -471,7 +484,7 @@ class TaskClientAsync(ResourceClientAsync):
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                Each webhook is represented by a dictionary containing these items:
+                Each webhook is represented by a dictionary or `WebhookCreate` model containing these items:
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
@@ -479,6 +492,9 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The run object.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -486,14 +502,14 @@ class TaskClientAsync(ResourceClientAsync):
             timeout=to_seconds(timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=encode_webhook_list_to_base64(webhooks),
         )
 
         response = await self._http_client.call(
             url=self._build_url('runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
-            json=task_input,
+            json=task_input.model_dump() if task_input is not None else None,
             params=request_params,
         )
 
@@ -503,13 +519,13 @@ class TaskClientAsync(ResourceClientAsync):
     async def call(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         wait_duration: timedelta | None = None,
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
@@ -519,7 +535,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary.
+            task_input: Task input dictionary or `TaskInput` model.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
@@ -576,22 +592,25 @@ class TaskClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
         return None
 
-    async def update_input(self, *, task_input: dict) -> dict:
+    async def update_input(self, *, task_input: dict | TaskInput) -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Args:
-            task_input: The new default input for this task.
+            task_input: The new default input for this task, as a dictionary or `TaskInput` model.
 
         Returns:
             The updated task input.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         response = await self._http_client.call(
             url=self._build_url('input'),
             method='PUT',
             params=self._build_params(),
-            json=task_input,
+            json=task_input.model_dump(),
         )
         return response_to_dict(response)
 

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 import impit
 
 from apify_client._consts import OVERRIDABLE_DEFAULT_HEADERS
+from apify_client._models import WebhookCreate
 from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -69,26 +70,43 @@ def catch_not_found_or_throw(exc: ApifyApiError) -> None:
         raise exc
 
 
-def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
-    """Encode a list of webhook dictionaries to base64 for API transmission.
+@overload
+def encode_webhook_list_to_base64(webhooks: None) -> None: ...
+
+
+@overload
+def encode_webhook_list_to_base64(webhooks: list[dict | WebhookCreate]) -> str: ...
+
+
+def encode_webhook_list_to_base64(webhooks: list[dict | WebhookCreate] | None) -> str | None:
+    """Encode a list of webhook dictionaries or `WebhookCreate` models to base64 for API transmission.
 
     Args:
-        webhooks: A list of webhook dictionaries with keys like "event_types", "request_url", etc.
+        webhooks: A list of webhook dictionaries or `WebhookCreate` models with keys like
+            "event_types", "request_url", etc. If None, returns None.
 
     Returns:
-        A base64-encoded JSON string.
+        A base64-encoded JSON string, or None if webhooks is None.
     """
+    if webhooks is None:
+        return None
+
     data = list[dict]()
 
     for webhook in webhooks:
+        webhook_dict = webhook.model_dump(exclude_none=True) if isinstance(webhook, WebhookCreate) else webhook
+
         webhook_representation = {
-            'eventTypes': list(webhook['event_types']),
-            'requestUrl': webhook['request_url'],
+            'eventTypes': list(webhook_dict['event_types']),
+            'requestUrl': webhook_dict['request_url'],
         }
-        if 'payload_template' in webhook:
-            webhook_representation['payloadTemplate'] = webhook['payload_template']
-        if 'headers_template' in webhook:
-            webhook_representation['headersTemplate'] = webhook['headers_template']
+
+        if 'payload_template' in webhook_dict:
+            webhook_representation['payloadTemplate'] = webhook_dict['payload_template']
+
+        if 'headers_template' in webhook_dict:
+            webhook_representation['headersTemplate'] = webhook_dict['headers_template']
+
         data.append(webhook_representation)
 
     return b64encode(json.dumps(data).encode('utf-8')).decode('ascii')

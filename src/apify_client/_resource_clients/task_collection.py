@@ -19,6 +19,8 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._types import Timeout
+
 
 @docs_group('Resource clients')
 class TaskCollectionClient(ResourceClient):
@@ -45,6 +47,7 @@ class TaskCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfTasks:
         """List the available tasks.
 
@@ -54,11 +57,12 @@ class TaskCollectionClient(ResourceClient):
             limit: How many tasks to list.
             offset: What task to include as first when retrieving the list.
             desc: Whether to sort the tasks in descending order based on their creation date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available tasks matching the specified filters.
         """
-        result = self._list(limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfTasksResponse.model_validate(result).data
 
     def create(
@@ -67,7 +71,7 @@ class TaskCollectionClient(ResourceClient):
         actor_id: str,
         name: str,
         build: str | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
@@ -78,6 +82,7 @@ class TaskCollectionClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Task:
         """Create a new task.
 
@@ -92,7 +97,7 @@ class TaskCollectionClient(ResourceClient):
                 in the task settings.
             max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
                 is charged per result, you will not be charged for more results than the given limit.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -106,6 +111,7 @@ class TaskCollectionClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created task.
@@ -119,7 +125,7 @@ class TaskCollectionClient(ResourceClient):
                 build=build,
                 max_items=max_items,
                 memory_mbytes=memory_mbytes,
-                timeout_secs=to_seconds(timeout, as_int=True),
+                timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -130,7 +136,7 @@ class TaskCollectionClient(ResourceClient):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = self._create(**task_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
 
@@ -159,6 +165,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfTasks:
         """List the available tasks.
 
@@ -168,11 +175,12 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             limit: How many tasks to list.
             offset: What task to include as first when retrieving the list.
             desc: Whether to sort the tasks in descending order based on their creation date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available tasks matching the specified filters.
         """
-        result = await self._list(limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfTasksResponse.model_validate(result).data
 
     async def create(
@@ -181,7 +189,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         actor_id: str,
         name: str,
         build: str | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
@@ -192,6 +200,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Task:
         """Create a new task.
 
@@ -206,7 +215,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 in the task settings.
             max_items: Maximum number of results that will be returned by runs of this task. If the Actor of this task
                 is charged per result, you will not be charged for more results than the given limit.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -220,6 +229,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created task.
@@ -233,7 +243,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 build=build,
                 max_items=max_items,
                 memory_mbytes=memory_mbytes,
-                timeout_secs=to_seconds(timeout, as_int=True),
+                timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -244,5 +254,5 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = await self._create(**task_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data

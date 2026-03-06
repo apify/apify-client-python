@@ -37,7 +37,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._consts import ActorJobStatus
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,
@@ -54,6 +53,7 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
+    from apify_client._types import ActorJobStatus, Timeout
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -85,15 +85,18 @@ class ActorClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Actor | None:
+    def get(self, *, timeout: Timeout = 'long') -> Actor | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return ActorResponse.model_validate(result).data
@@ -126,6 +129,7 @@ class ActorClient(ResourceClient):
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, None | dict[str, str]] | None = None,
+        timeout: Timeout = 'long',
     ) -> Actor:
         """Update the Actor with the specified fields.
 
@@ -164,6 +168,7 @@ class ActorClient(ResourceClient):
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
                 or remove build tags. To assign a tag, provide a dict with 'buildId' key. To remove a tag,
                 set its value to None. Example: {'latest': {'buildId': 'abc'}, 'beta': None}.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated Actor.
@@ -201,15 +206,18 @@ class ActorClient(ResourceClient):
             ),
             tagged_builds=tagged_builds,
         )
-        result = self._update(**actor_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        self._delete()
+        self._delete(timeout=timeout)
 
     def start(
         self,
@@ -221,10 +229,11 @@ class ActorClient(ResourceClient):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
 
@@ -242,7 +251,7 @@ class ActorClient(ResourceClient):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
@@ -255,6 +264,7 @@ class ActorClient(ResourceClient):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -267,7 +277,7 @@ class ActorClient(ResourceClient):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -279,6 +289,7 @@ class ActorClient(ResourceClient):
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -294,11 +305,12 @@ class ActorClient(ResourceClient):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         webhooks: list[dict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
+        timeout: Timeout = 'long',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
@@ -318,7 +330,7 @@ class ActorClient(ResourceClient):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
@@ -331,6 +343,7 @@ class ActorClient(ResourceClient):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -343,9 +356,10 @@ class ActorClient(ResourceClient):
             max_total_charge_usd=max_total_charge_usd,
             restart_on_error=restart_on_error,
             memory_mbytes=memory_mbytes,
-            timeout=timeout,
+            run_timeout=run_timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
+            timeout=timeout,
         )
         run_client = self._client_registry.run_client(
             resource_id=started_run.id,
@@ -372,6 +386,7 @@ class ActorClient(ResourceClient):
         tag: str | None = None,
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Build:
         """Build the Actor.
 
@@ -388,6 +403,7 @@ class ActorClient(ResourceClient):
                 This is to enable quick rebuild during development. By default, the cache is not used.
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The build object.
@@ -404,6 +420,7 @@ class ActorClient(ResourceClient):
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -427,6 +444,7 @@ class ActorClient(ResourceClient):
         self,
         *,
         wait_for_finish: int | None = None,
+        timeout: Timeout = 'long',
     ) -> BuildClient:
         """Retrieve Actor's default build.
 
@@ -435,6 +453,7 @@ class ActorClient(ResourceClient):
         Args:
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The resource client for the default build of this Actor.
@@ -443,7 +462,12 @@ class ActorClient(ResourceClient):
             waitForFinish=wait_for_finish,
         )
 
-        response = self._http_client.call(url=self._build_url('builds/default'), method='GET', params=request_params)
+        response = self._http_client.call(
+            url=self._build_url('builds/default'),
+            method='GET',
+            params=request_params,
+            timeout=timeout,
+        )
         result = response_to_dict(response)
 
         return self._client_registry.build_client(
@@ -504,7 +528,12 @@ class ActorClient(ResourceClient):
         return self._client_registry.webhook_collection_client(**self._base_client_kwargs)
 
     def validate_input(
-        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+        self,
+        run_input: Any = None,
+        *,
+        build_tag: str | None = None,
+        content_type: str | None = None,
+        timeout: Timeout = 'long',
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -512,6 +541,7 @@ class ActorClient(ResourceClient):
             run_input: The input to validate.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
@@ -524,6 +554,7 @@ class ActorClient(ResourceClient):
             headers={'content-type': content_type},
             data=run_input,
             params=self._build_params(build=build_tag),
+            timeout=timeout,
         )
 
         return True
@@ -550,15 +581,18 @@ class ActorClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Actor | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Actor | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return ActorResponse.model_validate(result).data
@@ -591,6 +625,7 @@ class ActorClientAsync(ResourceClientAsync):
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, None | dict[str, str]] | None = None,
+        timeout: Timeout = 'long',
     ) -> Actor:
         """Update the Actor with the specified fields.
 
@@ -629,6 +664,7 @@ class ActorClientAsync(ResourceClientAsync):
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
                 or remove build tags. To assign a tag, provide a dict with 'buildId' key. To remove a tag,
                 set its value to None. Example: {'latest': {'buildId': 'abc'}, 'beta': None}.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated Actor.
@@ -666,15 +702,18 @@ class ActorClientAsync(ResourceClientAsync):
             ),
             tagged_builds=tagged_builds,
         )
-        result = await self._update(**actor_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        await self._delete()
+        await self._delete(timeout=timeout)
 
     async def start(
         self,
@@ -686,10 +725,11 @@ class ActorClientAsync(ResourceClientAsync):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
 
@@ -707,7 +747,7 @@ class ActorClientAsync(ResourceClientAsync):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
@@ -720,6 +760,7 @@ class ActorClientAsync(ResourceClientAsync):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -732,7 +773,7 @@ class ActorClientAsync(ResourceClientAsync):
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -744,6 +785,7 @@ class ActorClientAsync(ResourceClientAsync):
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -759,11 +801,12 @@ class ActorClientAsync(ResourceClientAsync):
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         webhooks: list[dict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
+        timeout: Timeout = 'long',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
@@ -783,7 +826,7 @@ class ActorClientAsync(ResourceClientAsync):
                 a non-zero status code.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit
                 specified in the default run configuration for the Actor.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the default run configuration for the Actor.
             force_permission_level: Override the Actor's permissions for this run. If not set, the Actor will run
                 with permissions configured in the Actor settings.
@@ -796,6 +839,7 @@ class ActorClientAsync(ResourceClientAsync):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -808,9 +852,10 @@ class ActorClientAsync(ResourceClientAsync):
             max_total_charge_usd=max_total_charge_usd,
             restart_on_error=restart_on_error,
             memory_mbytes=memory_mbytes,
-            timeout=timeout,
+            run_timeout=run_timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
+            timeout=timeout,
         )
 
         run_client = self._client_registry.run_client(
@@ -841,6 +886,7 @@ class ActorClientAsync(ResourceClientAsync):
         tag: str | None = None,
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Build:
         """Build the Actor.
 
@@ -857,6 +903,7 @@ class ActorClientAsync(ResourceClientAsync):
                 This is to enable quick rebuild during development. By default, the cache is not used.
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The build object.
@@ -873,6 +920,7 @@ class ActorClientAsync(ResourceClientAsync):
             url=self._build_url('builds'),
             method='POST',
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -896,6 +944,7 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         *,
         wait_for_finish: int | None = None,
+        timeout: Timeout = 'long',
     ) -> BuildClientAsync:
         """Retrieve Actor's default build.
 
@@ -904,6 +953,7 @@ class ActorClientAsync(ResourceClientAsync):
         Args:
             wait_for_finish: The maximum number of seconds the server waits for the build to finish before returning.
                 By default it is 0, the maximum value is 60.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The resource client for the default build of this Actor.
@@ -916,6 +966,7 @@ class ActorClientAsync(ResourceClientAsync):
             url=self._build_url('builds/default'),
             method='GET',
             params=request_params,
+            timeout=timeout,
         )
         result = response_to_dict(response)
 
@@ -977,7 +1028,12 @@ class ActorClientAsync(ResourceClientAsync):
         return self._client_registry.webhook_collection_client(**self._base_client_kwargs)
 
     async def validate_input(
-        self, run_input: Any = None, *, build_tag: str | None = None, content_type: str | None = None
+        self,
+        run_input: Any = None,
+        *,
+        build_tag: str | None = None,
+        content_type: str | None = None,
+        timeout: Timeout = 'long',
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -985,6 +1041,7 @@ class ActorClientAsync(ResourceClientAsync):
             run_input: The input to validate.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
@@ -997,6 +1054,7 @@ class ActorClientAsync(ResourceClientAsync):
             headers={'content-type': content_type},
             data=run_input,
             params=self._build_params(build=build_tag),
+            timeout=timeout,
         )
 
         return True

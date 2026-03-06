@@ -16,6 +16,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 
 if TYPE_CHECKING:
     from apify_client._models import Webhook, WebhookEventType
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -43,6 +44,7 @@ class WebhookCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfWebhooks:
         """List the available webhooks.
 
@@ -52,11 +54,12 @@ class WebhookCollectionClient(ResourceClient):
             limit: How many webhooks to retrieve.
             offset: What webhook to include as first when retrieving the list.
             desc: Whether to sort the webhooks in descending order based on their date of creation.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        result = self._list(limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfWebhooksResponse.model_validate(result).data
 
     def create(
@@ -73,6 +76,7 @@ class WebhookCollectionClient(ResourceClient):
         do_not_retry: bool | None = None,
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> Webhook:
         """Create a new webhook.
 
@@ -94,6 +98,7 @@ class WebhookCollectionClient(ResourceClient):
                 the same webhook multiple times.
             is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
                 is fulfilled. Only applicable when actor_run_id is filled.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
            The created webhook.
@@ -113,7 +118,7 @@ class WebhookCollectionClient(ResourceClient):
                 actor_id=actor_id,
             ),
         )
-        result = self._create(**webhook_create.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(timeout=timeout, **webhook_create.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
 
@@ -142,6 +147,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfWebhooks:
         """List the available webhooks.
 
@@ -151,11 +157,12 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             limit: How many webhooks to retrieve.
             offset: What webhook to include as first when retrieving the list.
             desc: Whether to sort the webhooks in descending order based on their date of creation.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available webhooks matching the specified filters.
         """
-        result = await self._list(limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfWebhooksResponse.model_validate(result).data
 
     async def create(
@@ -172,6 +179,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         do_not_retry: bool | None = None,
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> Webhook:
         """Create a new webhook.
 
@@ -193,6 +201,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
                 the same webhook multiple times.
             is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
                 is fulfilled. Only applicable when actor_run_id is filled.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
            The created webhook.
@@ -212,5 +221,5 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
                 actor_id=actor_id,
             ),
         )
-        result = await self._create(**webhook_create.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(timeout=timeout, **webhook_create.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data

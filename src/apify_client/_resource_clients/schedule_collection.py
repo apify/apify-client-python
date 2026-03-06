@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -12,6 +12,9 @@ from apify_client._models import (
     ScheduleResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -39,6 +42,7 @@ class ScheduleCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfSchedules:
         """List the available schedules.
 
@@ -48,11 +52,12 @@ class ScheduleCollectionClient(ResourceClient):
             limit: How many schedules to retrieve.
             offset: What schedules to include as first when retrieving the list.
             desc: Whether to sort the schedules in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available schedules matching the specified filters.
         """
-        result = self._list(limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfSchedulesResponse.model_validate(result).data
 
     def create(
@@ -66,6 +71,7 @@ class ScheduleCollectionClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Schedule:
         """Create a new schedule.
 
@@ -82,6 +88,7 @@ class ScheduleCollectionClient(ResourceClient):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: Title of this schedule.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created schedule.
@@ -99,7 +106,7 @@ class ScheduleCollectionClient(ResourceClient):
             timezone=timezone,
             title=title,
         )
-        result = self._create(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
 
@@ -128,6 +135,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfSchedules:
         """List the available schedules.
 
@@ -137,11 +145,12 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             limit: How many schedules to retrieve.
             offset: What schedules to include as first when retrieving the list.
             desc: Whether to sort the schedules in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available schedules matching the specified filters.
         """
-        result = await self._list(limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfSchedulesResponse.model_validate(result).data
 
     async def create(
@@ -155,6 +164,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Schedule:
         """Create a new schedule.
 
@@ -171,6 +181,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: Title of this schedule.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created schedule.
@@ -188,5 +199,5 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             timezone=timezone,
             title=title,
         )
-        result = await self._create(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data

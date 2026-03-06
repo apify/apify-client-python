@@ -10,5 +10,5 @@ async def main() -> None:
         token=TOKEN,
         max_retries=4,
         min_delay_between_retries=timedelta(milliseconds=500),
-        timeout=timedelta(seconds=360),
+        timeout_medium=timedelta(seconds=360),
     )

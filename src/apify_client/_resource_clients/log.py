@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._http_clients import HttpResponse
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -33,13 +34,14 @@ class LogClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, raw: bool = False) -> str | None:
+    def get(self, *, raw: bool = False, timeout: Timeout = 'long') -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved log, or None, if it does not exist.
@@ -49,6 +51,7 @@ class LogClient(ResourceClient):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
+                timeout=timeout,
             )
 
             return response.text  # noqa: TRY300
@@ -58,13 +61,14 @@ class LogClient(ResourceClient):
 
         return None
 
-    def get_as_bytes(self, *, raw: bool = False) -> bytes | None:
+    def get_as_bytes(self, *, raw: bool = False, timeout: Timeout = 'long') -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved log as raw bytes, or None, if it does not exist.
@@ -74,6 +78,7 @@ class LogClient(ResourceClient):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
+                timeout=timeout,
             )
 
             return response.content  # noqa: TRY300
@@ -84,13 +89,14 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self, *, raw: bool = False) -> Iterator[HttpResponse | None]:
+    def stream(self, *, raw: bool = False, timeout: Timeout = 'long') -> Iterator[HttpResponse | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
@@ -102,6 +108,7 @@ class LogClient(ResourceClient):
                 method='GET',
                 params=self._build_params(stream=True, raw=raw),
                 stream=True,
+                timeout=timeout,
             )
 
             yield response
@@ -132,13 +139,14 @@ class LogClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, raw: bool = False) -> str | None:
+    async def get(self, *, raw: bool = False, timeout: Timeout = 'long') -> str | None:
         """Retrieve the log as text.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved log, or None, if it does not exist.
@@ -148,6 +156,7 @@ class LogClientAsync(ResourceClientAsync):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
+                timeout=timeout,
             )
 
             return response.text  # noqa: TRY300
@@ -157,13 +166,14 @@ class LogClientAsync(ResourceClientAsync):
 
         return None
 
-    async def get_as_bytes(self, *, raw: bool = False) -> bytes | None:
+    async def get_as_bytes(self, *, raw: bool = False, timeout: Timeout = 'long') -> bytes | None:
         """Retrieve the log as raw bytes.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved log as raw bytes, or None, if it does not exist.
@@ -173,6 +183,7 @@ class LogClientAsync(ResourceClientAsync):
                 url=self._build_url(),
                 method='GET',
                 params=self._build_params(raw=raw),
+                timeout=timeout,
             )
 
             return response.content  # noqa: TRY300
@@ -183,13 +194,14 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self, *, raw: bool = False) -> AsyncIterator[HttpResponse | None]:
+    async def stream(self, *, raw: bool = False, timeout: Timeout = 'long') -> AsyncIterator[HttpResponse | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved log as a context-managed streaming `Response`, or None, if it does not exist.
@@ -201,6 +213,7 @@ class LogClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._build_params(stream=True, raw=raw),
                 stream=True,
+                timeout=timeout,
             )
 
             yield response

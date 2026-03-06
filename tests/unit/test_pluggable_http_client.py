@@ -18,9 +18,10 @@ from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
-    from datetime import timedelta
 
     from pytest_httpserver import HTTPServer
+
+    from apify_client._types import Timeout
 
 
 # -- Test response and client implementations --
@@ -86,7 +87,7 @@ class FakeHttpClient(HttpClient):
         data: str | bytes | bytearray | None = None,
         json: Any = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> FakeResponse:
         self.calls.append(
             {
@@ -120,7 +121,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         data: str | bytes | bytearray | None = None,
         json: Any = None,
         stream: bool | None = None,
-        timeout: timedelta | None = None,
+        timeout: Timeout = 'medium',
     ) -> FakeResponse:
         self.calls.append(
             {
@@ -216,7 +217,7 @@ def test_apify_client_custom_http_client_receives_requests() -> None:
 
     # Use _get() via the dataset client to avoid Pydantic model validation
     # (actor.get() would try to validate against ActorResponse model)
-    result = client.dataset('test-dataset')._get()
+    result = client.dataset('test-dataset')._get(timeout='short')
 
     assert len(fake_client.calls) == 1
     call = fake_client.calls[0]
@@ -261,7 +262,7 @@ async def test_apify_client_async_custom_http_client_receives_requests() -> None
     client = ApifyClientAsync.with_custom_http_client(token='test_token', http_client=fake_client)
 
     # Use _get() via the dataset client to avoid Pydantic model validation
-    result = await client.dataset('test-dataset')._get()
+    result = await client.dataset('test-dataset')._get(timeout='short')
 
     assert len(fake_client.calls) == 1
     call = fake_client.calls[0]
@@ -391,7 +392,7 @@ def test_custom_http_client_with_real_server(httpserver: HTTPServer) -> None:
     client = ApifyClient.with_custom_http_client(token='test_token', api_url=api_url, http_client=WrappingHttpClient())
 
     # Use _get() to test the raw request flow without Pydantic validation
-    result = client.dataset('test-dataset')._get()
+    result = client.dataset('test-dataset')._get(timeout='short')
 
     assert result is not None
     assert result['data']['id'] == 'test-dataset'
@@ -419,7 +420,7 @@ async def test_custom_http_client_async_with_real_server(httpserver: HTTPServer)
     )
 
     # Use _get() to test the raw request flow without Pydantic validation
-    result = await client.dataset('test-dataset')._get()
+    result = await client.dataset('test-dataset')._get(timeout='short')
 
     assert result is not None
     assert result['data']['id'] == 'test-dataset'

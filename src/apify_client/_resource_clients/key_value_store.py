@@ -6,7 +6,6 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
 from apify_client._docs import docs_group
 from apify_client._models import (
     KeyValueStore,
@@ -31,6 +30,7 @@ if TYPE_CHECKING:
 
     from apify_client._http_clients import HttpResponse
     from apify_client._models import GeneralAccess
+    from apify_client._types import Timeout
 
 
 def _parse_get_record_response(response: HttpResponse) -> Any:
@@ -88,20 +88,29 @@ class KeyValueStoreClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> KeyValueStore | None:
+    def get(self, *, timeout: Timeout = 'short') -> KeyValueStore | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        result = self._get(timeout=FAST_OPERATION_TIMEOUT)
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return KeyValueStoreResponse.model_validate(result).data
 
-    def update(self, *, name: str | None = None, general_access: GeneralAccess | None = None) -> KeyValueStore:
+    def update(
+        self,
+        *,
+        name: str | None = None,
+        general_access: GeneralAccess | None = None,
+        timeout: Timeout = 'long',
+    ) -> KeyValueStore:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -109,19 +118,23 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             name: The new name for key-value store.
             general_access: Determines how others can access the key-value store.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated key-value store.
         """
-        result = self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
+        result = self._update(timeout=timeout, name=name, generalAccess=general_access)
         return KeyValueStoreResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        self._delete(timeout=FAST_OPERATION_TIMEOUT)
+        self._delete(timeout=timeout)
 
     def list_keys(
         self,
@@ -131,6 +144,7 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'medium',
     ) -> ListOfKeys:
         """List the keys in the key-value store.
 
@@ -142,6 +156,7 @@ class KeyValueStoreClient(ResourceClient):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
@@ -158,7 +173,7 @@ class KeyValueStoreClient(ResourceClient):
             url=self._build_url('keys'),
             method='GET',
             params=request_params,
-            timeout=STANDARD_OPERATION_TIMEOUT,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -171,6 +186,7 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Iterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
 
@@ -181,6 +197,7 @@ class KeyValueStoreClient(ResourceClient):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Yields:
             A key from the key-value store.
@@ -202,6 +219,7 @@ class KeyValueStoreClient(ResourceClient):
                 collection=collection,
                 prefix=prefix,
                 signature=signature,
+                timeout=timeout,
             )
 
             yield from current_keys_page.items
@@ -213,7 +231,7 @@ class KeyValueStoreClient(ResourceClient):
 
             exclusive_start_key = current_keys_page.next_exclusive_start_key
 
-    def get_record(self, key: str, signature: str | None = None) -> dict | None:
+    def get_record(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -221,6 +239,7 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             key: Key of the record to retrieve.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -230,6 +249,7 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
+                timeout=timeout,
             )
 
             return {
@@ -243,13 +263,14 @@ class KeyValueStoreClient(ResourceClient):
 
         return None
 
-    def record_exists(self, key: str) -> bool:
+    def record_exists(self, key: str, *, timeout: Timeout = 'long') -> bool:
         """Check if given record is present in the key-value store.
 
         https://docs.apify.com/api/v2/key-value-store-record-head
 
         Args:
             key: Key of the record to check.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             True if the record exists, False otherwise.
@@ -259,6 +280,7 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._build_url(f'records/{key}'),
                 method='HEAD',
                 params=self._build_params(),
+                timeout=timeout,
             )
         except ApifyApiError as exc:
             if exc.status_code == HTTPStatus.NOT_FOUND:
@@ -268,7 +290,7 @@ class KeyValueStoreClient(ResourceClient):
 
         return response.status_code == HTTPStatus.OK
 
-    def get_record_as_bytes(self, key: str, signature: str | None = None) -> dict | None:
+    def get_record_as_bytes(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -276,6 +298,7 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             key: Key of the record to retrieve.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -285,6 +308,7 @@ class KeyValueStoreClient(ResourceClient):
                 url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
+                timeout=timeout,
             )
 
             return {
@@ -299,7 +323,9 @@ class KeyValueStoreClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream_record(self, key: str, signature: str | None = None) -> Iterator[dict | None]:
+    def stream_record(
+        self, key: str, signature: str | None = None, *, timeout: Timeout = 'long'
+    ) -> Iterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -307,6 +333,7 @@ class KeyValueStoreClient(ResourceClient):
         Args:
             key: Key of the record to retrieve.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The requested record as a context-managed streaming Response, or None, if the record does not exist.
@@ -318,6 +345,7 @@ class KeyValueStoreClient(ResourceClient):
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
+                timeout=timeout,
             )
 
             yield {
@@ -338,6 +366,8 @@ class KeyValueStoreClient(ResourceClient):
         key: str,
         value: Any,
         content_type: str | None = None,
+        *,
+        timeout: Timeout = 'long',
     ) -> None:
         """Set a value to the given record in the key-value store.
 
@@ -347,6 +377,7 @@ class KeyValueStoreClient(ResourceClient):
             key: The key of the record to save the value to.
             value: The value to save into the record.
             content_type: The content type of the saved value.
+            timeout: Timeout for the API HTTP request.
         """
         value, content_type = encode_key_value_store_record_value(value, content_type)
 
@@ -358,24 +389,26 @@ class KeyValueStoreClient(ResourceClient):
             params=self._build_params(),
             data=value,
             headers=headers,
+            timeout=timeout,
         )
 
-    def delete_record(self, key: str) -> None:
+    def delete_record(self, key: str, *, timeout: Timeout = 'short') -> None:
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
 
         Args:
             key: The key of the record which to delete.
+            timeout: Timeout for the API HTTP request.
         """
         self._http_client.call(
             url=self._build_url(f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
-            timeout=FAST_OPERATION_TIMEOUT,
+            timeout=timeout,
         )
 
-    def get_record_public_url(self, key: str) -> str:
+    def get_record_public_url(self, key: str, *, timeout: Timeout = 'long') -> str:
         """Generate a URL that can be used to access key-value store record.
 
         If the client has permission to access the key-value store's URL signing key, the URL will include a signature
@@ -383,6 +416,7 @@ class KeyValueStoreClient(ResourceClient):
 
         Args:
             key: The key for which the URL should be generated.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             A public URL that can be used to access the value of the given key in the KVS.
@@ -390,7 +424,7 @@ class KeyValueStoreClient(ResourceClient):
         if self._resource_id is None:
             raise ValueError('resource_id cannot be None when generating a public URL')
 
-        metadata = self.get()
+        metadata = self.get(timeout=timeout)
 
         request_params = self._build_params()
 
@@ -413,6 +447,7 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         expires_in: timedelta | None = None,
+        timeout: Timeout = 'long',
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
@@ -425,10 +460,18 @@ class KeyValueStoreClient(ResourceClient):
 
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
 
+        Args:
+            limit: Number of keys to be returned. Maximum value is 1000.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
+            collection: The name of the collection in store schema to list keys from.
+            prefix: The prefix of the keys to be listed.
+            expires_in: How long the signed URL should be valid from the time it is generated.
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The public key-value store keys URL.
         """
-        metadata = self.get()
+        metadata = self.get(timeout=timeout)
 
         request_params = self._build_params(
             limit=limit,
@@ -475,15 +518,18 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> KeyValueStore | None:
+    async def get(self, *, timeout: Timeout = 'short') -> KeyValueStore | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved key-value store, or None if it does not exist.
         """
-        result = await self._get(timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return KeyValueStoreResponse.model_validate(result).data
@@ -493,6 +539,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         *,
         name: str | None = None,
         general_access: GeneralAccess | None = None,
+        timeout: Timeout = 'long',
     ) -> KeyValueStore:
         """Update the key-value store with specified fields.
 
@@ -501,19 +548,23 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Args:
             name: The new name for key-value store.
             general_access: Determines how others can access the key-value store.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated key-value store.
         """
-        result = await self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
+        result = await self._update(timeout=timeout, name=name, generalAccess=general_access)
         return KeyValueStoreResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/delete-store
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        await self._delete(timeout=FAST_OPERATION_TIMEOUT)
+        await self._delete(timeout=timeout)
 
     async def list_keys(
         self,
@@ -523,6 +574,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'medium',
     ) -> ListOfKeys:
         """List the keys in the key-value store.
 
@@ -534,6 +586,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
@@ -550,7 +603,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             url=self._build_url('keys'),
             method='GET',
             params=request_params,
-            timeout=STANDARD_OPERATION_TIMEOUT,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -563,6 +616,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> AsyncIterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
 
@@ -573,6 +627,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Yields:
             A key from the key-value store.
@@ -594,6 +649,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 collection=collection,
                 prefix=prefix,
                 signature=signature,
+                timeout=timeout,
             )
 
             for key in current_keys_page.items:
@@ -606,7 +662,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
             exclusive_start_key = current_keys_page.next_exclusive_start_key
 
-    async def get_record(self, key: str, signature: str | None = None) -> dict | None:
+    async def get_record(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -614,6 +670,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Args:
             key: Key of the record to retrieve.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -623,6 +680,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
+                timeout=timeout,
             )
 
             return {
@@ -636,13 +694,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return None
 
-    async def record_exists(self, key: str) -> bool:
+    async def record_exists(self, key: str, *, timeout: Timeout = 'long') -> bool:
         """Check if given record is present in the key-value store.
 
         https://docs.apify.com/api/v2/key-value-store-record-head
 
         Args:
             key: Key of the record to check.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             True if the record exists, False otherwise.
@@ -652,6 +711,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._build_url(f'records/{key}'),
                 method='HEAD',
                 params=self._build_params(),
+                timeout=timeout,
             )
         except ApifyApiError as exc:
             if exc.status_code == HTTPStatus.NOT_FOUND:
@@ -661,7 +721,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return response.status_code == HTTPStatus.OK
 
-    async def get_record_as_bytes(self, key: str, signature: str | None = None) -> dict | None:
+    async def get_record_as_bytes(
+        self, key: str, signature: str | None = None, *, timeout: Timeout = 'long'
+    ) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -669,6 +731,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Args:
             key: Key of the record to retrieve.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The requested record, or None, if the record does not exist.
@@ -678,6 +741,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 url=self._build_url(f'records/{key}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
+                timeout=timeout,
             )
 
             return {
@@ -692,7 +756,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream_record(self, key: str, signature: str | None = None) -> AsyncIterator[dict | None]:
+    async def stream_record(
+        self, key: str, signature: str | None = None, *, timeout: Timeout = 'long'
+    ) -> AsyncIterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -700,6 +766,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Args:
             key: Key of the record to retrieve.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The requested record as a context-managed streaming Response, or None, if the record does not exist.
@@ -711,6 +778,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
+                timeout=timeout,
             )
 
             yield {
@@ -731,6 +799,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         key: str,
         value: Any,
         content_type: str | None = None,
+        *,
+        timeout: Timeout = 'long',
     ) -> None:
         """Set a value to the given record in the key-value store.
 
@@ -740,6 +810,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             key: The key of the record to save the value to.
             value: The value to save into the record.
             content_type: The content type of the saved value.
+            timeout: Timeout for the API HTTP request.
         """
         value, content_type = encode_key_value_store_record_value(value, content_type)
 
@@ -751,24 +822,26 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             params=self._build_params(),
             data=value,
             headers=headers,
+            timeout=timeout,
         )
 
-    async def delete_record(self, key: str) -> None:
+    async def delete_record(self, key: str, *, timeout: Timeout = 'short') -> None:
         """Delete the specified record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/delete-record
 
         Args:
             key: The key of the record which to delete.
+            timeout: Timeout for the API HTTP request.
         """
         await self._http_client.call(
             url=self._build_url(f'records/{key}'),
             method='DELETE',
             params=self._build_params(),
-            timeout=FAST_OPERATION_TIMEOUT,
+            timeout=timeout,
         )
 
-    async def get_record_public_url(self, key: str) -> str:
+    async def get_record_public_url(self, key: str, *, timeout: Timeout = 'long') -> str:
         """Generate a URL that can be used to access key-value store record.
 
         If the client has permission to access the key-value store's URL signing key, the URL will include a signature
@@ -776,6 +849,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         Args:
             key: The key for which the URL should be generated.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             A public URL that can be used to access the value of the given key in the KVS.
@@ -783,7 +857,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         if self._resource_id is None:
             raise ValueError('resource_id cannot be None when generating a public URL')
 
-        metadata = await self.get()
+        metadata = await self.get(timeout=timeout)
 
         request_params = self._build_params()
 
@@ -806,6 +880,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         expires_in: timedelta | None = None,
+        timeout: Timeout = 'long',
     ) -> str:
         """Generate a URL that can be used to access key-value store keys.
 
@@ -818,10 +893,18 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
 
+        Args:
+            limit: Number of keys to be returned. Maximum value is 1000.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
+            collection: The name of the collection in store schema to list keys from.
+            prefix: The prefix of the keys to be listed.
+            expires_in: How long the signed URL should be valid from the time it is generated.
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The public key-value store keys URL.
         """
-        metadata = await self.get()
+        metadata = await self.get(timeout=timeout)
 
         keys_public_url = urlparse(self._build_url('keys'))
 

@@ -14,6 +14,7 @@ from apify_client._models import (
     ListOfRuns,
     ListOfWebhookDispatches,
     ListOfWebhooks,
+    Run,
     Webhook,
     WebhookDispatch,
     WebhookEventType,
@@ -39,7 +40,7 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     # No completed runs found - start one and wait for it to finish
     run = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call())
 
-    assert isinstance(run, ListOfRuns)
+    assert isinstance(run, Run)
 
     return run.id
 

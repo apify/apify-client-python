@@ -405,21 +405,26 @@ class RequestQueueClient(ResourceClient):
             )
         ).data
 
-    def batch_delete_requests(self, requests: list[dict]) -> BatchDeleteResult:
+    def batch_delete_requests(self, requests: list[dict | RequestDraft]) -> BatchDeleteResult:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests: List of the requests to delete.
+            requests: List of the requests to delete, each as a dictionary or `RequestDraft` model.
         """
+        requests_as_dicts: list[dict] = [
+            (RequestDraft.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
+            for r in requests
+        ]
+
         request_params = self._build_params(clientKey=self.client_key)
 
         response = self._http_client.call(
             url=self._build_url('requests/batch'),
             method='DELETE',
             params=request_params,
-            json=requests,
+            json=requests_as_dicts,
             timeout=FAST_OPERATION_TIMEOUT,
         )
 
@@ -880,21 +885,26 @@ class RequestQueueClientAsync(ResourceClientAsync):
             )
         ).data
 
-    async def batch_delete_requests(self, requests: list[dict]) -> BatchDeleteResult:
+    async def batch_delete_requests(self, requests: list[dict | RequestDraft]) -> BatchDeleteResult:
         """Delete given requests from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests: List of the requests to delete.
+            requests: List of the requests to delete, each as a dictionary or `RequestDraft` model.
         """
+        requests_as_dicts: list[dict] = [
+            (RequestDraft.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
+            for r in requests
+        ]
+
         request_params = self._build_params(clientKey=self.client_key)
 
         response = await self._http_client.call(
             url=self._build_url('requests/batch'),
             method='DELETE',
             params=request_params,
-            json=requests,
+            json=requests_as_dicts,
             timeout=FAST_OPERATION_TIMEOUT,
         )
         result = response_to_dict(response)

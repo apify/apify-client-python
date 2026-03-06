@@ -21,28 +21,28 @@ jobs:
       operating_system_for_codecov: ubuntu-latest
       tests_concurrency: "16"
 
-  # Integration tests are inlined (not calling the reusable workflow) to avoid
-  # GitHub's compile-time secret validation for nested reusable workflows, which
-  # fails on fork PRs where repo secrets are not available.
+  # Integration tests are inlined (not calling the reusable workflow) to avoid GitHub's compile-time secret
+  # validation for nested reusable workflows, which fails on fork PRs where repo secrets are not available.
   integration_tests:
-    name: Integration tests
+    name: Integration tests (${{ matrix.python-version }}, ${{ matrix.os }})
     if: >-
       ${{
         (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'apify') ||
         (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
         github.event_name == 'workflow_dispatch'
       }}
-    concurrency:
-      group: integration_tests
+
     strategy:
       matrix:
         os: ["ubuntu-latest"]
         python-version: ["3.11", "3.14"]
-      max-parallel: 1
+
     runs-on: ${{ matrix.os }}
+
     env:
-      TESTS_CONCURRENCY: "1"
+      TESTS_CONCURRENCY: "16"
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

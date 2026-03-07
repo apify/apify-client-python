@@ -101,7 +101,7 @@ class TaskClient(ResourceClient):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            task_input: Task input dictionary or `TaskInput` model.
+            task_input: Task input dictionary.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
@@ -164,7 +164,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary or `TaskInput` model.
+            task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
@@ -180,7 +180,7 @@ class TaskClient(ResourceClient):
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                Each webhook is represented by a dictionary or `WebhookCreate` model containing these items:
+                Each webhook is represented by a dictionary containing these items:
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
@@ -231,7 +231,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary or `TaskInput` model.
+            task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
@@ -295,7 +295,7 @@ class TaskClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Args:
-            task_input: The new default input for this task, as a dictionary or `TaskInput` model.
+            task_input: The new default input for this task.
 
         Returns:
             The updated task input.
@@ -405,7 +405,7 @@ class TaskClientAsync(ResourceClientAsync):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            task_input: Task input dictionary or `TaskInput` model.
+            task_input: Task input dictionary.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
@@ -468,7 +468,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary or `TaskInput` model.
+            task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
@@ -484,7 +484,7 @@ class TaskClientAsync(ResourceClientAsync):
             webhooks: Optional ad-hoc webhooks (https://docs.apify.com/webhooks/ad-hoc-webhooks) associated with
                 the Actor run which can be used to receive a notification, e.g. when the Actor finished or failed.
                 If you already have a webhook set up for the Actor or task, you do not have to add it again here.
-                Each webhook is represented by a dictionary or `WebhookCreate` model containing these items:
+                Each webhook is represented by a dictionary containing these items:
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
@@ -535,7 +535,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/run-collection/run-task
 
         Args:
-            task_input: Task input dictionary or `TaskInput` model.
+            task_input: Task input dictionary.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
@@ -598,7 +598,7 @@ class TaskClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Args:
-            task_input: The new default input for this task, as a dictionary or `TaskInput` model.
+            task_input: The new default input for this task.
 
         Returns:
             The updated task input.

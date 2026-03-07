@@ -96,7 +96,7 @@ class TaskCollectionClient(ResourceClient):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            task_input: Task input object, as a dictionary or `TaskInput` model.
+            task_input: Task input object.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
@@ -213,7 +213,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
-            task_input: Task input object, as a dictionary or `TaskInput` model.
+            task_input: Task input object.
             title: A human-friendly equivalent of the name.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.

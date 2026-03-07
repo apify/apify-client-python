@@ -172,7 +172,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue, as a dictionary or `RequestDraft` model.
+            request: The request to add to the queue.
             forefront: Whether to add the request to the head or the end of the queue.
 
         Returns:
@@ -226,7 +226,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request, as a dictionary or `Request` model.
+            request: The updated request.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
 
         Returns:
@@ -335,7 +335,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue, each as a dictionary or `RequestDraft` model.
+            requests: List of requests to be added to the queue.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -411,7 +411,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests: List of the requests to delete, each as a dictionary or `RequestDraft` model.
+            requests: List of the requests to delete.
         """
         requests_as_dicts: list[dict] = [
             (RequestDraft.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
@@ -602,7 +602,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue, as a dictionary or `RequestDraft` model.
+            request: The request to add to the queue.
             forefront: Whether to add the request to the head or the end of the queue.
 
         Returns:
@@ -654,7 +654,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request, as a dictionary or `Request` model.
+            request: The updated request.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
 
         Returns:
@@ -813,7 +813,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue, each as a dictionary or `RequestDraft` model.
+            requests: List of requests to be added to the queue.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -891,7 +891,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/delete-requests
 
         Args:
-            requests: List of the requests to delete, each as a dictionary or `RequestDraft` model.
+            requests: List of the requests to delete.
         """
         requests_as_dicts: list[dict] = [
             (RequestDraft.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)

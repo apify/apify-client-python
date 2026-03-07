@@ -52,7 +52,7 @@ class WebhookRepresentationList(RootModel[list[WebhookRepresentation]]):
 
     @classmethod
     def from_webhooks(cls, webhooks: list[dict | WebhookCreate]) -> WebhookRepresentationList:
-        """Construct from a list of webhook dictionaries or `WebhookCreate` models."""
+        """Construct from a list of webhook dictionaries."""
         representations = []
         for webhook in webhooks:
             webhook_dict = webhook.model_dump(exclude_none=True) if isinstance(webhook, WebhookCreate) else webhook
@@ -74,11 +74,11 @@ class WebhookRepresentationList(RootModel[list[WebhookRepresentation]]):
 
     @classmethod
     def encode_to_base64(cls, webhooks: list[dict | WebhookCreate] | None) -> str | None:
-        """Encode a list of webhook dictionaries or `WebhookCreate` models to base64 for API transmission.
+        """Encode a list of webhooks to base64 for API transmission.
 
         Args:
-            webhooks: A list of webhook dictionaries or `WebhookCreate` models with keys like
-                `event_types`, `request_url`, etc. If None, returns None.
+            webhooks: A list of webhooks with keys like `event_types`, `request_url`, etc.
+                If None, returns None.
 
         Returns:
             A base64-encoded JSON string, or None if webhooks is None.

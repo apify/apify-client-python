@@ -71,7 +71,7 @@ class TaskCollectionClient(ResourceClient):
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -110,11 +110,14 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The created task.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         task_fields = CreateTaskRequest(
             act_id=actor_id,
             name=name,
             title=title,
-            input=TaskInput.model_validate(task_input) if task_input else None,
+            input=task_input,
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -185,7 +188,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -224,11 +227,14 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created task.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         task_fields = CreateTaskRequest(
             act_id=actor_id,
             name=name,
             title=title,
-            input=TaskInput.model_validate(task_input) if task_input else None,
+            input=task_input,
             options=TaskOptions(
                 build=build,
                 max_items=max_items,

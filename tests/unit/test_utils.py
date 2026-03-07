@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
+from apify_client._internal_models import WebhookRepresentationList
 from apify_client._models import WebhookEventType
 from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils import (
@@ -14,7 +15,6 @@ from apify_client._utils import (
     create_storage_content_signature,
     encode_base62,
     encode_key_value_store_record_value,
-    encode_webhook_list_to_base64,
     is_retryable_error,
     response_to_dict,
     response_to_list,
@@ -31,9 +31,9 @@ def test_to_safe_id() -> None:
 
 
 def test_encode_webhook_list_to_base64() -> None:
-    assert encode_webhook_list_to_base64([]) == 'W10='
+    assert WebhookRepresentationList.encode_to_base64([]) == 'W10='
     assert (
-        encode_webhook_list_to_base64(
+        WebhookRepresentationList.encode_to_base64(
             [
                 {
                     'event_types': [WebhookEventType.ACTOR_RUN_CREATED],

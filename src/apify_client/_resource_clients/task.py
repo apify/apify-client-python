@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._internal_models import WebhookRepresentationList
 from apify_client._models import (
     ActorStandby,
     Run,
@@ -18,7 +19,6 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
-    encode_webhook_list_to_base64,
     response_to_dict,
     to_seconds,
 )
@@ -198,7 +198,7 @@ class TaskClient(ResourceClient):
             timeout=to_seconds(timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks),
+            webhooks=WebhookRepresentationList.encode_to_base64(webhooks),
         )
 
         response = self._http_client.call(
@@ -502,7 +502,7 @@ class TaskClientAsync(ResourceClientAsync):
             timeout=to_seconds(timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks),
+            webhooks=WebhookRepresentationList.encode_to_base64(webhooks),
         )
 
         response = await self._http_client.call(

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
+from apify_client._internal_models import WebhookRepresentationList
 from apify_client._models import (
     Actor,
     ActorPermissionLevel,
@@ -28,7 +29,6 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     encode_key_value_store_record_value,
-    encode_webhook_list_to_base64,
     response_to_dict,
     to_seconds,
 )
@@ -271,7 +271,7 @@ class ActorClient(ResourceClient):
             timeout=to_seconds(timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks),
+            webhooks=WebhookRepresentationList.encode_to_base64(webhooks),
         )
 
         response = self._http_client.call(
@@ -736,7 +736,7 @@ class ActorClientAsync(ResourceClientAsync):
             timeout=to_seconds(timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks),
+            webhooks=WebhookRepresentationList.encode_to_base64(webhooks),
         )
 
         response = await self._http_client.call(

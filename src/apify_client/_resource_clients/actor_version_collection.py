@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import TypeAdapter
 
@@ -17,6 +17,10 @@ from apify_client._models import (
     VersionSourceType,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
+
 
 _source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])
 
@@ -40,15 +44,18 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self) -> ListOfVersions:
+    def list(self, *, timeout: Timeout = 'long') -> ListOfVersions:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The list of available Actor versions.
         """
-        result = self._list()
+        result = self._list(timeout=timeout)
         return ListOfVersionsResponse.model_validate(result).data
 
     def create(
@@ -63,6 +70,7 @@ class ActorVersionCollectionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Version:
         """Create a new Actor version.
 
@@ -84,6 +92,7 @@ class ActorVersionCollectionClient(ResourceClient):
                 Required when `source_type` is `VersionSourceType.TARBALL`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created Actor version.
@@ -99,7 +108,7 @@ class ActorVersionCollectionClient(ResourceClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = self._create(**version_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
 
@@ -122,15 +131,18 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self) -> ListOfVersions:
+    async def list(self, *, timeout: Timeout = 'long') -> ListOfVersions:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The list of available Actor versions.
         """
-        result = await self._list()
+        result = await self._list(timeout=timeout)
         return ListOfVersionsResponse.model_validate(result).data
 
     async def create(
@@ -145,6 +157,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Version:
         """Create a new Actor version.
 
@@ -166,6 +179,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
                 Required when `source_type` is `VersionSourceType.TARBALL`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created Actor version.
@@ -181,5 +195,5 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = await self._create(**version_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._create(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data

@@ -26,7 +26,6 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._consts import ActorJobStatus
     from apify_client._resource_clients import (
         RunClient,
         RunClientAsync,
@@ -35,6 +34,7 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
+    from apify_client._types import ActorJobStatus, Timeout
 
 
 @docs_group('Resource clients')
@@ -54,15 +54,18 @@ class TaskClient(ResourceClient):
     ) -> None:
         super().__init__(resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    def get(self) -> Task | None:
+    def get(self, *, timeout: Timeout = 'long') -> Task | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved task.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return TaskResponse.model_validate(result).data
@@ -75,7 +78,7 @@ class TaskClient(ResourceClient):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -83,6 +86,7 @@ class TaskClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Task:
         """Update the task with specified fields.
 
@@ -96,7 +100,7 @@ class TaskClient(ResourceClient):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -110,6 +114,7 @@ class TaskClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated task.
@@ -122,7 +127,7 @@ class TaskClient(ResourceClient):
                 build=build,
                 max_items=max_items,
                 memory_mbytes=memory_mbytes,
-                timeout_secs=to_seconds(timeout, as_int=True),
+                timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -133,15 +138,18 @@ class TaskClient(ResourceClient):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = self._update(**task_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        self._delete()
+        self._delete(timeout=timeout)
 
     def start(
         self,
@@ -150,10 +158,11 @@ class TaskClient(ResourceClient):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Start the task and immediately return the Run object.
 
@@ -167,7 +176,7 @@ class TaskClient(ResourceClient):
                 per result, you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -180,6 +189,7 @@ class TaskClient(ResourceClient):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -188,7 +198,7 @@ class TaskClient(ResourceClient):
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -200,6 +210,7 @@ class TaskClient(ResourceClient):
             headers={'content-type': 'application/json; charset=utf-8'},
             json=task_input,
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -212,10 +223,11 @@ class TaskClient(ResourceClient):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_duration: timedelta | None = None,
+        timeout: Timeout = 'long',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
@@ -231,7 +243,7 @@ class TaskClient(ResourceClient):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -240,6 +252,7 @@ class TaskClient(ResourceClient):
                 the Actor or task, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the task run to finish. If not provided,
                 waits indefinitely.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -249,9 +262,10 @@ class TaskClient(ResourceClient):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout=timeout,
+            run_timeout=run_timeout,
             restart_on_error=restart_on_error,
             webhooks=webhooks,
+            timeout=timeout,
         )
 
         run_client = self._client_registry.run_client(
@@ -263,10 +277,13 @@ class TaskClient(ResourceClient):
         )
         return run_client.wait_for_finish(wait_duration=wait_duration)
 
-    def get_input(self) -> dict | None:
+    def get_input(self, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             Retrieved task input.
@@ -276,19 +293,21 @@ class TaskClient(ResourceClient):
                 url=self._build_url('input'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
 
-    def update_input(self, *, task_input: dict) -> dict:
+    def update_input(self, *, task_input: dict, timeout: Timeout = 'long') -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Args:
             task_input: The new default input for this task.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated task input.
@@ -298,6 +317,7 @@ class TaskClient(ResourceClient):
             method='PUT',
             params=self._build_params(),
             json=task_input,
+            timeout=timeout,
         )
         return response_to_dict(response)
 
@@ -349,15 +369,18 @@ class TaskClientAsync(ResourceClientAsync):
     ) -> None:
         super().__init__(resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    async def get(self) -> Task | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Task | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved task.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return TaskResponse.model_validate(result).data
@@ -370,7 +393,7 @@ class TaskClientAsync(ResourceClientAsync):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -378,6 +401,7 @@ class TaskClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        timeout: Timeout = 'long',
     ) -> Task:
         """Update the task with specified fields.
 
@@ -391,7 +415,7 @@ class TaskClientAsync(ResourceClientAsync):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -405,6 +429,7 @@ class TaskClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated task.
@@ -417,7 +442,7 @@ class TaskClientAsync(ResourceClientAsync):
                 build=build,
                 max_items=max_items,
                 memory_mbytes=memory_mbytes,
-                timeout_secs=to_seconds(timeout, as_int=True),
+                timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -428,15 +453,18 @@ class TaskClientAsync(ResourceClientAsync):
                 memory_mbytes=actor_standby_memory_mbytes,
             ),
         )
-        result = await self._update(**task_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        await self._delete()
+        await self._delete(timeout=timeout)
 
     async def start(
         self,
@@ -445,10 +473,11 @@ class TaskClientAsync(ResourceClientAsync):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Start the task and immediately return the Run object.
 
@@ -462,7 +491,7 @@ class TaskClientAsync(ResourceClientAsync):
                 per result, you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -475,6 +504,7 @@ class TaskClientAsync(ResourceClientAsync):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -483,7 +513,7 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             maxItems=max_items,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
             webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
@@ -495,6 +525,7 @@ class TaskClientAsync(ResourceClientAsync):
             headers={'content-type': 'application/json; charset=utf-8'},
             json=task_input,
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -507,10 +538,11 @@ class TaskClientAsync(ResourceClientAsync):
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_duration: timedelta | None = None,
+        timeout: Timeout = 'long',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
@@ -526,7 +558,7 @@ class TaskClientAsync(ResourceClientAsync):
                 you will not be charged for more results than the given limit.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
-            timeout: Optional timeout for the run. By default, the run uses timeout specified
+            run_timeout: Optional timeout for the run. By default, the run uses timeout specified
                 in the task settings.
             restart_on_error: If true, the Task run process will be restarted whenever it exits with
                 a non-zero status code.
@@ -535,6 +567,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the Actor or task, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the task run to finish. If not provided,
                 waits indefinitely.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
@@ -544,9 +577,10 @@ class TaskClientAsync(ResourceClientAsync):
             build=build,
             max_items=max_items,
             memory_mbytes=memory_mbytes,
-            timeout=timeout,
+            run_timeout=run_timeout,
             restart_on_error=restart_on_error,
             webhooks=webhooks,
+            timeout=timeout,
         )
         run_client = self._client_registry.run_client(
             resource_id=started_run.id,
@@ -557,10 +591,13 @@ class TaskClientAsync(ResourceClientAsync):
         )
         return await run_client.wait_for_finish(wait_duration=wait_duration)
 
-    async def get_input(self) -> dict | None:
+    async def get_input(self, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             Retrieved task input.
@@ -570,19 +607,21 @@ class TaskClientAsync(ResourceClientAsync):
                 url=self._build_url('input'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
             catch_not_found_or_throw(exc)
         return None
 
-    async def update_input(self, *, task_input: dict) -> dict:
+    async def update_input(self, *, task_input: dict, timeout: Timeout = 'long') -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
 
         Args:
             task_input: The new default input for this task.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated task input.
@@ -592,6 +631,7 @@ class TaskClientAsync(ResourceClientAsync):
             method='PUT',
             params=self._build_params(),
             json=task_input,
+            timeout=timeout,
         )
         return response_to_dict(response)
 

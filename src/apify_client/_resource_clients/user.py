@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
@@ -18,6 +18,9 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -41,17 +44,20 @@ class UserClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> UserPublicInfo | UserPrivateInfo | None:
+    def get(self, *, timeout: Timeout = 'long') -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
 
         https://docs.apify.com/api/v2#/reference/users
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         try:
@@ -59,7 +65,7 @@ class UserClient(ResourceClient):
         except ValidationError:
             return PublicUserDataResponse.model_validate(result).data
 
-    def monthly_usage(self) -> MonthlyUsage | None:
+    def monthly_usage(self, *, timeout: Timeout = 'long') -> MonthlyUsage | None:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -67,6 +73,9 @@ class UserClient(ResourceClient):
         use of storage, data transfer, and request queue usage.
 
         https://docs.apify.com/api/v2/#/reference/users/monthly-usage
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved request, or None, if it did not exist.
@@ -76,6 +85,7 @@ class UserClient(ResourceClient):
                 url=self._build_url('usage/monthly'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return MonthlyUsageResponse.model_validate(result).data
@@ -85,13 +95,16 @@ class UserClient(ResourceClient):
 
         return None
 
-    def limits(self) -> AccountLimits | None:
+    def limits(self, *, timeout: Timeout = 'long') -> AccountLimits | None:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
         the current usage cycle, a summary of the account's limits, and the current usage.
 
         https://docs.apify.com/api/v2#/reference/users/account-limits/get-account-limits
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The account limits, or None, if they could not be retrieved.
@@ -101,6 +114,7 @@ class UserClient(ResourceClient):
                 url=self._build_url('limits'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return LimitsResponse.model_validate(result).data
@@ -115,8 +129,15 @@ class UserClient(ResourceClient):
         *,
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
+        timeout: Timeout = 'long',
     ) -> None:
-        """Update the account's limits manageable on your account's Limits page."""
+        """Update the account's limits manageable on your account's Limits page.
+
+        Args:
+            max_monthly_usage_usd: Maximum monthly usage in USD.
+            data_retention_days: Data retention period in days.
+            timeout: Timeout for the API HTTP request.
+        """
         self._http_client.call(
             url=self._build_url('limits'),
             method='PUT',
@@ -127,6 +148,7 @@ class UserClient(ResourceClient):
                     'dataRetentionDays': data_retention_days,
                 }
             ),
+            timeout=timeout,
         )
 
 
@@ -151,17 +173,20 @@ class UserClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> UserPublicInfo | UserPrivateInfo | None:
+    async def get(self, *, timeout: Timeout = 'long') -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
 
         https://docs.apify.com/api/v2#/reference/users
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved user data, or None if the user does not exist.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         try:
@@ -169,7 +194,7 @@ class UserClientAsync(ResourceClientAsync):
         except ValidationError:
             return PublicUserDataResponse.model_validate(result).data
 
-    async def monthly_usage(self) -> MonthlyUsage | None:
+    async def monthly_usage(self, *, timeout: Timeout = 'long') -> MonthlyUsage | None:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -177,6 +202,9 @@ class UserClientAsync(ResourceClientAsync):
         use of storage, data transfer, and request queue usage.
 
         https://docs.apify.com/api/v2/#/reference/users/monthly-usage
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved request, or None, if it did not exist.
@@ -186,6 +214,7 @@ class UserClientAsync(ResourceClientAsync):
                 url=self._build_url('usage/monthly'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return MonthlyUsageResponse.model_validate(result).data
@@ -195,13 +224,16 @@ class UserClientAsync(ResourceClientAsync):
 
         return None
 
-    async def limits(self) -> AccountLimits | None:
+    async def limits(self, *, timeout: Timeout = 'long') -> AccountLimits | None:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
         the current usage cycle, a summary of the account's limits, and the current usage.
 
         https://docs.apify.com/api/v2#/reference/users/account-limits/get-account-limits
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The account limits, or None, if they could not be retrieved.
@@ -211,6 +243,7 @@ class UserClientAsync(ResourceClientAsync):
                 url=self._build_url('limits'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return LimitsResponse.model_validate(result).data
@@ -225,8 +258,15 @@ class UserClientAsync(ResourceClientAsync):
         *,
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
+        timeout: Timeout = 'long',
     ) -> None:
-        """Update the account's limits manageable on your account's Limits page."""
+        """Update the account's limits manageable on your account's Limits page.
+
+        Args:
+            max_monthly_usage_usd: Maximum monthly usage in USD.
+            data_retention_days: Data retention period in days.
+            timeout: Timeout for the API HTTP request.
+        """
         await self._http_client.call(
             url=self._build_url('limits'),
             method='PUT',
@@ -237,4 +277,5 @@ class UserClientAsync(ResourceClientAsync):
                     'dataRetentionDays': data_retention_days,
                 }
             ),
+            timeout=timeout,
         )

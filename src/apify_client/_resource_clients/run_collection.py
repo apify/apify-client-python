@@ -9,7 +9,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from apify_client._consts import ActorJobStatus
+    from apify_client._types import ActorJobStatus, Timeout
 
 
 @docs_group('Resource clients')
@@ -40,6 +40,7 @@ class RunCollectionClient(ResourceClient):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfRuns:
         """List all Actor runs.
 
@@ -56,6 +57,7 @@ class RunCollectionClient(ResourceClient):
             status: Retrieve only runs with the provided statuses.
             started_before: Only return runs started before this date (inclusive).
             started_after: Only return runs started after this date (inclusive).
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved Actor runs.
@@ -63,6 +65,7 @@ class RunCollectionClient(ResourceClient):
         status_param = list(status) if isinstance(status, list) else status
 
         result = self._list(
+            timeout=timeout,
             limit=limit,
             offset=offset,
             desc=desc,
@@ -101,6 +104,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfRuns:
         """List all Actor runs.
 
@@ -117,6 +121,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
             status: Retrieve only runs with the provided statuses.
             started_before: Only return runs started before this date (inclusive).
             started_after: Only return runs started after this date (inclusive).
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved Actor runs.
@@ -124,6 +129,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         status_param = list(status) if isinstance(status, list) else status
 
         result = await self._list(
+            timeout=timeout,
             limit=limit,
             offset=offset,
             desc=desc,

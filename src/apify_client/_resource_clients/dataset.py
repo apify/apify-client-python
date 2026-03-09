@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from apify_client._consts import FAST_OPERATION_TIMEOUT, STANDARD_OPERATION_TIMEOUT
 from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -22,9 +21,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._consts import JsonSerializable
     from apify_client._http_clients import HttpResponse
     from apify_client._models import GeneralAccess
+    from apify_client._types import JsonSerializable, Timeout
 
 
 @docs_group('Other')
@@ -77,20 +76,29 @@ class DatasetClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Dataset | None:
+    def get(self, *, timeout: Timeout = 'short') -> Dataset | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        result = self._get(timeout=FAST_OPERATION_TIMEOUT)
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return DatasetResponse.model_validate(result).data
 
-    def update(self, *, name: str | None = None, general_access: GeneralAccess | None = None) -> Dataset:
+    def update(
+        self,
+        *,
+        name: str | None = None,
+        general_access: GeneralAccess | None = None,
+        timeout: Timeout = 'short',
+    ) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -98,19 +106,27 @@ class DatasetClient(ResourceClient):
         Args:
             name: The new name for the dataset.
             general_access: Determines how others can access the dataset.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated dataset.
         """
-        result = self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
+        result = self._update(
+            timeout=timeout,
+            name=name,
+            generalAccess=general_access,
+        )
         return DatasetResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        self._delete(timeout=FAST_OPERATION_TIMEOUT)
+        self._delete(timeout=timeout)
 
     def list_items(
         self,
@@ -127,6 +143,7 @@ class DatasetClient(ResourceClient):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> DatasetItemsPage:
         """List the items of the dataset.
 
@@ -159,6 +176,7 @@ class DatasetClient(ResourceClient):
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
@@ -182,6 +200,7 @@ class DatasetClient(ResourceClient):
             url=self._build_url('items'),
             method='GET',
             params=request_params,
+            timeout=timeout,
         )
 
         # When using signature, API returns items as list directly
@@ -211,6 +230,7 @@ class DatasetClient(ResourceClient):
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Iterator[dict]:
         """Iterate over the items in the dataset.
 
@@ -241,6 +261,7 @@ class DatasetClient(ResourceClient):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Yields:
             An item from the dataset.
@@ -271,6 +292,7 @@ class DatasetClient(ResourceClient):
                 skip_empty=skip_empty,
                 skip_hidden=skip_hidden,
                 signature=signature,
+                timeout=timeout,
             )
 
             yield from current_items_page.items
@@ -301,6 +323,7 @@ class DatasetClient(ResourceClient):
         xml_row: str | None = None,
         flatten: list[str] | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -346,6 +369,7 @@ class DatasetClient(ResourceClient):
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset items as raw bytes.
@@ -374,6 +398,7 @@ class DatasetClient(ResourceClient):
             xml_row=xml_row,
             flatten=flatten,
             signature=signature,
+            timeout=timeout,
         )
 
     def get_items_as_bytes(
@@ -396,6 +421,7 @@ class DatasetClient(ResourceClient):
         xml_row: str | None = None,
         flatten: list[str] | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -439,6 +465,7 @@ class DatasetClient(ResourceClient):
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset items as raw bytes.
@@ -467,6 +494,7 @@ class DatasetClient(ResourceClient):
             url=self._build_url('items'),
             method='GET',
             params=request_params,
+            timeout=timeout,
         )
 
         return response.content
@@ -491,6 +519,7 @@ class DatasetClient(ResourceClient):
         xml_root: str | None = None,
         xml_row: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Iterator[HttpResponse]:
         """Retrieve the items in the dataset as a stream.
 
@@ -533,6 +562,7 @@ class DatasetClient(ResourceClient):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset items as a context-managed streaming `Response`.
@@ -563,13 +593,14 @@ class DatasetClient(ResourceClient):
                 method='GET',
                 params=request_params,
                 stream=True,
+                timeout=timeout,
             )
             yield response
         finally:
             if response:
                 response.close()
 
-    def push_items(self, items: JsonSerializable) -> None:
+    def push_items(self, items: JsonSerializable, *, timeout: Timeout = 'medium') -> None:
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -577,6 +608,7 @@ class DatasetClient(ResourceClient):
         Args:
             items: The items which to push in the dataset. Either a stringified JSON, a dictionary, or a list
                 of strings or dictionaries.
+            timeout: Timeout for the API HTTP request.
         """
         data = None
         json = None
@@ -593,13 +625,16 @@ class DatasetClient(ResourceClient):
             params=self._build_params(),
             data=data,
             json=json,
-            timeout=STANDARD_OPERATION_TIMEOUT,
+            timeout=timeout,
         )
 
-    def get_statistics(self) -> DatasetStatistics | None:
+    def get_statistics(self, *, timeout: Timeout = 'short') -> DatasetStatistics | None:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset statistics or None if the dataset does not exist.
@@ -609,7 +644,7 @@ class DatasetClient(ResourceClient):
                 url=self._build_url('statistics'),
                 method='GET',
                 params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return DatasetStatisticsResponse.model_validate(result).data
@@ -633,6 +668,7 @@ class DatasetClient(ResourceClient):
         flatten: list[str] | None = None,
         view: str | None = None,
         expires_in: timedelta | None = None,
+        timeout: Timeout = 'long',
     ) -> str:
         """Generate a URL that can be used to access dataset items.
 
@@ -645,10 +681,26 @@ class DatasetClient(ResourceClient):
 
         Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
 
+        Args:
+            offset: Number of items that should be skipped at the start. The default value is 0.
+            limit: Maximum number of items to return. By default there is no limit.
+            clean: If True, returns only non-empty items and skips hidden fields.
+            desc: By default, results are returned in the same order as they were stored. To reverse the order,
+                set this parameter to True.
+            fields: A list of fields which should be picked from the items.
+            omit: A list of fields which should be omitted from the items.
+            unwind: A list of fields which should be unwound, in order which they should be processed.
+            skip_empty: If True, then empty items are skipped from the output.
+            skip_hidden: If True, then hidden fields are skipped from the output.
+            flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
+            expires_in: How long the signed URL should be valid.
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The public dataset items URL.
         """
-        dataset = self.get()
+        dataset = self.get(timeout=timeout)
 
         request_params = self._build_params(
             offset=offset,
@@ -701,20 +753,29 @@ class DatasetClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Dataset | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Dataset | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved dataset, or None, if it does not exist.
         """
-        result = await self._get(timeout=FAST_OPERATION_TIMEOUT)
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return DatasetResponse.model_validate(result).data
 
-    async def update(self, *, name: str | None = None, general_access: GeneralAccess | None = None) -> Dataset:
+    async def update(
+        self,
+        *,
+        name: str | None = None,
+        general_access: GeneralAccess | None = None,
+        timeout: Timeout = 'short',
+    ) -> Dataset:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -722,19 +783,27 @@ class DatasetClientAsync(ResourceClientAsync):
         Args:
             name: The new name for the dataset.
             general_access: Determines how others can access the dataset.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated dataset.
         """
-        result = await self._update(timeout=FAST_OPERATION_TIMEOUT, name=name, generalAccess=general_access)
+        result = await self._update(
+            timeout=timeout,
+            name=name,
+            generalAccess=general_access,
+        )
         return DatasetResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/delete-dataset
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        await self._delete(timeout=FAST_OPERATION_TIMEOUT)
+        await self._delete(timeout=timeout)
 
     async def list_items(
         self,
@@ -751,6 +820,7 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> DatasetItemsPage:
         """List the items of the dataset.
 
@@ -783,6 +853,7 @@ class DatasetClientAsync(ResourceClientAsync):
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
@@ -806,6 +877,7 @@ class DatasetClientAsync(ResourceClientAsync):
             url=self._build_url('items'),
             method='GET',
             params=request_params,
+            timeout=timeout,
         )
 
         # When using signature, API returns items as list directly
@@ -835,6 +907,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> AsyncIterator[dict]:
         """Iterate over the items in the dataset.
 
@@ -865,6 +938,7 @@ class DatasetClientAsync(ResourceClientAsync):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Yields:
             An item from the dataset.
@@ -895,6 +969,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 skip_empty=skip_empty,
                 skip_hidden=skip_hidden,
                 signature=signature,
+                timeout=timeout,
             )
 
             for item in current_items_page.items:
@@ -926,6 +1001,7 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_row: str | None = None,
         flatten: list[str] | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> bytes:
         """Get the items in the dataset as raw bytes.
 
@@ -969,6 +1045,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset items as raw bytes.
@@ -997,6 +1074,7 @@ class DatasetClientAsync(ResourceClientAsync):
             url=self._build_url('items'),
             method='GET',
             params=request_params,
+            timeout=timeout,
         )
 
         return response.content
@@ -1021,6 +1099,7 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_root: str | None = None,
         xml_row: str | None = None,
         signature: str | None = None,
+        timeout: Timeout = 'long',
     ) -> AsyncIterator[HttpResponse]:
         """Retrieve the items in the dataset as a stream.
 
@@ -1063,6 +1142,7 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             signature: Signature used to access the items.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset items as a context-managed streaming `Response`.
@@ -1093,13 +1173,14 @@ class DatasetClientAsync(ResourceClientAsync):
                 method='GET',
                 params=request_params,
                 stream=True,
+                timeout=timeout,
             )
             yield response
         finally:
             if response:
                 await response.aclose()
 
-    async def push_items(self, items: JsonSerializable) -> None:
+    async def push_items(self, items: JsonSerializable, *, timeout: Timeout = 'medium') -> None:
         """Push items to the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/put-items
@@ -1107,6 +1188,7 @@ class DatasetClientAsync(ResourceClientAsync):
         Args:
             items: The items which to push in the dataset. Either a stringified JSON, a dictionary, or a list
                 of strings or dictionaries.
+            timeout: Timeout for the API HTTP request.
         """
         data = None
         json = None
@@ -1123,13 +1205,16 @@ class DatasetClientAsync(ResourceClientAsync):
             params=self._build_params(),
             data=data,
             json=json,
-            timeout=STANDARD_OPERATION_TIMEOUT,
+            timeout=timeout,
         )
 
-    async def get_statistics(self) -> DatasetStatistics | None:
+    async def get_statistics(self, *, timeout: Timeout = 'short') -> DatasetStatistics | None:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The dataset statistics or None if the dataset does not exist.
@@ -1139,7 +1224,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 url=self._build_url('statistics'),
                 method='GET',
                 params=self._build_params(),
-                timeout=FAST_OPERATION_TIMEOUT,
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return DatasetStatisticsResponse.model_validate(result).data
@@ -1163,6 +1248,7 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: list[str] | None = None,
         view: str | None = None,
         expires_in: timedelta | None = None,
+        timeout: Timeout = 'long',
     ) -> str:
         """Generate a URL that can be used to access dataset items.
 
@@ -1175,10 +1261,26 @@ class DatasetClientAsync(ResourceClientAsync):
 
         Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
 
+        Args:
+            offset: Number of items that should be skipped at the start. The default value is 0.
+            limit: Maximum number of items to return. By default there is no limit.
+            clean: If True, returns only non-empty items and skips hidden fields.
+            desc: By default, results are returned in the same order as they were stored. To reverse the order,
+                set this parameter to True.
+            fields: A list of fields which should be picked from the items.
+            omit: A list of fields which should be omitted from the items.
+            unwind: A list of fields which should be unwound, in order which they should be processed.
+            skip_empty: If True, then empty items are skipped from the output.
+            skip_hidden: If True, then hidden fields are skipped from the output.
+            flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
+            expires_in: How long the signed URL should be valid.
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The public dataset items URL.
         """
-        dataset = await self.get()
+        dataset = await self.get(timeout=timeout)
 
         request_params = self._build_params(
             offset=offset,

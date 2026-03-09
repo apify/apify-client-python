@@ -9,7 +9,10 @@ from apify_client._consts import (
     DEFAULT_API_URL,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
-    DEFAULT_TIMEOUT,
+    DEFAULT_TIMEOUT_LONG,
+    DEFAULT_TIMEOUT_MAX,
+    DEFAULT_TIMEOUT_MEDIUM,
+    DEFAULT_TIMEOUT_SHORT,
 )
 from apify_client._docs import docs_group
 from apify_client._http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
@@ -114,7 +117,10 @@ class ApifyClient:
         api_public_url: str | None = DEFAULT_API_URL,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
-        timeout: timedelta = DEFAULT_TIMEOUT,
+        timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
+        timeout_medium: timedelta = DEFAULT_TIMEOUT_MEDIUM,
+        timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
+        timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the Apify API client.
@@ -132,7 +138,10 @@ class ApifyClient:
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
-            timeout: The socket timeout of the HTTP requests sent to the Apify API.
+            timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
+            timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
+            timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
+            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
@@ -191,7 +200,10 @@ class ApifyClient:
         # Configuration for the default HTTP client (used if a custom client is not provided).
         self._max_retries = max_retries
         self._min_delay_between_retries = min_delay_between_retries
-        self._timeout = timeout
+        self._timeout_short = timeout_short
+        self._timeout_medium = timeout_medium
+        self._timeout_long = timeout_long
+        self._timeout_max = timeout_max
         self._headers = headers
 
     @classmethod
@@ -249,7 +261,10 @@ class ApifyClient:
         if self._http_client is None:
             self._http_client = ImpitHttpClient(
                 token=self._token,
-                timeout=self._timeout,
+                timeout_short=self._timeout_short,
+                timeout_medium=self._timeout_medium,
+                timeout_long=self._timeout_long,
+                timeout_max=self._timeout_max,
                 max_retries=self._max_retries,
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
@@ -455,7 +470,10 @@ class ApifyClientAsync:
         api_public_url: str | None = DEFAULT_API_URL,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
-        timeout: timedelta = DEFAULT_TIMEOUT,
+        timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
+        timeout_medium: timedelta = DEFAULT_TIMEOUT_MEDIUM,
+        timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
+        timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
     ) -> None:
         """Initialize the Apify API client.
@@ -473,7 +491,10 @@ class ApifyClientAsync:
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
-            timeout: The socket timeout of the HTTP requests sent to the Apify API.
+            timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
+            timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
+            timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
+            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
@@ -532,7 +553,10 @@ class ApifyClientAsync:
         # Configuration for the default HTTP client (used if a custom client is not provided).
         self._max_retries = max_retries
         self._min_delay_between_retries = min_delay_between_retries
-        self._timeout = timeout
+        self._timeout_short = timeout_short
+        self._timeout_medium = timeout_medium
+        self._timeout_long = timeout_long
+        self._timeout_max = timeout_max
         self._headers = headers
 
     @classmethod
@@ -590,7 +614,10 @@ class ApifyClientAsync:
         if self._http_client is None:
             self._http_client = ImpitHttpClientAsync(
                 token=self._token,
-                timeout=self._timeout,
+                timeout_short=self._timeout_short,
+                timeout_medium=self._timeout_medium,
+                timeout_long=self._timeout_long,
+                timeout_max=self._timeout_max,
                 max_retries=self._max_retries,
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,

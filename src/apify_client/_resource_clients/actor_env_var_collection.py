@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -26,15 +29,18 @@ class ActorEnvVarCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self) -> ListOfEnvVars:
+    def list(self, *, timeout: Timeout = 'long') -> ListOfEnvVars:
         """List the available Actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The list of available Actor environment variables.
         """
-        result = self._list()
+        result = self._list(timeout=timeout)
         return ListOfEnvVarsResponse.model_validate(result).data
 
     def create(
@@ -43,6 +49,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
         is_secret: bool | None = None,
         name: str,
         value: str,
+        timeout: Timeout = 'long',
     ) -> EnvVar:
         """Create a new Actor environment variable.
 
@@ -52,12 +59,14 @@ class ActorEnvVarCollectionClient(ResourceClient):
             is_secret: Whether the environment variable is secret or not.
             name: The name of the environment variable.
             value: The value of the environment variable.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created Actor environment variable.
         """
         result = self._create(
-            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True)
+            timeout=timeout,
+            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True),
         )
         return EnvVarResponse.model_validate(result).data
 
@@ -81,15 +90,18 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self) -> ListOfEnvVars:
+    async def list(self, *, timeout: Timeout = 'long') -> ListOfEnvVars:
         """List the available Actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The list of available Actor environment variables.
         """
-        result = await self._list()
+        result = await self._list(timeout=timeout)
         return ListOfEnvVarsResponse.model_validate(result).data
 
     async def create(
@@ -98,6 +110,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         is_secret: bool | None = None,
         name: str,
         value: str,
+        timeout: Timeout = 'long',
     ) -> EnvVar:
         """Create a new Actor environment variable.
 
@@ -107,11 +120,13 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             is_secret: Whether the environment variable is secret or not.
             name: The name of the environment variable.
             value: The value of the environment variable.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The created Actor environment variable.
         """
         result = await self._create(
-            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True)
+            timeout=timeout,
+            **EnvVar(name=name, value=value, is_secret=is_secret).model_dump(by_alias=True, exclude_none=True),
         )
         return EnvVarResponse.model_validate(result).data

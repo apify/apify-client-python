@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import ListOfWebhookDispatches, WebhookDispatchList
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -32,6 +35,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfWebhookDispatches | None:
         """List all webhook dispatches of a user.
 
@@ -41,11 +45,12 @@ class WebhookDispatchCollectionClient(ResourceClient):
             limit: How many webhook dispatches to retrieve.
             offset: What webhook dispatch to include as first when retrieving the list.
             desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        result = self._list(limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return WebhookDispatchList.model_validate(result).data
 
 
@@ -74,6 +79,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfWebhookDispatches | None:
         """List all webhook dispatches of a user.
 
@@ -83,9 +89,10 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
             limit: How many webhook dispatches to retrieve.
             offset: What webhook dispatch to include as first when retrieving the list.
             desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved webhook dispatches of a user.
         """
-        result = await self._list(limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return WebhookDispatchList.model_validate(result).data

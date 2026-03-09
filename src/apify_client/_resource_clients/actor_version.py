@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
     )
+    from apify_client._types import Timeout
 
 _source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])
 
@@ -48,15 +49,18 @@ class ActorVersionClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Version | None:
+    def get(self, *, timeout: Timeout = 'long') -> Version | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor version data.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return VersionResponse.model_validate(result).data
@@ -72,6 +76,7 @@ class ActorVersionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Version:
         """Update the Actor version with specified fields.
 
@@ -92,6 +97,7 @@ class ActorVersionClient(ResourceClient):
                 Required when `source_type` is `VersionSourceType.TARBALL`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated Actor version.
@@ -106,15 +112,18 @@ class ActorVersionClient(ResourceClient):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = self._update(**version_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        self._delete()
+        self._delete(timeout=timeout)
 
     def env_vars(self) -> ActorEnvVarCollectionClient:
         """Retrieve a client for the environment variables of this Actor version."""
@@ -156,15 +165,18 @@ class ActorVersionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Version | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Version | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor version data.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return VersionResponse.model_validate(result).data
@@ -180,6 +192,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Version:
         """Update the Actor version with specified fields.
 
@@ -200,6 +213,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
                 Required when `source_type` is `VersionSourceType.TARBALL`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated Actor version.
@@ -214,15 +228,18 @@ class ActorVersionClientAsync(ResourceClientAsync):
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
         )
-        result = await self._update(**version_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        await self._delete()
+        await self._delete(timeout=timeout)
 
     def env_vars(self) -> ActorEnvVarCollectionClientAsync:
         """Retrieve a client for the environment variables of this Actor version."""

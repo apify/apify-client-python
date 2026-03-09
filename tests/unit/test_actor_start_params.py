@@ -53,7 +53,7 @@ def _create_minimal_run_response() -> dict:
 
 
 def test_actor_start_passes_timeout_param_sync(httpserver: HTTPServer) -> None:
-    """Test that sync ActorClient.start() passes timeout as 'timeout' query parameter."""
+    """Test that sync ActorClient.start() passes run_timeout as 'timeout' query parameter."""
     captured_requests: list[Request] = []
 
     def capture_request(request: Request) -> Response:
@@ -73,20 +73,20 @@ def test_actor_start_passes_timeout_param_sync(httpserver: HTTPServer) -> None:
     client = ApifyClient(token='test_token', api_url=api_url)
 
     # Call start with timeout (timedelta) parameter
-    client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
+    client.actor(_MOCKED_ACTOR_ID).start(run_timeout=timedelta(seconds=300))
 
     # Verify the request was made with correct timeout parameter
     assert len(captured_requests) == 1
     request = captured_requests[0]
 
-    # The timeout should be passed as 'timeout' query parameter, not 'timeout_secs'
+    # The run_timeout should be passed as 'timeout' query parameter, not 'timeout_secs'
     assert 'timeout' in request.args, "Expected 'timeout' query parameter to be present"
     assert request.args['timeout'] == '300', f'Expected timeout=300, got timeout={request.args.get("timeout")}'
     assert 'timeout_secs' not in request.args, "Unexpected 'timeout_secs' query parameter"
 
 
 async def test_actor_start_passes_timeout_param_async(httpserver: HTTPServer) -> None:
-    """Test that async ActorClientAsync.start() passes timeout as 'timeout' query parameter."""
+    """Test that async ActorClientAsync.start() passes run_timeout as 'timeout' query parameter."""
     captured_requests: list[Request] = []
 
     def capture_request(request: Request) -> Response:
@@ -106,13 +106,13 @@ async def test_actor_start_passes_timeout_param_async(httpserver: HTTPServer) ->
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
     # Call start with timeout (timedelta) parameter
-    await client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=300))
+    await client.actor(_MOCKED_ACTOR_ID).start(run_timeout=timedelta(seconds=300))
 
     # Verify the request was made with correct timeout parameter
     assert len(captured_requests) == 1
     request = captured_requests[0]
 
-    # The timeout should be passed as 'timeout' query parameter, not 'timeout_secs'
+    # The run_timeout should be passed as 'timeout' query parameter, not 'timeout_secs'
     assert 'timeout' in request.args, "Expected 'timeout' query parameter to be present"
     assert request.args['timeout'] == '300', f'Expected timeout=300, got timeout={request.args.get("timeout")}'
     assert 'timeout_secs' not in request.args, "Unexpected 'timeout_secs' query parameter"
@@ -199,7 +199,7 @@ def test_actor_start_various_timeout_values_sync(httpserver: HTTPServer, timeout
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(token='test_token', api_url=api_url)
 
-    client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=timeout_value))
+    client.actor(_MOCKED_ACTOR_ID).start(run_timeout=timedelta(seconds=timeout_value))
 
     assert len(captured_requests) == 1
     assert captured_requests[0].args['timeout'] == str(timeout_value)
@@ -226,7 +226,7 @@ async def test_actor_start_various_timeout_values_async(httpserver: HTTPServer, 
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
-    await client.actor(_MOCKED_ACTOR_ID).start(timeout=timedelta(seconds=timeout_value))
+    await client.actor(_MOCKED_ACTOR_ID).start(run_timeout=timedelta(seconds=timeout_value))
 
     assert len(captured_requests) == 1
     assert captured_requests[0].args['timeout'] == str(timeout_value)

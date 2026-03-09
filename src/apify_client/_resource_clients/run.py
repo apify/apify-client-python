@@ -35,6 +35,7 @@ if TYPE_CHECKING:
         RequestQueueClient,
         RequestQueueClientAsync,
     )
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -58,15 +59,18 @@ class RunClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Run | None:
+    def get(self, *, timeout: Timeout = 'long') -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor run data.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return RunResponse.model_validate(result).data
@@ -77,6 +81,7 @@ class RunClient(ResourceClient):
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
         general_access: GeneralAccess | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Update the run with the specified fields.
 
@@ -86,25 +91,30 @@ class RunClient(ResourceClient):
             status_message: The new status message for the run.
             is_status_message_terminal: Set this flag to True if this is the final status message of the Actor run.
             general_access: Determines how others can access the run and its storages.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated run.
         """
         result = self._update(
+            timeout=timeout,
             statusMessage=status_message,
             isStatusMessageTerminal=is_status_message_terminal,
             generalAccess=general_access,
         )
         return RunResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
-        """
-        self._delete()
 
-    def abort(self, *, gracefully: bool | None = None) -> Run:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        self._delete(timeout=timeout)
+
+    def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'long') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -113,6 +123,7 @@ class RunClient(ResourceClient):
             gracefully: If True, the Actor run will abort gracefully. It will send `aborting` and `persistStates`
                 events into the run and force-stop the run after 30 seconds. It is helpful in cases where you plan
                 to resurrect the run later.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The data of the aborted Actor run.
@@ -121,15 +132,22 @@ class RunClient(ResourceClient):
             url=self._build_url('abort'),
             method='POST',
             params=self._build_params(gracefully=gracefully),
+            timeout=timeout,
         )
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
-    def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
+    def wait_for_finish(
+        self,
+        *,
+        wait_duration: timedelta | None = None,
+        timeout: Timeout = 'no_timeout',
+    ) -> Run | None:
         """Wait synchronously until the run finishes or the server times out.
 
         Args:
             wait_duration: How long does the client wait for run to finish. None for indefinite.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -139,6 +157,7 @@ class RunClient(ResourceClient):
             url=self._build_url(),
             params=self._build_params(),
             wait_duration=wait_duration,
+            timeout=timeout,
         )
 
         if response is None:
@@ -153,6 +172,7 @@ class RunClient(ResourceClient):
         target_actor_build: str | None = None,
         run_input: Any = None,
         content_type: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Transform an Actor run into a run of another Actor with a new input.
 
@@ -165,6 +185,7 @@ class RunClient(ResourceClient):
                 (typically the latest build).
             run_input: The input to pass to the new run.
             content_type: The content type of the input.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data.
@@ -181,6 +202,7 @@ class RunClient(ResourceClient):
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -191,10 +213,11 @@ class RunClient(ResourceClient):
         *,
         build: str | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Resurrect a finished Actor run.
 
@@ -208,7 +231,7 @@ class RunClient(ResourceClient):
                 By default, the resurrected run uses the same build as before.
             memory_mbytes: New memory limit for the resurrected run, in megabytes. By default, the resurrected run
                 uses the same memory limit as before.
-            timeout: New timeout for the resurrected run. By default, the resurrected run uses the
+            run_timeout: New timeout for the resurrected run. By default, the resurrected run uses the
                 same timeout as before.
             max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
@@ -216,6 +239,7 @@ class RunClient(ResourceClient):
                 resurrected run uses the same limit as before. Limit can be only increased.
             restart_on_error: Determines whether the resurrected run will be restarted if it fails.
                 By default, the resurrected run uses the same setting as before.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data.
@@ -223,7 +247,7 @@ class RunClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(run_timeout, as_int=True),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
@@ -233,15 +257,19 @@ class RunClient(ResourceClient):
             url=self._build_url('resurrect'),
             method='POST',
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
-    def reboot(self) -> Run:
+    def reboot(self, *, timeout: Timeout = 'long') -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data.
@@ -249,6 +277,7 @@ class RunClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url('reboot'),
             method='POST',
+            timeout=timeout,
         )
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
@@ -310,6 +339,7 @@ class RunClient(ResourceClient):
         to_logger: logging.Logger | None = None,
         *,
         from_start: bool = True,
+        timeout: Timeout = 'long',
     ) -> StreamedLog:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
@@ -320,11 +350,12 @@ class RunClient(ResourceClient):
             from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
                 logs for long-running Actors in stand-by.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             `StreamedLog` instance for redirected logs.
         """
-        run_data = self.get()
+        run_data = self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
@@ -337,7 +368,7 @@ class RunClient(ResourceClient):
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            actor_data = actor_client.get()
+            actor_data = actor_client.get(timeout=timeout)
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
@@ -351,6 +382,7 @@ class RunClient(ResourceClient):
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
+        timeout: Timeout = 'long',
     ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
 
@@ -361,6 +393,7 @@ class RunClient(ResourceClient):
             count: The number of events to charge. Defaults to 1 if not provided.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
+            timeout: Timeout for the API HTTP request.
 
         Raises:
             ValueError: If event_name is empty or not provided.
@@ -386,12 +419,15 @@ class RunClient(ResourceClient):
                     'count': count or 1,
                 }
             ),
+            timeout=timeout,
         )
 
     def get_status_message_watcher(
         self,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
+        *,
+        timeout: Timeout = 'long',
     ) -> StatusMessageWatcher:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
@@ -401,11 +437,12 @@ class RunClient(ResourceClient):
             to_logger: `Logger` used for logging the status and status messages. If not provided, a new logger is
             created.
             check_period: The period with which the status message will be polled.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             `StatusMessageWatcher` instance.
         """
-        run_data = self.get()
+        run_data = self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
@@ -418,7 +455,7 @@ class RunClient(ResourceClient):
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            actor_data = actor_client.get()
+            actor_data = actor_client.get(timeout=timeout)
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
@@ -449,15 +486,18 @@ class RunClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Run | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved Actor run data.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return RunResponse.model_validate(result).data
@@ -468,6 +508,7 @@ class RunClientAsync(ResourceClientAsync):
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
         general_access: GeneralAccess | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Update the run with the specified fields.
 
@@ -477,18 +518,20 @@ class RunClientAsync(ResourceClientAsync):
             status_message: The new status message for the run.
             is_status_message_terminal: Set this flag to True if this is the final status message of the Actor run.
             general_access: Determines how others can access the run and its storages.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated run.
         """
         result = await self._update(
+            timeout=timeout,
             statusMessage=status_message,
             isStatusMessageTerminal=is_status_message_terminal,
             generalAccess=general_access,
         )
         return RunResponse.model_validate(result).data
 
-    async def abort(self, *, gracefully: bool | None = None) -> Run:
+    async def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'long') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -497,6 +540,7 @@ class RunClientAsync(ResourceClientAsync):
             gracefully: If True, the Actor run will abort gracefully. It will send `aborting` and `persistStates`
                 events into the run and force-stop the run after 30 seconds. It is helpful in cases where you plan
                 to resurrect the run later.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The data of the aborted Actor run.
@@ -505,15 +549,22 @@ class RunClientAsync(ResourceClientAsync):
             url=self._build_url('abort'),
             method='POST',
             params=self._build_params(gracefully=gracefully),
+            timeout=timeout,
         )
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
-    async def wait_for_finish(self, *, wait_duration: timedelta | None = None) -> Run | None:
+    async def wait_for_finish(
+        self,
+        *,
+        wait_duration: timedelta | None = None,
+        timeout: Timeout = 'no_timeout',
+    ) -> Run | None:
         """Wait asynchronously until the run finishes or the server times out.
 
         Args:
             wait_duration: How long does the client wait for run to finish. None for indefinite.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
@@ -523,15 +574,19 @@ class RunClientAsync(ResourceClientAsync):
             url=self._build_url(),
             params=self._build_params(),
             wait_duration=wait_duration,
+            timeout=timeout,
         )
         return Run.model_validate(response) if response is not None else None
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
+
+        Args:
+            timeout: Timeout for the API HTTP request.
         """
-        await self._delete()
+        await self._delete(timeout=timeout)
 
     async def metamorph(
         self,
@@ -540,6 +595,7 @@ class RunClientAsync(ResourceClientAsync):
         target_actor_build: str | None = None,
         run_input: Any = None,
         content_type: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Transform an Actor run into a run of another Actor with a new input.
 
@@ -552,6 +608,7 @@ class RunClientAsync(ResourceClientAsync):
                 (typically the latest build).
             run_input: The input to pass to the new run.
             content_type: The content type of the input.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data.
@@ -571,6 +628,7 @@ class RunClientAsync(ResourceClientAsync):
             headers={'content-type': content_type},
             data=run_input,
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
@@ -581,10 +639,11 @@ class RunClientAsync(ResourceClientAsync):
         *,
         build: str | None = None,
         memory_mbytes: int | None = None,
-        timeout: timedelta | None = None,
+        run_timeout: timedelta | None = None,
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> Run:
         """Resurrect a finished Actor run.
 
@@ -598,7 +657,7 @@ class RunClientAsync(ResourceClientAsync):
                 By default, the resurrected run uses the same build as before.
             memory_mbytes: New memory limit for the resurrected run, in megabytes. By default, the resurrected run
                 uses the same memory limit as before.
-            timeout: New timeout for the resurrected run. By default, the resurrected run uses the
+            run_timeout: New timeout for the resurrected run. By default, the resurrected run uses the
                 same timeout as before.
             max_items: Maximum number of items that the resurrected pay-per-result run will return. By default, the
                 resurrected run uses the same limit as before. Limit can be only increased.
@@ -606,6 +665,7 @@ class RunClientAsync(ResourceClientAsync):
                 resurrected run uses the same limit as before. Limit can be only increased.
             restart_on_error: Determines whether the resurrected run will be restarted if it fails.
                 By default, the resurrected run uses the same setting as before.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data.
@@ -613,7 +673,7 @@ class RunClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             memory=memory_mbytes,
-            timeout=to_seconds(timeout, as_int=True),
+            timeout=to_seconds(run_timeout, as_int=True),
             maxItems=max_items,
             maxTotalChargeUsd=max_total_charge_usd,
             restartOnError=restart_on_error,
@@ -623,15 +683,19 @@ class RunClientAsync(ResourceClientAsync):
             url=self._build_url('resurrect'),
             method='POST',
             params=request_params,
+            timeout=timeout,
         )
 
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
-    async def reboot(self) -> Run:
+    async def reboot(self, *, timeout: Timeout = 'long') -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The Actor run data.
@@ -639,6 +703,7 @@ class RunClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url('reboot'),
             method='POST',
+            timeout=timeout,
         )
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
@@ -700,6 +765,7 @@ class RunClientAsync(ResourceClientAsync):
         to_logger: logging.Logger | None = None,
         *,
         from_start: bool = True,
+        timeout: Timeout = 'long',
     ) -> StreamedLogAsync:
         """Get `StreamedLog` instance that can be used to redirect logs.
 
@@ -710,11 +776,12 @@ class RunClientAsync(ResourceClientAsync):
             from_start: If `True`, all logs from the start of the Actor run will be redirected. If `False`, only newly
                 arrived logs will be redirected. This can be useful for redirecting only a small portion of relevant
                 logs for long-running Actors in stand-by.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             `StreamedLog` instance for redirected logs.
         """
-        run_data = await self.get()
+        run_data = await self.get(timeout=timeout)
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
         actor_id = run_data.act_id if run_data else ''
@@ -727,7 +794,7 @@ class RunClientAsync(ResourceClientAsync):
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            actor_data = await actor_client.get()
+            actor_data = await actor_client.get(timeout=timeout)
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:
@@ -741,6 +808,7 @@ class RunClientAsync(ResourceClientAsync):
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
+        timeout: Timeout = 'long',
     ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
 
@@ -751,6 +819,7 @@ class RunClientAsync(ResourceClientAsync):
             count: The number of events to charge. Defaults to 1 if not provided.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
+            timeout: Timeout for the API HTTP request.
 
         Raises:
             ValueError: If event_name is empty or not provided.
@@ -776,12 +845,15 @@ class RunClientAsync(ResourceClientAsync):
                     'count': count or 1,
                 }
             ),
+            timeout=timeout,
         )
 
     async def get_status_message_watcher(
         self,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
+        *,
+        timeout: Timeout = 'long',
     ) -> StatusMessageWatcherAsync:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
 
@@ -791,11 +863,12 @@ class RunClientAsync(ResourceClientAsync):
             to_logger: `Logger` used for logging the status and status messages. If not provided, a new logger is
             created.
             check_period: The period with which the status message will be polled.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             `StatusMessageWatcher` instance.
         """
-        run_data = await self.get()
+        run_data = await self.get(timeout=timeout)
 
         run_id = f'runId:{run_data.id}' if run_data and run_data.id else ''
 
@@ -809,7 +882,7 @@ class RunClientAsync(ResourceClientAsync):
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            actor_data = await actor_client.get()
+            actor_data = await actor_client.get(timeout=timeout)
         actor_name = actor_data.name if actor_data else ''
 
         if not to_logger:

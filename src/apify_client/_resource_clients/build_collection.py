@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -32,6 +35,7 @@ class BuildCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfBuilds:
         """List all Actor builds.
 
@@ -45,11 +49,12 @@ class BuildCollectionClient(ResourceClient):
             limit: How many builds to retrieve.
             offset: What build to include as first when retrieving the list.
             desc: Whether to sort the builds in descending order based on their start date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved Actor builds.
         """
-        result = self._list(limit=limit, offset=offset, desc=desc)
+        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfBuildsResponse.model_validate(result).data
 
 
@@ -78,6 +83,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        timeout: Timeout = 'long',
     ) -> ListOfBuilds:
         """List all Actor builds.
 
@@ -91,9 +97,10 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             limit: How many builds to retrieve.
             offset: What build to include as first when retrieving the list.
             desc: Whether to sort the builds in descending order based on their start date.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The retrieved Actor builds.
         """
-        result = await self._list(limit=limit, offset=offset, desc=desc)
+        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfBuildsResponse.model_validate(result).data

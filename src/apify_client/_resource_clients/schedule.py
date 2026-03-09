@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -14,6 +14,9 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict
 from apify_client.errors import ApifyApiError
+
+if TYPE_CHECKING:
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')
@@ -37,15 +40,18 @@ class ScheduleClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self) -> Schedule | None:
+    def get(self, *, timeout: Timeout = 'long') -> Schedule | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved schedule.
         """
-        result = self._get()
+        result = self._get(timeout=timeout)
         if result is None:
             return None
         return ScheduleResponse.model_validate(result).data
@@ -61,6 +67,7 @@ class ScheduleClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Schedule:
         """Update the schedule with specified fields.
 
@@ -77,6 +84,7 @@ class ScheduleClient(ResourceClient):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: A human-friendly equivalent of the name.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated schedule.
@@ -91,20 +99,26 @@ class ScheduleClient(ResourceClient):
             timezone=timezone,
             title=title,
         )
-        result = self._update(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
+        result = self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
-    def delete(self) -> None:
+    def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
-        """
-        self._delete()
 
-    def get_log(self) -> list[ScheduleInvoked] | None:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        self._delete(timeout=timeout)
+
+    def get_log(self, *, timeout: Timeout = 'long') -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             Retrieved log of the given schedule.
@@ -114,6 +128,7 @@ class ScheduleClient(ResourceClient):
                 url=self._build_url('log'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return ScheduleLogResponse.model_validate(result).data
@@ -144,15 +159,18 @@ class ScheduleClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self) -> Schedule | None:
+    async def get(self, *, timeout: Timeout = 'long') -> Schedule | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
 
+        Args:
+            timeout: Timeout for the API HTTP request.
+
         Returns:
             The retrieved schedule.
         """
-        result = await self._get()
+        result = await self._get(timeout=timeout)
         if result is None:
             return None
         return ScheduleResponse.model_validate(result).data
@@ -168,6 +186,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        timeout: Timeout = 'long',
     ) -> Schedule:
         """Update the schedule with specified fields.
 
@@ -184,6 +203,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: A human-friendly equivalent of the name.
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated schedule.
@@ -198,20 +218,26 @@ class ScheduleClientAsync(ResourceClientAsync):
             timezone=timezone,
             title=title,
         )
-        result = await self._update(**schedule_fields.model_dump(by_alias=True, exclude_none=True))
+        result = await self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
-    async def delete(self) -> None:
+    async def delete(self, *, timeout: Timeout = 'long') -> None:
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
-        """
-        await self._delete()
 
-    async def get_log(self) -> list[ScheduleInvoked] | None:
+        Args:
+            timeout: Timeout for the API HTTP request.
+        """
+        await self._delete(timeout=timeout)
+
+    async def get_log(self, *, timeout: Timeout = 'long') -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             Retrieved log of the given schedule.
@@ -221,6 +247,7 @@ class ScheduleClientAsync(ResourceClientAsync):
                 url=self._build_url('log'),
                 method='GET',
                 params=self._build_params(),
+                timeout=timeout,
             )
             result = response_to_dict(response)
             return ScheduleLogResponse.model_validate(result).data

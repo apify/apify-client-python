@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
+from base64 import b64encode
 from datetime import timedelta
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
-from apify_client._models import ActorJobStatus  # noqa: TC001
+from apify_client._models import ActorJobStatus, WebhookCreate  # noqa: TC001
 
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
@@ -26,7 +28,7 @@ class ActorJob(BaseModel):
     Used for validation during polling operations. Allows extra fields so the full response data is preserved.
     """
 
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra='allow', populate_by_name=True)
 
     status: ActorJobStatus
 
@@ -37,6 +39,95 @@ class ActorJobResponse(BaseModel):
     Used for minimal validation during polling operations. Allows extra fields so the full response data is preserved.
     """
 
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra='allow', populate_by_name=True)
 
     data: ActorJob
+
+
+class WebhookRepresentation(BaseModel):
+    """Representation of a webhook for base64-encoded API transmission.
+
+    Contains only the fields needed for the webhook payload sent via query parameters.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra='ignore')
+
+    event_types: Annotated[list[str], Field(alias='eventTypes')]
+    request_url: Annotated[str, Field(alias='requestUrl')]
+    payload_template: Annotated[str | None, Field(alias='payloadTemplate')] = None
+    headers_template: Annotated[str | None, Field(alias='headersTemplate')] = None
+
+
+class WebhookRepresentationList(RootModel[list[WebhookRepresentation]]):
+    """List of webhook representations with base64 encoding support."""
+
+    @classmethod
+    def from_webhooks(cls, webhooks: list[WebhookCreate]) -> WebhookRepresentationList:
+        """Construct from a list of `WebhookCreate` models."""
+        representations = list[WebhookRepresentation]()
+
+        for w in webhooks:
+            webhook_dict = w.model_dump(mode='json', exclude_none=True)
+            representations.append(WebhookRepresentation.model_validate(webhook_dict))
+
+        return cls(representations)
+
+    def to_base64(self) -> str | None:
+        """Encode this list of webhook representations to a base64 string.
+
+        Returns `None` if the list is empty, so that the query parameter is omitted.
+        """
+        if not self.root:
+            return None
+
+        data = [r.model_dump(by_alias=True, exclude_none=True) for r in self.root]
+        json_string = json.dumps(data).encode(encoding='utf-8')
+        return b64encode(json_string).decode(encoding='ascii')
+
+
+class RequestInput(BaseModel):
+    """Input model for adding requests to a request queue.
+
+    Both `url` and `unique_key` are required. The API defaults `method` to `GET` when not provided.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+
+    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
+    """A unique identifier assigned to the request."""
+
+    unique_key: Annotated[
+        str,
+        Field(alias='uniqueKey', examples=['GET|60d83e70|e3b0c442|https://apify.com']),
+    ]
+    """A unique key used for request de-duplication."""
+
+    url: Annotated[AnyUrl, Field(examples=['https://apify.com'])]
+    """The URL of the request."""
+
+    method: Annotated[str | None, Field(examples=['GET'])] = None
+    """The HTTP method of the request. Defaults to `GET` on the API side if not provided."""
+
+
+class RequestDeleteInput(BaseModel):
+    """Input model for deleting requests from a request queue.
+
+    Requests are identified by `id` or `unique_key`. At least one must be provided.
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+
+    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
+    """A unique identifier assigned to the request."""
+
+    unique_key: Annotated[
+        str | None,
+        Field(alias='uniqueKey', examples=['GET|60d83e70|e3b0c442|https://apify.com']),
+    ] = None
+    """A unique key used for request de-duplication."""

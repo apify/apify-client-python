@@ -7,7 +7,7 @@ import json
 import string
 import time
 import warnings
-from base64 import b64encode, urlsafe_b64encode
+from base64 import urlsafe_b64encode
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
@@ -67,31 +67,6 @@ def catch_not_found_or_throw(exc: ApifyApiError) -> None:
     is_not_found_type = exc.type in ['record-not-found', 'record-or-token-not-found']
     if not (is_not_found_status and is_not_found_type):
         raise exc
-
-
-def encode_webhook_list_to_base64(webhooks: list[dict]) -> str:
-    """Encode a list of webhook dictionaries to base64 for API transmission.
-
-    Args:
-        webhooks: A list of webhook dictionaries with keys like "event_types", "request_url", etc.
-
-    Returns:
-        A base64-encoded JSON string.
-    """
-    data = list[dict]()
-
-    for webhook in webhooks:
-        webhook_representation = {
-            'eventTypes': list(webhook['event_types']),
-            'requestUrl': webhook['request_url'],
-        }
-        if 'payload_template' in webhook:
-            webhook_representation['payloadTemplate'] = webhook['payload_template']
-        if 'headers_template' in webhook:
-            webhook_representation['headersTemplate'] = webhook['headers_template']
-        data.append(webhook_representation)
-
-    return b64encode(json.dumps(data).encode('utf-8')).decode('ascii')
 
 
 def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:

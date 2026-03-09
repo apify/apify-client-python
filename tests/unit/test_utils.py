@@ -5,16 +5,17 @@ from unittest.mock import Mock
 
 import impit
 import pytest
+from pydantic import AnyUrl
 
-from apify_client._models import WebhookEventType
+from apify_client._models import WebhookCondition, WebhookCreate, WebhookEventType
 from apify_client._resource_clients._resource_client import ResourceClientBase
+from apify_client._types import WebhookRepresentationList
 from apify_client._utils import (
     catch_not_found_or_throw,
     create_hmac_signature,
     create_storage_content_signature,
     encode_base62,
     encode_key_value_store_record_value,
-    encode_webhook_list_to_base64,
     is_retryable_error,
     response_to_dict,
     response_to_list,
@@ -31,21 +32,23 @@ def test_to_safe_id() -> None:
 
 
 def test_encode_webhook_list_to_base64() -> None:
-    assert encode_webhook_list_to_base64([]) == 'W10='
+    assert WebhookRepresentationList.from_webhooks([]).to_base64() is None
     assert (
-        encode_webhook_list_to_base64(
+        WebhookRepresentationList.from_webhooks(
             [
-                {
-                    'event_types': [WebhookEventType.ACTOR_RUN_CREATED],
-                    'request_url': 'https://example.com/run-created',
-                },
-                {
-                    'event_types': [WebhookEventType.ACTOR_RUN_SUCCEEDED],
-                    'request_url': 'https://example.com/run-succeeded',
-                    'payload_template': '{"hello": "world", "resource":{{resource}}}',
-                },
+                WebhookCreate(
+                    event_types=[WebhookEventType.ACTOR_RUN_CREATED],
+                    condition=WebhookCondition(),
+                    request_url=AnyUrl('https://example.com/run-created'),
+                ),
+                WebhookCreate(
+                    event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+                    condition=WebhookCondition(),
+                    request_url=AnyUrl('https://example.com/run-succeeded'),
+                    payload_template='{"hello": "world", "resource":{{resource}}}',
+                ),
             ]
-        )
+        ).to_base64()
         == 'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
     )
 

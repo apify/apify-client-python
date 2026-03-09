@@ -23,14 +23,11 @@ from apify_client._models import (
     RunOrigin,
     RunResponse,
     UpdateActorRequest,
+    WebhookCreate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    encode_key_value_store_record_value,
-    encode_webhook_list_to_base64,
-    response_to_dict,
-    to_seconds,
-)
+from apify_client._types import WebhookRepresentationList
+from apify_client._utils import encode_key_value_store_record_value, response_to_dict, to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -232,7 +229,7 @@ class ActorClient(ResourceClient):
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         timeout: Timeout = 'long',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -271,6 +268,10 @@ class ActorClient(ResourceClient):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
+        validated_webhooks = (
+            [WebhookCreate.model_validate(w) if isinstance(w, dict) else w for w in webhooks] if webhooks else []
+        )
+
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -280,7 +281,7 @@ class ActorClient(ResourceClient):
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=WebhookRepresentationList.from_webhooks(validated_webhooks).to_base64(),
         )
 
         response = self._http_client.call(
@@ -306,7 +307,7 @@ class ActorClient(ResourceClient):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
@@ -728,7 +729,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         timeout: Timeout = 'long',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -767,6 +768,10 @@ class ActorClientAsync(ResourceClientAsync):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
+        validated_webhooks = (
+            [WebhookCreate.model_validate(w) if isinstance(w, dict) else w for w in webhooks] if webhooks else []
+        )
+
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -776,7 +781,7 @@ class ActorClientAsync(ResourceClientAsync):
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=WebhookRepresentationList.from_webhooks(validated_webhooks).to_base64(),
         )
 
         response = await self._http_client.call(
@@ -802,7 +807,7 @@ class ActorClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',

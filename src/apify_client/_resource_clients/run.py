@@ -13,12 +13,7 @@ from apify_client._models import Run, RunResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
-from apify_client._utils import (
-    encode_key_value_store_record_value,
-    response_to_dict,
-    to_safe_id,
-    to_seconds,
-)
+from apify_client._utils import encode_key_value_store_record_value, response_to_dict, to_safe_id, to_seconds
 
 if TYPE_CHECKING:
     import logging

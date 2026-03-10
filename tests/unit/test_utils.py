@@ -31,7 +31,7 @@ def test_to_safe_id() -> None:
     assert to_safe_id('user/resource/extra') == 'user~resource~extra'
 
 
-def test_encode_webhook_list_to_base64() -> None:
+def test_webhook_representation_list_to_base64() -> None:
     assert WebhookRepresentationList.from_webhooks([]).to_base64() is None
     assert (
         WebhookRepresentationList.from_webhooks(
@@ -51,6 +51,44 @@ def test_encode_webhook_list_to_base64() -> None:
         ).to_base64()
         == 'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
     )
+
+
+def test_webhook_representation_list_from_dicts() -> None:
+    """Test that from_webhooks accepts plain dicts with the minimal ad-hoc webhook shape."""
+    result = WebhookRepresentationList.from_webhooks(
+        [
+            {
+                'event_types': ['ACTOR.RUN.CREATED'],
+                'request_url': 'https://example.com/run-created',
+            },
+            {
+                'event_types': ['ACTOR.RUN.SUCCEEDED'],
+                'request_url': 'https://example.com/run-succeeded',
+                'payload_template': '{"hello": "world"}',
+            },
+        ]
+    ).to_base64()
+
+    assert result is not None
+
+    # Also verify round-trip: dicts and WebhookCreate models should produce the same base64
+    result_from_models = WebhookRepresentationList.from_webhooks(
+        [
+            WebhookCreate(
+                event_types=[WebhookEventType.ACTOR_RUN_CREATED],
+                condition=WebhookCondition(),
+                request_url=AnyUrl('https://example.com/run-created'),
+            ),
+            WebhookCreate(
+                event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+                condition=WebhookCondition(),
+                request_url=AnyUrl('https://example.com/run-succeeded'),
+                payload_template='{"hello": "world"}',
+            ),
+        ]
+    ).to_base64()
+
+    assert result == result_from_models
 
 
 @pytest.mark.parametrize(

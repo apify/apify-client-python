@@ -5,7 +5,7 @@ from base64 import b64encode
 from datetime import timedelta
 from typing import Annotated, Any, Literal
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel, model_validator
 
 from apify_client._models import ActorJobStatus, WebhookCreate  # noqa: TC001
 
@@ -62,13 +62,20 @@ class WebhookRepresentationList(RootModel[list[WebhookRepresentation]]):
     """List of webhook representations with base64 encoding support."""
 
     @classmethod
-    def from_webhooks(cls, webhooks: list[WebhookCreate]) -> WebhookRepresentationList:
-        """Construct from a list of `WebhookCreate` models."""
+    def from_webhooks(cls, webhooks: list[dict | WebhookCreate]) -> WebhookRepresentationList:
+        """Construct from a list of `WebhookCreate` models or plain dicts.
+
+        Dicts are validated directly as `WebhookRepresentation`, so only the minimal ad-hoc webhook fields
+        (`event_types`, `request_url`, and optionally `payload_template`/`headers_template`) are required.
+        """
         representations = list[WebhookRepresentation]()
 
-        for w in webhooks:
-            webhook_dict = w.model_dump(mode='json', exclude_none=True)
-            representations.append(WebhookRepresentation.model_validate(webhook_dict))
+        for webhook in webhooks:
+            if isinstance(webhook, dict):
+                representations.append(WebhookRepresentation.model_validate(webhook))
+            else:
+                webhook_dict = webhook.model_dump(mode='json', exclude_none=True)
+                representations.append(WebhookRepresentation.model_validate(webhook_dict))
 
         return cls(representations)
 
@@ -131,3 +138,9 @@ class RequestDeleteInput(BaseModel):
         Field(alias='uniqueKey', examples=['GET|60d83e70|e3b0c442|https://apify.com']),
     ] = None
     """A unique key used for request de-duplication."""
+
+    @model_validator(mode='after')
+    def _check_at_least_one_identifier(self) -> RequestDeleteInput:
+        if self.id is None and self.unique_key is None:
+            raise ValueError('At least one of `id` or `unique_key` must be provided')
+        return self

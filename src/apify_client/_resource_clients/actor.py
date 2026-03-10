@@ -268,10 +268,6 @@ class ActorClient(ResourceClient):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        validated_webhooks = (
-            [WebhookCreate.model_validate(w) if isinstance(w, dict) else w for w in webhooks] if webhooks else []
-        )
-
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -281,7 +277,7 @@ class ActorClient(ResourceClient):
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=WebhookRepresentationList.from_webhooks(validated_webhooks).to_base64(),
+            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
         response = self._http_client.call(
@@ -768,10 +764,6 @@ class ActorClientAsync(ResourceClientAsync):
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
 
-        validated_webhooks = (
-            [WebhookCreate.model_validate(w) if isinstance(w, dict) else w for w in webhooks] if webhooks else []
-        )
-
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -781,7 +773,7 @@ class ActorClientAsync(ResourceClientAsync):
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=WebhookRepresentationList.from_webhooks(validated_webhooks).to_base64(),
+            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
         response = await self._http_client.call(

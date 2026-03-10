@@ -197,10 +197,6 @@ class TaskClient(ResourceClient):
         if isinstance(task_input, dict):
             task_input = TaskInput.model_validate(task_input)
 
-        validated_webhooks = (
-            [WebhookCreate.model_validate(w) if isinstance(w, dict) else w for w in webhooks] if webhooks else []
-        )
-
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -208,7 +204,7 @@ class TaskClient(ResourceClient):
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=WebhookRepresentationList.from_webhooks(validated_webhooks).to_base64(),
+            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
         response = self._http_client.call(
@@ -525,10 +521,6 @@ class TaskClientAsync(ResourceClientAsync):
         if isinstance(task_input, dict):
             task_input = TaskInput.model_validate(task_input)
 
-        validated_webhooks = (
-            [WebhookCreate.model_validate(w) if isinstance(w, dict) else w for w in webhooks] if webhooks else []
-        )
-
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -536,7 +528,7 @@ class TaskClientAsync(ResourceClientAsync):
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=WebhookRepresentationList.from_webhooks(validated_webhooks).to_base64(),
+            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
         response = await self._http_client.call(

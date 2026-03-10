@@ -36,7 +36,7 @@ class DatasetCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfDatasets:
         """List the available datasets.
 
@@ -60,7 +60,7 @@ class DatasetCollectionClient(ResourceClient):
         *,
         name: str | None = None,
         schema: dict | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
@@ -104,7 +104,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfDatasets:
         """List the available datasets.
 
@@ -128,7 +128,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         *,
         name: str | None = None,
         schema: dict | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Dataset:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 

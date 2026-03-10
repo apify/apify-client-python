@@ -59,7 +59,7 @@ class RunClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> Run | None:
+    def get(self, *, timeout: Timeout = 'short') -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
@@ -81,7 +81,7 @@ class RunClient(ResourceClient):
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
         general_access: GeneralAccess | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Run:
         """Update the run with the specified fields.
 
@@ -104,7 +104,7 @@ class RunClient(ResourceClient):
         )
         return RunResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
@@ -114,7 +114,7 @@ class RunClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'long') -> Run:
+    def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'short') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -172,7 +172,7 @@ class RunClient(ResourceClient):
         target_actor_build: str | None = None,
         run_input: Any = None,
         content_type: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Transform an Actor run into a run of another Actor with a new input.
 
@@ -217,7 +217,7 @@ class RunClient(ResourceClient):
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Resurrect a finished Actor run.
 
@@ -263,7 +263,7 @@ class RunClient(ResourceClient):
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
-    def reboot(self, *, timeout: Timeout = 'long') -> Run:
+    def reboot(self, *, timeout: Timeout = 'medium') -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
@@ -382,7 +382,7 @@ class RunClient(ResourceClient):
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
 
@@ -486,7 +486,7 @@ class RunClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> Run | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Run | None:
         """Return information about the Actor run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/run-object/get-run
@@ -508,7 +508,7 @@ class RunClientAsync(ResourceClientAsync):
         status_message: str | None = None,
         is_status_message_terminal: bool | None = None,
         general_access: GeneralAccess | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Run:
         """Update the run with the specified fields.
 
@@ -531,7 +531,7 @@ class RunClientAsync(ResourceClientAsync):
         )
         return RunResponse.model_validate(result).data
 
-    async def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'long') -> Run:
+    async def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'short') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -578,7 +578,7 @@ class RunClientAsync(ResourceClientAsync):
         )
         return Run.model_validate(response) if response is not None else None
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the run.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/delete-run/delete-run
@@ -595,7 +595,7 @@ class RunClientAsync(ResourceClientAsync):
         target_actor_build: str | None = None,
         run_input: Any = None,
         content_type: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Transform an Actor run into a run of another Actor with a new input.
 
@@ -643,7 +643,7 @@ class RunClientAsync(ResourceClientAsync):
         max_items: int | None = None,
         max_total_charge_usd: Decimal | None = None,
         restart_on_error: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Resurrect a finished Actor run.
 
@@ -689,7 +689,7 @@ class RunClientAsync(ResourceClientAsync):
         result = response_to_dict(response)
         return RunResponse.model_validate(result).data
 
-    async def reboot(self, *, timeout: Timeout = 'long') -> Run:
+    async def reboot(self, *, timeout: Timeout = 'medium') -> Run:
         """Reboot an Actor run. Only runs that are running, i.e. runs with status RUNNING can be rebooted.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/reboot-run/reboot-run
@@ -808,7 +808,7 @@ class RunClientAsync(ResourceClientAsync):
         event_name: str,
         count: int | None = None,
         idempotency_key: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
 

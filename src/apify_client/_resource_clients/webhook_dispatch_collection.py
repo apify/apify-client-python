@@ -35,7 +35,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfWebhookDispatches | None:
         """List all webhook dispatches of a user.
 
@@ -79,7 +79,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfWebhookDispatches | None:
         """List all webhook dispatches of a user.
 

@@ -40,7 +40,7 @@ class RunCollectionClient(ResourceClient):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfRuns:
         """List all Actor runs.
 
@@ -104,7 +104,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfRuns:
         """List all Actor runs.
 

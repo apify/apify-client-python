@@ -85,7 +85,7 @@ class ActorClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> Actor | None:
+    def get(self, *, timeout: Timeout = 'short') -> Actor | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -129,7 +129,7 @@ class ActorClient(ResourceClient):
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, None | dict[str, str]] | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Actor:
         """Update the Actor with the specified fields.
 
@@ -209,7 +209,7 @@ class ActorClient(ResourceClient):
         result = self._update(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
@@ -233,7 +233,7 @@ class ActorClient(ResourceClient):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
 
@@ -310,7 +310,7 @@ class ActorClient(ResourceClient):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
@@ -386,7 +386,7 @@ class ActorClient(ResourceClient):
         tag: str | None = None,
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Build:
         """Build the Actor.
 
@@ -444,7 +444,7 @@ class ActorClient(ResourceClient):
         self,
         *,
         wait_for_finish: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> BuildClient:
         """Retrieve Actor's default build.
 
@@ -533,7 +533,7 @@ class ActorClient(ResourceClient):
         *,
         build_tag: str | None = None,
         content_type: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -581,7 +581,7 @@ class ActorClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> Actor | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Actor | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -625,7 +625,7 @@ class ActorClientAsync(ResourceClientAsync):
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, None | dict[str, str]] | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Actor:
         """Update the Actor with the specified fields.
 
@@ -705,7 +705,7 @@ class ActorClientAsync(ResourceClientAsync):
         result = await self._update(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/delete-actor
@@ -729,7 +729,7 @@ class ActorClientAsync(ResourceClientAsync):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
 
@@ -806,7 +806,7 @@ class ActorClientAsync(ResourceClientAsync):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
 
@@ -886,7 +886,7 @@ class ActorClientAsync(ResourceClientAsync):
         tag: str | None = None,
         use_cache: bool | None = None,
         wait_for_finish: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Build:
         """Build the Actor.
 
@@ -944,7 +944,7 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         *,
         wait_for_finish: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> BuildClientAsync:
         """Retrieve Actor's default build.
 
@@ -1033,7 +1033,7 @@ class ActorClientAsync(ResourceClientAsync):
         *,
         build_tag: str | None = None,
         content_type: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 

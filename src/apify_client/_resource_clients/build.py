@@ -35,7 +35,7 @@ class BuildClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> Build | None:
+    def get(self, *, timeout: Timeout = 'short') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
@@ -51,7 +51,7 @@ class BuildClient(ResourceClient):
             return None
         return BuildResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
@@ -61,7 +61,7 @@ class BuildClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def abort(self, *, timeout: Timeout = 'long') -> Build:
+    def abort(self, *, timeout: Timeout = 'short') -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
@@ -81,7 +81,7 @@ class BuildClient(ResourceClient):
         result = response_to_dict(response)
         return BuildResponse.model_validate(result).data
 
-    def get_open_api_definition(self, *, timeout: Timeout = 'long') -> dict:
+    def get_open_api_definition(self, *, timeout: Timeout = 'medium') -> dict:
         """Return OpenAPI definition of the Actor's build.
 
         https://docs.apify.com/api/v2/actor-build-openapi-json-get
@@ -155,7 +155,7 @@ class BuildClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> Build | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Build | None:
         """Return information about the Actor build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/build-object/get-build
@@ -171,7 +171,7 @@ class BuildClientAsync(ResourceClientAsync):
             return None
         return BuildResponse.model_validate(result).data
 
-    async def abort(self, *, timeout: Timeout = 'long') -> Build:
+    async def abort(self, *, timeout: Timeout = 'short') -> Build:
         """Abort the Actor build which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/abort-build/abort-build
@@ -191,7 +191,7 @@ class BuildClientAsync(ResourceClientAsync):
         result = response_to_dict(response)
         return BuildResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the build.
 
         https://docs.apify.com/api/v2#/reference/actor-builds/delete-build/delete-build
@@ -201,7 +201,7 @@ class BuildClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def get_open_api_definition(self, *, timeout: Timeout = 'long') -> dict:
+    async def get_open_api_definition(self, *, timeout: Timeout = 'medium') -> dict:
         """Return OpenAPI definition of the Actor's build.
 
         https://docs.apify.com/api/v2/actor-build-openapi-json-get

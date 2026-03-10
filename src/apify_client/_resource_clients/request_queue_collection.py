@@ -41,7 +41,7 @@ class RequestQueueCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfRequestQueues:
         """List the available request queues.
 
@@ -64,7 +64,7 @@ class RequestQueueCollectionClient(ResourceClient):
         self,
         *,
         name: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
@@ -107,7 +107,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfRequestQueues:
         """List the available request queues.
 
@@ -130,7 +130,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> RequestQueue:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 

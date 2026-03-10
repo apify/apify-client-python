@@ -114,7 +114,7 @@ class RunClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'short') -> Run:
+    def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'medium') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run
@@ -531,7 +531,7 @@ class RunClientAsync(ResourceClientAsync):
         )
         return RunResponse.model_validate(result).data
 
-    async def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'short') -> Run:
+    async def abort(self, *, gracefully: bool | None = None, timeout: Timeout = 'medium') -> Run:
         """Abort the Actor run which is starting or currently running and return its details.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/abort-run/abort-run

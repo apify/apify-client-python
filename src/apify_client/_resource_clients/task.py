@@ -13,14 +13,11 @@ from apify_client._models import (
     TaskOptions,
     TaskResponse,
     UpdateTaskRequest,
+    WebhookCreate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    encode_webhook_list_to_base64,
-    response_to_dict,
-    to_seconds,
-)
+from apify_client._types import WebhookRepresentationList
+from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -74,7 +71,7 @@ class TaskClient(ResourceClient):
         self,
         *,
         name: str | None = None,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
@@ -119,10 +116,13 @@ class TaskClient(ResourceClient):
         Returns:
             The updated task.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         task_fields = UpdateTaskRequest(
             name=name,
             title=title,
-            input=TaskInput.model_validate(task_input) if task_input else None,
+            input=task_input,
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -154,14 +154,14 @@ class TaskClient(ResourceClient):
     def start(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -194,6 +194,9 @@ class TaskClient(ResourceClient):
         Returns:
             The run object.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -201,14 +204,14 @@ class TaskClient(ResourceClient):
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
         response = self._http_client.call(
             url=self._build_url('runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
-            json=task_input,
+            json=task_input.model_dump() if task_input is not None else None,
             params=request_params,
             timeout=timeout,
         )
@@ -219,13 +222,13 @@ class TaskClient(ResourceClient):
     def call(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         wait_duration: timedelta | None = None,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -300,7 +303,7 @@ class TaskClient(ResourceClient):
             catch_not_found_or_throw(exc)
         return None
 
-    def update_input(self, *, task_input: dict, timeout: Timeout = 'short') -> dict:
+    def update_input(self, *, task_input: dict | TaskInput, timeout: Timeout = 'short') -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
@@ -312,11 +315,14 @@ class TaskClient(ResourceClient):
         Returns:
             The updated task input.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         response = self._http_client.call(
             url=self._build_url('input'),
             method='PUT',
             params=self._build_params(),
-            json=task_input,
+            json=task_input.model_dump(),
             timeout=timeout,
         )
         return response_to_dict(response)
@@ -389,7 +395,7 @@ class TaskClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
@@ -434,10 +440,13 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The updated task.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         task_fields = UpdateTaskRequest(
             name=name,
             title=title,
-            input=TaskInput.model_validate(task_input) if task_input else None,
+            input=task_input,
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -469,14 +478,14 @@ class TaskClientAsync(ResourceClientAsync):
     async def start(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -509,6 +518,9 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The run object.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
@@ -516,14 +528,14 @@ class TaskClientAsync(ResourceClientAsync):
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=encode_webhook_list_to_base64(webhooks) if webhooks is not None else None,
+            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
         response = await self._http_client.call(
             url=self._build_url('runs'),
             method='POST',
             headers={'content-type': 'application/json; charset=utf-8'},
-            json=task_input,
+            json=task_input.model_dump() if task_input is not None else None,
             params=request_params,
             timeout=timeout,
         )
@@ -534,13 +546,13 @@ class TaskClientAsync(ResourceClientAsync):
     async def call(
         self,
         *,
-        task_input: dict | None = None,
+        task_input: dict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[dict] | None = None,
+        webhooks: list[dict | WebhookCreate] | None = None,
         wait_duration: timedelta | None = None,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -614,7 +626,7 @@ class TaskClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
         return None
 
-    async def update_input(self, *, task_input: dict, timeout: Timeout = 'short') -> dict:
+    async def update_input(self, *, task_input: dict | TaskInput, timeout: Timeout = 'short') -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
@@ -626,11 +638,14 @@ class TaskClientAsync(ResourceClientAsync):
         Returns:
             The updated task input.
         """
+        if isinstance(task_input, dict):
+            task_input = TaskInput.model_validate(task_input)
+
         response = await self._http_client.call(
             url=self._build_url('input'),
             method='PUT',
             params=self._build_params(),
-            json=task_input,
+            json=task_input.model_dump(),
             timeout=timeout,
         )
         return response_to_dict(response)

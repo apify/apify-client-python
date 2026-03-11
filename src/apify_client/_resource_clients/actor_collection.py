@@ -49,7 +49,7 @@ class ActorCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfActors:
         """List the Actors the user has created or used.
 
@@ -94,7 +94,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Actor:
         """Create a new Actor.
 
@@ -194,7 +194,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfActors:
         """List the Actors the user has created or used.
 
@@ -239,7 +239,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Actor:
         """Create a new Actor.
 

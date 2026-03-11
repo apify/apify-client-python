@@ -31,7 +31,7 @@ class ActorEnvVarClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> EnvVar | None:
+    def get(self, *, timeout: Timeout = 'short') -> EnvVar | None:
         """Return information about the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/get-environment-variable
@@ -53,7 +53,7 @@ class ActorEnvVarClient(ResourceClient):
         is_secret: bool | None = None,
         name: str,
         value: str,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> EnvVar:
         """Update the Actor environment variable with specified fields.
 
@@ -74,7 +74,7 @@ class ActorEnvVarClient(ResourceClient):
         )
         return EnvVarResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/delete-environment-variable
@@ -106,7 +106,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> EnvVar | None:
+    async def get(self, *, timeout: Timeout = 'short') -> EnvVar | None:
         """Return information about the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/get-environment-variable
@@ -128,7 +128,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         is_secret: bool | None = None,
         name: str,
         value: str,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> EnvVar:
         """Update the Actor environment variable with specified fields.
 
@@ -149,7 +149,7 @@ class ActorEnvVarClientAsync(ResourceClientAsync):
         )
         return EnvVarResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor environment variable.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-object/delete-environment-variable

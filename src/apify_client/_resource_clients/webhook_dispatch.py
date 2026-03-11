@@ -31,7 +31,7 @@ class WebhookDispatchClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
+    def get(self, *, timeout: Timeout = 'short') -> WebhookDispatch | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch
@@ -69,7 +69,7 @@ class WebhookDispatchClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
+    async def get(self, *, timeout: Timeout = 'short') -> WebhookDispatch | None:
         """Retrieve the webhook dispatch.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatch-object/get-webhook-dispatch

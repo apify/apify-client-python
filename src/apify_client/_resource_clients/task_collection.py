@@ -47,7 +47,7 @@ class TaskCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfTasks:
         """List the available tasks.
 
@@ -82,7 +82,7 @@ class TaskCollectionClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Task:
         """Create a new task.
 
@@ -168,7 +168,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfTasks:
         """List the available tasks.
 
@@ -203,7 +203,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Task:
         """Create a new task.
 

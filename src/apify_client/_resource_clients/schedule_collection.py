@@ -42,7 +42,7 @@ class ScheduleCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfSchedules:
         """List the available schedules.
 
@@ -71,7 +71,7 @@ class ScheduleCollectionClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Schedule:
         """Create a new schedule.
 
@@ -135,7 +135,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfSchedules:
         """List the available schedules.
 
@@ -164,7 +164,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Schedule:
         """Create a new schedule.
 

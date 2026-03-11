@@ -8,11 +8,13 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - [**breaking**] Make HTTP client pluggable with abstract base classes ([#641](https://github.com/apify/apify-client-python/pull/641)) ([5ae33a0](https://github.com/apify/apify-client-python/commit/5ae33a0a801fdacd0c456a8630fea053f9df6550)) by [@vdusek](https://github.com/vdusek), closes [#416](https://github.com/apify/apify-client-python/issues/416)
+- [**breaking**] Introduce tiered timeout system with per-endpoint configuration ([#653](https://github.com/apify/apify-client-python/pull/653)) ([723ec6e](https://github.com/apify/apify-client-python/commit/723ec6e5954474767a5ecbf4902d9b62f7d214f8)) by [@vdusek](https://github.com/vdusek)
 
 ### 🚜 Refactor
 
 - [**breaking**] Introduce fully typed clients ([#604](https://github.com/apify/apify-client-python/pull/604)) ([81ee194](https://github.com/apify/apify-client-python/commit/81ee1943b400b49797868fe4dfa52d1662e09370)) by [@vdusek](https://github.com/vdusek), closes [#21](https://github.com/apify/apify-client-python/issues/21), [#481](https://github.com/apify/apify-client-python/issues/481)
 - [**breaking**] Drop support for Python 3.10 ([#636](https://github.com/apify/apify-client-python/pull/636)) ([7895a4e](https://github.com/apify/apify-client-python/commit/7895a4e60145f490911044da4aa7e3c1c424d416)) by [@vdusek](https://github.com/vdusek)
+- [**breaking**] Update default timeout tiers on non-storage resource clients ([#664](https://github.com/apify/apify-client-python/pull/664)) ([0b35bbe](https://github.com/apify/apify-client-python/commit/0b35bbe212a8a64c5aea5d5d813315252760b055)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

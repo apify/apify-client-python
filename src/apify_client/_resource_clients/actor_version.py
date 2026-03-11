@@ -49,7 +49,7 @@ class ActorVersionClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> Version | None:
+    def get(self, *, timeout: Timeout = 'short') -> Version | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
@@ -76,7 +76,7 @@ class ActorVersionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Version:
         """Update the Actor version with specified fields.
 
@@ -115,7 +115,7 @@ class ActorVersionClient(ResourceClient):
         result = self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version
@@ -165,7 +165,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> Version | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Version | None:
         """Return information about the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/get-version
@@ -192,7 +192,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Version:
         """Update the Actor version with specified fields.
 
@@ -231,7 +231,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         result = await self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the Actor version.
 
         https://docs.apify.com/api/v2#/reference/actors/version-object/delete-version

@@ -54,7 +54,7 @@ class TaskClient(ResourceClient):
     ) -> None:
         super().__init__(resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    def get(self, *, timeout: Timeout = 'long') -> Task | None:
+    def get(self, *, timeout: Timeout = 'short') -> Task | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -86,7 +86,7 @@ class TaskClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Task:
         """Update the task with specified fields.
 
@@ -141,7 +141,7 @@ class TaskClient(ResourceClient):
         result = self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
@@ -162,7 +162,7 @@ class TaskClient(ResourceClient):
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
 
@@ -227,7 +227,7 @@ class TaskClient(ResourceClient):
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_duration: timedelta | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
@@ -277,7 +277,7 @@ class TaskClient(ResourceClient):
         )
         return run_client.wait_for_finish(wait_duration=wait_duration)
 
-    def get_input(self, *, timeout: Timeout = 'long') -> dict | None:
+    def get_input(self, *, timeout: Timeout = 'short') -> dict | None:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -300,7 +300,7 @@ class TaskClient(ResourceClient):
             catch_not_found_or_throw(exc)
         return None
 
-    def update_input(self, *, task_input: dict, timeout: Timeout = 'long') -> dict:
+    def update_input(self, *, task_input: dict, timeout: Timeout = 'short') -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input
@@ -369,7 +369,7 @@ class TaskClientAsync(ResourceClientAsync):
     ) -> None:
         super().__init__(resource_id=resource_id, resource_path=resource_path, **kwargs)
 
-    async def get(self, *, timeout: Timeout = 'long') -> Task | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Task | None:
         """Retrieve the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/get-task
@@ -401,7 +401,7 @@ class TaskClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Task:
         """Update the task with specified fields.
 
@@ -456,7 +456,7 @@ class TaskClientAsync(ResourceClientAsync):
         result = await self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/delete-task
@@ -477,7 +477,7 @@ class TaskClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: list[dict] | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
 
@@ -542,7 +542,7 @@ class TaskClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         webhooks: list[dict] | None = None,
         wait_duration: timedelta | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
 
@@ -591,7 +591,7 @@ class TaskClientAsync(ResourceClientAsync):
         )
         return await run_client.wait_for_finish(wait_duration=wait_duration)
 
-    async def get_input(self, *, timeout: Timeout = 'long') -> dict | None:
+    async def get_input(self, *, timeout: Timeout = 'short') -> dict | None:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -614,7 +614,7 @@ class TaskClientAsync(ResourceClientAsync):
             catch_not_found_or_throw(exc)
         return None
 
-    async def update_input(self, *, task_input: dict, timeout: Timeout = 'long') -> dict:
+    async def update_input(self, *, task_input: dict, timeout: Timeout = 'short') -> dict:
         """Update the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/update-task-input

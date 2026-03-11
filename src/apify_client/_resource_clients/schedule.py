@@ -40,7 +40,7 @@ class ScheduleClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> Schedule | None:
+    def get(self, *, timeout: Timeout = 'short') -> Schedule | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
@@ -67,7 +67,7 @@ class ScheduleClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Schedule:
         """Update the schedule with specified fields.
 
@@ -102,7 +102,7 @@ class ScheduleClient(ResourceClient):
         result = self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
@@ -112,7 +112,7 @@ class ScheduleClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def get_log(self, *, timeout: Timeout = 'long') -> list[ScheduleInvoked] | None:
+    def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -159,7 +159,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> Schedule | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Schedule | None:
         """Return information about the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/get-schedule
@@ -186,7 +186,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Schedule:
         """Update the schedule with specified fields.
 
@@ -221,7 +221,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         result = await self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-object/delete-schedule
@@ -231,7 +231,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def get_log(self, *, timeout: Timeout = 'long') -> list[ScheduleInvoked] | None:
+    async def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked] | None:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log

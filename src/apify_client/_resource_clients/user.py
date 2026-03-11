@@ -44,7 +44,7 @@ class UserClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> UserPublicInfo | UserPrivateInfo | None:
+    def get(self, *, timeout: Timeout = 'short') -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
@@ -65,7 +65,7 @@ class UserClient(ResourceClient):
         except ValidationError:
             return PublicUserDataResponse.model_validate(result).data
 
-    def monthly_usage(self, *, timeout: Timeout = 'long') -> MonthlyUsage | None:
+    def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage | None:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -95,7 +95,7 @@ class UserClient(ResourceClient):
 
         return None
 
-    def limits(self, *, timeout: Timeout = 'long') -> AccountLimits | None:
+    def limits(self, *, timeout: Timeout = 'short') -> AccountLimits | None:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
@@ -129,7 +129,7 @@ class UserClient(ResourceClient):
         *,
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> None:
         """Update the account's limits manageable on your account's Limits page.
 
@@ -173,7 +173,7 @@ class UserClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> UserPublicInfo | UserPrivateInfo | None:
+    async def get(self, *, timeout: Timeout = 'short') -> UserPublicInfo | UserPrivateInfo | None:
         """Return information about user account.
 
         You receive all or only public info based on your token permissions.
@@ -194,7 +194,7 @@ class UserClientAsync(ResourceClientAsync):
         except ValidationError:
             return PublicUserDataResponse.model_validate(result).data
 
-    async def monthly_usage(self, *, timeout: Timeout = 'long') -> MonthlyUsage | None:
+    async def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage | None:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -224,7 +224,7 @@ class UserClientAsync(ResourceClientAsync):
 
         return None
 
-    async def limits(self, *, timeout: Timeout = 'long') -> AccountLimits | None:
+    async def limits(self, *, timeout: Timeout = 'short') -> AccountLimits | None:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
@@ -258,7 +258,7 @@ class UserClientAsync(ResourceClientAsync):
         *,
         max_monthly_usage_usd: int | None = None,
         data_retention_days: int | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> None:
         """Update the account's limits manageable on your account's Limits page.
 

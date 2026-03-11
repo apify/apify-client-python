@@ -44,7 +44,7 @@ class WebhookCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfWebhooks:
         """List the available webhooks.
 
@@ -76,7 +76,7 @@ class WebhookCollectionClient(ResourceClient):
         do_not_retry: bool | None = None,
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Webhook:
         """Create a new webhook.
 
@@ -147,7 +147,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfWebhooks:
         """List the available webhooks.
 
@@ -179,7 +179,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         do_not_retry: bool | None = None,
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Webhook:
         """Create a new webhook.
 

@@ -39,7 +39,7 @@ class StoreCollectionClient(ResourceClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfStoreActors:
         """List Actors in Apify store.
 
@@ -101,7 +101,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfStoreActors:
         """List Actors in Apify store.
 

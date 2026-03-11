@@ -29,7 +29,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'long') -> ListOfEnvVars:
+    def list(self, *, timeout: Timeout = 'short') -> ListOfEnvVars:
         """List the available Actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -49,7 +49,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
         is_secret: bool | None = None,
         name: str,
         value: str,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> EnvVar:
         """Create a new Actor environment variable.
 
@@ -90,7 +90,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self, *, timeout: Timeout = 'long') -> ListOfEnvVars:
+    async def list(self, *, timeout: Timeout = 'short') -> ListOfEnvVars:
         """List the available Actor environment variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
@@ -110,7 +110,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         is_secret: bool | None = None,
         name: str,
         value: str,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> EnvVar:
         """Create a new Actor environment variable.
 

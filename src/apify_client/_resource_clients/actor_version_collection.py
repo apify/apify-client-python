@@ -44,7 +44,7 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'long') -> ListOfVersions:
+    def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -70,7 +70,7 @@ class ActorVersionCollectionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Version:
         """Create a new Actor version.
 
@@ -131,7 +131,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self, *, timeout: Timeout = 'long') -> ListOfVersions:
+    async def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
         """List the available Actor versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
@@ -157,7 +157,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Version:
         """Create a new Actor version.
 

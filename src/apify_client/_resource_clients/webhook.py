@@ -44,7 +44,7 @@ class WebhookClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'long') -> Webhook | None:
+    def get(self, *, timeout: Timeout = 'short') -> Webhook | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -73,7 +73,7 @@ class WebhookClient(ResourceClient):
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Webhook:
         """Update the webhook.
 
@@ -113,7 +113,7 @@ class WebhookClient(ResourceClient):
         result = self._update(timeout=timeout, **webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
-    def delete(self, *, timeout: Timeout = 'long') -> None:
+    def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
@@ -123,7 +123,7 @@ class WebhookClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def test(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
+    def test(self, *, timeout: Timeout = 'medium') -> WebhookDispatch | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -187,7 +187,7 @@ class WebhookClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'long') -> Webhook | None:
+    async def get(self, *, timeout: Timeout = 'short') -> Webhook | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -216,7 +216,7 @@ class WebhookClientAsync(ResourceClientAsync):
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> Webhook:
         """Update the webhook.
 
@@ -256,7 +256,7 @@ class WebhookClientAsync(ResourceClientAsync):
         result = await self._update(timeout=timeout, **webhook_update.model_dump(by_alias=True, exclude_none=True))
         return WebhookResponse.model_validate(result).data
 
-    async def delete(self, *, timeout: Timeout = 'long') -> None:
+    async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/delete-webhook
@@ -266,7 +266,7 @@ class WebhookClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def test(self, *, timeout: Timeout = 'long') -> WebhookDispatch | None:
+    async def test(self, *, timeout: Timeout = 'medium') -> WebhookDispatch | None:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.

@@ -41,7 +41,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfKeyValueStores:
         """List the available key-value stores.
 
@@ -65,7 +65,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         *,
         name: str | None = None,
         schema: dict | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> KeyValueStore:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
@@ -109,7 +109,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'medium',
     ) -> ListOfKeyValueStores:
         """List the available key-value stores.
 
@@ -133,7 +133,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         *,
         name: str | None = None,
         schema: dict | None = None,
-        timeout: Timeout = 'long',
+        timeout: Timeout = 'short',
     ) -> KeyValueStore:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 

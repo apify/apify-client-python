@@ -366,7 +366,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_add_requests(
         self,
-        requests: list[dict | RequestInput],
+        requests: list[RequestInput] | list[dict],
         *,
         forefront: bool = False,
         max_parallel: int = 1,
@@ -454,7 +454,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_delete_requests(
         self,
-        requests: list[dict | RequestDeleteInput],
+        requests: list[RequestDeleteInput] | list[dict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -895,7 +895,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_add_requests(
         self,
-        requests: list[dict | RequestInput],
+        requests: list[RequestInput] | list[dict],
         *,
         forefront: bool = False,
         max_parallel: int = 5,
@@ -985,7 +985,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_delete_requests(
         self,
-        requests: list[dict | RequestDeleteInput],
+        requests: list[RequestDeleteInput] | list[dict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:

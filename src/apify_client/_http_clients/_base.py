@@ -153,7 +153,7 @@ class HttpClientBase:
         parsed_params: dict[str, Any] = {}
         for key, value in params.items():
             if isinstance(value, bool):
-                parsed_params[key] = int(value)
+                parsed_params[key] = (str(value)).lower()
             elif isinstance(value, list):
                 parsed_params[key] = ','.join(value)
             elif isinstance(value, datetime):

@@ -62,7 +62,7 @@ class WebhookRepresentationList(RootModel[list[WebhookRepresentation]]):
     """List of webhook representations with base64 encoding support."""
 
     @classmethod
-    def from_webhooks(cls, webhooks: list[dict | WebhookCreate]) -> WebhookRepresentationList:
+    def from_webhooks(cls, webhooks: list[WebhookCreate] | list[dict]) -> WebhookRepresentationList:
         """Construct from a list of `WebhookCreate` models or plain dicts.
 
         Dicts are validated directly as `WebhookRepresentation`, so only the minimal ad-hoc webhook fields

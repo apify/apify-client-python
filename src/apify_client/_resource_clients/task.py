@@ -161,7 +161,7 @@ class TaskClient(ResourceClient):
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -228,7 +228,7 @@ class TaskClient(ResourceClient):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         wait_duration: timedelta | None = None,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -485,7 +485,7 @@ class TaskClientAsync(ResourceClientAsync):
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -552,7 +552,7 @@ class TaskClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         wait_duration: timedelta | None = None,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:

@@ -229,7 +229,7 @@ class ActorClient(ResourceClient):
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -303,7 +303,7 @@ class ActorClient(ResourceClient):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
@@ -725,7 +725,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -799,7 +799,7 @@ class ActorClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
-        webhooks: list[dict | WebhookCreate] | None = None,
+        webhooks: list[WebhookCreate] | list[dict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',

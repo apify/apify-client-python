@@ -1,0 +1,28 @@
+---
+id: retrieve-actor-data
+title: Retrieve Actor data
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import RetrieveAsyncExample from '!!raw-loader!./code/03_retrieve_async.py';
+import RetrieveSyncExample from '!!raw-loader!./code/03_retrieve_sync.py';
+
+Actor output data is stored in [datasets](https://docs.apify.com/platform/storage/dataset), which can be retrieved from individual Actor runs. Dataset items support pagination for efficient retrieval, and multiple datasets can be merged into a single dataset for further analysis. This merged dataset can then be exported into various formats such as CSV, JSON, XLSX, or XML. Additionally, [integrations](https://docs.apify.com/platform/integrations) provide powerful tools to automate data workflows.
+
+The following example demonstrates how to fetch datasets from an Actor's runs, paginate through their items, and merge them into a single dataset for unified analysis:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {RetrieveAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {RetrieveSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

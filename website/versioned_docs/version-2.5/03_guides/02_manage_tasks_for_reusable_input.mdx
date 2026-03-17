@@ -1,0 +1,28 @@
+---
+id: manage-tasks-for-reusable-input
+title: Manage tasks for reusable input
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import TasksAsyncExample from '!!raw-loader!./code/02_tasks_async.py';
+import TasksSyncExample from '!!raw-loader!./code/02_tasks_sync.py';
+
+When you need to run multiple inputs with the same Actor, the most convenient approach is to create multiple [tasks](https://docs.apify.com/platform/actors/running/tasks), each with different input configurations. Task inputs are stored on the Apify platform when the task is created, allowing you to reuse them easily.
+
+The following example demonstrates how to create tasks for the `apify/instagram-hashtag-scraper` Actor with different inputs, manage task clients, and execute them asynchronously:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {TasksAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {TasksSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

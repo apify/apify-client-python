@@ -4,6 +4,7 @@ const { config } = require('@apify/docs-theme');
 
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
 const { groupSort } = require('./transformDocs.js');
+const versions = require('./versions.json');
 
 const { absoluteUrl } = config;
 
@@ -67,6 +68,17 @@ module.exports = {
                             label: 'GitHub',
                             position: 'left',
                         },
+                        {
+                            type: 'docsVersionDropdown',
+                            position: 'left',
+                            className: 'navbar__item',
+                            'data-api-links': JSON.stringify([
+                                'reference/next',
+                                ...versions.map((version, i) => (i === 0 ? 'reference' : `reference/${version}`)),
+                            ]),
+                            dropdownItemsBefore: [],
+                            dropdownItemsAfter: [],
+                        },
                     ],
                 },
             },
@@ -124,6 +136,12 @@ module.exports = {
                     includeGeneratedIndex: false,
                     includePages: true,
                     relativePaths: false,
+                    excludeRoutes: [
+                        '/api/client/python/reference/[0-9]*/**',
+                        '/api/client/python/reference/[0-9]*',
+                        '/api/client/python/reference/next/**',
+                        '/api/client/python/reference/next',
+                    ],
                 },
             },
         ],
@@ -131,6 +149,7 @@ module.exports = {
     ],
     themeConfig: {
         ...config.themeConfig,
+        versions,
         tableOfContents: {
             ...config.themeConfig.tableOfContents,
             maxHeadingLevel: 5,

@@ -1,0 +1,10 @@
+[
+    {
+        "entryPoints": { "index": { "label": "Index", "path": "src/apify_client" } },
+        "packageRoot": "..",
+        "packagePath": ".",
+        "packageSlug": ".",
+        "packageName": "apify-client",
+        "packageVersion": "2.5.0"
+    }
+]

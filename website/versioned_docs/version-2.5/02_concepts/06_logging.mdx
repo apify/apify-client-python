@@ -1,0 +1,33 @@
+---
+id: logging
+title: Logging
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import LoggingConfigExample from '!!raw-loader!./code/06_logging_config.py';
+import LoggingFormatterExample from '!!raw-loader!./code/06_logging_formatter.py';
+
+The library logs useful debug information to the `apify_client` logger whenever it sends requests to the Apify API. You can configure this logger to print debug information to the standard output by adding a handler:
+
+<CodeBlock className="language-python">
+    {LoggingConfigExample}
+</CodeBlock>
+
+The log records include additional properties, provided via the extra argument, which can be helpful for debugging. Some of these properties are:
+
+- `attempt` - Number of retry attempts for the request.
+- `status_code` - HTTP status code of the response.
+- `url` - URL of the API endpoint being called.
+- `client_method` - Method name of the client that initiated the request.
+- `resource_id` - Identifier of the resource being accessed.
+
+To display these additional properties in the log output, you need to use a custom log formatter. Here's a basic example:
+
+<CodeBlock className="language-python">
+    {LoggingFormatterExample}
+</CodeBlock>
+
+For more information on creating and using custom log formatters, refer to the official Python [logging documentation](https://docs.python.org/3/howto/logging.html#formatters).

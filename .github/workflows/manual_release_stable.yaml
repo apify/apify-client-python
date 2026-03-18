@@ -145,14 +145,15 @@ jobs:
       - name: Snapshot the current version
         run: |
           cd website
-          VERSION=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('../pyproject.toml').read_text())['project']['version'])")
-          export MAJOR_MINOR=$(echo $VERSION | cut -d. -f1-2)
-          rm -rf versioned_docs/version-$MAJOR_MINOR
-          rm -rf versioned_sidebars/version-$MAJOR_MINOR-sidebars.json
+          VERSION="$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('../pyproject.toml').read_text())['project']['version'])")"
+          MAJOR_MINOR="$(echo "$VERSION" | cut -d. -f1-2)"
+          export MAJOR_MINOR
+          rm -rf "versioned_docs/version-${MAJOR_MINOR}"
+          rm -rf "versioned_sidebars/version-${MAJOR_MINOR}-sidebars.json"
           jq 'map(select(. != env.MAJOR_MINOR))' versions.json > tmp.json && mv tmp.json versions.json
           bash build_api_reference.sh
-          npx docusaurus docs:version $MAJOR_MINOR
-          npx docusaurus api:version $MAJOR_MINOR
+          npx docusaurus docs:version "$MAJOR_MINOR"
+          npx docusaurus api:version "$MAJOR_MINOR"
 
       - name: Commit and push the version snapshot
         uses: EndBug/add-and-commit@v9

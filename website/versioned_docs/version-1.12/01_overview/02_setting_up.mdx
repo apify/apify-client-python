@@ -1,0 +1,71 @@
+---
+id: setting-up
+title: Setting up
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import AsyncExample from '!!raw-loader!./code/02_auth_async.py';
+import SyncExample from '!!raw-loader!./code/02_auth_sync.py';
+
+This guide will help you get started with [Apify client for Python](https://github.com/apify/apify-client-python) by setting it up on your computer. Follow the steps below to ensure a smooth installation process.
+
+## Prerequisites
+
+Before installing `apify-client` itself, make sure that your system meets the following requirements:
+
+- **Python 3.10 or higher**: `apify-client` requires Python 3.10 or a newer version. You can download Python from the [official website](https://www.python.org/downloads/).
+- **Python package manager**: While this guide uses Pip (the most common package manager), you can also use any package manager you want. You can download Pip from the [official website](https://pip.pypa.io/en/stable/installation/).
+
+### Verifying prerequisites
+
+To check if Python and the Pip package manager are installed, run the following commands:
+
+```sh
+python --version
+```
+
+```sh
+pip --version
+```
+
+If these commands return the respective versions, you're ready to continue.
+
+## Installation
+
+Apify client for Python is available as the [`apify-client`](https://pypi.org/project/apify-client/) package on PyPI. To install it, run:
+
+```sh
+pip install apify-client
+```
+
+After installation, verify that `apify-client` is installed correctly by checking its version:
+
+```sh
+python -c 'import apify_client; print(apify_client.__version__)'
+```
+
+## Authentication and initialization
+
+To use the client, you need an [API token](https://docs.apify.com/platform/integrations/api#api-token). You can find your token under [Integrations](https://console.apify.com/account/integrations) tab in Apify Console. Copy the token and initialize the client by providing the token (`MY-APIFY-TOKEN`) as a parameter to the `ApifyClient` constructor.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {AsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {SyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::warning Secure access
+
+The API token is used to authorize your requests to the Apify API. You can be charged for the usage of the underlying services, so do not share your API token with untrusted parties or expose it on the client side of your applications.
+
+:::

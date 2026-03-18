@@ -1,0 +1,48 @@
+---
+id: single-and-collection-clients
+title: Single and collection clients
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import CollectionAsyncExample from '!!raw-loader!./code/02_collection_async.py';
+import CollectionSyncExample from '!!raw-loader!./code/02_collection_sync.py';
+import SingleAsyncExample from '!!raw-loader!./code/02_single_async.py';
+import SingleSyncExample from '!!raw-loader!./code/02_single_sync.py';
+
+The Apify client interface is designed to be consistent and intuitive across all of its components. When you call specific methods on the main client, you create specialized clients to manage individual API resources. There are two main types of clients:
+
+- [`ActorClient`](/reference/class/ActorClient) - Manages a single resource.
+- [`ActorCollectionClient`](/reference/class/ActorCollectionClient) - Manages a collection of resources.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {CollectionAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {CollectionSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+The resource ID can be the resource's `id` or a combination of `username/resource-name`.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {SingleAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {SingleSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+By utilizing the appropriate collection or resource client, you can simplify how you interact with the Apify API.

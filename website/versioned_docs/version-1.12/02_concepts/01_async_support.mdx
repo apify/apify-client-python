@@ -1,0 +1,18 @@
+---
+id: asyncio-support
+title: Asyncio support
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import AsyncSupportExample from '!!raw-loader!./code/01_async_support.py';
+
+The package provides an asynchronous version of the client, [`ApifyClientAsync`](/reference/class/ApifyClientAsync), which allows you to interact with the Apify API using Python's standard async/await syntax. This enables you to perform non-blocking operations, see the Python [asyncio documentation](https://docs.python.org/3/library/asyncio-task.html) for more information.
+
+The following example demonstrates how to run an Actor asynchronously and stream its logs while it is running:
+
+<CodeBlock className="language-python">
+    {AsyncSupportExample}
+</CodeBlock>

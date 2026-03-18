@@ -21,7 +21,7 @@
         },
         {
             "type": "category",
-            "label": "Examples",
+            "label": "Guides",
             "collapsed": true,
             "items": [
                 {
@@ -29,6 +29,10 @@
                     "dirName": "03_examples"
                 }
             ]
+        },
+        {
+            "type": "doc",
+            "id": "changelog"
         }
     ]
 }

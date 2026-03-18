@@ -1,0 +1,28 @@
+---
+id: integration-with-data-libraries
+title: Integration with data libraries
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import PandasAsyncExample from '!!raw-loader!./code/04_pandas_async.py';
+import PandasSyncExample from '!!raw-loader!./code/04_pandas_sync.py';
+
+The Apify client for Python seamlessly integrates with data analysis libraries like [Pandas](https://pandas.pydata.org/). This allows you to load dataset items directly into a Pandas [DataFrame](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) for efficient manipulation and analysis. Pandas provides robust data structures and tools for handling large datasets, making it a powerful addition to your Apify workflows.
+
+The following example demonstrates how to retrieve items from the most recent dataset of an Actor run and load them into a Pandas DataFrame for further analysis:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {PandasAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {PandasSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>

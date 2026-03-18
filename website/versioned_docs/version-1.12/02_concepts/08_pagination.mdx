@@ -1,0 +1,38 @@
+---
+id: pagination
+title: Pagination
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import PaginationAsyncExample from '!!raw-loader!./code/08_pagination_async.py';
+import PaginationSyncExample from '!!raw-loader!./code/08_pagination_sync.py';
+
+Most methods named `list` or `list_something` in the Apify client return a [`ListPage`](/reference/class/ListPage)  object. This object provides a consistent interface for working with paginated data and includes the following properties:
+
+- `items` - The main results you're looking for.
+- `total` - The total number of items available.
+- `offset` - The starting point of the current page.
+- `count` - The number of items in the current page.
+- `limit` - The maximum number of items per page.
+
+Some methods, such as `list_keys` or `list_head`, paginate differently. Regardless, the primary results are always stored under the items property, and the limit property can be used to control the number of results returned.
+
+The following example demonstrates how to fetch all items from a dataset using pagination:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {PaginationAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {PaginationSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+The [`ListPage`](/reference/class/ListPage) interface offers several key benefits. Its consistent structure ensures predictable results for most `list` methods, providing a uniform way to work with paginated data. It also offers flexibility, allowing you to customize the `limit` and `offset` parameters to control data fetching according to your needs. Additionally, it provides scalability, enabling you to efficiently handle large datasets through pagination. This approach ensures efficient data retrieval while keeping memory usage under control, making it ideal for managing and processing large collections.

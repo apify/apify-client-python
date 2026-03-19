@@ -36,4 +36,4 @@ jobs:
         run: uv run poe install-dev
 
       - name: Async docstrings check
-        run: uv run poe check-async-docstrings
+        run: uv run poe check-docstrings

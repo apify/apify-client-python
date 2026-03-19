@@ -15,6 +15,6 @@ repos:
 
       - id: docstrings-check
         name: Docstrings check
-        entry: uv run poe check-async-docstrings
+        entry: uv run poe check-docstrings
         language: system
         pass_filenames: false

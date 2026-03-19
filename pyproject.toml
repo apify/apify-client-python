@@ -48,7 +48,7 @@ dev = [
     "black>=24.3.0",
     "datamodel-code-generator[http,ruff]<1.0.0",
     "dycw-pytest-only<3.0.0",
-    "griffe",
+    "griffe<3.0.0",
     "poethepoet<1.0.0",
     "pre-commit<5.0.0",
     "pydoc-markdown<5.0.0",
@@ -58,7 +58,6 @@ dev = [
     "pytest-timeout<3.0.0",
     "pytest-xdist<4.0.0",
     "pytest<9.0.0",
-    "redbaron<1.0.0",
     "ruff~=0.15.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
     "types-colorama<0.5.0",
@@ -240,9 +239,9 @@ unit-tests = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/unit
 unit-tests-cov = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-unit.xml tests/unit"
 integration-tests = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/integration"
 integration-tests-cov = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-integration.xml tests/integration"
-check-async-docstrings = "uv run python scripts/check_async_docstrings.py"
-fix-async-docstrings = "uv run python scripts/fix_async_docstrings.py"
-check-code = ["lint", "type-check", "unit-tests", "check-async-docstrings"]
+check-docstrings = "uv run python -m scripts.check_docstrings"
+fix-docstrings = "uv run python -m scripts.fix_docstrings"
+check-code = ["lint", "type-check", "check-docstrings", "unit-tests"]
 
 [tool.poe.tasks.install-dev]
 shell = "uv sync --all-extras && uv run pre-commit install"

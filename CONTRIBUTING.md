@@ -24,8 +24,8 @@ All tasks are defined in `pyproject.toml` under `[tool.poe.tasks]` and can be ru
 | `unit-tests-cov` | Run unit tests with coverage |
 | `integration-tests` | Run integration tests |
 | `integration-tests-cov` | Run integration tests with coverage |
-| `check-async-docstrings` | Check async client docstrings |
-| `fix-async-docstrings` | Fix async client docstrings |
+| `check-docstrings` | Check async client docstrings |
+| `fix-docstrings` | Fix async client docstrings |
 | `build-docs` | Build documentation website |
 | `run-docs` | Run documentation website locally |
 | `build` | Build package |

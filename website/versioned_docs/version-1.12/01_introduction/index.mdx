@@ -1,6 +1,9 @@
 ---
 id: introduction
-title: Introduction
+title: Overview
+sidebar_label: Overview
+slug: /
+description: "The official Python library to access the Apify API, with automatic retries, async support, and comprehensive API coverage."
 ---
 
 import Tabs from '@theme/Tabs';
@@ -11,6 +14,26 @@ import UsageAsyncExample from '!!raw-loader!./code/01_usage_async.py';
 import UsageSyncExample from '!!raw-loader!./code/01_usage_sync.py';
 
 The [Apify client for Python](https://github.com/apify/apify-client-python) is the official library to access the [Apify REST API](https://docs.apify.com/api/v2) from your Python applications. It provides useful features like automatic retries and convenience functions that improve the experience of using the Apify API. All requests and responses (including errors) are encoded in JSON format with UTF-8 encoding. The client provides both synchronous and asynchronous interfaces.
+
+## Prerequisites
+
+`apify-client` requires Python 3.10 or higher. Python is available for download on the [official website](https://www.python.org/downloads/). Check your current Python version by running:
+
+```bash
+python --version
+```
+
+## Installation
+
+The Apify client is available as the [`apify-client`](https://pypi.org/project/apify-client/) package on PyPI.
+
+```bash
+pip install apify-client
+```
+
+## Quick example
+
+Here's an example showing how to run an Actor and retrieve its results:
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -24,3 +47,5 @@ The [Apify client for Python](https://github.com/apify/apify-client-python) is t
         </CodeBlock>
     </TabItem>
 </Tabs>
+
+> You can find your API token in the [Integrations section](https://console.apify.com/account/integrations) of Apify Console. See the [Quick start guide](./quick-start) for more details on authentication.

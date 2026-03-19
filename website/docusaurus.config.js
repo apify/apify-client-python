@@ -3,8 +3,28 @@ const { join, resolve } = require('node:path');
 const { config } = require('@apify/docs-theme');
 
 const { externalLinkProcessor } = require('./tools/utils/externalLink');
-const { groupSort } = require('./transformDocs.js');
 const versions = require('./versions.json');
+
+const GROUP_ORDER = [
+    'Apify API clients',
+    'HTTP clients',
+    'Resource clients',
+    'Errors',
+    'Models',
+    'Other',
+];
+
+const groupSort = (g1, g2) => {
+    const i1 = GROUP_ORDER.indexOf(g1);
+    const i2 = GROUP_ORDER.indexOf(g2);
+    // Both known – sort by defined order
+    if (i1 !== -1 && i2 !== -1) return i1 - i2;
+    // Unknown groups go after known ones
+    if (i1 !== -1) return -1;
+    if (i2 !== -1) return 1;
+    // Both unknown – alphabetical
+    return g1.localeCompare(g2);
+};
 
 const { absoluteUrl } = config;
 
@@ -46,19 +66,21 @@ module.exports = {
                     title: 'API Client for Python',
                     items: [
                         {
-                            to: 'docs',
+                            type: 'doc',
+                            docId: 'introduction/introduction',
                             label: 'Docs',
                             position: 'left',
                             activeBaseRegex: '/docs(?!/changelog)',
                         },
                         {
-                            to: '/reference',
+                            type: 'custom-versioned-reference',
                             label: 'Reference',
                             position: 'left',
                             activeBaseRegex: '/reference',
                         },
                         {
-                            to: 'docs/changelog',
+                            type: 'doc',
+                            docId: 'changelog',
                             label: 'Changelog',
                             position: 'left',
                             activeBaseRegex: '/docs/changelog',
@@ -109,7 +131,6 @@ module.exports = {
                 typedocOptions: {
                     excludeExternals: false,
                 },
-                pathToCurrentVersionTypedocJSON: `${__dirname}/api-typedoc-generated.json`,
                 sortSidebar: groupSort,
                 routeBasePath: 'reference',
                 python: true,

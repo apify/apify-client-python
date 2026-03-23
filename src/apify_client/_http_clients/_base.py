@@ -145,7 +145,7 @@ class HttpClientBase:
     def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
         """Convert request parameters to Apify API-compatible formats.
 
-        Converts booleans to 0/1, lists to comma-separated strings, datetimes to ISO 8601 Zulu format.
+        Converts booleans to 'false'/'true', lists to comma-separated strings, datetimes to ISO 8601 Zulu format.
         """
         if params is None:
             return None

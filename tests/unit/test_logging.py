@@ -206,7 +206,7 @@ def mock_api(httpserver: HTTPServer) -> None:
     )
 
     httpserver.expect_request(
-        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=1&raw=1'
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
     ).respond_with_handler(_streaming_log_handler)
 
 
@@ -486,7 +486,7 @@ async def test_streamed_log_async_restart_after_normal_completion(httpserver: HT
     """Test that StreamedLogAsync cannot be restarted after task completes normally."""
     # Set up a quick-completing stream endpoint
     httpserver.expect_request(
-        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=1&raw=1'
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
     ).respond_with_data(b'Quick log\n', content_type='application/octet-stream')
 
     # Set up actor info endpoint (needed for get_streamed_log)

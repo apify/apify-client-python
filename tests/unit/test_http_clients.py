@@ -183,9 +183,9 @@ def test_parse_params_none() -> None:
 
 
 def test_parse_params_boolean() -> None:
-    """Test _parse_params converts booleans to integers."""
+    """Test _parse_params converts booleans to `false` or `true`."""
     result = HttpClient._parse_params({'flag': True, 'disabled': False})
-    assert result == {'flag': 1, 'disabled': 0}
+    assert result == {'flag': 'true', 'disabled': 'false'}
 
 
 def test_parse_params_list() -> None:
@@ -224,7 +224,7 @@ def test_parse_params_mixed() -> None:
     assert result == {
         'limit': 10,
         'offset': 0,
-        'flag': 1,
+        'flag': 'true',
         'tags': 'tag1,tag2',
         'created_at': '2024-01-15T10:30:45.123Z',
         'name': 'test',
@@ -377,7 +377,7 @@ def test_prepare_request_call_with_params() -> None:
 
     _headers, params, _data = client._prepare_request_call(params={'limit': 10, 'flag': True})
 
-    assert params == {'limit': 10, 'flag': 1}
+    assert params == {'limit': 10, 'flag': 'true'}
 
 
 def test_build_url_with_params_none() -> None:

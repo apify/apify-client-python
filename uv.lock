@@ -6,6 +6,10 @@ resolution-markers = [
     "python_full_version < '3.14'",
 ]
 
+[options]
+exclude-newer = "2026-03-23T08:38:56.883370546Z"
+exclude-newer-span = "PT24H"
+
 [[package]]
 name = "annotated-types"
 version = "0.7.0"

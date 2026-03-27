@@ -1,0 +1,21 @@
+---
+title: Nested clients
+---
+
+Sometimes clients return other clients. That's to simplify working with nested collections, such as runs of a given actor.
+
+```python
+from apify_client import ApifyClient
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+actor_client = apify_client.actor('john-doe/my-actor')
+runs_client = actor_client.runs()
+# List the last 10 runs of the john-doe/hello-world actor
+actor_runs = runs_client.list(limit=10, desc=True).items
+
+# Select the last run of the john-doe/hello-world actor that finished
+# with a SUCCEEDED status
+last_succeeded_run_client = actor_client.last_run(status='SUCCEEDED')
+# Fetch items from the run's dataset
+dataset_items = last_succeeded_run_client.dataset().list_items().items
+```

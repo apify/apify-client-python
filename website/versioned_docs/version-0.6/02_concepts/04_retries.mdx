@@ -1,0 +1,15 @@
+---
+title: Retries with exponential backoff
+---
+
+Network communication sometimes fails. The client will automatically retry requests that failed due to a network error, an internal error of the Apify API (HTTP 500+) or rate limit error (HTTP 429). By default, it will retry up to 8 times. First retry will be attempted after ~500ms, second after ~1000ms and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries_millis` options of the `ApifyClient` constructor.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient(
+    'MY-APIFY-TOKEN',
+    max_retries=8,
+    min_delay_between_retries_millis=500,
+)
+```

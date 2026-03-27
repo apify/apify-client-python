@@ -1,0 +1,51 @@
+---
+id: quick-start
+title: Quick start
+sidebar_label: Quick start
+description: "Get started with the Apify client for Python."
+---
+
+## Installation
+
+```bash
+pip install apify-client
+```
+
+## Authentication
+
+To use the Apify API, you need an API token. You can find your token in the [Integrations section](https://console.apify.com/account/integrations) of Apify Console.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+```
+
+## Running an Actor
+
+The simplest way to run an Actor is to use the `call` method, which starts the Actor and waits for it to finish.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+# Start an actor and wait for it to finish
+actor_call = apify_client.actor('john-doe/my-cool-actor').call()
+
+# Fetch results from the actor's default dataset
+dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
+```
+
+## Working with datasets
+
+```python
+# Get (or create, if it doesn't exist) a dataset with the name of my-dataset
+my_dataset = apify_client.datasets().get_or_create(name='my-dataset')
+
+# Append items to the end of the dataset
+apify_client.dataset(my_dataset['id']).push_items([{'foo': 1}, {'bar': 2}])
+
+# List items in the dataset
+items = apify_client.dataset(my_dataset['id']).list_items().items
+```

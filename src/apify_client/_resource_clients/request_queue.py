@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import math
+import warnings
 from collections.abc import Iterable
 from queue import Queue
 from typing import TYPE_CHECKING, Any
@@ -44,9 +44,6 @@ if TYPE_CHECKING:
 
     from apify_client._models import GeneralAccess
     from apify_client._types import Timeout
-
-
-logger = logging.getLogger(__name__)
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
@@ -394,9 +391,17 @@ class RequestQueueClient(ResourceClient):
             Result containing lists of processed and unprocessed requests.
         """
         if max_unprocessed_requests_retries:
-            logger.warning('`max_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                '`max_unprocessed_requests_retries` is deprecated and not used anymore.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if min_delay_between_unprocessed_requests_retries:
-            logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                '`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         if max_parallel != 1:
             raise NotImplementedError('max_parallel is only supported in async client')
@@ -923,9 +928,17 @@ class RequestQueueClientAsync(ResourceClientAsync):
             Result containing lists of processed and unprocessed requests.
         """
         if max_unprocessed_requests_retries:
-            logger.warning('`max_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                '`max_unprocessed_requests_retries` is deprecated and not used anymore.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if min_delay_between_unprocessed_requests_retries:
-            logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                '`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         requests_as_dicts = [
             (RequestInput.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)

@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       docs_pr_number:
-        description: "PR number in apify/apify-docs that triggered this workflow"
+        description: PR number in apify/apify-docs that triggered this workflow
         required: true
         type: string
       docs_pr_sha:
-        description: "Commit SHA from the apify/apify-docs PR"
+        description: Commit SHA from the apify/apify-docs PR
         required: true
         type: string
 
@@ -102,9 +102,9 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         id: pr
         run: |
-          BRANCH="chore/update-models-docs-pr-${DOCS_PR_NUMBER}"
+          BRANCH="update-models-docs-pr-${DOCS_PR_NUMBER}"
           DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
-          TITLE="chore: update generated models from apify-docs PR #${DOCS_PR_NUMBER}"
+          TITLE="[TODO]: update generated models from apify-docs PR #${DOCS_PR_NUMBER}"
 
           # -B creates the branch or resets it if it already exists (re-runs for the same docs PR).
           git checkout -B "$BRANCH"

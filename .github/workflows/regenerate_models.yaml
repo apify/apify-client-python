@@ -29,7 +29,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GITHUB_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
       DOCS_PR_NUMBER: ${{ inputs.docs_pr_number }}
 
     steps:
@@ -46,6 +45,8 @@ jobs:
 
       - name: Checkout apify-client-python
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
       - name: Download OpenAPI spec artifact
@@ -88,6 +89,8 @@ jobs:
       - name: Create or update PR
         if: steps.changes.outputs.changed == 'true'
         id: pr
+        env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
           BRANCH="update-models-docs-pr-${DOCS_PR_NUMBER}"
           DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
@@ -133,6 +136,7 @@ jobs:
       - name: Comment on apify-docs PR
         if: steps.changes.outputs.changed == 'true'
         env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}
           PR_URL: ${{ steps.pr.outputs.pr_url }}
         run: |
@@ -150,6 +154,8 @@ jobs:
 
       - name: Comment on failure
         if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
           if [[ -z "$DOCS_PR_NUMBER" ]]; then
             echo "DOCS_PR_NUMBER is not set; skipping failure comment on apify/apify-docs PR."

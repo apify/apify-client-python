@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, ListOfDatasets, ListOfDatasetsResponse
@@ -36,6 +36,7 @@ class DatasetCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        ownership: Literal['ownedByMe', 'sharedWithMe'] | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfDatasets:
         """List the available datasets.
@@ -47,12 +48,16 @@ class DatasetCollectionClient(ResourceClient):
             limit: How many datasets to retrieve.
             offset: What dataset to include as first when retrieving the list.
             desc: Whether to sort the datasets in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own datasets,
+                'sharedWithMe' returns only datasets shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available datasets matching the specified filters.
         """
-        result = self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
         return ListOfDatasetsResponse.model_validate(result).data
 
     def get_or_create(
@@ -104,6 +109,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        ownership: Literal['ownedByMe', 'sharedWithMe'] | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfDatasets:
         """List the available datasets.
@@ -115,12 +121,16 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             limit: How many datasets to retrieve.
             offset: What dataset to include as first when retrieving the list.
             desc: Whether to sort the datasets in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own datasets,
+                'sharedWithMe' returns only datasets shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available datasets matching the specified filters.
         """
-        result = await self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = await self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
         return ListOfDatasetsResponse.model_validate(result).data
 
     async def get_or_create(

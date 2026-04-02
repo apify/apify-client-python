@@ -1,5 +1,5 @@
 # This workflow regenerates Pydantic models (src/apify_client/_models.py) from the OpenAPI spec whenever
-# the spec changes in a apify/apify-docs PR. It is triggered via workflow_dispatch from the apify-docs CI pipeline.
+# the spec changes in an apify/apify-docs PR. It is triggered via workflow_dispatch from the apify-docs CI pipeline.
 
 name: Regenerate models from OpenAPI spec
 
@@ -36,7 +36,7 @@ jobs:
     steps:
       - name: Validate inputs
         run: |
-          if ! [[ "$DOCS_PR_NUMBER" =~ ^[0-9]+$ ]]; then
+          if ! [[ "$DOCS_PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
             echo "::error::docs_pr_number must be a positive integer, got: $DOCS_PR_NUMBER"
             exit 1
           fi
@@ -75,7 +75,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv run poe install-dev
 
       # We call datamodel-codegen with --input pointing at the locally built spec.
       - name: Generate models from local spec
@@ -114,7 +119,7 @@ jobs:
 
           EXISTING_PR=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url' 2>/dev/null || true)
 
-          if [ -n "$EXISTING_PR" ]; then
+          if [[ -n "$EXISTING_PR" ]]; then
             echo "PR already exists: $EXISTING_PR"
             echo "pr_url=$EXISTING_PR" >> "$GITHUB_OUTPUT"
             echo "created=false" >> "$GITHUB_OUTPUT"
@@ -149,7 +154,7 @@ jobs:
           PR_CREATED: ${{ steps.pr.outputs.created }}
           PR_URL: ${{ steps.pr.outputs.pr_url }}
         run: |
-          if [ "$PR_CREATED" = "true" ]; then
+          if [[ "$PR_CREATED" = "true" ]]; then
             COMMENT="A PR to update the Python client models has been created: ${PR_URL}
 
           This was automatically triggered by OpenAPI specification changes in this PR."
@@ -164,6 +169,12 @@ jobs:
       - name: Comment on failure
         if: failure()
         run: |
+          if [[ -z "$DOCS_PR_NUMBER" ]]; then
+            echo "DOCS_PR_NUMBER is not set; skipping failure comment on apify/apify-docs PR."
+            exit 0
+          fi
+
           gh pr comment "$DOCS_PR_NUMBER" \
             --repo apify/apify-docs \
-            --body "Python client model regeneration failed. [See workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})."
+            --body "Python client model regeneration failed. [See workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." \
+            || echo "Warning: Failed to post failure comment to apify/apify-docs PR #$DOCS_PR_NUMBER."

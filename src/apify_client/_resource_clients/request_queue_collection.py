@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -12,7 +12,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._types import Timeout
+    from apify_client._types import StorageOwnership, Timeout
 
 
 @docs_group('Resource clients')
@@ -41,7 +41,7 @@ class RequestQueueCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        ownership: Literal['ownedByMe', 'sharedWithMe'] | None = None,
+        ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfRequestQueues:
         """List the available request queues.
@@ -112,7 +112,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        ownership: Literal['ownedByMe', 'sharedWithMe'] | None = None,
+        ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfRequestQueues:
         """List the available request queues.

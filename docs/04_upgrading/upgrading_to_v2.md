@@ -1,6 +1,7 @@
 ---
 id: upgrading-to-v2
 title: Upgrading to v2
+description: Breaking changes and migration guide from v1 to v2.
 ---
 
 This page summarizes the breaking changes between Apify Python API Client v1.x and v2.0.

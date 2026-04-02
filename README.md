@@ -33,7 +33,8 @@ apify_client = ApifyClient('MY-APIFY-TOKEN')
 actor_call = apify_client.actor('john-doe/my-cool-actor').call()
 
 # Fetch results from the Actor's default dataset
-dataset_items = apify_client.dataset(actor_call['defaultDatasetId']).list_items().items
+if actor_call is not None:
+    dataset_items = apify_client.dataset(actor_call.default_dataset_id).list_items().items
 ```
 
 ## Features
@@ -46,7 +47,7 @@ Based on the endpoint, the client automatically extracts the relevant data and r
 
 ### Retries with exponential backoff
 
-Network communication sometimes fails. The client will automatically retry requests that failed due to a network error, an internal error of the Apify API (HTTP 500+) or rate limit error (HTTP 429). By default, it will retry up to 8 times. First retry will be attempted after ~500ms, second after ~1000ms and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries_millis` options of the `ApifyClient` constructor.
+Network communication sometimes fails. The client will automatically retry requests that failed due to a network error, an internal error of the Apify API (HTTP 500+) or rate limit error (HTTP 429). By default, it will retry up to 4 times. First retry will be attempted after ~500ms, second after ~1000ms and so on. You can configure those parameters using the `max_retries` and `min_delay_between_retries` options of the `ApifyClient` constructor.
 
 ### Support for asynchronous usage
 

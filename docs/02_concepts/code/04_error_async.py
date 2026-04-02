@@ -1,4 +1,7 @@
+import asyncio
+
 from apify_client import ApifyClientAsync
+from apify_client.errors import ApifyApiError
 
 TOKEN = 'MY-APIFY-TOKEN'
 
@@ -7,9 +10,13 @@ async def main() -> None:
     apify_client = ApifyClientAsync(TOKEN)
 
     try:
-        # Try to list items from non-existing dataset
-        dataset_client = apify_client.dataset('not-existing-dataset-id')
+        # Try to list items from a non-existing dataset.
+        dataset_client = apify_client.dataset('non-existing-dataset-id')
         dataset_items = (await dataset_client.list_items()).items
-    except Exception as ApifyApiError:
-        # The exception is an instance of ApifyApiError
-        print(ApifyApiError)
+    except ApifyApiError as err:
+        # The client raises ApifyApiError for API errors.
+        print(f'API error: {err}')
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

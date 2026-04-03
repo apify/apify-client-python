@@ -7,6 +7,7 @@ description: Handle API errors with the ApifyApiError exception and automatic da
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@site/src/components/ApiLink';
 
 import ErrorAsyncExample from '!!raw-loader!./code/04_error_async.py';
 import ErrorSyncExample from '!!raw-loader!./code/04_error_sync.py';
@@ -25,3 +26,5 @@ When you use the Apify client, it automatically extracts all relevant data from 
         </CodeBlock>
     </TabItem>
 </Tabs>
+
+For a complete list of error classes, see the <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> reference.

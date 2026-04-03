@@ -1,0 +1,187 @@
+---
+id: upgrading-to-v3
+title: Upgrading to v3
+description: Breaking changes and migration guide from v2 to v3.
+---
+
+import ApiLink from '@site/src/components/ApiLink';
+
+This page summarizes the breaking changes between Apify Python API Client v2.x and v3.0.
+
+## Python version support
+
+Support for Python 3.10 has been dropped. The Apify Python API Client v3.x now requires Python 3.11 or later. Make sure your environment is running a compatible version before upgrading.
+
+## Fully typed clients
+
+Resource client methods now return [Pydantic](https://docs.pydantic.dev/latest/) models instead of plain dictionaries. This provides IDE autocompletion, type checking, and early validation of API responses.
+
+### Accessing response fields
+
+Before (v2):
+
+```python
+from apify_client import ApifyClient
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+# v2 — methods returned plain dicts
+run = client.actor('apify/hello-world').call(run_input={'key': 'value'})
+dataset_id = run['defaultDatasetId']
+status = run['status']
+```
+
+After (v3):
+
+```python
+from apify_client import ApifyClient
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+# v3 — methods return Pydantic models
+run = client.actor('apify/hello-world').call(run_input={'key': 'value'})
+dataset_id = run.default_dataset_id
+status = run.status
+```
+
+All model classes are generated from the Apify OpenAPI specification and live in `apify_client._models` module. They are configured with `extra='allow'`, so any new fields added to the API in the future are preserved on the model instance. Fields are accessed using their Python snake_case names:
+
+```python
+run.default_dataset_id   # ✓ use snake_case attribute names
+run.id
+run.status
+```
+
+Models also use `populate_by_name=True`, which means you can use either the Python field name or the camelCase alias when **constructing** a model:
+
+```python
+from apify_client._models import Run
+
+# Both work when constructing models
+Run(default_dataset_id='abc')   # Python field name
+Run(defaultDatasetId='abc')     # camelCase API alias
+```
+
+### Exceptions
+
+Not every method returns a Pydantic model. Methods whose payloads are user-defined or inherently unstructured still return plain types:
+
+- <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items()`</ApiLink> returns `DatasetItemsPage`, a dataclass whose `items` field is `list[dict[str, Any]]`, because dataset items are arbitrary JSON.
+- <ApiLink to="class/KeyValueStoreClient#get_record">`KeyValueStoreClient.get_record()`</ApiLink> returns a `dict` with `key`, `value`, and `content_type` keys.
+
+### Pydantic models as method parameters
+
+Resource client methods that previously accepted only dictionaries for structured input now also accept Pydantic models. Existing code that passes dictionaries continues to work — this change is additive for callers, but is listed here because method type signatures have changed.
+
+Before (v2):
+
+```python
+rq_client.add_request({
+    'url': 'https://example.com',
+    'uniqueKey': 'https://example.com',
+    'method': 'GET',
+})
+```
+
+After (v3) — both forms are accepted:
+
+```python
+from apify_client._types import RequestInput
+
+# Option 1: dict (still works)
+rq_client.add_request({
+    'url': 'https://example.com',
+    'uniqueKey': 'https://example.com',
+    'method': 'GET',
+})
+
+# Option 2: Pydantic model (new)
+rq_client.add_request(RequestInput(
+    url='https://example.com',
+    unique_key='https://example.com',
+    method='GET',
+))
+```
+
+Model input is available on methods such as <ApiLink to="class/RequestQueueClient#add_request">`RequestQueueClient.add_request()`</ApiLink>, <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests()`</ApiLink>, <ApiLink to="class/ActorClient#start">`ActorClient.start()`</ApiLink>, <ApiLink to="class/ActorClient#call">`ActorClient.call()`</ApiLink>, <ApiLink to="class/TaskClient#start">`TaskClient.start()`</ApiLink>, <ApiLink to="class/TaskClient#call">`TaskClient.call()`</ApiLink>, <ApiLink to="class/TaskClient#update">`TaskClient.update()`</ApiLink>, and <ApiLink to="class/TaskClient#update_input">`TaskClient.update_input()`</ApiLink>, among others. Check the API reference for the complete list.
+
+## Pluggable HTTP client architecture
+
+The HTTP layer is now abstracted behind <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> base classes. The default implementation based on [Impit](https://github.com/apify/impit) (<ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> / <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink>) is unchanged, but you can now replace it with your own.
+
+To use a custom HTTP client, implement the `call()` method and pass the instance via the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client()`</ApiLink> class method:
+
+```python
+from apify_client import ApifyClient, HttpClient, HttpResponse, Timeout
+
+class MyHttpClient(HttpClient):
+    def call(self, *, method, url, headers=None, params=None,
+             data=None, json=None, stream=None, timeout='medium') -> HttpResponse:
+        ...
+
+client = ApifyClient.with_custom_http_client(
+    token='MY-APIFY-TOKEN',
+    http_client=MyHttpClient(),
+)
+```
+
+The response must satisfy the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol (properties: `status_code`, `text`, `content`, `headers`; methods: `json()`, `read()`, `close()`, `iter_bytes()`). Many popular libraries like `httpx` already satisfy this protocol out of the box.
+
+For a full walkthrough and working examples, see the [Custom HTTP clients](/docs/concepts/custom-http-clients) concept page and the [Custom HTTP client](/docs/guides/custom-http-client-httpx) guide.
+
+## Tiered timeout system
+
+Individual API methods now use a tiered timeout instead of a single global timeout. Each method declares a default tier appropriate for its expected latency.
+
+### Timeout tiers
+
+| Tier | Default | Typical use case |
+|---|---|---|
+| `short` | 5 s | Fast CRUD operations (get, update, delete) |
+| `medium` | 30 s | Batch and list operations, starting runs |
+| `long` | 360 s | Long-polling, streaming, data retrieval |
+| `no_timeout` | Disabled | Blocking calls like `actor.call()` that wait for a run to finish |
+
+A `timeout_max` value (default 360 s) caps the exponential growth of timeouts across retries.
+
+### Configuring default tiers
+
+You can override the default duration of any tier on the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor:
+
+```python
+from datetime import timedelta
+
+from apify_client import ApifyClient
+
+client = ApifyClient(
+    token='MY-APIFY-TOKEN',
+    timeout_short=timedelta(seconds=10),
+    timeout_medium=timedelta(seconds=60),
+    timeout_long=timedelta(seconds=600),
+    timeout_max=timedelta(seconds=600),
+)
+```
+
+### Per-call override
+
+Every resource client method exposes a `timeout` parameter. You can pass a tier name or a `timedelta` for a one-off override:
+
+```python
+from datetime import timedelta
+
+# Use the 'long' tier for this specific call
+actor = client.actor('apify/hello-world').get(timeout='long')
+
+# Or pass an explicit duration
+actor = client.actor('apify/hello-world').get(timeout=timedelta(seconds=120))
+```
+
+### Retry behavior
+
+On retries, the timeout doubles with each attempt (exponential backoff) up to `timeout_max`. For example, with `timeout_short=5s` and `timeout_max=360s`: attempt 1 uses 5 s, attempt 2 uses 10 s, attempt 3 uses 20 s, and so on.
+
+### Updated default timeout tiers
+
+The default timeout tier assigned to each method on non-storage resource clients has been revised to better match the expected latency of the underlying API endpoint. For example, a simple `get()` call now defaults to `short` (5 s), while `start()` defaults to `medium` (30 s) and `call()` defaults to `no_timeout`.
+
+If your code relied on the previous global timeout behavior, review the timeout tier on the methods you use and adjust via the `timeout` parameter or by overriding tier defaults on the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor (see [Tiered timeout system](#tiered-timeout-system) above).

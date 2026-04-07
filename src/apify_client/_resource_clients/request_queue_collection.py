@@ -12,7 +12,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._types import Timeout
+    from apify_client._types import StorageOwnership, Timeout
 
 
 @docs_group('Resource clients')
@@ -41,6 +41,7 @@ class RequestQueueCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfRequestQueues:
         """List the available request queues.
@@ -51,13 +52,17 @@ class RequestQueueCollectionClient(ResourceClient):
             unnamed: Whether to include unnamed request queues in the list.
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
-            desc: Whether to sort therequest queues in descending order based on their modification date.
+            desc: Whether to sort the request queues in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
+                'sharedWithMe' returns only request queues shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available request queues matching the specified filters.
         """
-        result = self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
         return ListOfRequestQueuesResponse.model_validate(result).data
 
     def get_or_create(
@@ -107,6 +112,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfRequestQueues:
         """List the available request queues.
@@ -117,13 +123,17 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             unnamed: Whether to include unnamed request queues in the list.
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
-            desc: Whether to sort therequest queues in descending order based on their modification date.
+            desc: Whether to sort the request queues in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
+                'sharedWithMe' returns only request queues shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available request queues matching the specified filters.
         """
-        result = await self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = await self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
         return ListOfRequestQueuesResponse.model_validate(result).data
 
     async def get_or_create(

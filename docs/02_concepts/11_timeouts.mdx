@@ -1,0 +1,62 @@
+---
+id: timeouts
+title: Timeouts
+description: Configure the tiered timeout system for controlling how long API requests can take.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@site/src/components/ApiLink';
+
+import TimeoutsAsyncExample from '!!raw-loader!./code/11_timeouts_async.py';
+import TimeoutsSyncExample from '!!raw-loader!./code/11_timeouts_sync.py';
+
+The Apify client uses a tiered timeout system to set appropriate time limits for different types of API requests. Each tier has a default value suited to its use case:
+
+| Tier | Default | Purpose |
+|---|---|---|
+| `short` | 5 seconds | Fast CRUD operations (get, update, delete) |
+| `medium` | 30 seconds | Batch, list, and data transfer operations |
+| `long` | 360 seconds | Long-polling, streaming, and heavy operations |
+| `no_timeout` | — | Disables the timeout entirely |
+
+Every client method has a pre-assigned tier that matches the expected duration of the underlying API call. You generally don't need to change these unless you're working with unusually large payloads or slow network conditions.
+
+## Configuring default timeouts
+
+You can override the default values for each tier in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor. The `timeout_max` parameter sets an upper cap on the timeout for any individual API request, limiting exponential growth during retries.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {TimeoutsAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {TimeoutsSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Per-call overrides
+
+Most client methods accept a `timeout` parameter that overrides the default tier for that specific call. You can pass either a `timedelta` for an exact duration or a tier literal (`'short'`, `'medium'`, `'long'`, `'no_timeout'`) to switch tiers.
+
+```python
+from datetime import timedelta
+
+# Use an exact timeout for this call.
+client.dataset('id').list_items(timeout=timedelta(seconds=120))
+
+# Switch to a different tier.
+client.dataset('id').list_items(timeout='long')
+
+# Disable the timeout entirely.
+client.dataset('id').list_items(timeout='no_timeout')
+```
+
+## Interaction with retries
+
+Timeouts work together with the [retry system](/api/client/python/docs/concepts/retries). When a request times out, it counts as a failed attempt and triggers a retry (up to `max_retries`). The timeout applies to each individual attempt, not the total time across all retries.

@@ -8,14 +8,16 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
+import ApiLink from '@site/src/components/ApiLink';
+
 import CallAsyncExample from '!!raw-loader!./code/07_call_async.py';
 import CallSyncExample from '!!raw-loader!./code/07_call_sync.py';
 
 The Apify client provides several convenience methods to handle actions that the API alone cannot perform efficiently, such as waiting for an Actor run to finish without running into network timeouts. These methods simplify common tasks and enhance the usability of the client.
 
-- [`ActorClient.call`](/reference/class/ActorClient#call) - Starts an Actor and waits for it to finish, handling network timeouts internally. Waits indefinitely by default, or up to the specified `wait_duration`.
-- [`ActorClient.start`](/reference/class/ActorClient#start) - Starts an Actor and immediately returns the Run object without waiting for it to finish.
-- [`RunClient.wait_for_finish`](/reference/class/RunClient#wait_for_finish) - Waits for an already-started run to reach a terminal status.
+- <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink> - Starts an Actor and waits for it to finish, handling network timeouts internally. Waits indefinitely by default, or up to the specified `wait_duration`.
+- <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink> - Starts an Actor and immediately returns the Run object without waiting for it to finish.
+- <ApiLink to="class/RunClient#wait_for_finish">`RunClient.wait_for_finish`</ApiLink> - Waits for an already-started run to reach a terminal status.
 
 Additionally, storage-related resources offer flexible options for data retrieval:
 
@@ -34,3 +36,7 @@ Additionally, storage-related resources offer flexible options for data retrieva
         </CodeBlock>
     </TabItem>
 </Tabs>
+
+:::tip
+The `call()` method polls internally and may take a long time for long-running Actors. Use `start()` and `wait_for_finish()` separately if you need more control over the waiting behavior.
+:::

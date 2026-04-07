@@ -12,7 +12,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._types import Timeout
+    from apify_client._types import StorageOwnership, Timeout
 
 
 @docs_group('Resource clients')
@@ -41,6 +41,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfKeyValueStores:
         """List the available key-value stores.
@@ -52,12 +53,16 @@ class KeyValueStoreCollectionClient(ResourceClient):
             limit: How many key-value stores to retrieve.
             offset: What key-value store to include as first when retrieving the list.
             desc: Whether to sort the key-value stores in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
+                'sharedWithMe' returns only key-value stores shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        result = self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
         return ListOfKeyValueStoresResponse.model_validate(result).data
 
     def get_or_create(
@@ -109,6 +114,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfKeyValueStores:
         """List the available key-value stores.
@@ -120,12 +126,16 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             limit: How many key-value stores to retrieve.
             offset: What key-value store to include as first when retrieving the list.
             desc: Whether to sort the key-value stores in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
+                'sharedWithMe' returns only key-value stores shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        result = await self._list(timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc)
+        result = await self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
         return ListOfKeyValueStoresResponse.model_validate(result).data
 
     async def get_or_create(

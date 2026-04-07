@@ -4,7 +4,7 @@
 #   1. Automatically via workflow_dispatch from the apify-docs CI pipeline (with docs_pr_number and docs_workflow_run_id).
 #   2. Manually from the GitHub UI (without any inputs) to regenerate from the live published spec.
 
-name: Regenerate models from OpenAPI spec
+name: Regenerate models
 
 on:
   workflow_dispatch:
@@ -86,14 +86,15 @@ jobs:
 
       - name: Commit model changes
         id: commit
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@v10
         with:
           add: src/apify_client/_models.py
           author_name: apify-service-account
           author_email: apify-service-account@users.noreply.github.com
           message: ${{ env.TITLE }}
           new_branch: ${{ env.BRANCH }}
-          push: --force
+          commit: --no-verify
+          push: -u origin ${{ env.BRANCH }} --force
 
       - name: Create or update PR
         if: steps.commit.outputs.committed == 'true'

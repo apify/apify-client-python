@@ -79,9 +79,9 @@ jobs:
       - name: Generate models from OpenAPI spec
         run: |
           if [[ -f openapi-spec/openapi.json ]]; then
-            uv run datamodel-codegen --input openapi-spec/openapi.json
+            uv run poe generate-models-from-file openapi-spec/openapi.json
           else
-            uv run datamodel-codegen
+            uv run poe generate-models
           fi
 
       - name: Commit model changes

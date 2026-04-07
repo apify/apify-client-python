@@ -269,4 +269,16 @@ shell = "./build_api_reference.sh && corepack enable && yarn && uv run yarn star
 cwd = "website"
 
 [tool.poe.tasks.generate-models]
-shell = "uv run datamodel-codegen"
+shell = "uv run datamodel-codegen && python scripts/fix_generated_models.py"
+
+[tool.poe.tasks.generate-models-from-file]
+# The --input flag is ignored when url is set in pyproject.toml, so we temporarily
+# replace url with input, run the generator, and restore the original pyproject.toml.
+shell = """
+sed -i 's|^url = .*|input = "'"$input_file"'"|' pyproject.toml
+uv run datamodel-codegen && python scripts/fix_generated_models.py
+STATUS=$?
+git checkout pyproject.toml
+exit $STATUS
+"""
+args = [{ name = "input-file", positional = true, required = true }]

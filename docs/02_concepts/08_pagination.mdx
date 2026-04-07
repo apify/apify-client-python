@@ -13,6 +13,9 @@ import ApiLink from '@site/src/components/ApiLink';
 import PaginationAsyncExample from '!!raw-loader!./code/08_pagination_async.py';
 import PaginationSyncExample from '!!raw-loader!./code/08_pagination_sync.py';
 
+import IterateItemsAsyncExample from '!!raw-loader!./code/08_iterate_items_async.py';
+import IterateItemsSyncExample from '!!raw-loader!./code/08_iterate_items_sync.py';
+
 Most methods named `list` or `list_something` in the Apify client return a <ApiLink to="class/ListPage">`ListPage`</ApiLink>  object. This object provides a consistent interface for working with paginated data and includes the following properties:
 
 - `items` - The main results you're looking for.
@@ -38,8 +41,25 @@ The following example shows how to fetch all items from a dataset using paginati
     </TabItem>
 </Tabs>
 
-This approach lets you efficiently retrieve large datasets through pagination while keeping memory usage under control.
+The <ApiLink to="class/ListPage">`ListPage`</ApiLink> interface offers several key benefits. Its consistent structure ensures predictable results for most `list` methods, providing a uniform way to work with paginated data. It also offers flexibility, allowing you to customize the `limit` and `offset` parameters to control data fetching according to your needs. Additionally, it provides scalability, enabling you to efficiently handle large datasets through pagination. This approach ensures efficient data retrieval while keeping memory usage under control, making it ideal for managing and processing large collections.
 
-:::tip
-For most use cases, prefer `iterate_items()` which handles pagination automatically and yields items one by one.
-:::
+## Generator-based iteration
+
+For most use cases, `iterate_items()` is the recommended way to process all items in a dataset. It handles pagination automatically using a Python generator, fetching items in batches behind the scenes so you don't need to manage offsets or limits yourself.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {IterateItemsAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {IterateItemsSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+`iterate_items()` accepts the same filtering parameters as `list_items()` (`clean`, `fields`, `omit`, `unwind`, `skip_empty`, `skip_hidden`), so you can combine automatic pagination with data filtering.
+
+Similarly, `KeyValueStoreClient` provides an `iterate_keys()` method for iterating over all keys in a key-value store without manual pagination.

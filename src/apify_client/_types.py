@@ -9,6 +9,9 @@ from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel, model_vali
 
 from apify_client._models import ActorJobStatus, WebhookCreate  # noqa: TC001
 
+StorageOwnership = Literal['ownedByMe', 'sharedWithMe']
+"""Filter for storage listing methods to return only storages owned by the user or shared with the user."""
+
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
 

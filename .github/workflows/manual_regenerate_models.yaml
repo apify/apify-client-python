@@ -93,7 +93,8 @@ jobs:
           author_email: apify-service-account@users.noreply.github.com
           message: ${{ env.TITLE }}
           new_branch: ${{ env.BRANCH }}
-          push: --force
+          commit: --no-verify
+          push: -u origin ${{ env.BRANCH }} --force
 
       - name: Create or update PR
         if: steps.commit.outputs.committed == 'true'

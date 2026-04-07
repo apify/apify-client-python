@@ -208,7 +208,6 @@ context = 7
 
 # https://koxudaxi.github.io/datamodel-code-generator/
 [tool.datamodel-codegen]
-url = "https://docs.apify.com/api/openapi.json"
 input_file_type = "openapi"
 output = "src/apify_client/_models.py"
 target_python_version = "3.11"
@@ -269,16 +268,8 @@ shell = "./build_api_reference.sh && corepack enable && yarn && uv run yarn star
 cwd = "website"
 
 [tool.poe.tasks.generate-models]
-shell = "uv run datamodel-codegen && python scripts/fix_generated_models.py"
+shell = "uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json && python scripts/postprocess_generated_models.py"
 
 [tool.poe.tasks.generate-models-from-file]
-# The --input flag is ignored when url is set in pyproject.toml, so we temporarily
-# replace url with input, run the generator, and restore the original pyproject.toml.
-shell = """
-sed -i 's|^url = .*|input = "'"$input_file"'"|' pyproject.toml
-uv run datamodel-codegen && python scripts/fix_generated_models.py
-STATUS=$?
-git checkout pyproject.toml
-exit $STATUS
-"""
+shell = "uv run datamodel-codegen --input $input_file && python scripts/postprocess_generated_models.py"
 args = [{ name = "input-file", positional = true, required = true }]

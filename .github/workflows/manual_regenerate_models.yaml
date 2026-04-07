@@ -4,7 +4,7 @@
 #   1. Automatically via workflow_dispatch from the apify-docs CI pipeline (with docs_pr_number and docs_workflow_run_id).
 #   2. Manually from the GitHub UI (without any inputs) to regenerate from the live published spec.
 
-name: Regenerate models from OpenAPI spec
+name: Regenerate models
 
 on:
   workflow_dispatch:

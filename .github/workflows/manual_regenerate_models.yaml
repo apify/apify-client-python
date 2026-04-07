@@ -1,5 +1,8 @@
-# This workflow regenerates Pydantic models (src/apify_client/_models.py) from the OpenAPI spec whenever
-# the spec changes in an apify/apify-docs PR. It is triggered via workflow_dispatch from the apify-docs CI pipeline.
+# This workflow regenerates Pydantic models (src/apify_client/_models.py) from the OpenAPI spec.
+#
+# It can be triggered in two ways:
+#   1. Automatically via workflow_dispatch from the apify-docs CI pipeline (with docs_pr_number and docs_workflow_run_id).
+#   2. Manually from the GitHub UI (without any inputs) to regenerate from the live published spec.
 
 name: Regenerate models from OpenAPI spec
 
@@ -7,12 +10,12 @@ on:
   workflow_dispatch:
     inputs:
       docs_pr_number:
-        description: PR number in apify/apify-docs that triggered this workflow
-        required: true
+        description: PR number in apify/apify-docs that triggered this workflow (optional for manual runs)
+        required: false
         type: string
       docs_workflow_run_id:
-        description: Workflow run ID in apify/apify-docs that built the OpenAPI spec artifact
-        required: true
+        description: Workflow run ID in apify/apify-docs that built the OpenAPI spec artifact (optional for manual runs)
+        required: false
         type: string
 
 permissions:
@@ -20,7 +23,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: regenerate-models-${{ inputs.docs_pr_number }}
+  group: regenerate-models-${{ inputs.docs_pr_number || 'manual' }}
   cancel-in-progress: true
 
 jobs:
@@ -30,17 +33,18 @@ jobs:
 
     env:
       DOCS_PR_NUMBER: ${{ inputs.docs_pr_number }}
-      BRANCH: "update-models-docs-pr-${{ inputs.docs_pr_number }}"
-      TITLE: "[TODO]: update generated models from apify-docs PR #${{ inputs.docs_pr_number }}"
+      BRANCH: ${{ inputs.docs_pr_number && format('update-models-docs-pr-{0}', inputs.docs_pr_number) || 'update-models-manual' }}
+      TITLE: "${{ inputs.docs_pr_number && format('[TODO]: update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || '[TODO]: update generated models from published OpenAPI spec' }}"
 
     steps:
       - name: Validate inputs
+        if: inputs.docs_pr_number || inputs.docs_workflow_run_id
         run: |
-          if ! [[ "$DOCS_PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+          if [[ -n "$DOCS_PR_NUMBER" ]] && ! [[ "$DOCS_PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
             echo "::error::docs_pr_number must be a positive integer, got: $DOCS_PR_NUMBER"
             exit 1
           fi
-          if ! [[ "${{ inputs.docs_workflow_run_id }}" =~ ^[0-9]+$ ]]; then
+          if [[ -n "${{ inputs.docs_workflow_run_id }}" ]] && ! [[ "${{ inputs.docs_workflow_run_id }}" =~ ^[0-9]+$ ]]; then
             echo "::error::docs_workflow_run_id must be a numeric run ID, got: ${{ inputs.docs_workflow_run_id }}"
             exit 1
           fi
@@ -51,7 +55,9 @@ jobs:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
+      # Skipped for manual runs — datamodel-codegen will fetch from the published spec URL instead.
       - name: Download OpenAPI spec artifact
+        if: inputs.docs_workflow_run_id
         uses: actions/download-artifact@v4
         with:
           name: openapi-bundles
@@ -68,8 +74,15 @@ jobs:
       - name: Install dependencies
         run: uv run poe install-dev
 
+      # When a docs workflow run ID is provided, use the downloaded artifact.
+      # Otherwise, datamodel-codegen fetches from the default URL configured in pyproject.toml.
       - name: Generate models from OpenAPI spec
-        run: uv run datamodel-codegen --input openapi-spec/openapi.json
+        run: |
+          if [[ -f openapi-spec/openapi.json ]]; then
+            uv run datamodel-codegen --input openapi-spec/openapi.json
+          else
+            uv run datamodel-codegen
+          fi
 
       - name: Commit model changes
         id: commit
@@ -88,7 +101,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
-          DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
           EXISTING_PR=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url' 2>/dev/null || true)
 
           if [[ -n "$EXISTING_PR" ]]; then
@@ -96,7 +108,9 @@ jobs:
             echo "pr_url=$EXISTING_PR" >> "$GITHUB_OUTPUT"
             echo "created=false" >> "$GITHUB_OUTPUT"
           else
-            BODY=$(cat <<EOF
+            if [[ -n "$DOCS_PR_NUMBER" ]]; then
+              DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
+              BODY=$(cat <<EOF
           This PR updates the auto-generated Pydantic models based on OpenAPI specification changes in [apify-docs PR #${DOCS_PR_NUMBER}](${DOCS_PR_URL}).
 
           ## Changes
@@ -107,7 +121,17 @@ jobs:
 
           - apify-docs PR: ${DOCS_PR_URL}
           EOF
-            )
+              )
+            else
+              BODY=$(cat <<EOF
+          This PR updates the auto-generated Pydantic models from the published OpenAPI specification.
+
+          ## Changes
+
+          - Regenerated \`src/apify_client/_models.py\` using \`datamodel-codegen\`
+          EOF
+              )
+            fi
 
             PR_URL=$(gh pr create \
               --title "$TITLE" \
@@ -121,7 +145,7 @@ jobs:
 
       # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding client-python PR.
       - name: Comment on apify-docs PR
-        if: steps.commit.outputs.committed == 'true'
+        if: steps.commit.outputs.committed == 'true' && inputs.docs_pr_number
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}
@@ -140,7 +164,7 @@ jobs:
             --body "$COMMENT"
 
       - name: Comment on failure
-        if: failure()
+        if: failure() && inputs.docs_pr_number
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |

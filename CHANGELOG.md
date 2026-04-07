@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Make HTTP client pluggable with abstract base classes ([#641](https://github.com/apify/apify-client-python/pull/641)) ([5ae33a0](https://github.com/apify/apify-client-python/commit/5ae33a0a801fdacd0c456a8630fea053f9df6550)) by [@vdusek](https://github.com/vdusek), closes [#416](https://github.com/apify/apify-client-python/issues/416)
 - [**breaking**] Introduce tiered timeout system with per-endpoint configuration ([#653](https://github.com/apify/apify-client-python/pull/653)) ([723ec6e](https://github.com/apify/apify-client-python/commit/723ec6e5954474767a5ecbf4902d9b62f7d214f8)) by [@vdusek](https://github.com/vdusek)
 - Accept Pydantic models as alternatives to dicts in resource client methods ([#663](https://github.com/apify/apify-client-python/pull/663)) ([b778c20](https://github.com/apify/apify-client-python/commit/b778c2040228ff9f5a97765de10535cec3f0353e)) by [@vdusek](https://github.com/vdusek), closes [#421](https://github.com/apify/apify-client-python/issues/421)
+- Add ownership parameter to storage collection listing methods ([#696](https://github.com/apify/apify-client-python/pull/696)) ([51a92a3](https://github.com/apify/apify-client-python/commit/51a92a31dac5dd433acfaea76155011d0892d8c8)) by [@nmanerikar](https://github.com/nmanerikar)
 
 ### 🚜 Refactor
 

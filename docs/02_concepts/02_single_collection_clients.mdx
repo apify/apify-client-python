@@ -8,15 +8,17 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
+import ApiLink from '@site/src/components/ApiLink';
+
 import CollectionAsyncExample from '!!raw-loader!./code/02_collection_async.py';
 import CollectionSyncExample from '!!raw-loader!./code/02_collection_sync.py';
 import SingleAsyncExample from '!!raw-loader!./code/02_single_async.py';
 import SingleSyncExample from '!!raw-loader!./code/02_single_sync.py';
 
-The Apify client interface is designed to be consistent and intuitive across all of its components. When you call specific methods on the main client, you create specialized clients to manage individual API resources. There are two main types of clients:
+The Apify client provides two types of resource clients: single-resource clients for managing an individual resource, and collection clients for listing or creating resources.
 
-- [`ActorClient`](/reference/class/ActorClient) - Manages a single resource.
-- [`ActorCollectionClient`](/reference/class/ActorCollectionClient) - Manages a collection of resources.
+- <ApiLink to="class/ActorClient">`ActorClient`</ApiLink> - Manages a single resource.
+- <ApiLink to="class/ActorCollectionClient">`ActorCollectionClient`</ApiLink> - Manages a collection of resources.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

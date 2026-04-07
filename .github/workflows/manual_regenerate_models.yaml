@@ -30,6 +30,8 @@ jobs:
 
     env:
       DOCS_PR_NUMBER: ${{ inputs.docs_pr_number }}
+      BRANCH: "update-models-docs-pr-${{ inputs.docs_pr_number }}"
+      TITLE: "[TODO]: update generated models from apify-docs PR #${{ inputs.docs_pr_number }}"
 
     steps:
       - name: Validate inputs
@@ -69,39 +71,24 @@ jobs:
       - name: Generate models from OpenAPI spec
         run: uv run datamodel-codegen --input openapi-spec/openapi.json
 
-      - name: Check for changes
-        id: changes
-        run: |
-          if git diff --exit-code src/apify_client/_models.py; then
-            echo "No changes in generated models"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "Models have changed"
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Configure git
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config user.name "apify-service-account"
-          git config user.email "apify-service-account@users.noreply.github.com"
+      - name: Commit model changes
+        id: commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: src/apify_client/_models.py
+          author_name: apify-service-account
+          author_email: apify-service-account@users.noreply.github.com
+          message: ${{ env.TITLE }}
+          new_branch: ${{ env.BRANCH }}
+          push: --force
 
       - name: Create or update PR
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.commit.outputs.committed == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
-          BRANCH="update-models-docs-pr-${DOCS_PR_NUMBER}"
           DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
-          TITLE="[TODO]: update generated models from apify-docs PR #${DOCS_PR_NUMBER}"
-
-          # -B creates the branch or resets it if it already exists (re-runs for the same docs PR).
-          git checkout -B "$BRANCH"
-          git add src/apify_client/_models.py
-          git commit -m "$TITLE"
-          git push --force origin "$BRANCH"
-
           EXISTING_PR=$(gh pr list --head "$BRANCH" --json url --jq '.[0].url' 2>/dev/null || true)
 
           if [[ -n "$EXISTING_PR" ]]; then
@@ -134,7 +121,7 @@ jobs:
 
       # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding client-python PR.
       - name: Comment on apify-docs PR
-        if: steps.changes.outputs.changed == 'true'
+        if: steps.commit.outputs.committed == 'true'
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}

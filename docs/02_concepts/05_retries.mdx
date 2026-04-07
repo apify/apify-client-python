@@ -8,6 +8,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
+import ApiLink from '@site/src/components/ApiLink';
+
 import RetriesAsyncExample from '!!raw-loader!./code/05_retries_async.py';
 import RetriesSyncExample from '!!raw-loader!./code/05_retries_sync.py';
 
@@ -22,7 +24,7 @@ By default, the client retries a failed request up to 4 times. The retry interva
 - The first retry occurs after approximately 500 milliseconds.
 - The second retry occurs after approximately 1,000 milliseconds, and so on.
 
-You can customize this behavior using the following options in the [`ApifyClient`](/reference/class/ApifyClient) constructor:
+You can customize this behavior using the following options in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor:
 
 - `max_retries`: Defines the maximum number of retry attempts.
 - `min_delay_between_retries`: Sets the minimum delay between retries as a `timedelta`.

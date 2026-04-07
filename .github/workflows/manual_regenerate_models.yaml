@@ -168,11 +168,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
-          if [[ -z "$DOCS_PR_NUMBER" ]]; then
-            echo "DOCS_PR_NUMBER is not set; skipping failure comment on apify/apify-docs PR."
-            exit 0
-          fi
-
           gh pr comment "$DOCS_PR_NUMBER" \
             --repo apify/apify-docs \
             --body "Python client model regeneration failed. [See workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." \

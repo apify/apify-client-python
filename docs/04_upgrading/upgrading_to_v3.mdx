@@ -66,7 +66,7 @@ Run(defaultDatasetId='abc')     # camelCase API alias
 
 Not every method returns a Pydantic model. Methods whose payloads are user-defined or inherently unstructured still return plain types:
 
-- <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items()`</ApiLink> returns `DatasetItemsPage`, a dataclass whose `items` field is `list[dict[str, Any]]`, because dataset items are arbitrary JSON.
+- <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items()`</ApiLink> returns `DatasetItemsPage`, a dataclass whose `items` field is `list[dict[str, Any]]`, because the structure of dataset items is defined by the [Actor output schema](https://docs.apify.com/platform/actors/development/actor-definition/output-schema), which the API Client or SDK has no knowledge of.
 - <ApiLink to="class/KeyValueStoreClient#get_record">`KeyValueStoreClient.get_record()`</ApiLink> returns a `dict` with `key`, `value`, and `content_type` keys.
 
 ### Pydantic models as method parameters

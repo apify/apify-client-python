@@ -208,7 +208,6 @@ context = 7
 
 # https://koxudaxi.github.io/datamodel-code-generator/
 [tool.datamodel-codegen]
-url = "https://docs.apify.com/api/openapi.json"
 input_file_type = "openapi"
 output = "src/apify_client/_models.py"
 target_python_version = "3.11"
@@ -269,4 +268,8 @@ shell = "./build_api_reference.sh && corepack enable && yarn && uv run yarn star
 cwd = "website"
 
 [tool.poe.tasks.generate-models]
-shell = "uv run datamodel-codegen"
+shell = "uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json && python scripts/postprocess_generated_models.py"
+
+[tool.poe.tasks.generate-models-from-file]
+shell = "uv run datamodel-codegen --input $input_file && python scripts/postprocess_generated_models.py"
+args = [{ name = "input-file", positional = true, required = true }]

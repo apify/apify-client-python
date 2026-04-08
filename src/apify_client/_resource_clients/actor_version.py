@@ -7,7 +7,7 @@ from pydantic import TypeAdapter
 from apify_client._docs import docs_group
 from apify_client._models import (
     CreateOrUpdateVersionRequest,
-    EnvVar,
+    EnvVarRequest,
     SourceCodeFile,
     SourceCodeFolder,
     Version,
@@ -104,7 +104,7 @@ class ActorVersionClient(ResourceClient):
         """
         version_fields = CreateOrUpdateVersionRequest(
             build_tag=build_tag,
-            env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
+            env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
             source_type=source_type,
             source_files=_source_file_list_adapter.validate_python(source_files) if source_files else None,
@@ -220,7 +220,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         """
         version_fields = CreateOrUpdateVersionRequest(
             build_tag=build_tag,
-            env_vars=[EnvVar.model_validate(v) for v in env_vars] if env_vars else None,
+            env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
             source_type=source_type,
             source_files=_source_file_list_adapter.validate_python(source_files) if source_files else None,

@@ -6,7 +6,6 @@ from apify_client._docs import docs_group
 from apify_client._models import (
     Schedule,
     ScheduleCreate,
-    ScheduleCreateActions,
     ScheduleInvoked,
     ScheduleLogResponse,
     ScheduleResponse,
@@ -94,7 +93,7 @@ class ScheduleClient(ResourceClient):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
+            actions=actions or None,  # ty: ignore[invalid-argument-type]
             description=description,
             timezone=timezone,
             title=title,
@@ -213,7 +212,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
+            actions=actions or None,  # ty: ignore[invalid-argument-type]
             description=description,
             timezone=timezone,
             title=title,

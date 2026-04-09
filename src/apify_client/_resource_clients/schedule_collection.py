@@ -8,7 +8,6 @@ from apify_client._models import (
     ListOfSchedulesResponse,
     Schedule,
     ScheduleCreate,
-    ScheduleCreateActions,
     ScheduleResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -101,7 +100,7 @@ class ScheduleCollectionClient(ResourceClient):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
+            actions=actions or None,
             description=description,
             timezone=timezone,
             title=title,
@@ -194,7 +193,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=[ScheduleCreateActions.model_validate(a) for a in actions] if actions else None,
+            actions=actions or None,
             description=description,
             timezone=timezone,
             title=title,

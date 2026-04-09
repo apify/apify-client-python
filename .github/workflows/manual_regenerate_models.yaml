@@ -40,6 +40,8 @@ jobs:
       BRANCH: ${{ inputs.docs_pr_number && format('update-models-docs-pr-{0}', inputs.docs_pr_number) || 'update-models-manual' }}
       TITLE: "${{ inputs.docs_pr_number && format('[TODO]: update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || '[TODO]: update generated models from published OpenAPI spec' }}"
       ASSIGNEE: ${{ inputs.docs_pr_author || github.actor }}
+      REVIEWER: vdusek
+      LABEL: t-tooling
 
     steps:
       - name: Validate inputs
@@ -65,9 +67,9 @@ jobs:
         run: |
           if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
             git fetch origin "$BRANCH"
-            git checkout "$BRANCH"
+            git switch "$BRANCH"
           else
-            git checkout -b "$BRANCH"
+            git switch -c "$BRANCH"
           fi
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
@@ -136,9 +138,9 @@ jobs:
               --body "$BODY" \
               --head "$BRANCH" \
               --base master \
-              --reviewer vdusek \
+              --reviewer "$REVIEWER" \
               --assignee "$ASSIGNEE" \
-              --label t-tooling)
+              --label "$LABEL")
             echo "Created PR: $PR_URL"
             echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
             echo "created=true" >> "$GITHUB_OUTPUT"

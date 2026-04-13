@@ -150,8 +150,8 @@ class SourceCodeFile(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    format: SourceCodeFileFormat
-    content: Annotated[str, Field(examples=["console.log('This is the main.js file');"])]
+    format: SourceCodeFileFormat | None = None
+    content: Annotated[str | None, Field(examples=["console.log('This is the main.js file');"])] = None
     name: Annotated[str, Field(examples=['src/main.js'])]
 
 
@@ -225,14 +225,6 @@ class CommonActorPricingInfo(BaseModel):
     notified_about_future_change_at: Annotated[AwareDatetime | None, Field(alias='notifiedAboutFutureChangeAt')] = None
     notified_about_change_at: Annotated[AwareDatetime | None, Field(alias='notifiedAboutChangeAt')] = None
     reason_for_change: Annotated[str | None, Field(alias='reasonForChange')] = None
-
-
-@docs_group('Models')
-class PricingModel(StrEnum):
-    PAY_PER_EVENT = 'PAY_PER_EVENT'
-    PRICE_PER_DATASET_ITEM = 'PRICE_PER_DATASET_ITEM'
-    FLAT_PRICE_PER_MONTH = 'FLAT_PRICE_PER_MONTH'
-    FREE = 'FREE'
 
 
 @docs_group('Models')
@@ -674,6 +666,27 @@ class ActorNotFoundError(BaseModel):
         populate_by_name=True,
     )
     error: ActorNotFoundErrorDetail | None = None
+
+
+@docs_group('Models')
+class RecordOrTokenNotFoundErrorDetail(ErrorDetail):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    type: Annotated[Literal['record-or-token-not-found'], Field(title='ErrorType')] = 'record-or-token-not-found'
+    """
+    Machine-processable error type identifier.
+    """
+
+
+@docs_group('Models')
+class RecordOrTokenNotFoundError(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    error: RecordOrTokenNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')
@@ -1629,7 +1642,7 @@ class CreateTaskRequest(BaseModel):
         populate_by_name=True,
     )
     act_id: Annotated[str, Field(alias='actId', examples=['asADASadYvn4mBZmm'])]
-    name: Annotated[str, Field(examples=['my-task'])]
+    name: Annotated[str | None, Field(examples=['my-task'])] = None
     options: TaskOptions | None = None
     input: TaskInput | None = None
     title: str | None = None
@@ -1730,27 +1743,6 @@ class ChargeRunRequest(BaseModel):
     )
     event_name: Annotated[str, Field(alias='eventName', examples=['ANALYZE_PAGE'])]
     count: Annotated[int, Field(examples=[1])]
-
-
-@docs_group('Models')
-class RecordOrTokenNotFoundErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['record-or-token-not-found'], Field(title='ErrorType')] = 'record-or-token-not-found'
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
-class RecordOrTokenNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordOrTokenNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')
@@ -2472,7 +2464,7 @@ class RequestBase(BaseModel):
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: Annotated[AnyUrl | None, Field(examples=['https://apify.com'])] = None
+    url: Annotated[str | None, Field(examples=['https://apify.com'])] = None
     """
     The URL of the request.
     """
@@ -2485,7 +2477,7 @@ class RequestBase(BaseModel):
     """
     The final URL that was loaded, after redirects (if any).
     """
-    payload: Annotated[dict[str, Any] | None, Field(examples=[None])] = None
+    payload: Annotated[str | dict[str, Any] | None, Field(examples=[None])] = None
     """
     The request payload, typically used with POST or PUT requests.
     """
@@ -2550,7 +2542,7 @@ class RequestDraft(BaseModel):
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: Annotated[AnyUrl, Field(examples=['https://apify.com'])]
+    url: Annotated[str, Field(examples=['https://apify.com'])]
     """
     The URL of the request.
     """
@@ -2869,7 +2861,7 @@ class HeadRequest(BaseModel):
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: Annotated[AnyUrl, Field(examples=['https://apify.com'])]
+    url: Annotated[str, Field(examples=['https://apify.com'])]
     """
     The URL of the request.
     """
@@ -2933,7 +2925,7 @@ class LockedHeadRequest(BaseModel):
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: Annotated[AnyUrl, Field(examples=['https://apify.com'])]
+    url: Annotated[str, Field(examples=['https://apify.com'])]
     """
     The URL of the request.
     """
@@ -3034,7 +3026,7 @@ class WebhookCreate(BaseModel):
     idempotency_key: Annotated[str | None, Field(alias='idempotencyKey', examples=['fdSJmdP3nfs7sfk3y'])] = None
     ignore_ssl_errors: Annotated[bool | None, Field(alias='ignoreSslErrors', examples=[False])] = None
     do_not_retry: Annotated[bool | None, Field(alias='doNotRetry', examples=[False])] = None
-    request_url: Annotated[AnyUrl, Field(alias='requestUrl', examples=['http://example.com/'])]
+    request_url: Annotated[str, Field(alias='requestUrl', examples=['http://example.com/'])]
     payload_template: Annotated[
         str | None, Field(alias='payloadTemplate', examples=['{\\n "userId": {{userId}}...'])
     ] = None

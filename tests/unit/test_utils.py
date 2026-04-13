@@ -5,7 +5,6 @@ from unittest.mock import Mock
 
 import impit
 import pytest
-from pydantic import AnyUrl
 
 from apify_client._models import WebhookCondition, WebhookCreate, WebhookEventType
 from apify_client._resource_clients._resource_client import ResourceClientBase
@@ -39,12 +38,12 @@ def test_webhook_representation_list_to_base64() -> None:
                 WebhookCreate(
                     event_types=[WebhookEventType.ACTOR_RUN_CREATED],
                     condition=WebhookCondition(),
-                    request_url=AnyUrl('https://example.com/run-created'),
+                    request_url='https://example.com/run-created',
                 ),
                 WebhookCreate(
                     event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
                     condition=WebhookCondition(),
-                    request_url=AnyUrl('https://example.com/run-succeeded'),
+                    request_url='https://example.com/run-succeeded',
                     payload_template='{"hello": "world", "resource":{{resource}}}',
                 ),
             ]
@@ -77,12 +76,12 @@ def test_webhook_representation_list_from_dicts() -> None:
             WebhookCreate(
                 event_types=[WebhookEventType.ACTOR_RUN_CREATED],
                 condition=WebhookCondition(),
-                request_url=AnyUrl('https://example.com/run-created'),
+                request_url='https://example.com/run-created',
             ),
             WebhookCreate(
                 event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
                 condition=WebhookCondition(),
-                request_url=AnyUrl('https://example.com/run-succeeded'),
+                request_url='https://example.com/run-succeeded',
                 payload_template='{"hello": "world"}',
             ),
         ]

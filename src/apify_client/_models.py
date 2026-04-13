@@ -92,15 +92,39 @@ class ListOfActorsResponse(BaseModel):
 
 
 @docs_group('Models')
-class Error(BaseModel):
+class ErrorType(StrEnum):
+    """Machine-processable error type identifier."""
+
+    ACTOR_MEMORY_LIMIT_EXCEEDED = 'actor-memory-limit-exceeded'
+    ACTOR_NOT_FOUND = 'actor-not-found'
+    INVALID_INPUT = 'invalid-input'
+    METHOD_NOT_ALLOWED = 'method-not-allowed'
+    PAGE_NOT_FOUND = 'page-not-found'
+    PERMISSION_DENIED = 'permission-denied'
+    RATE_LIMIT_EXCEEDED = 'rate-limit-exceeded'
+    RECORD_NOT_FOUND = 'record-not-found'
+    RECORD_NOT_UNIQUE = 'record-not-unique'
+    RECORD_OR_TOKEN_NOT_FOUND = 'record-or-token-not-found'
+    REQUEST_ID_INVALID = 'request-id-invalid'
+    REQUEST_TOO_LARGE = 'request-too-large'
+    RUN_FAILED = 'run-failed'
+    RUN_TIMEOUT_EXCEEDED = 'run-timeout-exceeded'
+    SCHEDULE_ACTOR_NOT_FOUND = 'schedule-actor-not-found'
+    SCHEDULE_ACTOR_TASK_NOT_FOUND = 'schedule-actor-task-not-found'
+    TOKEN_NOT_VALID = 'token-not-valid'
+    UNKNOWN_BUILD_TAG = 'unknown-build-tag'
+    UNSUPPORTED_CONTENT_ENCODING = 'unsupported-content-encoding'
+    USER_NOT_FOUND = 'user-not-found'
+    X402_PAYMENT_REQUIRED = 'x402-payment-required'
+
+
+@docs_group('Models')
+class ErrorDetail(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
-    type: Annotated[ErrorType | None, Field(title='ErrorType')] = None
-    """
-    Machine-processable error type identifier.
-    """
+    type: ErrorType | None = None
     message: str | None = None
     """
     Human-readable error message describing what went wrong.
@@ -113,7 +137,7 @@ class ErrorResponse(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    error: Annotated[Error, Field(title='ErrorDetail')]
+    error: ErrorDetail
 
 
 @docs_group('Models')
@@ -613,105 +637,6 @@ class VersionResponse(BaseModel):
 
 
 @docs_group('Models')
-class ErrorType(StrEnum):
-    """Machine-processable error type identifier."""
-
-    ACTOR_MEMORY_LIMIT_EXCEEDED = 'actor-memory-limit-exceeded'
-    ACTOR_NOT_FOUND = 'actor-not-found'
-    INVALID_INPUT = 'invalid-input'
-    METHOD_NOT_ALLOWED = 'method-not-allowed'
-    PERMISSION_DENIED = 'permission-denied'
-    RATE_LIMIT_EXCEEDED = 'rate-limit-exceeded'
-    RECORD_NOT_FOUND = 'record-not-found'
-    RECORD_NOT_UNIQUE = 'record-not-unique'
-    RECORD_OR_TOKEN_NOT_FOUND = 'record-or-token-not-found'
-    REQUEST_ID_INVALID = 'request-id-invalid'
-    REQUEST_TOO_LARGE = 'request-too-large'
-    RUN_FAILED = 'run-failed'
-    RUN_TIMEOUT_EXCEEDED = 'run-timeout-exceeded'
-    TOKEN_NOT_VALID = 'token-not-valid'
-    UNKNOWN_BUILD_TAG = 'unknown-build-tag'
-    UNSUPPORTED_CONTENT_ENCODING = 'unsupported-content-encoding'
-    X402_PAYMENT_REQUIRED = 'x402-payment-required'
-
-
-@docs_group('Models')
-class ErrorDetail(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: ErrorType | None = None
-    message: str | None = None
-    """
-    Human-readable error message describing what went wrong.
-    """
-
-
-@docs_group('Models')
-class ActorNotFoundErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['actor-not-found'], Field(title='ErrorType')] = 'actor-not-found'
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
-class ActorNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: ActorNotFoundErrorDetail | None = None
-
-
-@docs_group('Models')
-class RecordOrTokenNotFoundErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['record-or-token-not-found'], Field(title='ErrorType')] = 'record-or-token-not-found'
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
-class RecordOrTokenNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordOrTokenNotFoundErrorDetail | None = None
-
-
-@docs_group('Models')
-class RecordNotFoundErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['record-not-found'], Field(title='ErrorType')] = 'record-not-found'
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
-class ActorVersionNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
-
-
-@docs_group('Models')
 class ListOfEnvVars(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -737,15 +662,6 @@ class EnvVarResponse(BaseModel):
         populate_by_name=True,
     )
     data: EnvVar
-
-
-@docs_group('Models')
-class EnvironmentVariableNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')
@@ -1094,15 +1010,6 @@ class UnknownBuildTagError(BaseModel):
         populate_by_name=True,
     )
     error: UnknownBuildTagErrorDetail | None = None
-
-
-@docs_group('Models')
-class ActorBuildNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')
@@ -1556,15 +1463,6 @@ class ActorRunTimeoutExceededError(BaseModel):
 
 
 @docs_group('Models')
-class ActorRunNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
-
-
-@docs_group('Models')
 class TaskStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1832,15 +1730,6 @@ class KeyValueStoreResponse(BaseModel):
 
 
 @docs_group('Models')
-class KeyValueStoreNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
-
-
-@docs_group('Models')
 class UpdateStoreRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1904,15 +1793,6 @@ class RecordResponse(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-
-
-@docs_group('Models')
-class RecordNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')
@@ -2047,15 +1927,6 @@ class DatasetResponse(BaseModel):
         populate_by_name=True,
     )
     data: Dataset
-
-
-@docs_group('Models')
-class DatasetNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')
@@ -2399,15 +2270,6 @@ class RequestQueueResponse(BaseModel):
 
 
 @docs_group('Models')
-class RequestQueueNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
-
-
-@docs_group('Models')
 class UpdateRequestQueueRequest(BaseModel):
     """Request object for updating a request queue."""
 
@@ -2443,14 +2305,6 @@ class RequestUserData(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(examples=['DETAIL'])] = None
-    """
-    Optional label for categorizing the request.
-    """
-    image: Annotated[AnyUrl | None, Field(examples=['https://picserver1.eu'])] = None
-    """
-    Optional image URL associated with the request.
-    """
 
 
 @docs_group('Models')
@@ -2474,7 +2328,7 @@ class RequestBase(BaseModel):
     """
     The number of times this request has been retried.
     """
-    loaded_url: Annotated[AnyUrl | None, Field(alias='loadedUrl', examples=['https://apify.com/jobs'])] = None
+    loaded_url: Annotated[str | None, Field(alias='loadedUrl', examples=['https://apify.com/jobs'])] = None
     """
     The final URL that was loaded, after redirects (if any).
     """
@@ -2824,15 +2678,6 @@ class RequestResponse(BaseModel):
         populate_by_name=True,
     )
     data: Request
-
-
-@docs_group('Models')
-class RequestNotFoundError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RecordNotFoundErrorDetail | None = None
 
 
 @docs_group('Models')

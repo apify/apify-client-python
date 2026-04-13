@@ -92,15 +92,38 @@ class ListOfActorsResponse(BaseModel):
 
 
 @docs_group('Models')
-class Error(BaseModel):
+class ErrorType(StrEnum):
+    """Machine-processable error type identifier."""
+
+    ACTOR_MEMORY_LIMIT_EXCEEDED = 'actor-memory-limit-exceeded'
+    ACTOR_NOT_FOUND = 'actor-not-found'
+    INVALID_INPUT = 'invalid-input'
+    METHOD_NOT_ALLOWED = 'method-not-allowed'
+    PAGE_NOT_FOUND = 'page-not-found'
+    PERMISSION_DENIED = 'permission-denied'
+    RATE_LIMIT_EXCEEDED = 'rate-limit-exceeded'
+    RECORD_NOT_FOUND = 'record-not-found'
+    RECORD_NOT_UNIQUE = 'record-not-unique'
+    RECORD_OR_TOKEN_NOT_FOUND = 'record-or-token-not-found'
+    REQUEST_ID_INVALID = 'request-id-invalid'
+    REQUEST_TOO_LARGE = 'request-too-large'
+    RUN_FAILED = 'run-failed'
+    RUN_TIMEOUT_EXCEEDED = 'run-timeout-exceeded'
+    SCHEDULE_ACTOR_NOT_FOUND = 'schedule-actor-not-found'
+    SCHEDULE_ACTOR_TASK_NOT_FOUND = 'schedule-actor-task-not-found'
+    TOKEN_NOT_VALID = 'token-not-valid'
+    UNKNOWN_BUILD_TAG = 'unknown-build-tag'
+    UNSUPPORTED_CONTENT_ENCODING = 'unsupported-content-encoding'
+    USER_NOT_FOUND = 'user-not-found'
+
+
+@docs_group('Models')
+class ErrorDetail(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
-    type: Annotated[ErrorType | None, Field(title='ErrorType')] = None
-    """
-    Machine-processable error type identifier.
-    """
+    type: ErrorType | None = None
     message: str | None = None
     """
     Human-readable error message describing what went wrong.
@@ -113,7 +136,7 @@ class ErrorResponse(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    error: Annotated[Error, Field(title='ErrorDetail')]
+    error: ErrorDetail
 
 
 @docs_group('Models')
@@ -965,63 +988,6 @@ class BuildResponse(BaseModel):
         populate_by_name=True,
     )
     data: Build
-
-
-@docs_group('Models')
-class ErrorType(StrEnum):
-    """Machine-processable error type identifier."""
-
-    ACTOR_MEMORY_LIMIT_EXCEEDED = 'actor-memory-limit-exceeded'
-    ACTOR_NOT_FOUND = 'actor-not-found'
-    INVALID_INPUT = 'invalid-input'
-    METHOD_NOT_ALLOWED = 'method-not-allowed'
-    PERMISSION_DENIED = 'permission-denied'
-    RATE_LIMIT_EXCEEDED = 'rate-limit-exceeded'
-    RECORD_NOT_FOUND = 'record-not-found'
-    RECORD_NOT_UNIQUE = 'record-not-unique'
-    RECORD_OR_TOKEN_NOT_FOUND = 'record-or-token-not-found'
-    REQUEST_ID_INVALID = 'request-id-invalid'
-    REQUEST_TOO_LARGE = 'request-too-large'
-    RUN_FAILED = 'run-failed'
-    RUN_TIMEOUT_EXCEEDED = 'run-timeout-exceeded'
-    TOKEN_NOT_VALID = 'token-not-valid'
-    UNKNOWN_BUILD_TAG = 'unknown-build-tag'
-    UNSUPPORTED_CONTENT_ENCODING = 'unsupported-content-encoding'
-
-
-@docs_group('Models')
-class ErrorDetail(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: ErrorType | None = None
-    message: str | None = None
-    """
-    Human-readable error message describing what went wrong.
-    """
-
-
-@docs_group('Models')
-class Type1(StrEnum):
-    """Machine-processable error type identifier."""
-
-    ACTOR_MEMORY_LIMIT_EXCEEDED = 'actor-memory-limit-exceeded'
-    ACTOR_NOT_FOUND = 'actor-not-found'
-    INVALID_INPUT = 'invalid-input'
-    METHOD_NOT_ALLOWED = 'method-not-allowed'
-    PERMISSION_DENIED = 'permission-denied'
-    RATE_LIMIT_EXCEEDED = 'rate-limit-exceeded'
-    RECORD_NOT_FOUND = 'record-not-found'
-    RECORD_NOT_UNIQUE = 'record-not-unique'
-    RECORD_OR_TOKEN_NOT_FOUND = 'record-or-token-not-found'
-    REQUEST_ID_INVALID = 'request-id-invalid'
-    REQUEST_TOO_LARGE = 'request-too-large'
-    RUN_FAILED = 'run-failed'
-    RUN_TIMEOUT_EXCEEDED = 'run-timeout-exceeded'
-    TOKEN_NOT_VALID = 'token-not-valid'
-    UNKNOWN_BUILD_TAG = 'unknown-build-tag'
-    UNSUPPORTED_CONTENT_ENCODING = 'unsupported-content-encoding'
 
 
 @docs_group('Models')

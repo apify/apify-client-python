@@ -2308,7 +2308,7 @@ class RequestUserData(BaseModel):
     """
     Optional label for categorizing the request.
     """
-    image: Annotated[AnyUrl | None, Field(examples=['https://picserver1.eu'])] = None
+    image: Annotated[str | None, Field(examples=['https://picserver1.eu'])] = None
     """
     Optional image URL associated with the request.
     """
@@ -2335,7 +2335,7 @@ class RequestBase(BaseModel):
     """
     The number of times this request has been retried.
     """
-    loaded_url: Annotated[AnyUrl | None, Field(alias='loadedUrl', examples=['https://apify.com/jobs'])] = None
+    loaded_url: Annotated[str | None, Field(alias='loadedUrl', examples=['https://apify.com/jobs'])] = None
     """
     The final URL that was loaded, after redirects (if any).
     """

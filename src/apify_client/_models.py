@@ -2304,14 +2304,6 @@ class RequestUserData(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    label: Annotated[str | None, Field(examples=['DETAIL'])] = None
-    """
-    Optional label for categorizing the request.
-    """
-    image: Annotated[str | None, Field(examples=['https://picserver1.eu'])] = None
-    """
-    Optional image URL associated with the request.
-    """
 
 
 @docs_group('Models')

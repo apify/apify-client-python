@@ -8,6 +8,8 @@ Currently fixes:
   nested-$ref limitation), causing datamodel-codegen to generate a duplicate `Type(StrEnum)`
   class alongside the canonical `ErrorType(StrEnum)`. This script removes the duplicate and
   rewires references to use `ErrorType`.
+- Missing @docs_group decorator: Adds `@docs_group('Models')` to all model classes for API
+  reference documentation grouping, along with the required import.
 """
 
 from __future__ import annotations
@@ -51,10 +53,27 @@ def deduplicate_error_type_enum(content: str) -> str:
     return re.sub(r'\n{3,}', '\n\n\n', content)
 
 
+def add_docs_group_decorators(content: str) -> str:
+    """Add `@docs_group('Models')` decorator to all model classes and the required import."""
+    # Add the import after the existing imports.
+    content = re.sub(
+        r'(from pydantic import [^\n]+\n)',
+        r'\1\nfrom apify_client._docs import docs_group\n',
+        content,
+    )
+    # Add @docs_group('Models') before every class definition.
+    return re.sub(
+        r'\nclass ',
+        "\n@docs_group('Models')\nclass ",
+        content,
+    )
+
+
 def main() -> None:
     content = MODELS_PATH.read_text()
     fixed = fix_discriminators(content)
     fixed = deduplicate_error_type_enum(fixed)
+    fixed = add_docs_group_decorators(fixed)
 
     if fixed != content:
         MODELS_PATH.write_text(fixed)

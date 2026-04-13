@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from pydantic import AnyUrl
-
 from apify_client._docs import docs_group
 from apify_client._models import (
     ListOfWebhooks,
@@ -105,7 +103,7 @@ class WebhookCollectionClient(ResourceClient):
         """
         webhook_create = WebhookCreate(
             event_types=list(event_types),
-            request_url=AnyUrl(request_url),
+            request_url=request_url,
             payload_template=payload_template,
             headers_template=headers_template,
             ignore_ssl_errors=ignore_ssl_errors,
@@ -208,7 +206,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         """
         webhook_create = WebhookCreate(
             event_types=list(event_types),
-            request_url=AnyUrl(request_url),
+            request_url=request_url,
             payload_template=payload_template,
             headers_template=headers_template,
             ignore_ssl_errors=ignore_ssl_errors,

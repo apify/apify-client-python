@@ -13,7 +13,14 @@ extend-exclude = [
     "*.lock",
     "*.min.js",
     "*.min.css",
-    "CHANGELOG.md",
+    "*.json",
+    "*.yaml",
+    "*.yml",
+    "*.toml",
+    "*.cfg",
+    "*.ini",
+    "**/CHANGELOG.md",
+    "**/changelog.md",
 ]
 
 [default.extend-words]

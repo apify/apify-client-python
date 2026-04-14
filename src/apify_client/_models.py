@@ -1832,6 +1832,241 @@ class ActorRunTimeoutExceededError(BaseModel):
 
 
 @docs_group('Models')
+class DatasetStats(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    read_count: Annotated[int, Field(alias='readCount', examples=[22])]
+    write_count: Annotated[int, Field(alias='writeCount', examples=[3])]
+    storage_bytes: Annotated[int, Field(alias='storageBytes', examples=[783])]
+
+
+@docs_group('Models')
+class Dataset(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
+    name: Annotated[str | None, Field(examples=['d7b9MDYsbtX5L7XAj'])] = None
+    user_id: Annotated[str, Field(alias='userId', examples=['wRsJZtadYvn4mBZmm'])]
+    created_at: Annotated[AwareDatetime, Field(alias='createdAt', examples=['2019-12-12T07:34:14.202Z'])]
+    modified_at: Annotated[AwareDatetime, Field(alias='modifiedAt', examples=['2019-12-13T08:36:13.202Z'])]
+    accessed_at: Annotated[AwareDatetime, Field(alias='accessedAt', examples=['2019-12-14T08:36:13.202Z'])]
+    item_count: Annotated[int, Field(alias='itemCount', examples=[7], ge=0)]
+    clean_item_count: Annotated[int, Field(alias='cleanItemCount', examples=[5], ge=0)]
+    act_id: Annotated[str | None, Field(alias='actId')] = None
+    act_run_id: Annotated[str | None, Field(alias='actRunId')] = None
+    fields: list[str] | None = None
+    schema_: Annotated[
+        dict[str, Any] | None,
+        Field(
+            alias='schema',
+            examples=[
+                {
+                    'actorSpecification': 1,
+                    'title': 'My dataset',
+                    'views': {
+                        'overview': {
+                            'title': 'Overview',
+                            'transformation': {'fields': ['linkUrl']},
+                            'display': {
+                                'component': 'table',
+                                'properties': {'linkUrl': {'label': 'Link URL', 'format': 'link'}},
+                            },
+                        }
+                    },
+                }
+            ],
+        ),
+    ] = None
+    """
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](/platform/actors/development/actor-definition/dataset-schema)
+    """
+    console_url: Annotated[
+        AnyUrl, Field(alias='consoleUrl', examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])
+    ]
+    items_public_url: Annotated[
+        AnyUrl | None,
+        Field(
+            alias='itemsPublicUrl',
+            examples=['https://api.apify.com/v2/datasets/WkzbQMuFYuamGv3YF/items?signature=abc123'],
+        ),
+    ] = None
+    """
+    A public link to access the dataset items directly.
+    """
+    url_signing_secret_key: Annotated[str | None, Field(alias='urlSigningSecretKey')] = None
+    """
+    A secret key for generating signed public URLs. It is only provided to clients with WRITE permission for the dataset.
+    """
+    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
+    stats: DatasetStats | None = None
+
+
+@docs_group('Models')
+class DatasetResponse(BaseModel):
+    """Response containing dataset metadata."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    data: Dataset
+
+
+@docs_group('Models')
+class UpdateDatasetRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    name: str | None = None
+    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
+
+
+@docs_group('Models')
+class PutItemsRequest(BaseModel):
+    """The request body containing the item(s) to add to the dataset. Can be a single
+    object or an array of objects. Each object represents one dataset item.
+
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+
+
+@docs_group('Models')
+class ValidationError(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    instance_path: Annotated[str | None, Field(alias='instancePath')] = None
+    """
+    The path to the instance being validated.
+    """
+    schema_path: Annotated[str | None, Field(alias='schemaPath')] = None
+    """
+    The path to the schema that failed the validation.
+    """
+    keyword: str | None = None
+    """
+    The validation keyword that caused the error.
+    """
+    message: str | None = None
+    """
+    A message describing the validation error.
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters specific to the validation error.
+    """
+
+
+@docs_group('Models')
+class InvalidItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    item_position: Annotated[int | None, Field(alias='itemPosition', examples=[2])] = None
+    """
+    The position of the invalid item in the array.
+    """
+    validation_errors: Annotated[list[ValidationError] | None, Field(alias='validationErrors')] = None
+    """
+    A complete list of AJV validation error objects for the invalid item.
+    """
+
+
+@docs_group('Models')
+class SchemaValidationErrorData(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    invalid_items: Annotated[list[InvalidItem], Field(alias='invalidItems')]
+    """
+    A list of invalid items in the received array of items.
+    """
+
+
+@docs_group('Models')
+class DatasetSchemaValidationError(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    type: Annotated[str | None, Field(examples=['schema-validation-error'])] = None
+    """
+    The type of the error.
+    """
+    message: Annotated[str | None, Field(examples=['Schema validation failed'])] = None
+    """
+    A human-readable message describing the error.
+    """
+    data: SchemaValidationErrorData | None = None
+
+
+@docs_group('Models')
+class PutItemResponseError(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    error: DatasetSchemaValidationError
+
+
+@docs_group('Models')
+class DatasetFieldStatistics(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    min: float | None = None
+    """
+    Minimum value of the field. For numbers, this is calculated directly. For strings, this is the length of the shortest string. For arrays, this is the length of the shortest array. For objects, this is the number of keys in the smallest object.
+    """
+    max: float | None = None
+    """
+    Maximum value of the field. For numbers, this is calculated directly. For strings, this is the length of the longest string. For arrays, this is the length of the longest array. For objects, this is the number of keys in the largest object.
+    """
+    null_count: Annotated[int | None, Field(alias='nullCount')] = None
+    """
+    How many items in the dataset have a null value for this field.
+    """
+    empty_count: Annotated[int | None, Field(alias='emptyCount')] = None
+    """
+    How many items in the dataset are `undefined`, meaning that for example empty string is not considered empty.
+    """
+
+
+@docs_group('Models')
+class DatasetStatistics(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    field_statistics: Annotated[dict[str, Any] | None, Field(alias='fieldStatistics')] = None
+    """
+    When you configure the dataset [fields schema](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema/validation), we measure the statistics such as `min`, `max`, `nullCount` and `emptyCount` for each field. This property provides statistics for each field from dataset fields schema. <br/></br>See dataset field statistics [documentation](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema/validation#dataset-field-statistics) for more information.
+    """
+
+
+@docs_group('Models')
+class DatasetStatisticsResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    data: DatasetStatistics
+
+
+@docs_group('Models')
 class TaskStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2211,241 +2446,6 @@ class ListOfDatasetsResponse(BaseModel):
         populate_by_name=True,
     )
     data: ListOfDatasets
-
-
-@docs_group('Models')
-class DatasetStats(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    read_count: Annotated[int, Field(alias='readCount', examples=[22])]
-    write_count: Annotated[int, Field(alias='writeCount', examples=[3])]
-    storage_bytes: Annotated[int, Field(alias='storageBytes', examples=[783])]
-
-
-@docs_group('Models')
-class Dataset(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
-    name: Annotated[str | None, Field(examples=['d7b9MDYsbtX5L7XAj'])] = None
-    user_id: Annotated[str, Field(alias='userId', examples=['wRsJZtadYvn4mBZmm'])]
-    created_at: Annotated[AwareDatetime, Field(alias='createdAt', examples=['2019-12-12T07:34:14.202Z'])]
-    modified_at: Annotated[AwareDatetime, Field(alias='modifiedAt', examples=['2019-12-13T08:36:13.202Z'])]
-    accessed_at: Annotated[AwareDatetime, Field(alias='accessedAt', examples=['2019-12-14T08:36:13.202Z'])]
-    item_count: Annotated[int, Field(alias='itemCount', examples=[7], ge=0)]
-    clean_item_count: Annotated[int, Field(alias='cleanItemCount', examples=[5], ge=0)]
-    act_id: Annotated[str | None, Field(alias='actId')] = None
-    act_run_id: Annotated[str | None, Field(alias='actRunId')] = None
-    fields: list[str] | None = None
-    schema_: Annotated[
-        dict[str, Any] | None,
-        Field(
-            alias='schema',
-            examples=[
-                {
-                    'actorSpecification': 1,
-                    'title': 'My dataset',
-                    'views': {
-                        'overview': {
-                            'title': 'Overview',
-                            'transformation': {'fields': ['linkUrl']},
-                            'display': {
-                                'component': 'table',
-                                'properties': {'linkUrl': {'label': 'Link URL', 'format': 'link'}},
-                            },
-                        }
-                    },
-                }
-            ],
-        ),
-    ] = None
-    """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](/platform/actors/development/actor-definition/dataset-schema)
-    """
-    console_url: Annotated[
-        AnyUrl, Field(alias='consoleUrl', examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])
-    ]
-    items_public_url: Annotated[
-        AnyUrl | None,
-        Field(
-            alias='itemsPublicUrl',
-            examples=['https://api.apify.com/v2/datasets/WkzbQMuFYuamGv3YF/items?signature=abc123'],
-        ),
-    ] = None
-    """
-    A public link to access the dataset items directly.
-    """
-    url_signing_secret_key: Annotated[str | None, Field(alias='urlSigningSecretKey')] = None
-    """
-    A secret key for generating signed public URLs. It is only provided to clients with WRITE permission for the dataset.
-    """
-    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
-    stats: DatasetStats | None = None
-
-
-@docs_group('Models')
-class DatasetResponse(BaseModel):
-    """Response containing dataset metadata."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    data: Dataset
-
-
-@docs_group('Models')
-class UpdateDatasetRequest(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    name: str | None = None
-    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
-
-
-@docs_group('Models')
-class PutItemsRequest(BaseModel):
-    """The request body containing the item(s) to add to the dataset. Can be a single
-    object or an array of objects. Each object represents one dataset item.
-
-    """
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-
-
-@docs_group('Models')
-class ValidationError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    instance_path: Annotated[str | None, Field(alias='instancePath')] = None
-    """
-    The path to the instance being validated.
-    """
-    schema_path: Annotated[str | None, Field(alias='schemaPath')] = None
-    """
-    The path to the schema that failed the validation.
-    """
-    keyword: str | None = None
-    """
-    The validation keyword that caused the error.
-    """
-    message: str | None = None
-    """
-    A message describing the validation error.
-    """
-    params: dict[str, Any] | None = None
-    """
-    Additional parameters specific to the validation error.
-    """
-
-
-@docs_group('Models')
-class InvalidItem(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    item_position: Annotated[int | None, Field(alias='itemPosition', examples=[2])] = None
-    """
-    The position of the invalid item in the array.
-    """
-    validation_errors: Annotated[list[ValidationError] | None, Field(alias='validationErrors')] = None
-    """
-    A complete list of AJV validation error objects for the invalid item.
-    """
-
-
-@docs_group('Models')
-class SchemaValidationErrorData(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    invalid_items: Annotated[list[InvalidItem], Field(alias='invalidItems')]
-    """
-    A list of invalid items in the received array of items.
-    """
-
-
-@docs_group('Models')
-class DatasetSchemaValidationError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[str | None, Field(examples=['schema-validation-error'])] = None
-    """
-    The type of the error.
-    """
-    message: Annotated[str | None, Field(examples=['Schema validation failed'])] = None
-    """
-    A human-readable message describing the error.
-    """
-    data: SchemaValidationErrorData | None = None
-
-
-@docs_group('Models')
-class PutItemResponseError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: DatasetSchemaValidationError
-
-
-@docs_group('Models')
-class DatasetFieldStatistics(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    min: float | None = None
-    """
-    Minimum value of the field. For numbers, this is calculated directly. For strings, this is the length of the shortest string. For arrays, this is the length of the shortest array. For objects, this is the number of keys in the smallest object.
-    """
-    max: float | None = None
-    """
-    Maximum value of the field. For numbers, this is calculated directly. For strings, this is the length of the longest string. For arrays, this is the length of the longest array. For objects, this is the number of keys in the largest object.
-    """
-    null_count: Annotated[int | None, Field(alias='nullCount')] = None
-    """
-    How many items in the dataset have a null value for this field.
-    """
-    empty_count: Annotated[int | None, Field(alias='emptyCount')] = None
-    """
-    How many items in the dataset are `undefined`, meaning that for example empty string is not considered empty.
-    """
-
-
-@docs_group('Models')
-class DatasetStatistics(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    field_statistics: Annotated[dict[str, Any] | None, Field(alias='fieldStatistics')] = None
-    """
-    When you configure the dataset [fields schema](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema/validation), we measure the statistics such as `min`, `max`, `nullCount` and `emptyCount` for each field. This property provides statistics for each field from dataset fields schema. <br/></br>See dataset field statistics [documentation](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema/validation#dataset-field-statistics) for more information.
-    """
-
-
-@docs_group('Models')
-class DatasetStatisticsResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    data: DatasetStatistics
 
 
 @docs_group('Models')

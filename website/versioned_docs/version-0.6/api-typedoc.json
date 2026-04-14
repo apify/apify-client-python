@@ -10027,7 +10027,7 @@
                         "args": {
                             "wait_secs": "how long does the client wait for run to finish. None for indefinite.\n"
                         },
-                        "returns": "dict, optional: The actor run data. If the status on the object is not one of the terminal statuses\n(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished."
+                        "returns": "dict, optional: The actor run data. If the status on the object is not one of the terminal statuses\n(SUCCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished."
                     },
                     "sources": [
                         {
@@ -10049,7 +10049,7 @@
                                         "content": [
                                             {
                                                 "kind": "text",
-                                                "text": "dict, optional: The actor run data. If the status on the object is not one of the terminal statuses\n(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished."
+                                                "text": "dict, optional: The actor run data. If the status on the object is not one of the terminal statuses\n(SUCCEEDED, FAILED, TIMED_OUT, ABORTED), then the run has not yet finished."
                                             }
                                         ],
                                         "tag": "@returns"
@@ -16965,7 +16965,7 @@
                         "args": {
                             "wait_secs": "how long does the client wait for build to finish. None for indefinite.\n"
                         },
-                        "returns": "dict, optional: The actor build data. If the status on the object is not one of the terminal statuses\n(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished."
+                        "returns": "dict, optional: The actor build data. If the status on the object is not one of the terminal statuses\n(SUCCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished."
                     },
                     "sources": [
                         {
@@ -16987,7 +16987,7 @@
                                         "content": [
                                             {
                                                 "kind": "text",
-                                                "text": "dict, optional: The actor build data. If the status on the object is not one of the terminal statuses\n(SUCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished."
+                                                "text": "dict, optional: The actor build data. If the status on the object is not one of the terminal statuses\n(SUCCEEDED, FAILED, TIMED_OUT, ABORTED), then the build has not yet finished."
                                             }
                                         ],
                                         "tag": "@returns"

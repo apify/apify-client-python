@@ -115,6 +115,7 @@ class ErrorType(StrEnum):
     UNKNOWN_BUILD_TAG = 'unknown-build-tag'
     UNSUPPORTED_CONTENT_ENCODING = 'unsupported-content-encoding'
     USER_NOT_FOUND = 'user-not-found'
+    X402_PAYMENT_REQUIRED = 'x402-payment-required'
 
 
 @docs_group('Models')

@@ -1,0 +1,46 @@
+---
+title: Single and collection clients
+---
+
+The `ApifyClient` interface follows a generic pattern that is applicable to all of its components. By calling individual methods of `ApifyClient`, specific clients which target individual API resources are created. There are two types of those clients. A client for management of a single resource and a client for a collection of resources.
+
+### Collection clients
+
+```python
+from apify_client import ApifyClient
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+# Collection clients do not require a parameter
+actor_collection_client = apify_client.actors()
+# Create an actor with the name: my-actor
+my_actor = actor_collection_client.create(name='my-actor')
+# List all of your actors
+actor_list = actor_collection_client.list().items
+```
+
+```python
+# Collection clients do not require a parameter
+dataset_collection_client = apify_client.datasets()
+# Get (or create, if it doesn't exist) a dataset with the name of my-dataset
+my_dataset = dataset_collection_client.get_or_create(name='my-dataset')
+```
+
+### Resource clients
+
+```python
+# Resource clients accept an ID of the resource
+actor_client = apify_client.actor('john-doe/my-actor')
+# Fetch the john-doe/my-actor object from the API
+my_actor = actor_client.get()
+# Start the run of john-doe/my-actor and return the Run object
+my_actor_run = actor_client.start()
+```
+
+```python
+# Resource clients accept an ID of the resource
+dataset_client = apify_client.dataset('john-doe/my-dataset')
+# Append items to the end of john-doe/my-dataset
+dataset_client.push_items([{'foo': 1}, {'bar': 2}])
+```
+
+> The ID of the resource can be either the `id` of the said resource, or a combination of your `username/resource-name`.

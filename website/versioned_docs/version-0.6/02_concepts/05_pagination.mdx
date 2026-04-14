@@ -1,0 +1,18 @@
+---
+title: Pagination
+---
+
+Most methods named `list` or `list_something` return a `ListPage` object, containing properties `items`, `total`, `offset`, `count` and `limit`. There are some exceptions though, like `list_keys` or `list_head` which paginate differently. The results you're looking for are always stored under `items` and you can use the `limit` property to get only a subset of results. Other properties can be available depending on the method.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+# List first 10 actors
+actors = apify_client.actors().list(limit=10)
+print(f'Total actors: {actors.total}')
+print(f'Returned: {actors.count}')
+for actor in actors.items:
+    print(actor['name'])
+```

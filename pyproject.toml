@@ -176,6 +176,7 @@ max-branches = 18
 addopts = "-r a --verbose"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
+pythonpath = ["."]
 timeout = 1800
 
 [tool.ty.environment]

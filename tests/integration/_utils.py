@@ -66,7 +66,7 @@ def get_random_string(length: int = 10) -> str:
 
 def get_random_resource_name(resource: str) -> str:
     """Generate a random resource name for test resources."""
-    return f'python-client-test-{resource}-{get_random_string(5)}'
+    return f'python-client-test-{resource}-{get_random_string(16)}'
 
 
 @overload

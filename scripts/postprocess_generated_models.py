@@ -10,9 +10,8 @@ Currently fixes:
   rewires references to use `ErrorType`.
 - Missing @docs_group decorator: Adds `@docs_group('Models')` to all model classes for API
   reference documentation grouping, along with the required import.
-- Class sorting: Sorts class definitions alphabetically (with topological ordering to respect
-  inheritance dependencies), so that regeneration from a reordered OpenAPI spec produces
-  minimal diffs.
+- Class sorting: Sorts class definitions alphabetically (with topological ordering to respect inheritance
+  dependencies), so that regeneration from a reordered OpenAPI spec produces minimal diffs.
 """
 
 from __future__ import annotations
@@ -62,8 +61,7 @@ def deduplicate_error_type_enum(content: str) -> str:
 def add_docs_group_decorators(content: str) -> str:
     """Add `@docs_group('Models')` decorator to all model classes and the required import.
 
-    This function is idempotent — it skips the import and decorators if they
-    already exist.
+    This function is idempotent — it skips the import and decorators if they already exist.
     """
     # Add the import after the existing imports (only if not already present).
     if 'from apify_client._docs import docs_group' not in content:
@@ -85,15 +83,12 @@ def add_docs_group_decorators(content: str) -> str:
 def sort_classes(content: str) -> str:
     """Sort class definitions alphabetically while respecting inheritance order.
 
-    Uses topological sorting so that base classes always appear before their
-    subclasses, with alphabetical ordering as the tie-breaker.  This makes the
-    output deterministic regardless of the order in the OpenAPI spec, which
-    keeps diffs minimal across regenerations.
+    Uses topological sorting so that base classes always appear before their subclasses, with alphabetical ordering as
+    the tie-breaker. This makes the output deterministic regardless of the order in the OpenAPI spec, which keeps diffs
+    minimal across regenerations.
 
-    Only the class statement's base-class expression creates an ordering
-    constraint — field type annotations are lazy strings thanks to
-    ``from __future__ import annotations`` and don't require forward
-    declaration.
+    Only the class statement's base-class expression creates an ordering constraint — field type annotations are lazy
+    strings thanks to `from __future__ import annotations` and don't require forward declaration.
     """
     lines = content.split('\n')
 
@@ -111,7 +106,7 @@ def sort_classes(content: str) -> str:
     header = '\n'.join(header_lines)
 
     # Split the remainder into class blocks.
-    # Each block starts with ``@docs_group('Models')`` on its own line.
+    # Each block starts with `@docs_group('Models')` on its own line.
     rest = '\n'.join(lines[header_end:])
     decorator_escaped = re.escape(DOCS_GROUP_DECORATOR)
     raw_blocks = re.split(rf'(?=^{decorator_escaped}$)', rest, flags=re.MULTILINE)
@@ -127,6 +122,7 @@ def sort_classes(content: str) -> str:
             continue
         class_name = match.group(1)
         base_expr = match.group(2)
+
         # Collect all capitalized identifiers from the base-class expression.
         referenced = set(re.findall(r'\b([A-Z]\w+)\b', base_expr))
         class_blocks[class_name] = block

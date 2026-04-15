@@ -442,7 +442,7 @@ def test_sort_classes_fallback_on_cycle() -> None:
     assert result == content
 
 
-def test_sort_classes_fallback_on_unparseable_block() -> None:
+def test_sort_classes_fallback_on_unparsable_block() -> None:
     header = 'from pydantic import BaseModel'
     # Insert a decorated block that has no valid class definition.
     content = (

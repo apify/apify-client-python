@@ -1,0 +1,18 @@
+---
+title: Error handling
+---
+
+Based on the endpoint, the client automatically extracts the relevant data and returns it in the expected format. Date strings are automatically converted to `datetime.datetime` objects.
+
+For exceptions, we throw an `ApifyApiError`, which wraps the plain JSON errors returned by API and enriches them with other context for easier debugging.
+
+```python
+from apify_client import ApifyClient
+
+apify_client = ApifyClient('MY-APIFY-TOKEN')
+
+try:
+    actor = apify_client.actor('non-existent-actor').get()
+except Exception as e:
+    print(f'Error: {e}')
+```

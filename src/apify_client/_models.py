@@ -1336,6 +1336,7 @@ class ErrorType(StrEnum):
     SCHEDULE_ACTOR_TASK_NOT_FOUND = 'schedule-actor-task-not-found'
     SCHEDULE_NAME_NOT_UNIQUE = 'schedule-name-not-unique'
     SCHEMA_VALIDATION = 'schema-validation'
+    SCHEMA_VALIDATION_ERROR = 'schema-validation-error'
     SCHEMA_VALIDATION_FAILED = 'schema-validation-failed'
     SIGN_UP_METHOD_NOT_ALLOWED = 'sign-up-method-not-allowed'
     SLACK_INTEGRATION_NOT_CUSTOM = 'slack-integration-not-custom'

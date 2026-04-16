@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 - Accept Pydantic models as alternatives to dicts in resource client methods ([#663](https://github.com/apify/apify-client-python/pull/663)) ([b778c20](https://github.com/apify/apify-client-python/commit/b778c2040228ff9f5a97765de10535cec3f0353e)) by [@vdusek](https://github.com/vdusek), closes [#421](https://github.com/apify/apify-client-python/issues/421)
 - Add ownership parameter to storage collection listing methods ([#696](https://github.com/apify/apify-client-python/pull/696)) ([51a92a3](https://github.com/apify/apify-client-python/commit/51a92a31dac5dd433acfaea76155011d0892d8c8)) by [@nmanerikar](https://github.com/nmanerikar)
 
+### 🐛 Bug Fixes
+
+- Guard integration test resource names against 63-char API limit ([#729](https://github.com/apify/apify-client-python/pull/729)) ([47a7a69](https://github.com/apify/apify-client-python/commit/47a7a6967e28c7042fa8e75cd4c138356495fa2c)) by [@vdusek](https://github.com/vdusek)
+
 ### 🚜 Refactor
 
 - [**breaking**] Introduce fully typed clients ([#604](https://github.com/apify/apify-client-python/pull/604)) ([81ee194](https://github.com/apify/apify-client-python/commit/81ee1943b400b49797868fe4dfa52d1662e09370)) by [@vdusek](https://github.com/vdusek), closes [#21](https://github.com/apify/apify-client-python/issues/21), [#481](https://github.com/apify/apify-client-python/issues/481)

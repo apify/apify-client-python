@@ -64,9 +64,21 @@ def get_random_string(length: int = 10) -> str:
     return ''.join(secrets.choice(string.ascii_letters) for _ in range(length))
 
 
-def get_random_resource_name(resource: str) -> str:
-    """Generate a random resource name for test resources."""
-    return f'python-client-test-{resource}-{get_random_string(5)}'
+def get_random_resource_name(label: str) -> str:
+    """Generate a unique resource name containing the given label.
+
+    Ensures the generated name does not exceed the API limit of 63 characters.
+    """
+    name_template = 'python-client-test-{}-{}'
+    template_length = len(name_template.format('', ''))
+    api_name_limit = 63
+    random_id_length = 8
+    label_length_limit = api_name_limit - template_length - random_id_length
+
+    label = label.replace('_', '-')
+    assert len(label) <= label_length_limit, f'Max label length is {label_length_limit}, but got {len(label)}'
+
+    return name_template.format(label, get_crypto_random_object_id(random_id_length))
 
 
 @overload

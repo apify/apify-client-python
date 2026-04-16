@@ -46,13 +46,15 @@ jobs:
     steps:
       - name: Validate inputs
         if: inputs.docs_pr_number || inputs.docs_workflow_run_id
+        env:
+          DOCS_WORKFLOW_RUN_ID: ${{ inputs.docs_workflow_run_id }}
         run: |
           if [[ -n "$DOCS_PR_NUMBER" ]] && ! [[ "$DOCS_PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
             echo "::error::docs_pr_number must be a positive integer, got: $DOCS_PR_NUMBER"
             exit 1
           fi
-          if [[ -n "${{ inputs.docs_workflow_run_id }}" ]] && ! [[ "${{ inputs.docs_workflow_run_id }}" =~ ^[0-9]+$ ]]; then
-            echo "::error::docs_workflow_run_id must be a numeric run ID, got: ${{ inputs.docs_workflow_run_id }}"
+          if [[ -n "$DOCS_WORKFLOW_RUN_ID" ]] && ! [[ "$DOCS_WORKFLOW_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::docs_workflow_run_id must be a numeric run ID, got: $DOCS_WORKFLOW_RUN_ID"
             exit 1
           fi
 
@@ -173,5 +175,5 @@ jobs:
         run: |
           gh pr comment "$DOCS_PR_NUMBER" \
             --repo apify/apify-docs \
-            --body "Python client model regeneration failed. [See workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." \
+            --body "Python client model regeneration failed. [See workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})." \
             || echo "Warning: Failed to post failure comment to apify/apify-docs PR #$DOCS_PR_NUMBER."

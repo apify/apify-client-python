@@ -78,7 +78,7 @@ jobs:
       # Skipped for manual runs — datamodel-codegen will fetch from the published spec URL instead.
       - name: Download OpenAPI spec artifact
         if: inputs.docs_workflow_run_id
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openapi-bundles
           path: openapi-spec

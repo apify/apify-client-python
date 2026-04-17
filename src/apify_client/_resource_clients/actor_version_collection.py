@@ -5,6 +5,12 @@ from typing import TYPE_CHECKING, Any
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
@@ -44,8 +50,10 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
+    def list(self, *, timeout: Timeout = 'short') -> IterableListPage[Version]:
         """List the available Actor versions.
+
+        The returned page also supports iteration: `for item in client.list()` yields individual versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
@@ -55,8 +63,12 @@ class ActorVersionCollectionClient(ResourceClient):
         Returns:
             The list of available Actor versions.
         """
-        result = self._list(timeout=timeout)
-        return ListOfVersionsResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfVersions:
+            result = self._list(timeout=timeout, **kwargs)
+            return ListOfVersionsResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback)
 
     def create(
         self,
@@ -131,8 +143,10 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
+    def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[Version]:
         """List the available Actor versions.
+
+        The returned page also supports iteration: `for item in client.list()` yields individual versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
@@ -142,8 +156,12 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actor versions.
         """
-        result = await self._list(timeout=timeout)
-        return ListOfVersionsResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfVersions:
+            result = await self._list(timeout=timeout, **kwargs)
+            return ListOfVersionsResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback)
 
     async def create(
         self,

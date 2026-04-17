@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import (
     ActorStandby,
     CreateTaskRequest,
@@ -19,6 +25,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._models import TaskShort
     from apify_client._types import Timeout
 
 
@@ -48,8 +55,11 @@ class TaskCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfTasks:
+    ) -> IterableListPage[TaskShort]:
         """List the available tasks.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual tasks
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
@@ -62,8 +72,12 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfTasksResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfTasks:
+            result = self._list(timeout=timeout, **kwargs)
+            return ListOfTasksResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -162,15 +176,18 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfTasks:
+    ) -> IterableListPageAsync[TaskShort]:
         """List the available tasks.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual tasks
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
@@ -183,8 +200,12 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfTasksResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfTasks:
+            result = await self._list(timeout=timeout, **kwargs)
+            return ListOfTasksResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import (
     Actor,
     ActorResponse,
@@ -19,6 +25,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._models import ActorShort
     from apify_client._types import Timeout
 
 
@@ -50,8 +57,11 @@ class ActorCollectionClient(ResourceClient):
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
         timeout: Timeout = 'medium',
-    ) -> ListOfActors:
+    ) -> IterableListPage[ActorShort]:
         """List the Actors the user has created or used.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
@@ -66,8 +76,12 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
-        return ListOfActorsResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfActors:
+            result = self._list(timeout=timeout, my=my, sortBy=sort_by, **kwargs)
+            return ListOfActorsResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -186,7 +200,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         my: bool | None = None,
@@ -195,8 +209,11 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
         timeout: Timeout = 'medium',
-    ) -> ListOfActors:
+    ) -> IterableListPageAsync[ActorShort]:
         """List the Actors the user has created or used.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
@@ -211,8 +228,12 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
-        return ListOfActorsResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfActors:
+            result = await self._list(timeout=timeout, my=my, sortBy=sort_by, **kwargs)
+            return ListOfActorsResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

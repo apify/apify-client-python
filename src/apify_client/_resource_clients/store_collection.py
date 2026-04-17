@@ -3,10 +3,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import ListOfActorsInStoreResponse, ListOfStoreActors
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._models import StoreListActor
     from apify_client._types import Timeout
 
 
@@ -40,8 +47,11 @@ class StoreCollectionClient(ResourceClient):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfStoreActors:
+    ) -> IterableListPage[StoreListActor]:
         """List Actors in Apify store.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
+        from the store and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
 
@@ -59,17 +69,20 @@ class StoreCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        result = self._list(
-            timeout=timeout,
-            limit=limit,
-            offset=offset,
-            search=search,
-            sortBy=sort_by,
-            category=category,
-            username=username,
-            pricingModel=pricing_model,
-        )
-        return ListOfActorsInStoreResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfStoreActors:
+            result = self._list(
+                timeout=timeout,
+                search=search,
+                sortBy=sort_by,
+                category=category,
+                username=username,
+                pricingModel=pricing_model,
+                **kwargs,
+            )
+            return ListOfActorsInStoreResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback, limit=limit, offset=offset)
 
 
 @docs_group('Resource clients')
@@ -91,7 +104,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
@@ -102,8 +115,11 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfStoreActors:
+    ) -> IterableListPageAsync[StoreListActor]:
         """List Actors in Apify store.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
+        from the store and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store
 
@@ -121,14 +137,17 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        result = await self._list(
-            timeout=timeout,
-            limit=limit,
-            offset=offset,
-            search=search,
-            sortBy=sort_by,
-            category=category,
-            username=username,
-            pricingModel=pricing_model,
-        )
-        return ListOfActorsInStoreResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfStoreActors:
+            result = await self._list(
+                timeout=timeout,
+                search=search,
+                sortBy=sort_by,
+                category=category,
+                username=username,
+                pricingModel=pricing_model,
+                **kwargs,
+            )
+            return ListOfActorsInStoreResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback, limit=limit, offset=offset)

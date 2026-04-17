@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import (
     KeyValueStore,
     KeyValueStoreResponse,
@@ -43,8 +49,11 @@ class KeyValueStoreCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfKeyValueStores:
+    ) -> IterableListPage[KeyValueStore]:
         """List the available key-value stores.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        key-value stores and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
 
@@ -60,10 +69,12 @@ class KeyValueStoreCollectionClient(ResourceClient):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        result = self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
-        )
-        return ListOfKeyValueStoresResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfKeyValueStores:
+            result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
+            return ListOfKeyValueStoresResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(
         self,
@@ -107,7 +118,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         unnamed: bool | None = None,
@@ -116,8 +127,11 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfKeyValueStores:
+    ) -> IterableListPageAsync[KeyValueStore]:
         """List the available key-value stores.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        key-value stores and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
 
@@ -133,10 +147,12 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available key-value stores matching the specified filters.
         """
-        result = await self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
-        )
-        return ListOfKeyValueStoresResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfKeyValueStores:
+            result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
+            return ListOfKeyValueStoresResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self,

@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import (
     ListOfSchedules,
     ListOfSchedulesResponse,
@@ -13,6 +19,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._models import ScheduleShort
     from apify_client._types import Timeout
 
 
@@ -42,8 +49,11 @@ class ScheduleCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfSchedules:
+    ) -> IterableListPage[ScheduleShort]:
         """List the available schedules.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        schedules and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
@@ -56,8 +66,12 @@ class ScheduleCollectionClient(ResourceClient):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfSchedulesResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfSchedules:
+            result = self._list(timeout=timeout, **kwargs)
+            return ListOfSchedulesResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -128,15 +142,18 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfSchedules:
+    ) -> IterableListPageAsync[ScheduleShort]:
         """List the available schedules.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        schedules and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
@@ -149,8 +166,12 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfSchedulesResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfSchedules:
+            result = await self._list(timeout=timeout, **kwargs)
+            return ListOfSchedulesResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

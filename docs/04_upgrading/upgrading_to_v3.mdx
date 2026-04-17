@@ -185,3 +185,23 @@ On retries, the timeout doubles with each attempt (exponential backoff) up to `t
 The default timeout tier assigned to each method on non-storage resource clients has been revised to better match the expected latency of the underlying API endpoint. For example, a simple `get()` call now defaults to `short` (5 s), while `start()` defaults to `medium` (30 s) and `call()` defaults to `no_timeout`.
 
 If your code relied on the previous global timeout behavior, review the timeout tier on the methods you use and adjust via the `timeout` parameter or by overriding tier defaults on the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor (see [Tiered timeout system](#tiered-timeout-system) above).
+
+## Snake_case `sort_by` values on `actors().list()`
+
+The `sort_by` parameter of <ApiLink to="class/ActorCollectionClient#list">`ActorCollectionClient.list()`</ApiLink> and <ApiLink to="class/ActorCollectionClientAsync#list">`ActorCollectionClientAsync.list()`</ApiLink> now accepts pythonic snake_case values instead of the raw camelCase values used by the API.
+
+Before (v2):
+
+```python
+client.actors().list(sort_by='createdAt')
+client.actors().list(sort_by='stats.lastRunStartedAt')
+```
+
+After (v3):
+
+```python
+client.actors().list(sort_by='created_at')
+client.actors().list(sort_by='last_run_started_at')
+```
+
+The default value also changed from `'createdAt'` to `'created_at'` (behavior is unchanged). The client translates the snake_case value to the form expected by the API internally.

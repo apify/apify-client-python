@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from apify_client._docs import docs_group
 
 if TYPE_CHECKING:
+    from typing import Self
+
     from apify_client._http_clients import HttpResponse
 
 
@@ -26,6 +28,12 @@ class ApifyApiError(ApifyClientError):
     are retried automatically before this error is raised, while client errors (HTTP 4xx) are raised
     immediately.
 
+    Instantiating `ApifyApiError` directly dispatches to a more specific subclass based on the
+    `type` field of the API error response (e.g. a `record-not-found` response produces a
+    `RecordNotFoundError`). Existing `except ApifyApiError` handlers continue to match because
+    every generated subclass inherits from this class. If the response body cannot be parsed or
+    the `type` is not recognized, an `ApifyApiError` is raised instead.
+
     Attributes:
         message: The error message from the API response.
         type: The error type identifier from the API response (e.g. `record-not-found`).
@@ -34,6 +42,20 @@ class ApifyApiError(ApifyClientError):
         http_method: The HTTP method of the failed request.
         data: Additional error data from the API response.
     """
+
+    def __new__(cls, response: HttpResponse, attempt: int, method: str = 'GET') -> Self:  # noqa: ARG004
+        """Dispatch to the subclass matching the response's error `type`, if any."""
+        target_cls: type[ApifyApiError] = cls
+        if cls is ApifyApiError:
+            # Local import to avoid the circular dependency (`_generated_errors` imports us).
+            from apify_client._generated_errors import API_ERROR_CLASS_BY_TYPE  # noqa: PLC0415
+
+            error_type = _extract_error_type(response)
+            if error_type is not None:
+                subclass = API_ERROR_CLASS_BY_TYPE.get(error_type)
+                if subclass is not None:
+                    target_cls = subclass
+        return super().__new__(target_cls)
 
     def __init__(self, response: HttpResponse, attempt: int, method: str = 'GET') -> None:
         """Initialize the API error from a failed response.
@@ -73,6 +95,21 @@ class ApifyApiError(ApifyClientError):
         self.http_method = method
 
 
+def _extract_error_type(response: HttpResponse) -> str | None:
+    """Return the `error.type` field from the response body, or None if absent or unparsable."""
+    try:
+        data = response.json()
+    except ValueError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    error = data.get('error')
+    if not isinstance(error, dict):
+        return None
+    error_type = error.get('type')
+    return error_type if isinstance(error_type, str) else None
+
+
 @docs_group('Errors')
 class InvalidResponseBodyError(ApifyClientError):
     """Error raised when a response body cannot be parsed.
@@ -93,3 +130,10 @@ class InvalidResponseBodyError(ApifyClientError):
         self.name = 'InvalidResponseBodyError'
         self.code = 'invalid-response-body'
         self.response = response
+
+
+# Re-export the generated per-type Exception subclasses so users can do e.g.
+# `from apify_client.errors import RecordNotFoundError`. The star import is safe because
+# `_generated_errors` defines an `__all__` and `errors.py` is fully initialized at the point
+# the re-import triggers (the module-level classes above are already bound).
+from apify_client._generated_errors import *  # noqa: E402, F403

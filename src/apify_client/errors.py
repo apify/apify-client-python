@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 
@@ -43,19 +43,22 @@ class ApifyApiError(ApifyClientError):
         data: Additional error data from the API response.
     """
 
+    _apify_error_payload: dict[str, Any] | None
+
     def __new__(cls, response: HttpResponse, attempt: int, method: str = 'GET') -> Self:  # noqa: ARG004
         """Dispatch to the subclass matching the response's error `type`, if any."""
+        payload = _extract_error_payload(response)
         target_cls: type[ApifyApiError] = cls
-        if cls is ApifyApiError:
-            # Local import to avoid the circular dependency (`_generated_errors` imports us).
-            from apify_client._generated_errors import API_ERROR_CLASS_BY_TYPE  # noqa: PLC0415
+        if cls is ApifyApiError and payload is not None:
+            error_type = payload.get('type')
+            if isinstance(error_type, str):
+                # avoid circular import with _generated_errors
+                from apify_client._generated_errors import API_ERROR_CLASS_BY_TYPE  # noqa: PLC0415
 
-            error_type = _extract_error_type(response)
-            if error_type is not None:
-                subclass = API_ERROR_CLASS_BY_TYPE.get(error_type)
-                if subclass is not None:
-                    target_cls = subclass
-        return super().__new__(target_cls)
+                target_cls = API_ERROR_CLASS_BY_TYPE.get(error_type, cls)
+        instance = super().__new__(target_cls)
+        instance._apify_error_payload = payload
+        return instance
 
     def __init__(self, response: HttpResponse, attempt: int, method: str = 'GET') -> None:
         """Initialize the API error from a failed response.
@@ -65,27 +68,21 @@ class ApifyApiError(ApifyClientError):
             attempt: The attempt number when the request failed (1-indexed).
             method: The HTTP method of the failed request.
         """
-        self.message: str | None = None
+        # Prefer the payload stashed by __new__; fall back to re-parsing for direct subclass
+        # instantiation (e.g. if a user constructs a subclass without going through the base class).
+        payload = getattr(self, '_apify_error_payload', None)
+        if payload is None:
+            payload = _extract_error_payload(response)
+
+        self.message: str | None = f'Unexpected error: {response.text}'
         self.type: str | None = None
         self.data = dict[str, str]()
-        self.message = f'Unexpected error: {response.text}'
 
-        try:
-            response_data = response.json()
-
-            if (
-                isinstance(response_data, dict)
-                and 'error' in response_data
-                and isinstance(response_data['error'], dict)
-            ):
-                self.message = response_data['error']['message']
-                self.type = response_data['error']['type']
-
-                if 'data' in response_data['error']:
-                    self.data = response_data['error']['data']
-
-        except ValueError:
-            pass
+        if payload is not None:
+            self.message = payload['message']
+            self.type = payload['type']
+            if 'data' in payload:
+                self.data = payload['data']
 
         super().__init__(self.message)
 
@@ -95,8 +92,8 @@ class ApifyApiError(ApifyClientError):
         self.http_method = method
 
 
-def _extract_error_type(response: HttpResponse) -> str | None:
-    """Return the `error.type` field from the response body, or None if absent or unparsable."""
+def _extract_error_payload(response: HttpResponse) -> dict[str, Any] | None:
+    """Return the `error` dict from the response body, or None if absent or unparsable."""
     try:
         data = response.json()
     except ValueError:
@@ -104,10 +101,7 @@ def _extract_error_type(response: HttpResponse) -> str | None:
     if not isinstance(data, dict):
         return None
     error = data.get('error')
-    if not isinstance(error, dict):
-        return None
-    error_type = error.get('type')
-    return error_type if isinstance(error_type, str) else None
+    return error if isinstance(error, dict) else None
 
 
 @docs_group('Errors')
@@ -132,8 +126,4 @@ class InvalidResponseBodyError(ApifyClientError):
         self.response = response
 
 
-# Re-export the generated per-type Exception subclasses so users can do e.g.
-# `from apify_client.errors import RecordNotFoundError`. The star import is safe because
-# `_generated_errors` defines an `__all__` and `errors.py` is fully initialized at the point
-# the re-import triggers (the module-level classes above are already bound).
 from apify_client._generated_errors import *  # noqa: E402, F403

@@ -10,15 +10,11 @@ Currently fixes:
   rewires references to use `ErrorType`.
 - Missing @docs_group decorator: Adds `@docs_group('Models')` to all model classes for API
   reference documentation grouping, along with the required import.
-- Class sorting: Sorts class definitions alphabetically (with topological ordering to respect inheritance
-  dependencies), so that regeneration from a reordered OpenAPI spec produces minimal diffs.
 """
 
 from __future__ import annotations
 
-import heapq
 import re
-from collections import defaultdict
 from pathlib import Path
 
 MODELS_PATH = Path(__file__).resolve().parent.parent / 'src' / 'apify_client' / '_models.py'
@@ -80,97 +76,11 @@ def add_docs_group_decorators(content: str) -> str:
     return '\n'.join(result)
 
 
-def sort_classes(content: str) -> str:
-    """Sort class definitions alphabetically while respecting inheritance order.
-
-    Uses topological sorting so that base classes always appear before their subclasses, with alphabetical ordering as
-    the tie-breaker. This makes the output deterministic regardless of the order in the OpenAPI spec, which keeps diffs
-    minimal across regenerations.
-
-    Only the class statement's base-class expression creates an ordering constraint — field type annotations are lazy
-    strings thanks to `from __future__ import annotations` and don't require forward declaration.
-    """
-    lines = content.split('\n')
-
-    # Find where class blocks start (first @docs_group decorator).
-    header_end = 0
-    for i, line in enumerate(lines):
-        if line == DOCS_GROUP_DECORATOR:
-            header_end = i
-            break
-
-    # Strip trailing blank lines from the header; we re-add spacing later.
-    header_lines = lines[:header_end]
-    while header_lines and not header_lines[-1].strip():
-        header_lines.pop()
-    header = '\n'.join(header_lines)
-
-    # Split the remainder into class blocks.
-    # Each block starts with `@docs_group('Models')` on its own line.
-    rest = '\n'.join(lines[header_end:])
-    decorator_escaped = re.escape(DOCS_GROUP_DECORATOR)
-    raw_blocks = re.split(rf'(?=^{decorator_escaped}$)', rest, flags=re.MULTILINE)
-    blocks = [b.strip() for b in raw_blocks if b.strip()]
-
-    # Parse each block: extract class name and base-class dependencies.
-    class_blocks: dict[str, str] = {}
-    class_deps: dict[str, set[str]] = {}
-
-    for block in blocks:
-        match = re.search(r'^class\s+(\w+)\(([^)]+)\):', block, re.MULTILINE)
-        if not match:
-            continue
-        class_name = match.group(1)
-        base_expr = match.group(2)
-
-        # Collect all capitalized identifiers from the base-class expression.
-        referenced = set(re.findall(r'\b([A-Z]\w+)\b', base_expr))
-        class_blocks[class_name] = block
-        class_deps[class_name] = referenced
-
-    if len(class_blocks) != len(blocks):
-        # Some blocks didn't match the class regex — fall back to avoid data loss.
-        return content
-
-    all_names = set(class_blocks)
-
-    # Build the dependency graph (only in-file references matter).
-    in_degree: dict[str, int] = {}
-    reverse: dict[str, set[str]] = defaultdict(set)
-
-    for name, refs in class_deps.items():
-        local_deps = (refs & all_names) - {name}
-        in_degree[name] = len(local_deps)
-        for dep in local_deps:
-            reverse[dep].add(name)
-
-    # Kahn's algorithm with a min-heap for alphabetical tie-breaking.
-    heap = sorted(name for name, degree in in_degree.items() if degree == 0)
-    heapq.heapify(heap)
-
-    sorted_names: list[str] = []
-    while heap:
-        name = heapq.heappop(heap)
-        sorted_names.append(name)
-        for dependent in reverse[name]:
-            in_degree[dependent] -= 1
-            if in_degree[dependent] == 0:
-                heapq.heappush(heap, dependent)
-
-    if len(sorted_names) != len(class_blocks):
-        # Cycle detected — fall back to the original order to avoid data loss.
-        return content
-
-    sorted_blocks = [class_blocks[name] for name in sorted_names]
-    return header + '\n\n\n' + '\n\n\n'.join(sorted_blocks) + '\n'
-
-
 def main() -> None:
     content = MODELS_PATH.read_text()
     fixed = fix_discriminators(content)
     fixed = deduplicate_error_type_enum(fixed)
     fixed = add_docs_group_decorators(fixed)
-    fixed = sort_classes(fixed)
 
     if fixed != content:
         MODELS_PATH.write_text(fixed)

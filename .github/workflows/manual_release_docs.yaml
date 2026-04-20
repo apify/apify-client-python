@@ -1,20 +1,17 @@
 name: Release docs
 
 on:
-  # Runs when manually triggered from the GitHub UI.
+  # Runs when manually triggered from the GitHub UI. Always checks out the default branch —
+  # this workflow pushes a theme-update commit back to the default branch, so the checked-out
+  # ref must be its current tip to avoid non-fast-forward pushes.
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Git ref to checkout (branch, tag, or SHA). Defaults to the default branch.
-        required: false
-        type: string
-        default: ""
 
-  # Runs when invoked by another workflow.
+  # Runs when invoked by another workflow. The caller is responsible for passing a ref that's
+  # on the default branch tip (e.g. a freshly pushed commit protected by `concurrency: release`).
   workflow_call:
     inputs:
       ref:
-        description: Git ref to checkout (branch, tag, or SHA)
+        description: Git ref to checkout (must resolve to the default branch tip).
         required: true
         type: string
 
@@ -76,7 +73,10 @@ jobs:
           add: website/package.json website/yarn.lock
           message: "chore: Automatic docs theme update [skip ci]"
           default_author: github_actions
-          # Required: checkout may leave a detached HEAD when invoked with a SHA ref.
+          # Required: `actions/checkout` leaves a detached HEAD when invoked with a SHA ref.
+          # Creating a local default-branch pointer at HEAD lets EndBug push it back. The caller
+          # contract (see trigger definitions above) guarantees HEAD is the default branch tip,
+          # so this push is always a fast-forward.
           new_branch: ${{ github.event.repository.default_branch }}
 
       - name: Build docs

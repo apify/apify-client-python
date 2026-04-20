@@ -1,17 +1,14 @@
 name: Release docs
 
 on:
-  # Runs when manually triggered from the GitHub UI. Always checks out the default branch —
-  # this workflow pushes a theme-update commit back to the default branch, so the checked-out
-  # ref must be its current tip to avoid non-fast-forward pushes.
+  # Runs when manually triggered from the GitHub UI.
   workflow_dispatch:
 
-  # Runs when invoked by another workflow. The caller is responsible for passing a ref that's
-  # on the default branch tip (e.g. a freshly pushed commit protected by `concurrency: release`).
+  # Runs when invoked by another workflow.
   workflow_call:
     inputs:
       ref:
-        description: Git ref to checkout (must resolve to the default branch tip).
+        description: Git ref to checkout.
         required: true
         type: string
 
@@ -31,20 +28,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Determine checkout ref
-        id: resolve_ref
-        env:
-          INPUT_REF: ${{ inputs.ref }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          REF="${INPUT_REF:-$DEFAULT_BRANCH}"
-          echo "ref=$REF" >> "$GITHUB_OUTPUT"
-
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
-          ref: ${{ steps.resolve_ref.outputs.ref }}
+          ref: ${{ inputs.ref || github.event.repository.default_branch }}
 
       - name: Set up Node
         uses: actions/setup-node@v6
@@ -73,10 +61,7 @@ jobs:
           add: website/package.json website/yarn.lock
           message: "chore: Automatic docs theme update [skip ci]"
           default_author: github_actions
-          # Required: `actions/checkout` leaves a detached HEAD when invoked with a SHA ref.
-          # Creating a local default-branch pointer at HEAD lets EndBug push it back. The caller
-          # contract (see trigger definitions above) guarantees HEAD is the default branch tip,
-          # so this push is always a fast-forward.
+          # `actions/checkout` detaches HEAD on SHA refs; EndBug needs a branch to push.
           new_branch: ${{ github.event.repository.default_branch }}
 
       - name: Build docs

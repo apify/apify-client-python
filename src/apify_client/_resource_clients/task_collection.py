@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import (
+from apify_client._models_generated import (
     ActorStandby,
     CreateTaskRequest,
     ListOfTasks,
@@ -19,6 +19,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._typeddicts_generated import TaskInputDict
     from apify_client._types import Timeout
 
 
@@ -75,7 +76,7 @@ class TaskCollectionClient(ResourceClient):
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
-        task_input: dict | TaskInput | None = None,
+        task_input: TaskInputDict | TaskInput | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -116,7 +117,7 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The created task.
         """
-        if isinstance(task_input, dict):
+        if task_input is not None and not isinstance(task_input, TaskInput):
             task_input = TaskInput.model_validate(task_input)
 
         task_fields = CreateTaskRequest(
@@ -196,7 +197,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         max_items: int | None = None,
         restart_on_error: bool | None = None,
-        task_input: dict | TaskInput | None = None,
+        task_input: TaskInputDict | TaskInput | None = None,
         title: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
@@ -237,7 +238,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The created task.
         """
-        if isinstance(task_input, dict):
+        if task_input is not None and not isinstance(task_input, TaskInput):
             task_input = TaskInput.model_validate(task_input)
 
         task_fields = CreateTaskRequest(

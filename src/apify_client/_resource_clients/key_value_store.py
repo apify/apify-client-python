@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
-from apify_client._models import (
+from apify_client._models_generated import (
     KeyValueStore,
     KeyValueStoreKey,
     KeyValueStoreResponse,
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._models import GeneralAccess
+    from apify_client._models_generated import GeneralAccess
     from apify_client._types import Timeout
 
 

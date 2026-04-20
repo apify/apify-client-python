@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     import logging
     from types import TracebackType
 
-    from apify_client._models import Run
+    from apify_client._models_generated import Run
     from apify_client._resource_clients import RunClient, RunClientAsync
 
 

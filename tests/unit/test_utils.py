@@ -1,14 +1,15 @@
 import io
 from datetime import timedelta
 from http import HTTPStatus
+from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock
 
 import impit
 import pytest
 
-from apify_client._models import WebhookCondition, WebhookCreate, WebhookEventType
+from apify_client._models import WebhookRepresentationList
+from apify_client._models_generated import WebhookCondition, WebhookCreate, WebhookEventType
 from apify_client._resource_clients._resource_client import ResourceClientBase
-from apify_client._types import WebhookRepresentationList
 from apify_client._utils import (
     catch_not_found_or_throw,
     create_hmac_signature,
@@ -21,6 +22,9 @@ from apify_client._utils import (
     to_safe_id,
 )
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+
+if TYPE_CHECKING:
+    from apify_client._typeddicts_generated import WebhookCreateDict
 
 
 def test_to_safe_id() -> None:
@@ -54,7 +58,11 @@ def test_webhook_representation_list_to_base64() -> None:
 
 def test_webhook_representation_list_from_dicts() -> None:
     """Test that from_webhooks accepts plain dicts with the minimal ad-hoc webhook shape."""
-    result = WebhookRepresentationList.from_webhooks(
+    # The runtime only needs the keys consumed by WebhookRepresentation (event_types, request_url,
+    # optionally payload_template/headers_template). WebhookCreateDict requires more — cast to
+    # silence the type checker while still exercising the minimal-dict runtime path.
+    webhooks = cast(
+        'list[WebhookCreateDict]',
         [
             {
                 'event_types': ['ACTOR.RUN.CREATED'],
@@ -65,8 +73,9 @@ def test_webhook_representation_list_from_dicts() -> None:
                 'request_url': 'https://example.com/run-succeeded',
                 'payload_template': '{"hello": "world"}',
             },
-        ]
-    ).to_base64()
+        ],
+    )
+    result = WebhookRepresentationList.from_webhooks(webhooks).to_base64()
 
     assert result is not None
 

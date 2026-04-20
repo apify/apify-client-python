@@ -156,7 +156,7 @@ def test_add_docs_group_decorators_adds_import_and_decorators() -> None:
         class Bar(BaseModel):
             value: int
     """)
-    result = add_docs_group_decorators(content)
+    result = add_docs_group_decorators(content, 'Models')
     assert 'from apify_client._docs import docs_group' in result
     assert result.count("@docs_group('Models')") == 2
 
@@ -168,7 +168,7 @@ def test_add_docs_group_decorators_places_import_after_pydantic() -> None:
         class Foo(BaseModel):
             pass
     """)
-    result = add_docs_group_decorators(content)
+    result = add_docs_group_decorators(content, 'Models')
     lines = result.split('\n')
     pydantic_idx = next(i for i, line in enumerate(lines) if 'from pydantic' in line)
     docs_import_idx = next(i for i, line in enumerate(lines) if 'from apify_client._docs' in line)
@@ -184,7 +184,7 @@ def test_add_docs_group_decorators_idempotent_import() -> None:
         class Foo(BaseModel):
             pass
     """)
-    result = add_docs_group_decorators(content)
+    result = add_docs_group_decorators(content, 'Models')
     assert result.count('from apify_client._docs import docs_group') == 1
 
 
@@ -202,7 +202,7 @@ def test_add_docs_group_decorators_idempotent_decorators() -> None:
         class Bar(BaseModel):
             pass
     """)
-    result = add_docs_group_decorators(content)
+    result = add_docs_group_decorators(content, 'Models')
     assert result.count("@docs_group('Models')") == 2
 
 
@@ -216,7 +216,7 @@ def test_add_docs_group_decorators_placed_before_each_class() -> None:
         class Beta(BaseModel):
             pass
     """)
-    result = add_docs_group_decorators(content)
+    result = add_docs_group_decorators(content, 'Models')
     lines = result.split('\n')
     for i, line in enumerate(lines):
         if line.startswith('class '):
@@ -225,7 +225,7 @@ def test_add_docs_group_decorators_placed_before_each_class() -> None:
 
 def test_add_docs_group_decorators_no_classes() -> None:
     content = 'from pydantic import BaseModel\n\nx = 1\n'
-    result = add_docs_group_decorators(content)
+    result = add_docs_group_decorators(content, 'Models')
     assert "@docs_group('Models')" not in result
 
 
@@ -253,7 +253,7 @@ def test_full_pipeline() -> None:
     """)
     result = fix_discriminators(content)
     result = deduplicate_error_type_enum(result)
-    result = add_docs_group_decorators(result)
+    result = add_docs_group_decorators(result, 'Models')
 
     # Discriminator fixed.
     assert "discriminator='pricing_model'" in result

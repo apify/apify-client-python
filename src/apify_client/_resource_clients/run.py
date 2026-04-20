@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
-from apify_client._models import Run, RunResponse
+from apify_client._models_generated import Run, RunResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     import logging
     from decimal import Decimal
 
-    from apify_client._models import GeneralAccess
+    from apify_client._models_generated import GeneralAccess
     from apify_client._resource_clients import (
         DatasetClient,
         DatasetClientAsync,

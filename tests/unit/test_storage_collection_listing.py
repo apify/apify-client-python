@@ -7,7 +7,7 @@ import pytest
 from werkzeug.wrappers import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._models import StorageOwnership
+from apify_client._models_generated import StorageOwnership
 
 if TYPE_CHECKING:
     from collections.abc import Callable

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import (
+from apify_client._models_generated import (
     ListOfWebhooks,
     ListOfWebhooksResponse,
     WebhookCondition,
@@ -13,7 +13,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._models import Webhook, WebhookEventType
+    from apify_client._models_generated import Webhook, WebhookEventType
     from apify_client._types import Timeout
 
 

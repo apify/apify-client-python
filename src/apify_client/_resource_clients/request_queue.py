@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING, Any, Literal
 from more_itertools import constrained_batches
 
 from apify_client._docs import docs_group
-from apify_client._models import (
+from apify_client._models import RequestDeleteInput, RequestInput
+from apify_client._models_generated import (
     AddedRequest,
     AddRequestResponse,
     BatchAddResponse,
@@ -35,14 +36,15 @@ from apify_client._models import (
     UnlockRequestsResult,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._types import RequestDeleteInput, RequestInput
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._models import GeneralAccess
+    from apify_client._models_generated import GeneralAccess
+    from apify_client._typeddicts import RequestDeleteInputDict, RequestInputDict
+    from apify_client._typeddicts_generated import RequestDict
     from apify_client._types import Timeout
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
@@ -187,7 +189,7 @@ class RequestQueueClient(ResourceClient):
 
     def add_request(
         self,
-        request: dict | RequestInput,
+        request: RequestInputDict | RequestInput,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -204,7 +206,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The added request.
         """
-        if isinstance(request, dict):
+        if not isinstance(request, RequestInput):
             request = RequestInput.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
@@ -249,7 +251,7 @@ class RequestQueueClient(ResourceClient):
 
     def update_request(
         self,
-        request: dict | Request,
+        request: RequestDict | Request,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'medium',
@@ -266,7 +268,7 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The updated request.
         """
-        if isinstance(request, dict):
+        if not isinstance(request, Request):
             request = Request.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
@@ -363,7 +365,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_add_requests(
         self,
-        requests: list[RequestInput] | list[dict],
+        requests: list[RequestInput] | list[RequestInputDict],
         *,
         forefront: bool = False,
         max_parallel: int = 1,
@@ -407,7 +409,9 @@ class RequestQueueClient(ResourceClient):
             raise NotImplementedError('max_parallel is only supported in async client')
 
         requests_as_dicts = [
-            (RequestInput.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
+            (r if isinstance(r, RequestInput) else RequestInput.model_validate(r)).model_dump(
+                by_alias=True, exclude_none=True
+            )
             for r in requests
         ]
 
@@ -459,7 +463,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_delete_requests(
         self,
-        requests: list[RequestDeleteInput] | list[dict],
+        requests: list[RequestDeleteInput] | list[RequestDeleteInputDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -472,7 +476,7 @@ class RequestQueueClient(ResourceClient):
             timeout: Timeout for the API HTTP request.
         """
         requests_as_dicts = [
-            (RequestDeleteInput.model_validate(r) if isinstance(r, dict) else r).model_dump(
+            (r if isinstance(r, RequestDeleteInput) else RequestDeleteInput.model_validate(r)).model_dump(
                 by_alias=True, exclude_none=True
             )
             for r in requests
@@ -700,7 +704,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def add_request(
         self,
-        request: dict | RequestInput,
+        request: RequestInputDict | RequestInput,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -717,7 +721,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The added request.
         """
-        if isinstance(request, dict):
+        if not isinstance(request, RequestInput):
             request = RequestInput.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
@@ -760,7 +764,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def update_request(
         self,
-        request: dict | Request,
+        request: RequestDict | Request,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'medium',
@@ -777,7 +781,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The updated request.
         """
-        if isinstance(request, dict):
+        if not isinstance(request, Request):
             request = Request.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
@@ -920,7 +924,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_add_requests(
         self,
-        requests: list[RequestInput] | list[dict],
+        requests: list[RequestInput] | list[RequestInputDict],
         *,
         forefront: bool = False,
         max_parallel: int = 5,
@@ -961,7 +965,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
             )
 
         requests_as_dicts = [
-            (RequestInput.model_validate(r) if isinstance(r, dict) else r).model_dump(by_alias=True, exclude_none=True)
+            (r if isinstance(r, RequestInput) else RequestInput.model_validate(r)).model_dump(
+                by_alias=True, exclude_none=True
+            )
             for r in requests
         ]
 
@@ -1018,7 +1024,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_delete_requests(
         self,
-        requests: list[RequestDeleteInput] | list[dict],
+        requests: list[RequestDeleteInput] | list[RequestDeleteInputDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -1031,7 +1037,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout: Timeout for the API HTTP request.
         """
         requests_as_dicts = [
-            (RequestDeleteInput.model_validate(r) if isinstance(r, dict) else r).model_dump(
+            (r if isinstance(r, RequestDeleteInput) else RequestDeleteInput.model_validate(r)).model_dump(
                 by_alias=True, exclude_none=True
             )
             for r in requests

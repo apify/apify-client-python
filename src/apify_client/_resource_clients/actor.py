@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, Any, Literal
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
-from apify_client._models import (
+from apify_client._models import WebhookRepresentationList
+from apify_client._models_generated import (
     Actor,
     ActorPermissionLevel,
     ActorResponse,
@@ -26,7 +27,6 @@ from apify_client._models import (
     WebhookCreate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._types import WebhookRepresentationList
 from apify_client._utils import encode_key_value_store_record_value, response_to_dict, to_seconds
 
 if TYPE_CHECKING:
@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
+    from apify_client._models_generated import ActorJobStatus
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,
@@ -50,7 +51,8 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client._types import ActorJobStatus, Timeout
+    from apify_client._typeddicts_generated import WebhookCreateDict
+    from apify_client._types import Timeout
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -229,7 +231,7 @@ class ActorClient(ResourceClient):
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[WebhookCreate] | list[dict] | None = None,
+        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -303,7 +305,7 @@ class ActorClient(ResourceClient):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
-        webhooks: list[WebhookCreate] | list[dict] | None = None,
+        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',
@@ -725,7 +727,7 @@ class ActorClientAsync(ResourceClientAsync):
         run_timeout: timedelta | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[WebhookCreate] | list[dict] | None = None,
+        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -799,7 +801,7 @@ class ActorClientAsync(ResourceClientAsync):
         restart_on_error: bool | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
-        webhooks: list[WebhookCreate] | list[dict] | None = None,
+        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
         logger: Logger | None | Literal['default'] = 'default',

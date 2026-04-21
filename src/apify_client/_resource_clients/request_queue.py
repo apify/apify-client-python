@@ -10,6 +10,12 @@ from typing import TYPE_CHECKING, Any, Literal
 from more_itertools import constrained_batches
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_cursor_iterable_list_page,
+    build_cursor_iterable_list_page_async,
+)
 from apify_client._models import (
     AddedRequest,
     AddRequestResponse,
@@ -48,6 +54,11 @@ if TYPE_CHECKING:
 _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
+
+
+def _rq_next_cursor(page: ListOfRequests) -> str | None:
+    """Return the opaque `next_cursor` from the page, or `None` when there are no more pages."""
+    return page.next_cursor
 
 
 @docs_group('Resource clients')
@@ -496,17 +507,27 @@ class RequestQueueClient(ResourceClient):
         *,
         limit: int | None = None,
         filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
-        timeout: Timeout = 'medium',
         cursor: str | None = None,
         exclusive_start_id: str | None = None,
-    ) -> ListOfRequests:
+        chunk_size: int | None = None,
+        timeout: Timeout = 'medium',
+    ) -> IterableListPage[Request]:
         """List requests in the queue.
+
+        The returned page also supports iteration: `for request in client.list_requests(...)` yields
+        individual requests and transparently fetches further pages using the opaque `cursor`
+        returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
             limit: How many requests to retrieve.
             filter: List of request states to use as a filter. Multiple values mean union of the given filters.
+            cursor: A token returned in a previous API response, to continue listing the next page of requests.
+            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
+                Only applied to the first page fetched; subsequent pages during iteration use `cursor`.
+            chunk_size: Maximum number of requests requested per API call when iterating. Only
+                relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
             cursor: A token returned in previous API response, to continue listing next page of requests
             exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
@@ -521,23 +542,33 @@ class RequestQueueClient(ResourceClient):
                 stacklevel=2,
             )
 
-        request_params = self._build_params(
+        def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+            # `exclusive_start_id` is honored only on the first page (when no cursor has been
+            # produced by the server yet); subsequent pages rely on the opaque `cursor`.
+            request_params = self._build_params(
+                limit=limit,
+                filter=','.join(filter) if filter else None,
+                clientKey=self.client_key,
+                exclusiveStartId=exclusive_start_id if cursor is None else None,
+                cursor=cursor,
+            )
+            response = self._http_client.call(
+                url=self._build_url('requests'),
+                method='GET',
+                params=request_params,
+                timeout=timeout,
+            )
+            result = response_to_dict(response)
+            return ListOfRequestsResponse.model_validate(result).data
+
+        return build_cursor_iterable_list_page(
+            _callback,
+            cursor_param='cursor',
+            next_cursor_fn=_rq_next_cursor,
+            initial_cursor=cursor,
             limit=limit,
-            filter=','.join(filter) if filter else None,
-            clientKey=self.client_key,
-            exclusiveStartId=exclusive_start_id,
-            cursor=cursor,
+            chunk_size=chunk_size,
         )
-
-        response = self._http_client.call(
-            url=self._build_url('requests'),
-            method='GET',
-            params=request_params,
-            timeout=timeout,
-        )
-
-        result = response_to_dict(response)
-        return ListOfRequestsResponse.model_validate(result).data
 
     def unlock_requests(self: RequestQueueClient, *, timeout: Timeout = 'long') -> UnlockRequestsResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
@@ -1049,22 +1080,32 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response_to_dict(response)
         return BatchDeleteResponse.model_validate(result).data
 
-    async def list_requests(
+    def list_requests(
         self,
         *,
         limit: int | None = None,
         filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
-        timeout: Timeout = 'medium',
         cursor: str | None = None,
         exclusive_start_id: str | None = None,
-    ) -> ListOfRequests:
+        chunk_size: int | None = None,
+        timeout: Timeout = 'medium',
+    ) -> IterableListPageAsync[Request]:
         """List requests in the queue.
+
+        The returned page also supports iteration: `for request in client.list_requests(...)` yields
+        individual requests and transparently fetches further pages using the opaque `cursor`
+        returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
             limit: How many requests to retrieve.
             filter: List of request states to use as a filter. Multiple values mean union of the given filters.
+            cursor: A token returned in a previous API response, to continue listing the next page of requests.
+            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
+                Only applied to the first page fetched; subsequent pages during iteration use `cursor`.
+            chunk_size: Maximum number of requests requested per API call when iterating. Only
+                relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
             cursor: A token returned in previous API response, to continue listing next page of requests
             exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
@@ -1079,23 +1120,33 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 stacklevel=2,
             )
 
-        request_params = self._build_params(
+        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+            # `exclusive_start_id` is honored only on the first page (when no cursor has been
+            # produced by the server yet); subsequent pages rely on the opaque `cursor`.
+            request_params = self._build_params(
+                limit=limit,
+                filter=','.join(filter) if filter else None,
+                clientKey=self.client_key,
+                exclusiveStartId=exclusive_start_id if cursor is None else None,
+                cursor=cursor,
+            )
+            response = await self._http_client.call(
+                url=self._build_url('requests'),
+                method='GET',
+                params=request_params,
+                timeout=timeout,
+            )
+            result = response_to_dict(response)
+            return ListOfRequestsResponse.model_validate(result).data
+
+        return build_cursor_iterable_list_page_async(
+            _callback,
+            cursor_param='cursor',
+            next_cursor_fn=_rq_next_cursor,
+            initial_cursor=cursor,
             limit=limit,
-            filter=','.join(filter) if filter else None,
-            clientKey=self.client_key,
-            exclusiveStartId=exclusive_start_id,
-            cursor=cursor,
+            chunk_size=chunk_size,
         )
-
-        response = await self._http_client.call(
-            url=self._build_url('requests'),
-            method='GET',
-            params=request_params,
-            timeout=timeout,
-        )
-
-        result = response_to_dict(response)
-        return ListOfRequestsResponse.model_validate(result).data
 
     async def unlock_requests(
         self: RequestQueueClientAsync,

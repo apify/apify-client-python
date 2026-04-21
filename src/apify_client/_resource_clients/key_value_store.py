@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 import re
+import warnings
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_cursor_iterable_list_page,
+    build_cursor_iterable_list_page_async,
+)
 from apify_client._models import (
     KeyValueStore,
     KeyValueStoreKey,
@@ -31,6 +38,13 @@ if TYPE_CHECKING:
     from apify_client._http_clients import HttpResponse
     from apify_client._models import GeneralAccess
     from apify_client._types import Timeout
+
+
+def _kvs_next_cursor(page: ListOfKeys) -> str | None:
+    """Return the next cursor for KVS key pagination, or `None` when there are no more pages."""
+    if not page.is_truncated:
+        return None
+    return page.next_exclusive_start_key
 
 
 def _parse_get_record_response(response: HttpResponse) -> Any:
@@ -144,9 +158,13 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfKeys:
+    ) -> IterableListPage[KeyValueStoreKey]:
         """List the keys in the key-value store.
+
+        The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
+        keys and transparently fetches further pages using cursor-based pagination.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
@@ -156,80 +174,85 @@ class KeyValueStoreClient(ResourceClient):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
+                when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._build_params(
+
+        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
+            request_params = self._build_params(
+                limit=limit,
+                exclusiveStartKey=exclusive_start_key,
+                collection=collection,
+                prefix=prefix,
+                signature=signature,
+            )
+            response = self._http_client.call(
+                url=self._build_url('keys'),
+                method='GET',
+                params=request_params,
+                timeout=timeout,
+            )
+            result = response_to_dict(response)
+            return ListOfKeysResponse.model_validate(result).data
+
+        return build_cursor_iterable_list_page(
+            _callback,
+            cursor_param='exclusive_start_key',
+            next_cursor_fn=_kvs_next_cursor,
+            initial_cursor=exclusive_start_key,
             limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-            collection=collection,
-            prefix=prefix,
-            signature=signature,
+            chunk_size=chunk_size,
         )
-
-        response = self._http_client.call(
-            url=self._build_url('keys'),
-            method='GET',
-            params=request_params,
-            timeout=timeout,
-        )
-
-        result = response_to_dict(response)
-        return ListOfKeysResponse.model_validate(result).data
 
     def iterate_keys(
         self,
         *,
         limit: int | None = None,
+        exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
-        timeout: Timeout = 'long',
+        chunk_size: int | None = 1000,
+        timeout: Timeout = 'medium',
     ) -> Iterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
+
+        Deprecated: iterate the return value of `KeyValueStoreClient.list_keys()` instead.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Maximum number of keys to return. By default there is no limit.
+            limit: Number of keys to be returned. Maximum value is 1000.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
+                when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
             A key from the key-value store.
         """
-        cache_size = 1000
-        read_keys = 0
-        exclusive_start_key: str | None = None
-
-        while True:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_keys == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_keys)
-
-            current_keys_page = self.list_keys(
-                limit=effective_limit,
-                exclusive_start_key=exclusive_start_key,
-                collection=collection,
-                prefix=prefix,
-                signature=signature,
-                timeout=timeout,
-            )
-
-            yield from current_keys_page.items
-
-            read_keys += len(current_keys_page.items)
-
-            if not current_keys_page.is_truncated:
-                break
-
-            exclusive_start_key = current_keys_page.next_exclusive_start_key
+        warnings.warn(
+            '`KeyValueStoreClient.iterate_keys()` is deprecated, iterate the return value of '
+            '`KeyValueStoreClient.list_keys()` instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        yield from self.list_keys(
+            limit=limit,
+            exclusive_start_key=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+            signature=signature,
+            chunk_size=chunk_size,
+            timeout=timeout,
+        )
 
     def get_record(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -566,7 +589,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def list_keys(
+    def list_keys(
         self,
         *,
         limit: int | None = None,
@@ -574,9 +597,13 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfKeys:
+    ) -> IterableListPageAsync[KeyValueStoreKey]:
         """List the keys in the key-value store.
+
+        The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
+        keys and transparently fetches further pages using cursor-based pagination.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
@@ -586,81 +613,86 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
+                when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._build_params(
+
+        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
+            request_params = self._build_params(
+                limit=limit,
+                exclusiveStartKey=exclusive_start_key,
+                collection=collection,
+                prefix=prefix,
+                signature=signature,
+            )
+            response = await self._http_client.call(
+                url=self._build_url('keys'),
+                method='GET',
+                params=request_params,
+                timeout=timeout,
+            )
+            result = response_to_dict(response)
+            return ListOfKeysResponse.model_validate(result).data
+
+        return build_cursor_iterable_list_page_async(
+            _callback,
+            cursor_param='exclusive_start_key',
+            next_cursor_fn=_kvs_next_cursor,
+            initial_cursor=exclusive_start_key,
             limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-            collection=collection,
-            prefix=prefix,
-            signature=signature,
+            chunk_size=chunk_size,
         )
-
-        response = await self._http_client.call(
-            url=self._build_url('keys'),
-            method='GET',
-            params=request_params,
-            timeout=timeout,
-        )
-
-        result = response_to_dict(response)
-        return ListOfKeysResponse.model_validate(result).data
 
     async def iterate_keys(
         self,
         *,
         limit: int | None = None,
+        exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
-        timeout: Timeout = 'long',
+        chunk_size: int | None = 1000,
+        timeout: Timeout = 'medium',
     ) -> AsyncIterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
+
+        Deprecated: iterate the return value of `KeyValueStoreClientAsync.list_keys()` instead.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Maximum number of keys to return. By default there is no limit.
+            limit: Number of keys to be returned. Maximum value is 1000.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
+                when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
             A key from the key-value store.
         """
-        cache_size = 1000
-        read_keys = 0
-        exclusive_start_key: str | None = None
-
-        while True:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_keys == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_keys)
-
-            current_keys_page = await self.list_keys(
-                limit=effective_limit,
-                exclusive_start_key=exclusive_start_key,
-                collection=collection,
-                prefix=prefix,
-                signature=signature,
-                timeout=timeout,
-            )
-
-            for key in current_keys_page.items:
-                yield key
-
-            read_keys += len(current_keys_page.items)
-
-            if not current_keys_page.is_truncated:
-                break
-
-            exclusive_start_key = current_keys_page.next_exclusive_start_key
+        warnings.warn(
+            '`KeyValueStoreClientAsync.iterate_keys()` is deprecated, iterate the return value of '
+            '`KeyValueStoreClientAsync.list_keys()` instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        async for key in self.list_keys(
+            limit=limit,
+            exclusive_start_key=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+            signature=signature,
+            chunk_size=chunk_size,
+            timeout=timeout,
+        ):
+            yield key
 
     async def get_record(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.

@@ -3,6 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._iterable_list_page import (
+    IterableListPage,
+    IterableListPageAsync,
+    build_iterable_list_page,
+    build_iterable_list_page_async,
+)
 from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -29,8 +35,11 @@ class ActorEnvVarCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListOfEnvVars:
+    def list(self, *, timeout: Timeout = 'short') -> IterableListPage[EnvVar]:
         """List the available Actor environment variables.
+
+        The returned page also supports iteration: `for item in client.list()` yields individual environment
+        variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
 
@@ -40,8 +49,12 @@ class ActorEnvVarCollectionClient(ResourceClient):
         Returns:
             The list of available Actor environment variables.
         """
-        result = self._list(timeout=timeout)
-        return ListOfEnvVarsResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> ListOfEnvVars:
+            result = self._list(timeout=timeout, **kwargs)
+            return ListOfEnvVarsResponse.model_validate(result).data
+
+        return build_iterable_list_page(_callback)
 
     def create(
         self,
@@ -90,8 +103,11 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self, *, timeout: Timeout = 'short') -> ListOfEnvVars:
+    def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[EnvVar]:
         """List the available Actor environment variables.
+
+        The returned page also supports iteration: `for item in client.list()` yields individual environment
+        variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
 
@@ -101,8 +117,12 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actor environment variables.
         """
-        result = await self._list(timeout=timeout)
-        return ListOfEnvVarsResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> ListOfEnvVars:
+            result = await self._list(timeout=timeout, **kwargs)
+            return ListOfEnvVarsResponse.model_validate(result).data
+
+        return build_iterable_list_page_async(_callback)
 
     async def create(
         self,

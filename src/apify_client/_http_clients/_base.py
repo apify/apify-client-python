@@ -204,8 +204,7 @@ class HttpClientBase:
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
-        if not headers:
-            headers = {}
+        headers = dict(headers) if headers else {}
 
         # Dump JSON data to string so it can be gzipped.
         if json is not None:

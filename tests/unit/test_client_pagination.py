@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import warnings
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from unittest import mock
 from unittest.mock import Mock
@@ -467,10 +468,10 @@ def _mocked_api_cursor_pagination_logic(*, url: str, params: dict[str, Any] | No
     limit = int(limit_raw) if limit_raw not in (None, '') else 0
     assert limit >= 0, 'Invalid limit sent to API'
 
-    if 'exclusiveStartKey' in params or 'exclusiveStartId' in params:
-        cursor_raw = params.get('exclusiveStartKey') or params.get('exclusiveStartId')
-    else:
-        cursor_raw = None
+    # KVS uses `exclusiveStartKey`; RQ accepts either the deprecated `exclusiveStartId` (initial
+    # call only) or the new opaque `cursor` (subsequent calls use this). Both cursor values encode
+    # the last-seen item id as a string.
+    cursor_raw = params.get('exclusiveStartKey') or params.get('exclusiveStartId') or params.get('cursor')
 
     start = int(cursor_raw) + 1 if cursor_raw not in (None, '') else 0
     end = total_items
@@ -496,11 +497,15 @@ def _mocked_api_cursor_pagination_logic(*, url: str, params: dict[str, Any] | No
             }
         }
     else:
+        has_more = page_end < total_items and bool(selected_items)
+        next_cursor = str(selected_items[-1]['id']) if has_more else None
         response.json = lambda: {
             'data': {
                 'items': selected_items,
                 'count': len(selected_items),
                 'limit': limit or (len(selected_items) or 1),
+                'nextCursor': next_cursor,
+                'next_cursor': next_cursor,
             }
         }
 
@@ -538,15 +543,21 @@ _RQ_TEST_CASES = (
     _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), {'RequestQueueClient'}),
     _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), {'RequestQueueClient'}),
     _PaginationCase(
-        'Exclusive start id',
-        {'exclusive_start_id': '1000'},
+        'Cursor',
+        {'cursor': '1000'},
         create_items(1001, 2500),
         {'RequestQueueClient'},
     ),
     _PaginationCase(
-        'Exclusive start id and limit',
-        {'exclusive_start_id': '1000', 'limit': 500},
+        'Cursor and limit',
+        {'cursor': '1000', 'limit': 500},
         create_items(1001, 1501),
+        {'RequestQueueClient'},
+    ),
+    _PaginationCase(
+        'Exclusive start id (deprecated)',
+        {'exclusive_start_id': '1000'},
+        create_items(1001, 2500),
         {'RequestQueueClient'},
     ),
     _PaginationCase(
@@ -641,7 +652,16 @@ def test_rq_list_requests_iterable(
 ) -> None:
     """The sync RQ client's `list_requests()` return value should iterate across cursor-paginated pages."""
     with mock.patch.object(client._http_client, 'call', side_effect=_mocked_api_cursor_pagination_logic):
-        returned_items = [dict(item) for item in client.list_requests(**inputs)]
+        # `exclusive_start_id` is deprecated but still supported as the initial cursor; swallow its warning.
+        warning_filter = (
+            pytest.warns(DeprecationWarning, match='exclusive_start_id.*deprecated')
+            if 'exclusive_start_id' in inputs
+            else warnings.catch_warnings()
+        )
+        with warning_filter:
+            if 'exclusive_start_id' not in inputs:
+                warnings.simplefilter('error', DeprecationWarning)
+            returned_items = [dict(item) for item in client.list_requests(**inputs)]
 
         assert returned_items == expected_items
 
@@ -661,6 +681,28 @@ async def test_rq_list_requests_iterable_async(
         return _mocked_api_cursor_pagination_logic(**kwargs)
 
     with mock.patch.object(client._http_client, 'call', side_effect=async_side_effect):
-        returned_items = [dict(item) async for item in client.list_requests(**inputs)]
+        warning_filter = (
+            pytest.warns(DeprecationWarning, match='exclusive_start_id.*deprecated')
+            if 'exclusive_start_id' in inputs
+            else warnings.catch_warnings()
+        )
+        with warning_filter:
+            if 'exclusive_start_id' not in inputs:
+                warnings.simplefilter('error', DeprecationWarning)
+            returned_items = [dict(item) async for item in client.list_requests(**inputs)]
 
         assert returned_items == expected_items
+
+
+def test_rq_list_requests_rejects_cursor_and_exclusive_start_id() -> None:
+    """Passing both `cursor` and `exclusive_start_id` is mutually exclusive and must error."""
+    client = ApifyClient(token='').request_queue(ID_PLACEHOLDER)
+    with pytest.raises(ValueError, match='Cannot use both'):
+        client.list_requests(cursor='a', exclusive_start_id='b')
+
+
+async def test_rq_list_requests_rejects_cursor_and_exclusive_start_id_async() -> None:
+    """Async variant of the mutual-exclusion check."""
+    client = ApifyClientAsync(token='').request_queue(ID_PLACEHOLDER)
+    with pytest.raises(ValueError, match='Cannot use both'):
+        client.list_requests(cursor='a', exclusive_start_id='b')

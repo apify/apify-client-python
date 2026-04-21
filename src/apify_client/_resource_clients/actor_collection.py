@@ -28,6 +28,11 @@ if TYPE_CHECKING:
     from apify_client._models import ActorShort
     from apify_client._types import Timeout
 
+_SORT_BY_TO_API: dict[str, str] = {
+    'created_at': 'createdAt',
+    'last_run_started_at': 'stats.lastRunStartedAt',
+}
+
 
 @docs_group('Resource clients')
 class ActorCollectionClient(ResourceClient):
@@ -55,7 +60,7 @@ class ActorCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
     ) -> IterableListPage[ActorShort]:
         """List the Actors the user has created or used.
@@ -76,9 +81,10 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
+        api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
         def _callback(**kwargs: Any) -> ListOfActors:
-            result = self._list(timeout=timeout, my=my, sortBy=sort_by, **kwargs)
+            result = self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
             return ListOfActorsResponse.model_validate(result).data
 
         return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
@@ -207,7 +213,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
     ) -> IterableListPageAsync[ActorShort]:
         """List the Actors the user has created or used.
@@ -228,9 +234,10 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
+        api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
         async def _callback(**kwargs: Any) -> ListOfActors:
-            result = await self._list(timeout=timeout, my=my, sortBy=sort_by, **kwargs)
+            result = await self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
             return ListOfActorsResponse.model_validate(result).data
 
         return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)

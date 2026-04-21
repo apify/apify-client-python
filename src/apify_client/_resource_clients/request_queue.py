@@ -5,7 +5,7 @@ import math
 import warnings
 from collections.abc import Iterable
 from queue import Queue
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from more_itertools import constrained_batches
 
@@ -57,14 +57,8 @@ _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
 def _rq_next_cursor(page: ListOfRequests) -> str | None:
-    """Return the id of the last request on the page to use as the next `exclusive_start_id`.
-
-    The RQ list endpoint does not indicate whether there are more requests left, so the only stop
-    signal is an empty page — handled by the iteration helper's `current_page.items` guard.
-    """
-    if not page.items:
-        return None
-    return page.items[-1].id
+    """Return the opaque `next_cursor` from the page, or `None` when there are no more pages."""
+    return page.next_cursor
 
 
 @docs_group('Resource clients')
@@ -512,6 +506,8 @@ class RequestQueueClient(ResourceClient):
         self,
         *,
         limit: int | None = None,
+        filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
+        cursor: str | None = None,
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
@@ -519,24 +515,40 @@ class RequestQueueClient(ResourceClient):
         """List requests in the queue.
 
         The returned page also supports iteration: `for request in client.list_requests(...)` yields
-        individual requests and transparently fetches further pages using cursor-based pagination
-        on each request's `id`.
+        individual requests and transparently fetches further pages using the opaque `cursor`
+        returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: All requests up to this one (including) are skipped from the result.
+            filter: List of request states to use as a filter. Multiple values mean union of the given filters.
+            cursor: A token returned in a previous API response, to continue listing the next page of requests.
+            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
+                Only applied to the first page fetched; subsequent pages during iteration use `cursor`.
             chunk_size: Maximum number of requests requested per API call when iterating. Only
                 relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
         """
+        if exclusive_start_id and cursor:
+            raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')
 
-        def _callback(*, limit: int | None = None, exclusive_start_id: str | None = None) -> ListOfRequests:
+        if exclusive_start_id is not None:
+            warnings.warn(
+                '`exclusive_start_id` is deprecated for paginating requests. Use pagination using `cursor` instead.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+            # `exclusive_start_id` is honored only on the first page (when no cursor has been
+            # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
                 limit=limit,
-                exclusiveStartId=exclusive_start_id,
+                filter=','.join(filter) if filter else None,
                 clientKey=self.client_key,
+                exclusiveStartId=exclusive_start_id if cursor is None else None,
+                cursor=cursor,
             )
             response = self._http_client.call(
                 url=self._build_url('requests'),
@@ -549,9 +561,9 @@ class RequestQueueClient(ResourceClient):
 
         return build_cursor_iterable_list_page(
             _callback,
-            cursor_param='exclusive_start_id',
+            cursor_param='cursor',
             next_cursor_fn=_rq_next_cursor,
-            initial_cursor=exclusive_start_id,
+            initial_cursor=cursor,
             limit=limit,
             chunk_size=chunk_size,
         )
@@ -1070,6 +1082,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         *,
         limit: int | None = None,
+        filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
+        cursor: str | None = None,
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
@@ -1077,24 +1091,40 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """List requests in the queue.
 
         The returned page also supports iteration: `for request in client.list_requests(...)` yields
-        individual requests and transparently fetches further pages using cursor-based pagination
-        on each request's `id`.
+        individual requests and transparently fetches further pages using the opaque `cursor`
+        returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: All requests up to this one (including) are skipped from the result.
+            filter: List of request states to use as a filter. Multiple values mean union of the given filters.
+            cursor: A token returned in a previous API response, to continue listing the next page of requests.
+            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
+                Only applied to the first page fetched; subsequent pages during iteration use `cursor`.
             chunk_size: Maximum number of requests requested per API call when iterating. Only
                 relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
         """
+        if exclusive_start_id and cursor:
+            raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')
 
-        async def _callback(*, limit: int | None = None, exclusive_start_id: str | None = None) -> ListOfRequests:
+        if exclusive_start_id is not None:
+            warnings.warn(
+                '`exclusive_start_id` is deprecated for paginating requests. Use pagination using `cursor` instead.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+            # `exclusive_start_id` is honored only on the first page (when no cursor has been
+            # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
                 limit=limit,
-                exclusiveStartId=exclusive_start_id,
+                filter=','.join(filter) if filter else None,
                 clientKey=self.client_key,
+                exclusiveStartId=exclusive_start_id if cursor is None else None,
+                cursor=cursor,
             )
             response = await self._http_client.call(
                 url=self._build_url('requests'),
@@ -1107,9 +1137,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         return build_cursor_iterable_list_page_async(
             _callback,
-            cursor_param='exclusive_start_id',
+            cursor_param='cursor',
             next_cursor_fn=_rq_next_cursor,
-            initial_cursor=exclusive_start_id,
+            initial_cursor=cursor,
             limit=limit,
             chunk_size=chunk_size,
         )

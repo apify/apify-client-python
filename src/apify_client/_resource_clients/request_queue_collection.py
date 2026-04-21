@@ -14,12 +14,13 @@ from apify_client._models import (
     ListOfRequestQueuesResponse,
     RequestQueue,
     RequestQueueResponse,
+    StorageOwnership,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
     from apify_client._models import RequestQueueShort
-    from apify_client._types import StorageOwnership, Timeout
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

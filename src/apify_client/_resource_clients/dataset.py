@@ -268,13 +268,16 @@ class DatasetClient(ResourceClient):
         """
         cache_size = 1000
 
-        should_finish = False
         read_items = 0
+        # Server-side filters (skip_empty, skip_hidden, clean) drop items after the [offset, offset+limit)
+        # window is scanned, so a short page does not imply the dataset is exhausted. Track the scanned
+        # window explicitly and stop only when the server returns no items at all.
+        scanned_items = 0
 
         # We can't rely on DatasetItemsPage.total because that is updated with a delay,
         # so if you try to read the dataset items right after a run finishes, you could miss some.
         # Instead, we just read and read until we reach the limit, or until there are no more items to read.
-        while not should_finish:
+        while True:
             effective_limit = cache_size
             if limit is not None:
                 if read_items == limit:
@@ -282,7 +285,7 @@ class DatasetClient(ResourceClient):
                 effective_limit = min(cache_size, limit - read_items)
 
             current_items_page = self.list_items(
-                offset=offset + read_items,
+                offset=offset + scanned_items,
                 limit=effective_limit,
                 clean=clean,
                 desc=desc,
@@ -298,10 +301,11 @@ class DatasetClient(ResourceClient):
             yield from current_items_page.items
 
             current_page_item_count = len(current_items_page.items)
-            read_items += current_page_item_count
+            if current_page_item_count == 0:
+                break
 
-            if current_page_item_count < cache_size:
-                should_finish = True
+            read_items += current_page_item_count
+            scanned_items += effective_limit
 
     def download_items(
         self,
@@ -945,13 +949,16 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         cache_size = 1000
 
-        should_finish = False
         read_items = 0
+        # Server-side filters (skip_empty, skip_hidden, clean) drop items after the [offset, offset+limit)
+        # window is scanned, so a short page does not imply the dataset is exhausted. Track the scanned
+        # window explicitly and stop only when the server returns no items at all.
+        scanned_items = 0
 
         # We can't rely on DatasetItemsPage.total because that is updated with a delay,
         # so if you try to read the dataset items right after a run finishes, you could miss some.
         # Instead, we just read and read until we reach the limit, or until there are no more items to read.
-        while not should_finish:
+        while True:
             effective_limit = cache_size
             if limit is not None:
                 if read_items == limit:
@@ -959,7 +966,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 effective_limit = min(cache_size, limit - read_items)
 
             current_items_page = await self.list_items(
-                offset=offset + read_items,
+                offset=offset + scanned_items,
                 limit=effective_limit,
                 clean=clean,
                 desc=desc,
@@ -976,10 +983,11 @@ class DatasetClientAsync(ResourceClientAsync):
                 yield item
 
             current_page_item_count = len(current_items_page.items)
-            read_items += current_page_item_count
+            if current_page_item_count == 0:
+                break
 
-            if current_page_item_count < cache_size:
-                should_finish = True
+            read_items += current_page_item_count
+            scanned_items += effective_limit
 
     async def get_items_as_bytes(
         self,

@@ -4,7 +4,7 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
-from werkzeug import Response
+from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 
@@ -87,3 +87,59 @@ async def test_list_items_desc_true_async(httpserver: HTTPServer, desc_header_va
     result = await client.dataset(DATASET_ID).list_items()
 
     assert result.desc is True
+
+
+def _make_filtered_pagination_handler(*, dataset_size: int) -> Callable:
+    """Simulate an API that scans `[offset, offset+limit)` then post-filters out odd-indexed items.
+
+    Each returned page therefore contains ~half of the scanned window — a situation that
+    only `skip_empty`, `skip_hidden`, or `clean=True` can produce server-side.
+    """
+
+    def handler(request: Request) -> Response:
+        offset = int(request.args.get('offset', '0'))
+        limit = int(request.args.get('limit', '1000'))
+        scanned_end = min(offset + limit, dataset_size)
+        items = [{'i': i} for i in range(offset, scanned_end) if i % 2 == 0]
+        return Response(
+            status=200,
+            headers={
+                'x-apify-pagination-total': str(dataset_size),
+                'x-apify-pagination-offset': str(offset),
+                'x-apify-pagination-count': str(len(items)),
+                'x-apify-pagination-limit': str(limit),
+                'x-apify-pagination-desc': 'false',
+                'content-type': 'application/json',
+            },
+            response=json.dumps(items),
+        )
+
+    return handler
+
+
+def test_iterate_items_with_filter_does_not_terminate_early_sync(httpserver: HTTPServer) -> None:
+    dataset_size = 2500
+    httpserver.expect_request(ITEMS_PATH).respond_with_handler(
+        _make_filtered_pagination_handler(dataset_size=dataset_size),
+    )
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    client = ApifyClient(token='test-token', api_url=api_url)
+    items = list(client.dataset(DATASET_ID).iterate_items(skip_empty=True))
+
+    expected = [{'i': i} for i in range(dataset_size) if i % 2 == 0]
+    assert items == expected
+
+
+async def test_iterate_items_with_filter_does_not_terminate_early_async(httpserver: HTTPServer) -> None:
+    dataset_size = 2500
+    httpserver.expect_request(ITEMS_PATH).respond_with_handler(
+        _make_filtered_pagination_handler(dataset_size=dataset_size),
+    )
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    client = ApifyClientAsync(token='test-token', api_url=api_url)
+    items = [item async for item in client.dataset(DATASET_ID).iterate_items(skip_empty=True)]
+
+    expected = [{'i': i} for i in range(dataset_size) if i % 2 == 0]
+    assert items == expected

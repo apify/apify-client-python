@@ -77,12 +77,7 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync, *, is_
         # Add requests and check if correct number of requests was locked
         for i in range(15):
             await maybe_await(
-                rq.add_request(
-                    cast(
-                        'RequestInputDict',
-                        {'url': f'http://test-lock.com/{i}', 'unique_key': f'http://test-lock.com/{i}'},
-                    )
-                )
+                rq.add_request({'url': f'http://test-lock.com/{i}', 'unique_key': f'http://test-lock.com/{i}'})
             )
 
         # Poll until all requests are available for locking (eventual consistency)
@@ -227,9 +222,7 @@ async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync, *
         # Add multiple requests
         for i in range(5):
             await maybe_await(
-                rq_client.add_request(
-                    cast('RequestInputDict', {'url': f'https://example.com/page-{i}', 'unique_key': f'page-{i}'})
-                )
+                rq_client.add_request({'url': f'https://example.com/page-{i}', 'unique_key': f'page-{i}'})
             )
 
         # Poll until requests are available (eventual consistency)
@@ -259,9 +252,7 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
         # Add multiple requests
         for i in range(5):
             await maybe_await(
-                rq_client.add_request(
-                    cast('RequestInputDict', {'url': f'https://example.com/item-{i}', 'unique_key': f'item-{i}'})
-                )
+                rq_client.add_request({'url': f'https://example.com/item-{i}', 'unique_key': f'item-{i}'})
             )
 
         # Poll until all requests are available (eventual consistency)
@@ -290,9 +281,7 @@ async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsy
     try:
         # Add a request
         result = await maybe_await(
-            rq_client.add_request(
-                cast('RequestInputDict', {'url': 'https://example.com/to-delete', 'unique_key': 'delete-me'})
-            )
+            rq_client.add_request({'url': 'https://example.com/to-delete', 'unique_key': 'delete-me'})
         )
         add_result = cast('RequestRegistration', result)
 
@@ -362,9 +351,7 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
         # Add requests
         for i in range(10):
             await maybe_await(
-                rq_client.add_request(
-                    cast('RequestInputDict', {'url': f'https://example.com/delete-{i}', 'unique_key': f'delete-{i}'})
-                )
+                rq_client.add_request({'url': f'https://example.com/delete-{i}', 'unique_key': f'delete-{i}'})
             )
 
         # Poll until all requests are available (eventual consistency)
@@ -431,9 +418,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
         # Add multiple requests
         for i in range(5):
             await maybe_await(
-                rq_client.add_request(
-                    cast('RequestInputDict', {'url': f'https://example.com/lock-{i}', 'unique_key': f'lock-{i}'})
-                )
+                rq_client.add_request({'url': f'https://example.com/lock-{i}', 'unique_key': f'lock-{i}'})
             )
 
         # Poll until requests are available for locking (eventual consistency)
@@ -466,11 +451,7 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
 
     try:
         # Add a request
-        await maybe_await(
-            rq_client.add_request(
-                cast('RequestInputDict', {'url': 'https://example.com/prolong', 'unique_key': 'prolong-test'})
-            )
-        )
+        await maybe_await(rq_client.add_request({'url': 'https://example.com/prolong', 'unique_key': 'prolong-test'}))
 
         # Poll until the request is available for locking (eventual consistency)
         lock_response: LockedRequestQueueHead | None = None
@@ -508,11 +489,7 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
 
     try:
         # Add a request
-        await maybe_await(
-            rq_client.add_request(
-                cast('RequestInputDict', {'url': 'https://example.com/unlock', 'unique_key': 'unlock-test'})
-            )
-        )
+        await maybe_await(rq_client.add_request({'url': 'https://example.com/unlock', 'unique_key': 'unlock-test'}))
 
         # Poll until the request is available for locking (eventual consistency)
         lock_response: LockedRequestQueueHead | None = None
@@ -550,9 +527,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
         # Add multiple requests
         for i in range(5):
             await maybe_await(
-                rq_client.add_request(
-                    cast('RequestInputDict', {'url': f'https://example.com/unlock-{i}', 'unique_key': f'unlock-{i}'})
-                )
+                rq_client.add_request({'url': f'https://example.com/unlock-{i}', 'unique_key': f'unlock-{i}'})
             )
 
         # Poll until requests are available for locking (eventual consistency)

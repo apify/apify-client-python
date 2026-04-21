@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from base64 import b64encode
 from datetime import timedelta
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel, model_validator
 
@@ -16,9 +16,10 @@ Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 A `timedelta` overrides the timeout for this call, and `'no_timeout'` disables the timeout entirely.
 """
 
-JsonSerializable = str | int | float | bool | None | dict[str, Any] | list[Any]
-"""Type for representing json-serializable values. It's close enough to the real thing supported by json.parse.
-It was suggested in a discussion with (and approved by) Guido van Rossum, so I'd consider it correct enough.
+JsonSerializable = dict[str, 'JsonSerializable'] | list['JsonSerializable'] | str | int | float | bool | None
+"""Recursive type for JSON-serializable values - primitives plus objects and arrays with JSON-serializable contents.
+
+Based on the definition discussed in https://github.com/python/typing/issues/182.
 """
 
 

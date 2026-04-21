@@ -7,7 +7,16 @@ import pytest
 from werkzeug import Response
 
 from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
-from apify_client.errors import ApifyApiError, ForbiddenError, NotFoundError, ServerError
+from apify_client.errors import (
+    ApifyApiError,
+    ConflictError,
+    ForbiddenError,
+    InvalidRequestError,
+    NotFoundError,
+    RateLimitError,
+    ServerError,
+    UnauthorizedError,
+)
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -161,6 +170,35 @@ def test_apify_api_error_falls_back_for_unmapped_status(httpserver: HTTPServer) 
     assert type(exc.value) is ApifyApiError
     assert exc.value.status_code == 418
     assert exc.value.type == 'whatever'
+
+
+@pytest.mark.parametrize(
+    ('status_code', 'expected_cls'),
+    [
+        pytest.param(400, InvalidRequestError, id='400 → InvalidRequestError'),
+        pytest.param(401, UnauthorizedError, id='401 → UnauthorizedError'),
+        pytest.param(403, ForbiddenError, id='403 → ForbiddenError'),
+        pytest.param(404, NotFoundError, id='404 → NotFoundError'),
+        pytest.param(409, ConflictError, id='409 → ConflictError'),
+        pytest.param(429, RateLimitError, id='429 → RateLimitError'),
+    ],
+)
+def test_apify_api_error_dispatches_all_mapped_statuses(
+    httpserver: HTTPServer, status_code: int, expected_cls: type[ApifyApiError]
+) -> None:
+    """Every status in `_STATUS_TO_CLASS` dispatches to its matching subclass."""
+    httpserver.expect_request('/dispatch_all').respond_with_json(
+        {'error': {'type': 'some-type', 'message': 'msg'}}, status=status_code
+    )
+    # Use max_retries=1 so retryable statuses (429) don't loop during the test.
+    client = ImpitHttpClient(max_retries=1)
+
+    with pytest.raises(expected_cls) as exc:
+        client.call(method='GET', url=str(httpserver.url_for('/dispatch_all')))
+
+    assert type(exc.value) is expected_cls
+    assert isinstance(exc.value, ApifyApiError)
+    assert exc.value.status_code == status_code
 
 
 def test_apify_api_error_falls_back_for_unparsable_body(httpserver: HTTPServer) -> None:

@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Guard integration test resource names against 63-char API limit ([#729](https://github.com/apify/apify-client-python/pull/729)) ([47a7a69](https://github.com/apify/apify-client-python/commit/47a7a6967e28c7042fa8e75cd4c138356495fa2c)) by [@vdusek](https://github.com/vdusek)
+- Prevent `_prepare_request_call` from mutating caller&#x27;s headers dict ([#746](https://github.com/apify/apify-client-python/pull/746)) ([d553162](https://github.com/apify/apify-client-python/commit/d5531621535f5a491be5b5791ea4b80e46de1405)) by [@vdusek](https://github.com/vdusek)
 
 ### 🚜 Refactor
 

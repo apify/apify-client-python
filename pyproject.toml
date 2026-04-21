@@ -158,9 +158,6 @@ indent-style = "space"
     "ERA001", # Commented-out code
     "TC003",  # Move standard library import into a type-checking block
 ]
-"src/apify_client/_generated_errors.py" = [
-    "E501",  # Line too long (long error-type keys pushing dict entries over the limit)
-]
 
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"

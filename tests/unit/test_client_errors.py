@@ -7,7 +7,7 @@ import pytest
 from werkzeug import Response
 
 from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
-from apify_client.errors import ApifyApiError, InsufficientPermissionsError, RecordNotFoundError
+from apify_client.errors import ApifyApiError, ForbiddenError, NotFoundError, ServerError
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -105,50 +105,67 @@ async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> 
     assert exc.value.type == error['error']['type']
 
 
-def test_apify_api_error_dispatches_to_subclass_for_known_type(httpserver: HTTPServer) -> None:
-    """Known error types (from the OpenAPI spec) dispatch to their matching subclass."""
+def test_apify_api_error_dispatches_to_subclass_for_known_status(httpserver: HTTPServer) -> None:
+    """Mapped HTTP status codes dispatch to their matching subclass."""
     httpserver.expect_request('/dispatch').respond_with_json(
         {'error': {'type': 'record-not-found', 'message': 'nope'}}, status=404
     )
     client = ImpitHttpClient()
 
-    with pytest.raises(RecordNotFoundError) as exc:
+    with pytest.raises(NotFoundError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/dispatch')))
 
     # Still an ApifyApiError, so legacy `except` handlers keep working.
     assert isinstance(exc.value, ApifyApiError)
+    assert exc.value.status_code == 404
     assert exc.value.type == 'record-not-found'
 
 
 def test_apify_api_error_dispatches_streamed_response(httpserver: HTTPServer) -> None:
-    """Dispatch works even when the response body comes in as a stream (insufficient-permissions)."""
+    """Dispatch works even when the response body comes in as a stream (403 → ForbiddenError)."""
     httpserver.expect_request('/stream_dispatch').respond_with_handler(streaming_handler)
     client = ImpitHttpClient()
 
-    with pytest.raises(InsufficientPermissionsError) as exc:
+    with pytest.raises(ForbiddenError) as exc:
         client.call(method='GET', url=httpserver.url_for('/stream_dispatch'), stream=True)
 
     assert isinstance(exc.value, ApifyApiError)
+    assert exc.value.status_code == 403
     assert exc.value.type == 'insufficient-permissions'
 
 
-def test_apify_api_error_falls_back_for_unknown_type(httpserver: HTTPServer) -> None:
-    """Unknown error types fall back to the base ApifyApiError class."""
-    httpserver.expect_request('/unknown').respond_with_json(
-        {'error': {'type': 'totally-made-up', 'message': 'nope'}}, status=400
+def test_apify_api_error_dispatches_5xx_to_server_error(httpserver: HTTPServer) -> None:
+    """Any 5xx status falls under the ServerError subclass."""
+    httpserver.expect_request('/server_error').respond_with_json(
+        {'error': {'type': 'internal-error', 'message': 'boom'}}, status=503
+    )
+    client = ImpitHttpClient(max_retries=1)
+
+    with pytest.raises(ServerError) as exc:
+        client.call(method='GET', url=str(httpserver.url_for('/server_error')))
+
+    assert isinstance(exc.value, ApifyApiError)
+    assert exc.value.status_code == 503
+
+
+def test_apify_api_error_falls_back_for_unmapped_status(httpserver: HTTPServer) -> None:
+    """Statuses without a dedicated subclass fall back to the base ApifyApiError."""
+    httpserver.expect_request('/unmapped').respond_with_json(
+        {'error': {'type': 'whatever', 'message': 'nope'}}, status=418
     )
     client = ImpitHttpClient()
 
     with pytest.raises(ApifyApiError) as exc:
-        client.call(method='GET', url=str(httpserver.url_for('/unknown')))
+        client.call(method='GET', url=str(httpserver.url_for('/unmapped')))
 
     assert type(exc.value) is ApifyApiError
-    assert exc.value.type == 'totally-made-up'
+    assert exc.value.status_code == 418
+    assert exc.value.type == 'whatever'
 
 
 def test_apify_api_error_falls_back_for_unparsable_body(httpserver: HTTPServer) -> None:
-    """When the body can't be parsed, dispatch falls back to ApifyApiError without raising."""
-    httpserver.expect_request('/unparsable').respond_with_data('<not json>', status=500, content_type='text/html')
+    """When the body can't be parsed, status-based dispatch still applies and `.type` is None."""
+    httpserver.expect_request('/unparsable').respond_with_data('<not json>', status=418, content_type='text/html')
     client = ImpitHttpClient(max_retries=1)
 
     with pytest.raises(ApifyApiError) as exc:

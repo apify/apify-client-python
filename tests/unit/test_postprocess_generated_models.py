@@ -2,15 +2,10 @@ from __future__ import annotations
 
 import textwrap
 
-import pytest
-
 from scripts.postprocess_generated_models import (
     add_docs_group_decorators,
     deduplicate_error_type_enum,
-    derive_exception_class_names,
-    extract_error_type_members,
     fix_discriminators,
-    render_generated_errors_module,
 )
 
 # -- fix_discriminators -------------------------------------------------------
@@ -270,109 +265,3 @@ def test_full_pipeline() -> None:
 
     # Decorators added.
     assert "@docs_group('Models')" in result
-
-
-# -- extract_error_type_members -----------------------------------------------
-
-
-def test_extract_error_type_members_returns_name_value_pairs() -> None:
-    content = textwrap.dedent("""\
-        from enum import StrEnum
-
-        class ErrorType(StrEnum):
-            RECORD_NOT_FOUND = 'record-not-found'
-            ACTOR_NOT_FOUND = 'actor-not-found'
-    """)
-    members = extract_error_type_members(content)
-    assert members == [('RECORD_NOT_FOUND', 'record-not-found'), ('ACTOR_NOT_FOUND', 'actor-not-found')]
-
-
-def test_extract_error_type_members_ignores_other_classes() -> None:
-    content = textwrap.dedent("""\
-        from enum import StrEnum
-
-        class OtherEnum(StrEnum):
-            FOO = 'foo'
-
-        class ErrorType(StrEnum):
-            BAR = 'bar'
-    """)
-    assert extract_error_type_members(content) == [('BAR', 'bar')]
-
-
-def test_extract_error_type_members_returns_empty_when_missing() -> None:
-    content = 'from enum import StrEnum\n\nclass Foo(StrEnum):\n    A = "a"\n'
-    assert extract_error_type_members(content) == []
-
-
-# -- derive_exception_class_names ---------------------------------------------
-
-
-def test_derive_exception_class_names_strips_error_suffix() -> None:
-    members = [('BILLING_SYSTEM_ERROR', 'billing-system-error')]
-    assert derive_exception_class_names(members) == [
-        ('BILLING_SYSTEM_ERROR', 'billing-system-error', 'BillingSystemError'),
-    ]
-
-
-def test_derive_exception_class_names_appends_error_when_absent() -> None:
-    members = [('RECORD_NOT_FOUND', 'record-not-found')]
-    assert derive_exception_class_names(members) == [
-        ('RECORD_NOT_FOUND', 'record-not-found', 'RecordNotFoundError'),
-    ]
-
-
-def test_derive_exception_class_names_preserves_digit_parts() -> None:
-    members = [
-        ('FIELD_3D_SECURE_AUTH_FAILED', '3d-secure-auth-failed'),
-        ('X402_PAYMENT_REQUIRED', 'x402-payment-required'),
-    ]
-    result = derive_exception_class_names(members)
-    assert result[0][2] == 'Field3DSecureAuthFailedError'
-    assert result[1][2] == 'X402PaymentRequiredError'
-
-
-def test_derive_exception_class_names_resolves_stripping_collision() -> None:
-    # `SCHEMA_VALIDATION` comes first and claims `SchemaValidationError`.
-    # `SCHEMA_VALIDATION_ERROR` collides after stripping and falls back to the full-name variant.
-    members = [
-        ('SCHEMA_VALIDATION', 'schema-validation'),
-        ('SCHEMA_VALIDATION_ERROR', 'schema-validation-error'),
-    ]
-    result = derive_exception_class_names(members)
-    assert result == [
-        ('SCHEMA_VALIDATION', 'schema-validation', 'SchemaValidationError'),
-        ('SCHEMA_VALIDATION_ERROR', 'schema-validation-error', 'SchemaValidationErrorError'),
-    ]
-
-
-def test_derive_exception_class_names_raises_on_unresolvable_collision() -> None:
-    # Identical names must surface an error rather than silently dropping one.
-    members = [('FOO', 'foo'), ('FOO', 'foo-2')]
-    with pytest.raises(RuntimeError, match='Cannot derive a unique'):
-        derive_exception_class_names(members)
-
-
-# -- render_generated_errors_module -------------------------------------------
-
-
-def test_render_generated_errors_module_emits_classes_and_dispatch_map() -> None:
-    rendered = render_generated_errors_module(
-        [
-            ('RECORD_NOT_FOUND', 'record-not-found', 'RecordNotFoundError'),
-            ('ACTOR_NOT_FOUND', 'actor-not-found', 'ActorNotFoundError'),
-        ]
-    )
-    assert 'from apify_client.errors import ApifyApiError' in rendered
-    assert 'class RecordNotFoundError(ApifyApiError):' in rendered
-    assert 'class ActorNotFoundError(ApifyApiError):' in rendered
-    assert "'record-not-found': RecordNotFoundError," in rendered
-    assert "'actor-not-found': ActorNotFoundError," in rendered
-    assert "@docs_group('Errors')" in rendered
-    assert "'RecordNotFoundError'," in rendered  # __all__ entry
-
-
-def test_render_generated_errors_module_is_syntactically_valid() -> None:
-    rendered = render_generated_errors_module([('RECORD_NOT_FOUND', 'record-not-found', 'RecordNotFoundError')])
-    # Raises SyntaxError if the rendered source is malformed.
-    compile(rendered, '<generated>', 'exec')

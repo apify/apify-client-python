@@ -380,6 +380,24 @@ def test_prepare_request_call_with_params() -> None:
     assert params == {'limit': 10, 'flag': 'true'}
 
 
+def test_prepare_request_call_does_not_mutate_caller_headers() -> None:
+    """Test _prepare_request_call does not mutate the caller's headers dict.
+
+    A caller that reuses a shared headers dict across calls must not see stale
+    `Content-Type`/`Content-Encoding` headers leak in from a prior JSON/body call.
+    """
+    client = _ConcreteHttpClient()
+
+    caller_headers = {'x-trace-id': 'abc-123'}
+    original = dict(caller_headers)
+
+    client._prepare_request_call(headers=caller_headers, json={'x': 1})
+    assert caller_headers == original
+
+    client._prepare_request_call(headers=caller_headers, data='payload')
+    assert caller_headers == original
+
+
 def test_build_url_with_params_none() -> None:
     """Test _build_url_with_params with None params."""
     client = _ConcreteHttpClient()

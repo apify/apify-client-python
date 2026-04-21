@@ -22,8 +22,12 @@ from apify_client._resource_clients import (
     DatasetClientAsync,
     DatasetCollectionClient,
     DatasetCollectionClientAsync,
+    KeyValueStoreClient,
+    KeyValueStoreClientAsync,
     KeyValueStoreCollectionClient,
     KeyValueStoreCollectionClientAsync,
+    RequestQueueClient,
+    RequestQueueClientAsync,
     RequestQueueCollectionClient,
     RequestQueueCollectionClientAsync,
     RunCollectionClient,
@@ -96,19 +100,38 @@ _BYPASSED_RESPONSE_CLASSES = (
     'ListOfActorsInStoreResponse',
     'ListOfEnvVarsResponse',
     'ListOfVersionsResponse',
+    'ListOfKeysResponse',
+    'ListOfRequestsResponse',
 )
 
 
-@dataclasses.dataclass
+class _AttrDict(dict):
+    """A dict that also supports attribute access — enough for next_cursor_fn to call `item.id`."""
+
+    def __getattr__(self, name: str) -> Any:
+        try:
+            return self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+
 class _FakeListModel:
     """Stand-in for a paginated list model that mimics the fields the iteration logic accesses."""
 
-    items: list[dict[str, int]]
-    total: int = 0
-    count: int = 0
-    offset: int = 0
-    limit: int = 0
-    desc: bool = False
+    def __init__(self, **kwargs: Any) -> None:
+        # Sensible defaults for the pagination fields `IterableListPage` reads.
+        self.total = 0
+        self.count = 0
+        self.offset = 0
+        self.limit = 1
+        self.desc = False
+        self.items: list[Any] = []
+        self.is_truncated = False
+        self.next_exclusive_start_key: str | None = None
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        if 'count' not in kwargs:
+            self.count = len(self.items)
 
 
 @dataclasses.dataclass
@@ -129,17 +152,11 @@ def _bypass_response_validation() -> Any:
 
     def _build(_cls: type, obj: dict) -> _FakeResponseWrapper:
         data_dict = obj.get('data') or {}
-        items = data_dict.get('items', [])
-        return _FakeResponseWrapper(
-            data=_FakeListModel(
-                items=items,
-                total=data_dict.get('total', len(items)),
-                count=data_dict.get('count', len(items)),
-                offset=data_dict.get('offset', 0),
-                limit=data_dict.get('limit', 0),
-                desc=data_dict.get('desc', False),
-            )
-        )
+        raw_items = data_dict.get('items', [])
+        # Wrap dict items so cursor-based pagination can read `item.id` from the last item.
+        items = [_AttrDict(item) if isinstance(item, dict) else item for item in raw_items]
+        fields = {**data_dict, 'items': items}
+        return _FakeResponseWrapper(data=_FakeListModel(**fields))
 
     patchers = []
     for class_name in _BYPASSED_RESPONSE_CLASSES:
@@ -431,3 +448,219 @@ async def test_dataset_items_list_iterable_async(
         inputs_without_chunk_size = {k: v for k, v in inputs.items() if k != 'chunk_size'}
         with pytest.warns(DeprecationWarning, match='iterate_items.*is deprecated'):
             assert returned_items == [item async for item in client.iterate_items(**inputs_without_chunk_size)]
+
+
+def _mocked_api_cursor_pagination_logic(*, url: str, params: dict[str, Any] | None = None, **_: Any) -> Mock:
+    """Simulate the KVS keys and RQ requests endpoints, which paginate with a cursor.
+
+    Holds 2500 synthetic items with incrementing integer `id` equal to their position. Each page is
+    capped at 1000 items. The mock honors ``exclusive_start_key`` for KVS and ``exclusive_start_id``
+    for RQ — both are treated as the integer id of the previous page's last item; the next page
+    starts at that id + 1.
+    """
+    params = params or {}
+
+    total_items = 2500
+    max_items_per_page = 1000
+
+    limit_raw = params.get('limit')
+    limit = int(limit_raw) if limit_raw not in (None, '') else 0
+    assert limit >= 0, 'Invalid limit sent to API'
+
+    if 'exclusiveStartKey' in params or 'exclusiveStartId' in params:
+        cursor_raw = params.get('exclusiveStartKey') or params.get('exclusiveStartId')
+    else:
+        cursor_raw = None
+
+    start = int(cursor_raw) + 1 if cursor_raw not in (None, '') else 0
+    end = total_items
+    if limit:
+        end = min(start + limit, total_items)
+    page_end = min(end, start + max_items_per_page)
+    selected_items = [{'id': i, 'key': i} for i in range(start, page_end)]
+
+    response = Mock()
+    is_kvs = '/keys' in url
+    if is_kvs:
+        next_exclusive_start_key = str(selected_items[-1]['id']) if selected_items else None
+        is_truncated = page_end < total_items and bool(selected_items)
+        response.json = lambda: {
+            'data': {
+                'items': selected_items,
+                'count': len(selected_items),
+                'limit': limit or (len(selected_items) or 1),
+                'isTruncated': is_truncated,
+                'is_truncated': is_truncated,
+                'nextExclusiveStartKey': next_exclusive_start_key if is_truncated else None,
+                'next_exclusive_start_key': next_exclusive_start_key if is_truncated else None,
+            }
+        }
+    else:
+        response.json = lambda: {
+            'data': {
+                'items': selected_items,
+                'count': len(selected_items),
+                'limit': limit or (len(selected_items) or 1),
+            }
+        }
+
+    response.content = b''
+    response.headers = {}
+    return response
+
+
+_KVS_TEST_CASES = (
+    _PaginationCase('No options', {}, create_items(0, 2500), {'KeyValueStoreClient'}),
+    _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), {'KeyValueStoreClient'}),
+    _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), {'KeyValueStoreClient'}),
+    _PaginationCase(
+        'Exclusive start key',
+        {'exclusive_start_key': '1000'},
+        create_items(1001, 2500),
+        {'KeyValueStoreClient'},
+    ),
+    _PaginationCase(
+        'Exclusive start key and limit',
+        {'exclusive_start_key': '1000', 'limit': 500},
+        create_items(1001, 1501),
+        {'KeyValueStoreClient'},
+    ),
+    _PaginationCase(
+        'chunk_size',
+        {'chunk_size': 100, 'limit': 250},
+        create_items(0, 250),
+        {'KeyValueStoreClient'},
+    ),
+)
+
+_RQ_TEST_CASES = (
+    _PaginationCase('No options', {}, create_items(0, 2500), {'RequestQueueClient'}),
+    _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), {'RequestQueueClient'}),
+    _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), {'RequestQueueClient'}),
+    _PaginationCase(
+        'Exclusive start id',
+        {'exclusive_start_id': '1000'},
+        create_items(1001, 2500),
+        {'RequestQueueClient'},
+    ),
+    _PaginationCase(
+        'Exclusive start id and limit',
+        {'exclusive_start_id': '1000', 'limit': 500},
+        create_items(1001, 1501),
+        {'RequestQueueClient'},
+    ),
+    _PaginationCase(
+        'chunk_size',
+        {'chunk_size': 100, 'limit': 250},
+        create_items(0, 250),
+        {'RequestQueueClient'},
+    ),
+)
+
+
+def _cursor_params(
+    client_set: Literal['kvs', 'rq'],
+    test_cases: tuple[_PaginationCase, ...],
+    *,
+    async_clients: bool,
+) -> list[ParameterSet]:
+    client = ApifyClientAsync(token='') if async_clients else ApifyClient(token='')
+    sub_client: ResourceClient | ResourceClientAsync = (
+        client.key_value_store(ID_PLACEHOLDER) if client_set == 'kvs' else client.request_queue(ID_PLACEHOLDER)
+    )
+    return [
+        pytest.param(
+            test_case.inputs, test_case.expected_items, sub_client, id=f'{sub_client.__class__.__name__}:{test_case.id}'
+        )
+        for test_case in test_cases
+        if test_case.supports(sub_client)
+    ]
+
+
+# Params accepted by the deprecated `iterate_keys` (it never supported `exclusive_start_key`
+# nor the new `chunk_size`).
+_ITERATE_KEYS_PARAMS = {'limit', 'collection', 'prefix', 'signature', 'timeout'}
+
+
+@pytest.mark.parametrize(
+    ('inputs', 'expected_items', 'client'),
+    _cursor_params('kvs', _KVS_TEST_CASES, async_clients=False),
+)
+def test_kvs_list_keys_iterable(
+    client: KeyValueStoreClient,
+    inputs: dict,
+    expected_items: list[dict[str, int]],
+) -> None:
+    """The sync KVS client's `list_keys()` return value should iterate across cursor-paginated pages."""
+    with mock.patch.object(client._http_client, 'call', side_effect=_mocked_api_cursor_pagination_logic):
+        returned_items = [dict(item) for item in client.list_keys(**inputs)]
+
+        assert returned_items == expected_items
+
+        # Until the deprecated `iterate_keys` method is removed, it should behave the same for
+        # inputs whose parameters it supports.
+        legacy_inputs = {k: v for k, v in inputs.items() if k in _ITERATE_KEYS_PARAMS}
+        if legacy_inputs == inputs or not (set(inputs) - _ITERATE_KEYS_PARAMS):
+            with pytest.warns(DeprecationWarning, match='iterate_keys.*is deprecated'):
+                assert returned_items == [dict(item) for item in client.iterate_keys(**legacy_inputs)]
+
+
+@pytest.mark.parametrize(
+    ('inputs', 'expected_items', 'client'),
+    _cursor_params('kvs', _KVS_TEST_CASES, async_clients=True),
+)
+async def test_kvs_list_keys_iterable_async(
+    client: KeyValueStoreClientAsync,
+    inputs: dict,
+    expected_items: list[dict[str, int]],
+) -> None:
+    """The async KVS client's `list_keys()` return value should iterate across cursor-paginated pages."""
+
+    async def async_side_effect(**kwargs: Any) -> Mock:
+        return _mocked_api_cursor_pagination_logic(**kwargs)
+
+    with mock.patch.object(client._http_client, 'call', side_effect=async_side_effect):
+        returned_items = [dict(item) async for item in client.list_keys(**inputs)]
+
+        assert returned_items == expected_items
+
+        legacy_inputs = {k: v for k, v in inputs.items() if k in _ITERATE_KEYS_PARAMS}
+        if legacy_inputs == inputs or not (set(inputs) - _ITERATE_KEYS_PARAMS):
+            with pytest.warns(DeprecationWarning, match='iterate_keys.*is deprecated'):
+                assert returned_items == [dict(item) async for item in client.iterate_keys(**legacy_inputs)]
+
+
+@pytest.mark.parametrize(
+    ('inputs', 'expected_items', 'client'),
+    _cursor_params('rq', _RQ_TEST_CASES, async_clients=False),
+)
+def test_rq_list_requests_iterable(
+    client: RequestQueueClient,
+    inputs: dict,
+    expected_items: list[dict[str, int]],
+) -> None:
+    """The sync RQ client's `list_requests()` return value should iterate across cursor-paginated pages."""
+    with mock.patch.object(client._http_client, 'call', side_effect=_mocked_api_cursor_pagination_logic):
+        returned_items = [dict(item) for item in client.list_requests(**inputs)]
+
+        assert returned_items == expected_items
+
+
+@pytest.mark.parametrize(
+    ('inputs', 'expected_items', 'client'),
+    _cursor_params('rq', _RQ_TEST_CASES, async_clients=True),
+)
+async def test_rq_list_requests_iterable_async(
+    client: RequestQueueClientAsync,
+    inputs: dict,
+    expected_items: list[dict[str, int]],
+) -> None:
+    """The async RQ client's `list_requests()` return value should iterate across cursor-paginated pages."""
+
+    async def async_side_effect(**kwargs: Any) -> Mock:
+        return _mocked_api_cursor_pagination_logic(**kwargs)
+
+    with mock.patch.object(client._http_client, 'call', side_effect=async_side_effect):
+        returned_items = [dict(item) async for item in client.list_requests(**inputs)]
+
+        assert returned_items == expected_items

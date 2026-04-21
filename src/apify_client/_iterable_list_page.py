@@ -55,11 +55,12 @@ class IterableListPage(Iterable[T], Generic[T]):
     def __init__(self, first_page: Any, iterator: Iterator[T]) -> None:
         """Initialize a page wrapper from a Pydantic paginated model and an iterator over all items."""
         self.items = first_page.items
-        self.count = getattr(first_page, 'count', len(first_page.items))
-        self.offset = getattr(first_page, 'offset', 0)
-        self.limit = getattr(first_page, 'limit', 0)
-        self.total = getattr(first_page, 'total', len(first_page.items))
-        self.desc = getattr(first_page, 'desc', False)
+        count = getattr(first_page, 'count', None)
+        self.count = count if count is not None else len(first_page.items)
+        self.offset = getattr(first_page, 'offset', 0) or 0
+        self.limit = getattr(first_page, 'limit', 0) or 0
+        self.total = getattr(first_page, 'total', None) or len(first_page.items)
+        self.desc = getattr(first_page, 'desc', False) or False
         self._first_page = first_page
         self._iterator = iterator
 
@@ -172,6 +173,94 @@ def build_iterable_list_page_async(
             for item in current_page.items:
                 yield item
             fetched_items += len(current_page.items)
+
+    async def wrap_first_page() -> IterableListPage[Any]:
+        first_page = await fetch_first_page()
+        return IterableListPage(first_page, iter(first_page.items))
+
+    return IterableListPageAsync(wrap_first_page, async_iterator())
+
+
+def build_cursor_iterable_list_page(
+    callback: Callable[..., Any],
+    *,
+    cursor_param: str,
+    next_cursor_fn: Callable[[Any], Any],
+    initial_cursor: Any = None,
+    limit: int | None = None,
+    chunk_size: int | None = None,
+    **kwargs: Any,
+) -> IterableListPage[Any]:
+    """Build an `IterableListPage` for endpoints that paginate with a cursor instead of an offset.
+
+    The callback is invoked with `{cursor_param: cursor, 'limit': effective_limit, **kwargs}` for each
+    page, starting from `initial_cursor`. After each page, `next_cursor_fn(page)` is consulted to
+    obtain the next cursor; returning `None` ends iteration. The iteration also stops when a page is
+    empty or when the caller-requested `limit` has been reached.
+    """
+    effective_chunk = chunk_size or 0
+    user_limit = limit or 0
+
+    first_limit = _min_for_limit_param(limit, effective_chunk)
+    first_page = callback(**{**kwargs, cursor_param: initial_cursor, 'limit': first_limit})
+
+    def iterator() -> Iterator[Any]:
+        current_page = first_page
+        yield from current_page.items
+
+        fetched = len(current_page.items)
+        next_cursor = next_cursor_fn(current_page)
+
+        while current_page.items and next_cursor is not None and (not user_limit or user_limit > fetched):
+            remaining = (user_limit - fetched) if user_limit else 0
+            next_limit = effective_chunk if not user_limit else _min_for_limit_param(remaining, effective_chunk)
+            current_page = callback(**{**kwargs, cursor_param: next_cursor, 'limit': next_limit})
+            yield from current_page.items
+            fetched += len(current_page.items)
+            next_cursor = next_cursor_fn(current_page)
+
+    return IterableListPage(first_page, iterator())
+
+
+def build_cursor_iterable_list_page_async(
+    callback: Callable[..., Awaitable[Any]],
+    *,
+    cursor_param: str,
+    next_cursor_fn: Callable[[Any], Any],
+    initial_cursor: Any = None,
+    limit: int | None = None,
+    chunk_size: int | None = None,
+    **kwargs: Any,
+) -> IterableListPageAsync[Any]:
+    """Build an `IterableListPageAsync` for endpoints that paginate with a cursor instead of an offset.
+
+    Mirrors `build_cursor_iterable_list_page` but for async callbacks. The returned object is both
+    awaitable (resolves to the first page wrapped in `IterableListPage`) and asynchronously iterable
+    (yields items across pages using the supplied cursor strategy).
+    """
+    effective_chunk = chunk_size or 0
+    user_limit = limit or 0
+    first_limit = _min_for_limit_param(limit, effective_chunk)
+
+    async def fetch_first_page() -> Any:
+        return await callback(**{**kwargs, cursor_param: initial_cursor, 'limit': first_limit})
+
+    async def async_iterator() -> AsyncIterator[Any]:
+        current_page = await fetch_first_page()
+        for item in current_page.items:
+            yield item
+
+        fetched = len(current_page.items)
+        next_cursor = next_cursor_fn(current_page)
+
+        while current_page.items and next_cursor is not None and (not user_limit or user_limit > fetched):
+            remaining = (user_limit - fetched) if user_limit else 0
+            next_limit = effective_chunk if not user_limit else _min_for_limit_param(remaining, effective_chunk)
+            current_page = await callback(**{**kwargs, cursor_param: next_cursor, 'limit': next_limit})
+            for item in current_page.items:
+                yield item
+            fetched += len(current_page.items)
+            next_cursor = next_cursor_fn(current_page)
 
     async def wrap_first_page() -> IterableListPage[Any]:
         first_page = await fetch_first_page()

@@ -8,13 +8,12 @@ import string
 import time
 import warnings
 from base64 import urlsafe_b64encode
-from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import impit
 
 from apify_client._consts import OVERRIDABLE_DEFAULT_HEADERS
-from apify_client.errors import InvalidResponseBodyError
+from apify_client.errors import InvalidResponseBodyError, NotFoundError
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -63,9 +62,7 @@ def catch_not_found_or_throw(exc: ApifyApiError) -> None:
     Raises:
         ApifyApiError: If the error is not a 404 Not Found error.
     """
-    is_not_found_status = exc.status_code == HTTPStatus.NOT_FOUND
-    is_not_found_type = exc.type in ['record-not-found', 'record-or-token-not-found']
-    if not (is_not_found_status and is_not_found_type):
+    if not isinstance(exc, NotFoundError):
         raise exc
 
 

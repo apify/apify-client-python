@@ -1,7 +1,7 @@
 # This workflow regenerates Pydantic models (src/apify_client/_models.py) from the OpenAPI spec.
 #
 # It can be triggered in two ways:
-#   1. Automatically via workflow_dispatch from the apify-docs CI pipeline (with docs_pr_number and docs_workflow_run_id).
+#   1. Automatically via workflow_dispatch from the apify-docs CI pipeline.
 #   2. Manually from the GitHub UI (without any inputs) to regenerate from the live published spec.
 
 name: Regenerate models
@@ -46,13 +46,15 @@ jobs:
     steps:
       - name: Validate inputs
         if: inputs.docs_pr_number || inputs.docs_workflow_run_id
+        env:
+          DOCS_WORKFLOW_RUN_ID: ${{ inputs.docs_workflow_run_id }}
         run: |
           if [[ -n "$DOCS_PR_NUMBER" ]] && ! [[ "$DOCS_PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
             echo "::error::docs_pr_number must be a positive integer, got: $DOCS_PR_NUMBER"
             exit 1
           fi
-          if [[ -n "${{ inputs.docs_workflow_run_id }}" ]] && ! [[ "${{ inputs.docs_workflow_run_id }}" =~ ^[0-9]+$ ]]; then
-            echo "::error::docs_workflow_run_id must be a numeric run ID, got: ${{ inputs.docs_workflow_run_id }}"
+          if [[ -n "$DOCS_WORKFLOW_RUN_ID" ]] && ! [[ "$DOCS_WORKFLOW_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::docs_workflow_run_id must be a numeric run ID, got: $DOCS_WORKFLOW_RUN_ID"
             exit 1
           fi
 
@@ -61,8 +63,8 @@ jobs:
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
-      # If the branch already exists on the remote (e.g. from a previous run, possibly with
-      # reviewer commits), check it out to build on top of it instead of starting fresh.
+      # If the branch already exists on the remote (e.g. from a previous run, possibly with reviewer commits),
+      # check it out to build on top of it instead of starting fresh.
       - name: Switch to existing branch or create a new one
         run: |
           if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
@@ -76,7 +78,7 @@ jobs:
       # Skipped for manual runs — datamodel-codegen will fetch from the published spec URL instead.
       - name: Download OpenAPI spec artifact
         if: inputs.docs_workflow_run_id
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openapi-bundles
           path: openapi-spec
@@ -153,14 +155,29 @@ jobs:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}
           PR_URL: ${{ steps.pr.outputs.pr_url }}
+          DOCS_PR_AUTHOR: ${{ inputs.docs_pr_author }}
         run: |
-          if [[ "$PR_CREATED" = "true" ]]; then
-            COMMENT="A PR to update the Python client models has been created: ${PR_URL}
-
-          This was automatically triggered by OpenAPI specification changes in this PR."
-          else
-            COMMENT="The Python client model PR has been updated with the latest OpenAPI spec changes: ${PR_URL}"
+          MENTION=""
+          if [[ -n "$DOCS_PR_AUTHOR" ]]; then
+            MENTION="@${DOCS_PR_AUTHOR} "
           fi
+
+          if [[ "$PR_CREATED" = "true" ]]; then
+            HEADLINE="A companion PR has been opened in \`apify-client-python\` with the regenerated models: ${PR_URL}"
+          else
+            HEADLINE="The companion \`apify-client-python\` PR has been updated with the latest spec changes: ${PR_URL}"
+          fi
+
+          COMMENT=$(printf '%s\n' \
+            "> [!IMPORTANT]" \
+            "> **Action required** — ${MENTION}please coordinate this docs PR with the Python API client PR linked below." \
+            ">" \
+            "> Because this PR modifies the OpenAPI specification, the generated models in \`apify-client-python\` must be regenerated to stay in sync. This has already been done automatically:" \
+            ">" \
+            "> ${HEADLINE}" \
+            ">" \
+            "> - Please make sure to review and merge both PRs together to keep the OpenAPI spec and API clients in sync." \
+            "> - You can ask for review and help from the Tooling team if needed.")
 
           gh pr comment "$DOCS_PR_NUMBER" \
             --repo apify/apify-docs \
@@ -173,5 +190,5 @@ jobs:
         run: |
           gh pr comment "$DOCS_PR_NUMBER" \
             --repo apify/apify-docs \
-            --body "Python client model regeneration failed. [See workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})." \
+            --body "Python client model regeneration failed. [See workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})." \
             || echo "Warning: Failed to post failure comment to apify/apify-docs PR #$DOCS_PR_NUMBER."

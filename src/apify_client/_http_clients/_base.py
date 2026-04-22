@@ -157,7 +157,9 @@ class HttpClientBase:
             elif isinstance(value, list):
                 parsed_params[key] = ','.join(value)
             elif isinstance(value, datetime):
-                utc_aware_dt = value.astimezone(UTC)
+                # Treat a naive datetime as UTC; `.astimezone()` would otherwise assume the host's local tz.
+                aware = value.replace(tzinfo=UTC) if value.tzinfo is None else value
+                utc_aware_dt = aware.astimezone(UTC)
                 iso_str = utc_aware_dt.isoformat(timespec='milliseconds')
                 parsed_params[key] = iso_str.replace('+00:00', 'Z')
             elif value is not None:
@@ -204,8 +206,7 @@ class HttpClientBase:
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
-        if not headers:
-            headers = {}
+        headers = dict(headers) if headers else {}
 
         # Dump JSON data to string so it can be gzipped.
         if json is not None:

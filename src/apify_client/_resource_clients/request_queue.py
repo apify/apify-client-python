@@ -5,7 +5,7 @@ import math
 import warnings
 from collections.abc import Iterable
 from queue import Queue
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from more_itertools import constrained_batches
 
@@ -495,8 +495,10 @@ class RequestQueueClient(ResourceClient):
         self,
         *,
         limit: int | None = None,
-        exclusive_start_id: str | None = None,
+        filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
         timeout: Timeout = 'medium',
+        cursor: str | None = None,
+        exclusive_start_id: str | None = None,
     ) -> ListOfRequests:
         """List requests in the queue.
 
@@ -504,10 +506,28 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: All requests up to this one (including) are skipped from the result.
+            filter: List of request states to use as a filter. Multiple values mean union of the given filters.
             timeout: Timeout for the API HTTP request.
+            cursor: A token returned in previous API response, to continue listing next page of requests
+            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
         """
-        request_params = self._build_params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
+        if exclusive_start_id and cursor:
+            raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')
+
+        if exclusive_start_id is not None:
+            warnings.warn(
+                '`exclusive_start_id` is deprecated for paginating requests. Use pagination using `cursor` instead.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        request_params = self._build_params(
+            limit=limit,
+            filter=','.join(filter) if filter else None,
+            clientKey=self.client_key,
+            exclusiveStartId=exclusive_start_id,
+            cursor=cursor,
+        )
 
         response = self._http_client.call(
             url=self._build_url('requests'),
@@ -1033,8 +1053,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         *,
         limit: int | None = None,
-        exclusive_start_id: str | None = None,
+        filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
         timeout: Timeout = 'medium',
+        cursor: str | None = None,
+        exclusive_start_id: str | None = None,
     ) -> ListOfRequests:
         """List requests in the queue.
 
@@ -1042,10 +1064,28 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: All requests up to this one (including) are skipped from the result.
+            filter: List of request states to use as a filter. Multiple values mean union of the given filters.
             timeout: Timeout for the API HTTP request.
+            cursor: A token returned in previous API response, to continue listing next page of requests
+            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
         """
-        request_params = self._build_params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
+        if exclusive_start_id and cursor:
+            raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')
+
+        if exclusive_start_id is not None:
+            warnings.warn(
+                '`exclusive_start_id` is deprecated for paginating requests. Use pagination using `cursor` instead.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        request_params = self._build_params(
+            limit=limit,
+            filter=','.join(filter) if filter else None,
+            clientKey=self.client_key,
+            exclusiveStartId=exclusive_start_id,
+            cursor=cursor,
+        )
 
         response = await self._http_client.call(
             url=self._build_url('requests'),

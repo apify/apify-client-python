@@ -201,6 +201,21 @@ def test_parse_params_datetime() -> None:
     assert result == {'created_at': '2024-01-15T10:30:45.123Z'}
 
 
+@pytest.mark.skipif(not hasattr(time, 'tzset'), reason='time.tzset is Unix-only')
+def test_parse_params_naive_datetime_treated_as_utc(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Naive datetimes must be treated as UTC, not the host's local timezone."""
+    monkeypatch.setenv('TZ', 'Asia/Karachi')
+    time.tzset()
+    try:
+        dt = datetime(2024, 1, 15, 10, 30, 45, 123000)  # noqa: DTZ001 -- intentionally naive
+        result = HttpClient._parse_params({'created_at': dt})
+        assert result == {'created_at': '2024-01-15T10:30:45.123Z'}
+    finally:
+        # Restore TZ before re-applying tzset so the test doesn't leak Karachi time to later tests.
+        monkeypatch.undo()
+        time.tzset()
+
+
 def test_parse_params_none_values_filtered() -> None:
     """Test _parse_params filters out None values."""
     result = HttpClient._parse_params({'a': 1, 'b': None, 'c': 'value'})
@@ -378,6 +393,24 @@ def test_prepare_request_call_with_params() -> None:
     _headers, params, _data = client._prepare_request_call(params={'limit': 10, 'flag': True})
 
     assert params == {'limit': 10, 'flag': 'true'}
+
+
+def test_prepare_request_call_does_not_mutate_caller_headers() -> None:
+    """Test _prepare_request_call does not mutate the caller's headers dict.
+
+    A caller that reuses a shared headers dict across calls must not see stale
+    `Content-Type`/`Content-Encoding` headers leak in from a prior JSON/body call.
+    """
+    client = _ConcreteHttpClient()
+
+    caller_headers = {'x-trace-id': 'abc-123'}
+    original = dict(caller_headers)
+
+    client._prepare_request_call(headers=caller_headers, json={'x': 1})
+    assert caller_headers == original
+
+    client._prepare_request_call(headers=caller_headers, data='payload')
+    assert caller_headers == original
 
 
 def test_build_url_with_params_none() -> None:

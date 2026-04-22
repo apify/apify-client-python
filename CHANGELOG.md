@@ -11,12 +11,22 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Introduce tiered timeout system with per-endpoint configuration ([#653](https://github.com/apify/apify-client-python/pull/653)) ([723ec6e](https://github.com/apify/apify-client-python/commit/723ec6e5954474767a5ecbf4902d9b62f7d214f8)) by [@vdusek](https://github.com/vdusek)
 - Accept Pydantic models as alternatives to dicts in resource client methods ([#663](https://github.com/apify/apify-client-python/pull/663)) ([b778c20](https://github.com/apify/apify-client-python/commit/b778c2040228ff9f5a97765de10535cec3f0353e)) by [@vdusek](https://github.com/vdusek), closes [#421](https://github.com/apify/apify-client-python/issues/421)
 - Add ownership parameter to storage collection listing methods ([#696](https://github.com/apify/apify-client-python/pull/696)) ([51a92a3](https://github.com/apify/apify-client-python/commit/51a92a31dac5dd433acfaea76155011d0892d8c8)) by [@nmanerikar](https://github.com/nmanerikar)
+- Add filter and cursor parameters to list_requests method ([#743](https://github.com/apify/apify-client-python/pull/743)) ([3445ff7](https://github.com/apify/apify-client-python/commit/3445ff74e61d5f1f9a964f2ee3c14d198298f709)) by [@mvolfik](https://github.com/mvolfik)
+- Add ApifyApiError subclasses grouped by HTTP status ([#737](https://github.com/apify/apify-client-python/pull/737)) ([a6daff7](https://github.com/apify/apify-client-python/commit/a6daff754e5e1af8a6230f4c504db24a246c734f)) by [@vdusek](https://github.com/vdusek)
+
+### 🐛 Bug Fixes
+
+- Guard integration test resource names against 63-char API limit ([#729](https://github.com/apify/apify-client-python/pull/729)) ([47a7a69](https://github.com/apify/apify-client-python/commit/47a7a6967e28c7042fa8e75cd4c138356495fa2c)) by [@vdusek](https://github.com/vdusek)
+- Prevent `_prepare_request_call` from mutating caller&#x27;s headers dict ([#746](https://github.com/apify/apify-client-python/pull/746)) ([d553162](https://github.com/apify/apify-client-python/commit/d5531621535f5a491be5b5791ea4b80e46de1405)) by [@vdusek](https://github.com/vdusek)
+- Don&#x27;t block StatusMessageWatcher exit with 6s sleep on exception ([#753](https://github.com/apify/apify-client-python/pull/753)) ([48f5037](https://github.com/apify/apify-client-python/commit/48f50378e92e2058ff8e5aaba45ef9e3a6e5f081)) by [@vdusek](https://github.com/vdusek)
+- Treat naive datetime query params as UTC ([#752](https://github.com/apify/apify-client-python/pull/752)) ([9ab096a](https://github.com/apify/apify-client-python/commit/9ab096a7453080a3079c7459079f99a30bd6a7cb)) by [@vdusek](https://github.com/vdusek)
 
 ### 🚜 Refactor
 
 - [**breaking**] Introduce fully typed clients ([#604](https://github.com/apify/apify-client-python/pull/604)) ([81ee194](https://github.com/apify/apify-client-python/commit/81ee1943b400b49797868fe4dfa52d1662e09370)) by [@vdusek](https://github.com/vdusek), closes [#21](https://github.com/apify/apify-client-python/issues/21), [#481](https://github.com/apify/apify-client-python/issues/481)
 - [**breaking**] Drop support for Python 3.10 ([#636](https://github.com/apify/apify-client-python/pull/636)) ([7895a4e](https://github.com/apify/apify-client-python/commit/7895a4e60145f490911044da4aa7e3c1c424d416)) by [@vdusek](https://github.com/vdusek)
 - [**breaking**] Update default timeout tiers on non-storage resource clients ([#664](https://github.com/apify/apify-client-python/pull/664)) ([0b35bbe](https://github.com/apify/apify-client-python/commit/0b35bbe212a8a64c5aea5d5d813315252760b055)) by [@vdusek](https://github.com/vdusek)
+- [**breaking**] Use snake case for `actors().list(sort_by=...)` ([#736](https://github.com/apify/apify-client-python/pull/736)) ([eb70b64](https://github.com/apify/apify-client-python/commit/eb70b64eac86faba5cbe943845ad144ec0277896)) by [@vdusek](https://github.com/vdusek), closes [#700](https://github.com/apify/apify-client-python/issues/700)
 
 
 <!-- git-cliff-unreleased-end -->

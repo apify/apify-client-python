@@ -201,6 +201,21 @@ def test_parse_params_datetime() -> None:
     assert result == {'created_at': '2024-01-15T10:30:45.123Z'}
 
 
+@pytest.mark.skipif(not hasattr(time, 'tzset'), reason='time.tzset is Unix-only')
+def test_parse_params_naive_datetime_treated_as_utc(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Naive datetimes must be treated as UTC, not the host's local timezone."""
+    monkeypatch.setenv('TZ', 'Asia/Karachi')
+    time.tzset()
+    try:
+        dt = datetime(2024, 1, 15, 10, 30, 45, 123000)  # noqa: DTZ001 -- intentionally naive
+        result = HttpClient._parse_params({'created_at': dt})
+        assert result == {'created_at': '2024-01-15T10:30:45.123Z'}
+    finally:
+        # Restore TZ before re-applying tzset so the test doesn't leak Karachi time to later tests.
+        monkeypatch.undo()
+        time.tzset()
+
+
 def test_parse_params_none_values_filtered() -> None:
     """Test _parse_params filters out None values."""
     result = HttpClient._parse_params({'a': 1, 'b': None, 'c': 'value'})

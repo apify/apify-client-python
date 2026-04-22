@@ -194,7 +194,12 @@ class ResourceClient(ResourceClientBase):
         )
 
     def _get(self, *, timeout: Timeout) -> dict | None:
-        """Perform a GET request for this resource, returning the parsed response or None if not found."""
+        """Perform a GET request for this resource, returning the parsed response or None if not found.
+
+        404s collapse to `None` only when this client targets a specific resource by ID. For chained clients
+        without a `resource_id` (e.g. `run.dataset()`), a 404 could mean either the parent or the default
+        sub-resource is missing and the API body cannot disambiguate, so `NotFoundError` propagates to the caller.
+        """
         try:
             response = self._http_client.call(
                 url=self._build_url(),
@@ -204,6 +209,8 @@ class ResourceClient(ResourceClientBase):
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
+            if self._resource_id is None:
+                raise
             catch_not_found_or_throw(exc)
             return None
 
@@ -374,7 +381,12 @@ class ResourceClientAsync(ResourceClientBase):
         )
 
     async def _get(self, *, timeout: Timeout) -> dict | None:
-        """Perform a GET request for this resource, returning the parsed response or None if not found."""
+        """Perform a GET request for this resource, returning the parsed response or None if not found.
+
+        404s collapse to `None` only when this client targets a specific resource by ID. For chained clients
+        without a `resource_id` (e.g. `run.dataset()`), a 404 could mean either the parent or the default
+        sub-resource is missing and the API body cannot disambiguate, so `NotFoundError` propagates to the caller.
+        """
         try:
             response = await self._http_client.call(
                 url=self._build_url(),
@@ -384,6 +396,8 @@ class ResourceClientAsync(ResourceClientBase):
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
+            if self._resource_id is None:
+                raise
             catch_not_found_or_throw(exc)
             return None
 

@@ -218,11 +218,26 @@ except RateLimitError:
     ...
 ```
 
-### Behavior change: `.get()` now returns `None` on any 404
+### Behavior change: `.get()` on chained clients now raises on 404
 
-As a consequence of the dispatch above, `.get()`-style convenience methods — which use `catch_not_found_or_throw` internally to swallow 404 responses and return `None` — now swallow **every** 404, regardless of the `error.type` string in the response body. Previously only 404 responses carrying the types `record-not-found` or `record-or-token-not-found` were swallowed; any other 404 was re-raised as `ApifyApiError`.
+`.get()` continues to swallow 404 into `None` for direct, ID-identified fetches like `client.dataset(id).get()` or `client.run(id).get()` — a 404 there unambiguously means the named resource does not exist.
 
-In practice this matters only if you relied on a `.get()` call raising for a 404 with an unusual error type — such cases now return `None` instead. If your code needs to distinguish between "resource missing" and "404 with an unexpected type", inspect `.type` on the returned response or catch <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> from non-`.get()` calls that do not use `catch_not_found_or_throw`.
+For chained calls that target a default sub-resource without an ID — `run.dataset()`, `run.key_value_store()`, `run.request_queue()`, `run.log()` — a 404 is ambiguous (it could mean the parent run is missing OR the default sub-resource is missing, and the API body does not disambiguate). These now raise <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> instead of silently returning `None`:
+
+```python
+from apify_client import ApifyClient
+from apify_client.errors import NotFoundError
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+try:
+    dataset = client.run('some-run-id').dataset().get()
+except NotFoundError:
+    # Previously this returned `None`; now you must handle it explicitly.
+    dataset = None
+```
+
+Direct `.get()` also now swallows every 404 regardless of the `error.type` string in the response body (previously only `record-not-found` and `record-or-token-not-found` types were swallowed). If your code needs to distinguish between "resource missing" and "404 with an unexpected type", inspect `.type` on a caught <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> from a non-`.get()` call path.
 
 ## Snake_case `sort_by` values on `actors().list()`
 

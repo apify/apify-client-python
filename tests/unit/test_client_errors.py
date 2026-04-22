@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 from werkzeug import Response
 
+from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.errors import (
     ApifyApiError,
@@ -211,3 +212,41 @@ def test_apify_api_error_falls_back_for_unparsable_body(httpserver: HTTPServer) 
 
     assert type(exc.value) is ApifyApiError
     assert exc.value.type is None
+
+
+def _not_found_body() -> dict:
+    return {'error': {'type': 'record-not-found', 'message': 'not found'}}
+
+
+def test_direct_get_returns_none_on_404(httpserver: HTTPServer) -> None:
+    """`client.dataset("X").get()` — a direct, ID-identified fetch — swallows 404 into `None`."""
+    httpserver.expect_request('/v2/datasets/missing').respond_with_json(_not_found_body(), status=404)
+    client = ApifyClient(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    assert client.dataset('missing').get() is None
+
+
+async def test_direct_get_returns_none_on_404_async(httpserver: HTTPServer) -> None:
+    """Async mirror: direct `.get()` swallows 404."""
+    httpserver.expect_request('/v2/datasets/missing').respond_with_json(_not_found_body(), status=404)
+    client = ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    assert await client.dataset('missing').get() is None
+
+
+def test_chained_get_raises_on_404(httpserver: HTTPServer) -> None:
+    """`run("X").dataset().get()` is ambiguous on 404 (run or dataset missing) — propagate instead of `None`."""
+    httpserver.expect_request('/v2/actor-runs/missing-run/dataset').respond_with_json(_not_found_body(), status=404)
+    client = ApifyClient(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    with pytest.raises(NotFoundError):
+        client.run('missing-run').dataset().get()
+
+
+async def test_chained_get_raises_on_404_async(httpserver: HTTPServer) -> None:
+    """Async mirror: chained `.get()` propagates NotFoundError."""
+    httpserver.expect_request('/v2/actor-runs/missing-run/dataset').respond_with_json(_not_found_body(), status=404)
+    client = ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    with pytest.raises(NotFoundError):
+        await client.run('missing-run').dataset().get()

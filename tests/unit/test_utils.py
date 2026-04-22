@@ -125,7 +125,8 @@ def test__is_not_retryable_error(exc: Exception) -> None:
     [
         pytest.param(HTTPStatus.NOT_FOUND, 'record-not-found', True, id='404 record-not-found'),
         pytest.param(HTTPStatus.NOT_FOUND, 'record-or-token-not-found', True, id='404 token-not-found'),
-        pytest.param(HTTPStatus.NOT_FOUND, 'some-other-error', False, id='404 other error type'),
+        pytest.param(HTTPStatus.NOT_FOUND, 'some-other-error', True, id='404 other error type'),
+        pytest.param(HTTPStatus.BAD_REQUEST, 'record-not-found', False, id='400 record-not-found'),
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, 'record-not-found', False, id='500 record-not-found'),
     ],
 )
@@ -133,10 +134,10 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
     """Test that catch_not_found_or_throw suppresses 404 errors correctly."""
     mock_response = Mock()
     mock_response.status_code = status_code
+    mock_response.json.return_value = {'error': {'type': error_type, 'message': 'msg'}}
     mock_response.text = f'{{"error":{{"type":"{error_type}"}}}}'
 
     error = ApifyApiError(mock_response, 1)
-    error.type = error_type
 
     if should_suppress:
         catch_not_found_or_throw(error)

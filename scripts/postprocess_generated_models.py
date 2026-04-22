@@ -36,14 +36,17 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
     'pricingModel': 'pricing_model',
 }
 
-# Seed models for the TypedDict pruning. Every TypedDict in `_typeddicts.py` that is not
-# transitively reachable from this set is removed. Keep in sync with the `dict | <Model>` unions
-# on resource-client method signatures.
-TYPEDDICT_SEEDS: frozenset[str] = frozenset(
+# TypedDicts accepted as inputs by resource-client methods. These are the roots of the reachability
+# walk over `_typeddicts_generated.py`: anything not reachable from here (directly or transitively)
+# is dropped so only the TypedDicts that are part of the public input surface — plus their nested
+# shapes — survive. Names are the raw datamodel-codegen outputs (no `Dict` suffix yet); the suffix
+# is added later by `rename_with_dict_suffix`. Update this set whenever a new `<Name>Dict | <Name>`
+# union is introduced on a resource-client method signature.
+RESOURCE_INPUT_TYPEDDICTS: frozenset[str] = frozenset(
     {
-        'Request',
-        'TaskInput',
-        'WebhookCreate',
+        'Request',  # RequestQueueClient.update_request
+        'TaskInput',  # Actor/Task start/call/update default input
+        'WebhookCreate',  # Actor/Task start/call webhook list element
     }
 )
 
@@ -191,17 +194,17 @@ def _collect_name_references(node: ast.AST, exclude: set[str]) -> set[str]:
     return refs - exclude
 
 
-def _compute_transitive_closure(deps: dict[str, set[str]], seeds: set[str]) -> set[str]:
-    """Return every symbol transitively reachable from any seed."""
-    closure: set[str] = set()
+def _compute_reachable_symbols(deps: dict[str, set[str]], seeds: set[str]) -> set[str]:
+    """Return every symbol transitively reachable from any seed via `deps`."""
+    reachable: set[str] = set()
     stack = [s for s in seeds if s in deps]
     while stack:
         name = stack.pop()
-        if name in closure:
+        if name in reachable:
             continue
-        closure.add(name)
-        stack.extend(ref for ref in deps[name] if ref in deps and ref not in closure)
-    return closure
+        reachable.add(name)
+        stack.extend(ref for ref in deps[name] if ref in deps and ref not in reachable)
+    return reachable
 
 
 def prune_typeddicts(content: str, seeds: frozenset[str]) -> tuple[str, set[str]]:
@@ -218,7 +221,7 @@ def prune_typeddicts(content: str, seeds: frozenset[str]) -> tuple[str, set[str]
         # Ignore builtins and imported names — we only care about cross-references within the file.
         deps[name] = _collect_name_references(node, exclude={name}) & symbol_names
 
-    kept = _compute_transitive_closure(deps, set(seeds))
+    kept = _compute_reachable_symbols(deps, set(seeds))
 
     missing_seeds = seeds - symbol_names
     if missing_seeds:
@@ -265,7 +268,7 @@ def postprocess_models(path: Path) -> bool:
 def postprocess_typeddicts(path: Path) -> bool:
     """Apply `_typeddicts_generated.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
-    pruned, kept = prune_typeddicts(original, TYPEDDICT_SEEDS)
+    pruned, kept = prune_typeddicts(original, RESOURCE_INPUT_TYPEDDICTS)
     renamed = rename_with_dict_suffix(pruned, kept)
     flattened = flatten_empty_typeddicts(renamed)
     final = add_docs_group_decorators(flattened, 'Typed dicts')

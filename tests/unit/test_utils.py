@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import io
 from datetime import timedelta
 from http import HTTPStatus
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import impit
@@ -57,24 +59,20 @@ def test_webhook_representation_list_to_base64() -> None:
 
 
 def test_webhook_representation_list_from_dicts() -> None:
-    """Test that from_webhooks accepts plain dicts with the minimal ad-hoc webhook shape."""
-    # The runtime only needs the keys consumed by WebhookRepresentation (event_types, request_url,
-    # optionally payload_template/headers_template). WebhookCreateDict requires more — cast to
-    # silence the type checker while still exercising the minimal-dict runtime path.
-    webhooks = cast(
-        'list[WebhookCreateDict]',
-        [
-            {
-                'event_types': ['ACTOR.RUN.CREATED'],
-                'request_url': 'https://example.com/run-created',
-            },
-            {
-                'event_types': ['ACTOR.RUN.SUCCEEDED'],
-                'request_url': 'https://example.com/run-succeeded',
-                'payload_template': '{"hello": "world"}',
-            },
-        ],
-    )
+    """Test that from_webhooks accepts plain dicts typed as WebhookCreateDict."""
+    webhooks: list[WebhookCreateDict] = [
+        {
+            'event_types': ['ACTOR.RUN.CREATED'],
+            'condition': {},
+            'request_url': 'https://example.com/run-created',
+        },
+        {
+            'event_types': ['ACTOR.RUN.SUCCEEDED'],
+            'condition': {},
+            'request_url': 'https://example.com/run-succeeded',
+            'payload_template': '{"hello": "world"}',
+        },
+    ]
     result = WebhookRepresentationList.from_webhooks(webhooks).to_base64()
 
     assert result is not None

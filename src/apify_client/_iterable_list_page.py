@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable, Generator, Iterable, Iterator
+import asyncio
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable, Generator, Iterable, Iterator, Coroutine
 from typing import Any, Generic, TypeVar
 
 from apify_client._docs import docs_group
@@ -23,6 +24,25 @@ def _min_for_limit_param(a: int | None, b: int | None) -> int | None:
     if b is None:
         return a
     return min(a, b)
+
+
+T = TypeVar('T')
+
+
+class _LazyTask(Generic[T]):
+    """Task that is created lazily upon awaiting.
+
+    This allows to reuse the same Task multiple times without the need to schedule the task when it is created.
+    """
+    def __init__(self, awaitable: Awaitable[T]) -> None:
+        self._awaitable = awaitable
+        self._task: asyncio.Task[T] | None = None
+
+    def __await__(self) -> Generator[Any, None, T]:
+        if self._task is None:
+            self._task = asyncio.create_task(self._awaitable)
+        return (yield from self._task.__await__())
+
 
 
 @docs_group('Other')
@@ -109,7 +129,7 @@ def build_iterable_list_page(
     stopping iteration because it may change between calls; iteration stops when a page has
     no items or when the user-requested `limit` has been reached.
 
-    Recognized kwargs:
+    Iteration relevant kwargs:
         chunk_size: Maximum number of items requested per API call during iteration. Pass `0`
             or `None` to let the API decide (effectively infinity).
         limit: User-requested total item limit. Stops iteration once this many items are yielded.
@@ -126,7 +146,7 @@ def build_iterable_list_page(
         current_page = first_page
         yield from current_page.items
 
-        fetched_items = len(current_page.items)
+        fetched_items = current_page.count
         while current_page.items and (not limit or (limit > fetched_items)):
             new_kwargs = {
                 **kwargs,
@@ -135,7 +155,7 @@ def build_iterable_list_page(
             }
             current_page = callback(**new_kwargs)
             yield from current_page.items
-            fetched_items += len(current_page.items)
+            fetched_items += current_page.count
 
     return IterableListPage(first_page, iterator())
 
@@ -154,15 +174,15 @@ def build_iterable_list_page_async(
     offset = kwargs.get('offset') or 0
     limit = kwargs.get('limit') or 0
 
-    async def fetch_first_page() -> Any:
-        return await callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)})
+    # Can be awaited multiple times with same result, but not scheduled at this time yet, as it might be pre-emptive.
+    fetch_first_page = _LazyTask(callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)}))
 
     async def async_iterator() -> AsyncIterator[Any]:
-        current_page = await fetch_first_page()
+        current_page = await fetch_first_page
         for item in current_page.items:
             yield item
 
-        fetched_items = len(current_page.items)
+        fetched_items = current_page.count
         while current_page.items and (not limit or (limit > fetched_items)):
             new_kwargs = {
                 **kwargs,
@@ -172,10 +192,10 @@ def build_iterable_list_page_async(
             current_page = await callback(**new_kwargs)
             for item in current_page.items:
                 yield item
-            fetched_items += len(current_page.items)
+            fetched_items += current_page.count
 
     async def wrap_first_page() -> IterableListPage[Any]:
-        first_page = await fetch_first_page()
+        first_page = await fetch_first_page
         return IterableListPage(first_page, iter(first_page.items))
 
     return IterableListPageAsync(wrap_first_page, async_iterator())

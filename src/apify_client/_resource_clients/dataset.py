@@ -228,8 +228,9 @@ class DatasetClient(ResourceClient):
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
-                # x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-                count=len(items),
+                # x-apify-pagination-count returns count of processed items, not count of returned items
+                # This makes difference when items were filtered using hidden/empty
+                count=int(response.headers['x-apify-pagination-count']),
                 # API returns 999999999999 when no limit is used
                 limit=int(response.headers['x-apify-pagination-limit']),
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
@@ -905,8 +906,9 @@ class DatasetClientAsync(ResourceClientAsync):
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
-                # x-apify-pagination-count returns invalid values when hidden/empty items are skipped
-                count=len(items),
+                # x-apify-pagination-count returns count of processed items, not count of returned items
+                # This makes difference when items were filtered using hidden/empty
+                count=int(response.headers['x-apify-pagination-count']),
                 # API returns 999999999999 when no limit is used
                 limit=int(response.headers['x-apify-pagination-limit']),
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',

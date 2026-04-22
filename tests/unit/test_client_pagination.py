@@ -172,9 +172,10 @@ def _bypass_response_validation() -> Any:
             p.stop()
 
 
-def create_items(start: int, end: int) -> list[dict[str, int]]:
+def create_items(start: int, end: int, step: int | None = None) -> list[dict[str, int]]:
     """Create a list of test items for the given index range."""
-    step = -1 if end < start else 1
+    if not step:
+        step = -1 if end < start else 1
     return [{'id': i, 'key': i} for i in range(start, end, step)]
 
 
@@ -211,6 +212,10 @@ def _mocked_api_pagination_logic(*, url: str, params: dict[str, Any] | None = No
 
     selected_items = items[lower_index : min(upper_index, lower_index + max_items_per_page)]
 
+    # Every second item would be filtered out when using `skip_empty=True`, `skip_hidden=True`, or `clean=True`
+    if params.get('skip_empty') or params.get('skip_hidden') or params.get('clean'):
+        selected_items = selected_items[::2]
+
     response = Mock()
 
     # The dataset items endpoint returns items as a raw list
@@ -231,6 +236,7 @@ def _mocked_api_pagination_logic(*, url: str, params: dict[str, Any] | None = No
         }
 
     response.headers = {
+        'x-apify-pagination-count': count,
         'x-apify-pagination-total': str(total_items),
         'x-apify-pagination-offset': str(offset),
         'x-apify-pagination-limit': str(limit or count or 1),
@@ -322,6 +328,14 @@ TEST_CASES = (
         'Offset, limit, descending, chunk_size',
         {'offset': 50, 'limit': 1100, 'desc': True, 'chunk_size': 100},
         create_items(2450, 1350),
+        DATASET_CLIENTS,
+    ),
+    _PaginationCase(
+        'Offset, limit, descending, chunk_size, clean',
+        {'limit': 1500, 'chunk_size': 100, 'clean': True},
+        # API behavior with `clean=True` is to apply the cleaning after pagination, so we end up with missing items
+        # being counted towards the limit and thus fewer total items returned.
+        create_items(0, 1500, 2),
         DATASET_CLIENTS,
     ),
     _PaginationCase(

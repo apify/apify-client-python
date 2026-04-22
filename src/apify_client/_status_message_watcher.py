@@ -115,7 +115,8 @@ class StatusMessageWatcherAsync(StatusMessageWatcherBase):
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         """Cancel the logging task."""
-        await asyncio.sleep(self._final_sleep_time_s)
+        if exc_type is None:
+            await asyncio.sleep(self._final_sleep_time_s)
         await self.stop()
 
     async def _log_changed_status_message(self) -> None:
@@ -169,7 +170,6 @@ class StatusMessageWatcher(StatusMessageWatcherBase):
         """Signal the logging thread to stop logging and wait for it to finish."""
         if not self._logging_thread:
             raise RuntimeError('Logging thread is not active')
-        time.sleep(self._final_sleep_time_s)
         self._stop_logging = True
         self._logging_thread.join()
         self._logging_thread = None
@@ -184,6 +184,8 @@ class StatusMessageWatcher(StatusMessageWatcherBase):
         self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None
     ) -> None:
         """Stop the logging thread."""
+        if exc_type is None:
+            time.sleep(self._final_sleep_time_s)
         self.stop()
 
     def _log_changed_status_message(self) -> None:

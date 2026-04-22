@@ -151,7 +151,7 @@ class DatasetClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterableListPage[DatasetItemsPage]:
+    ) -> IterableListPage[dict[str, Any]]:
         """List the items of the dataset.
 
         The returned page also supports iteration: `for item in client.list_items(...)` yields individual
@@ -252,7 +252,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
-    ) -> Iterator[DatasetItemsPage]:
+    ) -> Iterator[dict[str, Any]]:
         """Iterate over the items in the dataset.
 
         Deprecated: iterate the return value of `DatasetClient.list_items()` instead.
@@ -829,7 +829,7 @@ class DatasetClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterableListPageAsync[DatasetItemsPage]:
+    ) -> IterableListPageAsync[dict[str, Any]]:
         """List the items of the dataset.
 
         The returned page also supports iteration: `for item in client.list_items(...)` yields individual
@@ -930,7 +930,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
-    ) -> AsyncIterator[DatasetItemsPage]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """Iterate over the items in the dataset.
 
         Deprecated: iterate the return value of `DatasetClientAsync.list_items()` instead.

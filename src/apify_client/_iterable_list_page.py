@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable, Generator, Iterable, Iterator, Coroutine
-from typing import Any, Generic, TypeVar
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable, Coroutine, Generator, Iterable, Iterator
+from typing import Any, Generic, Protocol, TypeVar
 
 from apify_client._docs import docs_group
 
 T = TypeVar('T')
+
+
+class HasItems(Protocol[T]):
+    items: list[T]
 
 
 def _min_for_limit_param(a: int | None, b: int | None) -> int | None:
@@ -26,15 +30,13 @@ def _min_for_limit_param(a: int | None, b: int | None) -> int | None:
     return min(a, b)
 
 
-T = TypeVar('T')
-
-
 class _LazyTask(Generic[T]):
     """Task that is created lazily upon awaiting.
 
     This allows to reuse the same Task multiple times without the need to schedule the task when it is created.
     """
-    def __init__(self, awaitable: Awaitable[T]) -> None:
+
+    def __init__(self, awaitable: Coroutine[Any, Any, T]) -> None:
         self._awaitable = awaitable
         self._task: asyncio.Task[T] | None = None
 
@@ -42,7 +44,6 @@ class _LazyTask(Generic[T]):
         if self._task is None:
             self._task = asyncio.create_task(self._awaitable)
         return (yield from self._task.__await__())
-
 
 
 @docs_group('Other')
@@ -72,7 +73,7 @@ class IterableListPage(Iterable[T], Generic[T]):
     desc: bool
     """Whether the items are sorted in descending order."""
 
-    def __init__(self, first_page: Any, iterator: Iterator[T]) -> None:
+    def __init__(self, first_page: HasItems[T], iterator: Iterator[T]) -> None:
         """Initialize a page wrapper from a Pydantic paginated model and an iterator over all items."""
         self.items = first_page.items
         count = getattr(first_page, 'count', None)
@@ -119,15 +120,24 @@ class IterableListPageAsync(AsyncIterable[T], Generic[T]):
 
 
 def build_iterable_list_page(
-    callback: Callable[..., Any],
+    callback: Callable[..., HasItems[T]],
     **kwargs: Any,
-) -> IterableListPage[Any]:
+) -> IterableListPage[T]:
     """Build an `IterableListPage` from a paginated sync callback.
 
     The callback is invoked once immediately to fetch the first page, and again lazily during
-    iteration to fetch further pages. The `total` field from the first page is not trusted for
-    stopping iteration because it may change between calls; iteration stops when a page has
-    no items or when the user-requested `limit` has been reached.
+    iteration to fetch further pages.
+
+    There are several optional kwargs that control the pagination, but not all are accepted on each paginated endpoint.
+    Some endpoints do not return all paginated metadata, so the implementation should be resilient to missing fields,
+    but it can use them if available.
+
+    The `total` field from the first page is not trusted for stopping iteration because it may change between calls;
+    iteration stops when a page has no items or when the user-requested `limit` has been reached.
+
+    The `count` field does not count objects returned, but object scanned by the API. For example when using filters,
+    returned items can be smaller than `count`. Therefore, `count` should be used for correct offset calculation if
+    available.
 
     Iteration relevant kwargs:
         chunk_size: Maximum number of items requested per API call during iteration. Pass `0`
@@ -142,11 +152,11 @@ def build_iterable_list_page(
 
     first_page = callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)})
 
-    def iterator() -> Iterator[Any]:
+    def iterator() -> Iterator[T]:
         current_page = first_page
         yield from current_page.items
 
-        fetched_items = current_page.count
+        fetched_items = getattr(current_page, 'count', len(current_page.items))
         while current_page.items and (not limit or (limit > fetched_items)):
             new_kwargs = {
                 **kwargs,
@@ -155,15 +165,15 @@ def build_iterable_list_page(
             }
             current_page = callback(**new_kwargs)
             yield from current_page.items
-            fetched_items += current_page.count
+            fetched_items += getattr(current_page, 'count', len(current_page.items))
 
     return IterableListPage(first_page, iterator())
 
 
 def build_iterable_list_page_async(
-    callback: Callable[..., Awaitable[Any]],
+    callback: Callable[..., Coroutine[Any, Any, HasItems[T]]],
     **kwargs: Any,
-) -> IterableListPageAsync[Any]:
+) -> IterableListPageAsync[T]:
     """Build an `IterableListPageAsync` from a paginated async callback.
 
     Mirrors `build_iterable_list_page` but for async callbacks. The returned object is both
@@ -182,7 +192,7 @@ def build_iterable_list_page_async(
         for item in current_page.items:
             yield item
 
-        fetched_items = current_page.count
+        fetched_items = getattr(current_page, 'count', len(current_page.items))
         while current_page.items and (not limit or (limit > fetched_items)):
             new_kwargs = {
                 **kwargs,
@@ -192,7 +202,7 @@ def build_iterable_list_page_async(
             current_page = await callback(**new_kwargs)
             for item in current_page.items:
                 yield item
-            fetched_items += current_page.count
+            fetched_items += getattr(current_page, 'count', len(current_page.items))
 
     async def wrap_first_page() -> IterableListPage[Any]:
         first_page = await fetch_first_page
@@ -202,15 +212,14 @@ def build_iterable_list_page_async(
 
 
 def build_cursor_iterable_list_page(
-    callback: Callable[..., Any],
+    callback: Callable[..., HasItems[T]],
     *,
     cursor_param: str,
-    next_cursor_fn: Callable[[Any], Any],
     initial_cursor: Any = None,
     limit: int | None = None,
     chunk_size: int | None = None,
     **kwargs: Any,
-) -> IterableListPage[Any]:
+) -> IterableListPage[T]:
     """Build an `IterableListPage` for endpoints that paginate with a cursor instead of an offset.
 
     The callback is invoked with `{cursor_param: cursor, 'limit': effective_limit, **kwargs}` for each
@@ -229,7 +238,7 @@ def build_cursor_iterable_list_page(
         yield from current_page.items
 
         fetched = len(current_page.items)
-        next_cursor = next_cursor_fn(current_page)
+        next_cursor = getattr(current_page, f'next_{cursor_param}')
 
         while current_page.items and next_cursor is not None and (not user_limit or user_limit > fetched):
             remaining = (user_limit - fetched) if user_limit else 0
@@ -237,21 +246,20 @@ def build_cursor_iterable_list_page(
             current_page = callback(**{**kwargs, cursor_param: next_cursor, 'limit': next_limit})
             yield from current_page.items
             fetched += len(current_page.items)
-            next_cursor = next_cursor_fn(current_page)
+            next_cursor = getattr(current_page, f'next_{cursor_param}')
 
     return IterableListPage(first_page, iterator())
 
 
 def build_cursor_iterable_list_page_async(
-    callback: Callable[..., Awaitable[Any]],
+    callback: Callable[..., Awaitable[HasItems[T]]],
     *,
     cursor_param: str,
-    next_cursor_fn: Callable[[Any], Any],
     initial_cursor: Any = None,
     limit: int | None = None,
     chunk_size: int | None = None,
     **kwargs: Any,
-) -> IterableListPageAsync[Any]:
+) -> IterableListPageAsync[T]:
     """Build an `IterableListPageAsync` for endpoints that paginate with a cursor instead of an offset.
 
     Mirrors `build_cursor_iterable_list_page` but for async callbacks. The returned object is both
@@ -271,7 +279,7 @@ def build_cursor_iterable_list_page_async(
             yield item
 
         fetched = len(current_page.items)
-        next_cursor = next_cursor_fn(current_page)
+        next_cursor = getattr(current_page, f'next_{cursor_param}')
 
         while current_page.items and next_cursor is not None and (not user_limit or user_limit > fetched):
             remaining = (user_limit - fetched) if user_limit else 0
@@ -280,7 +288,7 @@ def build_cursor_iterable_list_page_async(
             for item in current_page.items:
                 yield item
             fetched += len(current_page.items)
-            next_cursor = next_cursor_fn(current_page)
+            next_cursor = getattr(current_page, f'next_{cursor_param}')
 
     async def wrap_first_page() -> IterableListPage[Any]:
         first_page = await fetch_first_page()

@@ -56,11 +56,6 @@ _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
-def _rq_next_cursor(page: ListOfRequests) -> str | None:
-    """Return the opaque `next_cursor` from the page, or `None` when there are no more pages."""
-    return page.next_cursor
-
-
 @docs_group('Resource clients')
 class RequestQueueClient(ResourceClient):
     """Sub-client for managing a specific request queue.
@@ -564,7 +559,6 @@ class RequestQueueClient(ResourceClient):
         return build_cursor_iterable_list_page(
             _callback,
             cursor_param='cursor',
-            next_cursor_fn=_rq_next_cursor,
             initial_cursor=cursor,
             limit=limit,
             chunk_size=chunk_size,
@@ -1142,7 +1136,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
         return build_cursor_iterable_list_page_async(
             _callback,
             cursor_param='cursor',
-            next_cursor_fn=_rq_next_cursor,
             initial_cursor=cursor,
             limit=limit,
             chunk_size=chunk_size,

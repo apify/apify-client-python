@@ -40,13 +40,6 @@ if TYPE_CHECKING:
     from apify_client._types import Timeout
 
 
-def _kvs_next_cursor(page: ListOfKeys) -> str | None:
-    """Return the next cursor for KVS key pagination, or `None` when there are no more pages."""
-    if not page.is_truncated:
-        return None
-    return page.next_exclusive_start_key
-
-
 def _parse_get_record_response(response: HttpResponse) -> Any:
     """Parse an HTTP response based on its content type.
 
@@ -202,7 +195,6 @@ class KeyValueStoreClient(ResourceClient):
         return build_cursor_iterable_list_page(
             _callback,
             cursor_param='exclusive_start_key',
-            next_cursor_fn=_kvs_next_cursor,
             initial_cursor=exclusive_start_key,
             limit=limit,
             chunk_size=chunk_size,
@@ -641,7 +633,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         return build_cursor_iterable_list_page_async(
             _callback,
             cursor_param='exclusive_start_key',
-            next_cursor_fn=_kvs_next_cursor,
             initial_cursor=exclusive_start_key,
             limit=limit,
             chunk_size=chunk_size,

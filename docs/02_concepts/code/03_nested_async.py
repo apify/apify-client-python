@@ -1,5 +1,4 @@
 from apify_client import ApifyClientAsync
-from apify_client._models_generated import ActorJobStatus
 
 TOKEN = 'MY-APIFY-TOKEN'
 
@@ -14,7 +13,7 @@ async def main() -> None:
     actor_runs = (await runs_client.list(limit=10, desc=True)).items
 
     # Select the last run of the Actor that finished with a SUCCEEDED status.
-    last_succeeded_run_client = actor_client.last_run(status=ActorJobStatus.SUCCEEDED)
+    last_succeeded_run_client = actor_client.last_run(status='SUCCEEDED')
 
     # Get dataset
     actor_run_dataset_client = last_succeeded_run_client.dataset()

@@ -14,12 +14,12 @@ from apify_client._models_generated import (
     SourceCodeFolder,
     Version,
     VersionResponse,
-    VersionSourceType,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._types import Timeout
+    from apify_client._literals import Timeout
+    from apify_client._literals_generated import VersionSourceType
 
 
 _source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])
@@ -85,13 +85,13 @@ class ActorVersionCollectionClient(ResourceClient):
                 be set to the Actor build process.
             source_type: What source type is the Actor version using.
             source_files: Source code comprised of multiple files, each an item of the array. Required
-                when `source_type` is `VersionSourceType.SOURCE_FILES`. See the API docs for the exact structure.
+                when `source_type` is `'SOURCE_FILES'`. See the API docs for the exact structure.
             git_repo_url: The URL of a Git repository from which the source code will be cloned.
-                Required when `source_type` is `VersionSourceType.GIT_REPO`.
+                Required when `source_type` is `'GIT_REPO'`.
             tarball_url: The URL of a tarball or a zip archive from which the source code will be downloaded.
-                Required when `source_type` is `VersionSourceType.TARBALL`.
+                Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
-                Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
+                Required when `source_type` is `'GITHUB_GIST'`.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -172,13 +172,13 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
                 be set to the Actor build process.
             source_type: What source type is the Actor version using.
             source_files: Source code comprised of multiple files, each an item of the array. Required
-                when `source_type` is `VersionSourceType.SOURCE_FILES`. See the API docs for the exact structure.
+                when `source_type` is `'SOURCE_FILES'`. See the API docs for the exact structure.
             git_repo_url: The URL of a Git repository from which the source code will be cloned.
-                Required when `source_type` is `VersionSourceType.GIT_REPO`.
+                Required when `source_type` is `'GIT_REPO'`.
             tarball_url: The URL of a tarball or a zip archive from which the source code will be downloaded.
-                Required when `source_type` is `VersionSourceType.TARBALL`.
+                Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
-                Required when `source_type` is `VersionSourceType.GITHUB_GIST`.
+                Required when `source_type` is `'GITHUB_GIST'`.
             timeout: Timeout for the API HTTP request.
 
         Returns:

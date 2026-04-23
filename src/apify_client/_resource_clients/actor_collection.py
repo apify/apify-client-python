@@ -19,7 +19,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._types import Timeout
+    from apify_client._literals import Timeout
 
 _SORT_BY_TO_API: dict[str, str] = {
     'created_at': 'createdAt',

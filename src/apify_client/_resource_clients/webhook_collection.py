@@ -13,8 +13,9 @@ from apify_client._models_generated import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._models_generated import Webhook, WebhookEventType
-    from apify_client._types import Timeout
+    from apify_client._literals import Timeout
+    from apify_client._literals_generated import WebhookEventType
+    from apify_client._models_generated import Webhook
 
 
 @docs_group('Resource clients')

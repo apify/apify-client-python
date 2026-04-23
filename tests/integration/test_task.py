@@ -194,7 +194,7 @@ async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
         result = await maybe_await(client.run(run.id).wait_for_finish())
         finished_run = cast('Run', result)
         assert finished_run is not None
-        assert finished_run.status.value == 'SUCCEEDED'
+        assert finished_run.status == 'SUCCEEDED'
 
         # Cleanup run
         await maybe_await(client.run(run.id).delete())
@@ -227,7 +227,7 @@ async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
         run = cast('Run', result)
         assert run is not None
         assert run.id is not None
-        assert run.status.value == 'SUCCEEDED'
+        assert run.status == 'SUCCEEDED'
 
         # Cleanup run
         await maybe_await(client.run(run.id).delete())

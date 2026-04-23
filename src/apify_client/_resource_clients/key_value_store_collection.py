@@ -3,17 +3,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
+from apify_client._literals_generated import _STORAGE_OWNERSHIP_WIRE_VALUES, StorageOwnership
 from apify_client._models_generated import (
     KeyValueStore,
     KeyValueStoreResponse,
     ListOfKeyValueStores,
     ListOfKeyValueStoresResponse,
-    StorageOwnership,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._types import Timeout
+    from apify_client._literals import Timeout
 
 
 @docs_group('Resource clients')
@@ -54,15 +54,20 @@ class KeyValueStoreCollectionClient(ResourceClient):
             limit: How many key-value stores to retrieve.
             offset: What key-value store to include as first when retrieving the list.
             desc: Whether to sort the key-value stores in descending order based on their modification date.
-            ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
-                'sharedWithMe' returns only key-value stores shared with the user.
+            ownership: Filter by ownership. `'owned_by_me'` returns only user's own key-value stores,
+                `'shared_with_me'` returns only key-value stores shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available key-value stores matching the specified filters.
         """
         result = self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+            timeout=timeout,
+            unnamed=unnamed,
+            limit=limit,
+            offset=offset,
+            desc=desc,
+            ownership=_STORAGE_OWNERSHIP_WIRE_VALUES[ownership] if ownership is not None else None,
         )
         return ListOfKeyValueStoresResponse.model_validate(result).data
 
@@ -127,15 +132,20 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             limit: How many key-value stores to retrieve.
             offset: What key-value store to include as first when retrieving the list.
             desc: Whether to sort the key-value stores in descending order based on their modification date.
-            ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
-                'sharedWithMe' returns only key-value stores shared with the user.
+            ownership: Filter by ownership. `'owned_by_me'` returns only user's own key-value stores,
+                `'shared_with_me'` returns only key-value stores shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available key-value stores matching the specified filters.
         """
         result = await self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+            timeout=timeout,
+            unnamed=unnamed,
+            limit=limit,
+            offset=offset,
+            desc=desc,
+            ownership=_STORAGE_OWNERSHIP_WIRE_VALUES[ownership] if ownership is not None else None,
         )
         return ListOfKeyValueStoresResponse.model_validate(result).data
 

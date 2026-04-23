@@ -12,10 +12,11 @@ from typing import TYPE_CHECKING, Annotated
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel, model_validator
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import ActorJobStatus, WebhookCreate
+from apify_client._literals_generated import ActorJobStatus
+from apify_client._models_generated import WebhookCreate
 
 if TYPE_CHECKING:
-    from apify_client._types import WebhooksList
+    from apify_client._literals import WebhooksList
 
 
 @docs_group('Models')

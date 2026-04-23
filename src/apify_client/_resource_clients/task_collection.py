@@ -19,8 +19,8 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._literals import Timeout
     from apify_client._typeddicts_generated import TaskInputDict
-    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

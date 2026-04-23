@@ -8,7 +8,6 @@ from apify_client._docs import docs_group
 from apify_client._models import WebhookRepresentationList
 from apify_client._models_generated import (
     Actor,
-    ActorPermissionLevel,
     ActorResponse,
     ActorStandby,
     Build,
@@ -21,7 +20,6 @@ from apify_client._models_generated import (
     PayPerEventActorPricingInfo,
     PricePerDatasetItemActorPricingInfo,
     Run,
-    RunOrigin,
     RunResponse,
     UpdateActorRequest,
 )
@@ -33,7 +31,8 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._models_generated import ActorJobStatus
+    from apify_client._literals import Timeout, WebhooksList
+    from apify_client._literals_generated import ActorJobStatus, ActorPermissionLevel, RunOrigin
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,
@@ -50,7 +49,6 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client._types import Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -276,7 +274,7 @@ class ActorClient(ResourceClient):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
-            forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
+            forcePermissionLevel=force_permission_level,
             webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 
@@ -772,7 +770,7 @@ class ActorClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
-            forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
+            forcePermissionLevel=force_permission_level,
             webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
         )
 

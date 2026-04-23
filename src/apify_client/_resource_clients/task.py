@@ -7,7 +7,6 @@ from apify_client._models import WebhookRepresentationList
 from apify_client._models_generated import (
     ActorStandby,
     Run,
-    RunOrigin,
     RunResponse,
     Task,
     TaskInput,
@@ -21,7 +20,8 @@ from apify_client._utils import response_to_dict, to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._models_generated import ActorJobStatus
+    from apify_client._literals import Timeout, WebhooksList
+    from apify_client._literals_generated import ActorJobStatus, RunOrigin
     from apify_client._resource_clients import (
         RunClient,
         RunClientAsync,
@@ -31,7 +31,6 @@ if TYPE_CHECKING:
         WebhookCollectionClientAsync,
     )
     from apify_client._typeddicts_generated import TaskInputDict
-    from apify_client._types import Timeout, WebhooksList
 
 
 @docs_group('Resource clients')

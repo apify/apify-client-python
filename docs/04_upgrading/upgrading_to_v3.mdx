@@ -306,3 +306,53 @@ client.actors().list(sort_by='last_run_started_at')
 ```
 
 The default value also changed from `'createdAt'` to `'created_at'` (behavior is unchanged). The client translates the snake_case value to the form expected by the API internally.
+
+## `Literal` type aliases instead of `StrEnum` classes
+
+Generated enum-like types are now [`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal) type aliases instead of `StrEnum` classes. Pass plain strings instead of enum members; type checkers will validate them against the allowed set.
+
+Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralAccess`, `HttpMethod`, `RunOrigin`, `SourceCodeFileFormat`, `StorageOwnership`, `VersionSourceType`, `WebhookDispatchStatus`, `WebhookEventType`.
+
+Before (v2):
+
+```python
+from apify_client._models_generated import WebhookEventType
+
+client.actor('apify/hello-world').webhooks().create(
+    event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+    request_url='https://example.com/webhook',
+)
+```
+
+After (v3):
+
+```python
+client.actor('apify/hello-world').webhooks().create(
+    event_types=['ACTOR.RUN.SUCCEEDED'],
+    request_url='https://example.com/webhook',
+)
+```
+
+The aliases now live in `apify_client._literals_generated` (previously `apify_client._models_generated`) and can be imported for use in type annotations:
+
+```python
+from apify_client._literals_generated import WebhookEventType
+
+events: list[WebhookEventType] = ['ACTOR.RUN.SUCCEEDED', 'ACTOR.RUN.FAILED']
+```
+
+### Snake_case `StorageOwnership` values
+
+`StorageOwnership` previously carried the camelCase wire values (`'ownedByMe'` / `'sharedWithMe'`). It now uses pythonic snake_case values; the client translates them to the camelCase form expected by the API internally.
+
+Before (v2):
+
+```python
+client.datasets().list(ownership='ownedByMe')
+```
+
+After (v3):
+
+```python
+client.datasets().list(ownership='owned_by_me')
+```

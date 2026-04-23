@@ -19,7 +19,8 @@ if TYPE_CHECKING:
     import logging
     from decimal import Decimal
 
-    from apify_client._models_generated import GeneralAccess
+    from apify_client._literals import Timeout
+    from apify_client._literals_generated import GeneralAccess
     from apify_client._resource_clients import (
         DatasetClient,
         DatasetClientAsync,
@@ -30,7 +31,6 @@ if TYPE_CHECKING:
         RequestQueueClient,
         RequestQueueClientAsync,
     )
-    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

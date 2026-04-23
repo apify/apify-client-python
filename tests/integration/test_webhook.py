@@ -10,14 +10,12 @@ if TYPE_CHECKING:
 
 from ._utils import maybe_await
 from apify_client._models_generated import (
-    ActorJobStatus,
     ListOfRuns,
     ListOfWebhookDispatches,
     ListOfWebhooks,
     Run,
     Webhook,
     WebhookDispatch,
-    WebhookEventType,
 )
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -30,7 +28,7 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     since a completed run won't emit new events. If no completed runs exist, starts a new run and
     waits for it to finish.
     """
-    runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
+    runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status='SUCCEEDED'))
 
     assert isinstance(runs_page, ListOfRuns)
 
@@ -68,7 +66,7 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
     # Create webhook bound to a finished run (will never fire)
     created_webhook = await maybe_await(
         client.webhooks().create(
-            event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+            event_types=['ACTOR.RUN.SUCCEEDED'],
             request_url='https://httpbin.org/post',
             actor_run_id=run_id,
             is_ad_hoc=True,
@@ -95,7 +93,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
     # Create webhook bound to a finished run
     created_webhook = await maybe_await(
         client.webhooks().create(
-            event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+            event_types=['ACTOR.RUN.SUCCEEDED'],
             request_url='https://httpbin.org/post',
             actor_run_id=run_id,
             is_ad_hoc=True,
@@ -125,7 +123,7 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
     # Create webhook bound to a finished run
     created_webhook = await maybe_await(
         client.webhooks().create(
-            event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+            event_types=['ACTOR.RUN.SUCCEEDED'],
             request_url='https://httpbin.org/post',
             actor_run_id=run_id,
             is_ad_hoc=True,
@@ -150,7 +148,7 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
     # Create webhook bound to a finished run
     created_webhook = await maybe_await(
         client.webhooks().create(
-            event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+            event_types=['ACTOR.RUN.SUCCEEDED'],
             request_url='https://httpbin.org/post',
             actor_run_id=run_id,
             is_ad_hoc=True,
@@ -180,7 +178,7 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
     # Create webhook bound to a finished run
     created_webhook = await maybe_await(
         client.webhooks().create(
-            event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+            event_types=['ACTOR.RUN.SUCCEEDED'],
             request_url='https://httpbin.org/post',
             actor_run_id=run_id,
             is_ad_hoc=True,

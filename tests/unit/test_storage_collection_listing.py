@@ -7,7 +7,6 @@ import pytest
 from werkzeug.wrappers import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._models_generated import StorageOwnership
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -48,7 +47,7 @@ def test_dataset_collection_list_ownership_sync(httpserver: HTTPServer, client_u
     httpserver.expect_oneshot_request('/v2/datasets', method='GET').respond_with_handler(_make_handler(captured))
 
     client = ApifyClient(token='placeholder_token', **client_urls)
-    result = client.datasets().list(ownership=StorageOwnership.OWNED_BY_ME)
+    result = client.datasets().list(ownership='owned_by_me')
 
     assert result.total == 0
     assert captured['args']['ownership'] == 'ownedByMe'
@@ -59,7 +58,7 @@ async def test_dataset_collection_list_ownership_async(httpserver: HTTPServer, c
     httpserver.expect_oneshot_request('/v2/datasets', method='GET').respond_with_handler(_make_handler(captured))
 
     client = ApifyClientAsync(token='placeholder_token', **client_urls)
-    result = await client.datasets().list(ownership=StorageOwnership.SHARED_WITH_ME)
+    result = await client.datasets().list(ownership='shared_with_me')
 
     assert result.total == 0
     assert captured['args']['ownership'] == 'sharedWithMe'
@@ -72,7 +71,7 @@ def test_key_value_store_collection_list_ownership_sync(httpserver: HTTPServer, 
     )
 
     client = ApifyClient(token='placeholder_token', **client_urls)
-    result = client.key_value_stores().list(ownership=StorageOwnership.OWNED_BY_ME)
+    result = client.key_value_stores().list(ownership='owned_by_me')
 
     assert result.total == 0
     assert captured['args']['ownership'] == 'ownedByMe'
@@ -85,7 +84,7 @@ async def test_key_value_store_collection_list_ownership_async(httpserver: HTTPS
     )
 
     client = ApifyClientAsync(token='placeholder_token', **client_urls)
-    result = await client.key_value_stores().list(ownership=StorageOwnership.SHARED_WITH_ME)
+    result = await client.key_value_stores().list(ownership='shared_with_me')
 
     assert result.total == 0
     assert captured['args']['ownership'] == 'sharedWithMe'
@@ -96,7 +95,7 @@ def test_request_queue_collection_list_ownership_sync(httpserver: HTTPServer, cl
     httpserver.expect_oneshot_request('/v2/request-queues', method='GET').respond_with_handler(_make_handler(captured))
 
     client = ApifyClient(token='placeholder_token', **client_urls)
-    result = client.request_queues().list(ownership=StorageOwnership.OWNED_BY_ME)
+    result = client.request_queues().list(ownership='owned_by_me')
 
     assert result.total == 0
     assert captured['args']['ownership'] == 'ownedByMe'
@@ -107,7 +106,7 @@ async def test_request_queue_collection_list_ownership_async(httpserver: HTTPSer
     httpserver.expect_oneshot_request('/v2/request-queues', method='GET').respond_with_handler(_make_handler(captured))
 
     client = ApifyClientAsync(token='placeholder_token', **client_urls)
-    result = await client.request_queues().list(ownership=StorageOwnership.SHARED_WITH_ME)
+    result = await client.request_queues().list(ownership='shared_with_me')
 
     assert result.total == 0
     assert captured['args']['ownership'] == 'sharedWithMe'

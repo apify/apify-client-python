@@ -76,7 +76,7 @@ async def test_build_log(client: ApifyClient | ApifyClientAsync) -> None:
     # Find a completed build (SUCCEEDED status)
     completed_build = None
     for build in builds_page.items:
-        if build.status and build.status.value == 'SUCCEEDED':
+        if build.status and build.status == 'SUCCEEDED':
             completed_build = build
             break
 
@@ -103,14 +103,14 @@ async def test_build_wait_for_finish(client: ApifyClient | ApifyClientAsync) -> 
     # Find a completed build (SUCCEEDED status)
     completed_build = None
     for build in builds_page.items:
-        if build.status and build.status.value == 'SUCCEEDED':
+        if build.status and build.status == 'SUCCEEDED':
             completed_build = build
             break
 
     if completed_build is None:
         # If no succeeded build found, use any finished build
         for build in builds_page.items:
-            if build.status and build.status.value in ('SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED_OUT'):
+            if build.status and build.status in ('SUCCEEDED', 'FAILED', 'ABORTED', 'TIMED-OUT'):
                 completed_build = build
                 break
 
@@ -183,13 +183,13 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
         result = await maybe_await(second_build_client.wait_for_finish())
         finished_build = cast('Build | None', result)
         assert finished_build is not None
-        assert finished_build.status.value in ('SUCCEEDED', 'FAILED')
+        assert finished_build.status in ('SUCCEEDED', 'FAILED')
 
         # Test abort on already finished build (should return the build in its current state)
         result = await maybe_await(second_build_client.abort())
         aborted_build = cast('Build', result)
         assert aborted_build is not None
-        assert aborted_build.status.value in ('SUCCEEDED', 'FAILED')
+        assert aborted_build.status in ('SUCCEEDED', 'FAILED')
 
         # Delete the first build (not the default/latest)
         await maybe_await(first_build_client.delete())

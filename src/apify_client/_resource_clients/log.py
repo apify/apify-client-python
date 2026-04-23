@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._types import Timeout
+    from apify_client._literals import Timeout
 
 
 @docs_group('Resource clients')

@@ -123,6 +123,9 @@ indent-style = "space"
 "**/__init__.py" = [
     "F401", # Unused imports
 ]
+"**/{_models,_models_generated}.py" = [
+    "TC001", # Pydantic needs the literal aliases importable at runtime to resolve forward references
+]
 "**/{scripts}/*" = [
     "D",       # Everything from the pydocstyle
     "INP001",  # File {filename} is part of an implicit namespace package, add an __init__.py

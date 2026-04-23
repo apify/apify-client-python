@@ -28,8 +28,8 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from apify_client._http_clients import HttpResponse
+    from apify_client._literals import JsonSerializable, Timeout
     from apify_client._statistics import ClientStatistics
-    from apify_client._types import JsonSerializable, Timeout
 
 T = TypeVar('T')
 

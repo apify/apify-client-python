@@ -17,8 +17,7 @@ from apify_client._models import (
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._types import WebhookRepresentationList
-from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
-from apify_client.errors import ApifyApiError
+from apify_client._utils import response_to_dict, to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -280,7 +279,7 @@ class TaskClient(ResourceClient):
         )
         return run_client.wait_for_finish(wait_duration=wait_duration)
 
-    def get_input(self, *, timeout: Timeout = 'short') -> dict | None:
+    def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -290,18 +289,17 @@ class TaskClient(ResourceClient):
 
         Returns:
             Retrieved task input.
+
+        Raises:
+            NotFoundError: If the task does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url('input'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            return response_to_dict(response)
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-        return None
+        response = self._http_client.call(
+            url=self._build_url('input'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        return response_to_dict(response)
 
     def update_input(self, *, task_input: dict | TaskInput, timeout: Timeout = 'short') -> dict:
         """Update the default input for this task.
@@ -603,7 +601,7 @@ class TaskClientAsync(ResourceClientAsync):
         )
         return await run_client.wait_for_finish(wait_duration=wait_duration)
 
-    async def get_input(self, *, timeout: Timeout = 'short') -> dict | None:
+    async def get_input(self, *, timeout: Timeout = 'short') -> dict:
         """Retrieve the default input for this task.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-input-object/get-task-input
@@ -613,18 +611,17 @@ class TaskClientAsync(ResourceClientAsync):
 
         Returns:
             Retrieved task input.
+
+        Raises:
+            NotFoundError: If the task does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url('input'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            return response_to_dict(response)
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-        return None
+        response = await self._http_client.call(
+            url=self._build_url('input'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        return response_to_dict(response)
 
     async def update_input(self, *, task_input: dict | TaskInput, timeout: Timeout = 'short') -> dict:
         """Update the default input for this task.

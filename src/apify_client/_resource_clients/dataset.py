@@ -10,12 +10,10 @@ from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
-    catch_not_found_or_throw,
     create_storage_content_signature,
     response_to_dict,
     response_to_list,
 )
-from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -628,7 +626,7 @@ class DatasetClient(ResourceClient):
             timeout=timeout,
         )
 
-    def get_statistics(self, *, timeout: Timeout = 'short') -> DatasetStatistics | None:
+    def get_statistics(self, *, timeout: Timeout = 'short') -> DatasetStatistics:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
@@ -637,21 +635,19 @@ class DatasetClient(ResourceClient):
             timeout: Timeout for the API HTTP request.
 
         Returns:
-            The dataset statistics or None if the dataset does not exist.
-        """
-        try:
-            response = self._http_client.call(
-                url=self._build_url('statistics'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return DatasetStatisticsResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            The dataset statistics.
 
-        return None
+        Raises:
+            NotFoundError: If the dataset does not exist.
+        """
+        response = self._http_client.call(
+            url=self._build_url('statistics'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return DatasetStatisticsResponse.model_validate(result).data
 
     def create_items_public_url(
         self,
@@ -1208,7 +1204,7 @@ class DatasetClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
 
-    async def get_statistics(self, *, timeout: Timeout = 'short') -> DatasetStatistics | None:
+    async def get_statistics(self, *, timeout: Timeout = 'short') -> DatasetStatistics:
         """Get the dataset statistics.
 
         https://docs.apify.com/api/v2#tag/DatasetsStatistics/operation/dataset_statistics_get
@@ -1217,21 +1213,19 @@ class DatasetClientAsync(ResourceClientAsync):
             timeout: Timeout for the API HTTP request.
 
         Returns:
-            The dataset statistics or None if the dataset does not exist.
-        """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url('statistics'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return DatasetStatisticsResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            The dataset statistics.
 
-        return None
+        Raises:
+            NotFoundError: If the dataset does not exist.
+        """
+        response = await self._http_client.call(
+            url=self._build_url('statistics'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return DatasetStatisticsResponse.model_validate(result).data
 
     async def create_items_public_url(
         self,

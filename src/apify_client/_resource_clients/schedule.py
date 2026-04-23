@@ -11,8 +11,7 @@ from apify_client._models import (
     ScheduleResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, response_to_dict
-from apify_client.errors import ApifyApiError
+from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
     from apify_client._types import Timeout
@@ -111,7 +110,7 @@ class ScheduleClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked] | None:
+    def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked]:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -121,20 +120,18 @@ class ScheduleClient(ResourceClient):
 
         Returns:
             Retrieved log of the given schedule.
-        """
-        try:
-            response = self._http_client.call(
-                url=self._build_url('log'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return ScheduleLogResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
 
-        return None
+        Raises:
+            NotFoundError: If the schedule does not exist.
+        """
+        response = self._http_client.call(
+            url=self._build_url('log'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return ScheduleLogResponse.model_validate(result).data
 
 
 @docs_group('Resource clients')
@@ -230,7 +227,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked] | None:
+    async def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked]:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -240,17 +237,15 @@ class ScheduleClientAsync(ResourceClientAsync):
 
         Returns:
             Retrieved log of the given schedule.
-        """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url('log'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return ScheduleLogResponse.model_validate(result).data
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
 
-        return None
+        Raises:
+            NotFoundError: If the schedule does not exist.
+        """
+        response = await self._http_client.call(
+            url=self._build_url('log'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return ScheduleLogResponse.model_validate(result).data

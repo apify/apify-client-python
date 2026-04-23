@@ -16,8 +16,7 @@ from apify_client._models import (
     UserPublicInfo,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, response_to_dict
-from apify_client.errors import ApifyApiError
+from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
     from apify_client._types import Timeout
@@ -65,7 +64,7 @@ class UserClient(ResourceClient):
         except ValidationError:
             return PublicUserDataResponse.model_validate(result).data
 
-    def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage | None:
+    def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -78,24 +77,21 @@ class UserClient(ResourceClient):
             timeout: Timeout for the API HTTP request.
 
         Returns:
-            The retrieved request, or None, if it did not exist.
+            The retrieved monthly usage.
+
+        Raises:
+            NotFoundError: If the user does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url('usage/monthly'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return MonthlyUsageResponse.model_validate(result).data
+        response = self._http_client.call(
+            url=self._build_url('usage/monthly'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return MonthlyUsageResponse.model_validate(result).data
 
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-
-        return None
-
-    def limits(self, *, timeout: Timeout = 'short') -> AccountLimits | None:
+    def limits(self, *, timeout: Timeout = 'short') -> AccountLimits:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
@@ -107,22 +103,19 @@ class UserClient(ResourceClient):
             timeout: Timeout for the API HTTP request.
 
         Returns:
-            The account limits, or None, if they could not be retrieved.
+            The account limits.
+
+        Raises:
+            NotFoundError: If the user does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url('limits'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return LimitsResponse.model_validate(result).data
-
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-
-        return None
+        response = self._http_client.call(
+            url=self._build_url('limits'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return LimitsResponse.model_validate(result).data
 
     def update_limits(
         self,
@@ -194,7 +187,7 @@ class UserClientAsync(ResourceClientAsync):
         except ValidationError:
             return PublicUserDataResponse.model_validate(result).data
 
-    async def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage | None:
+    async def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage:
         """Return monthly usage of the user account.
 
         This includes a complete usage summary for the current usage cycle, an overall sum, as well as a daily breakdown
@@ -207,24 +200,21 @@ class UserClientAsync(ResourceClientAsync):
             timeout: Timeout for the API HTTP request.
 
         Returns:
-            The retrieved request, or None, if it did not exist.
+            The retrieved monthly usage.
+
+        Raises:
+            NotFoundError: If the user does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url('usage/monthly'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return MonthlyUsageResponse.model_validate(result).data
+        response = await self._http_client.call(
+            url=self._build_url('usage/monthly'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return MonthlyUsageResponse.model_validate(result).data
 
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-
-        return None
-
-    async def limits(self, *, timeout: Timeout = 'short') -> AccountLimits | None:
+    async def limits(self, *, timeout: Timeout = 'short') -> AccountLimits:
         """Return a complete summary of the user account's limits.
 
         It is the same information which is available on the account's Limits page. The returned data includes
@@ -236,22 +226,19 @@ class UserClientAsync(ResourceClientAsync):
             timeout: Timeout for the API HTTP request.
 
         Returns:
-            The account limits, or None, if they could not be retrieved.
+            The account limits.
+
+        Raises:
+            NotFoundError: If the user does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url('limits'),
-                method='GET',
-                params=self._build_params(),
-                timeout=timeout,
-            )
-            result = response_to_dict(response)
-            return LimitsResponse.model_validate(result).data
-
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-
-        return None
+        response = await self._http_client.call(
+            url=self._build_url('limits'),
+            method='GET',
+            params=self._build_params(),
+            timeout=timeout,
+        )
+        result = response_to_dict(response)
+        return LimitsResponse.model_validate(result).data
 
     async def update_limits(
         self,

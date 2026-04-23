@@ -14,8 +14,7 @@ from apify_client._models import (
     WebhookUpdate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, response_to_dict
-from apify_client.errors import ApifyApiError
+from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
     from apify_client._models import WebhookEventType
@@ -123,7 +122,7 @@ class WebhookClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def test(self, *, timeout: Timeout = 'medium') -> WebhookDispatch | None:
+    def test(self, *, timeout: Timeout = 'medium') -> WebhookDispatch:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -135,22 +134,19 @@ class WebhookClient(ResourceClient):
 
         Returns:
             The webhook dispatch created by the test.
+
+        Raises:
+            NotFoundError: If the webhook does not exist.
         """
-        try:
-            response = self._http_client.call(
-                url=self._build_url('test'),
-                method='POST',
-                params=self._build_params(),
-                timeout=timeout,
-            )
+        response = self._http_client.call(
+            url=self._build_url('test'),
+            method='POST',
+            params=self._build_params(),
+            timeout=timeout,
+        )
 
-            result = response_to_dict(response)
-            return TestWebhookResponse.model_validate(result).data
-
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-
-        return None
+        result = response_to_dict(response)
+        return TestWebhookResponse.model_validate(result).data
 
     def dispatches(self) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.
@@ -266,7 +262,7 @@ class WebhookClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def test(self, *, timeout: Timeout = 'medium') -> WebhookDispatch | None:
+    async def test(self, *, timeout: Timeout = 'medium') -> WebhookDispatch:
         """Test a webhook.
 
         Creates a webhook dispatch with a dummy payload.
@@ -278,22 +274,19 @@ class WebhookClientAsync(ResourceClientAsync):
 
         Returns:
             The webhook dispatch created by the test.
+
+        Raises:
+            NotFoundError: If the webhook does not exist.
         """
-        try:
-            response = await self._http_client.call(
-                url=self._build_url('test'),
-                method='POST',
-                params=self._build_params(),
-                timeout=timeout,
-            )
+        response = await self._http_client.call(
+            url=self._build_url('test'),
+            method='POST',
+            params=self._build_params(),
+            timeout=timeout,
+        )
 
-            result = response_to_dict(response)
-            return TestWebhookResponse.model_validate(result).data
-
-        except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
-
-        return None
+        result = response_to_dict(response)
+        return TestWebhookResponse.model_validate(result).data
 
     def dispatches(self) -> WebhookDispatchCollectionClientAsync:
         """Get dispatches of the webhook.

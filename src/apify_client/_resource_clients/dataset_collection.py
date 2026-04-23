@@ -3,7 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import Dataset, DatasetResponse, ListOfDatasets, ListOfDatasetsResponse, StorageOwnership
+from apify_client._models_generated import (
+    Dataset,
+    DatasetResponse,
+    ListOfDatasets,
+    ListOfDatasetsResponse,
+    StorageOwnership,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:

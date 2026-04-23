@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, Build, ListOfBuilds
+    from apify_client._models_generated import Actor, Build, ListOfBuilds
 
 
 from datetime import timedelta

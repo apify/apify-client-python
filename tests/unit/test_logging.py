@@ -13,7 +13,7 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client._models import ActorJobStatus
+from apify_client._models_generated import ActorJobStatus
 from apify_client._status_message_watcher import StatusMessageWatcherBase
 from apify_client._streamed_log import StreamedLogBase
 

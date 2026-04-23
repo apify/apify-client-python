@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, ListOfVersions, Version
+    from apify_client._models_generated import Actor, ListOfVersions, Version
 
 
 from ._utils import get_random_resource_name, maybe_await
-from apify_client._models import VersionSourceType
+from apify_client._models_generated import VersionSourceType
 
 
 async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> None:

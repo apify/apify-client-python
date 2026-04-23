@@ -11,6 +11,7 @@ GroupName = Literal[
     'Resource clients',
     'Errors',
     'Models',
+    'Typed dicts',
     'Other',
 ]
 

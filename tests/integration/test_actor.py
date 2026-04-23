@@ -8,7 +8,7 @@ from ._utils import get_random_resource_name, maybe_await
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, Build, ListOfActors, Run
+    from apify_client._models_generated import Actor, Build, ListOfActors, Run
     from apify_client._resource_clients import BuildClient, BuildClientAsync
 
 

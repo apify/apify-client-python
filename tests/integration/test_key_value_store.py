@@ -82,7 +82,7 @@ async def test_key_value_store_should_create_expiring_keys_public_url_with_param
         assert 'limit=10' in keys_public_url
 
         impit_client = impit.Client()
-        response = impit_client.get(keys_public_url, timeout=5)
+        response = impit_client.get(keys_public_url, timeout=30)
         assert response.status_code == 200
     finally:
         await maybe_await(store.delete())
@@ -104,7 +104,7 @@ async def test_key_value_store_should_create_public_keys_non_expiring_url(
         assert 'signature=' in keys_public_url
 
         impit_client = impit.Client()
-        response = impit_client.get(keys_public_url, timeout=5)
+        response = impit_client.get(keys_public_url, timeout=30)
         assert response.status_code == 200
     finally:
         await maybe_await(store.delete())

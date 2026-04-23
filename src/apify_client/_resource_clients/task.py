@@ -14,7 +14,6 @@ from apify_client._models_generated import (
     TaskOptions,
     TaskResponse,
     UpdateTaskRequest,
-    WebhookCreate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import response_to_dict, to_seconds
@@ -31,8 +30,8 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client._typeddicts_generated import TaskInputDict, WebhookCreateDict
-    from apify_client._types import Timeout
+    from apify_client._typeddicts_generated import TaskInputDict
+    from apify_client._types import Timeout, WebhooksList
 
 
 @docs_group('Resource clients')
@@ -162,7 +161,7 @@ class TaskClient(ResourceClient):
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
+        webhooks: WebhooksList | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -229,7 +228,7 @@ class TaskClient(ResourceClient):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
+        webhooks: WebhooksList | None = None,
         wait_duration: timedelta | None = None,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -485,7 +484,7 @@ class TaskClientAsync(ResourceClientAsync):
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
-        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
+        webhooks: WebhooksList | None = None,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -552,7 +551,7 @@ class TaskClientAsync(ResourceClientAsync):
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
-        webhooks: list[WebhookCreate] | list[WebhookCreateDict] | None = None,
+        webhooks: WebhooksList | None = None,
         wait_duration: timedelta | None = None,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:

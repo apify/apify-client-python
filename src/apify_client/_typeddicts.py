@@ -40,3 +40,25 @@ class RequestDeleteInputDict(TypedDict):
 
     unique_key: NotRequired[str | None]
     """A unique key used for request de-duplication."""
+
+
+@docs_group('Typed dicts')
+class WebhookRepresentationDict(TypedDict):
+    """TypedDict counterpart of `WebhookRepresentation` for ad-hoc webhooks.
+
+    Captures the minimal shape the Apify API actually requires when attaching ad-hoc webhooks to a run:
+    only `event_types` and `request_url` are mandatory. Unlike `WebhookCreateDict`, there is no `condition`
+    field — the API does not use it for ad-hoc webhooks.
+    """
+
+    event_types: list[str]
+    """The list of Actor events that trigger this webhook."""
+
+    request_url: str
+    """The URL to which the webhook sends its payload."""
+
+    payload_template: NotRequired[str | None]
+    """Optional template for the JSON payload sent by the webhook."""
+
+    headers_template: NotRequired[str | None]
+    """Optional template for the HTTP headers sent by the webhook."""

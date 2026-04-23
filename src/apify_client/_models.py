@@ -15,7 +15,7 @@ from apify_client._docs import docs_group
 from apify_client._models_generated import ActorJobStatus, WebhookCreate
 
 if TYPE_CHECKING:
-    from apify_client._typeddicts_generated import WebhookCreateDict
+    from apify_client._types import WebhooksList
 
 
 @docs_group('Models')
@@ -71,20 +71,25 @@ class WebhookRepresentationList(RootModel[list[WebhookRepresentation]]):
     """List of webhook representations with base64 encoding support."""
 
     @classmethod
-    def from_webhooks(cls, webhooks: list[WebhookCreate] | list[WebhookCreateDict]) -> WebhookRepresentationList:
-        """Construct from a list of `WebhookCreate` models or `WebhookCreateDict` TypedDicts.
+    def from_webhooks(cls, webhooks: WebhooksList) -> WebhookRepresentationList:
+        """Construct from a list of webhooks.
 
-        Dicts are validated directly as `WebhookRepresentation`, so only the minimal ad-hoc webhook fields
-        (`event_types`, `request_url`, and optionally `payload_template`/`headers_template`) are required.
+        See `WebhooksList` for the accepted shapes. `WebhookRepresentation` instances are used as-is; all
+        other shapes are validated into `WebhookRepresentation`, keeping only its fields and ignoring any
+        extras (e.g. `condition`).
         """
         representations = list[WebhookRepresentation]()
 
         for webhook in webhooks:
-            if isinstance(webhook, WebhookCreate):
+            if isinstance(webhook, WebhookRepresentation):
+                representations.append(webhook)
+            elif isinstance(webhook, WebhookCreate):
                 webhook_dict = webhook.model_dump(mode='json', exclude_none=True)
-                representations.append(WebhookRepresentation.model_validate(webhook_dict))
+                webhook_representation = WebhookRepresentation.model_validate(webhook_dict)
+                representations.append(webhook_representation)
             else:
-                representations.append(WebhookRepresentation.model_validate(webhook))
+                webhook_representation = WebhookRepresentation.model_validate(webhook)
+                representations.append(webhook_representation)
 
         return cls(representations)
 

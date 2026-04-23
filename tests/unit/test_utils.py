@@ -26,7 +26,7 @@ from apify_client._utils import (
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
-    from apify_client._typeddicts_generated import WebhookCreateDict
+    from apify_client._typeddicts import WebhookRepresentationDict
 
 
 def test_to_safe_id() -> None:
@@ -59,16 +59,14 @@ def test_webhook_representation_list_to_base64() -> None:
 
 
 def test_webhook_representation_list_from_dicts() -> None:
-    """Test that from_webhooks accepts plain dicts typed as WebhookCreateDict."""
-    webhooks: list[WebhookCreateDict] = [
+    """Test that from_webhooks accepts plain dicts typed as WebhookRepresentationDict."""
+    webhooks: list[WebhookRepresentationDict] = [
         {
             'event_types': ['ACTOR.RUN.CREATED'],
-            'condition': {},
             'request_url': 'https://example.com/run-created',
         },
         {
             'event_types': ['ACTOR.RUN.SUCCEEDED'],
-            'condition': {},
             'request_url': 'https://example.com/run-succeeded',
             'payload_template': '{"hello": "world"}',
         },

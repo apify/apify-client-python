@@ -3,6 +3,22 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Literal
 
+from apify_client._models import WebhookRepresentation
+from apify_client._models_generated import WebhookCreate
+from apify_client._typeddicts import WebhookRepresentationDict
+from apify_client._typeddicts_generated import WebhookCreateDict
+
+WebhooksList = (
+    list[WebhookCreate] | list[WebhookCreateDict] | list[WebhookRepresentation] | list[WebhookRepresentationDict]
+)
+"""Type for the `webhooks` parameter on resource-client `start`/`call` methods and `from_webhooks`.
+
+`WebhookRepresentation` / `WebhookRepresentationDict` are the minimal ad-hoc webhook shape (only
+`event_types` and `request_url` required). `WebhookCreate` / `WebhookCreateDict` are accepted so a
+persistent-webhook definition can be reused; their fields not relevant to ad-hoc webhooks (e.g.
+`condition`) are ignored at runtime.
+"""
+
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
 

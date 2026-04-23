@@ -6,6 +6,8 @@ from unittest import mock
 from unittest.mock import Mock
 
 import pytest
+from pydantic import BaseModel, ConfigDict
+from pydantic.fields import FieldInfo
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client import _models as _models_module
@@ -84,92 +86,96 @@ CollectionClientAsync: TypeAlias = (
 
 ID_PLACEHOLDER = 'some-id'
 
-# Response wrappers whose `model_validate` should be bypassed during pagination tests so
-# synthetic `{'id': N, 'key': N}` test items are accepted without matching the real API schemas.
-_BYPASSED_RESPONSE_CLASSES = (
+
+class _PermissiveItem(BaseModel):
+    """Accepts any dict and preserves attribute access via `extra='allow'`.
+
+    Used as the element type of `items` on paginated list models during tests so synthetic
+    `{'id': N, 'key': N}` payloads are accepted, while everything else on the real list and
+    response models (`.data` wrapping, `total`/`count`/`offset`/`limit`/`desc`/`is_truncated`/
+    `next_exclusive_start_key`/`next_cursor`/…, alias resolution) stays fully validated.
+    """
+
+    model_config = ConfigDict(extra='allow')
+
+    def __eq__(self, other: object) -> bool:
+        # Tests assert against plain `{'id': N, 'key': N}` dicts; compare by the stored payload.
+        if isinstance(other, dict):
+            return (self.__pydantic_extra__ or {}) == other
+        return super().__eq__(other)
+
+    __hash__ = None  # type: ignore[assignment]
+
+
+# Inner list models whose `items: list[<specific schema>]` is relaxed to `list[_PermissiveItem]`.
+_RELAXED_LIST_MODELS = (
+    'ListOfActors',
+    'ListOfBuilds',
+    'ListOfDatasets',
+    'ListOfEnvVars',
+    'ListOfKeys',
+    'ListOfKeyValueStores',
+    'ListOfRequestQueues',
+    'ListOfRequests',
+    'ListOfRuns',
+    'ListOfSchedules',
+    'ListOfStoreActors',
+    'ListOfTasks',
+    'ListOfVersions',
+    'ListOfWebhookDispatches',
+    'ListOfWebhooks',
+)
+
+# Outer wrappers that embed a relaxed list model via `.data`. Their compiled schema pins the
+# inner's schema at construction time, so they need a forced rebuild to pick up the relaxation.
+# The wrappers themselves are not mutated — their own field annotations stay as-is.
+_REBUILT_RESPONSE_WRAPPERS = (
+    'ListOfActorsInStoreResponse',
     'ListOfActorsResponse',
     'ListOfBuildsResponse',
+    'ListOfDatasetsResponse',
+    'ListOfEnvVarsResponse',
+    'ListOfKeyValueStoresResponse',
+    'ListOfKeysResponse',
+    'ListOfRequestQueuesResponse',
+    'ListOfRequestsResponse',
     'ListOfRunsResponse',
     'ListOfSchedulesResponse',
     'ListOfTasksResponse',
+    'ListOfVersionsResponse',
     'ListOfWebhooksResponse',
     'WebhookDispatchList',
-    'ListOfDatasetsResponse',
-    'ListOfKeyValueStoresResponse',
-    'ListOfRequestQueuesResponse',
-    'ListOfActorsInStoreResponse',
-    'ListOfEnvVarsResponse',
-    'ListOfVersionsResponse',
-    'ListOfKeysResponse',
-    'ListOfRequestsResponse',
 )
 
 
-class _AttrDict(dict):
-    """A dict that also supports attribute access — enough for next_cursor_fn to call `item.id`."""
-
-    def __getattr__(self, name: str) -> Any:
-        try:
-            return self[name]
-        except KeyError as exc:
-            raise AttributeError(name) from exc
-
-
-class _FakeListModel:
-    """Stand-in for a paginated list model that mimics the fields the iteration logic accesses."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        # Sensible defaults for the pagination fields `IterableListPage` reads.
-        self.total = 0
-        self.count = 0
-        self.offset = 0
-        self.limit = 1
-        self.desc = False
-        self.items: list[Any] = []
-        self.is_truncated = False
-        self.next_exclusive_start_key: str | None = None
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        if 'count' not in kwargs:
-            self.count = len(self.items)
-
-
-@dataclasses.dataclass
-class _FakeResponseWrapper:
-    """Stand-in for a `*Response` Pydantic model that wraps a paginated list under `.data`."""
-
-    data: _FakeListModel
-
-
 @pytest.fixture(autouse=True)
-def _bypass_response_validation() -> Any:
-    """Replace the Pydantic `model_validate` of response wrappers with a lightweight builder.
+def _relax_item_validation() -> Any:
+    """Relax only the element type of `items` on paginated list models for the test run.
 
-    Pagination tests use synthetic items that don't satisfy the real API schemas. Bypassing
-    validation lets the iteration logic run while still building a model-like object that exposes
-    the fields the client code consumes (`.data`, `.items`, `.total`, etc.).
+    Pagination tests feed synthetic `{'id': N, 'key': N}` items that don't satisfy the real API
+    schemas (`ActorShort`, `BuildShort`, `Request`, `EnvVar`, …). Instead of bypassing validation
+    wholesale, each inner `ListOf*` model has its `items` field swapped to `list[_PermissiveItem]`
+    and rebuilt. Outer `.data` wrapping and every pagination-metadata field remain validated.
     """
+    relaxed_field = FieldInfo.from_annotation(list[_PermissiveItem])
+    originals: dict[type[BaseModel], FieldInfo] = {}
+    wrappers = [getattr(_models_module, name) for name in _REBUILT_RESPONSE_WRAPPERS]
 
-    def _build(_cls: type, obj: dict) -> _FakeResponseWrapper:
-        data_dict = obj.get('data') or {}
-        raw_items = data_dict.get('items', [])
-        # Wrap dict items so cursor-based pagination can read `item.id` from the last item.
-        items = [_AttrDict(item) if isinstance(item, dict) else item for item in raw_items]
-        fields = {**data_dict, 'items': items}
-        return _FakeResponseWrapper(data=_FakeListModel(**fields))
-
-    patchers = []
-    for class_name in _BYPASSED_RESPONSE_CLASSES:
-        cls = getattr(_models_module, class_name)
-        patchers.append(mock.patch.object(cls, 'model_validate', classmethod(_build)))
-
-    for p in patchers:
-        p.start()
+    for name in _RELAXED_LIST_MODELS:
+        cls = getattr(_models_module, name)
+        originals[cls] = cls.model_fields['items']
+        cls.model_fields['items'] = relaxed_field
+        cls.model_rebuild(force=True)
+    for wrapper in wrappers:
+        wrapper.model_rebuild(force=True)
     try:
         yield
     finally:
-        for p in patchers:
-            p.stop()
+        for cls, field in originals.items():
+            cls.model_fields['items'] = field
+            cls.model_rebuild(force=True)
+        for wrapper in wrappers:
+            wrapper.model_rebuild(force=True)
 
 
 def create_items(start: int, end: int, step: int | None = None) -> list[dict[str, int]]:

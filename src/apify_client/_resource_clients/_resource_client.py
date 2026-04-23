@@ -10,7 +10,13 @@ from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
 from apify_client._types import ActorJobResponse
-from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id, to_seconds
+from apify_client._utils import (
+    catch_not_found_for_resource_or_throw,
+    catch_not_found_or_throw,
+    response_to_dict,
+    to_safe_id,
+    to_seconds,
+)
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -196,9 +202,8 @@ class ResourceClient(ResourceClientBase):
     def _get(self, *, timeout: Timeout) -> dict | None:
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
-        404s collapse to `None` only when this client targets a specific resource by ID. For chained clients
-        without a `resource_id` (e.g. `run.dataset()`), a 404 could mean either the parent or the default
-        sub-resource is missing and the API body cannot disambiguate, so `NotFoundError` propagates to the caller.
+        404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
+        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
         """
         try:
             response = self._http_client.call(
@@ -209,9 +214,7 @@ class ResourceClient(ResourceClientBase):
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
-            if self._resource_id is None:
-                raise
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
             return None
 
     def _update(self, *, timeout: Timeout, **kwargs: Any) -> dict:
@@ -226,7 +229,11 @@ class ResourceClient(ResourceClientBase):
         return response_to_dict(response)
 
     def _delete(self, *, timeout: Timeout) -> None:
-        """Perform a DELETE request to delete this resource, ignoring 404 errors."""
+        """Perform a DELETE request to delete this resource.
+
+        404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
+        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        """
         try:
             self._http_client.call(
                 url=self._build_url(),
@@ -235,7 +242,7 @@ class ResourceClient(ResourceClientBase):
                 timeout=timeout,
             )
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
     def _list(self, *, timeout: Timeout, **kwargs: Any) -> dict:
         """Perform a GET request to list resources."""
@@ -383,9 +390,8 @@ class ResourceClientAsync(ResourceClientBase):
     async def _get(self, *, timeout: Timeout) -> dict | None:
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
-        404s collapse to `None` only when this client targets a specific resource by ID. For chained clients
-        without a `resource_id` (e.g. `run.dataset()`), a 404 could mean either the parent or the default
-        sub-resource is missing and the API body cannot disambiguate, so `NotFoundError` propagates to the caller.
+        404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
+        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
         """
         try:
             response = await self._http_client.call(
@@ -396,9 +402,7 @@ class ResourceClientAsync(ResourceClientBase):
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
-            if self._resource_id is None:
-                raise
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
             return None
 
     async def _update(self, *, timeout: Timeout, **kwargs: Any) -> dict:
@@ -413,7 +417,11 @@ class ResourceClientAsync(ResourceClientBase):
         return response_to_dict(response)
 
     async def _delete(self, *, timeout: Timeout) -> None:
-        """Perform a DELETE request to delete this resource, ignoring 404 errors."""
+        """Perform a DELETE request to delete this resource.
+
+        404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
+        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        """
         try:
             await self._http_client.call(
                 url=self._build_url(),
@@ -422,7 +430,7 @@ class ResourceClientAsync(ResourceClientBase):
                 timeout=timeout,
             )
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
     async def _list(self, *, timeout: Timeout, **kwargs: Any) -> dict:
         """Perform a GET request to list resources."""

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw
+from apify_client._utils import catch_not_found_for_resource_or_throw
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -39,6 +39,9 @@ class LogClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
+        404s collapse to `None` only when this client targets a specific log by ID (e.g. `client.log(run_id).get()`).
+        For chained clients without a `resource_id` (e.g. `run.log().get()`), a 404 is ambiguous and propagates.
+
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
             timeout: Timeout for the API HTTP request.
@@ -57,7 +60,7 @@ class LogClient(ResourceClient):
             return response.text  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
         return None
 
@@ -84,7 +87,7 @@ class LogClient(ResourceClient):
             return response.content  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
         return None
 
@@ -113,7 +116,7 @@ class LogClient(ResourceClient):
 
             yield response
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
             yield None
         finally:
             if response:
@@ -144,6 +147,9 @@ class LogClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
+        404s collapse to `None` only when this client targets a specific log by ID (e.g. `client.log(run_id).get()`).
+        For chained clients without a `resource_id` (e.g. `run.log().get()`), a 404 is ambiguous and propagates.
+
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
             timeout: Timeout for the API HTTP request.
@@ -162,7 +168,7 @@ class LogClientAsync(ResourceClientAsync):
             return response.text  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
         return None
 
@@ -189,7 +195,7 @@ class LogClientAsync(ResourceClientAsync):
             return response.content  # noqa: TRY300
 
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
         return None
 
@@ -218,7 +224,7 @@ class LogClientAsync(ResourceClientAsync):
 
             yield response
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
             yield None
         finally:
             if response:

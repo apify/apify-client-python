@@ -308,9 +308,8 @@ class ResourceClient(ResourceClientBase):
         Raises:
             ApifyApiError: If API returns errors other than 404.
         """
-        now = datetime.now(UTC)
-        deadline = (now + wait_duration) if wait_duration is not None else None
-        not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+        deadline = (datetime.now(UTC) + wait_duration) if wait_duration is not None else None
+        not_found_deadline: datetime | None = None
         actor_job: dict = {}
 
         while True:
@@ -331,6 +330,9 @@ class ResourceClient(ResourceClientBase):
                 actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
+                # Reset the not-found streak so a later transient 404 gets its own grace window.
+                not_found_deadline = None
+
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
@@ -340,9 +342,12 @@ class ResourceClient(ResourceClientBase):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
-                # and return None. In such case, the requested record probably really doesn't exist.
-                if datetime.now(UTC) > not_found_deadline:
+                now = datetime.now(UTC)
+                if deadline is not None and now >= deadline:
+                    return None
+                if not_found_deadline is None:
+                    not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+                elif now > not_found_deadline:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -496,9 +501,8 @@ class ResourceClientAsync(ResourceClientBase):
         Raises:
             ApifyApiError: If API returns errors other than 404.
         """
-        now = datetime.now(UTC)
-        deadline = (now + wait_duration) if wait_duration is not None else None
-        not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+        deadline = (datetime.now(UTC) + wait_duration) if wait_duration is not None else None
+        not_found_deadline: datetime | None = None
         actor_job: dict = {}
 
         while True:
@@ -519,6 +523,9 @@ class ResourceClientAsync(ResourceClientBase):
                 actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
+                # Reset the not-found streak so a later transient 404 gets its own grace window.
+                not_found_deadline = None
+
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
@@ -528,9 +535,12 @@ class ResourceClientAsync(ResourceClientBase):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
-                # and return None. In such case, the requested record probably really doesn't exist.
-                if datetime.now(UTC) > not_found_deadline:
+                now = datetime.now(UTC)
+                if deadline is not None and now >= deadline:
+                    return None
+                if not_found_deadline is None:
+                    not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+                elif now > not_found_deadline:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying

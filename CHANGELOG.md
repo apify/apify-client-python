@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Don&#x27;t block StatusMessageWatcher exit with 6s sleep on exception ([#753](https://github.com/apify/apify-client-python/pull/753)) ([48f5037](https://github.com/apify/apify-client-python/commit/48f50378e92e2058ff8e5aaba45ef9e3a6e5f081)) by [@vdusek](https://github.com/vdusek)
 - Treat naive datetime query params as UTC ([#752](https://github.com/apify/apify-client-python/pull/752)) ([9ab096a](https://github.com/apify/apify-client-python/commit/9ab096a7453080a3079c7459079f99a30bd6a7cb)) by [@vdusek](https://github.com/vdusek)
 - Raise NotFoundError on ambiguous 404 responses ([#755](https://github.com/apify/apify-client-python/pull/755)) ([701185e](https://github.com/apify/apify-client-python/commit/701185e6e8a98f0b14d83cab10139f1e19be3f47)) by [@vdusek](https://github.com/vdusek)
+- Correct deadline logic in _wait_for_finish ([#749](https://github.com/apify/apify-client-python/pull/749)) ([fd0663e](https://github.com/apify/apify-client-python/commit/fd0663e22b31ddd289325146c9750ff07c068d6b)) by [@vdusek](https://github.com/vdusek)
 
 ### 🚜 Refactor
 

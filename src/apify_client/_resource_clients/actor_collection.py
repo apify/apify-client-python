@@ -8,6 +8,7 @@ from apify_client._iterable_list import (
     IterableListOfActors,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_actors,
 )
 from apify_client._models import (
     Actor,
@@ -16,6 +17,8 @@ from apify_client._models import (
     CreateActorRequest,
     DefaultRunOptions,
     ExampleRunInput,
+    ListOfActors,
+    ListOfActorsResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -82,11 +85,11 @@ class ActorCollectionClient(ResourceClient):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        def _callback(**kwargs: Any) -> IterableListOfActors:
+        def _fetch(**kwargs: Any) -> ListOfActors:
             result = self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            return IterableListOfActors.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfActorsResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_fetch, make_iterable_list_of_actors, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -214,7 +217,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfActors, ActorShort]:
+    ) -> AwaitableAsyncIterable[ListOfActors, ActorShort]:
         """List the Actors the user has created or used.
 
         The returned value is a `ListOfActors` that additionally implements `Iterable[ActorShort]`.
@@ -236,11 +239,11 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        async def _callback(**kwargs: Any) -> IterableListOfActors:
+        async def _fetch(**kwargs: Any) -> ListOfActors:
             result = await self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            return IterableListOfActors.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfActorsResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_fetch, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

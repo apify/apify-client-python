@@ -10,10 +10,13 @@ from apify_client._iterable_list import (
     IterableListOfVersions,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_versions,
 )
 from apify_client._models import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
+    ListOfVersions,
+    ListOfVersionsResponse,
     SourceCodeFile,
     SourceCodeFolder,
     Version,
@@ -62,11 +65,11 @@ class ActorVersionCollectionClient(ResourceClient):
             The list of available Actor versions.
         """
 
-        def _callback(**kwargs: Any) -> IterableListOfVersions:
+        def _fetch(**kwargs: Any) -> ListOfVersions:
             result = self._list(timeout=timeout, **kwargs)
-            return IterableListOfVersions.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfVersionsResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback)
+        return build_iterable_offset(_fetch, make_iterable_list_of_versions)
 
     def create(
         self,
@@ -141,7 +144,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> AwaitableAsyncIterable[IterableListOfVersions, Version]:
+    def list(self, *, timeout: Timeout = 'short') -> AwaitableAsyncIterable[ListOfVersions, Version]:
         """List the available Actor versions.
 
         The returned page also supports iteration: `for item in client.list()` yields individual versions.
@@ -155,11 +158,11 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             The list of available Actor versions.
         """
 
-        async def _callback(**kwargs: Any) -> IterableListOfVersions:
+        async def _fetch(**kwargs: Any) -> ListOfVersions:
             result = await self._list(timeout=timeout, **kwargs)
-            return IterableListOfVersions.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfVersionsResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback)
+        return build_awaitable_async_iterable_offset(_fetch)
 
     async def create(
         self,

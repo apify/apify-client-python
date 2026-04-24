@@ -8,8 +8,11 @@ from apify_client._iterable_list import (
     IterableListOfWebhooks,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_webhooks,
 )
 from apify_client._models import (
+    ListOfWebhooks,
+    ListOfWebhooksResponse,
     WebhookCondition,
     WebhookCreate,
     WebhookResponse,
@@ -66,13 +69,11 @@ class WebhookCollectionClient(ResourceClient):
             The list of available webhooks matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> IterableListOfWebhooks:
+        def _fetch(**kwargs: Any) -> ListOfWebhooks:
             result = self._list(timeout=timeout, **kwargs)
-            # Validate directly into the iterable subclass so `isinstance(result, ListOfWebhooks)`
-            # and typed field access work on the returned value without indirection.
-            return IterableListOfWebhooks.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfWebhooksResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_fetch, make_iterable_list_of_webhooks, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -160,7 +161,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfWebhooks, WebhookShort]:
+    ) -> AwaitableAsyncIterable[ListOfWebhooks, WebhookShort]:
         """List the available webhooks.
 
         The returned value is a `ListOfWebhooks` that additionally implements `Iterable[WebhookShort]`:
@@ -179,11 +180,11 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             The list of available webhooks matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> IterableListOfWebhooks:
+        async def _fetch(**kwargs: Any) -> ListOfWebhooks:
             result = await self._list(timeout=timeout, **kwargs)
-            return IterableListOfWebhooks.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfWebhooksResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_fetch, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

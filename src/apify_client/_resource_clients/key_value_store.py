@@ -13,11 +13,13 @@ from apify_client._iterable_list import (
     IterableListOfKeys,
     build_awaitable_async_iterable_cursor,
     build_iterable_cursor,
+    make_iterable_list_of_keys,
 )
 from apify_client._models import (
     KeyValueStore,
     KeyValueStoreResponse,
     ListOfKeys,
+    ListOfKeysResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -181,7 +183,7 @@ class KeyValueStoreClient(ResourceClient):
             The list of keys in the key-value store matching the given arguments.
         """
 
-        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> IterableListOfKeys:
+        def _fetch(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
             request_params = self._build_params(
                 limit=limit,
                 exclusiveStartKey=exclusive_start_key,
@@ -196,10 +198,11 @@ class KeyValueStoreClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return IterableListOfKeys.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfKeysResponse.model_validate(result).data
 
         return build_iterable_cursor(
-            _callback,
+            _fetch,
+            make_iterable_list_of_keys,
             cursor_param='exclusive_start_key',
             next_cursor_fn=_kvs_next_cursor,
             initial_cursor=exclusive_start_key,
@@ -592,7 +595,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfKeys, KeyValueStoreKey]:
+    ) -> AwaitableAsyncIterable[ListOfKeys, KeyValueStoreKey]:
         """List the keys in the key-value store.
 
         The returned value is a `ListOfKeys` that additionally implements `Iterable[KeyValueStoreKey]`.
@@ -615,7 +618,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The list of keys in the key-value store matching the given arguments.
         """
 
-        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> IterableListOfKeys:
+        async def _fetch(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
             request_params = self._build_params(
                 limit=limit,
                 exclusiveStartKey=exclusive_start_key,
@@ -630,10 +633,10 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return IterableListOfKeys.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfKeysResponse.model_validate(result).data
 
         return build_awaitable_async_iterable_cursor(
-            _callback,
+            _fetch,
             cursor_param='exclusive_start_key',
             next_cursor_fn=_kvs_next_cursor,
             initial_cursor=exclusive_start_key,

@@ -8,7 +8,9 @@ from apify_client._iterable_list import (
     IterableListOfRuns,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_runs,
 )
+from apify_client._models import ListOfRuns, ListOfRunsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -73,7 +75,7 @@ class RunCollectionClient(ResourceClient):
         """
         status_param = list(status) if isinstance(status, list) else status
 
-        def _callback(**kwargs: Any) -> IterableListOfRuns:
+        def _fetch(**kwargs: Any) -> ListOfRuns:
             result = self._list(
                 timeout=timeout,
                 status=status_param,
@@ -81,9 +83,9 @@ class RunCollectionClient(ResourceClient):
                 startedAfter=started_after,
                 **kwargs,
             )
-            return IterableListOfRuns.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfRunsResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_fetch, make_iterable_list_of_runs, limit=limit, offset=offset, desc=desc)
 
 
 @docs_group('Resource clients')
@@ -115,7 +117,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfRuns, RunShort]:
+    ) -> AwaitableAsyncIterable[ListOfRuns, RunShort]:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -141,7 +143,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         """
         status_param = list(status) if isinstance(status, list) else status
 
-        async def _callback(**kwargs: Any) -> IterableListOfRuns:
+        async def _fetch(**kwargs: Any) -> ListOfRuns:
             result = await self._list(
                 timeout=timeout,
                 status=status_param,
@@ -149,6 +151,6 @@ class RunCollectionClientAsync(ResourceClientAsync):
                 startedAfter=started_after,
                 **kwargs,
             )
-            return IterableListOfRuns.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfRunsResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_fetch, limit=limit, offset=offset, desc=desc)

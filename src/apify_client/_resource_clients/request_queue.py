@@ -15,6 +15,7 @@ from apify_client._iterable_list import (
     IterableListOfRequests,
     build_awaitable_async_iterable_cursor,
     build_iterable_cursor,
+    make_iterable_list_of_requests,
 )
 from apify_client._models import (
     AddedRequest,
@@ -26,6 +27,7 @@ from apify_client._models import (
     HeadAndLockResponse,
     HeadResponse,
     ListOfRequests,
+    ListOfRequestsResponse,
     LockedRequestQueueHead,
     ProlongRequestLockResponse,
     Request,
@@ -538,7 +540,7 @@ class RequestQueueClient(ResourceClient):
                 stacklevel=2,
             )
 
-        def _callback(*, limit: int | None = None, cursor: str | None = None) -> IterableListOfRequests:
+        def _fetch(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
             # `exclusive_start_id` is honored only on the first page (when no cursor has been
             # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
@@ -555,10 +557,11 @@ class RequestQueueClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return IterableListOfRequests.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfRequestsResponse.model_validate(result).data
 
         return build_iterable_cursor(
-            _callback,
+            _fetch,
+            make_iterable_list_of_requests,
             cursor_param='cursor',
             next_cursor_fn=_rq_next_cursor,
             initial_cursor=cursor,
@@ -1085,7 +1088,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfRequests, Request]:
+    ) -> AwaitableAsyncIterable[ListOfRequests, Request]:
         """List requests in the queue.
 
         The returned value is a `ListOfRequests` that additionally implements `Iterable[Request]`.
@@ -1113,7 +1116,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 stacklevel=2,
             )
 
-        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> IterableListOfRequests:
+        async def _fetch(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
             # `exclusive_start_id` is honored only on the first page (when no cursor has been
             # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
@@ -1130,10 +1133,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return IterableListOfRequests.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfRequestsResponse.model_validate(result).data
 
         return build_awaitable_async_iterable_cursor(
-            _callback,
+            _fetch,
             cursor_param='cursor',
             next_cursor_fn=_rq_next_cursor,
             initial_cursor=cursor,

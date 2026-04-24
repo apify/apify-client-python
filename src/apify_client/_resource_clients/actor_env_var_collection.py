@@ -8,8 +8,9 @@ from apify_client._iterable_list import (
     IterableListOfEnvVars,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_env_vars,
 )
-from apify_client._models import EnvVar, EnvVarResponse
+from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -50,11 +51,11 @@ class ActorEnvVarCollectionClient(ResourceClient):
             The list of available Actor environment variables.
         """
 
-        def _callback(**kwargs: Any) -> IterableListOfEnvVars:
+        def _fetch(**kwargs: Any) -> ListOfEnvVars:
             result = self._list(timeout=timeout, **kwargs)
-            return IterableListOfEnvVars.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfEnvVarsResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback)
+        return build_iterable_offset(_fetch, make_iterable_list_of_env_vars)
 
     def create(
         self,
@@ -103,7 +104,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> AwaitableAsyncIterable[IterableListOfEnvVars, EnvVar]:
+    def list(self, *, timeout: Timeout = 'short') -> AwaitableAsyncIterable[ListOfEnvVars, EnvVar]:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `for item in client.list()` yields individual environment
@@ -118,11 +119,11 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             The list of available Actor environment variables.
         """
 
-        async def _callback(**kwargs: Any) -> IterableListOfEnvVars:
+        async def _fetch(**kwargs: Any) -> ListOfEnvVars:
             result = await self._list(timeout=timeout, **kwargs)
-            return IterableListOfEnvVars.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfEnvVarsResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback)
+        return build_awaitable_async_iterable_offset(_fetch)
 
     async def create(
         self,

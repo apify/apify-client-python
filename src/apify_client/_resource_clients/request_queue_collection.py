@@ -8,8 +8,11 @@ from apify_client._iterable_list import (
     IterableListOfRequestQueues,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_request_queues,
 )
 from apify_client._models import (
+    ListOfRequestQueues,
+    ListOfRequestQueuesResponse,
     RequestQueue,
     RequestQueueResponse,
     StorageOwnership,
@@ -70,13 +73,13 @@ class RequestQueueCollectionClient(ResourceClient):
             The list of available request queues matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> IterableListOfRequestQueues:
+        def _fetch(**kwargs: Any) -> ListOfRequestQueues:
             result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return IterableListOfRequestQueues.model_validate(
-                result.get('data') if isinstance(result, dict) else result
-            )
+            return ListOfRequestQueuesResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(
+            _fetch, make_iterable_list_of_request_queues, limit=limit, offset=offset, desc=desc
+        )
 
     def get_or_create(
         self,
@@ -127,7 +130,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfRequestQueues, RequestQueueShort]:
+    ) -> AwaitableAsyncIterable[ListOfRequestQueues, RequestQueueShort]:
         """List the available request queues.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -148,13 +151,11 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             The list of available request queues matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> IterableListOfRequestQueues:
+        async def _fetch(**kwargs: Any) -> ListOfRequestQueues:
             result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return IterableListOfRequestQueues.model_validate(
-                result.get('data') if isinstance(result, dict) else result
-            )
+            return ListOfRequestQueuesResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_fetch, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self,

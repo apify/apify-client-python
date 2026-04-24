@@ -8,7 +8,9 @@ from apify_client._iterable_list import (
     IterableListOfBuilds,
     build_awaitable_async_iterable_offset,
     build_iterable_offset,
+    make_iterable_list_of_builds,
 )
+from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -48,8 +50,8 @@ class BuildCollectionClient(ResourceClient):
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
         was initialized from.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual builds
-        and transparently fetches further pages from the API.
+        The returned value has the fields of `ListOfBuilds` and additionally implements `Iterable[BuildShort]`:
+        iterate with `for item in client.list(...)` to transparently fetch further pages.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
@@ -64,11 +66,11 @@ class BuildCollectionClient(ResourceClient):
             The retrieved Actor builds.
         """
 
-        def _callback(**kwargs: Any) -> IterableListOfBuilds:
+        def _fetch(**kwargs: Any) -> ListOfBuilds:
             result = self._list(timeout=timeout, **kwargs)
-            return IterableListOfBuilds.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfBuildsResponse.model_validate(result).data
 
-        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_fetch, make_iterable_list_of_builds, limit=limit, offset=offset, desc=desc)
 
 
 @docs_group('Resource clients')
@@ -97,14 +99,14 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> AwaitableAsyncIterable[IterableListOfBuilds, BuildShort]:
+    ) -> AwaitableAsyncIterable[ListOfBuilds, BuildShort]:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
         was initialized from.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual builds
-        and transparently fetches further pages from the API.
+        The returned value has the fields of `ListOfBuilds` and additionally implements `Iterable[BuildShort]`:
+        iterate with `for item in client.list(...)` to transparently fetch further pages.
 
         https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
         https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
@@ -119,8 +121,8 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             The retrieved Actor builds.
         """
 
-        async def _callback(**kwargs: Any) -> IterableListOfBuilds:
+        async def _fetch(**kwargs: Any) -> ListOfBuilds:
             result = await self._list(timeout=timeout, **kwargs)
-            return IterableListOfBuilds.model_validate(result.get('data') if isinstance(result, dict) else result)
+            return ListOfBuildsResponse.model_validate(result).data
 
-        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_fetch, limit=limit, offset=offset, desc=desc)

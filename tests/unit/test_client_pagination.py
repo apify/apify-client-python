@@ -9,6 +9,7 @@ from unittest.mock import Mock
 import pytest
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client import _iterable_list as _iterable_list_module
 from apify_client import _models as _models_module
 from apify_client._resource_clients import (
     ActorCollectionClient,
@@ -105,6 +106,25 @@ _BYPASSED_RESPONSE_CLASSES = (
     'ListOfRequestsResponse',
 )
 
+# Iterable subclasses of the `ListOf*` models, validated directly by list methods.
+_BYPASSED_ITERABLE_CLASSES = (
+    'IterableListOfActors',
+    'IterableListOfBuilds',
+    'IterableListOfDatasets',
+    'IterableListOfEnvVars',
+    'IterableListOfKeyValueStores',
+    'IterableListOfKeys',
+    'IterableListOfRequestQueues',
+    'IterableListOfRequests',
+    'IterableListOfRuns',
+    'IterableListOfSchedules',
+    'IterableListOfStoreActors',
+    'IterableListOfTasks',
+    'IterableListOfVersions',
+    'IterableListOfWebhookDispatches',
+    'IterableListOfWebhooks',
+)
+
 
 class _AttrDict(dict):
     """A dict that also supports attribute access — enough for next_cursor_fn to call `item.id`."""
@@ -144,25 +164,54 @@ class _FakeResponseWrapper:
 
 @pytest.fixture(autouse=True)
 def _bypass_response_validation() -> Any:
-    """Replace the Pydantic `model_validate` of response wrappers with a lightweight builder.
+    """Replace Pydantic validation on list-response wrappers with lightweight constructors.
 
-    Pagination tests use synthetic items that don't satisfy the real API schemas. Bypassing
-    validation lets the iteration logic run while still building a model-like object that exposes
-    the fields the client code consumes (`.data`, `.items`, `.total`, etc.).
+    Pagination tests use synthetic `{id, key}` items that don't satisfy real API schemas, so
+    `model_validate` is patched to either (a) return a `_FakeResponseWrapper` for the outer
+    `*Response` classes, or (b) use `model_construct` to skip validation on the new
+    `IterableListOf*` classes while still returning a real Pydantic instance (which is important
+    because the iterable types extend `ListOf*` — the iteration logic calls `.items`,
+    `__iter__`, `_iter_impl`, and `model_dump` on them).
     """
 
-    def _build(_cls: type, obj: dict) -> _FakeResponseWrapper:
+    def _build_response_wrapper(_cls: type, obj: dict) -> _FakeResponseWrapper:
         data_dict = obj.get('data') or {}
         raw_items = data_dict.get('items', [])
-        # Wrap dict items so cursor-based pagination can read `item.id` from the last item.
         items = [_AttrDict(item) if isinstance(item, dict) else item for item in raw_items]
         fields = {**data_dict, 'items': items}
         return _FakeResponseWrapper(data=_FakeListModel(**fields))
 
+    def _make_iterable_builder(cls: type) -> classmethod:
+        def _build_iterable(_cls: type, obj: Any) -> Any:
+            data_dict = obj if isinstance(obj, dict) else {}
+            raw_items = data_dict.get('items', [])
+            items = [_AttrDict(item) if isinstance(item, dict) else item for item in raw_items]
+            fields = {
+                'count': data_dict.get('count', len(items)),
+                'total': data_dict.get('total', len(items)),
+                'offset': data_dict.get('offset', 0),
+                'limit': data_dict.get('limit', 1) or 1,
+                'desc': data_dict.get('desc', False),
+                'is_truncated': data_dict.get('is_truncated', data_dict.get('isTruncated', False)),
+                'next_exclusive_start_key': data_dict.get(
+                    'next_exclusive_start_key', data_dict.get('nextExclusiveStartKey')
+                ),
+                'next_cursor': data_dict.get('next_cursor', data_dict.get('nextCursor')),
+                'items': items,
+            }
+            # model_construct skips validation; tolerates extra fields because all ListOf* models
+            # have `model_config = ConfigDict(extra='allow')`.
+            return cls.model_construct(**fields)  # ty: ignore[unresolved-attribute]
+
+        return classmethod(_build_iterable)
+
     patchers = []
     for class_name in _BYPASSED_RESPONSE_CLASSES:
         cls = getattr(_models_module, class_name)
-        patchers.append(mock.patch.object(cls, 'model_validate', classmethod(_build)))
+        patchers.append(mock.patch.object(cls, 'model_validate', classmethod(_build_response_wrapper)))
+    for class_name in _BYPASSED_ITERABLE_CLASSES:
+        cls = getattr(_iterable_list_module, class_name)
+        patchers.append(mock.patch.object(cls, 'model_validate', _make_iterable_builder(cls)))
 
     for p in patchers:
         p.start()

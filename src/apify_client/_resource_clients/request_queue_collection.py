@@ -3,15 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfRequestQueues,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import (
-    ListOfRequestQueues,
-    ListOfRequestQueuesResponse,
     RequestQueue,
     RequestQueueResponse,
     StorageOwnership,
@@ -51,7 +49,7 @@ class RequestQueueCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[RequestQueueShort]:
+    ) -> IterableListOfRequestQueues:
         """List the available request queues.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -72,11 +70,13 @@ class RequestQueueCollectionClient(ResourceClient):
             The list of available request queues matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfRequestQueues:
+        def _callback(**kwargs: Any) -> IterableListOfRequestQueues:
             result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfRequestQueuesResponse.model_validate(result).data
+            return IterableListOfRequestQueues.model_validate(
+                result.get('data') if isinstance(result, dict) else result
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(
         self,
@@ -127,7 +127,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[RequestQueueShort]:
+    ) -> AwaitableAsyncIterable[IterableListOfRequestQueues, RequestQueueShort]:
         """List the available request queues.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -148,11 +148,13 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             The list of available request queues matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfRequestQueues:
+        async def _callback(**kwargs: Any) -> IterableListOfRequestQueues:
             result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfRequestQueuesResponse.model_validate(result).data
+            return IterableListOfRequestQueues.model_validate(
+                result.get('data') if isinstance(result, dict) else result
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self,

@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfWebhookDispatches,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
-from apify_client._models import ListOfWebhookDispatches, WebhookDispatchList
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
     from apify_client._types import Timeout
 
 
-_EMPTY_WEBHOOK_DISPATCHES = ListOfWebhookDispatches(total=0, offset=0, limit=1, desc=False, count=0, items=[])
+_EMPTY_WEBHOOK_DISPATCHES = IterableListOfWebhookDispatches(total=0, offset=0, limit=1, desc=False, count=0, items=[])
 
 
 @docs_group('Resource clients')
@@ -46,7 +45,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[WebhookDispatch]:
+    ) -> IterableListOfWebhookDispatches:
         """List all webhook dispatches of a user.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -64,11 +63,16 @@ class WebhookDispatchCollectionClient(ResourceClient):
             The retrieved webhook dispatches of a user.
         """
 
-        def _callback(**kwargs: Any) -> ListOfWebhookDispatches:
+        def _callback(**kwargs: Any) -> IterableListOfWebhookDispatches:
             result = self._list(timeout=timeout, **kwargs)
-            return WebhookDispatchList.model_validate(result).data or _EMPTY_WEBHOOK_DISPATCHES
+            return (
+                IterableListOfWebhookDispatches.model_validate(
+                    result.get('data') if isinstance(result, dict) else result
+                )
+                or _EMPTY_WEBHOOK_DISPATCHES
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
 
 @docs_group('Resource clients')
@@ -97,7 +101,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[WebhookDispatch]:
+    ) -> AwaitableAsyncIterable[IterableListOfWebhookDispatches, WebhookDispatch]:
         """List all webhook dispatches of a user.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -115,8 +119,13 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
             The retrieved webhook dispatches of a user.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfWebhookDispatches:
+        async def _callback(**kwargs: Any) -> IterableListOfWebhookDispatches:
             result = await self._list(timeout=timeout, **kwargs)
-            return WebhookDispatchList.model_validate(result).data or _EMPTY_WEBHOOK_DISPATCHES
+            return (
+                IterableListOfWebhookDispatches.model_validate(
+                    result.get('data') if isinstance(result, dict) else result
+                )
+                or _EMPTY_WEBHOOK_DISPATCHES
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)

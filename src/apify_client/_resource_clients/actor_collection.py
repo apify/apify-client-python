@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfActors,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import (
     Actor,
@@ -16,8 +16,6 @@ from apify_client._models import (
     CreateActorRequest,
     DefaultRunOptions,
     ExampleRunInput,
-    ListOfActors,
-    ListOfActorsResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -62,11 +60,12 @@ class ActorCollectionClient(ResourceClient):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[ActorShort]:
+    ) -> IterableListOfActors:
         """List the Actors the user has created or used.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
-        and transparently fetches further pages from the API.
+        The returned value is a `ListOfActors` that additionally implements `Iterable[ActorShort]`.
+        Iterate to transparently fetch further pages, or access `.items` / `.total` / etc. for
+        first-page metadata.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
@@ -83,11 +82,11 @@ class ActorCollectionClient(ResourceClient):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        def _callback(**kwargs: Any) -> ListOfActors:
+        def _callback(**kwargs: Any) -> IterableListOfActors:
             result = self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            return ListOfActorsResponse.model_validate(result).data
+            return IterableListOfActors.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -215,11 +214,12 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[ActorShort]:
+    ) -> AwaitableAsyncIterable[IterableListOfActors, ActorShort]:
         """List the Actors the user has created or used.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
-        and transparently fetches further pages from the API.
+        The returned value is a `ListOfActors` that additionally implements `Iterable[ActorShort]`.
+        Iterate to transparently fetch further pages, or access `.items` / `.total` / etc. for
+        first-page metadata.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
@@ -236,11 +236,11 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        async def _callback(**kwargs: Any) -> ListOfActors:
+        async def _callback(**kwargs: Any) -> IterableListOfActors:
             result = await self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            return ListOfActorsResponse.model_validate(result).data
+            return IterableListOfActors.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

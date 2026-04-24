@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfEnvVars,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
-from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
+from apify_client._models import EnvVar, EnvVarResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -35,7 +35,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPage[EnvVar]:
+    def list(self, *, timeout: Timeout = 'short') -> IterableListOfEnvVars:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `for item in client.list()` yields individual environment
@@ -50,11 +50,11 @@ class ActorEnvVarCollectionClient(ResourceClient):
             The list of available Actor environment variables.
         """
 
-        def _callback(**kwargs: Any) -> ListOfEnvVars:
+        def _callback(**kwargs: Any) -> IterableListOfEnvVars:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfEnvVarsResponse.model_validate(result).data
+            return IterableListOfEnvVars.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback)
+        return build_iterable_offset(_callback)
 
     def create(
         self,
@@ -103,7 +103,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[EnvVar]:
+    def list(self, *, timeout: Timeout = 'short') -> AwaitableAsyncIterable[IterableListOfEnvVars, EnvVar]:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `for item in client.list()` yields individual environment
@@ -118,11 +118,11 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             The list of available Actor environment variables.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfEnvVars:
+        async def _callback(**kwargs: Any) -> IterableListOfEnvVars:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfEnvVarsResponse.model_validate(result).data
+            return IterableListOfEnvVars.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback)
+        return build_awaitable_async_iterable_offset(_callback)
 
     async def create(
         self,

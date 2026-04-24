@@ -3,17 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfKeyValueStores,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import (
     KeyValueStore,
     KeyValueStoreResponse,
-    ListOfKeyValueStores,
-    ListOfKeyValueStoresResponse,
     StorageOwnership,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -50,7 +48,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[KeyValueStore]:
+    ) -> IterableListOfKeyValueStores:
         """List the available key-value stores.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -71,11 +69,13 @@ class KeyValueStoreCollectionClient(ResourceClient):
             The list of available key-value stores matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfKeyValueStores:
+        def _callback(**kwargs: Any) -> IterableListOfKeyValueStores:
             result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfKeyValueStoresResponse.model_validate(result).data
+            return IterableListOfKeyValueStores.model_validate(
+                result.get('data') if isinstance(result, dict) else result
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(
         self,
@@ -128,7 +128,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[KeyValueStore]:
+    ) -> AwaitableAsyncIterable[IterableListOfKeyValueStores, KeyValueStore]:
         """List the available key-value stores.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -149,11 +149,13 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             The list of available key-value stores matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfKeyValueStores:
+        async def _callback(**kwargs: Any) -> IterableListOfKeyValueStores:
             result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfKeyValueStoresResponse.model_validate(result).data
+            return IterableListOfKeyValueStores.model_validate(
+                result.get('data') if isinstance(result, dict) else result
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self,

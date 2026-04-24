@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfBuilds,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
-from apify_client._models import ListOfBuilds, ListOfBuildsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -43,7 +42,7 @@ class BuildCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[BuildShort]:
+    ) -> IterableListOfBuilds:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -65,11 +64,11 @@ class BuildCollectionClient(ResourceClient):
             The retrieved Actor builds.
         """
 
-        def _callback(**kwargs: Any) -> ListOfBuilds:
+        def _callback(**kwargs: Any) -> IterableListOfBuilds:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfBuildsResponse.model_validate(result).data
+            return IterableListOfBuilds.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
 
 @docs_group('Resource clients')
@@ -98,7 +97,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[BuildShort]:
+    ) -> AwaitableAsyncIterable[IterableListOfBuilds, BuildShort]:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -120,8 +119,8 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             The retrieved Actor builds.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfBuilds:
+        async def _callback(**kwargs: Any) -> IterableListOfBuilds:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfBuildsResponse.model_validate(result).data
+            return IterableListOfBuilds.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)

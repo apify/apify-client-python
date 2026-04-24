@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfDatasets,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
-from apify_client._models import Dataset, DatasetResponse, ListOfDatasets, ListOfDatasetsResponse, StorageOwnership
+from apify_client._models import Dataset, DatasetResponse, StorageOwnership
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class DatasetCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[DatasetListItem]:
+    ) -> IterableListOfDatasets:
         """List the available datasets.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual datasets
@@ -66,11 +66,11 @@ class DatasetCollectionClient(ResourceClient):
             The list of available datasets matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfDatasets:
+        def _callback(**kwargs: Any) -> IterableListOfDatasets:
             result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfDatasetsResponse.model_validate(result).data
+            return IterableListOfDatasets.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     def get_or_create(
         self,
@@ -123,7 +123,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[DatasetListItem]:
+    ) -> AwaitableAsyncIterable[IterableListOfDatasets, DatasetListItem]:
         """List the available datasets.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual datasets
@@ -144,11 +144,11 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             The list of available datasets matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfDatasets:
+        async def _callback(**kwargs: Any) -> IterableListOfDatasets:
             result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfDatasetsResponse.model_validate(result).data
+            return IterableListOfDatasets.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     async def get_or_create(
         self,

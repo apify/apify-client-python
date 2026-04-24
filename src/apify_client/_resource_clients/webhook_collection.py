@@ -3,15 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfWebhooks,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import (
-    ListOfWebhooks,
-    ListOfWebhooksResponse,
     WebhookCondition,
     WebhookCreate,
     WebhookResponse,
@@ -49,11 +47,12 @@ class WebhookCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[WebhookShort]:
+    ) -> IterableListOfWebhooks:
         """List the available webhooks.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual webhooks
-        and transparently fetches further pages from the API.
+        The returned value is a `ListOfWebhooks` that additionally implements `Iterable[WebhookShort]`:
+        callers can use `.items` / `.total` / etc. for the first page's metadata, or iterate with
+        `for item in client.list(...)` to transparently fetch further pages.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
 
@@ -67,11 +66,13 @@ class WebhookCollectionClient(ResourceClient):
             The list of available webhooks matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfWebhooks:
+        def _callback(**kwargs: Any) -> IterableListOfWebhooks:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfWebhooksResponse.model_validate(result).data
+            # Validate directly into the iterable subclass so `isinstance(result, ListOfWebhooks)`
+            # and typed field access work on the returned value without indirection.
+            return IterableListOfWebhooks.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -159,11 +160,12 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[WebhookShort]:
+    ) -> AwaitableAsyncIterable[IterableListOfWebhooks, WebhookShort]:
         """List the available webhooks.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual webhooks
-        and transparently fetches further pages from the API.
+        The returned value is a `ListOfWebhooks` that additionally implements `Iterable[WebhookShort]`:
+        callers can use `.items` / `.total` / etc. for the first page's metadata, or iterate with
+        `for item in client.list(...)` to transparently fetch further pages.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
 
@@ -177,11 +179,11 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             The list of available webhooks matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfWebhooks:
+        async def _callback(**kwargs: Any) -> IterableListOfWebhooks:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfWebhooksResponse.model_validate(result).data
+            return IterableListOfWebhooks.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

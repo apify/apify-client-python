@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING, Any, Literal
 from more_itertools import constrained_batches
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_cursor_iterable_list_page,
-    build_cursor_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfRequests,
+    build_awaitable_async_iterable_cursor,
+    build_iterable_cursor,
 )
 from apify_client._models import (
     AddedRequest,
@@ -26,7 +26,6 @@ from apify_client._models import (
     HeadAndLockResponse,
     HeadResponse,
     ListOfRequests,
-    ListOfRequestsResponse,
     LockedRequestQueueHead,
     ProlongRequestLockResponse,
     Request,
@@ -511,12 +510,11 @@ class RequestQueueClient(ResourceClient):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[Request]:
+    ) -> IterableListOfRequests:
         """List requests in the queue.
 
-        The returned page also supports iteration: `for request in client.list_requests(...)` yields
-        individual requests and transparently fetches further pages using the opaque `cursor`
-        returned by the API.
+        The returned value is a `ListOfRequests` that additionally implements `Iterable[Request]`.
+        Iterate to transparently fetch further pages via the opaque `cursor` returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
@@ -540,7 +538,7 @@ class RequestQueueClient(ResourceClient):
                 stacklevel=2,
             )
 
-        def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+        def _callback(*, limit: int | None = None, cursor: str | None = None) -> IterableListOfRequests:
             # `exclusive_start_id` is honored only on the first page (when no cursor has been
             # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
@@ -557,9 +555,9 @@ class RequestQueueClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfRequestsResponse.model_validate(result).data
+            return IterableListOfRequests.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_cursor_iterable_list_page(
+        return build_iterable_cursor(
             _callback,
             cursor_param='cursor',
             next_cursor_fn=_rq_next_cursor,
@@ -1087,12 +1085,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[Request]:
+    ) -> AwaitableAsyncIterable[IterableListOfRequests, Request]:
         """List requests in the queue.
 
-        The returned page also supports iteration: `for request in client.list_requests(...)` yields
-        individual requests and transparently fetches further pages using the opaque `cursor`
-        returned by the API.
+        The returned value is a `ListOfRequests` that additionally implements `Iterable[Request]`.
+        Iterate to transparently fetch further pages via the opaque `cursor` returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
@@ -1116,7 +1113,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 stacklevel=2,
             )
 
-        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> IterableListOfRequests:
             # `exclusive_start_id` is honored only on the first page (when no cursor has been
             # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
@@ -1133,9 +1130,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfRequestsResponse.model_validate(result).data
+            return IterableListOfRequests.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_cursor_iterable_list_page_async(
+        return build_awaitable_async_iterable_cursor(
             _callback,
             cursor_param='cursor',
             next_cursor_fn=_rq_next_cursor,

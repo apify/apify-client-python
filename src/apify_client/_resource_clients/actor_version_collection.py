@@ -5,17 +5,15 @@ from typing import TYPE_CHECKING, Any
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfVersions,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
-    ListOfVersions,
-    ListOfVersionsResponse,
     SourceCodeFile,
     SourceCodeFolder,
     Version,
@@ -50,7 +48,7 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPage[Version]:
+    def list(self, *, timeout: Timeout = 'short') -> IterableListOfVersions:
         """List the available Actor versions.
 
         The returned page also supports iteration: `for item in client.list()` yields individual versions.
@@ -64,11 +62,11 @@ class ActorVersionCollectionClient(ResourceClient):
             The list of available Actor versions.
         """
 
-        def _callback(**kwargs: Any) -> ListOfVersions:
+        def _callback(**kwargs: Any) -> IterableListOfVersions:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfVersionsResponse.model_validate(result).data
+            return IterableListOfVersions.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback)
+        return build_iterable_offset(_callback)
 
     def create(
         self,
@@ -143,7 +141,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[Version]:
+    def list(self, *, timeout: Timeout = 'short') -> AwaitableAsyncIterable[IterableListOfVersions, Version]:
         """List the available Actor versions.
 
         The returned page also supports iteration: `for item in client.list()` yields individual versions.
@@ -157,11 +155,11 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             The list of available Actor versions.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfVersions:
+        async def _callback(**kwargs: Any) -> IterableListOfVersions:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfVersionsResponse.model_validate(result).data
+            return IterableListOfVersions.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback)
+        return build_awaitable_async_iterable_offset(_callback)
 
     async def create(
         self,

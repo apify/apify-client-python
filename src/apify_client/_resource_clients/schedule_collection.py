@@ -3,15 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfSchedules,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import (
-    ListOfSchedules,
-    ListOfSchedulesResponse,
     Schedule,
     ScheduleCreate,
     ScheduleResponse,
@@ -49,7 +47,7 @@ class ScheduleCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[ScheduleShort]:
+    ) -> IterableListOfSchedules:
         """List the available schedules.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -67,11 +65,11 @@ class ScheduleCollectionClient(ResourceClient):
             The list of available schedules matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfSchedules:
+        def _callback(**kwargs: Any) -> IterableListOfSchedules:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfSchedulesResponse.model_validate(result).data
+            return IterableListOfSchedules.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        return build_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     def create(
         self,
@@ -149,7 +147,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[ScheduleShort]:
+    ) -> AwaitableAsyncIterable[IterableListOfSchedules, ScheduleShort]:
         """List the available schedules.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -167,11 +165,11 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             The list of available schedules matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfSchedules:
+        async def _callback(**kwargs: Any) -> IterableListOfSchedules:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfSchedulesResponse.model_validate(result).data
+            return IterableListOfSchedules.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset, desc=desc)
 
     async def create(
         self,

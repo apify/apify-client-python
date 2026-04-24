@@ -8,18 +8,16 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_cursor_iterable_list_page,
-    build_cursor_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfKeys,
+    build_awaitable_async_iterable_cursor,
+    build_iterable_cursor,
 )
 from apify_client._models import (
     KeyValueStore,
-    KeyValueStoreKey,
     KeyValueStoreResponse,
     ListOfKeys,
-    ListOfKeysResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -36,7 +34,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._models import GeneralAccess
+    from apify_client._models import GeneralAccess, KeyValueStoreKey
     from apify_client._types import Timeout
 
 
@@ -160,11 +158,12 @@ class KeyValueStoreClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[KeyValueStoreKey]:
+    ) -> IterableListOfKeys:
         """List the keys in the key-value store.
 
-        The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
-        keys and transparently fetches further pages using cursor-based pagination.
+        The returned value is a `ListOfKeys` that additionally implements `Iterable[KeyValueStoreKey]`.
+        Iterate to transparently fetch further pages via the cursor, or access `.items` / `.count`
+        / `.next_exclusive_start_key` for first-page metadata.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
@@ -182,7 +181,7 @@ class KeyValueStoreClient(ResourceClient):
             The list of keys in the key-value store matching the given arguments.
         """
 
-        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
+        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> IterableListOfKeys:
             request_params = self._build_params(
                 limit=limit,
                 exclusiveStartKey=exclusive_start_key,
@@ -197,9 +196,9 @@ class KeyValueStoreClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfKeysResponse.model_validate(result).data
+            return IterableListOfKeys.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_cursor_iterable_list_page(
+        return build_iterable_cursor(
             _callback,
             cursor_param='exclusive_start_key',
             next_cursor_fn=_kvs_next_cursor,
@@ -593,11 +592,12 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[KeyValueStoreKey]:
+    ) -> AwaitableAsyncIterable[IterableListOfKeys, KeyValueStoreKey]:
         """List the keys in the key-value store.
 
-        The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
-        keys and transparently fetches further pages using cursor-based pagination.
+        The returned value is a `ListOfKeys` that additionally implements `Iterable[KeyValueStoreKey]`.
+        Iterate to transparently fetch further pages via the cursor, or access `.items` / `.count`
+        / `.next_exclusive_start_key` for first-page metadata.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
@@ -615,7 +615,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The list of keys in the key-value store matching the given arguments.
         """
 
-        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
+        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> IterableListOfKeys:
             request_params = self._build_params(
                 limit=limit,
                 exclusiveStartKey=exclusive_start_key,
@@ -630,9 +630,9 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfKeysResponse.model_validate(result).data
+            return IterableListOfKeys.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_cursor_iterable_list_page_async(
+        return build_awaitable_async_iterable_cursor(
             _callback,
             cursor_param='exclusive_start_key',
             next_cursor_fn=_kvs_next_cursor,

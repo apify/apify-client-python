@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -59,6 +58,24 @@ class DatasetItemsPage:
 
     desc: bool
     """Whether the items are sorted in descending order."""
+
+
+@docs_group('Other')
+@dataclass
+class IterableDatasetItemsPage(DatasetItemsPage):
+    """A `DatasetItemsPage` that is also `Iterable[dict]` across pages.
+
+    Iterating yields individual dataset items and transparently fetches further pages from
+    the API. Access `.items` / `.total` / etc. for first-page metadata. Mirrors the
+    `ListOf* & Iterable[ItemType]` pattern used for Pydantic-backed list responses.
+    """
+
+    # Private, not part of the dataclass's `__init__` signature; populated by the iteration
+    # helper after construction.
+    _iter_impl: Any = field(default=None, repr=False, compare=False)
+
+    def __iter__(self) -> Any:
+        return self._iter_impl if self._iter_impl is not None else iter(self.items)
 
 
 @docs_group('Resource clients')
@@ -151,11 +168,12 @@ class DatasetClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterableListPage[dict]:
+    ) -> IterableDatasetItemsPage:
         """List the items of the dataset.
 
-        The returned page also supports iteration: `for item in client.list_items(...)` yields individual
-        items and transparently fetches further pages from the API.
+        The returned value is a `DatasetItemsPage` that additionally implements `Iterable[dict]`:
+        callers can use `.items` / `.total` / etc. for the first page's metadata, or iterate with
+        `for item in client.list_items(...)` to transparently fetch further pages.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -198,7 +216,7 @@ class DatasetClient(ResourceClient):
             *,
             offset: int | None = None,
             limit: int | None = None,
-        ) -> DatasetItemsPage:
+        ) -> IterableDatasetItemsPage:
             request_params = self._build_params(
                 offset=offset,
                 limit=limit,
@@ -224,7 +242,7 @@ class DatasetClient(ResourceClient):
             # When using signature, API returns items as list directly
             items = response_to_list(response)
 
-            return DatasetItemsPage(
+            return IterableDatasetItemsPage(
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
@@ -235,7 +253,7 @@ class DatasetClient(ResourceClient):
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
             )
 
-        return build_iterable_list_page(_fetch_page, offset=offset, limit=limit, chunk_size=chunk_size)
+        return build_iterable_offset(_fetch_page, offset=offset, limit=limit, chunk_size=chunk_size)
 
     def iterate_items(
         self,
@@ -828,11 +846,12 @@ class DatasetClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterableListPageAsync[dict]:
+    ) -> AwaitableAsyncIterable[IterableDatasetItemsPage, dict]:
         """List the items of the dataset.
 
-        The returned page also supports iteration: `for item in client.list_items(...)` yields individual
-        items and transparently fetches further pages from the API.
+        The returned value is a `DatasetItemsPage` that additionally implements `Iterable[dict]`:
+        callers can use `.items` / `.total` / etc. for the first page's metadata, or iterate with
+        `for item in client.list_items(...)` to transparently fetch further pages.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -875,7 +894,7 @@ class DatasetClientAsync(ResourceClientAsync):
             *,
             offset: int | None = None,
             limit: int | None = None,
-        ) -> DatasetItemsPage:
+        ) -> IterableDatasetItemsPage:
             request_params = self._build_params(
                 offset=offset,
                 limit=limit,
@@ -901,7 +920,7 @@ class DatasetClientAsync(ResourceClientAsync):
             # When using signature, API returns items as list directly
             items = response_to_list(response)
 
-            return DatasetItemsPage(
+            return IterableDatasetItemsPage(
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
@@ -912,7 +931,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
             )
 
-        return build_iterable_list_page_async(_fetch_page, offset=offset, limit=limit, chunk_size=chunk_size)
+        return build_awaitable_async_iterable_offset(_fetch_page, offset=offset, limit=limit, chunk_size=chunk_size)
 
     async def iterate_items(
         self,

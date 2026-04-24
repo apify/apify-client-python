@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
+from apify_client._iterable_list import (
+    AwaitableAsyncIterable,
+    IterableListOfStoreActors,
+    build_awaitable_async_iterable_offset,
+    build_iterable_offset,
 )
-from apify_client._models import ListOfActorsInStoreResponse, ListOfStoreActors
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -47,7 +46,7 @@ class StoreCollectionClient(ResourceClient):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[StoreListActor]:
+    ) -> IterableListOfStoreActors:
         """List Actors in Apify store.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
@@ -70,7 +69,7 @@ class StoreCollectionClient(ResourceClient):
             The list of available Actors matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfStoreActors:
+        def _callback(**kwargs: Any) -> IterableListOfStoreActors:
             result = self._list(
                 timeout=timeout,
                 search=search,
@@ -80,9 +79,9 @@ class StoreCollectionClient(ResourceClient):
                 pricingModel=pricing_model,
                 **kwargs,
             )
-            return ListOfActorsInStoreResponse.model_validate(result).data
+            return IterableListOfStoreActors.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset)
+        return build_iterable_offset(_callback, limit=limit, offset=offset)
 
 
 @docs_group('Resource clients')
@@ -115,7 +114,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[StoreListActor]:
+    ) -> AwaitableAsyncIterable[IterableListOfStoreActors, StoreListActor]:
         """List Actors in Apify store.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
@@ -138,7 +137,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             The list of available Actors matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfStoreActors:
+        async def _callback(**kwargs: Any) -> IterableListOfStoreActors:
             result = await self._list(
                 timeout=timeout,
                 search=search,
@@ -148,6 +147,6 @@ class StoreCollectionClientAsync(ResourceClientAsync):
                 pricingModel=pricing_model,
                 **kwargs,
             )
-            return ListOfActorsInStoreResponse.model_validate(result).data
+            return IterableListOfStoreActors.model_validate(result.get('data') if isinstance(result, dict) else result)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset)
+        return build_awaitable_async_iterable_offset(_callback, limit=limit, offset=offset)

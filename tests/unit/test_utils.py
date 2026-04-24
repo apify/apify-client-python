@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import io
 from datetime import timedelta
 from http import HTTPStatus
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import impit
 import pytest
 
-from apify_client._models import WebhookCondition, WebhookCreate, WebhookEventType
+from apify_client._models import WebhookRepresentationList
+from apify_client._models_generated import WebhookCondition, WebhookCreate, WebhookEventType
 from apify_client._resource_clients._resource_client import ResourceClientBase
-from apify_client._types import WebhookRepresentationList
 from apify_client._utils import (
     catch_not_found_or_throw,
     create_hmac_signature,
@@ -21,6 +24,9 @@ from apify_client._utils import (
     to_safe_id,
 )
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+
+if TYPE_CHECKING:
+    from apify_client._typeddicts import WebhookRepresentationDict
 
 
 def test_to_safe_id() -> None:
@@ -53,20 +59,19 @@ def test_webhook_representation_list_to_base64() -> None:
 
 
 def test_webhook_representation_list_from_dicts() -> None:
-    """Test that from_webhooks accepts plain dicts with the minimal ad-hoc webhook shape."""
-    result = WebhookRepresentationList.from_webhooks(
-        [
-            {
-                'event_types': ['ACTOR.RUN.CREATED'],
-                'request_url': 'https://example.com/run-created',
-            },
-            {
-                'event_types': ['ACTOR.RUN.SUCCEEDED'],
-                'request_url': 'https://example.com/run-succeeded',
-                'payload_template': '{"hello": "world"}',
-            },
-        ]
-    ).to_base64()
+    """Test that from_webhooks accepts plain dicts typed as WebhookRepresentationDict."""
+    webhooks: list[WebhookRepresentationDict] = [
+        {
+            'event_types': ['ACTOR.RUN.CREATED'],
+            'request_url': 'https://example.com/run-created',
+        },
+        {
+            'event_types': ['ACTOR.RUN.SUCCEEDED'],
+            'request_url': 'https://example.com/run-succeeded',
+            'payload_template': '{"hello": "world"}',
+        },
+    ]
+    result = WebhookRepresentationList.from_webhooks(webhooks).to_base64()
 
     assert result is not None
 
@@ -125,7 +130,8 @@ def test__is_not_retryable_error(exc: Exception) -> None:
     [
         pytest.param(HTTPStatus.NOT_FOUND, 'record-not-found', True, id='404 record-not-found'),
         pytest.param(HTTPStatus.NOT_FOUND, 'record-or-token-not-found', True, id='404 token-not-found'),
-        pytest.param(HTTPStatus.NOT_FOUND, 'some-other-error', False, id='404 other error type'),
+        pytest.param(HTTPStatus.NOT_FOUND, 'some-other-error', True, id='404 other error type'),
+        pytest.param(HTTPStatus.BAD_REQUEST, 'record-not-found', False, id='400 record-not-found'),
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, 'record-not-found', False, id='500 record-not-found'),
     ],
 )
@@ -133,10 +139,10 @@ def test_catch_not_found_or_throw(status_code: HTTPStatus, error_type: str, *, s
     """Test that catch_not_found_or_throw suppresses 404 errors correctly."""
     mock_response = Mock()
     mock_response.status_code = status_code
+    mock_response.json.return_value = {'error': {'type': error_type, 'message': 'msg'}}
     mock_response.text = f'{{"error":{{"type":"{error_type}"}}}}'
 
     error = ApifyApiError(mock_response, 1)
-    error.type = error_type
 
     if should_suppress:
         catch_not_found_or_throw(error)

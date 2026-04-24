@@ -8,13 +8,12 @@ import string
 import time
 import warnings
 from base64 import urlsafe_b64encode
-from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import impit
 
 from apify_client._consts import OVERRIDABLE_DEFAULT_HEADERS
-from apify_client.errors import InvalidResponseBodyError
+from apify_client.errors import InvalidResponseBodyError, NotFoundError
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -63,10 +62,20 @@ def catch_not_found_or_throw(exc: ApifyApiError) -> None:
     Raises:
         ApifyApiError: If the error is not a 404 Not Found error.
     """
-    is_not_found_status = exc.status_code == HTTPStatus.NOT_FOUND
-    is_not_found_type = exc.type in ['record-not-found', 'record-or-token-not-found']
-    if not (is_not_found_status and is_not_found_type):
+    if not isinstance(exc, NotFoundError):
         raise exc
+
+
+def catch_not_found_for_resource_or_throw(exc: ApifyApiError, resource_id: str | None) -> None:
+    """Like `catch_not_found_or_throw`, but only suppress 404s when the client targets a specific resource by ID.
+
+    For chained clients without a `resource_id` (e.g. `run.dataset()`, `run.log()`), a 404 could mean either the
+    parent or the default sub-resource is missing — the API body cannot disambiguate — so the error propagates
+    rather than being swallowed.
+    """
+    if resource_id is None:
+        raise exc
+    catch_not_found_or_throw(exc)
 
 
 def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:

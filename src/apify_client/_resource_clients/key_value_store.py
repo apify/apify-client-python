@@ -14,7 +14,7 @@ from apify_client._iterable_list_page import (
     build_cursor_iterable_list_page,
     build_cursor_iterable_list_page_async,
 )
-from apify_client._models import (
+from apify_client._models_generated import (
     KeyValueStore,
     KeyValueStoreKey,
     KeyValueStoreResponse,
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._models import GeneralAccess
+    from apify_client._models_generated import GeneralAccess
     from apify_client._types import Timeout
 
 
@@ -929,8 +929,6 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         metadata = await self.get(timeout=timeout)
 
-        keys_public_url = urlparse(self._build_url('keys'))
-
         request_params = self._build_params(
             limit=limit,
             exclusiveStartKey=exclusive_start_key,
@@ -947,6 +945,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             request_params['signature'] = signature
 
         keys_public_url = urlparse(self._build_url('keys', public=True))
+
         filtered_params = {k: v for k, v in request_params.items() if v is not None}
         if filtered_params:
             keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))

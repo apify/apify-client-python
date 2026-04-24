@@ -10,7 +10,7 @@ from pydantic.fields import FieldInfo
 from werkzeug import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client import _models as _models_module
+from apify_client import _models_generated as _models_module
 from apify_client._resource_clients import (
     ActorCollectionClient,
     ActorCollectionClientAsync,

@@ -9,8 +9,14 @@ from typing import TYPE_CHECKING, Any
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, TERMINAL_STATUSES
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
-from apify_client._types import ActorJobResponse
-from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_safe_id, to_seconds
+from apify_client._models import ActorJobResponse
+from apify_client._utils import (
+    catch_not_found_for_resource_or_throw,
+    catch_not_found_or_throw,
+    response_to_dict,
+    to_safe_id,
+    to_seconds,
+)
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -194,7 +200,11 @@ class ResourceClient(ResourceClientBase):
         )
 
     def _get(self, *, timeout: Timeout) -> dict | None:
-        """Perform a GET request for this resource, returning the parsed response or None if not found."""
+        """Perform a GET request for this resource, returning the parsed response or None if not found.
+
+        404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
+        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        """
         try:
             response = self._http_client.call(
                 url=self._build_url(),
@@ -204,7 +214,7 @@ class ResourceClient(ResourceClientBase):
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
             return None
 
     def _update(self, *, timeout: Timeout, **kwargs: Any) -> dict:
@@ -219,7 +229,11 @@ class ResourceClient(ResourceClientBase):
         return response_to_dict(response)
 
     def _delete(self, *, timeout: Timeout) -> None:
-        """Perform a DELETE request to delete this resource, ignoring 404 errors."""
+        """Perform a DELETE request to delete this resource.
+
+        404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
+        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        """
         try:
             self._http_client.call(
                 url=self._build_url(),
@@ -228,7 +242,7 @@ class ResourceClient(ResourceClientBase):
                 timeout=timeout,
             )
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
     def _list(self, *, timeout: Timeout, **kwargs: Any) -> dict:
         """Perform a GET request to list resources."""
@@ -294,9 +308,8 @@ class ResourceClient(ResourceClientBase):
         Raises:
             ApifyApiError: If API returns errors other than 404.
         """
-        now = datetime.now(UTC)
-        deadline = (now + wait_duration) if wait_duration is not None else None
-        not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+        deadline = (datetime.now(UTC) + wait_duration) if wait_duration is not None else None
+        not_found_deadline: datetime | None = None
         actor_job: dict = {}
 
         while True:
@@ -317,6 +330,9 @@ class ResourceClient(ResourceClientBase):
                 actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
+                # Reset the not-found streak so a later transient 404 gets its own grace window.
+                not_found_deadline = None
+
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
@@ -326,9 +342,12 @@ class ResourceClient(ResourceClientBase):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
-                # and return None. In such case, the requested record probably really doesn't exist.
-                if datetime.now(UTC) > not_found_deadline:
+                now = datetime.now(UTC)
+                if deadline is not None and now >= deadline:
+                    return None
+                if not_found_deadline is None:
+                    not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+                elif now > not_found_deadline:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying
@@ -374,7 +393,11 @@ class ResourceClientAsync(ResourceClientBase):
         )
 
     async def _get(self, *, timeout: Timeout) -> dict | None:
-        """Perform a GET request for this resource, returning the parsed response or None if not found."""
+        """Perform a GET request for this resource, returning the parsed response or None if not found.
+
+        404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
+        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        """
         try:
             response = await self._http_client.call(
                 url=self._build_url(),
@@ -384,7 +407,7 @@ class ResourceClientAsync(ResourceClientBase):
             )
             return response_to_dict(response)
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
             return None
 
     async def _update(self, *, timeout: Timeout, **kwargs: Any) -> dict:
@@ -399,7 +422,11 @@ class ResourceClientAsync(ResourceClientBase):
         return response_to_dict(response)
 
     async def _delete(self, *, timeout: Timeout) -> None:
-        """Perform a DELETE request to delete this resource, ignoring 404 errors."""
+        """Perform a DELETE request to delete this resource.
+
+        404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
+        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        """
         try:
             await self._http_client.call(
                 url=self._build_url(),
@@ -408,7 +435,7 @@ class ResourceClientAsync(ResourceClientBase):
                 timeout=timeout,
             )
         except ApifyApiError as exc:
-            catch_not_found_or_throw(exc)
+            catch_not_found_for_resource_or_throw(exc, self._resource_id)
 
     async def _list(self, *, timeout: Timeout, **kwargs: Any) -> dict:
         """Perform a GET request to list resources."""
@@ -474,9 +501,8 @@ class ResourceClientAsync(ResourceClientBase):
         Raises:
             ApifyApiError: If API returns errors other than 404.
         """
-        now = datetime.now(UTC)
-        deadline = (now + wait_duration) if wait_duration is not None else None
-        not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+        deadline = (datetime.now(UTC) + wait_duration) if wait_duration is not None else None
+        not_found_deadline: datetime | None = None
         actor_job: dict = {}
 
         while True:
@@ -497,6 +523,9 @@ class ResourceClientAsync(ResourceClientBase):
                 actor_job_response = ActorJobResponse.model_validate(result)
                 actor_job = actor_job_response.data.model_dump()
 
+                # Reset the not-found streak so a later transient 404 gets its own grace window.
+                not_found_deadline = None
+
                 is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
@@ -506,9 +535,12 @@ class ResourceClientAsync(ResourceClientBase):
             except ApifyApiError as exc:
                 catch_not_found_or_throw(exc)
 
-                # If there are still not found errors after DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, we give up
-                # and return None. In such case, the requested record probably really doesn't exist.
-                if datetime.now(UTC) > not_found_deadline:
+                now = datetime.now(UTC)
+                if deadline is not None and now >= deadline:
+                    return None
+                if not_found_deadline is None:
+                    not_found_deadline = now + DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
+                elif now > not_found_deadline:
                     return None
 
             # It might take some time for database replicas to get up-to-date so sleep a bit before retrying

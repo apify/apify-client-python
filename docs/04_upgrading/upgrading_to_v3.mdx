@@ -55,7 +55,7 @@ run.status
 Models also use `populate_by_name=True`, which means you can use either the Python field name or the camelCase alias when **constructing** a model:
 
 ```python
-from apify_client._models import Run
+from apify_client._models_generated import Run
 
 # Both work when constructing models
 Run(default_dataset_id='abc')   # Python field name
@@ -86,7 +86,7 @@ rq_client.add_request({
 After (v3) — both forms are accepted:
 
 ```python
-from apify_client._types import RequestInput
+from apify_client._models import RequestInput
 
 # Option 1: dict (still works)
 rq_client.add_request({
@@ -185,6 +185,69 @@ On retries, the timeout doubles with each attempt (exponential backoff) up to `t
 The default timeout tier assigned to each method on non-storage resource clients has been revised to better match the expected latency of the underlying API endpoint. For example, a simple `get()` call now defaults to `short` (5 s), while `start()` defaults to `medium` (30 s) and `call()` defaults to `no_timeout`.
 
 If your code relied on the previous global timeout behavior, review the timeout tier on the methods you use and adjust via the `timeout` parameter or by overriding tier defaults on the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor (see [Tiered timeout system](#tiered-timeout-system) above).
+
+## Exception subclasses for API errors
+
+<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> now dispatches to a dedicated subclass based on the HTTP status code of the failed response. Instantiating `ApifyApiError` directly still works — it returns the most specific subclass for the status — so existing `except ApifyApiError` handlers are unaffected.
+
+The following subclasses are available:
+
+| Status | Subclass |
+|---|---|
+| 400 | <ApiLink to="class/InvalidRequestError">`InvalidRequestError`</ApiLink> |
+| 401 | <ApiLink to="class/UnauthorizedError">`UnauthorizedError`</ApiLink> |
+| 403 | <ApiLink to="class/ForbiddenError">`ForbiddenError`</ApiLink> |
+| 404 | <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> |
+| 409 | <ApiLink to="class/ConflictError">`ConflictError`</ApiLink> |
+| 429 | <ApiLink to="class/RateLimitError">`RateLimitError`</ApiLink> |
+| 5xx | <ApiLink to="class/ServerError">`ServerError`</ApiLink> |
+
+You can now branch on error kind without inspecting `status_code` or `type`:
+
+```python
+from apify_client import ApifyClient
+from apify_client.errors import NotFoundError, RateLimitError
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+try:
+    run = client.run('some-run-id').get()
+except NotFoundError:
+    run = None
+except RateLimitError:
+    ...
+```
+
+### Behavior change: 404 on ambiguous endpoints now raises `NotFoundError`
+
+Direct, ID-identified fetches like `client.dataset(id).get()` or `client.run(id).get()` continue to swallow 404 into `None` — a 404 there unambiguously means the named resource does not exist. Similarly, `.delete()` on an ID-identified client keeps its idempotent behavior (404 is silently swallowed).
+
+For calls where a 404 is *ambiguous*, the client now propagates <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> instead of returning `None` / silently succeeding. Three categories of endpoints are affected:
+
+1. **Chained calls that target a default sub-resource without an ID** — `run.dataset()`, `run.key_value_store()`, `run.request_queue()`, `run.log()`. A 404 here could mean the parent run is missing OR the default sub-resource is missing, and the API body does not disambiguate. Applies to both `.get()` and `.delete()`.
+2. **`.get()` / `.get_as_bytes()` / `.stream()` on a chained `LogClient`** — e.g. `run.log().get()`. Direct `client.log(build_or_run_id).get()` still returns `None` on 404.
+3. **Singleton sub-resource endpoints fetched via a fixed path** — <ApiLink to="class/ScheduleClient#get_log">`ScheduleClient.get_log()`</ApiLink>, <ApiLink to="class/TaskClient#get_input">`TaskClient.get_input()`</ApiLink>, <ApiLink to="class/DatasetClient#get_statistics">`DatasetClient.get_statistics()`</ApiLink>, <ApiLink to="class/UserClient#monthly_usage">`UserClient.monthly_usage()`</ApiLink>, <ApiLink to="class/UserClient#limits">`UserClient.limits()`</ApiLink>, <ApiLink to="class/WebhookClient#test">`WebhookClient.test()`</ApiLink>. These hit paths like `/schedules/{id}/log` or `/actor-tasks/{id}/input`, so a 404 effectively means the parent is missing. Return types moved from `T | None` to `T`.
+
+```python
+from apify_client import ApifyClient
+from apify_client.errors import NotFoundError
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+try:
+    dataset = client.run('some-run-id').dataset().get()
+except NotFoundError:
+    # Previously this returned `None`; now you must handle it explicitly.
+    dataset = None
+
+try:
+    schedule_log = client.schedule('some-schedule-id').get_log()
+except NotFoundError:
+    # `get_log()` previously returned `None` when the schedule was missing; now it raises.
+    schedule_log = None
+```
+
+Direct `.get()` also now swallows every 404 regardless of the `error.type` string in the response body (previously only `record-not-found` and `record-or-token-not-found` types were swallowed). If your code needs to distinguish between "resource missing" and "404 with an unexpected type", inspect `.type` on a caught <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> from a non-`.get()` call path.
 
 ## Snake_case `sort_by` values on `actors().list()`
 

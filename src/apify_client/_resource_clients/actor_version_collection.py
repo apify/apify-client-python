@@ -11,7 +11,7 @@ from apify_client._iterable_list_page import (
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
-from apify_client._models import (
+from apify_client._models_generated import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
     ListOfVersions,

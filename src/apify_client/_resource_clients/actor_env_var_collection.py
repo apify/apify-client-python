@@ -9,7 +9,7 @@ from apify_client._iterable_list_page import (
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
-from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
+from apify_client._models_generated import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:

@@ -11,6 +11,7 @@ const GROUP_ORDER = [
     'Resource clients',
     'Errors',
     'Models',
+    'Typed dicts',
     'Other',
 ];
 
@@ -62,6 +63,7 @@ module.exports = {
             '@apify/docs-theme',
             {
                 changelogFromRoot: true,
+                changelogDisplayedSidebar: `sidebar`,
                 subNavbar: {
                     title: 'API Client for Python',
                     items: [

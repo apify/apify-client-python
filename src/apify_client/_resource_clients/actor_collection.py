@@ -9,7 +9,7 @@ from apify_client._iterable_list_page import (
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
-from apify_client._models import (
+from apify_client._models_generated import (
     Actor,
     ActorResponse,
     ActorStandby,
@@ -25,7 +25,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._models import ActorShort
+    from apify_client._models_generated import ActorShort
     from apify_client._types import Timeout
 
 _SORT_BY_TO_API: dict[str, str] = {

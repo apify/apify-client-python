@@ -13,7 +13,7 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client._models import ActorJobStatus
+from apify_client._models_generated import ActorJobStatus
 from apify_client._status_message_watcher import StatusMessageWatcherBase
 from apify_client._streamed_log import StreamedLogBase
 
@@ -43,6 +43,10 @@ _MOCKED_ACTOR_LOGS = (
     b'2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR:...\n',
 )
 _EXISTING_LOGS_BEFORE_REDIRECT_ATTACH = 3
+
+# Large enough that a real sleep is clearly detectable against `_FAST_EXIT_THRESHOLD_S`.
+_PATCHED_FINAL_SLEEP_S = 5
+_FAST_EXIT_THRESHOLD_S = 1.0
 
 _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.', logging.INFO),
@@ -652,3 +656,64 @@ async def test_status_message_watcher_async_restart_after_normal_completion(http
     assert task2 is not task  # New task created
     await task2  # Let it complete (will hit terminal status again)
     assert task2.done()
+
+
+@pytest.mark.usefixtures('mock_api')
+def test_sync_watcher_manual_stop_skips_final_sleep(
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Manual `stop()` on the sync watcher must not pay the final sleep — only `__exit__` should."""
+    monkeypatch.setattr(StatusMessageWatcherBase, '_final_sleep_time_s', _PATCHED_FINAL_SLEEP_S)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    watcher = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
+
+    watcher.start()
+    start = time.monotonic()
+    watcher.stop()
+    elapsed = time.monotonic() - start
+
+    assert elapsed < _FAST_EXIT_THRESHOLD_S, f'stop() should not sleep, took {elapsed:.2f}s'
+
+
+@pytest.mark.usefixtures('mock_api')
+def test_sync_watcher_exit_skips_final_sleep_on_exception(
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exceptional `with`-exit must not pay the final sleep so exceptions propagate immediately."""
+    monkeypatch.setattr(StatusMessageWatcherBase, '_final_sleep_time_s', _PATCHED_FINAL_SLEEP_S)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    watcher = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
+
+    start = time.monotonic()
+    with pytest.raises(RuntimeError, match='boom'), watcher:
+        raise RuntimeError('boom')
+    elapsed = time.monotonic() - start
+
+    assert elapsed < _FAST_EXIT_THRESHOLD_S, f'__exit__ should skip final sleep on exception, took {elapsed:.2f}s'
+
+
+@pytest.mark.usefixtures('mock_api')
+async def test_async_watcher_aexit_skips_final_sleep_on_exception(
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exceptional `async with`-exit must not pay the final sleep so exceptions propagate immediately."""
+    monkeypatch.setattr(StatusMessageWatcherBase, '_final_sleep_time_s', _PATCHED_FINAL_SLEEP_S)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    watcher = await run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
+
+    start = time.monotonic()
+    with pytest.raises(RuntimeError, match='boom'):
+        async with watcher:
+            raise RuntimeError('boom')
+    elapsed = time.monotonic() - start
+
+    assert elapsed < _FAST_EXIT_THRESHOLD_S, f'__aexit__ should skip final sleep on exception, took {elapsed:.2f}s'

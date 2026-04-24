@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from impit import Response
 
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Dataset, ListOfDatasets
+    from apify_client._models_generated import Dataset, ListOfDatasets
     from apify_client._resource_clients.dataset import DatasetItemsPage
 
 import json

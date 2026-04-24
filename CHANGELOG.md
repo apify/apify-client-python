@@ -12,11 +12,17 @@ All notable changes to this project will be documented in this file.
 - Accept Pydantic models as alternatives to dicts in resource client methods ([#663](https://github.com/apify/apify-client-python/pull/663)) ([b778c20](https://github.com/apify/apify-client-python/commit/b778c2040228ff9f5a97765de10535cec3f0353e)) by [@vdusek](https://github.com/vdusek), closes [#421](https://github.com/apify/apify-client-python/issues/421)
 - Add ownership parameter to storage collection listing methods ([#696](https://github.com/apify/apify-client-python/pull/696)) ([51a92a3](https://github.com/apify/apify-client-python/commit/51a92a31dac5dd433acfaea76155011d0892d8c8)) by [@nmanerikar](https://github.com/nmanerikar)
 - Add filter and cursor parameters to list_requests method ([#743](https://github.com/apify/apify-client-python/pull/743)) ([3445ff7](https://github.com/apify/apify-client-python/commit/3445ff74e61d5f1f9a964f2ee3c14d198298f709)) by [@mvolfik](https://github.com/mvolfik)
+- Add ApifyApiError subclasses grouped by HTTP status ([#737](https://github.com/apify/apify-client-python/pull/737)) ([a6daff7](https://github.com/apify/apify-client-python/commit/a6daff754e5e1af8a6230f4c504db24a246c734f)) by [@vdusek](https://github.com/vdusek)
+- Generate TypedDict types for input-side models ([#738](https://github.com/apify/apify-client-python/pull/738)) ([2fd66d0](https://github.com/apify/apify-client-python/commit/2fd66d0adf253dff470f40d0bfdbc620da0ed608)) by [@vdusek](https://github.com/vdusek), closes [#666](https://github.com/apify/apify-client-python/issues/666)
 
 ### 🐛 Bug Fixes
 
 - Guard integration test resource names against 63-char API limit ([#729](https://github.com/apify/apify-client-python/pull/729)) ([47a7a69](https://github.com/apify/apify-client-python/commit/47a7a6967e28c7042fa8e75cd4c138356495fa2c)) by [@vdusek](https://github.com/vdusek)
 - Prevent `_prepare_request_call` from mutating caller&#x27;s headers dict ([#746](https://github.com/apify/apify-client-python/pull/746)) ([d553162](https://github.com/apify/apify-client-python/commit/d5531621535f5a491be5b5791ea4b80e46de1405)) by [@vdusek](https://github.com/vdusek)
+- Don&#x27;t block StatusMessageWatcher exit with 6s sleep on exception ([#753](https://github.com/apify/apify-client-python/pull/753)) ([48f5037](https://github.com/apify/apify-client-python/commit/48f50378e92e2058ff8e5aaba45ef9e3a6e5f081)) by [@vdusek](https://github.com/vdusek)
+- Treat naive datetime query params as UTC ([#752](https://github.com/apify/apify-client-python/pull/752)) ([9ab096a](https://github.com/apify/apify-client-python/commit/9ab096a7453080a3079c7459079f99a30bd6a7cb)) by [@vdusek](https://github.com/vdusek)
+- Raise NotFoundError on ambiguous 404 responses ([#755](https://github.com/apify/apify-client-python/pull/755)) ([701185e](https://github.com/apify/apify-client-python/commit/701185e6e8a98f0b14d83cab10139f1e19be3f47)) by [@vdusek](https://github.com/vdusek)
+- Correct deadline logic in _wait_for_finish ([#749](https://github.com/apify/apify-client-python/pull/749)) ([fd0663e](https://github.com/apify/apify-client-python/commit/fd0663e22b31ddd289325146c9750ff07c068d6b)) by [@vdusek](https://github.com/vdusek)
 
 ### 🚜 Refactor
 

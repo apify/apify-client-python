@@ -89,14 +89,14 @@ async def maybe_await(value: Coroutine[Any, Any, T]) -> T: ...
 async def maybe_await(value: T) -> T: ...
 
 
-async def maybe_await(value: T | Coroutine[Any, Any, T]) -> T:
+async def maybe_await(value: Any) -> Any:
     """Await coroutines, pass through other values.
 
     Enables unified test code for both sync and async clients:
         result = await maybe_await(client.datasets().list())
     """
     if hasattr(value, '__await__'):
-        return await value  # ty: ignore[invalid-await]
+        return await value
     return value
 
 

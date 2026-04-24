@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from apify_client._iterable_list_page import ListPage
+
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
@@ -13,11 +15,11 @@ from apify_client._models_generated import (
     ActorJobStatus,
     ListOfRuns,
     ListOfWebhookDispatches,
-    ListOfWebhooks,
     Run,
     Webhook,
     WebhookDispatch,
     WebhookEventType,
+    WebhookShort,
 )
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -49,16 +51,18 @@ async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=10))
 
-    assert isinstance(webhooks_page, ListOfWebhooks)
+    assert isinstance(webhooks_page, ListPage)
     assert isinstance(webhooks_page.items, list)
+    assert isinstance(webhooks_page.items[0], WebhookShort)
 
 
 async def test_list_webhooks_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks with pagination."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=5, offset=0))
 
-    assert isinstance(webhooks_page, ListOfWebhooks)
+    assert isinstance(webhooks_page, ListPage)
     assert isinstance(webhooks_page.items, list)
+    assert isinstance(webhooks_page.items[0], WebhookShort)
 
 
 async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:

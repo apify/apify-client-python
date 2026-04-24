@@ -47,7 +47,43 @@ class _LazyTask(Generic[T]):
 
 
 @docs_group('Other')
-class IterableListPage(Iterable[T], Generic[T]):
+class ListPage(Generic[T]):
+    """A page of API results.
+
+    Different endpoints may return different subsets of the available pagination metadata fields, the only field that
+    is common for all endpoints is items.
+    """
+
+    items: list[T]
+    """List of items on this page."""
+
+    count: int | None
+    """Number of items on this page."""
+
+    offset: int | None
+    """The starting offset of this page."""
+
+    limit: int | None
+    """The maximum number of items per page requested from the API."""
+
+    total: int | None
+    """Total number of items matching the query, as reported by the first page."""
+
+    desc: bool | None
+    """Whether the items are sorted in descending order."""
+
+    def __init__(self, first_page: HasItems[T]) -> None:
+        """Initialize a page wrapper from a Pydantic paginated model."""
+        self.items = first_page.items
+        self.count = getattr(first_page, 'count', None)
+        self.offset = getattr(first_page, 'offset', None)
+        self.limit = getattr(first_page, 'limit', None)
+        self.total = getattr(first_page, 'total', None)
+        self.desc = getattr(first_page, 'desc', None)
+
+
+@docs_group('Other')
+class IterableListPage(ListPage[T], Iterable[T], Generic[T]):
     """A page of results that can also be iterated to yield items across subsequent pages.
 
     Accessing fields such as `items`, `count`, or `total` returns the metadata of the first page,
@@ -55,34 +91,9 @@ class IterableListPage(Iterable[T], Generic[T]):
     yields individual items and performs additional API calls as needed to fetch further pages.
     """
 
-    items: list[T]
-    """List of items on this page."""
-
-    count: int
-    """Number of items on this page."""
-
-    offset: int
-    """The starting offset of this page."""
-
-    limit: int
-    """The maximum number of items per page requested from the API."""
-
-    total: int
-    """Total number of items matching the query, as reported by the first page."""
-
-    desc: bool
-    """Whether the items are sorted in descending order."""
-
     def __init__(self, first_page: HasItems[T], iterator: Iterator[T]) -> None:
         """Initialize a page wrapper from a Pydantic paginated model and an iterator over all items."""
-        self.items = first_page.items
-        count = getattr(first_page, 'count', None)
-        self.count = count if count is not None else len(first_page.items)
-        self.offset = getattr(first_page, 'offset', 0) or 0
-        self.limit = getattr(first_page, 'limit', 0) or 0
-        self.total = getattr(first_page, 'total', None) or len(first_page.items)
-        self.desc = getattr(first_page, 'desc', False) or False
-        self._first_page = first_page
+        super().__init__(first_page)
         self._iterator = iterator
 
     def __iter__(self) -> Iterator[T]:
@@ -95,28 +106,26 @@ class IterableListPageAsync(AsyncIterable[T], Generic[T]):
     """An awaitable result that can also be asynchronously iterated to yield items across pages.
 
     Awaiting the instance (`await client.list(...)`) performs a single API call and returns a
-    populated `IterableListPage`. Iterating (`async for item in client.list(...)`) yields individual
+    populated `ListPage`. Iterating (`async for item in client.list(...)`) yields individual
     items and performs additional API calls as needed to fetch further pages.
-
-    A single instance supports either awaiting or iterating — not both.
     """
 
     def __init__(
         self,
-        make_awaitable: Callable[[], Awaitable[IterableListPage[T]]],
+        awaitable_first_page: Callable[[], Awaitable[ListPage[T]]],
         async_iterator: AsyncIterator[T],
     ) -> None:
         """Initialize with a factory that creates the awaitable on demand and the async iterator over items."""
-        self._make_awaitable = make_awaitable
+        self._awaitable_first_page = awaitable_first_page
         self._async_iterator = async_iterator
 
     def __aiter__(self) -> AsyncIterator[T]:
         """Return an asynchronous iterator over all items across pages."""
         return self._async_iterator
 
-    def __await__(self) -> Generator[Any, Any, IterableListPage[T]]:
+    def __await__(self) -> Generator[Any, Any, ListPage[T]]:
         """Return an awaitable that resolves to an `IterableListPage` containing the first page."""
-        return self._make_awaitable().__await__()
+        return self._awaitable_first_page().__await__()
 
 
 def build_iterable_list_page(

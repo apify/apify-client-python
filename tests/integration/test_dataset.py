@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from apify_client._iterable_list_page import ListPage
+from apify_client._models_generated import DatasetListItem
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from contextlib import AbstractAsyncContextManager, AbstractContextManager
@@ -11,7 +14,7 @@ if TYPE_CHECKING:
     from impit import Response
 
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Dataset, ListOfDatasets
+    from apify_client._models_generated import Dataset
     from apify_client._resource_clients.dataset import DatasetItemsPage
 
 import json
@@ -26,22 +29,23 @@ from apify_client.errors import ApifyApiError
 
 async def test_dataset_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing datasets."""
-    result = await maybe_await(client.datasets().list(limit=10))
-    datasets_page = cast('ListOfDatasets', result)
+    datasets_page = await maybe_await(client.datasets().list(limit=10))
 
-    assert datasets_page is not None
-    assert datasets_page.items is not None
+    assert isinstance(datasets_page, ListPage)
     assert isinstance(datasets_page.items, list)
+    # User may have 0 datasets — only check element type when any were returned.
+    if datasets_page.items:
+        assert isinstance(datasets_page.items[0], DatasetListItem)
 
 
 async def test_dataset_collection_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing datasets with pagination."""
-    result = await maybe_await(client.datasets().list(limit=5, offset=0))
-    datasets_page = cast('ListOfDatasets', result)
+    datasets_page = await maybe_await(client.datasets().list(limit=5, offset=0))
 
-    assert datasets_page is not None
-    assert datasets_page.items is not None
+    assert isinstance(datasets_page, ListPage)
     assert isinstance(datasets_page.items, list)
+    if datasets_page.items:
+        assert isinstance(datasets_page.items[0], DatasetListItem)
 
 
 async def test_dataset_collection_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:

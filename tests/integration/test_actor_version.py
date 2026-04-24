@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from apify_client._iterable_list_page import ListPage
+from apify_client._models_generated import Version
+
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Actor, ListOfVersions, Version
+    from apify_client._models_generated import Actor
 
 
 from ._utils import get_random_resource_name, maybe_await
@@ -42,11 +45,11 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
 
     try:
         # List versions
-        result = await maybe_await(actor_client.versions().list())
-        versions = cast('ListOfVersions', result)
+        versions = await maybe_await(actor_client.versions().list())
 
-        assert versions is not None
-        assert versions.items is not None
+        assert isinstance(versions, ListPage)
+        assert isinstance(versions.items, list)
+        assert isinstance(versions.items[0], Version)
         assert len(versions.items) >= 1
 
         # Verify version fields

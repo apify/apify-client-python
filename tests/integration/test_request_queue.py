@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from apify_client._iterable_list_page import ListPage
+from apify_client._models_generated import Request, RequestQueueShort
+
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._models_generated import (
         BatchAddResult,
         BatchDeleteResult,
-        ListOfRequestQueues,
-        ListOfRequests,
         LockedRequestQueueHead,
-        Request,
         RequestLockInfo,
         RequestQueue,
         RequestQueueHead,
@@ -30,22 +30,22 @@ from ._utils import get_random_resource_name, get_random_string, maybe_await, ma
 
 async def test_request_queue_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing request queues."""
-    result = await maybe_await(client.request_queues().list(limit=10))
-    rq_page = cast('ListOfRequestQueues', result)
+    rq_page = await maybe_await(client.request_queues().list(limit=10))
 
-    assert rq_page is not None
-    assert rq_page.items is not None
+    assert isinstance(rq_page, ListPage)
     assert isinstance(rq_page.items, list)
+    if rq_page.items:
+        assert isinstance(rq_page.items[0], RequestQueueShort)
 
 
 async def test_request_queue_collection_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing request queues with pagination."""
-    result = await maybe_await(client.request_queues().list(limit=5, offset=0))
-    rq_page = cast('ListOfRequestQueues', result)
+    rq_page = await maybe_await(client.request_queues().list(limit=5, offset=0))
 
-    assert rq_page is not None
-    assert rq_page.items is not None
+    assert isinstance(rq_page, ListPage)
     assert isinstance(rq_page.items, list)
+    if rq_page.items:
+        assert isinstance(rq_page.items[0], RequestQueueShort)
 
 
 async def test_request_queue_collection_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:
@@ -256,15 +256,16 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
             )
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListOfRequests | None = None
+        list_response: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            list_response = cast('ListOfRequests', result)
-            if len(list_response.items) == 5:
+            list_response = await maybe_await(rq_client.list_requests())
+            if list_response.items and len(list_response.items) == 5:
                 break
 
-        assert list_response is not None
+        assert isinstance(list_response, ListPage)
+        assert isinstance(list_response.items, list)
+        assert isinstance(list_response.items[0], Request)
         assert len(list_response.items) == 5
     finally:
         await maybe_await(rq_client.delete())
@@ -325,15 +326,16 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
         assert len(batch_response.unprocessed_requests) == 0
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListOfRequests | None = None
+        list_response: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            list_response = cast('ListOfRequests', result)
-            if len(list_response.items) == 10:
+            list_response = await maybe_await(rq_client.list_requests())
+            if list_response.items and len(list_response.items) == 10:
                 break
 
-        assert list_response is not None
+        assert isinstance(list_response, ListPage)
+        assert isinstance(list_response.items, list)
+        assert isinstance(list_response.items[0], Request)
         assert len(list_response.items) == 10
     finally:
         await maybe_await(rq_client.delete())
@@ -355,15 +357,16 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
             )
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListOfRequests | None = None
+        list_response: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            list_response = cast('ListOfRequests', result)
-            if len(list_response.items) == 10:
+            list_response = await maybe_await(rq_client.list_requests())
+            if list_response.items and len(list_response.items) == 10:
                 break
 
-        assert list_response is not None
+        assert isinstance(list_response, ListPage)
+        assert isinstance(list_response.items, list)
+        assert isinstance(list_response.items[0], Request)
         assert len(list_response.items) == 10
         requests_to_delete: list[RequestDeleteInputDict] = [
             {'unique_key': item.unique_key} for item in list_response.items[:5]
@@ -376,15 +379,16 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
         assert len(delete_response.processed_requests) == 5
 
         # Poll until deletions are reflected (eventual consistency)
-        remaining: ListOfRequests | None = None
+        remaining: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            remaining = cast('ListOfRequests', result)
-            if len(remaining.items) == 5:
+            remaining = await maybe_await(rq_client.list_requests())
+            if remaining.items and len(remaining.items) == 5:
                 break
 
-        assert remaining is not None
+        assert isinstance(remaining, ListPage)
+        assert isinstance(remaining.items, list)
+        assert isinstance(remaining.items[0], Request)
         assert len(remaining.items) == 5
     finally:
         await maybe_await(rq_client.delete())

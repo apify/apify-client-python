@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 import pytest
 
 if TYPE_CHECKING:
-    from collections.abc import Coroutine
+    from collections.abc import Awaitable, Coroutine
 
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -83,6 +83,10 @@ def get_random_resource_name(label: str) -> str:
 
 @overload
 async def maybe_await(value: Coroutine[Any, Any, T]) -> T: ...
+
+
+@overload
+async def maybe_await(value: Awaitable[T]) -> T: ...
 
 
 @overload

@@ -144,7 +144,7 @@ def build_iterable_list_page(
     The `total` field from the first page is not trusted for stopping iteration because it may change between calls;
     iteration stops when a page has no items or when the user-requested `limit` has been reached.
 
-    The `count` field does not count objects returned, but object scanned by the API. For example when using filters,
+    The `count` field does not count objects returned, but objects scanned by the API. For example when using filters,
     returned items can be smaller than `count`. Therefore, `count` should be used for correct offset calculation if
     available.
 
@@ -213,9 +213,9 @@ def build_iterable_list_page_async(
                 yield item
             fetched_items += getattr(current_page, 'count', len(current_page.items))
 
-    async def wrap_first_page() -> IterableListPage[Any]:
+    async def wrap_first_page() -> ListPage[Any]:
         first_page = await fetch_first_page
-        return IterableListPage(first_page, iter(first_page.items))
+        return ListPage(first_page)
 
     return IterableListPageAsync(wrap_first_page, async_iterator())
 
@@ -261,7 +261,7 @@ def build_cursor_iterable_list_page(
 
 
 def build_cursor_iterable_list_page_async(
-    callback: Callable[..., Awaitable[HasItems[T]]],
+    callback: Callable[..., Coroutine[Any, Any, HasItems[T]]],
     *,
     cursor_param: str,
     initial_cursor: Any = None,
@@ -279,11 +279,11 @@ def build_cursor_iterable_list_page_async(
     user_limit = limit or 0
     first_limit = _min_for_limit_param(limit, effective_chunk)
 
-    async def fetch_first_page() -> Any:
-        return await callback(**{**kwargs, cursor_param: initial_cursor, 'limit': first_limit})
+    # Can be awaited multiple times with same result, but not scheduled at this time yet, as it might be pre-emptive.
+    fetch_first_page = _LazyTask(callback(**{**kwargs, cursor_param: initial_cursor, 'limit': first_limit}))
 
     async def async_iterator() -> AsyncIterator[Any]:
-        current_page = await fetch_first_page()
+        current_page = await fetch_first_page
         for item in current_page.items:
             yield item
 
@@ -299,8 +299,7 @@ def build_cursor_iterable_list_page_async(
             fetched += len(current_page.items)
             next_cursor = getattr(current_page, f'next_{cursor_param}')
 
-    async def wrap_first_page() -> IterableListPage[Any]:
-        first_page = await fetch_first_page()
-        return IterableListPage(first_page, iter(first_page.items))
+    async def wrap_first_page() -> ListPage[Any]:
+        return ListPage(await fetch_first_page)
 
     return IterableListPageAsync(wrap_first_page, async_iterator())

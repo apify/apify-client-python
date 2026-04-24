@@ -256,10 +256,10 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
             )
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             list_response = await maybe_await(rq_client.list_requests())
+            assert isinstance(list_response, ListPage)
             if list_response.items and len(list_response.items) == 5:
                 break
 
@@ -326,10 +326,10 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
         assert len(batch_response.unprocessed_requests) == 0
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             list_response = await maybe_await(rq_client.list_requests())
+            assert isinstance(list_response, ListPage)
             if list_response.items and len(list_response.items) == 10:
                 break
 
@@ -357,10 +357,10 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
             )
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             list_response = await maybe_await(rq_client.list_requests())
+            assert isinstance(list_response, ListPage)
             if list_response.items and len(list_response.items) == 10:
                 break
 
@@ -379,10 +379,10 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
         assert len(delete_response.processed_requests) == 5
 
         # Poll until deletions are reflected (eventual consistency)
-        remaining: ListPage[Request] | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             remaining = await maybe_await(rq_client.list_requests())
+            assert isinstance(remaining, ListPage)
             if remaining.items and len(remaining.items) == 5:
                 break
 

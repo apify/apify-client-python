@@ -2547,7 +2547,7 @@ class RequestQueue(BaseModel):
     """
     The number of requests that have been handled.
     """
-    pending_request_count: Annotated[int, Field(alias='pendingRequestCount', examples=[670], ge=0)]
+    pending_request_count: Annotated[int, Field(alias='pendingRequestCount', examples=[670])]
     """
     The number of requests that are pending and have not been handled yet.
     """
@@ -2650,7 +2650,7 @@ class RequestQueueShort(BaseModel):
     """
     The number of requests that have been handled.
     """
-    pending_request_count: Annotated[int, Field(alias='pendingRequestCount', examples=[670], ge=0)]
+    pending_request_count: Annotated[int, Field(alias='pendingRequestCount', examples=[670])]
     """
     The number of requests that are pending and have not been handled yet.
     """

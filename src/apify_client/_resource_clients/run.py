@@ -385,7 +385,7 @@ class RunClient(ResourceClient):
 
         Args:
             event_name: The name of the event to charge for.
-            count: The number of events to charge. Sent to the server as-is, including 0.
+            count: The number of events to charge.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             timeout: Timeout for the API HTTP request.
@@ -811,7 +811,7 @@ class RunClientAsync(ResourceClientAsync):
 
         Args:
             event_name: The name of the event to charge for.
-            count: The number of events to charge. Sent to the server as-is, including 0.
+            count: The number of events to charge.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             timeout: Timeout for the API HTTP request.

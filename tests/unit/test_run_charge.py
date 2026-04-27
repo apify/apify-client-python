@@ -24,20 +24,14 @@ def _decode_body(request: Request) -> dict:
 
 
 @pytest.mark.parametrize(
-    ('count', 'expected'),
-    [
-        (None, 1),
-        (0, 0),
-        (1, 1),
-        (5, 5),
-    ],
+    'count',
+    [0, 1, 5],
 )
 def test_run_charge_preserves_count_sync(
     httpserver: HTTPServer,
-    count: int | None,
-    expected: int,
+    count: int,
 ) -> None:
-    """Ensure `count` is sent as-is; only `None` falls back to 1 (in particular, `0` is preserved)."""
+    """Ensure `count` is sent as-is (in particular, `0` is preserved)."""
     captured_requests: list[Request] = []
 
     def capture_request(request: Request) -> Response:
@@ -53,22 +47,16 @@ def test_run_charge_preserves_count_sync(
 
     assert len(captured_requests) == 1
     body = _decode_body(captured_requests[0])
-    assert body['count'] == expected
+    assert body['count'] == count
 
 
 @pytest.mark.parametrize(
-    ('count', 'expected'),
-    [
-        (None, 1),
-        (0, 0),
-        (1, 1),
-        (5, 5),
-    ],
+    'count',
+    [0, 1, 5],
 )
 async def test_run_charge_preserves_count_async(
     httpserver: HTTPServer,
-    count: int | None,
-    expected: int,
+    count: int,
 ) -> None:
     """Async variant of `test_run_charge_preserves_count_sync`."""
     captured_requests: list[Request] = []
@@ -86,4 +74,4 @@ async def test_run_charge_preserves_count_async(
 
     assert len(captured_requests) == 1
     body = _decode_body(captured_requests[0])
-    assert body['count'] == expected
+    assert body['count'] == count

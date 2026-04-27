@@ -375,7 +375,7 @@ class RunClient(ResourceClient):
     def charge(
         self,
         event_name: str,
-        count: int | None = None,
+        count: int = 1,
         idempotency_key: str | None = None,
         timeout: Timeout = 'short',
     ) -> None:
@@ -385,8 +385,7 @@ class RunClient(ResourceClient):
 
         Args:
             event_name: The name of the event to charge for.
-            count: The number of events to charge. Defaults to 1 when `None`; other values,
-                including 0, are sent to the server as-is.
+            count: The number of events to charge. Sent to the server as-is, including 0.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             timeout: Timeout for the API HTTP request.
@@ -412,7 +411,7 @@ class RunClient(ResourceClient):
             data=json.dumps(
                 {
                     'eventName': event_name,
-                    'count': count if count is not None else 1,
+                    'count': count,
                 }
             ),
             timeout=timeout,
@@ -802,7 +801,7 @@ class RunClientAsync(ResourceClientAsync):
     async def charge(
         self,
         event_name: str,
-        count: int | None = None,
+        count: int = 1,
         idempotency_key: str | None = None,
         timeout: Timeout = 'short',
     ) -> None:
@@ -812,8 +811,7 @@ class RunClientAsync(ResourceClientAsync):
 
         Args:
             event_name: The name of the event to charge for.
-            count: The number of events to charge. Defaults to 1 when `None`; other values,
-                including 0, are sent to the server as-is.
+            count: The number of events to charge. Sent to the server as-is, including 0.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             timeout: Timeout for the API HTTP request.
@@ -839,7 +837,7 @@ class RunClientAsync(ResourceClientAsync):
             data=json.dumps(
                 {
                     'eventName': event_name,
-                    'count': count if count is not None else 1,
+                    'count': count,
                 }
             ),
             timeout=timeout,

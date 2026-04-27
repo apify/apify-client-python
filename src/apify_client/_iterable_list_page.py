@@ -124,7 +124,7 @@ class IterableListPageAsync(AsyncIterable[T], Generic[T]):
         return self._get_async_iterator()
 
     def __await__(self) -> Generator[Any, Any, ListPage[T]]:
-        """Return an awaitable that resolves to an `IterableListPage` containing the first page."""
+        """Return an awaitable that resolves to a `ListPage` containing the first page of results."""
         return self._awaitable_first_page().__await__()
 
 

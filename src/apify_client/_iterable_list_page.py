@@ -51,7 +51,9 @@ class ListPage(Generic[T]):
     """A page of API results.
 
     Different endpoints may return different subsets of the available pagination metadata fields, the only field that
-    is common for all endpoints is items.
+    is common for all endpoints is items. Endpoint-specific fields not enumerated below (for example
+    `is_truncated` / `next_exclusive_start_key` for key-value stores or `next_cursor` for request queues) remain
+    accessible via attribute access, transparently delegated to the underlying response model exposed as `raw`.
     """
 
     items: list[T]
@@ -72,14 +74,31 @@ class ListPage(Generic[T]):
     desc: bool | None
     """Whether the items are sorted in descending order."""
 
+    raw: HasItems[T]
+    """The underlying paginated model returned by the API, exposing any endpoint-specific fields."""
+
     def __init__(self, first_page: HasItems[T]) -> None:
         """Initialize a page wrapper from a Pydantic paginated model."""
+        self.raw = first_page
         self.items = first_page.items
         self.count = getattr(first_page, 'count', None)
         self.offset = getattr(first_page, 'offset', None)
         self.limit = getattr(first_page, 'limit', None)
         self.total = getattr(first_page, 'total', None)
         self.desc = getattr(first_page, 'desc', None)
+
+    def __getattr__(self, name: str) -> Any:
+        # Called only when normal attribute lookup fails, so it does not shadow the eagerly-copied
+        # fields above. Lets callers read endpoint-specific fields (e.g. `is_truncated`,
+        # `next_exclusive_start_key`, `next_cursor`) that previously lived on the response model.
+        try:
+            raw = object.__getattribute__(self, 'raw')
+        except AttributeError as exc:
+            raise AttributeError(name) from exc
+        try:
+            return getattr(raw, name)
+        except AttributeError as exc:
+            raise AttributeError(name) from exc
 
 
 @docs_group('Other')
@@ -124,7 +143,7 @@ class IterableListPageAsync(AsyncIterable[T], Generic[T]):
         return self._get_async_iterator()
 
     def __await__(self) -> Generator[Any, Any, ListPage[T]]:
-        """Return an awaitable that resolves to an `IterableListPage` containing the first page."""
+        """Return an awaitable that resolves to a `ListPage` containing the first page of results."""
         return self._awaitable_first_page().__await__()
 
 

@@ -173,8 +173,8 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
         dispatches = await maybe_await(webhook_client.dispatches().list())
         assert isinstance(dispatches, ListPage)
         assert isinstance(dispatches.items, list)
-        assert isinstance(dispatches.items[0], WebhookDispatch)
         assert len(dispatches.items) > 0
+        assert isinstance(dispatches.items[0], WebhookDispatch)
 
     finally:
         await maybe_await(webhook_client.delete())

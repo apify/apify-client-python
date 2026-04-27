@@ -265,8 +265,8 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
 
         assert isinstance(list_response, ListPage)
         assert isinstance(list_response.items, list)
-        assert isinstance(list_response.items[0], Request)
         assert len(list_response.items) == 5
+        assert isinstance(list_response.items[0], Request)
     finally:
         await maybe_await(rq_client.delete())
 
@@ -335,8 +335,8 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
 
         assert isinstance(list_response, ListPage)
         assert isinstance(list_response.items, list)
-        assert isinstance(list_response.items[0], Request)
         assert len(list_response.items) == 10
+        assert isinstance(list_response.items[0], Request)
     finally:
         await maybe_await(rq_client.delete())
 
@@ -366,8 +366,8 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
 
         assert isinstance(list_response, ListPage)
         assert isinstance(list_response.items, list)
-        assert isinstance(list_response.items[0], Request)
         assert len(list_response.items) == 10
+        assert isinstance(list_response.items[0], Request)
         requests_to_delete: list[RequestDeleteInputDict] = [
             {'unique_key': item.unique_key} for item in list_response.items[:5]
         ]
@@ -388,8 +388,8 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
 
         assert isinstance(remaining, ListPage)
         assert isinstance(remaining.items, list)
-        assert isinstance(remaining.items[0], Request)
         assert len(remaining.items) == 5
+        assert isinstance(remaining.items[0], Request)
     finally:
         await maybe_await(rq_client.delete())
 

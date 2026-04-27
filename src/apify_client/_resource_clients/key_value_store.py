@@ -162,13 +162,14 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Total number of keys to yield across all pages when iterating. The API caps each
+                individual request at 1000 keys; use `chunk_size` to control the per-request size.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
-                when iterating across pages.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -218,13 +219,14 @@ class KeyValueStoreClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Total number of keys to yield across all pages. The API caps each individual
+                request at 1000 keys; use `chunk_size` to control the per-request size.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
-                when iterating across pages.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -476,7 +478,7 @@ class KeyValueStoreClient(ResourceClient):
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Number of keys to be returned by the signed request. Maximum value is 1000.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
@@ -600,13 +602,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Total number of keys to yield across all pages when iterating. The API caps each
+                individual request at 1000 keys; use `chunk_size` to control the per-request size.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
-                when iterating across pages.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -656,13 +659,14 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Total number of keys to yield across all pages. The API caps each individual
+                request at 1000 keys; use `chunk_size` to control the per-request size.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of keys requested per API call when iterating. Only relevant
-                when iterating across pages.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -917,7 +921,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Number of keys to be returned by the signed request. Maximum value is 1000.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import ListOfWebhookDispatches, WebhookDispatchList
+from apify_client._models_generated import ListOfWebhookDispatches, ListOfWebhookDispatchesResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -51,7 +51,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
             The retrieved webhook dispatches of a user.
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return WebhookDispatchList.model_validate(result).data
+        return ListOfWebhookDispatchesResponse.model_validate(result).data
 
 
 @docs_group('Resource clients')
@@ -95,4 +95,4 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
             The retrieved webhook dispatches of a user.
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return WebhookDispatchList.model_validate(result).data
+        return ListOfWebhookDispatchesResponse.model_validate(result).data

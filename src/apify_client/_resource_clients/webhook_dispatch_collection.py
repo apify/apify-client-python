@@ -17,9 +17,6 @@ if TYPE_CHECKING:
     from apify_client._types import Timeout
 
 
-_EMPTY_WEBHOOK_DISPATCHES = ListOfWebhookDispatches(total=0, offset=0, limit=1, desc=False, count=0, items=[])
-
-
 @docs_group('Resource clients')
 class WebhookDispatchCollectionClient(ResourceClient):
     """Sub-client for the webhook dispatch collection.
@@ -66,7 +63,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
 
         def _callback(**kwargs: Any) -> ListOfWebhookDispatches:
             result = self._list(timeout=timeout, **kwargs)
-            return WebhookDispatchList.model_validate(result).data or _EMPTY_WEBHOOK_DISPATCHES
+            return WebhookDispatchList.model_validate(result).data
 
         return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
 
@@ -100,7 +97,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[WebhookDispatch]:
         """List all webhook dispatches of a user.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual
         webhook dispatches and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -117,6 +114,6 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
 
         async def _callback(**kwargs: Any) -> ListOfWebhookDispatches:
             result = await self._list(timeout=timeout, **kwargs)
-            return WebhookDispatchList.model_validate(result).data or _EMPTY_WEBHOOK_DISPATCHES
+            return WebhookDispatchList.model_validate(result).data
 
         return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)

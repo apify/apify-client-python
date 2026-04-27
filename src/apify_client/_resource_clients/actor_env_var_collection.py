@@ -106,7 +106,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
     def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[EnvVar]:
         """List the available Actor environment variables.
 
-        The returned page also supports iteration: `for item in client.list()` yields individual environment
+        The returned page also supports iteration: `async for item in client.list()` yields individual environment
         variables.
 
         https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables

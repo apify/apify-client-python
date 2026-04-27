@@ -828,7 +828,7 @@ class DatasetClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[dict[str, Any]]:
         """List the items of the dataset.
 
-        The returned page also supports iteration: `for item in client.list_items(...)` yields individual
+        The returned page also supports iteration: `async for item in client.list_items(...)` yields individual
         items and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items

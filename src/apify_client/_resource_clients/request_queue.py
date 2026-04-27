@@ -1092,7 +1092,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[Request]:
         """List requests in the queue.
 
-        The returned page also supports iteration: `for request in client.list_requests(...)` yields
+        The returned page also supports iteration: `async for request in client.list_requests(...)` yields
         individual requests and transparently fetches further pages using the opaque `cursor`
         returned by the API.
 

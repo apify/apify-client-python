@@ -152,7 +152,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[ScheduleShort]:
         """List the available schedules.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual
         schedules and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules

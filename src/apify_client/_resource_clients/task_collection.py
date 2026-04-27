@@ -187,7 +187,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[TaskShort]:
         """List the available tasks.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual tasks
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual tasks
         and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks

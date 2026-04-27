@@ -594,7 +594,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[KeyValueStoreKey]:
         """List the keys in the key-value store.
 
-        The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
+        The returned page also supports iteration: `async for key in client.list_keys(...)` yields individual
         keys and transparently fetches further pages using cursor-based pagination.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys

@@ -122,7 +122,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
         was initialized from.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual runs
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual runs
         and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs

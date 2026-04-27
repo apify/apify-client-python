@@ -118,7 +118,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[StoreListActor]:
         """List Actors in Apify store.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual Actors
         from the store and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2/#/reference/store/store-actors-collection/get-list-of-actors-in-store

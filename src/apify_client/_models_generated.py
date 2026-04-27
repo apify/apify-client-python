@@ -3912,7 +3912,7 @@ class WebhookDispatchList(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    data: ListOfWebhookDispatches | None = None
+    data: ListOfWebhookDispatches
 
 
 @docs_group('Models')

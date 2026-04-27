@@ -218,7 +218,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[ActorShort]:
         """List the Actors the user has created or used.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual Actors
         and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors

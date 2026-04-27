@@ -132,7 +132,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
     ) -> IterableListPageAsync[DatasetListItem]:
         """List the available datasets.
 
-        The returned page also supports iteration: `for item in client.list(...)` yields individual datasets
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual datasets
         and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets

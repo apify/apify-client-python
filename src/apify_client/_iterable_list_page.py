@@ -91,14 +91,14 @@ class IterableListPage(ListPage[T], Iterable[T], Generic[T]):
     yields individual items and performs additional API calls as needed to fetch further pages.
     """
 
-    def __init__(self, first_page: HasItems[T], iterator: Iterator[T]) -> None:
+    def __init__(self, first_page: HasItems[T], get_iterator: Callable[[], Iterator[T]]) -> None:
         """Initialize a page wrapper from a Pydantic paginated model and an iterator over all items."""
         super().__init__(first_page)
-        self._iterator = iterator
+        self._get_iterator = get_iterator
 
     def __iter__(self) -> Iterator[T]:
         """Return an iterator over all items across pages, fetching additional pages as needed."""
-        return self._iterator
+        return self._get_iterator()
 
 
 @docs_group('Other')
@@ -113,15 +113,15 @@ class IterableListPageAsync(AsyncIterable[T], Generic[T]):
     def __init__(
         self,
         awaitable_first_page: Callable[[], Awaitable[ListPage[T]]],
-        async_iterator: AsyncIterator[T],
+        get_async_iterator: Callable[[], AsyncIterator[T]],
     ) -> None:
         """Initialize with a factory that creates the awaitable on demand and the async iterator over items."""
         self._awaitable_first_page = awaitable_first_page
-        self._async_iterator = async_iterator
+        self._get_async_iterator = get_async_iterator
 
     def __aiter__(self) -> AsyncIterator[T]:
         """Return an asynchronous iterator over all items across pages."""
-        return self._async_iterator
+        return self._get_async_iterator()
 
     def __await__(self) -> Generator[Any, Any, ListPage[T]]:
         """Return an awaitable that resolves to an `IterableListPage` containing the first page."""
@@ -161,7 +161,7 @@ def build_iterable_list_page(
 
     first_page = callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)})
 
-    def iterator() -> Iterator[T]:
+    def get_iterator() -> Iterator[T]:
         current_page = first_page
         yield from current_page.items
 
@@ -176,7 +176,7 @@ def build_iterable_list_page(
             yield from current_page.items
             fetched_items += getattr(current_page, 'count', len(current_page.items))
 
-    return IterableListPage(first_page, iterator())
+    return IterableListPage(first_page, get_iterator)
 
 
 def build_iterable_list_page_async(
@@ -196,7 +196,7 @@ def build_iterable_list_page_async(
     # Can be awaited multiple times with same result, but not scheduled at this time yet, as it might be pre-emptive.
     fetch_first_page = _LazyTask(callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)}))
 
-    async def async_iterator() -> AsyncIterator[Any]:
+    async def get_async_iterator() -> AsyncIterator[Any]:
         current_page = await fetch_first_page
         for item in current_page.items:
             yield item
@@ -217,7 +217,7 @@ def build_iterable_list_page_async(
         first_page = await fetch_first_page
         return ListPage(first_page)
 
-    return IterableListPageAsync(wrap_first_page, async_iterator())
+    return IterableListPageAsync(wrap_first_page, get_async_iterator)
 
 
 def build_cursor_iterable_list_page(
@@ -242,7 +242,7 @@ def build_cursor_iterable_list_page(
     first_limit = _min_for_limit_param(limit, effective_chunk)
     first_page = callback(**{**kwargs, cursor_param: initial_cursor, 'limit': first_limit})
 
-    def iterator() -> Iterator[Any]:
+    def get_iterator() -> Iterator[Any]:
         current_page = first_page
         yield from current_page.items
 
@@ -257,7 +257,7 @@ def build_cursor_iterable_list_page(
             fetched += len(current_page.items)
             next_cursor = getattr(current_page, f'next_{cursor_param}')
 
-    return IterableListPage(first_page, iterator())
+    return IterableListPage(first_page, get_iterator)
 
 
 def build_cursor_iterable_list_page_async(
@@ -282,7 +282,7 @@ def build_cursor_iterable_list_page_async(
     # Can be awaited multiple times with same result, but not scheduled at this time yet, as it might be pre-emptive.
     fetch_first_page = _LazyTask(callback(**{**kwargs, cursor_param: initial_cursor, 'limit': first_limit}))
 
-    async def async_iterator() -> AsyncIterator[Any]:
+    async def get_async_iterator() -> AsyncIterator[Any]:
         current_page = await fetch_first_page
         for item in current_page.items:
             yield item
@@ -302,4 +302,4 @@ def build_cursor_iterable_list_page_async(
     async def wrap_first_page() -> ListPage[Any]:
         return ListPage(await fetch_first_page)
 
-    return IterableListPageAsync(wrap_first_page, async_iterator())
+    return IterableListPageAsync(wrap_first_page, get_async_iterator)

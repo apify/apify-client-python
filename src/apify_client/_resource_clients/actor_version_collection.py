@@ -146,7 +146,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
     def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[Version]:
         """List the available Actor versions.
 
-        The returned page also supports iteration: `for item in client.list()` yields individual versions.
+        The returned page also supports iteration: `async for item in client.list()` yields individual versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 

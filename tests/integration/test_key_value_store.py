@@ -146,10 +146,10 @@ async def test_get_record_signature(
         match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
         r' API token and that it has the required permissions.',
     ):
-        await maybe_await(kvs.get_record(key=key))
+        await maybe_await(kvs.get_record(key))
 
     # Kvs content retrieved with correct signature
-    result = await maybe_await(kvs.get_record(key=key, signature=test_kvs_of_another_user.keys_signature[key]))
+    result = await maybe_await(kvs.get_record(key, signature=test_kvs_of_another_user.keys_signature[key]))
     record = cast('dict', result)
     assert record
     assert test_kvs_of_another_user.expected_content[key] == record['value']
@@ -167,10 +167,10 @@ async def test_get_record_as_bytes_signature(
         match=r"Insufficient permissions for the key-value store. Make sure you're passing a correct"
         r' API token and that it has the required permissions.',
     ):
-        await maybe_await(kvs.get_record_as_bytes(key=key))
+        await maybe_await(kvs.get_record_as_bytes(key))
 
     # Kvs content retrieved with correct signature
-    result = await maybe_await(kvs.get_record_as_bytes(key=key, signature=test_kvs_of_another_user.keys_signature[key]))
+    result = await maybe_await(kvs.get_record_as_bytes(key, signature=test_kvs_of_another_user.keys_signature[key]))
     item = cast('dict', result)
     assert item
     assert test_kvs_of_another_user.expected_content[key] == json.loads(item['value'].decode('utf-8'))
@@ -191,16 +191,16 @@ async def test_stream_record_signature(
     # We'll test the error condition separately based on client type
     if is_async:
         with pytest.raises(ApifyApiError):
-            async with kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
+            async with kvs.stream_record(key) as stream:  # ty: ignore[invalid-context-manager]
                 pass
     else:
-        with pytest.raises(ApifyApiError), kvs.stream_record(key=key) as stream:  # ty: ignore[invalid-context-manager]
+        with pytest.raises(ApifyApiError), kvs.stream_record(key) as stream:  # ty: ignore[invalid-context-manager]
             pass
 
     # Kvs content retrieved with correct signature
     if is_async:
         async with kvs.stream_record(
-            key=key,
+            key,
             signature=test_kvs_of_another_user.keys_signature[key],
         ) as stream:  # ty: ignore[invalid-context-manager]
             assert stream
@@ -208,7 +208,7 @@ async def test_stream_record_signature(
             value = json.loads(stream_dict['value'].content.decode('utf-8'))
     else:
         with kvs.stream_record(
-            key=key,
+            key,
             signature=test_kvs_of_another_user.keys_signature[key],
         ) as stream:  # ty: ignore[invalid-context-manager]
             assert stream

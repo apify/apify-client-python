@@ -271,7 +271,7 @@ class KeyValueStoreClient(ResourceClient):
             timeout=timeout,
         )
 
-    def get_record(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
+    def get_record(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -330,7 +330,7 @@ class KeyValueStoreClient(ResourceClient):
 
         return response.status_code == HTTPStatus.OK
 
-    def get_record_as_bytes(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
+    def get_record_as_bytes(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -364,7 +364,7 @@ class KeyValueStoreClient(ResourceClient):
 
     @contextmanager
     def stream_record(
-        self, key: str, signature: str | None = None, *, timeout: Timeout = 'long'
+        self, key: str, *, signature: str | None = None, timeout: Timeout = 'long'
     ) -> Iterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
@@ -405,8 +405,8 @@ class KeyValueStoreClient(ResourceClient):
         self,
         key: str,
         value: Any,
-        content_type: str | None = None,
         *,
+        content_type: str | None = None,
         timeout: Timeout = 'long',
     ) -> None:
         """Set a value to the given record in the key-value store.
@@ -419,7 +419,7 @@ class KeyValueStoreClient(ResourceClient):
             content_type: The content type of the saved value.
             timeout: Timeout for the API HTTP request.
         """
-        value, content_type = encode_key_value_store_record_value(value, content_type)
+        value, content_type = encode_key_value_store_record_value(value, content_type=content_type)
 
         headers = {'content-type': content_type}
 
@@ -522,8 +522,8 @@ class KeyValueStoreClient(ResourceClient):
 
         if metadata and metadata.url_signing_secret_key:
             signature = create_storage_content_signature(
-                resource_id=metadata.id,
-                url_signing_secret_key=metadata.url_signing_secret_key,
+                metadata.id,
+                metadata.url_signing_secret_key,
                 expires_in=expires_in,
             )
             request_params['signature'] = signature
@@ -727,7 +727,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         ):
             yield key
 
-    async def get_record(self, key: str, signature: str | None = None, *, timeout: Timeout = 'long') -> dict | None:
+    async def get_record(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -787,7 +787,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         return response.status_code == HTTPStatus.OK
 
     async def get_record_as_bytes(
-        self, key: str, signature: str | None = None, *, timeout: Timeout = 'long'
+        self, key: str, *, signature: str | None = None, timeout: Timeout = 'long'
     ) -> dict | None:
         """Retrieve the given record from the key-value store, without parsing it.
 
@@ -822,7 +822,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
     @asynccontextmanager
     async def stream_record(
-        self, key: str, signature: str | None = None, *, timeout: Timeout = 'long'
+        self, key: str, *, signature: str | None = None, timeout: Timeout = 'long'
     ) -> AsyncIterator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
@@ -863,8 +863,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         self,
         key: str,
         value: Any,
-        content_type: str | None = None,
         *,
+        content_type: str | None = None,
         timeout: Timeout = 'long',
     ) -> None:
         """Set a value to the given record in the key-value store.
@@ -877,7 +877,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             content_type: The content type of the saved value.
             timeout: Timeout for the API HTTP request.
         """
-        value, content_type = encode_key_value_store_record_value(value, content_type)
+        value, content_type = encode_key_value_store_record_value(value, content_type=content_type)
 
         headers = {'content-type': content_type}
 
@@ -980,8 +980,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         if metadata and metadata.url_signing_secret_key:
             signature = create_storage_content_signature(
-                resource_id=metadata.id,
-                url_signing_secret_key=metadata.url_signing_secret_key,
+                metadata.id,
+                metadata.url_signing_secret_key,
                 expires_in=expires_in,
             )
             request_params['signature'] = signature

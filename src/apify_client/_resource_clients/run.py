@@ -185,7 +185,7 @@ class RunClient(ResourceClient):
         Returns:
             The Actor run data.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
@@ -375,7 +375,8 @@ class RunClient(ResourceClient):
     def charge(
         self,
         event_name: str,
-        count: int | None = None,
+        *,
+        count: int = 1,
         idempotency_key: str | None = None,
         timeout: Timeout = 'short',
     ) -> None:
@@ -385,7 +386,7 @@ class RunClient(ResourceClient):
 
         Args:
             event_name: The name of the event to charge for.
-            count: The number of events to charge. Defaults to 1 if not provided.
+            count: The number of events to charge.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             timeout: Timeout for the API HTTP request.
@@ -411,7 +412,7 @@ class RunClient(ResourceClient):
             data=json.dumps(
                 {
                     'eventName': event_name,
-                    'count': count or 1,
+                    'count': count,
                 }
             ),
             timeout=timeout,
@@ -419,9 +420,9 @@ class RunClient(ResourceClient):
 
     def get_status_message_watcher(
         self,
+        *,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
-        *,
         timeout: Timeout = 'long',
     ) -> StatusMessageWatcher:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
@@ -608,7 +609,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The Actor run data.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
@@ -801,7 +802,8 @@ class RunClientAsync(ResourceClientAsync):
     async def charge(
         self,
         event_name: str,
-        count: int | None = None,
+        *,
+        count: int = 1,
         idempotency_key: str | None = None,
         timeout: Timeout = 'short',
     ) -> None:
@@ -811,7 +813,7 @@ class RunClientAsync(ResourceClientAsync):
 
         Args:
             event_name: The name of the event to charge for.
-            count: The number of events to charge. Defaults to 1 if not provided.
+            count: The number of events to charge.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             timeout: Timeout for the API HTTP request.
@@ -837,7 +839,7 @@ class RunClientAsync(ResourceClientAsync):
             data=json.dumps(
                 {
                     'eventName': event_name,
-                    'count': count or 1,
+                    'count': count,
                 }
             ),
             timeout=timeout,
@@ -845,9 +847,9 @@ class RunClientAsync(ResourceClientAsync):
 
     async def get_status_message_watcher(
         self,
+        *,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
-        *,
         timeout: Timeout = 'long',
     ) -> StatusMessageWatcherAsync:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.

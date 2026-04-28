@@ -186,6 +186,9 @@ python-version = "3.11"
 include = ["src", "tests", "scripts", "docs", "website"]
 exclude = ["website/versioned_docs"]
 
+[tool.ty.rules]
+unused-ignore-comment = "error"
+
 [[tool.ty.overrides]]
 include = ["docs/**/*.py", "website/**/*.py"]
 [tool.ty.overrides.rules]

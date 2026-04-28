@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import WebhookDispatchList
+from apify_client._models_generated import ListOfWebhookDispatchesResponse
 from apify_client._pagination import (
     _LazyTask,
     build_get_iterator,
@@ -67,7 +67,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
 
         def _callback(**kwargs: Any) -> PageOfItems[WebhookDispatch]:
             result = self._list(timeout=timeout, **kwargs)
-            data = WebhookDispatchList.model_validate(result).data
+            data = ListOfWebhookDispatchesResponse.model_validate(result).data
             return PageOfItems(
                 items=data.items,
                 count=data.count,
@@ -137,7 +137,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
 
         async def _callback(**kwargs: Any) -> PageOfItems[WebhookDispatch]:
             result = await self._list(timeout=timeout, **kwargs)
-            data = WebhookDispatchList.model_validate(result).data
+            data = ListOfWebhookDispatchesResponse.model_validate(result).data
             return PageOfItems(
                 items=data.items,
                 count=data.count,

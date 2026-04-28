@@ -414,7 +414,7 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
     try:
         # Try to charge - this will fail for non-PPE actors but tests the API call
         try:
-            await maybe_await(run_client.charge(event_name='test-event', count=1))
+            await maybe_await(run_client.charge('test-event', count=1))
             # If it succeeds, the actor supports PPE
         except ApifyApiError as exc:
             # Expected error for non-PPE actors - re-raise if unexpected.

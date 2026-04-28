@@ -36,10 +36,10 @@ class ApifyApiError(ApifyClientError):
         data: Additional error data from the API response.
     """
 
-    # Subclasses in `_STATUS_TO_CLASS` must keep the `(response, attempt, method='GET')` constructor signature —
+    # Subclasses in `_STATUS_TO_CLASS` must keep the `(response, attempt, *, method='GET')` constructor signature —
     # `__new__` forwards those arguments verbatim.
 
-    def __new__(cls, response: HttpResponse, attempt: int, method: str = 'GET') -> Self:  # noqa: ARG004
+    def __new__(cls, response: HttpResponse, attempt: int, *, method: str = 'GET') -> Self:  # noqa: ARG004
         """Dispatch to the subclass matching the response's HTTP status code, if any."""
         target_cls: type[ApifyApiError] = cls
         if cls is ApifyApiError:
@@ -51,7 +51,7 @@ class ApifyApiError(ApifyClientError):
                 target_cls = mapped
         return super().__new__(target_cls)
 
-    def __init__(self, response: HttpResponse, attempt: int, method: str = 'GET') -> None:
+    def __init__(self, response: HttpResponse, attempt: int, *, method: str = 'GET') -> None:
         """Initialize the API error from a failed response.
 
         Args:

@@ -167,7 +167,7 @@ class HttpClientBase:
 
         return parsed_params
 
-    def _compute_timeout(self, timeout: Timeout, attempt: int) -> int | float | None:
+    def _compute_timeout(self, timeout: Timeout, *, attempt: int) -> int | float | None:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
         For `no_timeout`, returns `None` to indicate no timeout. For tier literals and explicit `timedelta` values,
@@ -197,6 +197,7 @@ class HttpClientBase:
 
     def _prepare_request_call(
         self,
+        *,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         data: str | bytes | bytearray | None = None,
@@ -221,7 +222,7 @@ class HttpClientBase:
 
         return (headers, self._parse_params(params), data)
 
-    def _build_url_with_params(self, url: str, params: dict[str, Any] | None = None) -> str:
+    def _build_url_with_params(self, url: str, *, params: dict[str, Any] | None = None) -> str:
         """Build a URL with query parameters appended. List values are expanded into multiple key=value pairs."""
         if not params:
             return url

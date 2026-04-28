@@ -128,25 +128,25 @@ def test_compute_timeout_with_timedelta() -> None:
     """Test _compute_timeout with a concrete timedelta doubles per attempt, capped at max."""
     client = ImpitHttpClient(timeout_max=timedelta(seconds=600))
 
-    assert client._compute_timeout(timedelta(seconds=5), 1) == 5.0
-    assert client._compute_timeout(timedelta(seconds=5), 2) == 10.0
-    assert client._compute_timeout(timedelta(seconds=5), 3) == 20.0
-    assert client._compute_timeout(timedelta(seconds=5), 4) == 40.0
+    assert client._compute_timeout(timedelta(seconds=5), attempt=1) == 5.0
+    assert client._compute_timeout(timedelta(seconds=5), attempt=2) == 10.0
+    assert client._compute_timeout(timedelta(seconds=5), attempt=3) == 20.0
+    assert client._compute_timeout(timedelta(seconds=5), attempt=4) == 40.0
 
 
 def test_compute_timeout_caps_at_max() -> None:
     """Test _compute_timeout caps at timeout_max."""
     client = ImpitHttpClient(timeout_max=timedelta(seconds=10))
 
-    assert client._compute_timeout(timedelta(seconds=5), 1) == 5.0
-    assert client._compute_timeout(timedelta(seconds=5), 2) == 10.0
-    assert client._compute_timeout(timedelta(seconds=5), 3) == 10.0  # capped
+    assert client._compute_timeout(timedelta(seconds=5), attempt=1) == 5.0
+    assert client._compute_timeout(timedelta(seconds=5), attempt=2) == 10.0
+    assert client._compute_timeout(timedelta(seconds=5), attempt=3) == 10.0  # capped
 
 
 def test_compute_timeout_no_timeout_returns_none() -> None:
     """Test _compute_timeout with 'no_timeout' returns None."""
     client = ImpitHttpClient()
-    assert client._compute_timeout('no_timeout', 1) is None
+    assert client._compute_timeout('no_timeout', attempt=1) is None
 
 
 async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> None:

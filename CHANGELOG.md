@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Treat naive datetime query params as UTC ([#752](https://github.com/apify/apify-client-python/pull/752)) ([9ab096a](https://github.com/apify/apify-client-python/commit/9ab096a7453080a3079c7459079f99a30bd6a7cb)) by [@vdusek](https://github.com/vdusek)
 - Raise NotFoundError on ambiguous 404 responses ([#755](https://github.com/apify/apify-client-python/pull/755)) ([701185e](https://github.com/apify/apify-client-python/commit/701185e6e8a98f0b14d83cab10139f1e19be3f47)) by [@vdusek](https://github.com/vdusek)
 - Correct deadline logic in _wait_for_finish ([#749](https://github.com/apify/apify-client-python/pull/749)) ([fd0663e](https://github.com/apify/apify-client-python/commit/fd0663e22b31ddd289325146c9750ff07c068d6b)) by [@vdusek](https://github.com/vdusek)
+- Preserve count=0 in RunClient&#x27;s charge ([#751](https://github.com/apify/apify-client-python/pull/751)) ([0a8942c](https://github.com/apify/apify-client-python/commit/0a8942c3a5728689e28e0273938a3509ebb5f58d)) by [@vdusek](https://github.com/vdusek)
 
 ### 🚜 Refactor
 
@@ -30,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Drop support for Python 3.10 ([#636](https://github.com/apify/apify-client-python/pull/636)) ([7895a4e](https://github.com/apify/apify-client-python/commit/7895a4e60145f490911044da4aa7e3c1c424d416)) by [@vdusek](https://github.com/vdusek)
 - [**breaking**] Update default timeout tiers on non-storage resource clients ([#664](https://github.com/apify/apify-client-python/pull/664)) ([0b35bbe](https://github.com/apify/apify-client-python/commit/0b35bbe212a8a64c5aea5d5d813315252760b055)) by [@vdusek](https://github.com/vdusek)
 - [**breaking**] Use snake case for `actors().list(sort_by=...)` ([#736](https://github.com/apify/apify-client-python/pull/736)) ([eb70b64](https://github.com/apify/apify-client-python/commit/eb70b64eac86faba5cbe943845ad144ec0277896)) by [@vdusek](https://github.com/vdusek), closes [#700](https://github.com/apify/apify-client-python/issues/700)
+- [**breaking**] Mark secondary arguments as keyword-only ([#766](https://github.com/apify/apify-client-python/pull/766)) ([4ca99fd](https://github.com/apify/apify-client-python/commit/4ca99fd6a442ad12adbdfc866e72543c0feaf96b)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

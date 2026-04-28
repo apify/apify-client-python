@@ -6,21 +6,24 @@ from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
 from apify_client._models_generated import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
-    ListOfVersions,
     ListOfVersionsResponse,
     SourceCodeFile,
     SourceCodeFolder,
     Version,
     VersionResponse,
     VersionSourceType,
+)
+from apify_client._pagination_classes import (
+    ListPageOfVersions,
+    ListPageOfVersionsAsync,
+    PaginatedPageOnlyTotal,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -50,7 +53,7 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPage[Version]:
+    def list(self, *, timeout: Timeout = 'short') -> ListPageOfVersions:
         """List the available Actor versions.
 
         The returned page also supports iteration: `for item in client.list()` yields individual versions.
@@ -64,11 +67,19 @@ class ActorVersionCollectionClient(ResourceClient):
             The list of available Actor versions.
         """
 
-        def _callback(**kwargs: Any) -> ListOfVersions:
+        def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[Version]:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfVersionsResponse.model_validate(result).data
+            data = ListOfVersionsResponse.model_validate(result).data
+            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
 
-        return build_iterable_list_page(_callback)
+        first_page = _callback()
+        get_iterator = build_iterable_list_page(_callback, first_page)
+
+        return ListPageOfVersions(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            total=first_page.total,
+        )
 
     def create(
         self,
@@ -143,7 +154,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[Version]:
+    def list(self, *, timeout: Timeout = 'short') -> ListPageOfVersionsAsync:
         """List the available Actor versions.
 
         The returned page also supports iteration: `async for item in client.list()` yields individual versions.
@@ -157,11 +168,18 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             The list of available Actor versions.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfVersions:
+        async def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[Version]:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfVersionsResponse.model_validate(result).data
+            data = ListOfVersionsResponse.model_validate(result).data
+            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
 
-        return build_iterable_list_page_async(_callback)
+        fetch_first_page = _LazyTask(_callback())
+        get_async_iterator = build_iterable_list_page_async(_callback, fetch_first_page)
+
+        return ListPageOfVersionsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

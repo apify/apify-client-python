@@ -4,17 +4,20 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
 from apify_client._models_generated import (
     Dataset,
     DatasetResponse,
-    ListOfDatasets,
     ListOfDatasetsResponse,
     StorageOwnership,
+)
+from apify_client._pagination_classes import (
+    ListPageOfDatasets,
+    ListPageOfDatasetsAsync,
+    PaginatedPage,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -51,7 +54,7 @@ class DatasetCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[DatasetListItem]:
+    ) -> ListPageOfDatasets:
         """List the available datasets.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual datasets
@@ -72,11 +75,30 @@ class DatasetCollectionClient(ResourceClient):
             The list of available datasets matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfDatasets:
+        def _callback(**kwargs: Any) -> PaginatedPage[DatasetListItem]:
             result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfDatasetsResponse.model_validate(result).data
+            data = ListOfDatasetsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfDatasets(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
     def get_or_create(
         self,
@@ -129,7 +151,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[DatasetListItem]:
+    ) -> ListPageOfDatasetsAsync:
         """List the available datasets.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual datasets
@@ -150,11 +172,27 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             The list of available datasets matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfDatasets:
+        async def _callback(**kwargs: Any) -> PaginatedPage[DatasetListItem]:
             result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            return ListOfDatasetsResponse.model_validate(result).data
+            data = ListOfDatasetsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_iterable_list_page_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return ListPageOfDatasetsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def get_or_create(
         self,

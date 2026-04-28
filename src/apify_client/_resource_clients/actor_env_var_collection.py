@@ -4,12 +4,16 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
-from apify_client._models_generated import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEnvVarsResponse
+from apify_client._models_generated import EnvVar, EnvVarResponse, ListOfEnvVarsResponse
+from apify_client._pagination_classes import (
+    ListPageOfEnvVars,
+    ListPageOfEnvVarsAsync,
+    PaginatedPageOnlyTotal,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -35,7 +39,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPage[EnvVar]:
+    def list(self, *, timeout: Timeout = 'short') -> ListPageOfEnvVars:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `for item in client.list()` yields individual environment
@@ -50,11 +54,19 @@ class ActorEnvVarCollectionClient(ResourceClient):
             The list of available Actor environment variables.
         """
 
-        def _callback(**kwargs: Any) -> ListOfEnvVars:
+        def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[EnvVar]:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfEnvVarsResponse.model_validate(result).data
+            data = ListOfEnvVarsResponse.model_validate(result).data
+            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
 
-        return build_iterable_list_page(_callback)
+        first_page = _callback()
+        get_iterator = build_iterable_list_page(_callback, first_page)
+
+        return ListPageOfEnvVars(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            total=first_page.total,
+        )
 
     def create(
         self,
@@ -103,7 +115,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> IterableListPageAsync[EnvVar]:
+    def list(self, *, timeout: Timeout = 'short') -> ListPageOfEnvVarsAsync:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `async for item in client.list()` yields individual environment
@@ -118,11 +130,18 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             The list of available Actor environment variables.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfEnvVars:
+        async def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[EnvVar]:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfEnvVarsResponse.model_validate(result).data
+            data = ListOfEnvVarsResponse.model_validate(result).data
+            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
 
-        return build_iterable_list_page_async(_callback)
+        fetch_first_page = _LazyTask(_callback())
+        get_async_iterator = build_iterable_list_page_async(_callback, fetch_first_page)
+
+        return ListPageOfEnvVarsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

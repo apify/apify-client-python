@@ -4,12 +4,16 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
-from apify_client._models_generated import ListOfBuilds, ListOfBuildsResponse
+from apify_client._models_generated import ListOfBuildsResponse
+from apify_client._pagination_classes import (
+    ListPageOfBuilds,
+    ListPageOfBuildsAsync,
+    PaginatedPage,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -43,7 +47,7 @@ class BuildCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[BuildShort]:
+    ) -> ListPageOfBuilds:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -65,11 +69,30 @@ class BuildCollectionClient(ResourceClient):
             The retrieved Actor builds.
         """
 
-        def _callback(**kwargs: Any) -> ListOfBuilds:
+        def _callback(**kwargs: Any) -> PaginatedPage[BuildShort]:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfBuildsResponse.model_validate(result).data
+            data = ListOfBuildsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfBuilds(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
 
 @docs_group('Resource clients')
@@ -98,7 +121,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[BuildShort]:
+    ) -> ListPageOfBuildsAsync:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -120,8 +143,24 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             The retrieved Actor builds.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfBuilds:
+        async def _callback(**kwargs: Any) -> PaginatedPage[BuildShort]:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfBuildsResponse.model_validate(result).data
+            data = ListOfBuildsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_iterable_list_page_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return ListPageOfBuildsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )

@@ -179,8 +179,9 @@ def build_iterable_list_page(
 
 def build_iterable_list_page_async(
     callback: Callable[..., Coroutine[Any, Any, HasItems[T]]],
+    fetch_first_page,
     **kwargs: Any,
-) -> IterableListPageAsync[T]:
+) -> Callable[[], AsyncIterator[T]]:
     """Build an `IterableListPageAsync` from a paginated async callback.
 
     Mirrors `build_iterable_list_page` but for async callbacks. The returned object is both
@@ -191,10 +192,7 @@ def build_iterable_list_page_async(
     offset = kwargs.get('offset') or 0
     limit = kwargs.get('limit') or 0
 
-    # Can be awaited multiple times with same result, but not scheduled at this time yet, as it might be pre-emptive.
-    fetch_first_page = _LazyTask(callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)}))
-
-    async def get_async_iterator() -> AsyncIterator[Any]:
+    async def get_async_iterator() -> AsyncIterator[T]:
         current_page = await fetch_first_page
         for item in current_page.items:
             yield item
@@ -211,11 +209,7 @@ def build_iterable_list_page_async(
                 yield item
             fetched_items += getattr(current_page, 'count', len(current_page.items))
 
-    async def wrap_first_page() -> ListPage[Any]:
-        first_page = await fetch_first_page
-        return ListPage(first_page)
-
-    return IterableListPageAsync(wrap_first_page, get_async_iterator)
+    return get_async_iterator
 
 
 def build_cursor_iterable_list_page(

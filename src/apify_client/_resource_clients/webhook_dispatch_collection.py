@@ -7,10 +7,11 @@ from apify_client._iterable_list_page import (
     IterableListPage,
     IterableListPageAsync,
     build_iterable_list_page,
-    build_iterable_list_page_async,
+    build_iterable_list_page_async, _LazyTask
 )
 from apify_client._models_generated import ListOfWebhookDispatches, WebhookDispatchList
-from apify_client._pagination_classes import ListPageOfWebhookDispatches
+from apify_client._pagination_classes import ListPageOfWebhookDispatches, PaginatedPage, \
+    ListPageOfWebhookDispatchesAsync
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -69,7 +70,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset, desc=desc)
         get_iterator = build_iterable_list_page(_callback,first_page, limit=limit, offset=offset, desc=desc)
 
-        return ListPageOfWebhookDispatches(get_iterator=get_iterator,
+        return ListPageOfWebhookDispatches(_get_iterator=get_iterator,
                                            items=first_page.items,
                                            count=first_page.count,
                                            offset=first_page.offset,
@@ -104,7 +105,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[WebhookDispatch]:
+    ) -> ListPageOfWebhookDispatchesAsync:
         """List all webhook dispatches of a user.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual
@@ -122,8 +123,13 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
             The retrieved webhook dispatches of a user.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfWebhookDispatches:
+        async def _callback(**kwargs: Any) -> PaginatedPage[WebhookDispatch]:
             result = await self._list(timeout=timeout, **kwargs)
-            return WebhookDispatchList.model_validate(result).data
+            data = WebhookDispatchList.model_validate(result).data
+            return PaginatedPage(items=data.items, count=data.count, offset=data.offset, desc=data.desc, total=data.total, limit=data.limit)
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_iterable_list_page_async(_callback, fetch_first_page,
+                                                limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfWebhookDispatchesAsync(_awaitable_first_page=fetch_first_page, _get_async_iterator=get_async_iterator)

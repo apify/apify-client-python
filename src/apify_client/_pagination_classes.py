@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, AsyncIterator, Awaitable, Generator
 from dataclasses import dataclass, InitVar, field
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, Self, Any
 
-
+from apify_client._iterable_list_page import HasItems
 from apify_client._models_generated import (
     ActorShort,
     BuildShort,
@@ -28,66 +28,91 @@ T = TypeVar('T')
 
 @dataclass
 class IterablePage(Generic[T]):
-    items: list[T]
-    get_iterator: InitVar[Callable[[], Iterator[T]]]
-    _get_iterator: Callable[[], Iterator[T]] = field(init=False, repr=False, compare=False)
-
-    def __post_init__(self, get_iterator: Callable[[], Iterator[T]]) -> None:
-        self._get_iterator = get_iterator
+    _get_iterator: Callable[[], Iterator[T]] = field(repr=False, compare=False)
 
     def __iter__(self) -> Iterator[T]:
         return self._get_iterator()
 
+@dataclass
+class IterablePageAsync(Generic[T]):
+    _get_async_iterator: Callable[[], AsyncIterator[T]] = field(repr=False, compare=False)
+
+    def __aiter__(self) -> AsyncIterator[T]:
+        return self._get_async_iterator()
 
 @dataclass
-class PaginatedPage:
-    count: int
-    offset: int
-    limit: int
+class AwaitablePage(Generic[T]):
+    _awaitable_first_page: Awaitable[PaginatedPage[T]] = field(repr=False, compare=False)
+
+    def __await__(self) -> Generator[Any, Any, PaginatedPage[T]]:
+        return self._awaitable_first_page.__await__()
+
+
+@dataclass
+class PageWithItems(Generic[T]):
+    items: list[T]
+
+@dataclass
+class PageWithTotal(Generic[T]):
     total: int
+
+@dataclass
+class PageWithLimit(Generic[T]):
+    limit: int
+
+@dataclass
+class PageWithCount(Generic[T]):
+    count: int
+
+@dataclass
+class PaginatedPage(PageWithItems[T], PageWithTotal, PageWithLimit, PageWithCount):
+    offset: int
     desc: bool
 
 @dataclass
-class ListPageOfActors(PaginatedPage, IterablePage[ActorShort]): ...
+class PaginatedPageOnlyTotal(PageWithItems[T], PageWithTotal): ...
 
 @dataclass
-class ListPageOfBuilds(PaginatedPage, IterablePage[BuildShort]): ...
+class ListPageOfActors(PaginatedPage[ActorShort], IterablePage[ActorShort]): ...
 
 @dataclass
-class ListPageOfDatasets(PaginatedPage, IterablePage[DatasetListItem]): ...
+class ListPageOfBuilds(PaginatedPage[BuildShort], IterablePage[BuildShort]): ...
 
 @dataclass
-class ListPageOfKeyValueStores(PaginatedPage, IterablePage[KeyValueStore]): ...
+class ListPageOfDatasets(PaginatedPage[DatasetListItem], IterablePage[DatasetListItem]): ...
 
 @dataclass
-class ListPageOfRequestQueues(PaginatedPage, IterablePage[RequestQueueShort]): ...
+class ListPageOfKeyValueStores(PaginatedPage[KeyValueStore], IterablePage[KeyValueStore]): ...
 
 @dataclass
-class ListPageOfRuns(PaginatedPage, IterablePage[RunShort]): ...
+class ListPageOfRequestQueues(PaginatedPage[RequestQueueShort], IterablePage[RequestQueueShort]): ...
 
 @dataclass
-class ListPageOfSchedules(PaginatedPage, IterablePage[ScheduleShort]): ...
+class ListPageOfRuns(PaginatedPage[RunShort], IterablePage[RunShort]): ...
 
 @dataclass
-class ListPageOfStoreActors(PaginatedPage, IterablePage[StoreListActor]): ...
+class ListPageOfSchedules(PaginatedPage[ScheduleShort], IterablePage[ScheduleShort]): ...
 
 @dataclass
-class ListPageOfTasks(PaginatedPage, IterablePage[TaskShort]): ...
+class ListPageOfStoreActors(PaginatedPage[StoreListActor], IterablePage[StoreListActor]): ...
 
 @dataclass
-class ListPageOfWebhookDispatches(PaginatedPage, IterablePage[WebhookDispatch]): ...
+class ListPageOfTasks(PaginatedPage[TaskShort], IterablePage[TaskShort]): ...
 
 @dataclass
-class ListPageOfWebhooks(PaginatedPage, IterablePage[WebhookShort]): ...
+class ListPageOfWebhookDispatches(PaginatedPage[WebhookDispatch], IterablePage[WebhookDispatch]): ...
 
 @dataclass
-class ListPageOfEnvVars(IterablePage[EnvVar]):
-    total: int
-
+class ListPageOfWebhookDispatchesAsync(IterablePageAsync[WebhookDispatch], AwaitablePage[WebhookDispatch]): ...
 
 @dataclass
-class ListPageOfVersions(IterablePage[Version]):
-    total: int
+class ListPageOfWebhooks(PaginatedPage[WebhookShort], IterablePage[WebhookShort]): ...
+
+@dataclass
+class ListPageOfEnvVars(IterablePage[EnvVar], PaginatedPageOnlyTotal): ...
+
+@dataclass
+class ListPageOfVersions(IterablePage[Version], PaginatedPageOnlyTotal): ...
 
 @dataclass
 class ListPageOfRequests(IterablePage[Request]):

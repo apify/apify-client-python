@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._iterable_list_page import ListPage
 from apify_client._models_generated import RunShort
+from apify_client._pagination_classes import PaginatedPage
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -43,12 +43,12 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
         )
         single_status_runs = await maybe_await(run_collection.list(status=ActorJobStatus.SUCCEEDED))
 
-        assert isinstance(multiple_status_runs, ListPage)
+        assert isinstance(multiple_status_runs, PaginatedPage)
         assert isinstance(multiple_status_runs.items, list)
         if multiple_status_runs.items:
             assert isinstance(multiple_status_runs.items[0], RunShort)
 
-        assert isinstance(single_status_runs, ListPage)
+        assert isinstance(single_status_runs, PaginatedPage)
         assert isinstance(single_status_runs.items, list)
         if single_status_runs.items:
             assert isinstance(single_status_runs.items[0], RunShort)
@@ -305,7 +305,7 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
     # List runs (should return valid data structure)
     runs_page = await maybe_await(client.runs().list(limit=10))
 
-    assert isinstance(runs_page, ListPage)
+    assert isinstance(runs_page, PaginatedPage)
     assert isinstance(runs_page.items, list)
     # The user may have 0 runs — only check element type when any were returned.
     if runs_page.items:

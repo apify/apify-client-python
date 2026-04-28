@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
@@ -16,8 +15,12 @@ from apify_client._models_generated import (
     CreateActorRequest,
     DefaultRunOptions,
     ExampleRunInput,
-    ListOfActors,
     ListOfActorsResponse,
+)
+from apify_client._pagination_classes import (
+    ListPageOfActors,
+    ListPageOfActorsAsync,
+    PaginatedPage,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -62,7 +65,7 @@ class ActorCollectionClient(ResourceClient):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[ActorShort]:
+    ) -> ListPageOfActors:
         """List the Actors the user has created or used.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
@@ -83,11 +86,30 @@ class ActorCollectionClient(ResourceClient):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        def _callback(**kwargs: Any) -> ListOfActors:
+        def _callback(**kwargs: Any) -> PaginatedPage[ActorShort]:
             result = self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            return ListOfActorsResponse.model_validate(result).data
+            data = ListOfActorsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfActors(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
     def create(
         self,
@@ -215,7 +237,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[ActorShort]:
+    ) -> ListPageOfActorsAsync:
         """List the Actors the user has created or used.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual Actors
@@ -236,11 +258,27 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        async def _callback(**kwargs: Any) -> ListOfActors:
+        async def _callback(**kwargs: Any) -> PaginatedPage[ActorShort]:
             result = await self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            return ListOfActorsResponse.model_validate(result).data
+            data = ListOfActorsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_iterable_list_page_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return ListPageOfActorsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from apify_client._iterable_list_page import ListPage
+from apify_client._pagination_classes import PaginatedPage
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -33,7 +33,7 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     """
     runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
 
-    assert isinstance(runs_page, ListPage)
+    assert isinstance(runs_page, PaginatedPage)
     assert isinstance(runs_page.items, list)
 
     if len(runs_page.items) > 0:
@@ -52,7 +52,7 @@ async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=10))
 
-    assert isinstance(webhooks_page, ListPage)
+    assert isinstance(webhooks_page, PaginatedPage)
     assert isinstance(webhooks_page.items, list)
     assert isinstance(webhooks_page.items[0], WebhookShort)
 
@@ -61,7 +61,7 @@ async def test_list_webhooks_pagination(client: ApifyClient | ApifyClientAsync) 
     """Test listing webhooks with pagination."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=5, offset=0))
 
-    assert isinstance(webhooks_page, ListPage)
+    assert isinstance(webhooks_page, PaginatedPage)
     assert isinstance(webhooks_page.items, list)
     assert isinstance(webhooks_page.items[0], WebhookShort)
 
@@ -171,7 +171,7 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
 
         # List dispatches for this webhook
         dispatches = await maybe_await(webhook_client.dispatches().list())
-        assert isinstance(dispatches, ListPage)
+        assert isinstance(dispatches, PaginatedPage)
         assert isinstance(dispatches.items, list)
         assert len(dispatches.items) > 0
         assert isinstance(dispatches.items[0], WebhookDispatch)

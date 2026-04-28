@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._iterable_list_page import ListPage
 from apify_client._models_generated import Request, RequestQueueShort
+from apify_client._pagination_classes import PageOfRequests
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -32,7 +32,7 @@ async def test_request_queue_collection_list(client: ApifyClient | ApifyClientAs
     """Test listing request queues."""
     rq_page = await maybe_await(client.request_queues().list(limit=10))
 
-    assert isinstance(rq_page, ListPage)
+    assert isinstance(rq_page, PageOfRequests)
     assert isinstance(rq_page.items, list)
     if rq_page.items:
         assert isinstance(rq_page.items[0], RequestQueueShort)
@@ -42,7 +42,7 @@ async def test_request_queue_collection_list_pagination(client: ApifyClient | Ap
     """Test listing request queues with pagination."""
     rq_page = await maybe_await(client.request_queues().list(limit=5, offset=0))
 
-    assert isinstance(rq_page, ListPage)
+    assert isinstance(rq_page, PageOfRequests)
     assert isinstance(rq_page.items, list)
     if rq_page.items:
         assert isinstance(rq_page.items[0], RequestQueueShort)
@@ -259,11 +259,11 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             list_response = await maybe_await(rq_client.list_requests())
-            assert isinstance(list_response, ListPage)
+            assert isinstance(list_response, PageOfRequests)
             if list_response.items and len(list_response.items) == 5:
                 break
 
-        assert isinstance(list_response, ListPage)
+        assert isinstance(list_response, PageOfRequests)
         assert isinstance(list_response.items, list)
         assert len(list_response.items) == 5
         assert isinstance(list_response.items[0], Request)
@@ -329,11 +329,11 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             list_response = await maybe_await(rq_client.list_requests())
-            assert isinstance(list_response, ListPage)
+            assert isinstance(list_response, PageOfRequests)
             if list_response.items and len(list_response.items) == 10:
                 break
 
-        assert isinstance(list_response, ListPage)
+        assert isinstance(list_response, PageOfRequests)
         assert isinstance(list_response.items, list)
         assert len(list_response.items) == 10
         assert isinstance(list_response.items[0], Request)
@@ -360,11 +360,11 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             list_response = await maybe_await(rq_client.list_requests())
-            assert isinstance(list_response, ListPage)
+            assert isinstance(list_response, PageOfRequests)
             if list_response.items and len(list_response.items) == 10:
                 break
 
-        assert isinstance(list_response, ListPage)
+        assert isinstance(list_response, PageOfRequests)
         assert isinstance(list_response.items, list)
         assert len(list_response.items) == 10
         assert isinstance(list_response.items[0], Request)
@@ -382,11 +382,11 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
             remaining = await maybe_await(rq_client.list_requests())
-            assert isinstance(remaining, ListPage)
+            assert isinstance(remaining, PageOfRequests)
             if remaining.items and len(remaining.items) == 5:
                 break
 
-        assert isinstance(remaining, ListPage)
+        assert isinstance(remaining, PageOfRequests)
         assert isinstance(remaining.items, list)
         assert len(remaining.items) == 5
         assert isinstance(remaining.items[0], Request)

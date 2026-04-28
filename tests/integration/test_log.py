@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._iterable_list_page import ListPage
 from apify_client._models_generated import BuildShort
+from apify_client._pagination_classes import PaginatedPage
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -44,7 +44,7 @@ async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync) -> Non
     actor = client.actor(HELLO_WORLD_ACTOR)
     builds_page = await maybe_await(actor.builds().list(limit=1))
 
-    assert isinstance(builds_page, ListPage)
+    assert isinstance(builds_page, PaginatedPage)
     assert isinstance(builds_page.items, list)
     assert isinstance(builds_page.items[0], BuildShort)
     build_id = builds_page.items[0].id

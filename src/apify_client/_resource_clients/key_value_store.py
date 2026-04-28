@@ -9,17 +9,20 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
+    _min_for_limit_param,
     build_cursor_iterable_list_page,
     build_cursor_iterable_list_page_async,
 )
 from apify_client._models_generated import (
     KeyValueStore,
-    KeyValueStoreKey,
     KeyValueStoreResponse,
-    ListOfKeys,
     ListOfKeysResponse,
+)
+from apify_client._pagination_classes import (
+    ListPageOfKeys,
+    ListPageOfKeysAsync,
+    PageOfKeys,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -36,7 +39,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._models_generated import GeneralAccess
+    from apify_client._models_generated import GeneralAccess, KeyValueStoreKey
     from apify_client._types import Timeout
 
 
@@ -153,7 +156,7 @@ class KeyValueStoreClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[KeyValueStoreKey]:
+    ) -> ListPageOfKeys:
         """List the keys in the key-value store.
 
         The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
@@ -176,7 +179,7 @@ class KeyValueStoreClient(ResourceClient):
             The list of keys in the key-value store matching the given arguments.
         """
 
-        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
+        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> PageOfKeys:
             request_params = self._build_params(
                 limit=limit,
                 exclusiveStartKey=exclusive_start_key,
@@ -191,14 +194,34 @@ class KeyValueStoreClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfKeysResponse.model_validate(result).data
+            data = ListOfKeysResponse.model_validate(result).data
+            return PageOfKeys(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                is_truncated=data.is_truncated,
+                exclusive_start_key=data.exclusive_start_key,
+                next_exclusive_start_key=data.next_exclusive_start_key,
+            )
 
-        return build_cursor_iterable_list_page(
+        first_limit = _min_for_limit_param(limit, chunk_size)
+        first_page = _callback(limit=first_limit, exclusive_start_key=exclusive_start_key)
+        get_iterator = build_cursor_iterable_list_page(
             _callback,
+            first_page,
             cursor_param='exclusive_start_key',
-            initial_cursor=exclusive_start_key,
             limit=limit,
             chunk_size=chunk_size,
+        )
+
+        return ListPageOfKeys(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            is_truncated=first_page.is_truncated,
+            exclusive_start_key=first_page.exclusive_start_key,
+            next_exclusive_start_key=first_page.next_exclusive_start_key,
         )
 
     def iterate_keys(
@@ -593,7 +616,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[KeyValueStoreKey]:
+    ) -> ListPageOfKeysAsync:
         """List the keys in the key-value store.
 
         The returned page also supports iteration: `async for key in client.list_keys(...)` yields individual
@@ -616,7 +639,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             The list of keys in the key-value store matching the given arguments.
         """
 
-        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> ListOfKeys:
+        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> PageOfKeys:
             request_params = self._build_params(
                 limit=limit,
                 exclusiveStartKey=exclusive_start_key,
@@ -631,14 +654,29 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfKeysResponse.model_validate(result).data
+            data = ListOfKeysResponse.model_validate(result).data
+            return PageOfKeys(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                is_truncated=data.is_truncated,
+                exclusive_start_key=data.exclusive_start_key,
+                next_exclusive_start_key=data.next_exclusive_start_key,
+            )
 
-        return build_cursor_iterable_list_page_async(
+        first_limit = _min_for_limit_param(limit, chunk_size)
+        fetch_first_page = _LazyTask(_callback(limit=first_limit, exclusive_start_key=exclusive_start_key))
+        get_async_iterator = build_cursor_iterable_list_page_async(
             _callback,
+            fetch_first_page,
             cursor_param='exclusive_start_key',
-            initial_cursor=exclusive_start_key,
             limit=limit,
             chunk_size=chunk_size,
+        )
+
+        return ListPageOfKeysAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
         )
 
     async def iterate_keys(

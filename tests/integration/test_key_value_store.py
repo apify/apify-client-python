@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._iterable_list_page import ListPage
 from apify_client._models_generated import KeyValueStore, KeyValueStoreKey
+from apify_client._pagination_classes import PageOfKeys
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -26,7 +26,7 @@ async def test_key_value_store_collection_list(client: ApifyClient | ApifyClient
     """Test listing key-value stores."""
     kvs_page = await maybe_await(client.key_value_stores().list(limit=10))
 
-    assert isinstance(kvs_page, ListPage)
+    assert isinstance(kvs_page, PageOfKeys)
     assert isinstance(kvs_page.items, list)
     if kvs_page.items:
         assert isinstance(kvs_page.items[0], KeyValueStore)
@@ -36,7 +36,7 @@ async def test_key_value_store_collection_list_pagination(client: ApifyClient | 
     """Test listing key-value stores with pagination."""
     kvs_page = await maybe_await(client.key_value_stores().list(limit=5, offset=0))
 
-    assert isinstance(kvs_page, ListPage)
+    assert isinstance(kvs_page, PageOfKeys)
     assert isinstance(kvs_page.items, list)
     if kvs_page.items:
         assert isinstance(kvs_page.items[0], KeyValueStore)
@@ -128,7 +128,7 @@ async def test_list_keys_signature(
     # Kvs content retrieved with correct signature
     response = await maybe_await(kvs.list_keys(signature=test_kvs_of_another_user.signature))
 
-    assert isinstance(response, ListPage)
+    assert isinstance(response, PageOfKeys)
     assert isinstance(response.items, list)
     assert isinstance(response.items[0], KeyValueStoreKey)
     assert set(test_kvs_of_another_user.expected_content) == {item.key for item in response.items}
@@ -343,7 +343,7 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync,
         # List keys
         keys_response = await maybe_await(store_client.list_keys())
 
-        assert isinstance(keys_response, ListPage)
+        assert isinstance(keys_response, PageOfKeys)
         assert isinstance(keys_response.items, list)
         assert isinstance(keys_response.items[0], KeyValueStoreKey)
         assert len(keys_response.items) == 5
@@ -375,7 +375,7 @@ async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyC
         # List with limit
         keys_response = await maybe_await(store_client.list_keys(limit=5))
 
-        assert isinstance(keys_response, ListPage)
+        assert isinstance(keys_response, PageOfKeys)
         assert isinstance(keys_response.items, list)
         assert isinstance(keys_response.items[0], KeyValueStoreKey)
         assert len(keys_response.items) == 5

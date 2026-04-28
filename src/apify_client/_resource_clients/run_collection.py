@@ -4,12 +4,16 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
-from apify_client._models_generated import ListOfRuns, ListOfRunsResponse
+from apify_client._models_generated import ListOfRunsResponse
+from apify_client._pagination_classes import (
+    ListPageOfRuns,
+    ListPageOfRunsAsync,
+    PaginatedPage,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -48,7 +52,7 @@ class RunCollectionClient(ResourceClient):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[RunShort]:
+    ) -> ListPageOfRuns:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -74,7 +78,7 @@ class RunCollectionClient(ResourceClient):
         """
         status_param = list(status) if isinstance(status, list) else status
 
-        def _callback(**kwargs: Any) -> ListOfRuns:
+        def _callback(**kwargs: Any) -> PaginatedPage[RunShort]:
             result = self._list(
                 timeout=timeout,
                 status=status_param,
@@ -82,9 +86,28 @@ class RunCollectionClient(ResourceClient):
                 startedAfter=started_after,
                 **kwargs,
             )
-            return ListOfRunsResponse.model_validate(result).data
+            data = ListOfRunsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfRuns(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
 
 @docs_group('Resource clients')
@@ -116,7 +139,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[RunShort]:
+    ) -> ListPageOfRunsAsync:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
@@ -142,7 +165,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         """
         status_param = list(status) if isinstance(status, list) else status
 
-        async def _callback(**kwargs: Any) -> ListOfRuns:
+        async def _callback(**kwargs: Any) -> PaginatedPage[RunShort]:
             result = await self._list(
                 timeout=timeout,
                 status=status_param,
@@ -150,6 +173,22 @@ class RunCollectionClientAsync(ResourceClientAsync):
                 startedAfter=started_after,
                 **kwargs,
             )
-            return ListOfRunsResponse.model_validate(result).data
+            data = ListOfRunsResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_iterable_list_page_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return ListPageOfRunsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )

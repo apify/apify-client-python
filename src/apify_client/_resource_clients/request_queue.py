@@ -11,8 +11,8 @@ from more_itertools import constrained_batches
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
+    _min_for_limit_param,
     build_cursor_iterable_list_page,
     build_cursor_iterable_list_page_async,
 )
@@ -26,7 +26,6 @@ from apify_client._models_generated import (
     BatchDeleteResult,
     HeadAndLockResponse,
     HeadResponse,
-    ListOfRequests,
     ListOfRequestsResponse,
     LockedRequestQueueHead,
     ProlongRequestLockResponse,
@@ -40,6 +39,11 @@ from apify_client._models_generated import (
     RequestResponse,
     UnlockRequestsResponse,
     UnlockRequestsResult,
+)
+from apify_client._pagination_classes import (
+    ListPageOfRequests,
+    ListPageOfRequestsAsync,
+    PageOfRequests,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
@@ -510,7 +514,7 @@ class RequestQueueClient(ResourceClient):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[Request]:
+    ) -> ListPageOfRequests:
         """List requests in the queue.
 
         The returned page also supports iteration: `for request in client.list_requests(...)` yields
@@ -541,7 +545,7 @@ class RequestQueueClient(ResourceClient):
                 stacklevel=2,
             )
 
-        def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+        def _callback(*, limit: int | None = None, cursor: str | None = None) -> PageOfRequests:
             # `exclusive_start_id` is honored only on the first page (when no cursor has been
             # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
@@ -558,14 +562,36 @@ class RequestQueueClient(ResourceClient):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfRequestsResponse.model_validate(result).data
+            data = ListOfRequestsResponse.model_validate(result).data
+            with warnings.catch_warnings():
+                # `exclusive_start_id` is deprecated on the API model; reading triggers a warning.
+                warnings.simplefilter('ignore', DeprecationWarning)
+                exclusive_start_id_value = data.exclusive_start_id
+            return PageOfRequests(
+                items=data.items,
+                limit=data.limit,
+                exclusive_start_id=exclusive_start_id_value,
+                cursor=data.cursor,
+                next_cursor=data.next_cursor,
+            )
 
-        return build_cursor_iterable_list_page(
+        first_limit = _min_for_limit_param(limit, chunk_size)
+        first_page = _callback(limit=first_limit, cursor=cursor)
+        get_iterator = build_cursor_iterable_list_page(
             _callback,
+            first_page,
             cursor_param='cursor',
-            initial_cursor=cursor,
             limit=limit,
             chunk_size=chunk_size,
+        )
+
+        return ListPageOfRequests(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            limit=first_page.limit,
+            exclusive_start_id=first_page.exclusive_start_id,
+            cursor=first_page.cursor,
+            next_cursor=first_page.next_cursor,
         )
 
     def unlock_requests(self: RequestQueueClient, *, timeout: Timeout = 'long') -> UnlockRequestsResult:
@@ -1089,7 +1115,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[Request]:
+    ) -> ListPageOfRequestsAsync:
         """List requests in the queue.
 
         The returned page also supports iteration: `async for request in client.list_requests(...)` yields
@@ -1120,7 +1146,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 stacklevel=2,
             )
 
-        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> ListOfRequests:
+        async def _callback(*, limit: int | None = None, cursor: str | None = None) -> PageOfRequests:
             # `exclusive_start_id` is honored only on the first page (when no cursor has been
             # produced by the server yet); subsequent pages rely on the opaque `cursor`.
             request_params = self._build_params(
@@ -1137,14 +1163,32 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
             result = response_to_dict(response)
-            return ListOfRequestsResponse.model_validate(result).data
+            data = ListOfRequestsResponse.model_validate(result).data
+            with warnings.catch_warnings():
+                # `exclusive_start_id` is deprecated on the API model; reading triggers a warning.
+                warnings.simplefilter('ignore', DeprecationWarning)
+                exclusive_start_id_value = data.exclusive_start_id
+            return PageOfRequests(
+                items=data.items,
+                limit=data.limit,
+                exclusive_start_id=exclusive_start_id_value,
+                cursor=data.cursor,
+                next_cursor=data.next_cursor,
+            )
 
-        return build_cursor_iterable_list_page_async(
+        first_limit = _min_for_limit_param(limit, chunk_size)
+        fetch_first_page = _LazyTask(_callback(limit=first_limit, cursor=cursor))
+        get_async_iterator = build_cursor_iterable_list_page_async(
             _callback,
+            fetch_first_page,
             cursor_param='cursor',
-            initial_cursor=cursor,
             limit=limit,
             chunk_size=chunk_size,
+        )
+
+        return ListPageOfRequestsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
         )
 
     async def unlock_requests(

@@ -9,12 +9,16 @@ from pydantic import BaseModel
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
 from apify_client._models_generated import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
+from apify_client._pagination_classes import (
+    ListPageOfDatasetItems,
+    ListPageOfDatasetItemsAsync,
+    PageOfDatasetItems,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     create_storage_content_signature,
@@ -149,7 +153,7 @@ class DatasetClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterableListPage[dict[str, Any]]:
+    ) -> ListPageOfDatasetItems:
         """List the items of the dataset.
 
         The returned page also supports iteration: `for item in client.list_items(...)` yields individual
@@ -196,7 +200,7 @@ class DatasetClient(ResourceClient):
             *,
             offset: int | None = None,
             limit: int | None = None,
-        ) -> DatasetItemsPage:
+        ) -> PageOfDatasetItems:
             request_params = self._build_params(
                 offset=offset,
                 limit=limit,
@@ -222,7 +226,7 @@ class DatasetClient(ResourceClient):
             # When using signature, API returns items as list directly
             items = response_to_list(response)
 
-            return DatasetItemsPage(
+            return PageOfDatasetItems(
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
@@ -234,7 +238,20 @@ class DatasetClient(ResourceClient):
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
             )
 
-        return build_iterable_list_page(_fetch_page, offset=offset, limit=limit, chunk_size=chunk_size)
+        first_page = _fetch_page(offset=offset, limit=limit)
+        get_iterator = build_iterable_list_page(
+            _fetch_page, first_page, offset=offset, limit=limit, chunk_size=chunk_size
+        )
+
+        return ListPageOfDatasetItems(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            total=first_page.total,
+            offset=first_page.offset,
+            count=first_page.count,
+            limit=first_page.limit,
+            desc=first_page.desc,
+        )
 
     def iterate_items(
         self,
@@ -825,7 +842,7 @@ class DatasetClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterableListPageAsync[dict[str, Any]]:
+    ) -> ListPageOfDatasetItemsAsync:
         """List the items of the dataset.
 
         The returned page also supports iteration: `async for item in client.list_items(...)` yields individual
@@ -872,7 +889,7 @@ class DatasetClientAsync(ResourceClientAsync):
             *,
             offset: int | None = None,
             limit: int | None = None,
-        ) -> DatasetItemsPage:
+        ) -> PageOfDatasetItems:
             request_params = self._build_params(
                 offset=offset,
                 limit=limit,
@@ -898,7 +915,7 @@ class DatasetClientAsync(ResourceClientAsync):
             # When using signature, API returns items as list directly
             items = response_to_list(response)
 
-            return DatasetItemsPage(
+            return PageOfDatasetItems(
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
@@ -910,7 +927,15 @@ class DatasetClientAsync(ResourceClientAsync):
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
             )
 
-        return build_iterable_list_page_async(_fetch_page, offset=offset, limit=limit, chunk_size=chunk_size)
+        fetch_first_page = _LazyTask(_fetch_page(offset=offset, limit=limit))
+        get_async_iterator = build_iterable_list_page_async(
+            _fetch_page, fetch_first_page, offset=offset, limit=limit, chunk_size=chunk_size
+        )
+
+        return ListPageOfDatasetItemsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def iterate_items(
         self,

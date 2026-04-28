@@ -4,20 +4,23 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._iterable_list_page import (
-    IterableListPage,
-    IterableListPageAsync,
+    _LazyTask,
     build_iterable_list_page,
     build_iterable_list_page_async,
 )
 from apify_client._models_generated import (
     ActorStandby,
     CreateTaskRequest,
-    ListOfTasks,
     ListOfTasksResponse,
     Task,
     TaskInput,
     TaskOptions,
     TaskResponse,
+)
+from apify_client._pagination_classes import (
+    ListPageOfTasks,
+    ListPageOfTasksAsync,
+    PaginatedPage,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -56,7 +59,7 @@ class TaskCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[TaskShort]:
+    ) -> ListPageOfTasks:
         """List the available tasks.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual tasks
@@ -74,11 +77,30 @@ class TaskCollectionClient(ResourceClient):
             The list of available tasks matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> ListOfTasks:
+        def _callback(**kwargs: Any) -> PaginatedPage[TaskShort]:
             result = self._list(timeout=timeout, **kwargs)
-            return ListOfTasksResponse.model_validate(result).data
+            data = ListOfTasksResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfTasks(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
     def create(
         self,
@@ -184,7 +206,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPageAsync[TaskShort]:
+    ) -> ListPageOfTasksAsync:
         """List the available tasks.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual tasks
@@ -202,11 +224,27 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             The list of available tasks matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> ListOfTasks:
+        async def _callback(**kwargs: Any) -> PaginatedPage[TaskShort]:
             result = await self._list(timeout=timeout, **kwargs)
-            return ListOfTasksResponse.model_validate(result).data
+            data = ListOfTasksResponse.model_validate(result).data
+            return PaginatedPage(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
 
-        return build_iterable_list_page_async(_callback, limit=limit, offset=offset, desc=desc)
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_iterable_list_page_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return ListPageOfTasksAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

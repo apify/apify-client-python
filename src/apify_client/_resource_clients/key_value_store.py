@@ -20,8 +20,8 @@ from apify_client._pagination import (
     build_get_cursor_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfKeys,
-    ListPageOfKeysAsync,
+    IterablePageOfKeys,
+    IterablePageOfKeysAsync,
     PageOfKeys,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -156,7 +156,7 @@ class KeyValueStoreClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfKeys:
+    ) -> IterablePageOfKeys:
         """List the keys in the key-value store.
 
         The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
@@ -214,7 +214,7 @@ class KeyValueStoreClient(ResourceClient):
             chunk_size=chunk_size,
         )
 
-        return ListPageOfKeys(
+        return IterablePageOfKeys(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -616,7 +616,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfKeysAsync:
+    ) -> IterablePageOfKeysAsync:
         """List the keys in the key-value store.
 
         The returned page also supports iteration: `async for key in client.list_keys(...)` yields individual
@@ -674,7 +674,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             chunk_size=chunk_size,
         )
 
-        return ListPageOfKeysAsync(
+        return IterablePageOfKeysAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

@@ -10,8 +10,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfStoreActors,
-    ListPageOfStoreActorsAsync,
+    IterablePageOfStoreActors,
+    IterablePageOfStoreActorsAsync,
     PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -51,7 +51,7 @@ class StoreCollectionClient(ResourceClient):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfStoreActors:
+    ) -> IterablePageOfStoreActors:
         """List Actors in Apify store.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
@@ -97,7 +97,7 @@ class StoreCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset)
         get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset)
 
-        return ListPageOfStoreActors(
+        return IterablePageOfStoreActors(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -138,7 +138,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfStoreActorsAsync:
+    ) -> IterablePageOfStoreActorsAsync:
         """List Actors in Apify store.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual Actors
@@ -184,7 +184,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset))
         get_async_iterator = build_get_iterator_async(_callback, fetch_first_page, limit=limit, offset=offset)
 
-        return ListPageOfStoreActorsAsync(
+        return IterablePageOfStoreActorsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

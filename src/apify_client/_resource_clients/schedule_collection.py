@@ -15,8 +15,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfSchedules,
-    ListPageOfSchedulesAsync,
+    IterablePageOfSchedules,
+    IterablePageOfSchedulesAsync,
     PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -52,7 +52,7 @@ class ScheduleCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfSchedules:
+    ) -> IterablePageOfSchedules:
         """List the available schedules.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -85,7 +85,7 @@ class ScheduleCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset, desc=desc)
         get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
-        return ListPageOfSchedules(
+        return IterablePageOfSchedules(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -171,7 +171,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfSchedulesAsync:
+    ) -> IterablePageOfSchedulesAsync:
         """List the available schedules.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual
@@ -206,7 +206,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 
-        return ListPageOfSchedulesAsync(
+        return IterablePageOfSchedulesAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

@@ -18,8 +18,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfTasks,
-    ListPageOfTasksAsync,
+    IterablePageOfTasks,
+    IterablePageOfTasksAsync,
     PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -59,7 +59,7 @@ class TaskCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfTasks:
+    ) -> IterablePageOfTasks:
         """List the available tasks.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual tasks
@@ -92,7 +92,7 @@ class TaskCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset, desc=desc)
         get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
-        return ListPageOfTasks(
+        return IterablePageOfTasks(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -206,7 +206,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfTasksAsync:
+    ) -> IterablePageOfTasksAsync:
         """List the available tasks.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual tasks
@@ -241,7 +241,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 
-        return ListPageOfTasksAsync(
+        return IterablePageOfTasksAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

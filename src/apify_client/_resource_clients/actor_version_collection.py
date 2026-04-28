@@ -21,8 +21,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfVersions,
-    ListPageOfVersionsAsync,
+    IterablePageOfVersions,
+    IterablePageOfVersionsAsync,
     PageOfItemsOnlyTotal,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -53,7 +53,7 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListPageOfVersions:
+    def list(self, *, timeout: Timeout = 'short') -> IterablePageOfVersions:
         """List the available Actor versions.
 
         The returned page also supports iteration: `for item in client.list()` yields individual versions.
@@ -75,7 +75,7 @@ class ActorVersionCollectionClient(ResourceClient):
         first_page = _callback()
         get_iterator = build_get_iterator(_callback, first_page)
 
-        return ListPageOfVersions(
+        return IterablePageOfVersions(
             _get_iterator=get_iterator,
             items=first_page.items,
             total=first_page.total,
@@ -154,7 +154,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListPageOfVersionsAsync:
+    def list(self, *, timeout: Timeout = 'short') -> IterablePageOfVersionsAsync:
         """List the available Actor versions.
 
         The returned page also supports iteration: `async for item in client.list()` yields individual versions.
@@ -176,7 +176,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         fetch_first_page = _LazyTask(_callback())
         get_async_iterator = build_get_iterator_async(_callback, fetch_first_page)
 
-        return ListPageOfVersionsAsync(
+        return IterablePageOfVersionsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

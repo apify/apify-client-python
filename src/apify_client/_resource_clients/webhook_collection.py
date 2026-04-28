@@ -15,8 +15,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfWebhooks,
-    ListPageOfWebhooksAsync,
+    IterablePageOfWebhooks,
+    IterablePageOfWebhooksAsync,
     PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -52,7 +52,7 @@ class WebhookCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfWebhooks:
+    ) -> IterablePageOfWebhooks:
         """List the available webhooks.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual webhooks
@@ -85,7 +85,7 @@ class WebhookCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset, desc=desc)
         get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
-        return ListPageOfWebhooks(
+        return IterablePageOfWebhooks(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -181,7 +181,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfWebhooksAsync:
+    ) -> IterablePageOfWebhooksAsync:
         """List the available webhooks.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual webhooks
@@ -216,7 +216,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 
-        return ListPageOfWebhooksAsync(
+        return IterablePageOfWebhooksAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

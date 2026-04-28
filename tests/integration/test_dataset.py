@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import DatasetListItem
-from apify_client._pagination_classes import PageOfItems
+from apify_client._pagination_classes import PageOfDatasetItems, PageOfItems
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -265,8 +265,8 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
         await maybe_sleep(1, is_async=is_async)
 
         # List items
-        result = await maybe_await(dataset_client.list_items())
-        items_page = cast('DatasetItemsPage', result)
+        items_page = await maybe_await(dataset_client.list_items())
+        assert isinstance(items_page, PageOfDatasetItems)
         assert items_page is not None
         assert len(items_page.items) == 3
         assert items_page.count == 3
@@ -298,22 +298,21 @@ async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyCli
         await maybe_sleep(1, is_async=is_async)
 
         # List with limit
-        result = await maybe_await(dataset_client.list_items(limit=5))
-        items_page = cast('DatasetItemsPage', result)
+        items_page = await maybe_await(dataset_client.list_items(limit=5))
+        assert isinstance(items_page, PageOfDatasetItems)
         assert len(items_page.items) == 5
         assert items_page.count == 5
         # Note: items_page.total may be 0 immediately after push due to eventual consistency
         assert items_page.limit == 5
 
         # List with offset
-        result = await maybe_await(dataset_client.list_items(offset=5, limit=5))
-        items_page_offset = cast('DatasetItemsPage', result)
+        items_page_offset = await maybe_await(dataset_client.list_items(offset=5, limit=5))
+        assert isinstance(items_page_offset, PageOfDatasetItems)
         assert len(items_page_offset.items) == 5
         assert items_page_offset.offset == 5
         # Note: items_page.total may be 0 immediately after push due to eventual consistency
-
         # Verify different items
-        assert items_page.items[0]['index'] != items_page_offset.items[0]['index']
+        assert items_page_offset.items[0]['index'] != items_page.items[0]['index']
     finally:
         await maybe_await(dataset_client.delete())
 
@@ -338,8 +337,8 @@ async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientA
         await maybe_sleep(1, is_async=is_async)
 
         # List with fields filter
-        result = await maybe_await(dataset_client.list_items(fields=['id', 'name']))
-        items_page = cast('DatasetItemsPage', result)
+        items_page = await maybe_await(dataset_client.list_items(fields=['id', 'name']))
+        assert isinstance(items_page, PageOfDatasetItems)
         assert len(items_page.items) == 2
 
         # Verify only specified fields are returned

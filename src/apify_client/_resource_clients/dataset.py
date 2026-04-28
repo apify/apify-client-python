@@ -15,8 +15,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfDatasetItems,
-    ListPageOfDatasetItemsAsync,
+    IterablePageOfDatasetItems,
+    IterablePageOfDatasetItemsAsync,
     PageOfDatasetItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -153,7 +153,7 @@ class DatasetClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> ListPageOfDatasetItems:
+    ) -> IterablePageOfDatasetItems:
         """List the items of the dataset.
 
         The returned page also supports iteration: `for item in client.list_items(...)` yields individual
@@ -196,14 +196,8 @@ class DatasetClient(ResourceClient):
             A page of the list of dataset items according to the specified filters.
         """
 
-        def _fetch_page(
-            *,
-            offset: int | None = None,
-            limit: int | None = None,
-        ) -> PageOfDatasetItems:
+        def _fetch_page(**kwargs: Any) -> PageOfDatasetItems:
             request_params = self._build_params(
-                offset=offset,
-                limit=limit,
                 desc=desc,
                 clean=clean,
                 fields=fields,
@@ -214,6 +208,8 @@ class DatasetClient(ResourceClient):
                 flatten=flatten,
                 view=view,
                 signature=signature,
+                timeout=timeout,
+                **kwargs,
             )
 
             response = self._http_client.call(
@@ -226,13 +222,15 @@ class DatasetClient(ResourceClient):
             # When using signature, API returns items as list directly
             items = response_to_list(response)
 
+            # When using signature, API returns items as list directly
+
             return PageOfDatasetItems(
                 items=items,
                 total=int(response.headers['x-apify-pagination-total']),
                 offset=int(response.headers['x-apify-pagination-offset']),
                 # x-apify-pagination-count returns count of processed items, not count of returned items
                 # This makes difference when items were filtered using hidden/empty
-                count=int(response.headers['x-apify-pagination-count']),
+                count=max(int(response.headers['x-apify-pagination-count']), len(items)),
                 # API returns 999999999999 when no limit is used
                 limit=int(response.headers['x-apify-pagination-limit']),
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
@@ -241,7 +239,7 @@ class DatasetClient(ResourceClient):
         first_page = _fetch_page(offset=offset, limit=limit)
         get_iterator = build_get_iterator(_fetch_page, first_page, offset=offset, limit=limit, chunk_size=chunk_size)
 
-        return ListPageOfDatasetItems(
+        return IterablePageOfDatasetItems(
             _get_iterator=get_iterator,
             items=first_page.items,
             total=first_page.total,
@@ -840,7 +838,7 @@ class DatasetClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> ListPageOfDatasetItemsAsync:
+    ) -> IterablePageOfDatasetItemsAsync:
         """List the items of the dataset.
 
         The returned page also supports iteration: `async for item in client.list_items(...)` yields individual
@@ -919,7 +917,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 offset=int(response.headers['x-apify-pagination-offset']),
                 # x-apify-pagination-count returns count of processed items, not count of returned items
                 # This makes difference when items were filtered using hidden/empty
-                count=int(response.headers['x-apify-pagination-count']),
+                count=max(int(response.headers['x-apify-pagination-count']), len(items)),
                 # API returns 999999999999 when no limit is used
                 limit=int(response.headers['x-apify-pagination-limit']),
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
@@ -930,7 +928,7 @@ class DatasetClientAsync(ResourceClientAsync):
             _fetch_page, fetch_first_page, offset=offset, limit=limit, chunk_size=chunk_size
         )
 
-        return ListPageOfDatasetItemsAsync(
+        return IterablePageOfDatasetItemsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

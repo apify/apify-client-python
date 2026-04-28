@@ -41,8 +41,8 @@ from apify_client._pagination import (
     build_get_cursor_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfRequests,
-    ListPageOfRequestsAsync,
+    IterablePageOfRequests,
+    IterablePageOfRequestsAsync,
     PageOfRequests,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -514,7 +514,7 @@ class RequestQueueClient(ResourceClient):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfRequests:
+    ) -> IterablePageOfRequests:
         """List requests in the queue.
 
         The returned page also supports iteration: `for request in client.list_requests(...)` yields
@@ -585,7 +585,7 @@ class RequestQueueClient(ResourceClient):
             chunk_size=chunk_size,
         )
 
-        return ListPageOfRequests(
+        return IterablePageOfRequests(
             _get_iterator=get_iterator,
             items=first_page.items,
             limit=first_page.limit,
@@ -1118,7 +1118,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         exclusive_start_id: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfRequestsAsync:
+    ) -> IterablePageOfRequestsAsync:
         """List requests in the queue.
 
         The returned page also supports iteration: `async for request in client.list_requests(...)` yields
@@ -1189,7 +1189,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             chunk_size=chunk_size,
         )
 
-        return ListPageOfRequestsAsync(
+        return IterablePageOfRequestsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

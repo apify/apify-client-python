@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import KeyValueStore, KeyValueStoreKey
-from apify_client._pagination_classes import PageOfKeys
+from apify_client._pagination_classes import PageOfItems, PageOfKeys
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -26,7 +26,7 @@ async def test_key_value_store_collection_list(client: ApifyClient | ApifyClient
     """Test listing key-value stores."""
     kvs_page = await maybe_await(client.key_value_stores().list(limit=10))
 
-    assert isinstance(kvs_page, PageOfKeys)
+    assert isinstance(kvs_page, PageOfItems)
     assert isinstance(kvs_page.items, list)
     if kvs_page.items:
         assert isinstance(kvs_page.items[0], KeyValueStore)
@@ -36,7 +36,7 @@ async def test_key_value_store_collection_list_pagination(client: ApifyClient | 
     """Test listing key-value stores with pagination."""
     kvs_page = await maybe_await(client.key_value_stores().list(limit=5, offset=0))
 
-    assert isinstance(kvs_page, PageOfKeys)
+    assert isinstance(kvs_page, PageOfItems)
     assert isinstance(kvs_page.items, list)
     if kvs_page.items:
         assert isinstance(kvs_page.items[0], KeyValueStore)

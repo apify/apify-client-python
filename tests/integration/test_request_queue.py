@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import Request, RequestQueueShort
-from apify_client._pagination_classes import PageOfRequests
+from apify_client._pagination_classes import PageOfItems, PageOfRequests
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -32,7 +32,7 @@ async def test_request_queue_collection_list(client: ApifyClient | ApifyClientAs
     """Test listing request queues."""
     rq_page = await maybe_await(client.request_queues().list(limit=10))
 
-    assert isinstance(rq_page, PageOfRequests)
+    assert isinstance(rq_page, PageOfItems)
     assert isinstance(rq_page.items, list)
     if rq_page.items:
         assert isinstance(rq_page.items[0], RequestQueueShort)
@@ -42,7 +42,7 @@ async def test_request_queue_collection_list_pagination(client: ApifyClient | Ap
     """Test listing request queues with pagination."""
     rq_page = await maybe_await(client.request_queues().list(limit=5, offset=0))
 
-    assert isinstance(rq_page, PageOfRequests)
+    assert isinstance(rq_page, PageOfItems)
     assert isinstance(rq_page.items, list)
     if rq_page.items:
         assert isinstance(rq_page.items[0], RequestQueueShort)

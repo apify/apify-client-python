@@ -10,8 +10,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfBuilds,
-    ListPageOfBuildsAsync,
+    IterablePageOfBuilds,
+    IterablePageOfBuildsAsync,
     PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -47,7 +47,7 @@ class BuildCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfBuilds:
+    ) -> IterablePageOfBuilds:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -84,7 +84,7 @@ class BuildCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset, desc=desc)
         get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
-        return ListPageOfBuilds(
+        return IterablePageOfBuilds(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -121,7 +121,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfBuildsAsync:
+    ) -> IterablePageOfBuildsAsync:
         """List all Actor builds.
 
         List all Actor builds, either of a single Actor, or all user's Actors, depending on where this client
@@ -160,7 +160,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 
-        return ListPageOfBuildsAsync(
+        return IterablePageOfBuildsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

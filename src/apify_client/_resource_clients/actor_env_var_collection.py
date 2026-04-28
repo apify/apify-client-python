@@ -10,8 +10,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfEnvVars,
-    ListPageOfEnvVarsAsync,
+    IterablePageOfEnvVars,
+    IterablePageOfEnvVarsAsync,
     PageOfItemsOnlyTotal,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -39,7 +39,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListPageOfEnvVars:
+    def list(self, *, timeout: Timeout = 'short') -> IterablePageOfEnvVars:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `for item in client.list()` yields individual environment
@@ -62,7 +62,7 @@ class ActorEnvVarCollectionClient(ResourceClient):
         first_page = _callback()
         get_iterator = build_get_iterator(_callback, first_page)
 
-        return ListPageOfEnvVars(
+        return IterablePageOfEnvVars(
             _get_iterator=get_iterator,
             items=first_page.items,
             total=first_page.total,
@@ -115,7 +115,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListPageOfEnvVarsAsync:
+    def list(self, *, timeout: Timeout = 'short') -> IterablePageOfEnvVarsAsync:
         """List the available Actor environment variables.
 
         The returned page also supports iteration: `async for item in client.list()` yields individual environment
@@ -138,7 +138,7 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         fetch_first_page = _LazyTask(_callback())
         get_async_iterator = build_get_iterator_async(_callback, fetch_first_page)
 
-        return ListPageOfEnvVarsAsync(
+        return IterablePageOfEnvVarsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

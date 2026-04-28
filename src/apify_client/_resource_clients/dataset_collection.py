@@ -15,8 +15,8 @@ from apify_client._pagination import (
     build_get_iterator_async,
 )
 from apify_client._pagination_classes import (
-    ListPageOfDatasets,
-    ListPageOfDatasetsAsync,
+    IterablePageOfDatasets,
+    IterablePageOfDatasetsAsync,
     PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -54,7 +54,7 @@ class DatasetCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfDatasets:
+    ) -> IterablePageOfDatasets:
         """List the available datasets.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual datasets
@@ -90,7 +90,7 @@ class DatasetCollectionClient(ResourceClient):
         first_page = _callback(limit=limit, offset=offset, desc=desc)
         get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
-        return ListPageOfDatasets(
+        return IterablePageOfDatasets(
             _get_iterator=get_iterator,
             items=first_page.items,
             count=first_page.count,
@@ -151,7 +151,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListPageOfDatasetsAsync:
+    ) -> IterablePageOfDatasetsAsync:
         """List the available datasets.
 
         The returned page also supports iteration: `async for item in client.list(...)` yields individual datasets
@@ -189,7 +189,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 
-        return ListPageOfDatasetsAsync(
+        return IterablePageOfDatasetsAsync(
             _awaitable_first_page=fetch_first_page,
             _get_async_iterator=get_async_iterator,
         )

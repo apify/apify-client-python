@@ -3952,6 +3952,37 @@ class WebhookEventType(StrEnum):
 
 
 @docs_group('Models')
+class WebhookRepresentation(BaseModel):
+    """Minimal representation of an ad-hoc webhook attached to a single Actor run or build via the
+    `webhooks` query parameter. The query parameter value is a Base64-encoded JSON array whose
+    items match this schema. Persistent webhook fields (e.g. `condition`) are not used here.
+
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    event_types: Annotated[list[WebhookEventType], Field(alias='eventTypes', examples=[['ACTOR.RUN.SUCCEEDED']])]
+    request_url: Annotated[str, Field(alias='requestUrl', examples=['http://example.com/'])]
+    """
+    The URL to which the webhook sends its payload.
+    """
+    payload_template: Annotated[
+        str | None, Field(alias='payloadTemplate', examples=['{\\n "userId": {{userId}}...'])
+    ] = None
+    """
+    Optional template for the JSON payload sent by the webhook.
+    """
+    headers_template: Annotated[
+        str | None, Field(alias='headersTemplate', examples=['{\\n "Authorization": "Bearer ..."}'])
+    ] = None
+    """
+    Optional template for the HTTP headers sent by the webhook.
+    """
+
+
+@docs_group('Models')
 class WebhookResponse(BaseModel):
     """Response containing webhook data."""
 

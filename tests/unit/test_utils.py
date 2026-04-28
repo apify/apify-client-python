@@ -188,7 +188,7 @@ def test_encode_key_value_store_record_value(
 ) -> None:
     """Test encoding of key-value store record values."""
     if input_content_type is not None:
-        value, content_type = encode_key_value_store_record_value(input_value, input_content_type)
+        value, content_type = encode_key_value_store_record_value(input_value, content_type=input_content_type)
     else:
         value, content_type = encode_key_value_store_record_value(input_value)
     assert value == expected_value

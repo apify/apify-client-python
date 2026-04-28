@@ -61,8 +61,8 @@ def test_dataset_of_another_user(api_token_2: str) -> Generator[DatasetFixture]:
     # Generate signature for authenticated access
     assert dataset.url_signing_secret_key is not None
     signature = create_storage_content_signature(
-        resource_id=dataset.id,
-        url_signing_secret_key=dataset.url_signing_secret_key,
+        dataset.id,
+        dataset.url_signing_secret_key,
     )
 
     yield DatasetFixture(
@@ -90,8 +90,8 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
 
     # Generate signatures for authenticated access
     signature = create_storage_content_signature(
-        resource_id=kvs.id,
-        url_signing_secret_key=kvs.url_signing_secret_key or '',
+        kvs.id,
+        kvs.url_signing_secret_key or '',
     )
 
     yield KvsFixture(

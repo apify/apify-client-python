@@ -43,7 +43,7 @@ def test_run_charge_preserves_count_sync(
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(token='test_token', api_url=api_url)
 
-    client.run(_MOCKED_RUN_ID).charge(event_name='test-event', count=count)
+    client.run(_MOCKED_RUN_ID).charge('test-event', count=count)
 
     assert len(captured_requests) == 1
     body = _decode_body(captured_requests[0])
@@ -70,7 +70,7 @@ async def test_run_charge_preserves_count_async(
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
-    await client.run(_MOCKED_RUN_ID).charge(event_name='test-event', count=count)
+    await client.run(_MOCKED_RUN_ID).charge('test-event', count=count)
 
     assert len(captured_requests) == 1
     body = _decode_body(captured_requests[0])

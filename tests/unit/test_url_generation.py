@@ -144,9 +144,7 @@ def test_kvs_public_url_sync(api_url: str, api_public_url: str | None, signing_k
         public_url = kvs.create_keys_public_url()
 
         if signing_key:
-            signature_value = create_storage_content_signature(
-                resource_id=MOCKED_KVS_ID, url_signing_secret_key=signing_key
-            )
+            signature_value = create_storage_content_signature(MOCKED_KVS_ID, signing_key)
             expected_signature = f'?signature={signature_value}'
         else:
             expected_signature = ''
@@ -172,10 +170,7 @@ async def test_kvs_public_url_async(api_url: str, api_public_url: str | None, si
         public_url = await kvs.create_keys_public_url()
 
         if signing_key:
-            signature_value = create_storage_content_signature(
-                resource_id=MOCKED_KVS_ID,
-                url_signing_secret_key=signing_key,
-            )
+            signature_value = create_storage_content_signature(MOCKED_KVS_ID, signing_key)
             expected_signature = f'?signature={signature_value}'
         else:
             expected_signature = ''

@@ -1898,6 +1898,15 @@ class ListOfVersionsResponse(BaseModel):
 
 
 @docs_group('Models')
+class ListOfWebhookDispatchesResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    data: ListOfWebhookDispatches
+
+
+@docs_group('Models')
 class ListOfWebhooksResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3904,15 +3913,6 @@ class WebhookDispatch(BaseModel):
     event_type: Annotated[WebhookEventType, Field(alias='eventType')]
     event_data: Annotated[EventData | None, Field(alias='eventData', title='eventData')] = None
     calls: Annotated[list[Call] | None, Field(title='calls')] = None
-
-
-@docs_group('Models')
-class WebhookDispatchList(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    data: ListOfWebhookDispatches | None = None
 
 
 @docs_group('Models')

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 from ._utils import get_random_resource_name, maybe_await
 from apify_client._models_generated import RunShort, TaskShort
-from apify_client._pagination_classes import PaginatedPage
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -117,7 +117,7 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
         # List tasks
         tasks_page = await maybe_await(client.tasks().list(limit=100))
 
-        assert isinstance(tasks_page, PaginatedPage)
+        assert isinstance(tasks_page, PageOfItems)
         assert isinstance(tasks_page.items, list)
         assert isinstance(tasks_page.items[0], TaskShort)
 
@@ -294,7 +294,7 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
         runs_client = task_client.runs()
         runs_page = await maybe_await(runs_client.list(limit=10))
 
-        assert isinstance(runs_page, PaginatedPage)
+        assert isinstance(runs_page, PageOfItems)
         assert isinstance(runs_page.items, list)
         assert isinstance(runs_page.items[0], RunShort)
         assert len(runs_page.items) >= 1
@@ -371,7 +371,7 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
         webhooks_client = task_client.webhooks()
         webhooks_page = await maybe_await(webhooks_client.list())
 
-        assert isinstance(webhooks_page, PaginatedPage)
+        assert isinstance(webhooks_page, PageOfItems)
         assert isinstance(webhooks_page.items, list)
         # New task should have no webhooks
         assert len(webhooks_page.items) == 0

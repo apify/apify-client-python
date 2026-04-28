@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import DatasetListItem
-from apify_client._pagination_classes import PaginatedPage
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
@@ -31,7 +31,7 @@ async def test_dataset_collection_list(client: ApifyClient | ApifyClientAsync) -
     """Test listing datasets."""
     datasets_page = await maybe_await(client.datasets().list(limit=10))
 
-    assert isinstance(datasets_page, PaginatedPage)
+    assert isinstance(datasets_page, PageOfItems)
     assert isinstance(datasets_page.items, list)
     # User may have 0 datasets — only check element type when any were returned.
     if datasets_page.items:
@@ -42,7 +42,7 @@ async def test_dataset_collection_list_pagination(client: ApifyClient | ApifyCli
     """Test listing datasets with pagination."""
     datasets_page = await maybe_await(client.datasets().list(limit=5, offset=0))
 
-    assert isinstance(datasets_page, PaginatedPage)
+    assert isinstance(datasets_page, PageOfItems)
     assert isinstance(datasets_page.items, list)
     if datasets_page.items:
         assert isinstance(datasets_page.items[0], DatasetListItem)

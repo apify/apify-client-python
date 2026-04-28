@@ -3,21 +3,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import (
     Dataset,
     DatasetResponse,
     ListOfDatasetsResponse,
     StorageOwnership,
 )
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfDatasets,
     ListPageOfDatasetsAsync,
-    PaginatedPage,
+    PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -75,10 +75,10 @@ class DatasetCollectionClient(ResourceClient):
             The list of available datasets matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> PaginatedPage[DatasetListItem]:
+        def _callback(**kwargs: Any) -> PageOfItems[DatasetListItem]:
             result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
             data = ListOfDatasetsResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -88,7 +88,7 @@ class DatasetCollectionClient(ResourceClient):
             )
 
         first_page = _callback(limit=limit, offset=offset, desc=desc)
-        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
         return ListPageOfDatasets(
             _get_iterator=get_iterator,
@@ -172,10 +172,10 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             The list of available datasets matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> PaginatedPage[DatasetListItem]:
+        async def _callback(**kwargs: Any) -> PageOfItems[DatasetListItem]:
             result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
             data = ListOfDatasetsResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -185,7 +185,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             )
 
         fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
-        get_async_iterator = build_iterable_list_page_async(
+        get_async_iterator = build_get_iterator_async(
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 

@@ -5,11 +5,6 @@ from typing import TYPE_CHECKING, Any
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
@@ -20,10 +15,15 @@ from apify_client._models_generated import (
     VersionResponse,
     VersionSourceType,
 )
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfVersions,
     ListPageOfVersionsAsync,
-    PaginatedPageOnlyTotal,
+    PageOfItemsOnlyTotal,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -67,13 +67,13 @@ class ActorVersionCollectionClient(ResourceClient):
             The list of available Actor versions.
         """
 
-        def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[Version]:
+        def _callback(**kwargs: Any) -> PageOfItemsOnlyTotal[Version]:
             result = self._list(timeout=timeout, **kwargs)
             data = ListOfVersionsResponse.model_validate(result).data
-            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
+            return PageOfItemsOnlyTotal(items=data.items, total=data.total)
 
         first_page = _callback()
-        get_iterator = build_iterable_list_page(_callback, first_page)
+        get_iterator = build_get_iterator(_callback, first_page)
 
         return ListPageOfVersions(
             _get_iterator=get_iterator,
@@ -168,13 +168,13 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             The list of available Actor versions.
         """
 
-        async def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[Version]:
+        async def _callback(**kwargs: Any) -> PageOfItemsOnlyTotal[Version]:
             result = await self._list(timeout=timeout, **kwargs)
             data = ListOfVersionsResponse.model_validate(result).data
-            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
+            return PageOfItemsOnlyTotal(items=data.items, total=data.total)
 
         fetch_first_page = _LazyTask(_callback())
-        get_async_iterator = build_iterable_list_page_async(_callback, fetch_first_page)
+        get_async_iterator = build_get_iterator_async(_callback, fetch_first_page)
 
         return ListPageOfVersionsAsync(
             _awaitable_first_page=fetch_first_page,

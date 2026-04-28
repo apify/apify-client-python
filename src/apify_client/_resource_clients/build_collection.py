@@ -3,16 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import ListOfBuildsResponse
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfBuilds,
     ListPageOfBuildsAsync,
-    PaginatedPage,
+    PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -69,10 +69,10 @@ class BuildCollectionClient(ResourceClient):
             The retrieved Actor builds.
         """
 
-        def _callback(**kwargs: Any) -> PaginatedPage[BuildShort]:
+        def _callback(**kwargs: Any) -> PageOfItems[BuildShort]:
             result = self._list(timeout=timeout, **kwargs)
             data = ListOfBuildsResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -82,7 +82,7 @@ class BuildCollectionClient(ResourceClient):
             )
 
         first_page = _callback(limit=limit, offset=offset, desc=desc)
-        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
         return ListPageOfBuilds(
             _get_iterator=get_iterator,
@@ -143,10 +143,10 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             The retrieved Actor builds.
         """
 
-        async def _callback(**kwargs: Any) -> PaginatedPage[BuildShort]:
+        async def _callback(**kwargs: Any) -> PageOfItems[BuildShort]:
             result = await self._list(timeout=timeout, **kwargs)
             data = ListOfBuildsResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -156,7 +156,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             )
 
         fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
-        get_async_iterator = build_iterable_list_page_async(
+        get_async_iterator = build_get_iterator_async(
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 

@@ -8,16 +8,16 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    _min_for_limit_param,
-    build_cursor_iterable_list_page,
-    build_cursor_iterable_list_page_async,
-)
 from apify_client._models_generated import (
     KeyValueStore,
     KeyValueStoreResponse,
     ListOfKeysResponse,
+)
+from apify_client._pagination import (
+    _LazyTask,
+    _min_for_limit_param,
+    build_get_cursor_iterator,
+    build_get_cursor_iterator_async,
 )
 from apify_client._pagination_classes import (
     ListPageOfKeys,
@@ -206,7 +206,7 @@ class KeyValueStoreClient(ResourceClient):
 
         first_limit = _min_for_limit_param(limit, chunk_size)
         first_page = _callback(limit=first_limit, exclusive_start_key=exclusive_start_key)
-        get_iterator = build_cursor_iterable_list_page(
+        get_iterator = build_get_cursor_iterator(
             _callback,
             first_page,
             cursor_param='exclusive_start_key',
@@ -666,7 +666,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         first_limit = _min_for_limit_param(limit, chunk_size)
         fetch_first_page = _LazyTask(_callback(limit=first_limit, exclusive_start_key=exclusive_start_key))
-        get_async_iterator = build_cursor_iterable_list_page_async(
+        get_async_iterator = build_get_cursor_iterator_async(
             _callback,
             fetch_first_page,
             cursor_param='exclusive_start_key',

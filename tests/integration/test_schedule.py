@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import ScheduleShort
-from apify_client._pagination_classes import PaginatedPage
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -121,7 +121,7 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
         # List schedules
         schedules_page = await maybe_await(client.schedules().list(limit=100))
 
-        assert isinstance(schedules_page, PaginatedPage)
+        assert isinstance(schedules_page, PageOfItems)
         assert isinstance(schedules_page.items, list)
         assert isinstance(schedules_page.items[0], ScheduleShort)
 

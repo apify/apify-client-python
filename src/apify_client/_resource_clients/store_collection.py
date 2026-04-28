@@ -3,16 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import ListOfActorsInStoreResponse
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfStoreActors,
     ListPageOfStoreActorsAsync,
-    PaginatedPage,
+    PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -74,7 +74,7 @@ class StoreCollectionClient(ResourceClient):
             The list of available Actors matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> PaginatedPage[StoreListActor]:
+        def _callback(**kwargs: Any) -> PageOfItems[StoreListActor]:
             result = self._list(
                 timeout=timeout,
                 search=search,
@@ -85,7 +85,7 @@ class StoreCollectionClient(ResourceClient):
                 **kwargs,
             )
             data = ListOfActorsInStoreResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -95,7 +95,7 @@ class StoreCollectionClient(ResourceClient):
             )
 
         first_page = _callback(limit=limit, offset=offset)
-        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset)
 
         return ListPageOfStoreActors(
             _get_iterator=get_iterator,
@@ -161,7 +161,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             The list of available Actors matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> PaginatedPage[StoreListActor]:
+        async def _callback(**kwargs: Any) -> PageOfItems[StoreListActor]:
             result = await self._list(
                 timeout=timeout,
                 search=search,
@@ -172,7 +172,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
                 **kwargs,
             )
             data = ListOfActorsInStoreResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -182,7 +182,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             )
 
         fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset))
-        get_async_iterator = build_iterable_list_page_async(_callback, fetch_first_page, limit=limit, offset=offset)
+        get_async_iterator = build_get_iterator_async(_callback, fetch_first_page, limit=limit, offset=offset)
 
         return ListPageOfStoreActorsAsync(
             _awaitable_first_page=fetch_first_page,

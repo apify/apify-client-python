@@ -3,11 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import (
     ActorStandby,
     CreateTaskRequest,
@@ -17,10 +12,15 @@ from apify_client._models_generated import (
     TaskOptions,
     TaskResponse,
 )
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfTasks,
     ListPageOfTasksAsync,
-    PaginatedPage,
+    PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -77,10 +77,10 @@ class TaskCollectionClient(ResourceClient):
             The list of available tasks matching the specified filters.
         """
 
-        def _callback(**kwargs: Any) -> PaginatedPage[TaskShort]:
+        def _callback(**kwargs: Any) -> PageOfItems[TaskShort]:
             result = self._list(timeout=timeout, **kwargs)
             data = ListOfTasksResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -90,7 +90,7 @@ class TaskCollectionClient(ResourceClient):
             )
 
         first_page = _callback(limit=limit, offset=offset, desc=desc)
-        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
         return ListPageOfTasks(
             _get_iterator=get_iterator,
@@ -224,10 +224,10 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             The list of available tasks matching the specified filters.
         """
 
-        async def _callback(**kwargs: Any) -> PaginatedPage[TaskShort]:
+        async def _callback(**kwargs: Any) -> PageOfItems[TaskShort]:
             result = await self._list(timeout=timeout, **kwargs)
             data = ListOfTasksResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -237,7 +237,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             )
 
         fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
-        get_async_iterator = build_iterable_list_page_async(
+        get_async_iterator = build_get_iterator_async(
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 

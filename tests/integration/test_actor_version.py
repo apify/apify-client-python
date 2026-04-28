@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import Version
-from apify_client._pagination_classes import PaginatedPageOnlyTotal
+from apify_client._pagination_classes import PageOfItemsOnlyTotal
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -47,7 +47,7 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
         # List versions
         versions = await maybe_await(actor_client.versions().list())
 
-        assert isinstance(versions, PaginatedPageOnlyTotal)
+        assert isinstance(versions, PageOfItemsOnlyTotal)
         assert isinstance(versions.items, list)
         assert isinstance(versions.items[0], Version)
         assert len(versions.items) >= 1

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import BuildShort
-from apify_client._pagination_classes import PaginatedPage
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -26,7 +26,7 @@ async def test_build_list_for_actor(client: ApifyClient | ApifyClientAsync) -> N
     actor = client.actor(HELLO_WORLD_ACTOR)
     builds_page = await maybe_await(actor.builds().list(limit=10))
 
-    assert isinstance(builds_page, PaginatedPage)
+    assert isinstance(builds_page, PageOfItems)
     assert isinstance(builds_page.items, list)
     assert isinstance(builds_page.items[0], BuildShort)  # hello-world has at least one build
 
@@ -41,7 +41,7 @@ async def test_build_get(client: ApifyClient | ApifyClientAsync) -> None:
     actor = client.actor(HELLO_WORLD_ACTOR)
     builds_page = await maybe_await(actor.builds().list(limit=1))
 
-    assert isinstance(builds_page, PaginatedPage)
+    assert isinstance(builds_page, PageOfItems)
     assert isinstance(builds_page.items, list)
     assert isinstance(builds_page.items[0], BuildShort)
     build_id = builds_page.items[0].id
@@ -61,7 +61,7 @@ async def test_user_builds_list(client: ApifyClient | ApifyClientAsync) -> None:
     # List user's builds (may be empty if user has no actors)
     builds_page = await maybe_await(client.builds().list(limit=10))
 
-    assert isinstance(builds_page, PaginatedPage)
+    assert isinstance(builds_page, PageOfItems)
     assert isinstance(builds_page.items, list)
     # User may have 0 builds — only check element type when any were returned.
     if builds_page.items:
@@ -74,7 +74,7 @@ async def test_build_log(client: ApifyClient | ApifyClientAsync) -> None:
     actor = client.actor(HELLO_WORLD_ACTOR)
     builds_page = await maybe_await(actor.builds().list(limit=5))
 
-    assert isinstance(builds_page, PaginatedPage)
+    assert isinstance(builds_page, PageOfItems)
     assert isinstance(builds_page.items, list)
     assert isinstance(builds_page.items[0], BuildShort)
 
@@ -103,7 +103,7 @@ async def test_build_wait_for_finish(client: ApifyClient | ApifyClientAsync) -> 
     actor = client.actor(HELLO_WORLD_ACTOR)
     builds_page = await maybe_await(actor.builds().list(limit=5))
 
-    assert isinstance(builds_page, PaginatedPage)
+    assert isinstance(builds_page, PageOfItems)
     assert isinstance(builds_page.items, list)
     assert isinstance(builds_page.items[0], BuildShort)
 
@@ -217,7 +217,7 @@ async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAs
     actor = client.actor(HELLO_WORLD_ACTOR)
     builds_page = await maybe_await(actor.builds().list(limit=1))
 
-    assert isinstance(builds_page, PaginatedPage)
+    assert isinstance(builds_page, PageOfItems)
     assert isinstance(builds_page.items, list)
     assert isinstance(builds_page.items[0], BuildShort)
     build_id = builds_page.items[0].id

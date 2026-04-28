@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from apify_client._models_generated import WebhookDispatch
-from apify_client._pagination_classes import PaginatedPage
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -18,7 +18,7 @@ async def test_webhook_dispatch_list(client: ApifyClient | ApifyClientAsync) -> 
     """Test listing webhook dispatches."""
     dispatches_page = await maybe_await(client.webhook_dispatches().list(limit=10))
 
-    assert isinstance(dispatches_page, PaginatedPage)
+    assert isinstance(dispatches_page, PageOfItems)
     assert isinstance(dispatches_page.items, list)
     # User may have 0 dispatches — only check element type when any were returned.
     if dispatches_page.items:
@@ -30,7 +30,7 @@ async def test_webhook_dispatch_get(client: ApifyClient | ApifyClientAsync) -> N
     # First list dispatches to get a dispatch ID
     dispatches_page = await maybe_await(client.webhook_dispatches().list(limit=1))
 
-    assert isinstance(dispatches_page, PaginatedPage)
+    assert isinstance(dispatches_page, PageOfItems)
     assert isinstance(dispatches_page.items, list)
 
     if dispatches_page.items:

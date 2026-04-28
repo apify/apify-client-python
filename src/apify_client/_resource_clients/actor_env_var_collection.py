@@ -3,16 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import EnvVar, EnvVarResponse, ListOfEnvVarsResponse
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfEnvVars,
     ListPageOfEnvVarsAsync,
-    PaginatedPageOnlyTotal,
+    PageOfItemsOnlyTotal,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -54,13 +54,13 @@ class ActorEnvVarCollectionClient(ResourceClient):
             The list of available Actor environment variables.
         """
 
-        def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[EnvVar]:
+        def _callback(**kwargs: Any) -> PageOfItemsOnlyTotal[EnvVar]:
             result = self._list(timeout=timeout, **kwargs)
             data = ListOfEnvVarsResponse.model_validate(result).data
-            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
+            return PageOfItemsOnlyTotal(items=data.items, total=data.total)
 
         first_page = _callback()
-        get_iterator = build_iterable_list_page(_callback, first_page)
+        get_iterator = build_get_iterator(_callback, first_page)
 
         return ListPageOfEnvVars(
             _get_iterator=get_iterator,
@@ -130,13 +130,13 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
             The list of available Actor environment variables.
         """
 
-        async def _callback(**kwargs: Any) -> PaginatedPageOnlyTotal[EnvVar]:
+        async def _callback(**kwargs: Any) -> PageOfItemsOnlyTotal[EnvVar]:
             result = await self._list(timeout=timeout, **kwargs)
             data = ListOfEnvVarsResponse.model_validate(result).data
-            return PaginatedPageOnlyTotal(items=data.items, total=data.total)
+            return PageOfItemsOnlyTotal(items=data.items, total=data.total)
 
         fetch_first_page = _LazyTask(_callback())
-        get_async_iterator = build_iterable_list_page_async(_callback, fetch_first_page)
+        get_async_iterator = build_get_iterator_async(_callback, fetch_first_page)
 
         return ListPageOfEnvVarsAsync(
             _awaitable_first_page=fetch_first_page,

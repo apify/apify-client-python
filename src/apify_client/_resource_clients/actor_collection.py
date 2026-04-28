@@ -3,11 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import (
     Actor,
     ActorResponse,
@@ -17,10 +12,15 @@ from apify_client._models_generated import (
     ExampleRunInput,
     ListOfActorsResponse,
 )
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfActors,
     ListPageOfActorsAsync,
-    PaginatedPage,
+    PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -86,10 +86,10 @@ class ActorCollectionClient(ResourceClient):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        def _callback(**kwargs: Any) -> PaginatedPage[ActorShort]:
+        def _callback(**kwargs: Any) -> PageOfItems[ActorShort]:
             result = self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
             data = ListOfActorsResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -99,7 +99,7 @@ class ActorCollectionClient(ResourceClient):
             )
 
         first_page = _callback(limit=limit, offset=offset, desc=desc)
-        get_iterator = build_iterable_list_page(_callback, first_page, limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
 
         return ListPageOfActors(
             _get_iterator=get_iterator,
@@ -258,10 +258,10 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
 
-        async def _callback(**kwargs: Any) -> PaginatedPage[ActorShort]:
+        async def _callback(**kwargs: Any) -> PageOfItems[ActorShort]:
             result = await self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
             data = ListOfActorsResponse.model_validate(result).data
-            return PaginatedPage(
+            return PageOfItems(
                 items=data.items,
                 count=data.count,
                 limit=data.limit,
@@ -271,7 +271,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             )
 
         fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
-        get_async_iterator = build_iterable_list_page_async(
+        get_async_iterator = build_get_iterator_async(
             _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
 

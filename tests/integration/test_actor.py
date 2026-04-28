@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 from ._utils import get_random_resource_name, maybe_await
 from apify_client._models_generated import ActorShort
-from apify_client._pagination_classes import PaginatedPage
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -40,7 +40,7 @@ async def test_list_actors_my(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing Actors created by the user."""
     actors_page = await maybe_await(client.actors().list(my=True, limit=10))
 
-    assert isinstance(actors_page, PaginatedPage)
+    assert isinstance(actors_page, PageOfItems)
     assert isinstance(actors_page.items, list)
     # User may have 0 actors — only check element type when any were returned.
     if actors_page.items:
@@ -51,7 +51,7 @@ async def test_list_actors_pagination(client: ApifyClient | ApifyClientAsync) ->
     """Test listing Actors with pagination parameters."""
     actors_page = await maybe_await(client.actors().list(limit=5, offset=0))
 
-    assert isinstance(actors_page, PaginatedPage)
+    assert isinstance(actors_page, PageOfItems)
     assert isinstance(actors_page.items, list)
     assert isinstance(actors_page.items[0], ActorShort)
 
@@ -60,7 +60,7 @@ async def test_list_actors_sorting(client: ApifyClient | ApifyClientAsync) -> No
     """Test listing Actors with sorting."""
     actors_page = await maybe_await(client.actors().list(limit=10, desc=True, sort_by='created_at'))
 
-    assert isinstance(actors_page, PaginatedPage)
+    assert isinstance(actors_page, PageOfItems)
     assert isinstance(actors_page.items, list)
     assert isinstance(actors_page.items[0], ActorShort)
 

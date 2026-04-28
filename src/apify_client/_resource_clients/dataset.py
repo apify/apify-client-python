@@ -8,12 +8,12 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from pydantic import BaseModel
 
 from apify_client._docs import docs_group
-from apify_client._iterable_list_page import (
-    _LazyTask,
-    build_iterable_list_page,
-    build_iterable_list_page_async,
-)
 from apify_client._models_generated import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
 from apify_client._pagination_classes import (
     ListPageOfDatasetItems,
     ListPageOfDatasetItemsAsync,
@@ -239,9 +239,7 @@ class DatasetClient(ResourceClient):
             )
 
         first_page = _fetch_page(offset=offset, limit=limit)
-        get_iterator = build_iterable_list_page(
-            _fetch_page, first_page, offset=offset, limit=limit, chunk_size=chunk_size
-        )
+        get_iterator = build_get_iterator(_fetch_page, first_page, offset=offset, limit=limit, chunk_size=chunk_size)
 
         return ListPageOfDatasetItems(
             _get_iterator=get_iterator,
@@ -928,7 +926,7 @@ class DatasetClientAsync(ResourceClientAsync):
             )
 
         fetch_first_page = _LazyTask(_fetch_page(offset=offset, limit=limit))
-        get_async_iterator = build_iterable_list_page_async(
+        get_async_iterator = build_get_iterator_async(
             _fetch_page, fetch_first_page, offset=offset, limit=limit, chunk_size=chunk_size
         )
 

@@ -46,15 +46,14 @@ class _LazyTask(Generic[T]):
         return (yield from self._task.__await__())
 
 
-def build_iterable_list_page(
+def build_get_iterator(
     callback: Callable[..., HasItems[T]],
     first_page: HasItems[T],
     **kwargs: Any,
 ) -> Callable[[], Iterator[T]]:
-    """Build an `IterableListPage` from a paginated sync callback.
+    """Build a factory for `Iterator` to yield items across paginated API calls.
 
-    The callback is invoked once immediately to fetch the first page, and again lazily during
-    iteration to fetch further pages.
+    The callback is invoked to lazy fetch items from API.
 
     There are several optional kwargs that control the pagination, but not all are accepted on each paginated endpoint.
     Some endpoints do not return all paginated metadata, so the implementation should be resilient to missing fields,
@@ -96,16 +95,14 @@ def build_iterable_list_page(
     return get_iterator
 
 
-def build_iterable_list_page_async(
+def build_get_iterator_async(
     callback: Callable[..., Coroutine[Any, Any, HasItems[T]]],
     fetch_first_page: Awaitable[HasItems[T]],
     **kwargs: Any,
 ) -> Callable[[], AsyncIterator[T]]:
-    """Build an `IterableListPageAsync` from a paginated async callback.
+    """Build a factory for `AsyncIterator` to yield items across paginated API calls.
 
-    Mirrors `build_iterable_list_page` but for async callbacks. The returned object is both
-    awaitable (resolves to the first page wrapped in `IterableListPage`) and asynchronously
-    iterable (yields items across pages).
+    Mirrors `build_get_iterator` but for async callbacks.
     """
     chunk_size = kwargs.pop('chunk_size', 0) or 0
     offset = kwargs.get('offset') or 0
@@ -131,7 +128,7 @@ def build_iterable_list_page_async(
     return get_async_iterator
 
 
-def build_cursor_iterable_list_page(
+def build_get_cursor_iterator(
     callback: Callable[..., HasItems[T]],
     first_page: HasItems[T],
     *,
@@ -140,7 +137,9 @@ def build_cursor_iterable_list_page(
     chunk_size: int | None = None,
     **kwargs: Any,
 ) -> Callable[[], Iterator[T]]:
-    """Build the iterator factory for endpoints that paginate with a cursor instead of an offset.
+    """Build a factory for `Iterator` to yield items across paginated API calls.
+
+    Mirrors `build_get_iterator` but with cursor based pagination.
 
     The caller is responsible for fetching the first page (typically by calling `callback` with
     the initial cursor). After each page, `getattr(page, f'next_{cursor_param}')` is consulted
@@ -168,7 +167,7 @@ def build_cursor_iterable_list_page(
     return get_iterator
 
 
-def build_cursor_iterable_list_page_async(
+def build_get_cursor_iterator_async(
     callback: Callable[..., Coroutine[Any, Any, HasItems[T]]],
     fetch_first_page: Awaitable[HasItems[T]],
     *,
@@ -177,10 +176,9 @@ def build_cursor_iterable_list_page_async(
     chunk_size: int | None = None,
     **kwargs: Any,
 ) -> Callable[[], AsyncIterator[T]]:
-    """Build the async iterator factory for endpoints that paginate with a cursor instead of an offset.
+    """Build a factory for `Iterator` to yield items across paginated API calls.
 
-    Mirrors `build_cursor_iterable_list_page` but for async callbacks. The caller is responsible
-    for awaiting the first page (typically through a `_LazyTask` wrapping the initial callback).
+    Mirrors `build_get_cursor_iterator` but for async callbacks.
     """
     effective_chunk = chunk_size or 0
     user_limit = limit or 0

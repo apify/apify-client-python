@@ -10,6 +10,7 @@ from apify_client._iterable_list_page import (
     build_iterable_list_page_async,
 )
 from apify_client._models_generated import ListOfWebhookDispatches, WebhookDispatchList
+from apify_client._pagination_classes import ListPageOfWebhookDispatches
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
@@ -43,7 +44,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterableListPage[WebhookDispatch]:
+    ) -> ListPageOfWebhookDispatches:
         """List all webhook dispatches of a user.
 
         The returned page also supports iteration: `for item in client.list(...)` yields individual
@@ -65,7 +66,16 @@ class WebhookDispatchCollectionClient(ResourceClient):
             result = self._list(timeout=timeout, **kwargs)
             return WebhookDispatchList.model_validate(result).data
 
-        return build_iterable_list_page(_callback, limit=limit, offset=offset, desc=desc)
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_iterable_list_page(_callback,first_page, limit=limit, offset=offset, desc=desc)
+
+        return ListPageOfWebhookDispatches(get_iterator=get_iterator,
+                                           items=first_page.items,
+                                           count=first_page.count,
+                                           offset=first_page.offset,
+                                           limit=first_page.limit,
+                                           total=first_page.total,
+                                           desc=first_page.desc)
 
 
 @docs_group('Resource clients')

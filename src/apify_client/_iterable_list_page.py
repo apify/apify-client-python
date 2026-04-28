@@ -130,8 +130,9 @@ class IterableListPageAsync(AsyncIterable[T], Generic[T]):
 
 def build_iterable_list_page(
     callback: Callable[..., HasItems[T]],
+    first_page: HasItems[T],
     **kwargs: Any,
-) -> IterableListPage[T]:
+) -> Callable[[], Iterator[T]]:
     """Build an `IterableListPage` from a paginated sync callback.
 
     The callback is invoked once immediately to fetch the first page, and again lazily during
@@ -158,9 +159,6 @@ def build_iterable_list_page(
     chunk_size = kwargs.pop('chunk_size', 0) or 0
     offset = kwargs.get('offset') or 0
     limit = kwargs.get('limit') or 0
-
-    first_page = callback(**{**kwargs, 'limit': _min_for_limit_param(kwargs.get('limit'), chunk_size)})
-
     def get_iterator() -> Iterator[T]:
         current_page = first_page
         yield from current_page.items
@@ -176,7 +174,7 @@ def build_iterable_list_page(
             yield from current_page.items
             fetched_items += getattr(current_page, 'count', len(current_page.items))
 
-    return IterableListPage(first_page, get_iterator)
+    return get_iterator
 
 
 def build_iterable_list_page_async(

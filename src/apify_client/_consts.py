@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from apify_client._models_generated import ActorJobStatus
+from apify_client._models import ActorJobStatus
 
 DEFAULT_API_URL = 'https://api.apify.com'
 """Default base URL for the Apify API."""

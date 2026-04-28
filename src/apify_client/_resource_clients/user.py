@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import ValidationError
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import (
+from apify_client._models import (
     AccountLimits,
     LimitsResponse,
     MonthlyUsage,

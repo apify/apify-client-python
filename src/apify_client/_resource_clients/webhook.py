@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import AnyUrl
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import (
+from apify_client._models import (
     TestWebhookResponse,
     Webhook,
     WebhookCondition,
@@ -17,7 +17,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
-    from apify_client._models_generated import WebhookEventType
+    from apify_client._models import WebhookEventType
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
     from apify_client._types import Timeout
 

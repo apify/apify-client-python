@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
+    from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 
 import json
 from datetime import timedelta

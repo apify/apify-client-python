@@ -876,6 +876,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def _batch_add_requests_worker(
         self,
+        *,
         queue: asyncio.Queue[Iterable[dict]],
         request_params: dict,
         timeout: Timeout,
@@ -992,7 +993,9 @@ class RequestQueueClientAsync(ResourceClientAsync):
             async with asyncio.TaskGroup() as tg:
                 workers = [
                     tg.create_task(
-                        self._batch_add_requests_worker(asyncio_queue, request_params, timeout),
+                        self._batch_add_requests_worker(
+                            queue=asyncio_queue, request_params=request_params, timeout=timeout
+                        ),
                         name=f'batch_add_requests_worker_{i}',
                     )
                     for i in range(max_parallel)

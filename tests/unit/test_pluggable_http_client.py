@@ -334,7 +334,7 @@ class ErrorRaisingHttpClient(HttpClient):
             text='{"error": {"message": "Actor not found", "type": "record-not-found"}}',
             _json={'error': {'message': 'Actor not found', 'type': 'record-not-found'}},
         )
-        raise ApifyApiError(error_response, attempt=1, method=method)
+        raise ApifyApiError(error_response, 1, method=method)
 
 
 def test_custom_http_client_error_handling() -> None:
@@ -356,7 +356,7 @@ class ErrorRaisingHttpClientAsync(HttpClientAsync):
             text='{"error": {"message": "Actor not found", "type": "record-not-found"}}',
             _json={'error': {'message': 'Actor not found', 'type': 'record-not-found'}},
         )
-        raise ApifyApiError(error_response, attempt=1, method=method)
+        raise ApifyApiError(error_response, 1, method=method)
 
 
 async def test_custom_http_client_async_error_handling() -> None:

@@ -270,7 +270,7 @@ class ActorClient(ResourceClient):
         Returns:
             The run object.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         request_params = self._build_params(
             build=build,
@@ -547,7 +547,7 @@ class ActorClient(ResourceClient):
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         self._http_client.call(
             url=self._build_url('validate-input'),
@@ -766,7 +766,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             The run object.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         request_params = self._build_params(
             build=build,
@@ -1047,7 +1047,7 @@ class ActorClientAsync(ResourceClientAsync):
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         await self._http_client.call(
             url=self._build_url('validate-input'),

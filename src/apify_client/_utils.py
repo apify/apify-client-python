@@ -81,7 +81,7 @@ def catch_not_found_for_resource_or_throw(exc: ApifyApiError, resource_id: str |
     catch_not_found_or_throw(exc)
 
 
-def encode_key_value_store_record_value(value: Any, content_type: str | None = None) -> tuple[Any, str]:
+def encode_key_value_store_record_value(value: Any, *, content_type: str | None = None) -> tuple[Any, str]:
     """Encode a value for storage in a key-value store record.
 
     Args:
@@ -230,6 +230,7 @@ def create_hmac_signature(secret_key: str, message: str) -> str:
 def create_storage_content_signature(
     resource_id: str,
     url_signing_secret_key: str,
+    *,
     expires_in: timedelta | None = None,
     version: int = 0,
 ) -> str:

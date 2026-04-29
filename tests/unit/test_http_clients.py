@@ -425,7 +425,7 @@ def test_build_url_with_params_simple() -> None:
     """Test _build_url_with_params with simple params."""
     client = _ConcreteHttpClient()
 
-    url = client._build_url_with_params('https://api.test.com/endpoint', {'key': 'value', 'limit': 10})
+    url = client._build_url_with_params('https://api.test.com/endpoint', params={'key': 'value', 'limit': 10})
     assert 'key=value' in url
     assert 'limit=10' in url
     assert url.startswith('https://api.test.com/endpoint?')
@@ -435,7 +435,7 @@ def test_build_url_with_params_list() -> None:
     """Test _build_url_with_params with list values."""
     client = _ConcreteHttpClient()
 
-    url = client._build_url_with_params('https://api.test.com/endpoint', {'tags': ['tag1', 'tag2', 'tag3']})
+    url = client._build_url_with_params('https://api.test.com/endpoint', params={'tags': ['tag1', 'tag2', 'tag3']})
     assert 'tags=tag1' in url
     assert 'tags=tag2' in url
     assert 'tags=tag3' in url
@@ -446,7 +446,7 @@ def test_build_url_with_params_mixed() -> None:
     client = _ConcreteHttpClient()
 
     url = client._build_url_with_params(
-        'https://api.test.com/endpoint', {'limit': 10, 'tags': ['a', 'b'], 'name': 'test'}
+        'https://api.test.com/endpoint', params={'limit': 10, 'tags': ['a', 'b'], 'name': 'test'}
     )
     assert 'limit=10' in url
     assert 'tags=a' in url

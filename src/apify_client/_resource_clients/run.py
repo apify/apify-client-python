@@ -185,7 +185,7 @@ class RunClient(ResourceClient):
         Returns:
             The Actor run data.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
@@ -375,6 +375,7 @@ class RunClient(ResourceClient):
     def charge(
         self,
         event_name: str,
+        *,
         count: int = 1,
         idempotency_key: str | None = None,
         timeout: Timeout = 'short',
@@ -419,9 +420,9 @@ class RunClient(ResourceClient):
 
     def get_status_message_watcher(
         self,
+        *,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
-        *,
         timeout: Timeout = 'long',
     ) -> StatusMessageWatcher:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.
@@ -608,7 +609,7 @@ class RunClientAsync(ResourceClientAsync):
         Returns:
             The Actor run data.
         """
-        run_input, content_type = encode_key_value_store_record_value(run_input, content_type)
+        run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         safe_target_actor_id = to_safe_id(target_actor_id)
 
@@ -801,6 +802,7 @@ class RunClientAsync(ResourceClientAsync):
     async def charge(
         self,
         event_name: str,
+        *,
         count: int = 1,
         idempotency_key: str | None = None,
         timeout: Timeout = 'short',
@@ -845,9 +847,9 @@ class RunClientAsync(ResourceClientAsync):
 
     async def get_status_message_watcher(
         self,
+        *,
         to_logger: logging.Logger | None = None,
         check_period: timedelta = timedelta(seconds=1),
-        *,
         timeout: Timeout = 'long',
     ) -> StatusMessageWatcherAsync:
         """Get `StatusMessageWatcher` instance that can be used to redirect status and status messages to logs.

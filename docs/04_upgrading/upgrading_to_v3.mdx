@@ -249,6 +249,44 @@ except NotFoundError:
 
 Direct `.get()` also now swallows every 404 regardless of the `error.type` string in the response body (previously only `record-not-found` and `record-or-token-not-found` types were swallowed). If your code needs to distinguish between "resource missing" and "404 with an unexpected type", inspect `.type` on a caught <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> from a non-`.get()` call path.
 
+## Keyword-only arguments for secondary parameters
+
+Several methods and utility functions had additional `*` separators inserted into their signatures, so optional/secondary parameters can no longer be passed positionally. The "subject" arguments (e.g. `key` on KVS record methods, `event_name` on `charge()`) remain positional; only the parameters that follow them are affected.
+
+### Affected APIs
+
+<ApiLink to="class/KeyValueStoreClient">`KeyValueStoreClient`</ApiLink> / <ApiLink to="class/KeyValueStoreClientAsync">`KeyValueStoreClientAsync`</ApiLink>:
+
+- `get_record(key, *, signature=None, timeout='long')`
+- `get_record_as_bytes(key, *, signature=None, timeout='long')`
+- `stream_record(key, *, signature=None, timeout='long')`
+- `set_record(key, value, *, content_type=None, timeout='long')`
+
+<ApiLink to="class/RunClient">`RunClient`</ApiLink> / <ApiLink to="class/RunClientAsync">`RunClientAsync`</ApiLink>:
+
+- `charge(event_name, *, count=1, idempotency_key=None, timeout='short')`
+- `get_status_message_watcher(*, to_logger=None, check_period=..., timeout='long')`
+
+<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> constructor:
+
+- `ApifyApiError(response, attempt, *, method='GET')`
+
+### Migration
+
+Before (v2):
+
+```python
+client.key_value_store('my-store').set_record('my-key', {'data': 1}, 'application/json')
+client.run('my-run').charge('my-event', 5, 'my-idempotency-key')
+```
+
+After (v3):
+
+```python
+client.key_value_store('my-store').set_record('my-key', {'data': 1}, content_type='application/json')
+client.run('my-run').charge('my-event', count=5, idempotency_key='my-idempotency-key')
+```
+
 ## Snake_case `sort_by` values on `actors().list()`
 
 The `sort_by` parameter of <ApiLink to="class/ActorCollectionClient#list">`ActorCollectionClient.list()`</ApiLink> and <ApiLink to="class/ActorCollectionClientAsync#list">`ActorCollectionClientAsync.list()`</ApiLink> now accepts pythonic snake_case values instead of the raw camelCase values used by the API.

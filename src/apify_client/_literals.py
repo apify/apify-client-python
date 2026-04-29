@@ -3,10 +3,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Literal
 
-from apify_client._models import WebhookRepresentation
-from apify_client._models_generated import WebhookCreate
-from apify_client._typeddicts import WebhookRepresentationDict
-from apify_client._typeddicts_generated import WebhookCreateDict
+from apify_client._models import WebhookCreate, WebhookRepresentation
+from apify_client._typeddicts import WebhookCreateDict, WebhookRepresentationDict
 
 WebhooksList = (
     list[WebhookCreate] | list[WebhookCreateDict] | list[WebhookRepresentation] | list[WebhookRepresentationDict]

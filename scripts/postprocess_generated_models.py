@@ -1,6 +1,6 @@
 """Post-process datamodel-codegen output to fix known issues and prune the TypedDict file.
 
-Applied to `_models_generated.py`:
+Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with
   discriminators on schemas referenced from array items).
 - Deduplicate the inlined `Type(StrEnum)` that comes from ErrorResponse.yaml; rewire to `ErrorType`.
@@ -10,11 +10,11 @@ Applied to `_models_generated.py`:
   `_<NAME>_WIRE_VALUES` mapping the Python value back to the original camelCase form so the
   resource clients can still produce the exact string the API expects on the wire.
 - Move the resulting `X = Literal[...]` definitions into `_literals_generated.py`, leaving
-  `_models_generated.py` importing them — so consumers can depend on a dedicated literals module
+  `_models.py` importing them — so consumers can depend on a dedicated literals module
   without pulling in every Pydantic model.
 - Add `@docs_group('Models')` to every model class (plus the required import).
 
-Applied to `_typeddicts_generated.py`:
+Applied to `_typeddicts.py`:
 - Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive
   dependencies). The file is generated in full by datamodel-codegen; the trimming happens here.
 - Rename every kept class to add a `Dict` suffix so it doesn't clash with the Pydantic model name
@@ -35,9 +35,9 @@ if TYPE_CHECKING:
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_DIR = REPO_ROOT / 'src' / 'apify_client'
-MODELS_PATH = PACKAGE_DIR / '_models_generated.py'
+MODELS_PATH = PACKAGE_DIR / '_models.py'
 LITERALS_PATH = PACKAGE_DIR / '_literals_generated.py'
-TYPEDDICTS_PATH = PACKAGE_DIR / '_typeddicts_generated.py'
+TYPEDDICTS_PATH = PACKAGE_DIR / '_typeddicts.py'
 
 # Map of camelCase discriminator values to their snake_case equivalents.
 # Add new entries here as needed when the OpenAPI spec introduces new discriminators.
@@ -46,7 +46,7 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 }
 
 # TypedDicts accepted as inputs by resource-client methods. These are the roots of the reachability
-# walk over `_typeddicts_generated.py`: anything not reachable from here (directly or transitively)
+# walk over `_typeddicts.py`: anything not reachable from here (directly or transitively)
 # is dropped so only the TypedDicts that are part of the public input surface — plus their nested
 # shapes — survive. Names are the raw datamodel-codegen outputs (no `Dict` suffix yet); the suffix
 # is added later by `rename_with_dict_suffix`. Update this set whenever a new `<Name>Dict | <Name>`
@@ -54,8 +54,11 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 RESOURCE_INPUT_TYPEDDICTS: frozenset[str] = frozenset(
     {
         'Request',  # RequestQueueClient.update_request
+        'RequestDraft',  # RequestQueueClient.add_request, batch_add_requests
+        'RequestDraftDelete',  # RequestQueueClient.batch_delete_requests
         'TaskInput',  # Actor/Task start/call/update default input
         'WebhookCreate',  # Actor/Task start/call webhook list element
+        'WebhookRepresentation',  # Actor/Task start/call ad-hoc webhook list element
     }
 )
 
@@ -268,7 +271,7 @@ def split_literals_to_file(content: str) -> tuple[str, str]:
     """Move every top-level `Name = Literal[...]` block into a separate literals module.
 
     Walks the top-level AST, collects each literal alias plus its trailing bare-string docstring,
-    deletes them from `_models_generated.py`, and rebuilds `_literals_generated.py` from the blocks
+    deletes them from `_models.py`, and rebuilds `_literals_generated.py` from the blocks
     in original order. The models content gains a `from apify_client._literals_generated import ...`
     line so Pydantic can still resolve the forward references in field annotations.
 
@@ -480,7 +483,7 @@ def rename_with_dict_suffix(content: str, names: set[str]) -> str:
 
 
 def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
-    """Apply `_models_generated.py`-specific fixes and emit `_literals_generated.py`.
+    """Apply `_models.py`-specific fixes and emit `_literals_generated.py`.
 
     Returns the list of paths that were (re)written.
     """
@@ -506,7 +509,7 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
 
 
 def postprocess_typeddicts(path: Path) -> bool:
-    """Apply `_typeddicts_generated.py`-specific fixes. Returns True if the file changed."""
+    """Apply `_typeddicts.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
     pruned, kept = prune_typeddicts(original, RESOURCE_INPUT_TYPEDDICTS)
     renamed = rename_with_dict_suffix(pruned, kept)
@@ -531,13 +534,13 @@ def main() -> None:
         for path in changed:
             print(f'Wrote {path}')
     else:
-        print('No fixes needed for _models_generated.py / _literals_generated.py')
+        print('No fixes needed for _models.py / _literals_generated.py')
 
     if postprocess_typeddicts(TYPEDDICTS_PATH):
         changed.append(TYPEDDICTS_PATH)
         print(f'Pruned and renamed TypedDicts in {TYPEDDICTS_PATH}')
     else:
-        print('No fixes needed for _typeddicts_generated.py')
+        print('No fixes needed for _typeddicts.py')
 
     if changed:
         run_ruff(changed)

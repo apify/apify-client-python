@@ -9,8 +9,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from apify_client._models import WebhookRepresentationList
-from apify_client._models_generated import WebhookCondition, WebhookCreate
+from apify_client._models import WebhookCondition, WebhookCreate
 from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -18,6 +17,7 @@ from apify_client._utils import (
     create_storage_content_signature,
     encode_base62,
     encode_key_value_store_record_value,
+    encode_webhooks_to_base64,
     is_retryable_error,
     response_to_dict,
     response_to_list,
@@ -36,10 +36,10 @@ def test_to_safe_id() -> None:
     assert to_safe_id('user/resource/extra') == 'user~resource~extra'
 
 
-def test_webhook_representation_list_to_base64() -> None:
-    assert WebhookRepresentationList.from_webhooks([]).to_base64() is None
+def test_encode_webhooks_to_base64() -> None:
+    assert encode_webhooks_to_base64([]) is None
     assert (
-        WebhookRepresentationList.from_webhooks(
+        encode_webhooks_to_base64(
             [
                 WebhookCreate(
                     event_types=['ACTOR.RUN.CREATED'],
@@ -53,13 +53,13 @@ def test_webhook_representation_list_to_base64() -> None:
                     payload_template='{"hello": "world", "resource":{{resource}}}',
                 ),
             ]
-        ).to_base64()
+        )
         == 'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
     )
 
 
-def test_webhook_representation_list_from_dicts() -> None:
-    """Test that from_webhooks accepts plain dicts typed as WebhookRepresentationDict."""
+def test_encode_webhooks_to_base64_from_dicts() -> None:
+    """Test that encode_webhooks_to_base64 accepts plain dicts typed as WebhookRepresentationDict."""
     webhooks: list[WebhookRepresentationDict] = [
         {
             'event_types': ['ACTOR.RUN.CREATED'],
@@ -71,12 +71,12 @@ def test_webhook_representation_list_from_dicts() -> None:
             'payload_template': '{"hello": "world"}',
         },
     ]
-    result = WebhookRepresentationList.from_webhooks(webhooks).to_base64()
+    result = encode_webhooks_to_base64(webhooks)
 
     assert result is not None
 
     # Also verify round-trip: dicts and WebhookCreate models should produce the same base64
-    result_from_models = WebhookRepresentationList.from_webhooks(
+    result_from_models = encode_webhooks_to_base64(
         [
             WebhookCreate(
                 event_types=['ACTOR.RUN.CREATED'],
@@ -90,7 +90,7 @@ def test_webhook_representation_list_from_dicts() -> None:
                 payload_template='{"hello": "world"}',
             ),
         ]
-    ).to_base64()
+    )
 
     assert result == result_from_models
 

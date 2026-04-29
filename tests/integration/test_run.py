@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
+    from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
 
 
 from datetime import UTC, datetime, timedelta
 
 from ._utils import maybe_await, maybe_sleep
-from apify_client._models_generated import Run
+from apify_client._models import Run
 from apify_client.errors import ApifyApiError
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'

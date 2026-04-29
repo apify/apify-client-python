@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import (
+    from apify_client._models import (
         BatchAddResult,
         BatchDeleteResult,
         ListOfRequestQueues,
@@ -19,8 +19,7 @@ if TYPE_CHECKING:
         RequestRegistration,
         UnlockRequestsResult,
     )
-    from apify_client._typeddicts import RequestDeleteInputDict, RequestInputDict
-    from apify_client._typeddicts_generated import RequestDict
+    from apify_client._typeddicts import RequestDict, RequestDraftDeleteDict, RequestDraftDict
 
 
 from datetime import timedelta
@@ -186,7 +185,7 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
 
     try:
         # Add a request
-        request_data: RequestInputDict = {
+        request_data: RequestDraftDict = {
             'url': 'https://example.com/test',
             'unique_key': 'test-key-1',
             'method': 'GET',
@@ -315,7 +314,7 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
 
     try:
         # Batch add requests
-        requests_to_add: list[RequestInputDict] = [
+        requests_to_add: list[RequestDraftDict] = [
             {'url': f'https://example.com/batch-{i}', 'unique_key': f'batch-{i}'} for i in range(10)
         ]
         result = await maybe_await(rq_client.batch_add_requests(requests_to_add))
@@ -365,9 +364,10 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
 
         assert list_response is not None
         assert len(list_response.items) == 10
-        requests_to_delete: list[RequestDeleteInputDict] = [
-            {'unique_key': item.unique_key} for item in list_response.items[:5]
-        ]
+        requests_to_delete: list[RequestDraftDeleteDict] = []
+        for item in list_response.items[:5]:
+            assert item.unique_key is not None
+            requests_to_delete.append({'unique_key': item.unique_key})
 
         # Batch delete
         result = await maybe_await(rq_client.batch_delete_requests(requests_to_delete))
@@ -561,7 +561,7 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
 
     try:
         # Add a request
-        request_data: RequestInputDict = {
+        request_data: RequestDraftDict = {
             'url': 'https://example.com/original',
             'unique_key': 'update-test',
             'method': 'GET',

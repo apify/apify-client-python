@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import (
+from apify_client._models import (
     KeyValueStore,
     KeyValueStoreKey,
     KeyValueStoreResponse,

@@ -11,7 +11,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
-    from apify_client._typeddicts import RequestInputDict
+    from apify_client._typeddicts import RequestDraftDict
 
 _PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT = """{
   "data": {
@@ -43,7 +43,7 @@ async def test_batch_not_processed_raises_exception_async(httpserver: HTTPServer
         api_public_url=server_url,
     )
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(status=401)
-    requests: list[RequestInputDict] = [
+    requests: list[RequestDraftDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -64,7 +64,7 @@ async def test_batch_processed_partially_async(httpserver: HTTPServer) -> None:
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
         status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
     )
-    requests: list[RequestInputDict] = [
+    requests: list[RequestDraftDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -86,7 +86,7 @@ def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> No
     )
 
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(status=401)
-    requests: list[RequestInputDict] = [
+    requests: list[RequestDraftDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -107,7 +107,7 @@ def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
         status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
     )
-    requests: list[RequestInputDict] = [
+    requests: list[RequestDraftDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]

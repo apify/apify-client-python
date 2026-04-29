@@ -1134,8 +1134,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
             chunk_size: Maximum number of requests requested per API call when iterating. Only
                 relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
-            cursor: A token returned in previous API response, to continue listing next page of requests
-            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
         """
         if exclusive_start_id and cursor:
             raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')

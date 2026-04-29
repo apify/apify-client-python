@@ -1814,10 +1814,6 @@ class ListOfRequests(BaseModel):
     """
     The array of requests.
     """
-    count: Annotated[int | None, Field(examples=[2])] = None
-    """
-    The total number of requests matching the query.
-    """
     limit: Annotated[int, Field(examples=[2])]
     """
     The maximum number of requests returned in this response.

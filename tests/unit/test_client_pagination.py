@@ -128,7 +128,6 @@ _REBUILT_RESPONSE_WRAPPERS = (
     'ListOfTasksResponse',
     'ListOfVersionsResponse',
     'ListOfWebhooksResponse',
-    'WebhookDispatchList',
 )
 
 

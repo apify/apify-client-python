@@ -49,27 +49,27 @@ class PageWithItems(Generic[T]):
 
 
 @dataclass
-class PageWithTotal(Generic[T]):
+class PageWithTotal:
     total: int
 
 
 @dataclass
-class PageWithLimit(Generic[T]):
+class PageWithLimit:
     limit: int
 
 
 @dataclass
-class PageWithCount(Generic[T]):
+class PageWithCount:
     count: int
 
 
 @dataclass
-class PageWithOffset(Generic[T]):
+class PageWithOffset:
     offset: int
 
 
 @dataclass
-class PageWithDesc(Generic[T]):
+class PageWithDesc:
     desc: bool
 
 
@@ -144,7 +144,7 @@ class IterablePageOfActors(PageOfItems[ActorShort], IterableOf[ActorShort]): ...
 
 
 @dataclass
-class IterablePageOfActorsAsync(AsyncIterableOf[ActorShort], AwaitablePage[ActorShort]): ...
+class IterablePageOfActorsAsync(AwaitablePage[ActorShort], AsyncIterableOf[ActorShort]): ...
 
 
 @dataclass
@@ -152,7 +152,7 @@ class IterablePageOfBuilds(PageOfItems[BuildShort], IterableOf[BuildShort]): ...
 
 
 @dataclass
-class IterablePageOfBuildsAsync(AsyncIterableOf[BuildShort], AwaitablePage[BuildShort]): ...
+class IterablePageOfBuildsAsync(AwaitablePage[BuildShort], AsyncIterableOf[BuildShort]): ...
 
 
 @dataclass
@@ -160,7 +160,7 @@ class IterablePageOfDatasets(PageOfItems[DatasetListItem], IterableOf[DatasetLis
 
 
 @dataclass
-class IterablePageOfDatasetsAsync(AsyncIterableOf[DatasetListItem], AwaitablePage[DatasetListItem]): ...
+class IterablePageOfDatasetsAsync(AwaitablePage[DatasetListItem], AsyncIterableOf[DatasetListItem]): ...
 
 
 @dataclass
@@ -168,7 +168,7 @@ class IterablePageOfDatasetItems(PageOfDatasetItems, IterableOf[dict[str, Any]])
 
 
 @dataclass
-class IterablePageOfDatasetItemsAsync(AsyncIterableOf[dict[str, Any]], AwaitablePageOfDatasetItems): ...
+class IterablePageOfDatasetItemsAsync(AwaitablePageOfDatasetItems, AsyncIterableOf[dict[str, Any]]): ...
 
 
 @dataclass
@@ -176,7 +176,7 @@ class IterablePageOfKeyValueStores(PageOfItems[KeyValueStore], IterableOf[KeyVal
 
 
 @dataclass
-class IterablePageOfKeyValueStoresAsync(AsyncIterableOf[KeyValueStore], AwaitablePage[KeyValueStore]): ...
+class IterablePageOfKeyValueStoresAsync(AwaitablePage[KeyValueStore], AsyncIterableOf[KeyValueStore]): ...
 
 
 @dataclass
@@ -184,7 +184,7 @@ class IterablePageOfRequestQueues(PageOfItems[RequestQueueShort], IterableOf[Req
 
 
 @dataclass
-class IterablePageOfRequestQueuesAsync(AsyncIterableOf[RequestQueueShort], AwaitablePage[RequestQueueShort]): ...
+class IterablePageOfRequestQueuesAsync(AwaitablePage[RequestQueueShort], AsyncIterableOf[RequestQueueShort]): ...
 
 
 @dataclass
@@ -192,7 +192,7 @@ class IterablePageOfRuns(PageOfItems[RunShort], IterableOf[RunShort]): ...
 
 
 @dataclass
-class IterablePageOfRunsAsync(AsyncIterableOf[RunShort], AwaitablePage[RunShort]): ...
+class IterablePageOfRunsAsync(AwaitablePage[RunShort], AsyncIterableOf[RunShort]): ...
 
 
 @dataclass
@@ -200,7 +200,7 @@ class IterablePageOfSchedules(PageOfItems[ScheduleShort], IterableOf[ScheduleSho
 
 
 @dataclass
-class IterablePageOfSchedulesAsync(AsyncIterableOf[ScheduleShort], AwaitablePage[ScheduleShort]): ...
+class IterablePageOfSchedulesAsync(AwaitablePage[ScheduleShort], AsyncIterableOf[ScheduleShort]): ...
 
 
 @dataclass
@@ -208,7 +208,7 @@ class IterablePageOfStoreActors(PageOfItems[StoreListActor], IterableOf[StoreLis
 
 
 @dataclass
-class IterablePageOfStoreActorsAsync(AsyncIterableOf[StoreListActor], AwaitablePage[StoreListActor]): ...
+class IterablePageOfStoreActorsAsync(AwaitablePage[StoreListActor], AsyncIterableOf[StoreListActor]): ...
 
 
 @dataclass
@@ -216,7 +216,7 @@ class IterablePageOfTasks(PageOfItems[TaskShort], IterableOf[TaskShort]): ...
 
 
 @dataclass
-class IterablePageOfTasksAsync(AsyncIterableOf[TaskShort], AwaitablePage[TaskShort]): ...
+class IterablePageOfTasksAsync(AwaitablePage[TaskShort], AsyncIterableOf[TaskShort]): ...
 
 
 @dataclass
@@ -224,7 +224,7 @@ class IterablePageOfWebhookDispatches(PageOfItems[WebhookDispatch], IterableOf[W
 
 
 @dataclass
-class IterablePageOfWebhookDispatchesAsync(AsyncIterableOf[WebhookDispatch], AwaitablePage[WebhookDispatch]): ...
+class IterablePageOfWebhookDispatchesAsync(AwaitablePage[WebhookDispatch], AsyncIterableOf[WebhookDispatch]): ...
 
 
 @dataclass
@@ -232,23 +232,23 @@ class IterablePageOfWebhooks(PageOfItems[WebhookShort], IterableOf[WebhookShort]
 
 
 @dataclass
-class IterablePageOfWebhooksAsync(AsyncIterableOf[WebhookShort], AwaitablePage[WebhookShort]): ...
+class IterablePageOfWebhooksAsync(AwaitablePage[WebhookShort], AsyncIterableOf[WebhookShort]): ...
 
 
 @dataclass
-class IterablePageOfEnvVars(IterableOf[EnvVar], PageOfItemsOnlyTotal): ...
+class IterablePageOfEnvVars(PageOfItemsOnlyTotal, IterableOf[EnvVar]): ...
 
 
 @dataclass
-class IterablePageOfEnvVarsAsync(AsyncIterableOf[EnvVar], AwaitablePageOnlyTotal[EnvVar]): ...
+class IterablePageOfEnvVarsAsync(AwaitablePageOnlyTotal[EnvVar], AsyncIterableOf[EnvVar]): ...
 
 
 @dataclass
-class IterablePageOfVersions(IterableOf[Version], PageOfItemsOnlyTotal): ...
+class IterablePageOfVersions(PageOfItemsOnlyTotal, IterableOf[Version]): ...
 
 
 @dataclass
-class IterablePageOfVersionsAsync(AsyncIterableOf[Version], AwaitablePageOnlyTotal[Version]): ...
+class IterablePageOfVersionsAsync(AwaitablePageOnlyTotal[Version], AsyncIterableOf[Version]): ...
 
 
 @dataclass
@@ -256,7 +256,7 @@ class IterablePageOfRequests(PageOfRequests, IterableOf[Request]): ...
 
 
 @dataclass
-class IterablePageOfRequestsAsync(AsyncIterableOf[Request], AwaitablePageOfRequests): ...
+class IterablePageOfRequestsAsync(AwaitablePageOfRequests, AsyncIterableOf[Request]): ...
 
 
 @dataclass
@@ -264,4 +264,4 @@ class IterablePageOfKeys(PageOfKeys, IterableOf[KeyValueStoreKey]): ...
 
 
 @dataclass
-class IterablePageOfKeysAsync(AsyncIterableOf[KeyValueStoreKey], AwaitablePageOfKeys): ...
+class IterablePageOfKeysAsync(AwaitablePageOfKeys, AsyncIterableOf[KeyValueStoreKey]): ...

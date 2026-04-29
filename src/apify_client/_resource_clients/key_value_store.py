@@ -233,7 +233,7 @@ class KeyValueStoreClient(ResourceClient):
         prefix: str | None = None,
         signature: str | None = None,
         chunk_size: int | None = 1000,
-        timeout: Timeout = 'medium',
+        timeout: Timeout = 'long',
     ) -> Iterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
 
@@ -688,7 +688,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         prefix: str | None = None,
         signature: str | None = None,
         chunk_size: int | None = 1000,
-        timeout: Timeout = 'medium',
+        timeout: Timeout = 'long',
     ) -> AsyncIterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
 

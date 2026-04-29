@@ -11,6 +11,7 @@ from apify_client._docs import docs_group
 from apify_client._models_generated import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._pagination import (
     _LazyTask,
+    _min_for_limit_param,
     build_get_iterator,
     build_get_iterator_async,
 )
@@ -208,7 +209,6 @@ class DatasetClient(ResourceClient):
                 flatten=flatten,
                 view=view,
                 signature=signature,
-                timeout=timeout,
                 **kwargs,
             )
 
@@ -236,7 +236,7 @@ class DatasetClient(ResourceClient):
                 desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
             )
 
-        first_page = _fetch_page(offset=offset, limit=limit)
+        first_page = _fetch_page(offset=offset, limit=_min_for_limit_param(limit, chunk_size))
         get_iterator = build_get_iterator(_fetch_page, first_page, offset=offset, limit=limit, chunk_size=chunk_size)
 
         return IterablePageOfDatasetItems(

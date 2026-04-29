@@ -3912,15 +3912,6 @@ class WebhookDispatch(BaseModel):
 
 
 @docs_group('Models')
-class WebhookDispatchList(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    data: ListOfWebhookDispatches
-
-
-@docs_group('Models')
 class WebhookDispatchResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
@@ -10,17 +11,11 @@ from apify_client._models_generated import (
     CreateActorRequest,
     DefaultRunOptions,
     ExampleRunInput,
+    ListOfActors,
     ListOfActorsResponse,
 )
 from apify_client._pagination import (
-    _LazyTask,
-    build_get_iterator,
-    build_get_iterator_async,
-)
-from apify_client._pagination_classes import (
-    IterablePageOfActors,
-    IterablePageOfActorsAsync,
-    PageOfItems,
+    get_items_iterator,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -65,11 +60,8 @@ class ActorCollectionClient(ResourceClient):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> IterablePageOfActors:
+    ) -> ListOfActors:
         """List the Actors the user has created or used.
-
-        The returned page also supports iteration: `for item in client.list(...)` yields individual Actors
-        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
@@ -85,31 +77,38 @@ class ActorCollectionClient(ResourceClient):
             The list of available Actors matching the specified filters.
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
+        result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=api_sort_by)
+        return ListOfActorsResponse.model_validate(result).data
 
-        def _callback(**kwargs: Any) -> PageOfItems[ActorShort]:
-            result = self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            data = ListOfActorsResponse.model_validate(result).data
-            return PageOfItems(
-                items=data.items,
-                count=data.count,
-                limit=data.limit,
-                total=data.total,
-                offset=data.offset,
-                desc=data.desc,
-            )
+    def iterate(self, *,
+                my: bool | None = None,
+                limit: int | None = None,
+                offset: int | None = None,
+                desc: bool | None = None,
+                sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
+                timeout: Timeout = 'medium'
+                ) -> Iterator[ActorShort]:
+        """Iterate over the Actors the user has created or used.
 
-        first_page = _callback(limit=limit, offset=offset, desc=desc)
-        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
-        return IterablePageOfActors(
-            _get_iterator=get_iterator,
-            items=first_page.items,
-            count=first_page.count,
-            limit=first_page.limit,
-            total=first_page.total,
-            offset=first_page.offset,
-            desc=first_page.desc,
-        )
+        Simple `list` call does only one API call, possibly not listing all items matching the criteria. This method
+        returns an interator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        Args:
+            my: If True, will return only Actors which the user has created themselves.
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            desc: Whether to sort the Actors in descending order based on their creation date.
+            sort_by: Field to sort the results by.
+            timeout: Timeout for the API HTTP request.
+
+        Returns:
+            The iterator of available Actors matching the specified filters.
+        """
+        def callback(limit=limit, offset=offset) ->ListOfActors:
+            return self.list(timeout=timeout, my=my, desc=desc, sort_by=sort_by,limit=limit, offset=offset)
+        return get_items_iterator(callback, limit=limit, offset=offset)
 
     def create(
         self,
@@ -228,7 +227,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(
+    async def list(
         self,
         *,
         my: bool | None = None,
@@ -237,11 +236,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
         timeout: Timeout = 'medium',
-    ) -> IterablePageOfActorsAsync:
+    ) -> ListOfActors:
         """List the Actors the user has created or used.
-
-        The returned page also supports iteration: `async for item in client.list(...)` yields individual Actors
-        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
@@ -257,28 +253,16 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             The list of available Actors matching the specified filters.
         """
         api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
+        result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=api_sort_by)
+        return ListOfActorsResponse.model_validate(result).data
 
-        async def _callback(**kwargs: Any) -> PageOfItems[ActorShort]:
-            result = await self._list(timeout=timeout, my=my, sortBy=api_sort_by, **kwargs)
-            data = ListOfActorsResponse.model_validate(result).data
-            return PageOfItems(
-                items=data.items,
-                count=data.count,
-                limit=data.limit,
-                total=data.total,
-                offset=data.offset,
-                desc=data.desc,
-            )
+    async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[ActorShort]:
+        """Iterate over the available Actor environment variables.
 
-        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
-        get_async_iterator = build_get_iterator_async(
-            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
-        )
-
-        return IterablePageOfActorsAsync(
-            _awaitable_first_page=fetch_first_page,
-            _get_async_iterator=get_async_iterator,
-        )
+        There is no possibility to control the pagination on this endpoint.
+        """
+        for item in (await self.list(timeout=timeout)).items:
+            yield item
 
     async def create(
         self,

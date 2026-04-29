@@ -46,6 +46,51 @@ class _LazyTask(Generic[T]):
         return (yield from self._task.__await__())
 
 
+def get_items_iterator(
+    callback: Callable[..., HasItems[T]],
+    limit: int | None = None,
+    offset: int | None = None,
+    chunk_size: int | None = None,
+) -> Iterator[T]:
+    """Yield individual items from paginated API responses.
+
+    The callback is invoked to lazy fetch items from API.
+
+    There are several optional kwargs that control the pagination, but not all are accepted on each paginated endpoint.
+    Some endpoints do not return all paginated metadata, so the implementation should be resilient to missing fields,
+    but it can use them if available.
+
+    The `total` field from the first page is not trusted for stopping iteration because it may change between calls;
+    iteration stops when a page has no items or when the user-requested `limit` has been reached.
+
+    The `count` field does not count objects returned, but objects scanned by the API. For example when using filters,
+    returned items can be smaller than `count`. Therefore, `count` should be used for correct offset calculation if
+    available.
+
+    Iteration relevant kwargs:
+        chunk_size: Maximum number of items requested per API call during iteration. Pass `0`
+            or `None` to let the API decide (effectively infinity).
+        limit: User-requested total item limit. Stops iteration once this many items are yielded.
+        offset: Starting offset for the first page.
+        **other: Passed through to the callback unchanged.
+    """
+    chunk_size = chunk_size or 0
+    initial_offset = offset or 0
+    limit = limit or 0
+    fetched_items = 0
+
+    while True:
+        current_page = callback(
+            limit=chunk_size if not limit else _min_for_limit_param(limit - fetched_items, chunk_size),
+            offset=initial_offset + fetched_items
+        )
+        yield from current_page.items
+        fetched_items += getattr(current_page, 'count', len(current_page.items))
+
+        if not current_page.items or (limit and fetched_items >= limit):
+            break
+
+
 def build_get_iterator(
     callback: Callable[..., HasItems[T]],
     first_page: HasItems[T],

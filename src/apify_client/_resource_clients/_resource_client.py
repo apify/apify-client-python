@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from pydantic import BaseModel
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, TERMINAL_STATUSES
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
 from apify_client._models import ActorJobResponse
+from apify_client._pagination import HasItems, _min_for_limit_param
 from apify_client._utils import (
     catch_not_found_for_resource_or_throw,
     catch_not_found_or_throw,
@@ -24,6 +28,9 @@ if TYPE_CHECKING:
     from apify_client._http_clients import HttpClient, HttpClientAsync
     from apify_client._types import Timeout
 
+
+ResponseModelT = TypeVar('ResponseModelT', bound=BaseModel)
+T = TypeVar('T')
 
 class ResourceClientBase(metaclass=WithLogDetailsClient):
     """Base class with shared implementation for sync and async resource clients.
@@ -253,6 +260,30 @@ class ResourceClient(ResourceClientBase):
             timeout=timeout,
         )
         return response_to_dict(response)
+
+    def _iterate(self, *, callback: Callable[...,HasItems[T]], **kwargs: Any) -> Iterator[T]:
+        """Return iterator over items that can be fetched through callback - list method."""
+        chunk_size = kwargs.pop('chunk_size', 0) or 0
+        offset = kwargs.get('offset') or 0
+        limit = kwargs.get('limit') or 0
+        fetched_items = 0
+        items = []
+
+        while True:
+            new_kwargs = {
+                **kwargs,
+                'offset': offset + fetched_items,
+                'limit': chunk_size if not limit else _min_for_limit_param(limit - fetched_items, chunk_size),
+            }
+            current_page = callback(**new_kwargs)
+            yield from current_page.items
+            fetched_items += getattr(current_page, 'count', len(current_page.items))
+            items = current_page.items
+
+            if not items or (limit and fetched_items >= limit):
+                break
+
+
 
     def _create(self, *, timeout: Timeout, **kwargs: Any) -> dict:
         """Perform a POST request to create a resource."""

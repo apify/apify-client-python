@@ -386,32 +386,34 @@ DATASET_CLIENTS = {'DatasetClient'}
 RQ_CLIENTS = {'RequestQueueClient'}
 KVS_CLIENTS = {'KeyValueStoreClient'}
 STORAGE_CLIENTS = DATASET_CLIENTS | RQ_CLIENTS | KVS_CLIENTS
-ALL_CLIENTS = COLLECTION_CLIENTS | NO_OPTIONS_CLIENTS | STORAGE_CLIENTS
+OPTIONS_CLIENTS = COLLECTION_CLIENTS | STORAGE_CLIENTS
 
 TEST_CASES = (
-    _PaginationCase('No options', {}, create_items(0, 2500), ALL_CLIENTS),
-    _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), ALL_CLIENTS - NO_OPTIONS_CLIENTS),
-    _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), ALL_CLIENTS - NO_OPTIONS_CLIENTS),
+    _PaginationCase('No options normal', {}, create_items(0, 2500), OPTIONS_CLIENTS),
+    # These clients can't iterate over all items if there is more of them than API limit as they offer no pagination parameters.
+    _PaginationCase('No options limited', {}, create_items(0, 1000), NO_OPTIONS_CLIENTS),
+    _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), OPTIONS_CLIENTS),
+    _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), OPTIONS_CLIENTS),
     _PaginationCase(
         'Offset',
         {'offset': 1000},
         create_items(1000, 2500),
-        ALL_CLIENTS - NO_OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS,
+        OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS,
     ),
     _PaginationCase(
         'Offset and limit',
         {'offset': 1000, 'limit': 1100},
         create_items(1000, 2100),
-        ALL_CLIENTS - NO_OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS,
+        OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS,
     ),
     _PaginationCase(
-        'Out of range offset', {'offset': 3000}, [], ALL_CLIENTS - NO_OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS
+        'Out of range offset', {'offset': 3000}, [], OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS
     ),
     _PaginationCase(
         'Offset, limit, descending',
         {'offset': 1000, 'limit': 1100, 'desc': True},
         create_items(1500, 400),
-        ALL_CLIENTS - NO_OPTIONS_CLIENTS - {'StoreCollectionClient'} - KVS_CLIENTS - RQ_CLIENTS,
+        OPTIONS_CLIENTS - {'StoreCollectionClient'} - KVS_CLIENTS - RQ_CLIENTS,
     ),
     _PaginationCase(
         'Offset, limit, descending, unnamed',
@@ -494,12 +496,8 @@ def test_client_list_iterable(
 ) -> None:
     """Every sync collection client's `list()` return value should iterate across pages."""
     client: CollectionClient = _CLIENT_FACTORIES[client_name](_make_sync_client(pagination_server))
-    returned_items = list(client.list(**inputs))
-
-    if inputs == {}:
-        list_response = client.list(**inputs)
-        assert len(returned_items) == list_response.total
-
+    returned_items = list(client.iterate(**inputs))
+    assert len(returned_items) == len(expected_items)
     assert returned_items == expected_items
 
 
@@ -515,12 +513,7 @@ async def test_client_list_iterable_async(
 ) -> None:
     """Every async collection client's `list()` return value should iterate across pages."""
     client: CollectionClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
-    returned_items = [item async for item in client.list(**inputs)]
-
-    if inputs == {}:
-        list_response = await client.list(**inputs)
-        assert len(returned_items) == list_response.total
-
+    returned_items = [item async for item in client.iterate(**inputs)]
     assert returned_items == expected_items
 
 

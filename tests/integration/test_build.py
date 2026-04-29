@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._models_generated import BuildShort
-from apify_client._pagination_classes import PageOfItems
-
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Actor, Build
+    from apify_client._models_generated import Actor, Build, ListOfBuilds
 
 
 from datetime import timedelta
@@ -24,12 +21,14 @@ async def test_build_list_for_actor(client: ApifyClient | ApifyClientAsync) -> N
     """Test listing builds for a public Actor."""
     # Get builds for hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=10))
+    result = await maybe_await(actor.builds().list(limit=10))
+    builds_page = cast('ListOfBuilds', result)
 
-    assert isinstance(builds_page, PageOfItems)
-    assert isinstance(builds_page.items, list)
-    assert isinstance(builds_page.items[0], BuildShort)  # hello-world has at least one build
+    assert builds_page is not None
+    assert builds_page.items is not None
+    assert len(builds_page.items) > 0  # hello-world should have at least one build
 
+    # Verify build structure
     first_build = builds_page.items[0]
     assert first_build.id is not None
     assert first_build.act_id is not None
@@ -39,11 +38,9 @@ async def test_build_get(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting a specific build."""
     # First list builds to get a build ID
     actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=1))
-
-    assert isinstance(builds_page, PageOfItems)
-    assert isinstance(builds_page.items, list)
-    assert isinstance(builds_page.items[0], BuildShort)
+    result = await maybe_await(actor.builds().list(limit=1))
+    builds_page = cast('ListOfBuilds', result)
+    assert builds_page.items
     build_id = builds_page.items[0].id
 
     # Get the specific build
@@ -59,24 +56,22 @@ async def test_build_get(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_user_builds_list(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing all user builds."""
     # List user's builds (may be empty if user has no actors)
-    builds_page = await maybe_await(client.builds().list(limit=10))
+    result = await maybe_await(client.builds().list(limit=10))
+    builds_page = cast('ListOfBuilds', result)
 
-    assert isinstance(builds_page, PageOfItems)
+    assert builds_page is not None
+    assert builds_page.items is not None
+    # User may have 0 builds, so we just check the structure
     assert isinstance(builds_page.items, list)
-    # User may have 0 builds — only check element type when any were returned.
-    if builds_page.items:
-        assert isinstance(builds_page.items[0], BuildShort)
 
 
 async def test_build_log(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting build log."""
     # First list builds to get a completed build ID
     actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=5))
-
-    assert isinstance(builds_page, PageOfItems)
-    assert isinstance(builds_page.items, list)
-    assert isinstance(builds_page.items[0], BuildShort)
+    result = await maybe_await(actor.builds().list(limit=5))
+    builds_page = cast('ListOfBuilds', result)
+    assert builds_page.items
 
     # Find a completed build (SUCCEEDED status)
     completed_build = None
@@ -101,11 +96,9 @@ async def test_build_wait_for_finish(client: ApifyClient | ApifyClientAsync) -> 
     """Test wait_for_finish on an already completed build."""
     # First list builds to get a completed build ID
     actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=5))
-
-    assert isinstance(builds_page, PageOfItems)
-    assert isinstance(builds_page.items, list)
-    assert isinstance(builds_page.items[0], BuildShort)
+    result = await maybe_await(actor.builds().list(limit=5))
+    builds_page = cast('ListOfBuilds', result)
+    assert builds_page.items
 
     # Find a completed build (SUCCEEDED status)
     completed_build = None
@@ -215,11 +208,9 @@ async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAs
     """Test getting OpenAPI definition for a build."""
     # Get builds for hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=1))
-
-    assert isinstance(builds_page, PageOfItems)
-    assert isinstance(builds_page.items, list)
-    assert isinstance(builds_page.items[0], BuildShort)
+    result = await maybe_await(actor.builds().list(limit=1))
+    builds_page = cast('ListOfBuilds', result)
+    assert builds_page.items
     build_id = builds_page.items[0].id
 
     # Get the OpenAPI definition

@@ -13,5 +13,5 @@ async def main() -> None:
 
     # Iterate through items automatically, lazily sending as many API calls
     # as needed and receiving items in chunks.
-    async for item in dataset_client.list_items(limit=limit, offset=offset):
+    async for item in dataset_client.iterate_items(limit=limit, offset=offset):
         print(item)  # Process the item as needed

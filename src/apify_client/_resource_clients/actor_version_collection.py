@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any
 
 from pydantic import TypeAdapter
@@ -20,6 +19,8 @@ from apify_client._models_generated import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._types import Timeout
 
 

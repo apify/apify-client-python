@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
@@ -8,6 +7,8 @@ from apify_client._models_generated import EnvVar, EnvVarResponse, ListOfEnvVars
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._types import Timeout
 
 
@@ -43,7 +44,6 @@ class ActorEnvVarCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout)
         return ListOfEnvVarsResponse.model_validate(result).data
-
 
     def iterate(self, *, timeout: Timeout = 'short') -> Iterator[EnvVar]:
         """Iterate over the available Actor environment variables.

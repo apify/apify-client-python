@@ -390,7 +390,8 @@ OPTIONS_CLIENTS = COLLECTION_CLIENTS | STORAGE_CLIENTS
 
 TEST_CASES = (
     _PaginationCase('No options normal', {}, create_items(0, 2500), OPTIONS_CLIENTS),
-    # These clients can't iterate over all items if there is more of them than API limit as they offer no pagination parameters.
+    # These clients can't iterate over all items if there is more of them than the API limit as they offer no
+    # pagination parameters.
     _PaginationCase('No options limited', {}, create_items(0, 1000), NO_OPTIONS_CLIENTS),
     _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), OPTIONS_CLIENTS),
     _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), OPTIONS_CLIENTS),
@@ -406,9 +407,7 @@ TEST_CASES = (
         create_items(1000, 2100),
         OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS,
     ),
-    _PaginationCase(
-        'Out of range offset', {'offset': 3000}, [], OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS
-    ),
+    _PaginationCase('Out of range offset', {'offset': 3000}, [], OPTIONS_CLIENTS - KVS_CLIENTS - RQ_CLIENTS),
     _PaginationCase(
         'Offset, limit, descending',
         {'offset': 1000, 'limit': 1100, 'desc': True},
@@ -527,19 +526,15 @@ def test_dataset_items_list_iterable(
     inputs: dict,
     expected_items: list[dict[str, int]],
 ) -> None:
-    """The sync dataset client's `list_items()` return value should iterate across pages."""
+    """The sync dataset client's `iterate_items()` should iterate across pages."""
     client: DatasetClient = _CLIENT_FACTORIES[client_name](_make_sync_client(pagination_server))
-    returned_items = list(client.list_items(**inputs))
+    returned_items = list(client.iterate_items(**inputs))
 
     if inputs == {}:
         list_response = client.list_items(**inputs)
         assert len(returned_items) == list_response.total
 
     assert returned_items == expected_items
-
-    # Until the deprecated `iterate_items` method is removed, it should behave the same
-    inputs_without_chunk_size = {k: v for k, v in inputs.items() if k != 'chunk_size'}
-    assert returned_items == list(client.iterate_items(**inputs_without_chunk_size))
 
 
 @pytest.mark.parametrize(
@@ -552,19 +547,15 @@ async def test_dataset_items_list_iterable_async(
     inputs: dict,
     expected_items: list[dict[str, int]],
 ) -> None:
-    """The async dataset client's `list_items()` return value should iterate across pages."""
+    """The async dataset client's `iterate_items()` should iterate across pages."""
     client: DatasetClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
-    returned_items = [item async for item in client.list_items(**inputs)]
+    returned_items = [item async for item in client.iterate_items(**inputs)]
 
     if inputs == {}:
         list_response = await client.list_items(**inputs)
         assert len(returned_items) == list_response.total
 
     assert returned_items == expected_items
-
-    # Until the deprecated `iterate_items` method is removed, it should behave the same
-    inputs_without_chunk_size = {k: v for k, v in inputs.items() if k != 'chunk_size'}
-    assert returned_items == [item async for item in client.iterate_items(**inputs_without_chunk_size)]
 
 
 @pytest.mark.parametrize(
@@ -577,14 +568,11 @@ def test_kvs_list_keys_iterable(
     inputs: dict,
     expected_items: list[dict[str, int]],
 ) -> None:
-    """The sync KVS client's `list_keys()` return value should iterate across cursor-paginated pages."""
+    """The sync KVS client's `iterate_keys()` should iterate across cursor-paginated pages."""
     client: KeyValueStoreClient = _CLIENT_FACTORIES[client_name](_make_sync_client(pagination_server))
-    returned_items = [dict(item) for item in client.list_keys(**inputs)]
+    returned_items = [dict(item) for item in client.iterate_keys(**inputs)]
 
     assert returned_items == expected_items
-
-    # Until the deprecated `iterate_keys` method is removed, it should behave the same
-    assert returned_items == [dict(item) for item in client.iterate_keys(**inputs)]
 
 
 @pytest.mark.parametrize(
@@ -597,14 +585,11 @@ async def test_kvs_list_keys_iterable_async(
     inputs: dict,
     expected_items: list[dict[str, int]],
 ) -> None:
-    """The async KVS client's `list_keys()` return value should iterate across cursor-paginated pages."""
+    """The async KVS client's `iterate_keys()` should iterate across cursor-paginated pages."""
     client: KeyValueStoreClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
-    returned_items = [dict(item) async for item in client.list_keys(**inputs)]
+    returned_items = [dict(item) async for item in client.iterate_keys(**inputs)]
 
     assert returned_items == expected_items
-
-    # Until the deprecated `iterate_keys` method is removed, it should behave the same
-    assert returned_items == [dict(item) async for item in client.iterate_keys(**inputs)]
 
 
 @pytest.mark.parametrize(
@@ -617,9 +602,9 @@ def test_rq_list_requests_iterable(
     inputs: dict,
     expected_items: list[dict[str, int]],
 ) -> None:
-    """The sync RQ client's `list_requests()` return value should iterate across cursor-paginated pages."""
+    """The sync RQ client's `iterate_requests()` should iterate across cursor-paginated pages."""
     client: RequestQueueClient = _CLIENT_FACTORIES[client_name](_make_sync_client(pagination_server))
-    returned_items = [dict(item) for item in client.list_requests(**inputs)]
+    returned_items = [dict(item) for item in client.iterate_requests(**inputs)]
     assert returned_items == expected_items
 
 
@@ -633,9 +618,9 @@ async def test_rq_list_requests_iterable_async(
     inputs: dict,
     expected_items: list[dict[str, int]],
 ) -> None:
-    """The async RQ client's `list_requests()` return value should iterate across cursor-paginated pages."""
+    """The async RQ client's `iterate_requests()` should iterate across cursor-paginated pages."""
     client: RequestQueueClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
-    returned_items = [dict(item) async for item in client.list_requests(**inputs)]
+    returned_items = [dict(item) async for item in client.iterate_requests(**inputs)]
     assert returned_items == expected_items
 
 
@@ -650,4 +635,4 @@ async def test_rq_list_requests_rejects_cursor_and_exclusive_start_id_async() ->
     """Async variant of the mutual-exclusion check."""
     client = ApifyClientAsync(token='').request_queue(ID_PLACEHOLDER)
     with pytest.raises(ValueError, match='Cannot use both'):
-        client.list_requests(cursor='a', exclusive_start_id='b')
+        await client.list_requests(cursor='a', exclusive_start_id='b')

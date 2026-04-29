@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._models_generated import EnvVar
-from apify_client._pagination_classes import PageOfItemsOnlyTotal
-
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Actor
+    from apify_client._models_generated import Actor, EnvVar, ListOfEnvVars
 
 
 from ._utils import get_random_resource_name, maybe_await
@@ -52,10 +49,11 @@ async def test_actor_env_var_list(client: ApifyClient | ApifyClientAsync) -> Non
 
     try:
         # List env vars
-        env_vars = await maybe_await(version_client.env_vars().list())
-        assert isinstance(env_vars, PageOfItemsOnlyTotal)
-        assert isinstance(env_vars.items, list)
-        assert isinstance(env_vars.items[0], EnvVar)
+        result = await maybe_await(version_client.env_vars().list())
+        env_vars = cast('ListOfEnvVars', result)
+
+        assert env_vars is not None
+        assert env_vars.items is not None
         assert len(env_vars.items) >= 1
 
         # Verify env var fields

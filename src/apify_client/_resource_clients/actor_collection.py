@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
@@ -14,13 +13,12 @@ from apify_client._models_generated import (
     ListOfActors,
     ListOfActorsResponse,
 )
-from apify_client._pagination import (
-    get_items_iterator,
-)
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
     from apify_client._models_generated import ActorShort
@@ -80,20 +78,22 @@ class ActorCollectionClient(ResourceClient):
         result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=api_sort_by)
         return ListOfActorsResponse.model_validate(result).data
 
-    def iterate(self, *,
-                my: bool | None = None,
-                limit: int | None = None,
-                offset: int | None = None,
-                desc: bool | None = None,
-                sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
-                timeout: Timeout = 'medium'
-                ) -> Iterator[ActorShort]:
+    def iterate(
+        self,
+        *,
+        my: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
+        timeout: Timeout = 'medium',
+    ) -> Iterator[ActorShort]:
         """Iterate over the Actors the user has created or used.
 
-        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
 
-        Simple `list` call does only one API call, possibly not listing all items matching the criteria. This method
-        returns an interator that is capable of making multiple API calls to retrieve all items matching the criteria.
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
 
         Args:
             my: If True, will return only Actors which the user has created themselves.
@@ -103,12 +103,14 @@ class ActorCollectionClient(ResourceClient):
             sort_by: Field to sort the results by.
             timeout: Timeout for the API HTTP request.
 
-        Returns:
-            The iterator of available Actors matching the specified filters.
+        Yields:
+            The Actors available to the user matching the specified filters.
         """
-        def callback(limit=limit, offset=offset) ->ListOfActors:
-            return self.list(timeout=timeout, my=my, desc=desc, sort_by=sort_by,limit=limit, offset=offset)
-        return get_items_iterator(callback, limit=limit, offset=offset)
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfActors:
+            return self.list(my=my, limit=limit, offset=offset, desc=desc, sort_by=sort_by, timeout=timeout)
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def create(
         self,
@@ -256,13 +258,39 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=api_sort_by)
         return ListOfActorsResponse.model_validate(result).data
 
-    async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[ActorShort]:
-        """Iterate over the available Actor environment variables.
+    def iterate(
+        self,
+        *,
+        my: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[ActorShort]:
+        """Iterate over the Actors the user has created or used.
 
-        There is no possibility to control the pagination on this endpoint.
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
+
+        Args:
+            my: If True, will return only Actors which the user has created themselves.
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            desc: Whether to sort the Actors in descending order based on their creation date.
+            sort_by: Field to sort the results by.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The Actors available to the user matching the specified filters.
         """
-        for item in (await self.list(timeout=timeout)).items:
-            yield item
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfActors:
+            return await self.list(my=my, limit=limit, offset=offset, desc=desc, sort_by=sort_by, timeout=timeout)
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def create(
         self,

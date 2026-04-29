@@ -2,24 +2,13 @@ from __future__ import annotations
 
 import warnings
 from contextlib import asynccontextmanager, contextmanager
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
-from pydantic import BaseModel
-
 from apify_client._docs import docs_group
 from apify_client._models_generated import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
-from apify_client._pagination import (
-    _LazyTask,
-    _min_for_limit_param,
-    build_get_iterator,
-    build_get_iterator_async,
-)
-from apify_client._pagination_classes import (
-    IterablePageOfDatasetItems,
-    IterablePageOfDatasetItemsAsync,
-    PageOfDatasetItems,
-)
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     create_storage_content_signature,
@@ -37,7 +26,8 @@ if TYPE_CHECKING:
 
 
 @docs_group('Other')
-class DatasetItemsPage(BaseModel):
+@dataclass
+class DatasetItemsPage:
     """A page of dataset items returned by the `list_items` method.
 
     Dataset items are arbitrary JSON objects stored in the dataset, so they cannot be
@@ -62,6 +52,139 @@ class DatasetItemsPage(BaseModel):
 
     desc: bool
     """Whether the items are sorted in descending order."""
+
+
+@dataclass
+class _DatasetItemsScannedPage:
+    """Internal page used during iteration, where ``count`` reflects the number of items scanned by the API.
+
+    The Apify API's ``x-apify-pagination-count`` header counts items the API scanned, which can exceed the number
+    of items actually returned when filters such as ``clean``/``skip_empty``/``skip_hidden`` drop items. The
+    pagination helper relies on this scanned count to advance the offset correctly.
+    """
+
+    items: list[dict[str, Any]]
+    count: int
+
+
+def _build_dataset_items_params(
+    client: DatasetClient | DatasetClientAsync,
+    *,
+    offset: int | None,
+    limit: int | None,
+    clean: bool | None,
+    desc: bool | None,
+    fields: list[str] | None,
+    omit: list[str] | None,
+    unwind: list[str] | None,
+    skip_empty: bool | None,
+    skip_hidden: bool | None,
+    signature: str | None,
+) -> dict[str, Any]:
+    return client._build_params(  # noqa: SLF001
+        offset=offset,
+        limit=limit,
+        desc=desc,
+        clean=clean,
+        fields=fields,
+        omit=omit,
+        unwind=unwind,
+        skipEmpty=skip_empty,
+        skipHidden=skip_hidden,
+        signature=signature,
+    )
+
+
+def _build_dataset_items_page(response: HttpResponse) -> DatasetItemsPage:
+    items = response_to_list(response)
+    return DatasetItemsPage(
+        items=items,
+        total=int(response.headers['x-apify-pagination-total']),
+        offset=int(response.headers['x-apify-pagination-offset']),
+        count=len(items),
+        limit=int(response.headers['x-apify-pagination-limit']),
+        desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
+    )
+
+
+def _build_scanned_page(response: HttpResponse) -> _DatasetItemsScannedPage:
+    items = response_to_list(response)
+    scanned = max(int(response.headers['x-apify-pagination-count']), len(items))
+    return _DatasetItemsScannedPage(items=items, count=scanned)
+
+
+def _fetch_dataset_items_page(
+    client: DatasetClient,
+    *,
+    offset: int | None,
+    limit: int | None,
+    clean: bool | None,
+    desc: bool | None,
+    fields: list[str] | None,
+    omit: list[str] | None,
+    unwind: list[str] | None,
+    skip_empty: bool | None,
+    skip_hidden: bool | None,
+    signature: str | None,
+    timeout: Timeout,
+) -> _DatasetItemsScannedPage:
+    request_params = _build_dataset_items_params(
+        client,
+        offset=offset,
+        limit=limit,
+        clean=clean,
+        desc=desc,
+        fields=fields,
+        omit=omit,
+        unwind=unwind,
+        skip_empty=skip_empty,
+        skip_hidden=skip_hidden,
+        signature=signature,
+    )
+    response = client._http_client.call(  # noqa: SLF001
+        url=client._build_url('items'),  # noqa: SLF001
+        method='GET',
+        params=request_params,
+        timeout=timeout,
+    )
+    return _build_scanned_page(response)
+
+
+async def _fetch_dataset_items_page_async(
+    client: DatasetClientAsync,
+    *,
+    offset: int | None,
+    limit: int | None,
+    clean: bool | None,
+    desc: bool | None,
+    fields: list[str] | None,
+    omit: list[str] | None,
+    unwind: list[str] | None,
+    skip_empty: bool | None,
+    skip_hidden: bool | None,
+    signature: str | None,
+    timeout: Timeout,
+) -> _DatasetItemsScannedPage:
+    request_params = _build_dataset_items_params(
+        client,
+        offset=offset,
+        limit=limit,
+        clean=clean,
+        desc=desc,
+        fields=fields,
+        omit=omit,
+        unwind=unwind,
+        skip_empty=skip_empty,
+        skip_hidden=skip_hidden,
+        signature=signature,
+    )
+    response = await client._http_client.call(  # noqa: SLF001
+        url=client._build_url('items'),  # noqa: SLF001
+        method='GET',
+        params=request_params,
+        timeout=timeout,
+    )
+    return _build_scanned_page(response)
 
 
 @docs_group('Resource clients')
@@ -152,13 +275,9 @@ class DatasetClient(ResourceClient):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
-        chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterablePageOfDatasetItems:
+    ) -> DatasetItemsPage:
         """List the items of the dataset.
-
-        The returned page also supports iteration: `for item in client.list_items(...)` yields individual
-        items and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -189,70 +308,51 @@ class DatasetClient(ResourceClient):
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of items requested per API call when iterating. Only relevant when
-                iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
         """
+        request_params = self._build_params(
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
+            signature=signature,
+        )
 
-        def _fetch_page(**kwargs: Any) -> PageOfDatasetItems:
-            request_params = self._build_params(
-                desc=desc,
-                clean=clean,
-                fields=fields,
-                omit=omit,
-                unwind=unwind,
-                skipEmpty=skip_empty,
-                skipHidden=skip_hidden,
-                flatten=flatten,
-                view=view,
-                signature=signature,
-                **kwargs,
-            )
+        response = self._http_client.call(
+            url=self._build_url('items'),
+            method='GET',
+            params=request_params,
+            timeout=timeout,
+        )
 
-            response = self._http_client.call(
-                url=self._build_url('items'),
-                method='GET',
-                params=request_params,
-                timeout=timeout,
-            )
+        # When using signature, API returns items as list directly
+        items = response_to_list(response)
 
-            # When using signature, API returns items as list directly
-            items = response_to_list(response)
-
-            # When using signature, API returns items as list directly
-
-            return PageOfDatasetItems(
-                items=items,
-                total=int(response.headers['x-apify-pagination-total']),
-                offset=int(response.headers['x-apify-pagination-offset']),
-                # x-apify-pagination-count returns count of processed items, not count of returned items
-                # This makes difference when items were filtered using hidden/empty
-                count=max(int(response.headers['x-apify-pagination-count']), len(items)),
-                # API returns 999999999999 when no limit is used
-                limit=int(response.headers['x-apify-pagination-limit']),
-                desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
-            )
-
-        first_page = _fetch_page(offset=offset, limit=_min_for_limit_param(limit, chunk_size))
-        get_iterator = build_get_iterator(_fetch_page, first_page, offset=offset, limit=limit, chunk_size=chunk_size)
-
-        return IterablePageOfDatasetItems(
-            _get_iterator=get_iterator,
-            items=first_page.items,
-            total=first_page.total,
-            offset=first_page.offset,
-            count=first_page.count,
-            limit=first_page.limit,
-            desc=first_page.desc,
+        return DatasetItemsPage(
+            items=items,
+            total=int(response.headers['x-apify-pagination-total']),
+            offset=int(response.headers['x-apify-pagination-offset']),
+            # x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+            count=len(items),
+            # API returns 999999999999 when no limit is used
+            limit=int(response.headers['x-apify-pagination-limit']),
+            desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
         )
 
     def iterate_items(
         self,
         *,
-        offset: int = 0,
+        offset: int | None = None,
         limit: int | None = None,
         clean: bool | None = None,
         desc: bool | None = None,
@@ -262,11 +362,13 @@ class DatasetClient(ResourceClient):
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         signature: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> Iterator[dict[str, Any]]:
+    ) -> Iterator[dict]:
         """Iterate over the items in the dataset.
 
-        Deprecated: iterate the return value of `DatasetClient.list_items()` instead.
+        Simple `list_items` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -295,31 +397,31 @@ class DatasetClient(ResourceClient):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of items requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
             An item from the dataset.
         """
-        warnings.warn(
-            '`DatasetClient.iterate_items()` is deprecated, iterate the return value of '
-            '`DatasetClient.list_items()` instead.',
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        yield from self.list_items(
-            offset=offset,
-            limit=limit,
-            clean=clean,
-            desc=desc,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_hidden=skip_hidden,
-            signature=signature,
-            chunk_size=1000,
-            timeout=timeout,
-        )
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> _DatasetItemsScannedPage:
+            return _fetch_dataset_items_page(
+                self,
+                offset=offset,
+                limit=limit,
+                clean=clean,
+                desc=desc,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+                signature=signature,
+                timeout=timeout,
+            )
+
+        # Default chunk size of 1000 keeps backwards compatibility with the previous fixed cache size.
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size or 1000)
 
     def download_items(
         self,
@@ -821,7 +923,7 @@ class DatasetClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    def list_items(
+    async def list_items(
         self,
         *,
         offset: int | None = None,
@@ -836,13 +938,9 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: list[str] | None = None,
         view: str | None = None,
         signature: str | None = None,
-        chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> IterablePageOfDatasetItemsAsync:
+    ) -> DatasetItemsPage:
         """List the items of the dataset.
-
-        The returned page also supports iteration: `async for item in client.list_items(...)` yields individual
-        items and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -873,70 +971,51 @@ class DatasetClientAsync(ResourceClientAsync):
             flatten: A list of fields that should be flattened.
             view: Name of the dataset view to be used.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of items requested per API call when iterating. Only relevant when
-                iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             A page of the list of dataset items according to the specified filters.
         """
-
-        async def _fetch_page(
-            *,
-            offset: int | None = None,
-            limit: int | None = None,
-        ) -> PageOfDatasetItems:
-            request_params = self._build_params(
-                offset=offset,
-                limit=limit,
-                desc=desc,
-                clean=clean,
-                fields=fields,
-                omit=omit,
-                unwind=unwind,
-                skipEmpty=skip_empty,
-                skipHidden=skip_hidden,
-                flatten=flatten,
-                view=view,
-                signature=signature,
-            )
-
-            response = await self._http_client.call(
-                url=self._build_url('items'),
-                method='GET',
-                params=request_params,
-                timeout=timeout,
-            )
-
-            # When using signature, API returns items as list directly
-            items = response_to_list(response)
-
-            return PageOfDatasetItems(
-                items=items,
-                total=int(response.headers['x-apify-pagination-total']),
-                offset=int(response.headers['x-apify-pagination-offset']),
-                # x-apify-pagination-count returns count of processed items, not count of returned items
-                # This makes difference when items were filtered using hidden/empty
-                count=max(int(response.headers['x-apify-pagination-count']), len(items)),
-                # API returns 999999999999 when no limit is used
-                limit=int(response.headers['x-apify-pagination-limit']),
-                desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
-            )
-
-        fetch_first_page = _LazyTask(_fetch_page(offset=offset, limit=limit))
-        get_async_iterator = build_get_iterator_async(
-            _fetch_page, fetch_first_page, offset=offset, limit=limit, chunk_size=chunk_size
+        request_params = self._build_params(
+            offset=offset,
+            limit=limit,
+            desc=desc,
+            clean=clean,
+            fields=fields,
+            omit=omit,
+            unwind=unwind,
+            skipEmpty=skip_empty,
+            skipHidden=skip_hidden,
+            flatten=flatten,
+            view=view,
+            signature=signature,
         )
 
-        return IterablePageOfDatasetItemsAsync(
-            _awaitable_first_page=fetch_first_page,
-            _get_async_iterator=get_async_iterator,
+        response = await self._http_client.call(
+            url=self._build_url('items'),
+            method='GET',
+            params=request_params,
+            timeout=timeout,
         )
 
-    async def iterate_items(
+        # When using signature, API returns items as list directly
+        items = response_to_list(response)
+
+        return DatasetItemsPage(
+            items=items,
+            total=int(response.headers['x-apify-pagination-total']),
+            offset=int(response.headers['x-apify-pagination-offset']),
+            # x-apify-pagination-count returns invalid values when hidden/empty items are skipped
+            count=len(items),
+            # API returns 999999999999 when no limit is used
+            limit=int(response.headers['x-apify-pagination-limit']),
+            desc=response.headers['x-apify-pagination-desc'].lower() == 'true',
+        )
+
+    def iterate_items(
         self,
         *,
-        offset: int = 0,
+        offset: int | None = None,
         limit: int | None = None,
         clean: bool | None = None,
         desc: bool | None = None,
@@ -946,11 +1025,13 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
         signature: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'long',
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncIterator[dict]:
         """Iterate over the items in the dataset.
 
-        Deprecated: iterate the return value of `DatasetClientAsync.list_items()` instead.
+        Simple `list_items` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -979,32 +1060,30 @@ class DatasetClientAsync(ResourceClientAsync):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of items requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
             An item from the dataset.
         """
-        warnings.warn(
-            '`DatasetClientAsync.iterate_items()` is deprecated, iterate the return value of '
-            '`DatasetClientAsync.list_items()` instead.',
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        async for item in self.list_items(
-            offset=offset,
-            limit=limit,
-            clean=clean,
-            desc=desc,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_hidden=skip_hidden,
-            signature=signature,
-            chunk_size=1000,
-            timeout=timeout,
-        ):
-            yield item
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> _DatasetItemsScannedPage:
+            return await _fetch_dataset_items_page_async(
+                self,
+                offset=offset,
+                limit=limit,
+                clean=clean,
+                desc=desc,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+                signature=signature,
+                timeout=timeout,
+            )
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size or 1000)
 
     async def get_items_as_bytes(
         self,

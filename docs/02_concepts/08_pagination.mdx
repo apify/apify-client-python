@@ -45,7 +45,10 @@ The <ApiLink to="class/ListPage">`ListPage`</ApiLink> interface offers several k
 
 ## Generator-based iteration
 
-You can also use the `list` methods directly in iteration. It handles pagination automatically, fetching items in batches behind the scenes so you don't need to manage offsets or limits yourself.
+For collection clients, the `iterate` method returns an iterator that lazily fetches as many pages as needed
+to retrieve every item matching the filters. For dataset, key-value store and request queue clients, the
+matching helpers are `iterate_items`, `iterate_keys` and `iterate_requests`. They handle pagination
+automatically, so you don't need to manage offsets, limits or cursors yourself.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -59,5 +62,3 @@ You can also use the `list` methods directly in iteration. It handles pagination
         </CodeBlock>
     </TabItem>
 </Tabs>
-
-Similarly, you can iterate over the return value of `KeyValueStoreClient.list_keys()` to go through all keys in a key-value store without manual pagination. The older `iterate_keys()` method is deprecated.

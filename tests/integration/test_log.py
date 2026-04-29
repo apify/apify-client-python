@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from apify_client._models_generated import BuildShort
-from apify_client._pagination_classes import PageOfItems
-
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Run
+    from apify_client._models_generated import ListOfBuilds, Run
 
 
 from ._utils import maybe_await
@@ -42,11 +39,9 @@ async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync) -> Non
     """Test retrieving log from a build."""
     # Get a build from hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    builds_page = await maybe_await(actor.builds().list(limit=1))
-
-    assert isinstance(builds_page, PageOfItems)
-    assert isinstance(builds_page.items, list)
-    assert isinstance(builds_page.items[0], BuildShort)
+    result = await maybe_await(actor.builds().list(limit=1))
+    builds_page = cast('ListOfBuilds', result)
+    assert builds_page.items
     build_id = builds_page.items[0].id
 
     # Get log from the build

@@ -6,22 +6,16 @@ from apify_client._docs import docs_group
 from apify_client._models_generated import (
     Dataset,
     DatasetResponse,
+    ListOfDatasets,
     ListOfDatasetsResponse,
     StorageOwnership,
 )
-from apify_client._pagination import (
-    _LazyTask,
-    build_get_iterator,
-    build_get_iterator_async,
-)
-from apify_client._pagination_classes import (
-    IterablePageOfDatasets,
-    IterablePageOfDatasetsAsync,
-    PageOfItems,
-)
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._models_generated import DatasetListItem
     from apify_client._types import Timeout
 
@@ -54,11 +48,8 @@ class DatasetCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterablePageOfDatasets:
+    ) -> ListOfDatasets:
         """List the available datasets.
-
-        The returned page also supports iteration: `for item in client.list(...)` yields individual datasets
-        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
 
@@ -74,31 +65,47 @@ class DatasetCollectionClient(ResourceClient):
         Returns:
             The list of available datasets matching the specified filters.
         """
+        result = self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
+        return ListOfDatasetsResponse.model_validate(result).data
 
-        def _callback(**kwargs: Any) -> PageOfItems[DatasetListItem]:
-            result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            data = ListOfDatasetsResponse.model_validate(result).data
-            return PageOfItems(
-                items=data.items,
-                count=data.count,
-                limit=data.limit,
-                total=data.total,
-                offset=data.offset,
-                desc=data.desc,
+    def iterate(
+        self,
+        *,
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[DatasetListItem]:
+        """Iterate over the available datasets.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
+
+        Args:
+            unnamed: Whether to include unnamed datasets in the list.
+            limit: How many datasets to retrieve.
+            offset: What dataset to include as first when retrieving the list.
+            desc: Whether to sort the datasets in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own datasets,
+                'sharedWithMe' returns only datasets shared with the user.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available datasets matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfDatasets:
+            return self.list(
+                unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
             )
 
-        first_page = _callback(limit=limit, offset=offset, desc=desc)
-        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
-
-        return IterablePageOfDatasets(
-            _get_iterator=get_iterator,
-            items=first_page.items,
-            count=first_page.count,
-            limit=first_page.limit,
-            total=first_page.total,
-            offset=first_page.offset,
-            desc=first_page.desc,
-        )
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def get_or_create(
         self,
@@ -142,7 +149,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    def list(
+    async def list(
         self,
         *,
         unnamed: bool | None = None,
@@ -151,11 +158,8 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> IterablePageOfDatasetsAsync:
+    ) -> ListOfDatasets:
         """List the available datasets.
-
-        The returned page also supports iteration: `async for item in client.list(...)` yields individual datasets
-        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
 
@@ -171,28 +175,47 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available datasets matching the specified filters.
         """
+        result = await self._list(
+            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+        )
+        return ListOfDatasetsResponse.model_validate(result).data
 
-        async def _callback(**kwargs: Any) -> PageOfItems[DatasetListItem]:
-            result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
-            data = ListOfDatasetsResponse.model_validate(result).data
-            return PageOfItems(
-                items=data.items,
-                count=data.count,
-                limit=data.limit,
-                total=data.total,
-                offset=data.offset,
-                desc=data.desc,
+    def iterate(
+        self,
+        *,
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[DatasetListItem]:
+        """Iterate over the available datasets.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/get-list-of-datasets
+
+        Args:
+            unnamed: Whether to include unnamed datasets in the list.
+            limit: How many datasets to retrieve.
+            offset: What dataset to include as first when retrieving the list.
+            desc: Whether to sort the datasets in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own datasets,
+                'sharedWithMe' returns only datasets shared with the user.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available datasets matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfDatasets:
+            return await self.list(
+                unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
             )
 
-        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
-        get_async_iterator = build_get_iterator_async(
-            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
-        )
-
-        return IterablePageOfDatasetsAsync(
-            _awaitable_first_page=fetch_first_page,
-            _get_async_iterator=get_async_iterator,
-        )
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def get_or_create(
         self,

@@ -70,7 +70,7 @@ class PageWithOffset(Generic[T]):
 
 @dataclass
 class PageWithDesc(Generic[T]):
-    desc: int
+    desc: bool
 
 
 @dataclass

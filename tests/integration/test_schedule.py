@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from apify_client._models_generated import ScheduleShort
+from apify_client._pagination_classes import PageOfItems
+
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import ListOfSchedules, Schedule
+    from apify_client._models_generated import Schedule
 
 
 from ._utils import get_random_resource_name, maybe_await
@@ -116,10 +119,11 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
 
     try:
         # List schedules
-        result = await maybe_await(client.schedules().list(limit=100))
-        schedules_page = cast('ListOfSchedules', result)
-        assert schedules_page is not None
-        assert schedules_page.items is not None
+        schedules_page = await maybe_await(client.schedules().list(limit=100))
+
+        assert isinstance(schedules_page, PageOfItems)
+        assert isinstance(schedules_page.items, list)
+        assert isinstance(schedules_page.items[0], ScheduleShort)
 
         # Verify our schedules are in the list
         schedule_ids = [s.id for s in schedules_page.items]

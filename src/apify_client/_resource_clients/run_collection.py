@@ -3,13 +3,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import ListOfRuns, ListOfRunsResponse
+from apify_client._models_generated import ListOfRunsResponse
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
+from apify_client._pagination_classes import (
+    IterablePageOfRuns,
+    IterablePageOfRunsAsync,
+    PageOfItems,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from apify_client._models_generated import ActorJobStatus
+    from apify_client._models_generated import ActorJobStatus, RunShort
     from apify_client._types import Timeout
 
 
@@ -42,11 +52,14 @@ class RunCollectionClient(ResourceClient):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfRuns:
+    ) -> IterablePageOfRuns:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
         was initialized from.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual runs
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
         https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list
@@ -65,16 +78,36 @@ class RunCollectionClient(ResourceClient):
         """
         status_param = list(status) if isinstance(status, list) else status
 
-        result = self._list(
-            timeout=timeout,
-            limit=limit,
-            offset=offset,
-            desc=desc,
-            status=status_param,
-            startedBefore=started_before,
-            startedAfter=started_after,
+        def _callback(**kwargs: Any) -> PageOfItems[RunShort]:
+            result = self._list(
+                timeout=timeout,
+                status=status_param,
+                startedBefore=started_before,
+                startedAfter=started_after,
+                **kwargs,
+            )
+            data = ListOfRunsResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return IterablePageOfRuns(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
         )
-        return ListOfRunsResponse.model_validate(result).data
 
 
 @docs_group('Resource clients')
@@ -96,7 +129,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
@@ -106,11 +139,14 @@ class RunCollectionClientAsync(ResourceClientAsync):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfRuns:
+    ) -> IterablePageOfRunsAsync:
         """List all Actor runs.
 
         List all Actor runs, either of a single Actor, or all user's Actors, depending on where this client
         was initialized from.
+
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual runs
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actors/run-collection/get-list-of-runs
         https://docs.apify.com/api/v2#/reference/actor-runs/run-collection/get-user-runs-list
@@ -129,13 +165,30 @@ class RunCollectionClientAsync(ResourceClientAsync):
         """
         status_param = list(status) if isinstance(status, list) else status
 
-        result = await self._list(
-            timeout=timeout,
-            limit=limit,
-            offset=offset,
-            desc=desc,
-            status=status_param,
-            startedBefore=started_before,
-            startedAfter=started_after,
+        async def _callback(**kwargs: Any) -> PageOfItems[RunShort]:
+            result = await self._list(
+                timeout=timeout,
+                status=status_param,
+                startedBefore=started_before,
+                startedAfter=started_after,
+                **kwargs,
+            )
+            data = ListOfRunsResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_get_iterator_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
-        return ListOfRunsResponse.model_validate(result).data
+
+        return IterablePageOfRunsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )

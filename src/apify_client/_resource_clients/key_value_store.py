@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import warnings
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
@@ -9,10 +10,19 @@ from urllib.parse import urlencode, urlparse, urlunparse
 from apify_client._docs import docs_group
 from apify_client._models_generated import (
     KeyValueStore,
-    KeyValueStoreKey,
     KeyValueStoreResponse,
-    ListOfKeys,
     ListOfKeysResponse,
+)
+from apify_client._pagination import (
+    _LazyTask,
+    _min_for_limit_param,
+    build_get_cursor_iterator,
+    build_get_cursor_iterator_async,
+)
+from apify_client._pagination_classes import (
+    IterablePageOfKeys,
+    IterablePageOfKeysAsync,
+    PageOfKeys,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
@@ -29,7 +39,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._models_generated import GeneralAccess
+    from apify_client._models_generated import GeneralAccess, KeyValueStoreKey
     from apify_client._types import Timeout
 
 
@@ -144,92 +154,122 @@ class KeyValueStoreClient(ResourceClient):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfKeys:
+    ) -> IterablePageOfKeys:
         """List the keys in the key-value store.
+
+        The returned page also supports iteration: `for key in client.list_keys(...)` yields individual
+        keys and transparently fetches further pages using cursor-based pagination.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Total number of keys to yield across all pages when iterating. The API caps each
+                individual request at 1000 keys; use `chunk_size` to control the per-request size.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._build_params(
+
+        def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> PageOfKeys:
+            request_params = self._build_params(
+                limit=limit,
+                exclusiveStartKey=exclusive_start_key,
+                collection=collection,
+                prefix=prefix,
+                signature=signature,
+            )
+            response = self._http_client.call(
+                url=self._build_url('keys'),
+                method='GET',
+                params=request_params,
+                timeout=timeout,
+            )
+            result = response_to_dict(response)
+            data = ListOfKeysResponse.model_validate(result).data
+            return PageOfKeys(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                is_truncated=data.is_truncated,
+                exclusive_start_key=data.exclusive_start_key,
+                next_exclusive_start_key=data.next_exclusive_start_key,
+            )
+
+        first_limit = _min_for_limit_param(limit, chunk_size)
+        first_page = _callback(limit=first_limit, exclusive_start_key=exclusive_start_key)
+        get_iterator = build_get_cursor_iterator(
+            _callback,
+            first_page,
+            cursor_param='exclusive_start_key',
             limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-            collection=collection,
-            prefix=prefix,
-            signature=signature,
+            chunk_size=chunk_size,
         )
 
-        response = self._http_client.call(
-            url=self._build_url('keys'),
-            method='GET',
-            params=request_params,
-            timeout=timeout,
+        return IterablePageOfKeys(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            is_truncated=first_page.is_truncated,
+            exclusive_start_key=first_page.exclusive_start_key,
+            next_exclusive_start_key=first_page.next_exclusive_start_key,
         )
-
-        result = response_to_dict(response)
-        return ListOfKeysResponse.model_validate(result).data
 
     def iterate_keys(
         self,
         *,
         limit: int | None = None,
+        exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        chunk_size: int | None = 1000,
         timeout: Timeout = 'long',
     ) -> Iterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
 
+        Deprecated: iterate the return value of `KeyValueStoreClient.list_keys()` instead.
+
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Maximum number of keys to return. By default there is no limit.
+            limit: Total number of keys to yield across all pages. The API caps each individual
+                request at 1000 keys; use `chunk_size` to control the per-request size.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
             A key from the key-value store.
         """
-        cache_size = 1000
-        read_keys = 0
-        exclusive_start_key: str | None = None
-
-        while True:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_keys == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_keys)
-
-            current_keys_page = self.list_keys(
-                limit=effective_limit,
-                exclusive_start_key=exclusive_start_key,
-                collection=collection,
-                prefix=prefix,
-                signature=signature,
-                timeout=timeout,
-            )
-
-            yield from current_keys_page.items
-
-            read_keys += len(current_keys_page.items)
-
-            if not current_keys_page.is_truncated:
-                break
-
-            exclusive_start_key = current_keys_page.next_exclusive_start_key
+        warnings.warn(
+            '`KeyValueStoreClient.iterate_keys()` is deprecated, iterate the return value of '
+            '`KeyValueStoreClient.list_keys()` instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        yield from self.list_keys(
+            limit=limit,
+            exclusive_start_key=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+            signature=signature,
+            chunk_size=chunk_size,
+            timeout=timeout,
+        )
 
     def get_record(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -461,7 +501,7 @@ class KeyValueStoreClient(ResourceClient):
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Number of keys to be returned by the signed request. Maximum value is 1000.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
@@ -566,7 +606,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def list_keys(
+    def list_keys(
         self,
         *,
         limit: int | None = None,
@@ -574,93 +614,118 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfKeys:
+    ) -> IterablePageOfKeysAsync:
         """List the keys in the key-value store.
+
+        The returned page also supports iteration: `async for key in client.list_keys(...)` yields individual
+        keys and transparently fetches further pages using cursor-based pagination.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Total number of keys to yield across all pages when iterating. The API caps each
+                individual request at 1000 keys; use `chunk_size` to control the per-request size.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of keys in the key-value store matching the given arguments.
         """
-        request_params = self._build_params(
+
+        async def _callback(*, limit: int | None = None, exclusive_start_key: str | None = None) -> PageOfKeys:
+            request_params = self._build_params(
+                limit=limit,
+                exclusiveStartKey=exclusive_start_key,
+                collection=collection,
+                prefix=prefix,
+                signature=signature,
+            )
+            response = await self._http_client.call(
+                url=self._build_url('keys'),
+                method='GET',
+                params=request_params,
+                timeout=timeout,
+            )
+            result = response_to_dict(response)
+            data = ListOfKeysResponse.model_validate(result).data
+            return PageOfKeys(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                is_truncated=data.is_truncated,
+                exclusive_start_key=data.exclusive_start_key,
+                next_exclusive_start_key=data.next_exclusive_start_key,
+            )
+
+        first_limit = _min_for_limit_param(limit, chunk_size)
+        fetch_first_page = _LazyTask(_callback(limit=first_limit, exclusive_start_key=exclusive_start_key))
+        get_async_iterator = build_get_cursor_iterator_async(
+            _callback,
+            fetch_first_page,
+            cursor_param='exclusive_start_key',
             limit=limit,
-            exclusiveStartKey=exclusive_start_key,
-            collection=collection,
-            prefix=prefix,
-            signature=signature,
+            chunk_size=chunk_size,
         )
 
-        response = await self._http_client.call(
-            url=self._build_url('keys'),
-            method='GET',
-            params=request_params,
-            timeout=timeout,
+        return IterablePageOfKeysAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
         )
-
-        result = response_to_dict(response)
-        return ListOfKeysResponse.model_validate(result).data
 
     async def iterate_keys(
         self,
         *,
         limit: int | None = None,
+        exclusive_start_key: str | None = None,
         collection: str | None = None,
         prefix: str | None = None,
         signature: str | None = None,
+        chunk_size: int | None = 1000,
         timeout: Timeout = 'long',
     ) -> AsyncIterator[KeyValueStoreKey]:
         """Iterate over the keys in the key-value store.
 
+        Deprecated: iterate the return value of `KeyValueStoreClientAsync.list_keys()` instead.
+
         https://docs.apify.com/api/v2#/reference/key-value-stores/key-collection/get-list-of-keys
 
         Args:
-            limit: Maximum number of keys to return. By default there is no limit.
+            limit: Total number of keys to yield across all pages. The API caps each individual
+                request at 1000 keys; use `chunk_size` to control the per-request size.
+            exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
             signature: Signature used to access the items.
+            chunk_size: Maximum number of keys requested per API call when iterating. Capped at
+                1000 by the API. Only relevant when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
             A key from the key-value store.
         """
-        cache_size = 1000
-        read_keys = 0
-        exclusive_start_key: str | None = None
-
-        while True:
-            effective_limit = cache_size
-            if limit is not None:
-                if read_keys == limit:
-                    break
-                effective_limit = min(cache_size, limit - read_keys)
-
-            current_keys_page = await self.list_keys(
-                limit=effective_limit,
-                exclusive_start_key=exclusive_start_key,
-                collection=collection,
-                prefix=prefix,
-                signature=signature,
-                timeout=timeout,
-            )
-
-            for key in current_keys_page.items:
-                yield key
-
-            read_keys += len(current_keys_page.items)
-
-            if not current_keys_page.is_truncated:
-                break
-
-            exclusive_start_key = current_keys_page.next_exclusive_start_key
+        warnings.warn(
+            '`KeyValueStoreClientAsync.iterate_keys()` is deprecated, iterate the return value of '
+            '`KeyValueStoreClientAsync.list_keys()` instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        async for key in self.list_keys(
+            limit=limit,
+            exclusive_start_key=exclusive_start_key,
+            collection=collection,
+            prefix=prefix,
+            signature=signature,
+            chunk_size=chunk_size,
+            timeout=timeout,
+        ):
+            yield key
 
     async def get_record(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:
         """Retrieve the given record from the key-value store.
@@ -894,7 +959,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         Any other options (like `limit` or `prefix`) will be included as query parameters in the URL.
 
         Args:
-            limit: Number of keys to be returned. Maximum value is 1000.
+            limit: Number of keys to be returned by the signed request. Maximum value is 1000.
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.

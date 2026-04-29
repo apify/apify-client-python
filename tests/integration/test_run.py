@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from apify_client._models_generated import RunShort
+from apify_client._pagination_classes import PageOfItems
+
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
+    from apify_client._models_generated import Dataset, KeyValueStore, RequestQueue, Run
 
 
 from datetime import UTC, datetime, timedelta
@@ -35,14 +38,20 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
     try:
         run_collection = client.actor(HELLO_WORLD_ACTOR).runs()
 
-        result = await maybe_await(run_collection.list(status=[ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT]))
-        multiple_status_runs = cast('ListOfRuns', result)
+        multiple_status_runs = await maybe_await(
+            run_collection.list(status=[ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT])
+        )
+        single_status_runs = await maybe_await(run_collection.list(status=ActorJobStatus.SUCCEEDED))
 
-        result = await maybe_await(run_collection.list(status=ActorJobStatus.SUCCEEDED))
-        single_status_runs = cast('ListOfRuns', result)
+        assert isinstance(multiple_status_runs, PageOfItems)
+        assert isinstance(multiple_status_runs.items, list)
+        if multiple_status_runs.items:
+            assert isinstance(multiple_status_runs.items[0], RunShort)
 
-        assert multiple_status_runs is not None
-        assert single_status_runs is not None
+        assert isinstance(single_status_runs, PageOfItems)
+        assert isinstance(single_status_runs.items, list)
+        if single_status_runs.items:
+            assert isinstance(single_status_runs.items[0], RunShort)
 
         assert all(
             run.status in [ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT] for run in multiple_status_runs.items
@@ -294,13 +303,13 @@ async def test_run_log(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing runs through the run collection client."""
     # List runs (should return valid data structure)
-    result = await maybe_await(client.runs().list(limit=10))
-    runs_page = cast('ListOfRuns', result)
-    assert runs_page is not None
-    assert runs_page.items is not None
+    runs_page = await maybe_await(client.runs().list(limit=10))
+
+    assert isinstance(runs_page, PageOfItems)
     assert isinstance(runs_page.items, list)
-    # The user may have runs, verify the structure
+    # The user may have 0 runs — only check element type when any were returned.
     if runs_page.items:
+        assert isinstance(runs_page.items[0], RunShort)
         first_run = runs_page.items[0]
         assert first_run.id is not None
         assert first_run.act_id is not None

@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from apify_client._models_generated import KeyValueStore, KeyValueStoreKey
+from apify_client._pagination_classes import PageOfItems, PageOfKeys
+
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 
 import json
 from datetime import timedelta
@@ -22,22 +24,22 @@ from apify_client.errors import ApifyApiError
 
 async def test_key_value_store_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing key-value stores."""
-    result = await maybe_await(client.key_value_stores().list(limit=10))
-    kvs_page = cast('ListOfKeyValueStores', result)
+    kvs_page = await maybe_await(client.key_value_stores().list(limit=10))
 
-    assert kvs_page is not None
-    assert kvs_page.items is not None
+    assert isinstance(kvs_page, PageOfItems)
     assert isinstance(kvs_page.items, list)
+    if kvs_page.items:
+        assert isinstance(kvs_page.items[0], KeyValueStore)
 
 
 async def test_key_value_store_collection_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing key-value stores with pagination."""
-    result = await maybe_await(client.key_value_stores().list(limit=5, offset=0))
-    kvs_page = cast('ListOfKeyValueStores', result)
+    kvs_page = await maybe_await(client.key_value_stores().list(limit=5, offset=0))
 
-    assert kvs_page is not None
-    assert kvs_page.items is not None
+    assert isinstance(kvs_page, PageOfItems)
     assert isinstance(kvs_page.items, list)
+    if kvs_page.items:
+        assert isinstance(kvs_page.items[0], KeyValueStore)
 
 
 async def test_key_value_store_collection_get_or_create(client: ApifyClient | ApifyClientAsync) -> None:
@@ -124,11 +126,12 @@ async def test_list_keys_signature(
         await maybe_await(kvs.list_keys())
 
     # Kvs content retrieved with correct signature
-    result = await maybe_await(kvs.list_keys(signature=test_kvs_of_another_user.signature))
-    response = cast('ListOfKeys', result)
-    raw_items = response.items
+    response = await maybe_await(kvs.list_keys(signature=test_kvs_of_another_user.signature))
 
-    assert set(test_kvs_of_another_user.expected_content) == {item.key for item in raw_items}
+    assert isinstance(response, PageOfKeys)
+    assert isinstance(response.items, list)
+    assert isinstance(response.items[0], KeyValueStoreKey)
+    assert set(test_kvs_of_another_user.expected_content) == {item.key for item in response.items}
 
 
 async def test_get_record_signature(
@@ -338,9 +341,11 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync,
         await maybe_sleep(1, is_async=is_async)
 
         # List keys
-        result = await maybe_await(store_client.list_keys())
-        keys_response = cast('ListOfKeys', result)
-        assert keys_response is not None
+        keys_response = await maybe_await(store_client.list_keys())
+
+        assert isinstance(keys_response, PageOfKeys)
+        assert isinstance(keys_response.items, list)
+        assert isinstance(keys_response.items[0], KeyValueStoreKey)
         assert len(keys_response.items) == 5
 
         # Verify key names
@@ -368,9 +373,11 @@ async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyC
         await maybe_sleep(1, is_async=is_async)
 
         # List with limit
-        result = await maybe_await(store_client.list_keys(limit=5))
-        keys_response = cast('ListOfKeys', result)
-        assert keys_response is not None
+        keys_response = await maybe_await(store_client.list_keys(limit=5))
+
+        assert isinstance(keys_response, PageOfKeys)
+        assert isinstance(keys_response.items, list)
+        assert isinstance(keys_response.items[0], KeyValueStoreKey)
         assert len(keys_response.items) == 5
     finally:
         await maybe_await(store_client.delete())

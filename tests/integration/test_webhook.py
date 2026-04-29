@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from apify_client._pagination_classes import PageOfItems
+
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
@@ -11,13 +13,12 @@ if TYPE_CHECKING:
 from ._utils import maybe_await
 from apify_client._models_generated import (
     ActorJobStatus,
-    ListOfRuns,
-    ListOfWebhookDispatches,
-    ListOfWebhooks,
     Run,
+    RunShort,
     Webhook,
     WebhookDispatch,
     WebhookEventType,
+    WebhookShort,
 )
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -32,9 +33,11 @@ async def _get_finished_run_id(client: ApifyClient | ApifyClientAsync) -> str:
     """
     runs_page = await maybe_await(client.actor(HELLO_WORLD_ACTOR).runs().list(limit=1, status=ActorJobStatus.SUCCEEDED))
 
-    assert isinstance(runs_page, ListOfRuns)
+    assert isinstance(runs_page, PageOfItems)
+    assert isinstance(runs_page.items, list)
 
     if len(runs_page.items) > 0:
+        assert isinstance(runs_page.items[0], RunShort)
         return runs_page.items[0].id
 
     # No completed runs found - start one and wait for it to finish
@@ -49,16 +52,18 @@ async def test_list_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=10))
 
-    assert isinstance(webhooks_page, ListOfWebhooks)
+    assert isinstance(webhooks_page, PageOfItems)
     assert isinstance(webhooks_page.items, list)
+    assert isinstance(webhooks_page.items[0], WebhookShort)
 
 
 async def test_list_webhooks_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing webhooks with pagination."""
     webhooks_page = await maybe_await(client.webhooks().list(limit=5, offset=0))
 
-    assert isinstance(webhooks_page, ListOfWebhooks)
+    assert isinstance(webhooks_page, PageOfItems)
     assert isinstance(webhooks_page.items, list)
+    assert isinstance(webhooks_page.items[0], WebhookShort)
 
 
 async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:
@@ -166,8 +171,10 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
 
         # List dispatches for this webhook
         dispatches = await maybe_await(webhook_client.dispatches().list())
-        assert isinstance(dispatches, ListOfWebhookDispatches)
+        assert isinstance(dispatches, PageOfItems)
+        assert isinstance(dispatches.items, list)
         assert len(dispatches.items) > 0
+        assert isinstance(dispatches.items[0], WebhookDispatch)
 
     finally:
         await maybe_await(webhook_client.delete())

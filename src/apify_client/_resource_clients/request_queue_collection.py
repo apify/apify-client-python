@@ -4,15 +4,25 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models_generated import (
-    ListOfRequestQueues,
     ListOfRequestQueuesResponse,
     RequestQueue,
     RequestQueueResponse,
     StorageOwnership,
 )
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
+from apify_client._pagination_classes import (
+    IterablePageOfRequestQueues,
+    IterablePageOfRequestQueuesAsync,
+    PageOfItems,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._models_generated import RequestQueueShort
     from apify_client._types import Timeout
 
 
@@ -44,8 +54,11 @@ class RequestQueueCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfRequestQueues:
+    ) -> IterablePageOfRequestQueues:
         """List the available request queues.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        request queues and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
 
@@ -61,10 +74,31 @@ class RequestQueueCollectionClient(ResourceClient):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        result = self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+
+        def _callback(**kwargs: Any) -> PageOfItems[RequestQueueShort]:
+            result = self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
+            data = ListOfRequestQueuesResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return IterablePageOfRequestQueues(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
         )
-        return ListOfRequestQueuesResponse.model_validate(result).data
 
     def get_or_create(
         self,
@@ -106,7 +140,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         unnamed: bool | None = None,
@@ -115,8 +149,11 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfRequestQueues:
+    ) -> IterablePageOfRequestQueuesAsync:
         """List the available request queues.
+
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual
+        request queues and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
 
@@ -132,10 +169,28 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available request queues matching the specified filters.
         """
-        result = await self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+
+        async def _callback(**kwargs: Any) -> PageOfItems[RequestQueueShort]:
+            result = await self._list(timeout=timeout, unnamed=unnamed, ownership=ownership, **kwargs)
+            data = ListOfRequestQueuesResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_get_iterator_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
         )
-        return ListOfRequestQueuesResponse.model_validate(result).data
+
+        return IterablePageOfRequestQueuesAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def get_or_create(
         self,

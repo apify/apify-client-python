@@ -4,15 +4,25 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models_generated import (
-    ListOfSchedules,
     ListOfSchedulesResponse,
     Schedule,
     ScheduleCreate,
     ScheduleResponse,
 )
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
+from apify_client._pagination_classes import (
+    IterablePageOfSchedules,
+    IterablePageOfSchedulesAsync,
+    PageOfItems,
+)
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._models_generated import ScheduleShort
     from apify_client._types import Timeout
 
 
@@ -42,8 +52,11 @@ class ScheduleCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfSchedules:
+    ) -> IterablePageOfSchedules:
         """List the available schedules.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual
+        schedules and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
@@ -56,8 +69,31 @@ class ScheduleCollectionClient(ResourceClient):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfSchedulesResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> PageOfItems[ScheduleShort]:
+            result = self._list(timeout=timeout, **kwargs)
+            data = ListOfSchedulesResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return IterablePageOfSchedules(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
     def create(
         self,
@@ -128,15 +164,18 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfSchedules:
+    ) -> IterablePageOfSchedulesAsync:
         """List the available schedules.
+
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual
+        schedules and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
 
@@ -149,8 +188,28 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available schedules matching the specified filters.
         """
-        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfSchedulesResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> PageOfItems[ScheduleShort]:
+            result = await self._list(timeout=timeout, **kwargs)
+            data = ListOfSchedulesResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_get_iterator_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return IterablePageOfSchedulesAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

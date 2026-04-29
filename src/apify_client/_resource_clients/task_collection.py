@@ -6,12 +6,21 @@ from apify_client._docs import docs_group
 from apify_client._models_generated import (
     ActorStandby,
     CreateTaskRequest,
-    ListOfTasks,
     ListOfTasksResponse,
     Task,
     TaskInput,
     TaskOptions,
     TaskResponse,
+)
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
+from apify_client._pagination_classes import (
+    IterablePageOfTasks,
+    IterablePageOfTasksAsync,
+    PageOfItems,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
@@ -19,6 +28,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client._models_generated import TaskShort
     from apify_client._typeddicts_generated import TaskInputDict
     from apify_client._types import Timeout
 
@@ -49,8 +59,11 @@ class TaskCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfTasks:
+    ) -> IterablePageOfTasks:
         """List the available tasks.
+
+        The returned page also supports iteration: `for item in client.list(...)` yields individual tasks
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
@@ -63,8 +76,31 @@ class TaskCollectionClient(ResourceClient):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfTasksResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> PageOfItems[TaskShort]:
+            result = self._list(timeout=timeout, **kwargs)
+            data = ListOfTasksResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        first_page = _callback(limit=limit, offset=offset, desc=desc)
+        get_iterator = build_get_iterator(_callback, first_page, limit=limit, offset=offset, desc=desc)
+
+        return IterablePageOfTasks(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            count=first_page.count,
+            limit=first_page.limit,
+            total=first_page.total,
+            offset=first_page.offset,
+            desc=first_page.desc,
+        )
 
     def create(
         self,
@@ -163,15 +199,18 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(
+    def list(
         self,
         *,
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfTasks:
+    ) -> IterablePageOfTasksAsync:
         """List the available tasks.
+
+        The returned page also supports iteration: `async for item in client.list(...)` yields individual tasks
+        and transparently fetches further pages from the API.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
 
@@ -184,8 +223,28 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available tasks matching the specified filters.
         """
-        result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
-        return ListOfTasksResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> PageOfItems[TaskShort]:
+            result = await self._list(timeout=timeout, **kwargs)
+            data = ListOfTasksResponse.model_validate(result).data
+            return PageOfItems(
+                items=data.items,
+                count=data.count,
+                limit=data.limit,
+                total=data.total,
+                offset=data.offset,
+                desc=data.desc,
+            )
+
+        fetch_first_page = _LazyTask(_callback(limit=limit, offset=offset, desc=desc))
+        get_async_iterator = build_get_iterator_async(
+            _callback, fetch_first_page, limit=limit, offset=offset, desc=desc
+        )
+
+        return IterablePageOfTasksAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

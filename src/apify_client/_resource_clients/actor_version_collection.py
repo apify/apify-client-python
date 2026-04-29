@@ -8,13 +8,22 @@ from apify_client._docs import docs_group
 from apify_client._models_generated import (
     CreateOrUpdateVersionRequest,
     EnvVarRequest,
-    ListOfVersions,
     ListOfVersionsResponse,
     SourceCodeFile,
     SourceCodeFolder,
     Version,
     VersionResponse,
     VersionSourceType,
+)
+from apify_client._pagination import (
+    _LazyTask,
+    build_get_iterator,
+    build_get_iterator_async,
+)
+from apify_client._pagination_classes import (
+    IterablePageOfVersions,
+    IterablePageOfVersionsAsync,
+    PageOfItemsOnlyTotal,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
@@ -44,8 +53,10 @@ class ActorVersionCollectionClient(ResourceClient):
             **kwargs,
         )
 
-    def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
+    def list(self, *, timeout: Timeout = 'short') -> IterablePageOfVersions:
         """List the available Actor versions.
+
+        The returned page also supports iteration: `for item in client.list()` yields individual versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
@@ -55,8 +66,20 @@ class ActorVersionCollectionClient(ResourceClient):
         Returns:
             The list of available Actor versions.
         """
-        result = self._list(timeout=timeout)
-        return ListOfVersionsResponse.model_validate(result).data
+
+        def _callback(**kwargs: Any) -> PageOfItemsOnlyTotal[Version]:
+            result = self._list(timeout=timeout, **kwargs)
+            data = ListOfVersionsResponse.model_validate(result).data
+            return PageOfItemsOnlyTotal(items=data.items, total=data.total)
+
+        first_page = _callback()
+        get_iterator = build_get_iterator(_callback, first_page)
+
+        return IterablePageOfVersions(
+            _get_iterator=get_iterator,
+            items=first_page.items,
+            total=first_page.total,
+        )
 
     def create(
         self,
@@ -131,8 +154,10 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
+    def list(self, *, timeout: Timeout = 'short') -> IterablePageOfVersionsAsync:
         """List the available Actor versions.
+
+        The returned page also supports iteration: `async for item in client.list()` yields individual versions.
 
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
@@ -142,8 +167,19 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actor versions.
         """
-        result = await self._list(timeout=timeout)
-        return ListOfVersionsResponse.model_validate(result).data
+
+        async def _callback(**kwargs: Any) -> PageOfItemsOnlyTotal[Version]:
+            result = await self._list(timeout=timeout, **kwargs)
+            data = ListOfVersionsResponse.model_validate(result).data
+            return PageOfItemsOnlyTotal(items=data.items, total=data.total)
+
+        fetch_first_page = _LazyTask(_callback())
+        get_async_iterator = build_get_iterator_async(_callback, fetch_first_page)
+
+        return IterablePageOfVersionsAsync(
+            _awaitable_first_page=fetch_first_page,
+            _get_async_iterator=get_async_iterator,
+        )
 
     async def create(
         self,

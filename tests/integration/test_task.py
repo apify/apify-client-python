@@ -6,10 +6,12 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
 from ._utils import get_random_resource_name, maybe_await
+from apify_client._models_generated import RunShort, TaskShort
+from apify_client._pagination_classes import PageOfItems
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, Task
+    from apify_client._models_generated import Actor, Run, Task
 
 # Use a simple, fast public actor for testing
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -113,10 +115,11 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
 
     try:
         # List tasks
-        result = await maybe_await(client.tasks().list(limit=100))
-        tasks_page = cast('ListOfTasks', result)
-        assert tasks_page is not None
-        assert tasks_page.items is not None
+        tasks_page = await maybe_await(client.tasks().list(limit=100))
+
+        assert isinstance(tasks_page, PageOfItems)
+        assert isinstance(tasks_page.items, list)
+        assert isinstance(tasks_page.items[0], TaskShort)
 
         # Verify our task is in the list
         task_ids = [t.id for t in tasks_page.items]
@@ -289,10 +292,11 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
 
         # List runs for this task
         runs_client = task_client.runs()
-        result = await maybe_await(runs_client.list(limit=10))
-        runs_page = cast('ListOfRuns', result)
-        assert runs_page is not None
-        assert runs_page.items is not None
+        runs_page = await maybe_await(runs_client.list(limit=10))
+
+        assert isinstance(runs_page, PageOfItems)
+        assert isinstance(runs_page.items, list)
+        assert isinstance(runs_page.items[0], RunShort)
         assert len(runs_page.items) >= 1
 
         # Cleanup run
@@ -365,10 +369,10 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     try:
         # Get webhooks client
         webhooks_client = task_client.webhooks()
-        result = await maybe_await(webhooks_client.list())
-        webhooks_page = cast('ListOfWebhooks', result)
-        assert webhooks_page is not None
-        assert webhooks_page.items is not None
+        webhooks_page = await maybe_await(webhooks_client.list())
+
+        assert isinstance(webhooks_page, PageOfItems)
+        assert isinstance(webhooks_page.items, list)
         # New task should have no webhooks
         assert len(webhooks_page.items) == 0
 

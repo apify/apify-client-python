@@ -8,7 +8,7 @@ import pytest
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._models_generated import ActorJobStatus
+from apify_client._models import ActorJobStatus
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer

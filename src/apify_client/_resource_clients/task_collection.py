@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models_generated import (
+from apify_client._models import (
     ActorStandby,
     CreateTaskRequest,
     ListOfTasks,
@@ -19,7 +19,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._typeddicts_generated import TaskInputDict
+    from apify_client._typeddicts import TaskInputDict
     from apify_client._types import Timeout
 
 

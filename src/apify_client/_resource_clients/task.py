@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import WebhookRepresentationList
-from apify_client._models_generated import (
+from apify_client._models import (
     ActorStandby,
     Run,
     RunOrigin,
@@ -16,12 +15,12 @@ from apify_client._models_generated import (
     UpdateTaskRequest,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import response_to_dict, to_seconds
+from apify_client._utils import encode_webhooks_to_base64, response_to_dict, to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._models_generated import ActorJobStatus
+    from apify_client._models import ActorJobStatus
     from apify_client._resource_clients import (
         RunClient,
         RunClientAsync,
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client._typeddicts_generated import TaskInputDict
+    from apify_client._typeddicts import TaskInputDict
     from apify_client._types import Timeout, WebhooksList
 
 
@@ -204,7 +203,7 @@ class TaskClient(ResourceClient):
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
+            webhooks=encode_webhooks_to_base64(webhooks),
         )
 
         response = self._http_client.call(
@@ -527,7 +526,7 @@ class TaskClientAsync(ResourceClientAsync):
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
             waitForFinish=wait_for_finish,
-            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
+            webhooks=encode_webhooks_to_base64(webhooks),
         )
 
         response = await self._http_client.call(

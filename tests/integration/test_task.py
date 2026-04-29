@@ -9,7 +9,7 @@ from ._utils import get_random_resource_name, maybe_await
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models_generated import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, Task
+    from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, Task
 
 # Use a simple, fast public actor for testing
 HELLO_WORLD_ACTOR = 'apify/hello-world'

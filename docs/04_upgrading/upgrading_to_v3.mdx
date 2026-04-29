@@ -55,7 +55,7 @@ run.status
 Models also use `populate_by_name=True`, which means you can use either the Python field name or the camelCase alias when **constructing** a model:
 
 ```python
-from apify_client._models_generated import Run
+from apify_client._models import Run
 
 # Both work when constructing models
 Run(default_dataset_id='abc')   # Python field name
@@ -86,7 +86,7 @@ rq_client.add_request({
 After (v3) — both forms are accepted:
 
 ```python
-from apify_client._models import RequestInput
+from apify_client._models import RequestDraft
 
 # Option 1: dict (still works)
 rq_client.add_request({
@@ -96,7 +96,7 @@ rq_client.add_request({
 })
 
 # Option 2: Pydantic model (new)
-rq_client.add_request(RequestInput(
+rq_client.add_request(RequestDraft(
     url='https://example.com',
     unique_key='https://example.com',
     method='GET',

@@ -7,18 +7,21 @@ import json
 import string
 import time
 import warnings
-from base64 import urlsafe_b64encode
+from base64 import b64encode, urlsafe_b64encode
+from functools import cache
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import impit
 
 from apify_client._consts import OVERRIDABLE_DEFAULT_HEADERS
+from apify_client._models import WebhookCreate, WebhookRepresentation
 from apify_client.errors import InvalidResponseBodyError, NotFoundError
 
 if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
+    from apify_client._types import WebhooksList
     from apify_client.errors import ApifyApiError
 
 T = TypeVar('T')
@@ -267,3 +270,50 @@ def check_custom_headers(class_name: str, headers: dict[str, str]) -> None:
             category=UserWarning,
             stacklevel=3,
         )
+
+
+@cache
+def _webhook_representation_keys() -> frozenset[str]:
+    """Return all field names and aliases declared on `WebhookRepresentation`."""
+    keys = set[str]()
+    for name, info in WebhookRepresentation.model_fields.items():
+        keys.add(name)
+        if info.alias is not None:
+            keys.add(info.alias)
+    return frozenset(keys)
+
+
+def encode_webhooks_to_base64(webhooks: WebhooksList | None) -> str | None:
+    """Encode a list of ad-hoc webhooks to a base64 string for the `webhooks` query parameter.
+
+    Returns `None` for `None` or an empty list, so the query parameter is omitted.
+
+    See `WebhooksList` for the accepted shapes. `WebhookRepresentation` instances are used as-is; `WebhookCreate`
+    instances are projected onto the `WebhookRepresentation` fields, dropping persistent-only fields like `condition`.
+    Dict shapes are validated into `WebhookRepresentation` and only fields it declares are kept.
+    """
+    if not webhooks:
+        return None
+
+    representations = list[WebhookRepresentation]()
+
+    for webhook in webhooks:
+        if isinstance(webhook, WebhookRepresentation):
+            representations.append(webhook)
+        elif isinstance(webhook, WebhookCreate):
+            representations.append(
+                WebhookRepresentation(
+                    event_types=webhook.event_types,
+                    request_url=webhook.request_url,
+                    payload_template=webhook.payload_template,
+                    headers_template=webhook.headers_template,
+                )
+            )
+        else:
+            allowed = _webhook_representation_keys()
+            filtered = {k: v for k, v in webhook.items() if k in allowed}
+            representations.append(WebhookRepresentation.model_validate(filtered))
+
+    data = [r.model_dump(by_alias=True, exclude_none=True) for r in representations]
+    json_string = json.dumps(data).encode(encoding='utf-8')
+    return b64encode(json_string).decode(encoding='ascii')

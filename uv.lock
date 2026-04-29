@@ -7,8 +7,14 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-26T08:16:43.660148479Z"
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "PT24H"
+
+[options.exclude-newer-package]
+apify-fingerprint-datapoints = false
+crawlee = false
+apify-shared = false
+apify-client = false
 
 [[package]]
 name = "annotated-types"

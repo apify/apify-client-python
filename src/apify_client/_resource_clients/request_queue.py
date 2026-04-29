@@ -10,8 +10,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from more_itertools import constrained_batches
 
 from apify_client._docs import docs_group
-from apify_client._models import RequestDeleteInput, RequestInput
-from apify_client._models_generated import (
+from apify_client._models import (
     AddedRequest,
     AddRequestResponse,
     BatchAddResponse,
@@ -26,6 +25,7 @@ from apify_client._models_generated import (
     ProlongRequestLockResponse,
     Request,
     RequestDraft,
+    RequestDraftDelete,
     RequestLockInfo,
     RequestQueue,
     RequestQueueHead,
@@ -42,9 +42,8 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._models_generated import GeneralAccess
-    from apify_client._typeddicts import RequestDeleteInputDict, RequestInputDict
-    from apify_client._typeddicts_generated import RequestDict
+    from apify_client._models import GeneralAccess
+    from apify_client._typeddicts import RequestDict, RequestDraftDeleteDict, RequestDraftDict
     from apify_client._types import Timeout
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
@@ -189,7 +188,7 @@ class RequestQueueClient(ResourceClient):
 
     def add_request(
         self,
-        request: RequestInputDict | RequestInput,
+        request: RequestDraftDict | RequestDraft,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -206,8 +205,8 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The added request.
         """
-        if not isinstance(request, RequestInput):
-            request = RequestInput.model_validate(request)
+        if not isinstance(request, RequestDraft):
+            request = RequestDraft.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
@@ -365,7 +364,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_add_requests(
         self,
-        requests: list[RequestInput] | list[RequestInputDict],
+        requests: list[RequestDraft] | list[RequestDraftDict],
         *,
         forefront: bool = False,
         max_parallel: int = 1,
@@ -409,7 +408,7 @@ class RequestQueueClient(ResourceClient):
             raise NotImplementedError('max_parallel is only supported in async client')
 
         requests_as_dicts = [
-            (r if isinstance(r, RequestInput) else RequestInput.model_validate(r)).model_dump(
+            (r if isinstance(r, RequestDraft) else RequestDraft.model_validate(r)).model_dump(
                 by_alias=True, exclude_none=True
             )
             for r in requests
@@ -463,7 +462,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_delete_requests(
         self,
-        requests: list[RequestDeleteInput] | list[RequestDeleteInputDict],
+        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -476,10 +475,14 @@ class RequestQueueClient(ResourceClient):
             timeout: Timeout for the API HTTP request.
         """
         requests_as_dicts = [
-            (r if isinstance(r, RequestDeleteInput) else RequestDeleteInput.model_validate(r)).model_dump(
-                by_alias=True, exclude_none=True
-            )
-            for r in requests
+            (
+                request
+                if isinstance(request, RequestDraftDelete)
+                else RequestDraftDelete.model_validate(
+                    request,
+                )
+            ).model_dump(by_alias=True, exclude_none=True)
+            for request in requests
         ]
 
         request_params = self._build_params(clientKey=self.client_key)
@@ -704,7 +707,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def add_request(
         self,
-        request: RequestInputDict | RequestInput,
+        request: RequestDraftDict | RequestDraft,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -721,8 +724,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The added request.
         """
-        if not isinstance(request, RequestInput):
-            request = RequestInput.model_validate(request)
+        if not isinstance(request, RequestDraft):
+            request = RequestDraft.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
@@ -925,7 +928,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_add_requests(
         self,
-        requests: list[RequestInput] | list[RequestInputDict],
+        requests: list[RequestDraft] | list[RequestDraftDict],
         *,
         forefront: bool = False,
         max_parallel: int = 5,
@@ -966,10 +969,17 @@ class RequestQueueClientAsync(ResourceClientAsync):
             )
 
         requests_as_dicts = [
-            (r if isinstance(r, RequestInput) else RequestInput.model_validate(r)).model_dump(
-                by_alias=True, exclude_none=True
+            (
+                request
+                if isinstance(request, RequestDraft)
+                else RequestDraft.model_validate(
+                    request,
+                )
+            ).model_dump(
+                by_alias=True,
+                exclude_none=True,
             )
-            for r in requests
+            for request in requests
         ]
 
         asyncio_queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
@@ -1027,7 +1037,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_delete_requests(
         self,
-        requests: list[RequestDeleteInput] | list[RequestDeleteInputDict],
+        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -1040,10 +1050,14 @@ class RequestQueueClientAsync(ResourceClientAsync):
             timeout: Timeout for the API HTTP request.
         """
         requests_as_dicts = [
-            (r if isinstance(r, RequestDeleteInput) else RequestDeleteInput.model_validate(r)).model_dump(
-                by_alias=True, exclude_none=True
-            )
-            for r in requests
+            (
+                request
+                if isinstance(request, RequestDraftDelete)
+                else RequestDraftDelete.model_validate(
+                    request,
+                )
+            ).model_dump(by_alias=True, exclude_none=True)
+            for request in requests
         ]
 
         request_params = self._build_params(clientKey=self.client_key)

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 from ._utils import maybe_await
-from apify_client._models_generated import (
+from apify_client._models import (
     ActorJobStatus,
     ListOfRuns,
     ListOfWebhookDispatches,

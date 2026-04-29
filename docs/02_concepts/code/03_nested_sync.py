@@ -1,5 +1,5 @@
 from apify_client import ApifyClient
-from apify_client._models_generated import ActorJobStatus
+from apify_client._models import ActorJobStatus
 
 TOKEN = 'MY-APIFY-TOKEN'
 

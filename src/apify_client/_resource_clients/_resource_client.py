@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, TERMINAL_STATUSES
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
-from apify_client._models import ActorJobResponse
 from apify_client._utils import (
     catch_not_found_for_resource_or_throw,
     catch_not_found_or_throw,
@@ -327,13 +326,12 @@ class ResourceClient(ResourceClientBase):
                     timeout=timeout,
                 )
                 result = response_to_dict(response)
-                actor_job_response = ActorJobResponse.model_validate(result)
-                actor_job = actor_job_response.data.model_dump()
+                actor_job = result.get('data') or {}
 
                 # Reset the not-found streak so a later transient 404 gets its own grace window.
                 not_found_deadline = None
 
-                is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
+                is_terminal = actor_job.get('status') in TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
                 if is_terminal or is_timed_out:
@@ -520,13 +518,12 @@ class ResourceClientAsync(ResourceClientBase):
                     timeout=timeout,
                 )
                 result = response_to_dict(response)
-                actor_job_response = ActorJobResponse.model_validate(result)
-                actor_job = actor_job_response.data.model_dump()
+                actor_job = result.get('data') or {}
 
                 # Reset the not-found streak so a later transient 404 gets its own grace window.
                 not_found_deadline = None
 
-                is_terminal = actor_job_response.data.status in TERMINAL_STATUSES
+                is_terminal = actor_job.get('status') in TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
                 if is_terminal or is_timed_out:

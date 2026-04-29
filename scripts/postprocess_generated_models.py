@@ -1,12 +1,12 @@
 """Post-process datamodel-codegen output to fix known issues and prune the TypedDict file.
 
-Applied to `_models_generated.py`:
+Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with
   discriminators on schemas referenced from array items).
 - Deduplicate the inlined `Type(StrEnum)` that comes from ErrorResponse.yaml; rewire to `ErrorType`.
 - Add `@docs_group('Models')` to every model class (plus the required import).
 
-Applied to `_typeddicts_generated.py`:
+Applied to `_typeddicts.py`:
 - Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive
   dependencies). The file is generated in full by datamodel-codegen; the trimming happens here.
 - Rename every kept class to add a `Dict` suffix so it doesn't clash with the Pydantic model name
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_DIR = REPO_ROOT / 'src' / 'apify_client'
-MODELS_PATH = PACKAGE_DIR / '_models_generated.py'
-TYPEDDICTS_PATH = PACKAGE_DIR / '_typeddicts_generated.py'
+MODELS_PATH = PACKAGE_DIR / '_models.py'
+TYPEDDICTS_PATH = PACKAGE_DIR / '_typeddicts.py'
 
 # Map of camelCase discriminator values to their snake_case equivalents.
 # Add new entries here as needed when the OpenAPI spec introduces new discriminators.
@@ -37,7 +37,7 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 }
 
 # TypedDicts accepted as inputs by resource-client methods. These are the roots of the reachability
-# walk over `_typeddicts_generated.py`: anything not reachable from here (directly or transitively)
+# walk over `_typeddicts.py`: anything not reachable from here (directly or transitively)
 # is dropped so only the TypedDicts that are part of the public input surface — plus their nested
 # shapes — survive. Names are the raw datamodel-codegen outputs (no `Dict` suffix yet); the suffix
 # is added later by `rename_with_dict_suffix`. Update this set whenever a new `<Name>Dict | <Name>`
@@ -45,8 +45,11 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 RESOURCE_INPUT_TYPEDDICTS: frozenset[str] = frozenset(
     {
         'Request',  # RequestQueueClient.update_request
+        'RequestDraft',  # RequestQueueClient.add_request, batch_add_requests
+        'RequestDraftDelete',  # RequestQueueClient.batch_delete_requests
         'TaskInput',  # Actor/Task start/call/update default input
         'WebhookCreate',  # Actor/Task start/call webhook list element
+        'WebhookRepresentation',  # Actor/Task start/call ad-hoc webhook list element
     }
 )
 
@@ -254,7 +257,7 @@ def rename_with_dict_suffix(content: str, names: set[str]) -> str:
 
 
 def postprocess_models(path: Path) -> bool:
-    """Apply `_models_generated.py`-specific fixes. Returns True if the file changed."""
+    """Apply `_models.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
     fixed = fix_discriminators(original)
     fixed = deduplicate_error_type_enum(fixed)
@@ -266,7 +269,7 @@ def postprocess_models(path: Path) -> bool:
 
 
 def postprocess_typeddicts(path: Path) -> bool:
-    """Apply `_typeddicts_generated.py`-specific fixes. Returns True if the file changed."""
+    """Apply `_typeddicts.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
     pruned, kept = prune_typeddicts(original, RESOURCE_INPUT_TYPEDDICTS)
     renamed = rename_with_dict_suffix(pruned, kept)
@@ -291,13 +294,13 @@ def main() -> None:
         changed.append(MODELS_PATH)
         print(f'Fixed generated models in {MODELS_PATH}')
     else:
-        print('No fixes needed for _models_generated.py')
+        print('No fixes needed for _models.py')
 
     if postprocess_typeddicts(TYPEDDICTS_PATH):
         changed.append(TYPEDDICTS_PATH)
         print(f'Pruned and renamed TypedDicts in {TYPEDDICTS_PATH}')
     else:
-        print('No fixes needed for _typeddicts_generated.py')
+        print('No fixes needed for _typeddicts.py')
 
     if changed:
         run_ruff(changed)

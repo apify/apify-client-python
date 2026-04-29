@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
-from apify_client._models import WebhookRepresentationList
-from apify_client._models_generated import (
+from apify_client._models import (
     Actor,
     ActorPermissionLevel,
     ActorResponse,
@@ -26,14 +25,19 @@ from apify_client._models_generated import (
     UpdateActorRequest,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import encode_key_value_store_record_value, response_to_dict, to_seconds
+from apify_client._utils import (
+    encode_key_value_store_record_value,
+    encode_webhooks_to_base64,
+    response_to_dict,
+    to_seconds,
+)
 
 if TYPE_CHECKING:
     from datetime import timedelta
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._models_generated import ActorJobStatus
+    from apify_client._models import ActorJobStatus
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,
@@ -277,7 +281,7 @@ class ActorClient(ResourceClient):
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
+            webhooks=encode_webhooks_to_base64(webhooks),
         )
 
         response = self._http_client.call(
@@ -773,7 +777,7 @@ class ActorClientAsync(ResourceClientAsync):
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
             forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
-            webhooks=WebhookRepresentationList.from_webhooks(webhooks or []).to_base64(),
+            webhooks=encode_webhooks_to_base64(webhooks),
         )
 
         response = await self._http_client.call(

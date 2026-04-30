@@ -60,7 +60,7 @@ async def test_list_actors_pagination(client: ApifyClient | ApifyClientAsync) ->
 
 async def test_list_actors_sorting(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing Actors with sorting."""
-    result = await maybe_await(client.actors().list(limit=10, desc=True, sort_by='created_at'))
+    result = await maybe_await(client.actors().list(limit=10, desc=True, sort_by='stats.lastRunStartedAt'))
     actors_page = cast('ListOfActors', result)
 
     assert actors_page is not None

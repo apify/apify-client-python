@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._literals import _STORAGE_OWNERSHIP_WIRE_VALUES, StorageOwnership
 from apify_client._models import (
     ListOfRequestQueues,
     ListOfRequestQueuesResponse,
@@ -13,6 +12,7 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._literals import StorageOwnership
     from apify_client._types import Timeout
 
 
@@ -54,8 +54,8 @@ class RequestQueueCollectionClient(ResourceClient):
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
             desc: Whether to sort the request queues in descending order based on their modification date.
-            ownership: Filter by ownership. `'owned_by_me'` returns only user's own request queues,
-                `'shared_with_me'` returns only request queues shared with the user.
+            ownership: Filter by ownership. `'ownedByMe'` returns only user's own request queues,
+                `'sharedWithMe'` returns only request queues shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -67,7 +67,7 @@ class RequestQueueCollectionClient(ResourceClient):
             limit=limit,
             offset=offset,
             desc=desc,
-            ownership=_STORAGE_OWNERSHIP_WIRE_VALUES[ownership] if ownership is not None else None,
+            ownership=ownership,
         )
         return ListOfRequestQueuesResponse.model_validate(result).data
 
@@ -130,8 +130,8 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
             desc: Whether to sort the request queues in descending order based on their modification date.
-            ownership: Filter by ownership. `'owned_by_me'` returns only user's own request queues,
-                `'shared_with_me'` returns only request queues shared with the user.
+            ownership: Filter by ownership. `'ownedByMe'` returns only user's own request queues,
+                `'sharedWithMe'` returns only request queues shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -143,7 +143,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             limit=limit,
             offset=offset,
             desc=desc,
-            ownership=_STORAGE_OWNERSHIP_WIRE_VALUES[ownership] if ownership is not None else None,
+            ownership=ownership,
         )
         return ListOfRequestQueuesResponse.model_validate(result).data
 

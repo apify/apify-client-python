@@ -4,7 +4,6 @@ import textwrap
 
 from scripts.postprocess_generated_models import (
     add_docs_group_decorators,
-    convert_camelcase_literal_values_to_snake_case,
     convert_enums_to_literals,
     deduplicate_error_type_enum,
     fix_discriminators,
@@ -556,74 +555,3 @@ def test_split_literals_to_file_output_has_valid_header() -> None:
     _, literals = split_literals_to_file(content)
     assert 'from __future__ import annotations' in literals
     assert 'from typing import Literal' in literals
-
-
-# -- convert_camelcase_literal_values_to_snake_case --------------------------------------
-
-
-def test_convert_camelcase_literal_values_to_snake_case_converts_values_and_emits_mapping() -> None:
-    """camelCase values are snake_cased and a wire-mapping dict is appended after the alias docstring."""
-    content = textwrap.dedent("""\
-        Ownership = Literal[
-            'ownedByMe',
-            'sharedWithMe',
-        ]
-        \"\"\"Ownership docstring.\"\"\"
-    """)
-    result = convert_camelcase_literal_values_to_snake_case(content)
-
-    assert "'owned_by_me'" in result
-    assert "'shared_with_me'" in result
-    assert "'ownedByMe'" in result  # preserved inside the wire mapping
-    assert '_OWNERSHIP_WIRE_VALUES: dict[Ownership, str]' in result
-    assert '"""Ownership docstring."""' in result  # alias docstring still above the mapping
-
-    # The mapping should come AFTER the alias's trailing docstring.
-    alias_docstring_idx = result.index('"""Ownership docstring."""')
-    mapping_idx = result.index('_OWNERSHIP_WIRE_VALUES')
-    assert alias_docstring_idx < mapping_idx
-
-
-def test_convert_camelcase_literal_values_to_snake_case_ignores_non_camelcase_values() -> None:
-    """SCREAMING_SNAKE, hyphenated, and dotted values pass through and emit no wire mapping."""
-    content = textwrap.dedent("""\
-        Status = Literal[
-            'READY',
-            'TIMED-OUT',
-            'ACTOR.RUN.CREATED',
-        ]
-    """)
-    result = convert_camelcase_literal_values_to_snake_case(content)
-
-    assert result == content  # untouched
-    assert 'WIRE_VALUES' not in result
-
-
-def test_convert_camelcase_literal_values_to_snake_case_handles_multiple_aliases() -> None:
-    """Each alias is processed independently; only those with camelCase values get a wire mapping."""
-    content = textwrap.dedent("""\
-        A = Literal[
-            'fooBar',
-        ]
-
-        B = Literal[
-            'UPPER_CASE',
-        ]
-
-        C = Literal[
-            'bazQux',
-        ]
-    """)
-    result = convert_camelcase_literal_values_to_snake_case(content)
-
-    assert "'foo_bar'" in result
-    assert "'baz_qux'" in result
-    assert '_A_WIRE_VALUES' in result
-    assert '_C_WIRE_VALUES' in result
-    assert '_B_WIRE_VALUES' not in result  # B had no camelCase values, no mapping emitted
-
-
-def test_convert_camelcase_literal_values_to_snake_case_no_change_when_no_aliases() -> None:
-    """Source without any `Literal[...]` aliases passes through unchanged."""
-    content = 'x = 1\n'
-    assert convert_camelcase_literal_values_to_snake_case(content) == content

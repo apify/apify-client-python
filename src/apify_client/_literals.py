@@ -460,15 +460,9 @@ SourceCodeFileFormat = Literal[
 
 
 StorageOwnership = Literal[
-    'owned_by_me',
-    'shared_with_me',
+    'ownedByMe',
+    'sharedWithMe',
 ]
-
-_STORAGE_OWNERSHIP_WIRE_VALUES: dict[StorageOwnership, str] = {
-    'owned_by_me': 'ownedByMe',
-    'shared_with_me': 'sharedWithMe',
-}
-"""Maps snake_case `StorageOwnership` values to the camelCase form expected on the API wire."""
 
 
 VersionSourceType = Literal[

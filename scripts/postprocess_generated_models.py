@@ -6,9 +6,6 @@ Applied to `_models.py`:
 - Deduplicate the inlined `Type(StrEnum)` that comes from ErrorResponse.yaml; rewire to `ErrorType`.
 - Rewrite every `class X(StrEnum)` as `X = Literal[...]` so downstream code can pass plain strings
   (and reuse the named alias in resource-client signatures) instead of enum members.
-- Convert camelCase string values in each literal alias to snake_case (Pythonic), and emit a
-  `_<NAME>_WIRE_VALUES` mapping the Python value back to the original camelCase form so the
-  resource clients can still produce the exact string the API expects on the wire.
 - Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving
   `_models.py` importing them — so consumers can depend on a dedicated literals module
   without pulling in every Pydantic model.
@@ -193,13 +190,6 @@ from typing import Literal
 
 """
 
-_CAMEL_CASE_VALUE = re.compile(r"^'([a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*)',?$")
-
-
-def _camel_to_snake(value: str) -> str:
-    """Convert a camelCase identifier to snake_case."""
-    return re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', value).lower()
-
 
 def _is_literal_alias(node: ast.stmt) -> bool:
     """Return True if `node` is a top-level `Name = Literal[...]` statement."""
@@ -211,60 +201,6 @@ def _is_literal_alias(node: ast.stmt) -> bool:
         and isinstance(node.value.value, ast.Name)
         and node.value.value.id == 'Literal'
     )
-
-
-def convert_camelcase_literal_values_to_snake_case(content: str) -> str:
-    """Rewrite camelCase string values in `Literal[...]` aliases into snake_case.
-
-    Scans each `Name = Literal[...]` block and, for any value matching the camelCase pattern
-    (lowercase-first followed by an uppercase letter), converts it to snake_case. For each alias
-    that had at least one conversion, emits a `_<NAME>_WIRE_VALUES: dict[<NAME>, str] = ...`
-    mapping right after the alias so consumers can translate back to the API wire format.
-
-    SCREAMING_SNAKE_CASE, dotted, hyphenated, and HTTP-method values pass through unchanged.
-    """
-    tree = ast.parse(content)
-    lines = content.split('\n')
-    insertions: list[tuple[int, list[str]]] = []  # (insert-after-line-exclusive, lines to insert)
-
-    for alias_name, node, end_line in _extract_top_level_symbols(tree):
-        if not _is_literal_alias(node):
-            continue
-
-        assert node.end_lineno is not None  # noqa: S101
-        wire_mapping: dict[str, str] = {}
-        for line_idx in range(node.lineno - 1, node.end_lineno):
-            match = _CAMEL_CASE_VALUE.match(lines[line_idx].strip())
-            if match is None:
-                continue
-            original = match.group(1)
-            snake = _camel_to_snake(original)
-            wire_mapping[snake] = original
-            lines[line_idx] = lines[line_idx].replace(f"'{original}'", f"'{snake}'", 1)
-
-        if not wire_mapping:
-            continue
-
-        constant_name = '_' + _camel_to_snake(alias_name).upper() + '_WIRE_VALUES'
-        docstring = f'"""Maps snake_case `{alias_name}` values to the camelCase form expected on the API wire."""'
-        mapping_lines = [
-            '',
-            f'{constant_name}: dict[{alias_name}, str] = {{',
-            *(f"    '{snake}': '{original}'," for snake, original in wire_mapping.items()),
-            '}',
-            docstring,
-        ]
-        # Insert after the alias's trailing docstring (absorbed into end_line) so the docstring
-        # stays attached to the alias rather than to the mapping dict.
-        insertions.append((end_line, mapping_lines))
-
-    if not insertions:
-        return content
-
-    for insert_at, new_lines in sorted(insertions, key=lambda r: r[0], reverse=True):
-        lines[insert_at:insert_at] = new_lines
-
-    return '\n'.join(lines)
 
 
 def split_literals_to_file(content: str) -> tuple[str, str]:
@@ -493,8 +429,6 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     fixed = convert_enums_to_literals(fixed)
     fixed = add_docs_group_decorators(fixed, 'Models')
     models_content, literals_content = split_literals_to_file(fixed)
-    if literals_content:
-        literals_content = convert_camelcase_literal_values_to_snake_case(literals_content)
 
     changed: list[Path] = []
     if models_content != original:

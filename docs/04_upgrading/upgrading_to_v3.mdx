@@ -287,26 +287,6 @@ client.key_value_store('my-store').set_record('my-key', {'data': 1}, content_typ
 client.run('my-run').charge('my-event', count=5, idempotency_key='my-idempotency-key')
 ```
 
-## Snake_case `sort_by` values on `actors().list()`
-
-The `sort_by` parameter of <ApiLink to="class/ActorCollectionClient#list">`ActorCollectionClient.list()`</ApiLink> and <ApiLink to="class/ActorCollectionClientAsync#list">`ActorCollectionClientAsync.list()`</ApiLink> now accepts pythonic snake_case values instead of the raw camelCase values used by the API.
-
-Before (v2):
-
-```python
-client.actors().list(sort_by='createdAt')
-client.actors().list(sort_by='stats.lastRunStartedAt')
-```
-
-After (v3):
-
-```python
-client.actors().list(sort_by='created_at')
-client.actors().list(sort_by='last_run_started_at')
-```
-
-The default value also changed from `'createdAt'` to `'created_at'` (behavior is unchanged). The client translates the snake_case value to the form expected by the API internally.
-
 ## `Literal` type aliases instead of `StrEnum` classes
 
 Generated enum-like types are now [`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal) type aliases instead of `StrEnum` classes. Pass plain strings instead of enum members; type checkers will validate them against the allowed set.
@@ -333,26 +313,10 @@ client.actor('apify/hello-world').webhooks().create(
 )
 ```
 
-The aliases now live in `apify_client._literals_generated` (previously `apify_client._models`) and can be imported for use in type annotations:
+The aliases now live in `apify_client._literals` (previously `apify_client._models`) and can be imported for use in type annotations:
 
 ```python
-from apify_client._literals_generated import WebhookEventType
+from apify_client._literals import WebhookEventType
 
 events: list[WebhookEventType] = ['ACTOR.RUN.SUCCEEDED', 'ACTOR.RUN.FAILED']
-```
-
-### Snake_case `StorageOwnership` values
-
-`StorageOwnership` previously carried the camelCase wire values (`'ownedByMe'` / `'sharedWithMe'`). It now uses pythonic snake_case values; the client translates them to the camelCase form expected by the API internally.
-
-Before (v2):
-
-```python
-client.datasets().list(ownership='ownedByMe')
-```
-
-After (v3):
-
-```python
-client.datasets().list(ownership='owned_by_me')
 ```

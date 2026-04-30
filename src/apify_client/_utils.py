@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._literals import WebhooksList
+    from apify_client._types import WebhooksList
     from apify_client.errors import ApifyApiError
 
 T = TypeVar('T')

@@ -213,7 +213,7 @@ def _is_literal_alias(node: ast.stmt) -> bool:
     )
 
 
-def snake_case_camelcase_literal_values(content: str) -> str:
+def convert_camelcase_literal_values_to_snake_case(content: str) -> str:
     """Rewrite camelCase string values in `Literal[...]` aliases into snake_case.
 
     Scans each `Name = Literal[...]` block and, for any value matching the camelCase pattern
@@ -494,7 +494,7 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     fixed = add_docs_group_decorators(fixed, 'Models')
     models_content, literals_content = split_literals_to_file(fixed)
     if literals_content:
-        literals_content = snake_case_camelcase_literal_values(literals_content)
+        literals_content = convert_camelcase_literal_values_to_snake_case(literals_content)
 
     changed: list[Path] = []
     if models_content != original:

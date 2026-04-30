@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._literals import Timeout, WebhooksList
     from apify_client._literals_generated import ActorJobStatus, ActorPermissionLevel, RunOrigin
     from apify_client._resource_clients import (
         ActorVersionClient,
@@ -53,6 +52,7 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
+    from apify_client._types import Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo

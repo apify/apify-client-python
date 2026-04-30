@@ -19,7 +19,6 @@ from apify_client._utils import encode_webhooks_to_base64, response_to_dict, to_
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._literals import Timeout, WebhooksList
     from apify_client._literals_generated import ActorJobStatus, RunOrigin
     from apify_client._resource_clients import (
         RunClient,
@@ -30,6 +29,7 @@ if TYPE_CHECKING:
         WebhookCollectionClientAsync,
     )
     from apify_client._typeddicts import TaskInputDict
+    from apify_client._types import Timeout, WebhooksList
 
 
 @docs_group('Resource clients')

@@ -14,7 +14,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
-    from apify_client._literals import Timeout
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

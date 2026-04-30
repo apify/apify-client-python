@@ -42,9 +42,9 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._literals import Timeout
     from apify_client._literals_generated import GeneralAccess
     from apify_client._typeddicts import RequestDict, RequestDraftDeleteDict, RequestDraftDict
+    from apify_client._types import Timeout
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB

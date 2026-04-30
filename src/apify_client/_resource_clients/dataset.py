@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._literals import JsonSerializable, Timeout
     from apify_client._literals_generated import GeneralAccess
+    from apify_client._types import JsonSerializable, Timeout
 
 
 @docs_group('Other')

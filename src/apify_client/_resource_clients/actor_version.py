@@ -16,7 +16,6 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._literals import Timeout
     from apify_client._literals_generated import VersionSourceType
     from apify_client._resource_clients import (
         ActorEnvVarClient,
@@ -24,6 +23,7 @@ if TYPE_CHECKING:
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
     )
+    from apify_client._types import Timeout
 
 _source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])
 

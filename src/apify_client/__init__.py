@@ -8,7 +8,7 @@ from ._http_clients import (
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
-from ._literals import Timeout
+from ._types import Timeout
 
 __version__ = metadata.version('apify-client')
 

@@ -7,7 +7,7 @@ from typing import Annotated, Any, Literal
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, RootModel
 
 from apify_client._docs import docs_group
-from apify_client._literals_generated import (
+from apify_client._literals import (
     ActorJobStatus,
     ActorPermissionLevel,
     ErrorType,

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from _pytest.logging import LogCaptureFixture
     from pytest_httpserver import HTTPServer
 
-    from apify_client._literals_generated import ActorJobStatus
+    from apify_client._literals import ActorJobStatus
 
 _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'

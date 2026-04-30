@@ -42,7 +42,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._literals_generated import GeneralAccess
+    from apify_client._literals import GeneralAccess
     from apify_client._typeddicts import RequestDict, RequestDraftDeleteDict, RequestDraftDict
     from apify_client._types import Timeout
 

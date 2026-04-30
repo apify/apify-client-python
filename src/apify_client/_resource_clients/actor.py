@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._literals_generated import ActorJobStatus, ActorPermissionLevel, RunOrigin
+    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,

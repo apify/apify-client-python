@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._literals_generated import _STORAGE_OWNERSHIP_WIRE_VALUES, StorageOwnership
+from apify_client._literals import _STORAGE_OWNERSHIP_WIRE_VALUES, StorageOwnership
 from apify_client._models import (
     ListOfRequestQueues,
     ListOfRequestQueuesResponse,

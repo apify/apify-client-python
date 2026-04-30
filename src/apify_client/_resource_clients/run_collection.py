@@ -9,7 +9,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from apify_client._literals_generated import ActorJobStatus
+    from apify_client._literals import ActorJobStatus
     from apify_client._types import Timeout
 
 

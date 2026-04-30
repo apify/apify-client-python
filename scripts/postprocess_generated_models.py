@@ -9,7 +9,7 @@ Applied to `_models.py`:
 - Convert camelCase string values in each literal alias to snake_case (Pythonic), and emit a
   `_<NAME>_WIRE_VALUES` mapping the Python value back to the original camelCase form so the
   resource clients can still produce the exact string the API expects on the wire.
-- Move the resulting `X = Literal[...]` definitions into `_literals_generated.py`, leaving
+- Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving
   `_models.py` importing them — so consumers can depend on a dedicated literals module
   without pulling in every Pydantic model.
 - Add `@docs_group('Models')` to every model class (plus the required import).
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_DIR = REPO_ROOT / 'src' / 'apify_client'
 MODELS_PATH = PACKAGE_DIR / '_models.py'
-LITERALS_PATH = PACKAGE_DIR / '_literals_generated.py'
+LITERALS_PATH = PACKAGE_DIR / '_literals.py'
 TYPEDDICTS_PATH = PACKAGE_DIR / '_typeddicts.py'
 
 # Map of camelCase discriminator values to their snake_case equivalents.
@@ -271,8 +271,8 @@ def split_literals_to_file(content: str) -> tuple[str, str]:
     """Move every top-level `Name = Literal[...]` block into a separate literals module.
 
     Walks the top-level AST, collects each literal alias plus its trailing bare-string docstring,
-    deletes them from `_models.py`, and rebuilds `_literals_generated.py` from the blocks
-    in original order. The models content gains a `from apify_client._literals_generated import ...`
+    deletes them from `_models.py`, and rebuilds `_literals.py` from the blocks
+    in original order. The models content gains a `from apify_client._literals import ...`
     line so Pydantic can still resolve the forward references in field annotations.
 
     Returns `(new_models_content, literals_file_content)`. If no literal aliases are found, the
@@ -303,7 +303,7 @@ def split_literals_to_file(content: str) -> tuple[str, str]:
     # Inject the import right after the last existing `from apify_client.` import so ruff/isort
     # keep the final ordering stable.
     names = sorted(name for _, _, name in blocks)
-    import_line = f'from apify_client._literals_generated import {", ".join(names)}'
+    import_line = f'from apify_client._literals import {", ".join(names)}'
     insert_at = next(
         (idx + 1 for idx in range(len(new_lines) - 1, -1, -1) if new_lines[idx].startswith('from apify_client.')),
         None,
@@ -483,7 +483,7 @@ def rename_with_dict_suffix(content: str, names: set[str]) -> str:
 
 
 def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
-    """Apply `_models.py`-specific fixes and emit `_literals_generated.py`.
+    """Apply `_models.py`-specific fixes and emit `_literals.py`.
 
     Returns the list of paths that were (re)written.
     """
@@ -534,7 +534,7 @@ def main() -> None:
         for path in changed:
             print(f'Wrote {path}')
     else:
-        print('No fixes needed for _models.py / _literals_generated.py')
+        print('No fixes needed for _models.py / _literals.py')
 
     if postprocess_typeddicts(TYPEDDICTS_PATH):
         changed.append(TYPEDDICTS_PATH)

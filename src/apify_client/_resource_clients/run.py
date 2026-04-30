@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     import logging
     from decimal import Decimal
 
-    from apify_client._literals_generated import GeneralAccess
+    from apify_client._literals import GeneralAccess
     from apify_client._resource_clients import (
         DatasetClient,
         DatasetClientAsync,

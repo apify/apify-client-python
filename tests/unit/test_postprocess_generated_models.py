@@ -487,7 +487,7 @@ def test_split_literals_to_file_moves_literal_aliases() -> None:
     models, literals = split_literals_to_file(content)
 
     assert 'Status = Literal[' not in models
-    assert 'from apify_client._literals_generated import Status' in models
+    assert 'from apify_client._literals import Status' in models
     assert 'status: Status' in models  # field annotation still references the name
 
     assert 'Status = Literal[' in literals
@@ -517,7 +517,7 @@ def test_split_literals_to_file_handles_multiple_aliases() -> None:
 
     assert 'A = Literal[' not in models
     assert 'B = Literal[' not in models
-    assert 'from apify_client._literals_generated import A, B' in models
+    assert 'from apify_client._literals import A, B' in models
 
     assert "A = Literal[\n    'x',\n]" in literals
     assert "B = Literal[\n    'y',\n]" in literals

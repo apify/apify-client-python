@@ -88,7 +88,7 @@ async def test_dataset_should_create_public_items_expiring_url_with_params(
         assert 'offset=0' in items_public_url
 
         impit_client = impit.Client()
-        response = impit_client.get(items_public_url, timeout=5)
+        response = impit_client.get(items_public_url, timeout=30)
         assert response.status_code == 200
     finally:
         await maybe_await(dataset.delete())
@@ -110,7 +110,7 @@ async def test_dataset_should_create_public_items_non_expiring_url(
         assert 'signature=' in items_public_url
 
         impit_client = impit.Client()
-        response = impit_client.get(items_public_url, timeout=5)
+        response = impit_client.get(items_public_url, timeout=30)
         assert response.status_code == 200
     finally:
         await maybe_await(dataset.delete())

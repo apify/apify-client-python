@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Add filter and cursor parameters to list_requests method ([#743](https://github.com/apify/apify-client-python/pull/743)) ([3445ff7](https://github.com/apify/apify-client-python/commit/3445ff74e61d5f1f9a964f2ee3c14d198298f709)) by [@mvolfik](https://github.com/mvolfik)
 - Add ApifyApiError subclasses grouped by HTTP status ([#737](https://github.com/apify/apify-client-python/pull/737)) ([a6daff7](https://github.com/apify/apify-client-python/commit/a6daff754e5e1af8a6230f4c504db24a246c734f)) by [@vdusek](https://github.com/vdusek)
 - Generate TypedDict types for input-side models ([#738](https://github.com/apify/apify-client-python/pull/738)) ([2fd66d0](https://github.com/apify/apify-client-python/commit/2fd66d0adf253dff470f40d0bfdbc620da0ed608)) by [@vdusek](https://github.com/vdusek), closes [#666](https://github.com/apify/apify-client-python/issues/666)
+- Generate Literal type aliases instead of StrEnum classes ([#759](https://github.com/apify/apify-client-python/pull/759)) ([2bf5a75](https://github.com/apify/apify-client-python/commit/2bf5a75f38a74a48c5c9a9682d9eaf330da27935)) by [@vdusek](https://github.com/vdusek), closes [#576](https://github.com/apify/apify-client-python/issues/576)
 
 ### 🐛 Bug Fixes
 

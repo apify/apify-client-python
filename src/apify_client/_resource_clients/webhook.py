@@ -17,7 +17,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils import response_to_dict
 
 if TYPE_CHECKING:
-    from apify_client._models import WebhookEventType
+    from apify_client._literals import WebhookEventType
     from apify_client._resource_clients import WebhookDispatchCollectionClient, WebhookDispatchCollectionClientAsync
     from apify_client._types import Timeout
 

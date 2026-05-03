@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from datetime import UTC, datetime, timedelta
 
 from ._utils import maybe_await, maybe_sleep
-from apify_client._models import ActorJobStatus, Run
+from apify_client._models import Run
 from apify_client.errors import ApifyApiError
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -35,19 +35,17 @@ async def test_run_collection_list_multiple_statuses(client: ApifyClient | Apify
     try:
         run_collection = client.actor(HELLO_WORLD_ACTOR).runs()
 
-        result = await maybe_await(run_collection.list(status=[ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT]))
+        result = await maybe_await(run_collection.list(status=['SUCCEEDED', 'TIMED-OUT']))
         multiple_status_runs = cast('ListOfRuns', result)
 
-        result = await maybe_await(run_collection.list(status=ActorJobStatus.SUCCEEDED))
+        result = await maybe_await(run_collection.list(status='SUCCEEDED'))
         single_status_runs = cast('ListOfRuns', result)
 
         assert multiple_status_runs is not None
         assert single_status_runs is not None
 
-        assert all(
-            run.status in [ActorJobStatus.SUCCEEDED, ActorJobStatus.TIMED_OUT] for run in multiple_status_runs.items
-        )
-        assert all(run.status == ActorJobStatus.SUCCEEDED for run in single_status_runs.items)
+        assert all(run.status in ['SUCCEEDED', 'TIMED-OUT'] for run in multiple_status_runs.items)
+        assert all(run.status == 'SUCCEEDED' for run in single_status_runs.items)
     finally:
         for run in created_runs:
             run_id = run.id
@@ -100,7 +98,7 @@ async def test_run_get_and_delete(client: ApifyClient | ApifyClientAsync) -> Non
     retrieved_run = cast('Run', result)
     assert retrieved_run is not None
     assert retrieved_run.id == run.id
-    assert retrieved_run.status.value == 'SUCCEEDED'
+    assert retrieved_run.status == 'SUCCEEDED'
 
     # Delete the run
     await maybe_await(run_client.delete())
@@ -197,13 +195,13 @@ async def test_run_abort(client: ApifyClient | ApifyClientAsync) -> None:
 
         assert aborted_run is not None
         # Status should be ABORTING or ABORTED (or SUCCEEDED if too fast)
-        assert aborted_run.status.value in ['ABORTING', 'ABORTED', 'SUCCEEDED']
+        assert aborted_run.status in ['ABORTING', 'ABORTED', 'SUCCEEDED']
 
         # Wait for abort to complete
         result = await maybe_await(run_client.wait_for_finish())
         final_run = cast('Run', result)
         assert final_run is not None
-        assert final_run.status.value in ['ABORTED', 'SUCCEEDED']
+        assert final_run.status in ['ABORTED', 'SUCCEEDED']
     finally:
         await maybe_await(run_client.wait_for_finish())
         await maybe_await(run_client.delete())
@@ -242,7 +240,7 @@ async def test_run_resurrect(client: ApifyClient | ApifyClientAsync) -> None:
     result = await maybe_await(actor.call())
     run = cast('Run', result)
     assert run is not None
-    assert run.status.value == 'SUCCEEDED'
+    assert run.status == 'SUCCEEDED'
 
     run_client = client.run(run.id)
 
@@ -252,13 +250,13 @@ async def test_run_resurrect(client: ApifyClient | ApifyClientAsync) -> None:
         resurrected_run = cast('Run', result)
         assert resurrected_run is not None
         # Status should be READY, RUNNING or already finished (if fast)
-        assert resurrected_run.status.value in ['READY', 'RUNNING', 'SUCCEEDED']
+        assert resurrected_run.status in ['READY', 'RUNNING', 'SUCCEEDED']
 
         # Wait for it to finish before deleting
         result = await maybe_await(run_client.wait_for_finish())
         final_run = cast('Run', result)
         assert final_run is not None
-        assert final_run.status.value == 'SUCCEEDED'
+        assert final_run.status == 'SUCCEEDED'
 
     finally:
         # Wait for run to finish before cleanup (resurrected run might still be running)
@@ -367,7 +365,7 @@ async def test_run_reboot(client: ApifyClient | ApifyClientAsync, *, is_async: b
 
         # Only try to reboot if the run is still running
         # Note: There's a race condition - run may finish between check and reboot call
-        if current_run and current_run.status.value == 'RUNNING':
+        if current_run and current_run.status == 'RUNNING':
             try:
                 result = await maybe_await(run_client.reboot())
                 rebooted_run = cast('Run', result)

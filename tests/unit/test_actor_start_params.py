@@ -8,7 +8,6 @@ import pytest
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._models import ActorJobStatus
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -26,7 +25,7 @@ def _create_minimal_run_response() -> dict:
             'userId': 'test_user_id',
             'startedAt': '2019-11-30T07:34:24.202Z',
             'finishedAt': '2019-12-12T09:30:12.202Z',
-            'status': ActorJobStatus.RUNNING.value,
+            'status': 'RUNNING',
             'statusMessage': 'Running',
             'isStatusMessageTerminal': False,
             'meta': {'origin': 'WEB'},

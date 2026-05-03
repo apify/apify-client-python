@@ -4,11 +4,12 @@ import asyncio
 import time
 from datetime import UTC, datetime, timedelta
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, get_args
 
-from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST, TERMINAL_STATUSES
+from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
+from apify_client._types import TerminalActorJobStatus
 from apify_client._utils import (
     catch_not_found_for_resource_or_throw,
     catch_not_found_or_throw,
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
     from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
     from apify_client._http_clients import HttpClient, HttpClientAsync
     from apify_client._types import Timeout
+
+_TERMINAL_STATUSES: frozenset[TerminalActorJobStatus] = frozenset(get_args(TerminalActorJobStatus))
 
 
 class ResourceClientBase(metaclass=WithLogDetailsClient):
@@ -331,7 +334,7 @@ class ResourceClient(ResourceClientBase):
                 # Reset the not-found streak so a later transient 404 gets its own grace window.
                 not_found_deadline = None
 
-                is_terminal = actor_job.get('status') in TERMINAL_STATUSES
+                is_terminal = actor_job.get('status') in _TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
                 if is_terminal or is_timed_out:
@@ -523,7 +526,7 @@ class ResourceClientAsync(ResourceClientBase):
                 # Reset the not-found streak so a later transient 404 gets its own grace window.
                 not_found_deadline = None
 
-                is_terminal = actor_job.get('status') in TERMINAL_STATUSES
+                is_terminal = actor_job.get('status') in _TERMINAL_STATUSES
                 is_timed_out = deadline is not None and datetime.now(UTC) >= deadline
 
                 if is_terminal or is_timed_out:

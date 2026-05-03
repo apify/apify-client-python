@@ -13,7 +13,8 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
-    from apify_client._models import Webhook, WebhookEventType
+    from apify_client._literals import WebhookEventType
+    from apify_client._models import Webhook
     from apify_client._types import Timeout
 
 

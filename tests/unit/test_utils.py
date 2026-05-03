@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from apify_client._models import WebhookCondition, WebhookCreate, WebhookEventType
+from apify_client._models import WebhookCondition, WebhookCreate
 from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -42,12 +42,12 @@ def test_encode_webhooks_to_base64() -> None:
         encode_webhooks_to_base64(
             [
                 WebhookCreate(
-                    event_types=[WebhookEventType.ACTOR_RUN_CREATED],
+                    event_types=['ACTOR.RUN.CREATED'],
                     condition=WebhookCondition(),
                     request_url='https://example.com/run-created',
                 ),
                 WebhookCreate(
-                    event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+                    event_types=['ACTOR.RUN.SUCCEEDED'],
                     condition=WebhookCondition(),
                     request_url='https://example.com/run-succeeded',
                     payload_template='{"hello": "world", "resource":{{resource}}}',
@@ -79,12 +79,12 @@ def test_encode_webhooks_to_base64_from_dicts() -> None:
     result_from_models = encode_webhooks_to_base64(
         [
             WebhookCreate(
-                event_types=[WebhookEventType.ACTOR_RUN_CREATED],
+                event_types=['ACTOR.RUN.CREATED'],
                 condition=WebhookCondition(),
                 request_url='https://example.com/run-created',
             ),
             WebhookCreate(
-                event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+                event_types=['ACTOR.RUN.SUCCEEDED'],
                 condition=WebhookCondition(),
                 request_url='https://example.com/run-succeeded',
                 payload_template='{"hello": "world"}',

@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._http_clients import HttpResponse
-    from apify_client._models import GeneralAccess
+    from apify_client._literals import GeneralAccess
     from apify_client._types import Timeout
 
 

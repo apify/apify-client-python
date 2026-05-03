@@ -8,11 +8,11 @@ from apify_client._models import (
     ListOfRequestQueuesResponse,
     RequestQueue,
     RequestQueueResponse,
-    StorageOwnership,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from apify_client._literals import StorageOwnership
     from apify_client._types import Timeout
 
 
@@ -54,15 +54,20 @@ class RequestQueueCollectionClient(ResourceClient):
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
             desc: Whether to sort the request queues in descending order based on their modification date.
-            ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
-                'sharedWithMe' returns only request queues shared with the user.
+            ownership: Filter by ownership. `'ownedByMe'` returns only user's own request queues,
+                `'sharedWithMe'` returns only request queues shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available request queues matching the specified filters.
         """
         result = self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+            timeout=timeout,
+            unnamed=unnamed,
+            limit=limit,
+            offset=offset,
+            desc=desc,
+            ownership=ownership,
         )
         return ListOfRequestQueuesResponse.model_validate(result).data
 
@@ -125,15 +130,20 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             limit: How many request queues to retrieve.
             offset: What request queue to include as first when retrieving the list.
             desc: Whether to sort the request queues in descending order based on their modification date.
-            ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
-                'sharedWithMe' returns only request queues shared with the user.
+            ownership: Filter by ownership. `'ownedByMe'` returns only user's own request queues,
+                `'sharedWithMe'` returns only request queues shared with the user.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The list of available request queues matching the specified filters.
         """
         result = await self._list(
-            timeout=timeout, unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership
+            timeout=timeout,
+            unnamed=unnamed,
+            limit=limit,
+            offset=offset,
+            desc=desc,
+            ownership=ownership,
         )
         return ListOfRequestQueuesResponse.model_validate(result).data
 

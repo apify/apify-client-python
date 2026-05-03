@@ -13,7 +13,6 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
-from apify_client._models import ActorJobStatus
 from apify_client._status_message_watcher import StatusMessageWatcherBase
 from apify_client._streamed_log import StreamedLogBase
 
@@ -22,6 +21,8 @@ if TYPE_CHECKING:
 
     from _pytest.logging import LogCaptureFixture
     from pytest_httpserver import HTTPServer
+
+    from apify_client._literals import ActorJobStatus
 
 _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'
@@ -81,10 +82,10 @@ class StatusResponseGenerator:
         self.requests_for_current_status = 0
         self.min_requests_per_status = 5
 
-        self.statuses = [
-            ('Initial message', ActorJobStatus.RUNNING, False),
-            ('Another message', ActorJobStatus.RUNNING, False),
-            ('Final message', ActorJobStatus.SUCCEEDED, True),
+        self.statuses: list[tuple[str, ActorJobStatus, bool]] = [
+            ('Initial message', 'RUNNING', False),
+            ('Another message', 'RUNNING', False),
+            ('Final message', 'SUCCEEDED', True),
         ]
 
     def _create_minimal_run_data(self, message: str, status: ActorJobStatus, *, is_terminal: bool) -> dict:
@@ -95,7 +96,7 @@ class StatusResponseGenerator:
             'userId': 'test_user_id',
             'startedAt': '2019-11-30T07:34:24.202Z',
             'finishedAt': '2019-12-12T09:30:12.202Z',
-            'status': status.value,
+            'status': status,
             'statusMessage': message,
             'isStatusMessageTerminal': is_terminal,
             'meta': {'origin': 'WEB'},
@@ -203,9 +204,7 @@ def mock_api(httpserver: HTTPServer) -> None:
     # Add actor run creation endpoint
     httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
         {
-            'data': status_generator._create_minimal_run_data(
-                'Initial message', ActorJobStatus.RUNNING, is_terminal=False
-            ),
+            'data': status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False),
         }
     )
 

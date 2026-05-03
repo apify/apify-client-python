@@ -7,7 +7,6 @@ from pydantic import TypeAdapter
 from apify_client._docs import docs_group
 from apify_client._models import (
     Actor,
-    ActorPermissionLevel,
     ActorResponse,
     ActorStandby,
     Build,
@@ -20,7 +19,6 @@ from apify_client._models import (
     PayPerEventActorPricingInfo,
     PricePerDatasetItemActorPricingInfo,
     Run,
-    RunOrigin,
     RunResponse,
     UpdateActorRequest,
 )
@@ -37,7 +35,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._models import ActorJobStatus
+    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,
@@ -280,7 +278,7 @@ class ActorClient(ResourceClient):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
-            forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
+            forcePermissionLevel=force_permission_level,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
@@ -776,7 +774,7 @@ class ActorClientAsync(ResourceClientAsync):
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             waitForFinish=wait_for_finish,
-            forcePermissionLevel=force_permission_level.value if force_permission_level is not None else None,
+            forcePermissionLevel=force_permission_level,
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 

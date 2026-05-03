@@ -6,7 +6,6 @@ from apify_client._docs import docs_group
 from apify_client._models import (
     ActorStandby,
     Run,
-    RunOrigin,
     RunResponse,
     Task,
     TaskInput,
@@ -20,7 +19,7 @@ from apify_client._utils import encode_webhooks_to_base64, response_to_dict, to_
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._models import ActorJobStatus
+    from apify_client._literals import ActorJobStatus, RunOrigin
     from apify_client._resource_clients import (
         RunClient,
         RunClientAsync,

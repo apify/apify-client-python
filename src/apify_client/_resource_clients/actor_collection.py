@@ -21,11 +21,6 @@ if TYPE_CHECKING:
 
     from apify_client._types import Timeout
 
-_SORT_BY_TO_API: dict[str, str] = {
-    'created_at': 'createdAt',
-    'last_run_started_at': 'stats.lastRunStartedAt',
-}
-
 
 @docs_group('Resource clients')
 class ActorCollectionClient(ResourceClient):
@@ -53,7 +48,7 @@ class ActorCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
+        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
         timeout: Timeout = 'medium',
     ) -> ListOfActors:
         """List the Actors the user has created or used.
@@ -71,8 +66,7 @@ class ActorCollectionClient(ResourceClient):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
-        result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=api_sort_by)
+        result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
         return ListOfActorsResponse.model_validate(result).data
 
     def create(
@@ -199,7 +193,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
-        sort_by: Literal['created_at', 'last_run_started_at'] | None = 'created_at',
+        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
         timeout: Timeout = 'medium',
     ) -> ListOfActors:
         """List the Actors the user has created or used.
@@ -217,8 +211,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         Returns:
             The list of available Actors matching the specified filters.
         """
-        api_sort_by = _SORT_BY_TO_API[sort_by] if sort_by is not None else None
-        result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=api_sort_by)
+        result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
         return ListOfActorsResponse.model_validate(result).data
 
     async def create(

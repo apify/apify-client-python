@@ -10,7 +10,6 @@ if TYPE_CHECKING:
 
 
 from ._utils import get_random_resource_name, maybe_await
-from apify_client._models import VersionSourceType
 
 
 async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> None:
@@ -72,7 +71,7 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
         result = await maybe_await(
             actor_client.versions().create(
                 version_number='1.0',
-                source_type=VersionSourceType.SOURCE_FILES,
+                source_type='SOURCE_FILES',
                 build_tag='test',
                 source_files=[
                     {
@@ -88,7 +87,7 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
         assert created_version is not None
         assert created_version.version_number == '1.0'
         assert created_version.build_tag == 'test'
-        assert created_version.source_type == VersionSourceType.SOURCE_FILES
+        assert created_version.source_type == 'SOURCE_FILES'
 
         # Get the same version
         version_client = actor_client.version('1.0')

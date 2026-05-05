@@ -96,7 +96,7 @@ For a guided walkthrough — authenticating, running an Actor, and reading its r
 ## Features
 
 - **Synchronous and asynchronous clients** — pick [`ApifyClient`](https://docs.apify.com/api/client/python/reference/class/ApifyClient) or [`ApifyClientAsync`](https://docs.apify.com/api/client/python/reference/class/ApifyClientAsync) to match your codebase; both expose the same API ([Asyncio support](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support)).
-- **Fully typed responses** — every method returns a [Pydantic](https://docs.pydantic.dev/) model generated from the Apify OpenAPI spec, with IDE autocomplete and runtime validation ([Upgrading to v3](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v3)).
+- **Fully typed responses** — every method returns a [Pydantic](https://docs.pydantic.dev/) model generated from the Apify OpenAPI spec, with IDE autocomplete and runtime validation ([Typed models](https://docs.apify.com/api/client/python/docs/concepts/typed-models)).
 - **Automatic retries** — exponential backoff for network errors, HTTP 429, and 5xx responses, configurable per client ([Retries](https://docs.apify.com/api/client/python/docs/concepts/retries)).
 - **Tiered timeouts** — short / medium / long tiers picked per endpoint, overridable per call ([Timeouts](https://docs.apify.com/api/client/python/docs/concepts/timeouts)).
 - **Pagination and streaming** — iterate datasets, key-value store keys, or live logs without manual paging or buffering ([Pagination](https://docs.apify.com/api/client/python/docs/concepts/pagination), [Streaming](https://docs.apify.com/api/client/python/docs/concepts/streaming-resources)).

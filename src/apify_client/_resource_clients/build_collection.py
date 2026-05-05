@@ -4,9 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import ListOfBuilds, ListOfBuildsResponse
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
+    from apify_client._models import BuildShort
     from apify_client._types import Timeout
 
 
@@ -57,6 +61,37 @@ class BuildCollectionClient(ResourceClient):
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfBuildsResponse.model_validate(result).data
 
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[BuildShort]:
+        """Iterate over all Actor builds.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
+        https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
+
+        Args:
+            limit: How many builds to retrieve.
+            offset: What build to include as first when retrieving the list.
+            desc: Whether to sort the builds in descending order based on their start date.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The Actor builds matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfBuilds:
+            return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
+
 
 @docs_group('Resource clients')
 class BuildCollectionClientAsync(ResourceClientAsync):
@@ -104,3 +139,34 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfBuildsResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[BuildShort]:
+        """Iterate over all Actor builds.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actors/build-collection/get-list-of-builds
+        https://docs.apify.com/api/v2#/reference/actor-builds/build-collection/get-user-builds-list
+
+        Args:
+            limit: How many builds to retrieve.
+            offset: What build to include as first when retrieving the list.
+            desc: Whether to sort the builds in descending order based on their start date.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The Actor builds matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfBuilds:
+            return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)

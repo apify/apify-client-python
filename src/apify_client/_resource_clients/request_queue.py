@@ -35,11 +35,13 @@ from apify_client._models import (
     UnlockRequestsResponse,
     UnlockRequestsResult,
 )
+from apify_client._pagination import get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
@@ -545,6 +547,44 @@ class RequestQueueClient(ResourceClient):
 
         result = response_to_dict(response)
         return ListOfRequestsResponse.model_validate(result).data
+
+    def iterate_requests(
+        self,
+        *,
+        limit: int | None = None,
+        filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
+        cursor: str | None = None,
+        chunk_size: int | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[Request]:
+        """Iterate over requests in the queue.
+
+        Simple `list_requests` does only one API call, possibly not listing all items matching the criteria.
+        This method returns an iterator that is capable of making multiple API calls to retrieve all items
+        matching the criteria using the opaque ``cursor`` returned by the API.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
+
+        Args:
+            limit: Maximum number of requests to yield across all pages.
+            filter: List of request states to use as a filter. Multiple values mean union of the given filters.
+            cursor: A token returned in a previous API response, used as the initial pagination cursor.
+            chunk_size: Maximum number of requests requested per API call when iterating across pages.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            A request from the queue.
+        """
+
+        def _callback(*, cursor: str | None = None, limit: int | None = None) -> ListOfRequests:
+            return self.list_requests(limit=limit, filter=filter, cursor=cursor, timeout=timeout)
+
+        return get_cursor_iterator(
+            _callback,
+            cursor=cursor,
+            limit=limit,
+            chunk_size=chunk_size,
+        )
 
     def unlock_requests(self: RequestQueueClient, *, timeout: Timeout = 'long') -> UnlockRequestsResult:
         """Unlock all requests in the queue, which were locked by the same clientKey or from the same Actor run.
@@ -1119,6 +1159,44 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         result = response_to_dict(response)
         return ListOfRequestsResponse.model_validate(result).data
+
+    def iterate_requests(
+        self,
+        *,
+        limit: int | None = None,
+        filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
+        cursor: str | None = None,
+        chunk_size: int | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[Request]:
+        """Iterate over requests in the queue.
+
+        Simple `list_requests` does only one API call, possibly not listing all items matching the criteria.
+        This method returns an iterator that is capable of making multiple API calls to retrieve all items
+        matching the criteria using the opaque ``cursor`` returned by the API.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
+
+        Args:
+            limit: Maximum number of requests to yield across all pages.
+            filter: List of request states to use as a filter. Multiple values mean union of the given filters.
+            cursor: A token returned in a previous API response, used as the initial pagination cursor.
+            chunk_size: Maximum number of requests requested per API call when iterating across pages.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            A request from the queue.
+        """
+
+        async def _callback(*, cursor: str | None = None, limit: int | None = None) -> ListOfRequests:
+            return await self.list_requests(limit=limit, filter=filter, cursor=cursor, timeout=timeout)
+
+        return get_cursor_iterator_async(
+            _callback,
+            cursor=cursor,
+            limit=limit,
+            chunk_size=chunk_size,
+        )
 
     async def unlock_requests(
         self: RequestQueueClientAsync,

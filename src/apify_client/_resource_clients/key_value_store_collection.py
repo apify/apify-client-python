@@ -9,9 +9,12 @@ from apify_client._models import (
     ListOfKeyValueStores,
     ListOfKeyValueStoresResponse,
 )
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._literals import StorageOwnership
     from apify_client._types import Timeout
 
@@ -70,6 +73,43 @@ class KeyValueStoreCollectionClient(ResourceClient):
             ownership=ownership,
         )
         return ListOfKeyValueStoresResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[KeyValueStore]:
+        """Iterate over the available key-value stores.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
+
+        Args:
+            unnamed: Whether to include unnamed key-value stores in the list.
+            limit: How many key-value stores to retrieve.
+            offset: What key-value store to include as first when retrieving the list.
+            desc: Whether to sort the key-value stores in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
+                'sharedWithMe' returns only key-value stores shared with the user.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available key-value stores matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfKeyValueStores:
+            return self.list(
+                unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
+            )
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def get_or_create(
         self,
@@ -148,6 +188,43 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             ownership=ownership,
         )
         return ListOfKeyValueStoresResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[KeyValueStore]:
+        """Iterate over the available key-value stores.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/get-list-of-key-value-stores
+
+        Args:
+            unnamed: Whether to include unnamed key-value stores in the list.
+            limit: How many key-value stores to retrieve.
+            offset: What key-value store to include as first when retrieving the list.
+            desc: Whether to sort the key-value stores in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
+                'sharedWithMe' returns only key-value stores shared with the user.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available key-value stores matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfKeyValueStores:
+            return await self.list(
+                unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
+            )
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def get_or_create(
         self,

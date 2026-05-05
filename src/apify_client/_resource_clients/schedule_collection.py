@@ -10,9 +10,13 @@ from apify_client._models import (
     ScheduleCreate,
     ScheduleResponse,
 )
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
+    from apify_client._models import ScheduleShort
     from apify_client._types import Timeout
 
 
@@ -58,6 +62,36 @@ class ScheduleCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfSchedulesResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[ScheduleShort]:
+        """Iterate over the available schedules.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
+
+        Args:
+            limit: How many schedules to retrieve.
+            offset: What schedules to include as first when retrieving the list.
+            desc: Whether to sort the schedules in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available schedules matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfSchedules:
+            return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def create(
         self,
@@ -151,6 +185,36 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfSchedulesResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[ScheduleShort]:
+        """Iterate over the available schedules.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/schedules/schedules-collection/get-list-of-schedules
+
+        Args:
+            limit: How many schedules to retrieve.
+            offset: What schedules to include as first when retrieving the list.
+            desc: Whether to sort the schedules in descending order based on their modification date.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available schedules matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfSchedules:
+            return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def create(
         self,

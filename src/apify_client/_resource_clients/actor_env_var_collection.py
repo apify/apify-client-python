@@ -7,6 +7,8 @@ from apify_client._models import EnvVar, EnvVarResponse, ListOfEnvVars, ListOfEn
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._types import Timeout
 
 
@@ -42,6 +44,13 @@ class ActorEnvVarCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout)
         return ListOfEnvVarsResponse.model_validate(result).data
+
+    def iterate(self, *, timeout: Timeout = 'short') -> Iterator[EnvVar]:
+        """Iterate over the available Actor environment variables.
+
+        There is no possibility to control the pagination on this endpoint.
+        """
+        return iter(self.list(timeout=timeout).items)
 
     def create(
         self,
@@ -103,6 +112,14 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout)
         return ListOfEnvVarsResponse.model_validate(result).data
+
+    async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[EnvVar]:
+        """Iterate over the available Actor environment variables.
+
+        There is no possibility to control the pagination on this endpoint.
+        """
+        for item in (await self.list(timeout=timeout)).items:
+            yield item
 
     async def create(
         self,

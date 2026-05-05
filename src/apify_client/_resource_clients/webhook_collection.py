@@ -10,11 +10,14 @@ from apify_client._models import (
     WebhookCreate,
     WebhookResponse,
 )
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._literals import WebhookEventType
-    from apify_client._models import Webhook
+    from apify_client._models import Webhook, WebhookShort
     from apify_client._types import Timeout
 
 
@@ -60,6 +63,36 @@ class WebhookCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfWebhooksResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[WebhookShort]:
+        """Iterate over the available webhooks.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
+
+        Args:
+            limit: How many webhooks to retrieve.
+            offset: What webhook to include as first when retrieving the list.
+            desc: Whether to sort the webhooks in descending order based on their date of creation.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available webhooks matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhooks:
+            return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def create(
         self,
@@ -163,6 +196,36 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfWebhooksResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[WebhookShort]:
+        """Iterate over the available webhooks.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/webhooks/webhook-collection/get-list-of-webhooks
+
+        Args:
+            limit: How many webhooks to retrieve.
+            offset: What webhook to include as first when retrieving the list.
+            desc: Whether to sort the webhooks in descending order based on their date of creation.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available webhooks matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhooks:
+            return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def create(
         self,

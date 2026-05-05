@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from apify_client._docs import docs_group
 from apify_client._models import ListOfWebhookDispatches, ListOfWebhookDispatchesResponse
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
+    from apify_client._models import WebhookDispatch
     from apify_client._types import Timeout
 
 
@@ -53,6 +57,36 @@ class WebhookDispatchCollectionClient(ResourceClient):
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfWebhookDispatchesResponse.model_validate(result).data
 
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[WebhookDispatch]:
+        """Iterate over all webhook dispatches of a user.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
+
+        Args:
+            limit: How many webhook dispatches to retrieve.
+            offset: What webhook dispatch to include as first when retrieving the list.
+            desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The webhook dispatches of a user matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhookDispatches:
+            return cast('ListOfWebhookDispatches', self.list(limit=limit, offset=offset, desc=desc, timeout=timeout))
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
+
 
 @docs_group('Resource clients')
 class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
@@ -96,3 +130,36 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfWebhookDispatchesResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[WebhookDispatch]:
+        """Iterate over all webhook dispatches of a user.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
+
+        Args:
+            limit: How many webhook dispatches to retrieve.
+            offset: What webhook dispatch to include as first when retrieving the list.
+            desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The webhook dispatches of a user matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhookDispatches:
+            return cast(
+                'ListOfWebhookDispatches',
+                await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout),
+            )
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)

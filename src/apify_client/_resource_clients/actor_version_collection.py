@@ -18,6 +18,8 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._literals import VersionSourceType
     from apify_client._types import Timeout
 
@@ -47,6 +49,8 @@ class ActorVersionCollectionClient(ResourceClient):
     def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
         """List the available Actor versions.
 
+        The returned page also supports iteration: `for item in client.list()` yields individual versions.
+
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Args:
@@ -57,6 +61,13 @@ class ActorVersionCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout)
         return ListOfVersionsResponse.model_validate(result).data
+
+    def iterate(self, *, timeout: Timeout = 'short') -> Iterator[Version]:
+        """Iterate over the available Actor environment variables.
+
+        There is no possibility to control the pagination on this endpoint.
+        """
+        return iter(self.list(timeout=timeout).items)
 
     def create(
         self,
@@ -134,6 +145,8 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
     async def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
         """List the available Actor versions.
 
+        The returned page also supports iteration: `async for item in client.list()` yields individual versions.
+
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Args:
@@ -144,6 +157,14 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout)
         return ListOfVersionsResponse.model_validate(result).data
+
+    async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[Version]:
+        """Iterate over the available Actor environment variables.
+
+        There is no possibility to control the pagination on this endpoint.
+        """
+        for item in (await self.list(timeout=timeout)).items:
+            yield item
 
     async def create(
         self,

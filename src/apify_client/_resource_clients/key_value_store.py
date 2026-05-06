@@ -14,7 +14,7 @@ from apify_client._models import (
     ListOfKeys,
     ListOfKeysResponse,
 )
-from apify_client._pagination import get_cursor_iterator, get_cursor_iterator_async
+from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     catch_not_found_or_throw,
@@ -226,7 +226,7 @@ class KeyValueStoreClient(ResourceClient):
             next_cursor=lambda page: page.next_exclusive_start_key,
             cursor=exclusive_start_key,
             limit=limit,
-            chunk_size=chunk_size or 1000,
+            chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
         )
 
     def get_record(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:
@@ -653,7 +653,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             next_cursor=lambda page: page.next_exclusive_start_key,
             cursor=exclusive_start_key,
             limit=limit,
-            chunk_size=chunk_size or 1000,
+            chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
         )
 
     async def get_record(self, key: str, *, signature: str | None = None, timeout: Timeout = 'long') -> dict | None:

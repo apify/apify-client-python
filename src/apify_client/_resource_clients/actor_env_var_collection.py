@@ -48,7 +48,18 @@ class ActorEnvVarCollectionClient(ResourceClient):
     def iterate(self, *, timeout: Timeout = 'short') -> Iterator[EnvVar]:
         """Iterate over the available Actor environment variables.
 
-        There is no possibility to control the pagination on this endpoint.
+        The underlying API endpoint does not support pagination, so this method performs a single API call and yields
+        the items from its response. If the endpoint returns more items than fit in one response (the API caps the page
+        size), the rest are not returned. In practice this is rarely a concern — Actors are not expected to define more
+        environment variables than the cap.
+
+        https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            An Actor environment variable.
         """
         return iter(self.list(timeout=timeout).items)
 
@@ -116,7 +127,18 @@ class ActorEnvVarCollectionClientAsync(ResourceClientAsync):
     async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[EnvVar]:
         """Iterate over the available Actor environment variables.
 
-        There is no possibility to control the pagination on this endpoint.
+        The underlying API endpoint does not support pagination, so this method performs a single API call and yields
+        the items from its response. If the endpoint returns more items than fit in one response (the API caps the page
+        size), the rest are not returned. In practice this is rarely a concern — Actors are not expected to define more
+        environment variables than the cap.
+
+        https://docs.apify.com/api/v2#/reference/actors/environment-variable-collection/get-list-of-environment-variables
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            An Actor environment variable.
         """
         for item in (await self.list(timeout=timeout)).items:
             yield item

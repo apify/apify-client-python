@@ -8,7 +8,7 @@ from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
-from apify_client._pagination import get_items_iterator, get_items_iterator_async
+from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import (
     create_storage_content_signature,
@@ -287,8 +287,7 @@ class DatasetClient(ResourceClient):
                 timeout=timeout,
             )
 
-        # Default chunk size of 1000 keeps backwards compatibility with the previous fixed cache size.
-        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size or 1000)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE)
 
     def download_items(
         self,
@@ -950,7 +949,9 @@ class DatasetClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size or 1000)
+        return get_items_iterator_async(
+            _callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE
+        )
 
     async def get_items_as_bytes(
         self,

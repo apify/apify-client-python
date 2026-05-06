@@ -7,8 +7,21 @@ if TYPE_CHECKING:
 
 T = TypeVar('T')
 
+DEFAULT_CHUNK_SIZE = 1000
+"""Default per-page size used by the iterate helpers when the caller does not specify one.
+
+The value of 1000 keeps backwards compatibility with the previous fixed cache size.
+"""
+
 
 class HasItems(Protocol[T]):
+    """Structural contract for a single page of results from a paginated API endpoint.
+
+    Implementations must expose `items`. They may optionally expose `count` — the number of items scanned by the API for
+    this page, which can exceed `len(items)` when filters drop items from the response. The iterator helpers consult
+    `count` opportunistically via `getattr` for offset bookkeeping and fall back to `len(items)` when it is absent.
+    """
+
     items: list[T]
 
 

@@ -63,7 +63,18 @@ class ActorVersionCollectionClient(ResourceClient):
     def iterate(self, *, timeout: Timeout = 'short') -> Iterator[Version]:
         """Iterate over the available Actor versions.
 
-        There is no possibility to control the pagination on this endpoint.
+        The underlying API endpoint does not support pagination, so this method performs a single API call and yields
+        the items from its response. If the endpoint returns more items than fit in one response (the API caps the page
+        size), the rest are not returned. In practice this is rarely a concern — Actors are not expected to have more
+        versions than the cap.
+
+        https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            An Actor version.
         """
         return iter(self.list(timeout=timeout).items)
 
@@ -157,7 +168,18 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
     async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[Version]:
         """Iterate over the available Actor versions.
 
-        There is no possibility to control the pagination on this endpoint.
+        The underlying API endpoint does not support pagination, so this method performs a single API call and yields
+        the items from its response. If the endpoint returns more items than fit in one response (the API caps the page
+        size), the rest are not returned. In practice this is rarely a concern — Actors are not expected to have more
+        versions than the cap.
+
+        https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            An Actor version.
         """
         for item in (await self.list(timeout=timeout)).items:
             yield item

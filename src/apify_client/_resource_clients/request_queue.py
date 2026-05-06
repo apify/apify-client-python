@@ -35,7 +35,7 @@ from apify_client._models import (
     UnlockRequestsResponse,
     UnlockRequestsResult,
 )
-from apify_client._pagination import get_cursor_iterator, get_cursor_iterator_async
+from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
 from apify_client.errors import ApifyApiError
@@ -584,7 +584,7 @@ class RequestQueueClient(ResourceClient):
             next_cursor=lambda page: page.next_cursor,
             cursor=cursor,
             limit=limit,
-            chunk_size=chunk_size or 1000,
+            chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
         )
 
     def unlock_requests(self: RequestQueueClient, *, timeout: Timeout = 'long') -> UnlockRequestsResult:
@@ -1197,7 +1197,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             next_cursor=lambda page: page.next_cursor,
             cursor=cursor,
             limit=limit,
-            chunk_size=chunk_size or 1000,
+            chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
         )
 
     async def unlock_requests(

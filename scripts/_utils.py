@@ -27,7 +27,6 @@ _SUBSTITUTIONS = [
     (re.compile(r'\bSynchronous\b'), 'Asynchronous'),
     (re.compile(r'Retry a function'), 'Retry an async function'),
     (re.compile(r'Function to retry'), 'Async function to retry'),
-    (re.compile(r'returned page also supports iteration: `for'), 'returned page also supports iteration: `async for'),
 ]
 """Patterns for converting sync docstrings to async docstrings."""
 

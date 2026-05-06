@@ -561,7 +561,7 @@ class RequestQueueClient(ResourceClient):
 
         Simple `list_requests` does only one API call, possibly not listing all items matching the criteria.
         This method returns an iterator that is capable of making multiple API calls to retrieve all items
-        matching the criteria using the opaque ``cursor`` returned by the API.
+        matching the criteria using the opaque `cursor` returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
@@ -581,9 +581,10 @@ class RequestQueueClient(ResourceClient):
 
         return get_cursor_iterator(
             _callback,
+            next_cursor=lambda page: page.next_cursor,
             cursor=cursor,
             limit=limit,
-            chunk_size=chunk_size,
+            chunk_size=chunk_size or 1000,
         )
 
     def unlock_requests(self: RequestQueueClient, *, timeout: Timeout = 'long') -> UnlockRequestsResult:
@@ -1173,7 +1174,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         Simple `list_requests` does only one API call, possibly not listing all items matching the criteria.
         This method returns an iterator that is capable of making multiple API calls to retrieve all items
-        matching the criteria using the opaque ``cursor`` returned by the API.
+        matching the criteria using the opaque `cursor` returned by the API.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/list-requests
 
@@ -1193,9 +1194,10 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         return get_cursor_iterator_async(
             _callback,
+            next_cursor=lambda page: page.next_cursor,
             cursor=cursor,
             limit=limit,
-            chunk_size=chunk_size,
+            chunk_size=chunk_size or 1000,
         )
 
     async def unlock_requests(

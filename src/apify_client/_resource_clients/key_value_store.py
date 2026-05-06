@@ -223,6 +223,7 @@ class KeyValueStoreClient(ResourceClient):
 
         return get_cursor_iterator(
             _callback,
+            next_cursor=lambda page: page.next_exclusive_start_key,
             cursor=exclusive_start_key,
             limit=limit,
             chunk_size=chunk_size or 1000,
@@ -649,6 +650,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         return get_cursor_iterator_async(
             _callback,
+            next_cursor=lambda page: page.next_exclusive_start_key,
             cursor=exclusive_start_key,
             limit=limit,
             chunk_size=chunk_size or 1000,

@@ -88,10 +88,12 @@ CollectionClientAsync: TypeAlias = (
 )
 
 ID_PLACEHOLDER = 'some-id'
+NORMAL_ITEMS = 2500
+EXTRA_ITEMS_UNNAMED = 100
+MAX_ITEMS_PER_PAGE = 1000
 
-
-# Inner list models whose `items: list[<specific schema>]` is relaxed to `list[dict]`.
-# Point of these tests is pagination mechanism, not internal object validation.
+# Inner list models whose `items: list[<specific schema>]` is relaxed to `list[dict]`. Point of these tests is
+# pagination mechanism, not internal object validation.
 _RELAXED_LIST_MODELS = (
     'ListOfActors',
     'ListOfBuilds',
@@ -110,9 +112,9 @@ _RELAXED_LIST_MODELS = (
     'ListOfWebhooks',
 )
 
-# Outer wrappers that embed a relaxed list model via `.data`. Their compiled schema pins the
-# inner's schema at construction time, so they need a forced rebuild to pick up the relaxation.
-# The wrappers themselves are not mutated — their own field annotations stay as-is.
+# Outer wrappers that embed a relaxed list model via `.data`. Their compiled schema pins the inner's schema at
+# construction time, so they need a forced rebuild to pick up the relaxation. The wrappers themselves are not mutated —
+# their own field annotations stay as-is.
 _REBUILT_RESPONSE_WRAPPERS = (
     'ListOfActorsInStoreResponse',
     'ListOfActorsResponse',
@@ -135,10 +137,10 @@ _REBUILT_RESPONSE_WRAPPERS = (
 def _relax_item_validation() -> Any:
     """Relax only the element type of `items` on paginated list models for the test run.
 
-    Pagination tests feed synthetic `{'id': N}` items that don't satisfy the real API schemas
-    (`ActorShort`, `BuildShort`, `Request`, `EnvVar`, …). Instead of bypassing validation
-    wholesale, each inner `ListOf*` model has its `items` field swapped to `list[dict]`
-    and rebuilt. Outer `.data` wrapping and every pagination-metadata field remain validated.
+    Pagination tests feed synthetic `{'id': N}` items that don't satisfy the real API schemas (`ActorShort`,
+    `BuildShort`, `Request`, `EnvVar`, …). Instead of bypassing validation wholesale, each inner `ListOf*` model has its
+    `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every pagination-metadata field remain
+    validated.
     """
     relaxed_field = FieldInfo.from_annotation(list[dict])
     originals: dict[type[BaseModel], FieldInfo] = {}
@@ -168,11 +170,6 @@ def create_items(start: int, end: int, step: int | None = None) -> list[dict[str
     return [{'id': i} for i in range(start, end, step)]
 
 
-NORMAL_ITEMS = 2500
-EXTRA_ITEMS_UNNAMED = 100
-MAX_ITEMS_PER_PAGE = 1000
-
-
 def _is_true(value: str | None) -> bool:
     """Match the `'true'` wire form produced by the client's bool→string serialization."""
     return value == 'true'
@@ -185,10 +182,9 @@ def _parse_int_param(value: str | None) -> int:
 def _handle_offset_pagination(request: Request) -> Response:
     """Serve an offset-paginated Apify API response.
 
-    The simulated platform holds 2500 items normally and an additional 100 when
-    ``unnamed=true`` is requested. Pages are capped at 1000 items regardless of the requested
-    limit, mirroring the real API. The dataset items endpoint returns items as a raw list;
-    all other endpoints wrap them in ``{'data': {...}}``.
+    The simulated platform holds 2500 items normally and an additional 100 when `unnamed=true` is requested. Pages are
+    capped at 1000 items regardless of the requested limit, mirroring the real API. The dataset items endpoint returns
+    items as a raw list; all other endpoints wrap them in `{'data': {...}}`.
     """
     params = request.args
 
@@ -238,10 +234,9 @@ def _handle_offset_pagination(request: Request) -> Response:
 def _handle_cursor_pagination(request: Request) -> Response:
     """Serve a cursor-paginated Apify API response for KVS keys and RQ requests.
 
-    Holds 2500 synthetic items whose integer `id` equals their position. Each page is capped
-    at 1000 items. KVS uses `exclusiveStartKey`; RQ accepts either the deprecated
-    `exclusiveStartId` on the initial call or the opaque `cursor` on subsequent calls. All
-    three values encode the last-seen item id as a string — the next page starts at id + 1.
+    Holds 2500 synthetic items whose integer `id` equals their position. Each page is capped at 1000 items. KVS uses
+    `exclusiveStartKey`; RQ accepts either the deprecated `exclusiveStartId` on the initial call or the opaque `cursor`
+    on subsequent calls. All three values encode the last-seen item id as a string — the next page starts at id + 1.
     """
     params = request.args
     limit = _parse_int_param(params.get('limit'))
@@ -303,9 +298,8 @@ def _make_async_client(httpserver: HTTPServer) -> ApifyClientAsync:
     return ApifyClientAsync(token='test', api_url=httpserver.url_for('/'))
 
 
-# Map resource-client class name to a factory that, given an `ApifyClient`/`ApifyClientAsync`,
-# returns the sub-client under test. Usable for both sync and async since every accessor is
-# available symmetrically on both root clients.
+# Map resource-client class name to a factory that, given an `ApifyClient`/`ApifyClientAsync`, returns the sub-client
+# under test. Usable for both sync and async since every accessor is available symmetrically on both root clients.
 _CLIENT_FACTORIES: dict[str, Callable[[Any], Any]] = {
     'ActorCollectionClient': lambda c: c.actors(),
     'ScheduleCollectionClient': lambda c: c.schedules(),
@@ -390,8 +384,8 @@ OPTIONS_CLIENTS = COLLECTION_CLIENTS | STORAGE_CLIENTS
 
 TEST_CASES = (
     _PaginationCase('No options normal', {}, create_items(0, 2500), OPTIONS_CLIENTS),
-    # These clients can't iterate over all items if there is more of them than the API limit as they offer no
-    # pagination parameters.
+    # These clients can't iterate over all items if there is more of them than the API limit as they offer no pagination
+    # parameters.
     _PaginationCase('No options limited', {}, create_items(0, 1000), NO_OPTIONS_CLIENTS),
     _PaginationCase('Limit', {'limit': 1100}, create_items(0, 1100), OPTIONS_CLIENTS),
     _PaginationCase('Out of range limit', {'limit': 3000}, create_items(0, 2500), OPTIONS_CLIENTS),
@@ -470,9 +464,8 @@ TEST_CASES = (
 def _generate_test_params(client_set: Literal['collection', 'dataset', 'kvs', 'rq']) -> list[ParameterSet]:
     """Build the pytest parameter set for the given client category.
 
-    Each parameter carries the resource-client class name; the test body instantiates
-    the real client against the `httpserver` URL and looks up the factory in
-    `_CLIENT_FACTORIES`.
+    Each parameter carries the resource-client class name; the test body instantiates the real client against the
+    `httpserver` URL and looks up the factory in `_CLIENT_FACTORIES`.
     """
     client_names = _CLIENT_SET_NAMES[client_set]
     return [

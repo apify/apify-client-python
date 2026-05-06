@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import ListOfWebhookDispatches, ListOfWebhookDispatchesResponse
@@ -40,7 +40,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfWebhookDispatches | None:
+    ) -> ListOfWebhookDispatches:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -83,7 +83,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         """
 
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhookDispatches:
-            return cast('ListOfWebhookDispatches', self.list(limit=limit, offset=offset, desc=desc, timeout=timeout))
+            return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
         return get_items_iterator(_callback, limit=limit, offset=offset)
 
@@ -114,7 +114,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> ListOfWebhookDispatches | None:
+    ) -> ListOfWebhookDispatches:
         """List all webhook dispatches of a user.
 
         https://docs.apify.com/api/v2#/reference/webhook-dispatches/webhook-dispatches-collection/get-list-of-webhook-dispatches
@@ -157,9 +157,6 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         """
 
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhookDispatches:
-            return cast(
-                'ListOfWebhookDispatches',
-                await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout),
-            )
+            return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
         return get_items_iterator_async(_callback, limit=limit, offset=offset)

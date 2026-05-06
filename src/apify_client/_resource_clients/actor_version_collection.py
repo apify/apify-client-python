@@ -49,8 +49,6 @@ class ActorVersionCollectionClient(ResourceClient):
     def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
         """List the available Actor versions.
 
-        The returned page also supports iteration: `for item in client.list()` yields individual versions.
-
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Args:
@@ -63,7 +61,7 @@ class ActorVersionCollectionClient(ResourceClient):
         return ListOfVersionsResponse.model_validate(result).data
 
     def iterate(self, *, timeout: Timeout = 'short') -> Iterator[Version]:
-        """Iterate over the available Actor environment variables.
+        """Iterate over the available Actor versions.
 
         There is no possibility to control the pagination on this endpoint.
         """
@@ -145,8 +143,6 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
     async def list(self, *, timeout: Timeout = 'short') -> ListOfVersions:
         """List the available Actor versions.
 
-        The returned page also supports iteration: `async for item in client.list()` yields individual versions.
-
         https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
 
         Args:
@@ -159,7 +155,7 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         return ListOfVersionsResponse.model_validate(result).data
 
     async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[Version]:
-        """Iterate over the available Actor environment variables.
+        """Iterate over the available Actor versions.
 
         There is no possibility to control the pagination on this endpoint.
         """

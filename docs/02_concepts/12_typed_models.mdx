@@ -1,0 +1,73 @@
+---
+id: typed-models
+title: Typed models
+description: Resource client methods return Pydantic models generated from the Apify OpenAPI spec, with IDE autocomplete, runtime validation, and forward-compatible field access.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@site/src/components/ApiLink';
+
+import AccessAsyncExample from '!!raw-loader!./code/12_typed_models_access_async.py';
+import AccessSyncExample from '!!raw-loader!./code/12_typed_models_access_sync.py';
+
+import InputAsyncExample from '!!raw-loader!./code/12_typed_models_input_async.py';
+import InputSyncExample from '!!raw-loader!./code/12_typed_models_input_sync.py';
+
+Resource client methods return [Pydantic](https://docs.pydantic.dev/) models generated directly from the [Apify OpenAPI specification](https://docs.apify.com/api/openapi.json). You get IDE autocompletion, runtime validation of API responses, and a Python-idiomatic snake_case interface on top of the underlying camelCase API.
+
+## Accessing response fields
+
+Every method that returns a structured payload returns a Pydantic model. Fields are accessed using their Python snake_case names regardless of the camelCase used by the API, and the static type of each field comes through to your editor.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {AccessAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {AccessSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+Date strings are automatically parsed into timezone-aware `datetime.datetime` objects, enums into `Literal` aliases, and nested objects into their own typed models, so you can compose attribute access without manual conversion.
+
+## Providing structured input
+
+A Pydantic model returned from one client call can be passed directly into any other method that accepts the same shape — useful for round-trip flows where you read a resource, tweak it, and write it back.
+
+For input you construct yourself, plain dictionaries work on every input method. Each input shape has a matching [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) that documents the expected keys.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {InputAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {InputSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Forward compatibility
+
+Generated models are configured with `extra='allow'`. Any new fields the API starts returning in the future are preserved on the model instance — they simply do not yet have a typed attribute. Upgrading the client to pick up a newer OpenAPI spec is a non-breaking change for code that reads existing fields.
+
+## Browsing all models
+
+The full list of generated models and TypedDicts is available in the [API reference](/api/client/python/reference) under the **Models** and **Typed dicts** groups.
+
+## Methods that return plain types
+
+A few endpoints intentionally return plain Python types instead of Pydantic models because their payloads are user-defined or inherently unstructured:
+
+- <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items()`</ApiLink> returns a <ApiLink to="class/DatasetItemsPage">`DatasetItemsPage`</ApiLink> whose `items` field is `list[dict[str, Any]]`. Dataset items follow the [Actor output schema](https://docs.apify.com/platform/actors/development/actor-definition/output-schema), which the client cannot know in advance.
+- <ApiLink to="class/KeyValueStoreClient#get_record">`KeyValueStoreClient.get_record()`</ApiLink> returns a `dict` with `key`, `value`, and `content_type` keys. The shape of `value` is determined by the record's content type.
+
+For background on the migration from plain dicts to typed models, see [Upgrading to v3](../04_upgrading/upgrading_to_v3.mdx).

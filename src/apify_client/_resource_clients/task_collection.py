@@ -13,12 +13,15 @@ from apify_client._models import (
     TaskOptions,
     TaskResponse,
 )
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
+    from apify_client._models import TaskShort
     from apify_client._typeddicts import TaskInputDict
     from apify_client._types import Timeout
 
@@ -65,6 +68,36 @@ class TaskCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfTasksResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[TaskShort]:
+        """Iterate over the available tasks.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
+
+        Args:
+            limit: How many tasks to list.
+            offset: What task to include as first when retrieving the list.
+            desc: Whether to sort the tasks in descending order based on their creation date.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available tasks matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfTasks:
+            return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def create(
         self,
@@ -186,6 +219,36 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout, limit=limit, offset=offset, desc=desc)
         return ListOfTasksResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[TaskShort]:
+        """Iterate over the available tasks.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/get-list-of-tasks
+
+        Args:
+            limit: How many tasks to list.
+            offset: What task to include as first when retrieving the list.
+            desc: Whether to sort the tasks in descending order based on their creation date.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available tasks matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfTasks:
+            return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def create(
         self,

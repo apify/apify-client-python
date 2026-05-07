@@ -18,6 +18,8 @@ from apify_client._models import (
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._literals import VersionSourceType
     from apify_client._types import Timeout
 
@@ -57,6 +59,24 @@ class ActorVersionCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout)
         return ListOfVersionsResponse.model_validate(result).data
+
+    def iterate(self, *, timeout: Timeout = 'short') -> Iterator[Version]:
+        """Iterate over the available Actor versions.
+
+        The underlying API endpoint does not support pagination, so this method performs a single API call and yields
+        the items from its response. If the endpoint returns more items than fit in one response (the API caps the page
+        size), the rest are not returned. In practice this is rarely a concern — Actors are not expected to have more
+        versions than the cap.
+
+        https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            An Actor version.
+        """
+        return iter(self.list(timeout=timeout).items)
 
     def create(
         self,
@@ -144,6 +164,25 @@ class ActorVersionCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout)
         return ListOfVersionsResponse.model_validate(result).data
+
+    async def iterate(self, *, timeout: Timeout = 'short') -> AsyncIterator[Version]:
+        """Iterate over the available Actor versions.
+
+        The underlying API endpoint does not support pagination, so this method performs a single API call and yields
+        the items from its response. If the endpoint returns more items than fit in one response (the API caps the page
+        size), the rest are not returned. In practice this is rarely a concern — Actors are not expected to have more
+        versions than the cap.
+
+        https://docs.apify.com/api/v2#/reference/actors/version-collection/get-list-of-versions
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            An Actor version.
+        """
+        for item in (await self.list(timeout=timeout)).items:
+            yield item
 
     async def create(
         self,

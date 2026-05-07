@@ -12,9 +12,10 @@ import ApiLink from '@site/src/components/ApiLink';
 
 import PaginationAsyncExample from '!!raw-loader!./code/08_pagination_async.py';
 import PaginationSyncExample from '!!raw-loader!./code/08_pagination_sync.py';
-
 import IterateItemsAsyncExample from '!!raw-loader!./code/08_iterate_items_async.py';
 import IterateItemsSyncExample from '!!raw-loader!./code/08_iterate_items_sync.py';
+import IterateCollectionAsyncExample from '!!raw-loader!./code/08_iterate_collection_async.py';
+import IterateCollectionSyncExample from '!!raw-loader!./code/08_iterate_collection_sync.py';
 
 Most methods named `list` or `list_something` in the Apify client return a <ApiLink to="class/ListPage">`ListPage`</ApiLink>  object. This object provides a consistent interface for working with paginated data and includes the following properties:
 
@@ -45,7 +46,28 @@ The <ApiLink to="class/ListPage">`ListPage`</ApiLink> interface offers several k
 
 ## Generator-based iteration
 
-For most use cases, `iterate_items()` is the recommended way to process all items in a dataset. It handles pagination automatically using a Python generator, fetching items in batches behind the scenes so you don't need to manage offsets or limits yourself.
+For collection clients, the `iterate` method returns an iterator that lazily fetches as many pages as needed
+to retrieve every item matching the filters. For dataset, key-value store and request queue clients, the
+matching helpers are `iterate_items`, `iterate_keys` and `iterate_requests`. They handle pagination
+automatically, so you don't need to manage offsets, limits or cursors yourself.
+
+The example below iterates over every Actor owned by the current user using a collection client's `iterate`
+method:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {IterateCollectionAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {IterateCollectionSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+The next example uses `iterate_items` on a dataset client to stream items past a given offset:
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -59,7 +81,3 @@ For most use cases, `iterate_items()` is the recommended way to process all item
         </CodeBlock>
     </TabItem>
 </Tabs>
-
-`iterate_items()` accepts the same filtering parameters as `list_items()` (`clean`, `fields`, `omit`, `unwind`, `skip_empty`, `skip_hidden`), so you can combine automatic pagination with data filtering.
-
-Similarly, `KeyValueStoreClient` provides an `iterate_keys()` method for iterating over all keys in a key-value store without manual pagination.

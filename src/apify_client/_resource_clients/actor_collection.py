@@ -13,12 +13,15 @@ from apify_client._models import (
     ListOfActors,
     ListOfActorsResponse,
 )
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
+    from apify_client._models import ActorShort
     from apify_client._types import Timeout
 
 
@@ -68,6 +71,40 @@ class ActorCollectionClient(ResourceClient):
         """
         result = self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
         return ListOfActorsResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        my: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        timeout: Timeout = 'medium',
+    ) -> Iterator[ActorShort]:
+        """Iterate over the Actors the user has created or used.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
+
+        Args:
+            my: If True, will return only Actors which the user has created themselves.
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            desc: Whether to sort the Actors in descending order based on their creation date.
+            sort_by: Field to sort the results by.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The Actors available to the user matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfActors:
+            return self.list(my=my, limit=limit, offset=offset, desc=desc, sort_by=sort_by, timeout=timeout)
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def create(
         self,
@@ -213,6 +250,40 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         """
         result = await self._list(timeout=timeout, my=my, limit=limit, offset=offset, desc=desc, sortBy=sort_by)
         return ListOfActorsResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        my: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[ActorShort]:
+        """Iterate over the Actors the user has created or used.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/actors/actor-collection/get-list-of-actors
+
+        Args:
+            my: If True, will return only Actors which the user has created themselves.
+            limit: How many Actors to list.
+            offset: What Actor to include as first when retrieving the list.
+            desc: Whether to sort the Actors in descending order based on their creation date.
+            sort_by: Field to sort the results by.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The Actors available to the user matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfActors:
+            return await self.list(my=my, limit=limit, offset=offset, desc=desc, sort_by=sort_by, timeout=timeout)
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def create(
         self,

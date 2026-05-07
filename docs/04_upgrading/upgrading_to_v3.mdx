@@ -320,3 +320,22 @@ from apify_client._literals import WebhookEventType
 
 events: list[WebhookEventType] = ['ACTOR.RUN.SUCCEEDED', 'ACTOR.RUN.FAILED']
 ```
+
+## Async `iterate_*` methods are plain functions, not async generators
+
+Async iteration helpers — <ApiLink to="class/DatasetClientAsync#iterate_items">`DatasetClientAsync.iterate_items()`</ApiLink> and <ApiLink to="class/KeyValueStoreClientAsync#iterate_keys">`KeyValueStoreClientAsync.iterate_keys()`</ApiLink> — were previously declared as `async def` (async generator functions). They are now plain `def` functions that return an `AsyncIterator` produced by a shared pagination helper.
+
+Consumer-side iteration is unchanged — `async for item in client.iterate_items(...)` works the same in both versions:
+
+```python
+# Works in both v2 and v3
+async for item in client.dataset('my-dataset').iterate_items():
+    print(item)
+```
+
+The difference matters only if your code inspects the function itself:
+
+- The call is no longer a coroutine function — `inspect.iscoroutinefunction(client.iterate_items)` returns `False`, and `inspect.isasyncgenfunction(client.iterate_items)` also returns `False` (it returns a regular function whose result is an async iterator).
+- Type checkers see `def (...) -> AsyncIterator[T]` instead of `async def (...) -> AsyncIterator[T]`. Annotations on variables that hold the call's result may need to change from `AsyncGenerator[T, None]` to `AsyncIterator[T]`.
+
+A new <ApiLink to="class/RequestQueueClientAsync#iterate_requests">`RequestQueueClientAsync.iterate_requests()`</ApiLink> helper is also introduced and follows the same `def ... -> AsyncIterator[T]` shape.

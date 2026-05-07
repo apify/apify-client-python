@@ -9,10 +9,14 @@ from apify_client._models import (
     RequestQueue,
     RequestQueueResponse,
 )
+from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
+
     from apify_client._literals import StorageOwnership
+    from apify_client._models import RequestQueueShort
     from apify_client._types import Timeout
 
 
@@ -70,6 +74,43 @@ class RequestQueueCollectionClient(ResourceClient):
             ownership=ownership,
         )
         return ListOfRequestQueuesResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
+        timeout: Timeout = 'medium',
+    ) -> Iterator[RequestQueueShort]:
+        """Iterate over the available request queues.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
+
+        Args:
+            unnamed: Whether to include unnamed request queues in the list.
+            limit: How many request queues to retrieve.
+            offset: What request queue to include as first when retrieving the list.
+            desc: Whether to sort the request queues in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
+                'sharedWithMe' returns only request queues shared with the user.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available request queues matching the specified filters.
+        """
+
+        def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfRequestQueues:
+            return self.list(
+                unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
+            )
+
+        return get_items_iterator(_callback, limit=limit, offset=offset)
 
     def get_or_create(
         self,
@@ -146,6 +187,43 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             ownership=ownership,
         )
         return ListOfRequestQueuesResponse.model_validate(result).data
+
+    def iterate(
+        self,
+        *,
+        unnamed: bool | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        desc: bool | None = None,
+        ownership: StorageOwnership | None = None,
+        timeout: Timeout = 'medium',
+    ) -> AsyncIterator[RequestQueueShort]:
+        """Iterate over the available request queues.
+
+        Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
+        returns an iterator that is capable of making multiple API calls to retrieve all items matching the criteria.
+
+        https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/get-list-of-request-queues
+
+        Args:
+            unnamed: Whether to include unnamed request queues in the list.
+            limit: How many request queues to retrieve.
+            offset: What request queue to include as first when retrieving the list.
+            desc: Whether to sort the request queues in descending order based on their modification date.
+            ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
+                'sharedWithMe' returns only request queues shared with the user.
+            timeout: Timeout for the API HTTP request.
+
+        Yields:
+            The available request queues matching the specified filters.
+        """
+
+        async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfRequestQueues:
+            return await self.list(
+                unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
+            )
+
+        return get_items_iterator_async(_callback, limit=limit, offset=offset)
 
     async def get_or_create(
         self,

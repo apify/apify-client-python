@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar
+from typing import TYPE_CHECKING, Protocol, TypeVar, overload
+
+from apify_client._models import KeyValueStoreKey, ListOfKeys, ListOfRequests, Request
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
@@ -96,23 +98,37 @@ async def get_items_iterator_async(
             break
 
 
+@overload
 def get_cursor_iterator(
-    callback: Callable[..., HasItems[T]],
+    callback: Callable[..., ListOfKeys],
     *,
-    next_cursor: Callable[[Any], str | None],
     cursor: str | None = None,
     limit: int | None = None,
     chunk_size: int | None = None,
-) -> Iterator[T]:
+) -> Iterator[KeyValueStoreKey]: ...
+@overload
+def get_cursor_iterator(
+    callback: Callable[..., ListOfRequests],
+    *,
+    cursor: str | None = None,
+    limit: int | None = None,
+    chunk_size: int | None = None,
+) -> Iterator[Request]: ...
+def get_cursor_iterator(
+    callback: Callable[..., ListOfKeys | ListOfRequests],
+    *,
+    cursor: str | None = None,
+    limit: int | None = None,
+    chunk_size: int | None = None,
+) -> Iterator[KeyValueStoreKey] | Iterator[Request]:
     """Yield individual items from cursor-paginated API responses.
 
-    Each page is expected to expose `items`; iteration ends when a page returns no items, the cursor extracted by
-    `next_cursor` is `None`, or the user-requested `limit` is reached.
+    Cursor pagination is restricted to the two API responses that expose it: `ListOfKeys` (for key-value store keys) and
+    `ListOfRequests` (for request queue requests). Iteration ends when a page returns no items, the next cursor is
+    `None`, or the user-requested `limit` is reached.
 
     Args:
         callback: Function returning a single page of items. Receives `cursor` and `limit` kwargs.
-        next_cursor: Callable that extracts the next-page cursor from the returned page (e.g. `lambda p: p.next_cursor`)
-            and returns `None` when there are no more pages.
         cursor: Value of the cursor for the first request, or `None` to start from the beginning.
         limit: Maximum total number of items to yield across all pages.
         chunk_size: Maximum number of items requested per API call.
@@ -129,20 +145,37 @@ def get_cursor_iterator(
         yield from current_page.items
 
         fetched_items += max(getattr(current_page, 'count', 0), len(current_page.items))
-        cursor = next_cursor(current_page)
+        cursor = (
+            current_page.next_exclusive_start_key if isinstance(current_page, ListOfKeys) else current_page.next_cursor
+        )
 
         if not current_page.items or cursor is None or (initial_limit and fetched_items >= initial_limit):
             break
 
 
-async def get_cursor_iterator_async(
-    callback: Callable[..., Awaitable[HasItems[T]]],
+@overload
+def get_cursor_iterator_async(
+    callback: Callable[..., Awaitable[ListOfKeys]],
     *,
-    next_cursor: Callable[[Any], str | None],
     cursor: str | None = None,
     limit: int | None = None,
     chunk_size: int | None = None,
-) -> AsyncIterator[T]:
+) -> AsyncIterator[KeyValueStoreKey]: ...
+@overload
+def get_cursor_iterator_async(
+    callback: Callable[..., Awaitable[ListOfRequests]],
+    *,
+    cursor: str | None = None,
+    limit: int | None = None,
+    chunk_size: int | None = None,
+) -> AsyncIterator[Request]: ...
+async def get_cursor_iterator_async(
+    callback: Callable[..., Awaitable[ListOfKeys | ListOfRequests]],
+    *,
+    cursor: str | None = None,
+    limit: int | None = None,
+    chunk_size: int | None = None,
+) -> AsyncIterator[KeyValueStoreKey] | AsyncIterator[Request]:
     """Async variant of :func:`get_cursor_iterator`."""
     effective_chunk = chunk_size or 0
     initial_limit = limit or 0
@@ -157,7 +190,9 @@ async def get_cursor_iterator_async(
             yield item
 
         fetched_items += max(getattr(current_page, 'count', 0), len(current_page.items))
-        cursor = next_cursor(current_page)
+        cursor = (
+            current_page.next_exclusive_start_key if isinstance(current_page, ListOfKeys) else current_page.next_cursor
+        )
 
         if not current_page.items or cursor is None or (initial_limit and fetched_items >= initial_limit):
             break

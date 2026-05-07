@@ -581,7 +581,6 @@ class RequestQueueClient(ResourceClient):
 
         return get_cursor_iterator(
             _callback,
-            next_cursor=lambda page: page.next_cursor,
             cursor=cursor,
             limit=limit,
             chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
@@ -1194,7 +1193,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         return get_cursor_iterator_async(
             _callback,
-            next_cursor=lambda page: page.next_cursor,
             cursor=cursor,
             limit=limit,
             chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,

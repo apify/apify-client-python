@@ -67,6 +67,11 @@ async def test_list_actors_sorting(client: ApifyClient | ApifyClientAsync) -> No
     assert actors_page.items is not None
     assert isinstance(actors_page.items, list)
 
+    sorted_items = sorted(actors_page.items, key=lambda a: a.stats.last_run_started_at or 0, reverse=True)
+
+    # The API should return items in the correct order based on the sorting parameters
+    assert actors_page.items == sorted_items
+
 
 async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync) -> None:
     """Test creating, updating, and deleting an Actor."""

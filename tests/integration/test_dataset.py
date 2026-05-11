@@ -10,7 +10,7 @@ import impit
 import pytest
 
 from ._utils import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
-from apify_client._models import Dataset, ListOfDatasets
+from apify_client._models import Dataset, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
 
@@ -403,7 +403,7 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *,
         statistics = await maybe_await(dataset_client.get_statistics())
 
         # Verify statistics is returned and properly parsed
-        assert isinstance(statistics, dict)
+        assert isinstance(statistics, DatasetStatistics)
 
     finally:
         await maybe_await(dataset_client.delete())

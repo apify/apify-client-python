@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from datetime import timedelta
+from typing import TYPE_CHECKING
+
+from ._utils import get_random_resource_name, maybe_await
+from apify_client._models import Actor, Build, ListOfBuilds
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, Build, ListOfBuilds
-
-
-from datetime import timedelta
-
-from ._utils import get_random_resource_name, maybe_await
 
 # Use a public actor that has builds available
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -21,10 +19,8 @@ async def test_build_list_for_actor(client: ApifyClient | ApifyClientAsync) -> N
     """Test listing builds for a public Actor."""
     # Get builds for hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.builds().list(limit=10))
-    builds_page = cast('ListOfBuilds', result)
-
-    assert builds_page is not None
+    builds_page = await maybe_await(actor.builds().list(limit=10))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items is not None
     assert len(builds_page.items) > 0  # hello-world should have at least one build
 
@@ -38,16 +34,14 @@ async def test_build_get(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting a specific build."""
     # First list builds to get a build ID
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.builds().list(limit=1))
-    builds_page = cast('ListOfBuilds', result)
+    builds_page = await maybe_await(actor.builds().list(limit=1))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items
     build_id = builds_page.items[0].id
 
     # Get the specific build
-    result = await maybe_await(client.build(build_id).get())
-    build = cast('Build | None', result)
-
-    assert build is not None
+    build = await maybe_await(client.build(build_id).get())
+    assert isinstance(build, Build)
     assert build.id == build_id
     assert build.act_id is not None
     assert build.status is not None
@@ -56,10 +50,8 @@ async def test_build_get(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_user_builds_list(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing all user builds."""
     # List user's builds (may be empty if user has no actors)
-    result = await maybe_await(client.builds().list(limit=10))
-    builds_page = cast('ListOfBuilds', result)
-
-    assert builds_page is not None
+    builds_page = await maybe_await(client.builds().list(limit=10))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items is not None
     # User may have 0 builds, so we just check the structure
     assert isinstance(builds_page.items, list)
@@ -69,8 +61,8 @@ async def test_build_log(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting build log."""
     # First list builds to get a completed build ID
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.builds().list(limit=5))
-    builds_page = cast('ListOfBuilds', result)
+    builds_page = await maybe_await(actor.builds().list(limit=5))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items
 
     # Find a completed build (SUCCEEDED status)
@@ -96,8 +88,8 @@ async def test_build_wait_for_finish(client: ApifyClient | ApifyClientAsync) -> 
     """Test wait_for_finish on an already completed build."""
     # First list builds to get a completed build ID
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.builds().list(limit=5))
-    builds_page = cast('ListOfBuilds', result)
+    builds_page = await maybe_await(actor.builds().list(limit=5))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items
 
     # Find a completed build (SUCCEEDED status)
@@ -118,10 +110,8 @@ async def test_build_wait_for_finish(client: ApifyClient | ApifyClientAsync) -> 
         completed_build = builds_page.items[0]
 
     # Wait for finish on already completed build (should return immediately)
-    result = await maybe_await(client.build(completed_build.id).wait_for_finish(wait_duration=timedelta(seconds=5)))
-    build = cast('Build | None', result)
-
-    assert build is not None
+    build = await maybe_await(client.build(completed_build.id).wait_for_finish(wait_duration=timedelta(seconds=5)))
+    assert isinstance(build, Build)
     assert build.id == completed_build.id
 
 
@@ -130,7 +120,7 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
     actor_name = get_random_resource_name('actor')
 
     # Create actor with two versions
-    result = await maybe_await(
+    created_actor = await maybe_await(
         client.actors().create(
             name=actor_name,
             title='Test Actor for Build Delete',
@@ -162,41 +152,35 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
             ],
         )
     )
-    created_actor = cast('Actor', result)
-    assert created_actor is not None
+    assert isinstance(created_actor, Actor)
     actor_client = client.actor(created_actor.id)
 
     try:
         # Build both versions - we need 2 builds because we can't delete the default build
-        result = await maybe_await(actor_client.build(version_number='0.1'))
-        first_build = cast('Build', result)
-        assert first_build is not None
+        first_build = await maybe_await(actor_client.build(version_number='0.1'))
+        assert isinstance(first_build, Build)
         first_build_client = client.build(first_build.id)
         await maybe_await(first_build_client.wait_for_finish())
 
-        result = await maybe_await(actor_client.build(version_number='0.2'))
-        second_build = cast('Build', result)
-        assert second_build is not None
+        second_build = await maybe_await(actor_client.build(version_number='0.2'))
+        assert isinstance(second_build, Build)
         second_build_client = client.build(second_build.id)
 
         # Wait for the second build to finish
-        result = await maybe_await(second_build_client.wait_for_finish())
-        finished_build = cast('Build | None', result)
-        assert finished_build is not None
+        finished_build = await maybe_await(second_build_client.wait_for_finish())
+        assert isinstance(finished_build, Build)
         assert finished_build.status in ('SUCCEEDED', 'FAILED')
 
         # Test abort on already finished build (should return the build in its current state)
-        result = await maybe_await(second_build_client.abort())
-        aborted_build = cast('Build', result)
-        assert aborted_build is not None
+        aborted_build = await maybe_await(second_build_client.abort())
+        assert isinstance(aborted_build, Build)
         assert aborted_build.status in ('SUCCEEDED', 'FAILED')
 
         # Delete the first build (not the default/latest)
         await maybe_await(first_build_client.delete())
 
         # Verify the build is deleted
-        result = await maybe_await(first_build_client.get())
-        deleted_build = cast('Build | None', result)
+        deleted_build = await maybe_await(first_build_client.get())
         assert deleted_build is None
 
     finally:
@@ -208,8 +192,8 @@ async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAs
     """Test getting OpenAPI definition for a build."""
     # Get builds for hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.builds().list(limit=1))
-    builds_page = cast('ListOfBuilds', result)
+    builds_page = await maybe_await(actor.builds().list(limit=1))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items
     build_id = builds_page.items[0].id
 

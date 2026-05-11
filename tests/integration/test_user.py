@@ -2,42 +2,35 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+
+from ._utils import maybe_await
+from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
-
-
-from ._utils import maybe_await
-from apify_client.errors import ApifyApiError
 
 
 async def test_get_user(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting user information."""
-    result = await maybe_await(client.user().get())
-    user = cast('UserPublicInfo | UserPrivateInfo', result)
-
-    assert user is not None
+    user = await maybe_await(client.user().get())
+    assert isinstance(user, UserPublicInfo | UserPrivateInfo)
     # UserPublicInfo has username but not id
     assert user.username is not None
 
 
 async def test_limits(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting account limits."""
-    result = await maybe_await(client.user().limits())
-    limits = cast('AccountLimits', result)
-
+    limits = await maybe_await(client.user().limits())
     # Verify we have at least some limit information. The actual fields depend on the account type.
-    assert limits is not None
+    assert isinstance(limits, AccountLimits)
 
 
 async def test_monthly_usage(client: ApifyClient | ApifyClientAsync) -> None:
     """Test retrieving monthly usage information."""
-    result = await maybe_await(client.user().monthly_usage())
-    usage = cast('MonthlyUsage', result)
-
-    assert usage is not None
+    usage = await maybe_await(client.user().monthly_usage())
+    assert isinstance(usage, MonthlyUsage)
     # Verify expected fields exist
     assert usage.usage_cycle is not None
     assert isinstance(usage.monthly_service_usage, dict)
@@ -53,9 +46,8 @@ async def test_update_limits(client: ApifyClient | ApifyClientAsync) -> None:
     user_client = client.user()
 
     # Get current limits to see what's available
-    result = await maybe_await(user_client.limits())
-    current_limits = cast('AccountLimits', result)
-    assert current_limits is not None
+    current_limits = await maybe_await(user_client.limits())
+    assert isinstance(current_limits, AccountLimits)
 
     # Try to update data retention days (allowed on most accounts). We try to set it to the current
     # value or a reasonable default.

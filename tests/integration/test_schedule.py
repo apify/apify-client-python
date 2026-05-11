@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+
+from ._utils import get_random_resource_name, maybe_await
+from apify_client._models import ListOfSchedules, Schedule
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import ListOfSchedules, Schedule
-
-
-from ._utils import get_random_resource_name, maybe_await
 
 
 async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -> None:
@@ -17,7 +16,7 @@ async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -
     schedule_name = get_random_resource_name('schedule')
 
     # Create schedule
-    result = await maybe_await(
+    created_schedule = await maybe_await(
         client.schedules().create(
             cron_expression='0 0 * * *',
             is_enabled=False,
@@ -25,11 +24,10 @@ async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -
             name=schedule_name,
         )
     )
-    created_schedule = cast('Schedule', result)
+    assert isinstance(created_schedule, Schedule)
     schedule_client = client.schedule(created_schedule.id)
 
     try:
-        assert created_schedule is not None
         assert created_schedule.id is not None
         assert created_schedule.name == schedule_name
         assert created_schedule.cron_expression == '0 0 * * *'
@@ -37,9 +35,8 @@ async def test_schedule_create_and_get(client: ApifyClient | ApifyClientAsync) -
         assert created_schedule.is_exclusive is False
 
         # Get the same schedule
-        result = await maybe_await(schedule_client.get())
-        retrieved_schedule = cast('Schedule', result)
-        assert retrieved_schedule is not None
+        retrieved_schedule = await maybe_await(schedule_client.get())
+        assert isinstance(retrieved_schedule, Schedule)
         assert retrieved_schedule.id == created_schedule.id
         assert retrieved_schedule.name == schedule_name
     finally:
@@ -52,7 +49,7 @@ async def test_schedule_update(client: ApifyClient | ApifyClientAsync) -> None:
     new_name = get_random_resource_name('schedule-updated')
 
     # Create schedule
-    result = await maybe_await(
+    created_schedule = await maybe_await(
         client.schedules().create(
             cron_expression='0 0 * * *',
             is_enabled=False,
@@ -60,29 +57,27 @@ async def test_schedule_update(client: ApifyClient | ApifyClientAsync) -> None:
             name=schedule_name,
         )
     )
-    created_schedule = cast('Schedule', result)
+    assert isinstance(created_schedule, Schedule)
     schedule_client = client.schedule(created_schedule.id)
 
     try:
         # Update the schedule
-        result = await maybe_await(
+        updated_schedule = await maybe_await(
             schedule_client.update(
                 name=new_name,
                 cron_expression='0 12 * * *',
                 is_enabled=True,
             )
         )
-        updated_schedule = cast('Schedule', result)
-        assert updated_schedule is not None
+        assert isinstance(updated_schedule, Schedule)
         assert updated_schedule.name == new_name
         assert updated_schedule.cron_expression == '0 12 * * *'
         assert updated_schedule.is_enabled is True
         assert updated_schedule.id == created_schedule.id
 
         # Verify the update persisted
-        result = await maybe_await(schedule_client.get())
-        retrieved_schedule = cast('Schedule', result)
-        assert retrieved_schedule is not None
+        retrieved_schedule = await maybe_await(schedule_client.get())
+        assert isinstance(retrieved_schedule, Schedule)
         assert retrieved_schedule.name == new_name
         assert retrieved_schedule.cron_expression == '0 12 * * *'
     finally:
@@ -95,7 +90,7 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
     schedule_name_2 = get_random_resource_name('schedule')
 
     # Create two schedules
-    result = await maybe_await(
+    created_1 = await maybe_await(
         client.schedules().create(
             cron_expression='0 0 * * *',
             is_enabled=False,
@@ -103,8 +98,8 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
             name=schedule_name_1,
         )
     )
-    created_1 = cast('Schedule', result)
-    result = await maybe_await(
+    assert isinstance(created_1, Schedule)
+    created_2 = await maybe_await(
         client.schedules().create(
             cron_expression='0 6 * * *',
             is_enabled=False,
@@ -112,13 +107,12 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
             name=schedule_name_2,
         )
     )
-    created_2 = cast('Schedule', result)
+    assert isinstance(created_2, Schedule)
 
     try:
         # List schedules
-        result = await maybe_await(client.schedules().list(limit=100))
-        schedules_page = cast('ListOfSchedules', result)
-        assert schedules_page is not None
+        schedules_page = await maybe_await(client.schedules().list(limit=100))
+        assert isinstance(schedules_page, ListOfSchedules)
         assert schedules_page.items is not None
 
         # Verify our schedules are in the list
@@ -135,7 +129,7 @@ async def test_schedule_delete(client: ApifyClient | ApifyClientAsync) -> None:
     schedule_name = get_random_resource_name('schedule')
 
     # Create schedule
-    result = await maybe_await(
+    created_schedule = await maybe_await(
         client.schedules().create(
             cron_expression='0 0 * * *',
             is_enabled=False,
@@ -143,7 +137,7 @@ async def test_schedule_delete(client: ApifyClient | ApifyClientAsync) -> None:
             name=schedule_name,
         )
     )
-    created_schedule = cast('Schedule', result)
+    assert isinstance(created_schedule, Schedule)
     schedule_client = client.schedule(created_schedule.id)
 
     # Delete schedule
@@ -159,7 +153,7 @@ async def test_schedule_get_log(client: ApifyClient | ApifyClientAsync) -> None:
     schedule_name = get_random_resource_name('schedule')
 
     # Create schedule
-    result = await maybe_await(
+    created_schedule = await maybe_await(
         client.schedules().create(
             cron_expression='0 0 * * *',
             is_enabled=False,
@@ -167,7 +161,7 @@ async def test_schedule_get_log(client: ApifyClient | ApifyClientAsync) -> None:
             name=schedule_name,
         )
     )
-    created_schedule = cast('Schedule', result)
+    assert isinstance(created_schedule, Schedule)
     schedule_client = client.schedule(created_schedule.id)
 
     try:

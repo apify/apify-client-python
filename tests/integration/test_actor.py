@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, cast
 
 from ._utils import get_random_resource_name, maybe_await
@@ -67,9 +68,12 @@ async def test_list_actors_sorting(client: ApifyClient | ApifyClientAsync) -> No
     assert actors_page.items is not None
     assert isinstance(actors_page.items, list)
 
-    sorted_items = sorted(actors_page.items, key=lambda a: a.stats.last_run_started_at or 0, reverse=True)
-
-    # The API should return items in the correct order based on the sorting parameters
+    min_dt = datetime.min.replace(tzinfo=UTC)
+    sorted_items = sorted(
+        actors_page.items,
+        key=lambda a: (a.stats.last_run_started_at if a.stats else None) or min_dt,
+        reverse=True,
+    )
     assert actors_page.items == sorted_items
 
 

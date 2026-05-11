@@ -46,7 +46,7 @@ dev = [
     # See https://github.com/apify/apify-client-python/pull/582/ for more details.
     # We explicitly constrain black>=24.3.0 to override the transitive dependency.
     "black>=24.3.0",
-    "datamodel-code-generator[http,ruff]<1.0.0",
+    "datamodel-code-generator[http,ruff]>=0.57.0,<1.0.0",
     "dycw-pytest-only<3.0.0",
     "griffe<3.0.0",
     "poethepoet<1.0.0",
@@ -229,6 +229,7 @@ use_annotated = true
 wrap_string_literal = true
 snake_case_field = true
 use_subclass_enum = true
+reuse_model = true
 extra_fields = "allow"
 allow_population_by_field_name = true
 aliases = "datamodel_codegen_aliases.json"

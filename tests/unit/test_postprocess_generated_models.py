@@ -5,7 +5,6 @@ import textwrap
 from scripts.postprocess_generated_models import (
     add_docs_group_decorators,
     convert_enums_to_literals,
-    deduplicate_error_type_enum,
     fix_discriminators,
     split_literals_to_file,
 )
@@ -47,143 +46,6 @@ def test_fix_discriminators_does_not_touch_unrelated() -> None:
     content = "items: list[X] = Field(discriminator='event_type')"
     result = fix_discriminators(content)
     assert result == content
-
-
-# -- deduplicate_error_type_enum ----------------------------------------------
-
-
-def test_deduplicate_error_type_enum_removes_duplicate() -> None:
-    """The duplicate `Type(StrEnum)` is dropped while the original `ErrorType` is preserved."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            SOME_ERROR = 'some-error'
-
-        class Type(StrEnum):
-            SOME_ERROR = 'some-error'
-            OTHER = 'other'
-
-        class ErrorResponse(BaseModel):
-            error_type: Type
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert 'class Type(StrEnum)' not in result
-    assert 'class ErrorType(StrEnum)' in result
-
-
-def test_deduplicate_error_type_enum_rewires_colon_annotation() -> None:
-    """A `: Type` annotation is rewired to `: ErrorType` after the duplicate is dropped."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            SOME_ERROR = 'some-error'
-
-        class Type(StrEnum):
-            SOME_ERROR = 'some-error'
-
-        class ErrorResponse(BaseModel):
-            error_type: Type
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert 'error_type: ErrorType' in result
-
-
-def test_deduplicate_error_type_enum_rewires_union_annotation() -> None:
-    """A `| Type` arm in a union annotation is rewired to `| ErrorType`."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            X = 'x'
-
-        class Type(StrEnum):
-            X = 'x'
-
-        class Foo(BaseModel):
-            field: str | Type
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert '| ErrorType' in result
-    assert '| Type' not in result
-
-
-def test_deduplicate_error_type_enum_rewires_bracket_annotation() -> None:
-    """A `[Type]` subscript inside a generic annotation is rewired to `[ErrorType]`."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            X = 'x'
-
-        class Type(StrEnum):
-            X = 'x'
-
-        class Foo(BaseModel):
-            field: list[Type]
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert 'list[ErrorType]' in result
-    assert 'list[Type]' not in result
-
-
-def test_deduplicate_error_type_enum_collapses_extra_blank_lines() -> None:
-    """Removing the duplicate enum collapses any resulting run of 4+ blank lines."""
-    content = "\nclass Type(StrEnum):\n    X = 'x'\n\n\n\n\nclass Next(BaseModel):\n    pass\n"
-    result = deduplicate_error_type_enum(content)
-    assert '\n\n\n\n' not in result
-
-
-def test_deduplicate_error_type_enum_no_change_when_no_duplicate() -> None:
-    """Source without a `Type(StrEnum)` duplicate passes through unchanged."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            SOME_ERROR = 'some-error'
-
-        class Foo(BaseModel):
-            field: ErrorType
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert result == content
-
-
-def test_deduplicate_error_type_enum_does_not_touch_type_in_class_names() -> None:
-    """`Type` inside other class names (e.g. `ContentType`) is not rewritten."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            X = 'x'
-
-        class Type(StrEnum):
-            X = 'x'
-
-        class ContentType(BaseModel):
-            value: str
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert 'class ContentType(BaseModel)' in result
-
-
-def test_deduplicate_error_type_enum_handles_type_as_last_class() -> None:
-    """The `Type` enum is removed even when it's the last top-level definition."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            X = 'x'
-
-        class Foo(BaseModel):
-            field: Type
-
-        class Type(StrEnum):
-            X = 'x'
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert 'class Type(StrEnum)' not in result
-    assert 'field: ErrorType' in result
-
-
-def test_deduplicate_error_type_enum_skips_non_strenum_type() -> None:
-    """A `Type` class that is not a `StrEnum` (e.g. a Pydantic model) is left in place."""
-    content = textwrap.dedent("""\
-        class ErrorType(StrEnum):
-            X = 'x'
-
-        class Type(BaseModel):
-            value: str
-    """)
-    result = deduplicate_error_type_enum(content)
-    assert 'class Type(BaseModel)' in result
 
 
 # -- add_docs_group_decorators ------------------------------------------------
@@ -417,7 +279,7 @@ def test_convert_enums_to_literals_field_references_still_resolve() -> None:
 
 
 def test_full_pipeline() -> None:
-    """All steps composed: discriminator fix, `Type` dedup, enum-to-literal, docs decorators."""
+    """All steps composed: discriminator fix, enum-to-literal, docs decorators."""
     content = textwrap.dedent("""\
         from enum import StrEnum
         from typing import Literal
@@ -430,17 +292,13 @@ def test_full_pipeline() -> None:
         class ErrorType(StrEnum):
             SOME_ERROR = 'some-error'
 
-        class Type(StrEnum):
-            SOME_ERROR = 'some-error'
-
         class ErrorResponse(BaseModel):
-            error_type: Type
+            error_type: ErrorType
 
         class Alpha(BaseModel):
             name: str
     """)
     result = fix_discriminators(content)
-    result = deduplicate_error_type_enum(result)
     result = convert_enums_to_literals(result)
     result = add_docs_group_decorators(result, 'Models')
 
@@ -448,8 +306,7 @@ def test_full_pipeline() -> None:
     assert "discriminator='pricing_model'" in result
     assert "discriminator='pricingModel'" not in result
 
-    # Duplicate Type enum removed and references rewired, then the remaining enum converted.
-    assert 'class Type(StrEnum)' not in result
+    # The enum is converted to a Literal alias.
     assert 'class ErrorType(StrEnum)' not in result
     assert 'ErrorType = Literal[' in result
     assert 'error_type: ErrorType' in result

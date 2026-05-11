@@ -3,7 +3,6 @@
 Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with
   discriminators on schemas referenced from array items).
-- Deduplicate the inlined `Type(StrEnum)` that comes from ErrorResponse.yaml; rewire to `ErrorType`.
 - Rewrite every `class X(StrEnum)` as `X = Literal[...]` so downstream code can pass plain strings
   (and reuse the named alias in resource-client signatures) instead of enum members.
 - Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving
@@ -95,32 +94,6 @@ def fix_discriminators(content: str) -> str:
             content,
         )
     return content
-
-
-def deduplicate_error_type_enum(content: str) -> str:
-    """Remove the duplicate `Type` enum and rewire references to `ErrorType`.
-
-    The `type` property on `ErrorResponse` discriminator subtypes (`RunFailedErrorDetail` etc.)
-    re-emits the value list of the named `ErrorType` enum as a separate `class Type(StrEnum)` —
-    upstream issue https://github.com/koxudaxi/datamodel-code-generator/issues/3104.
-    """
-    tree = ast.parse(content)
-    type_node = next(
-        (n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Type' and 'StrEnum' in _base_names(n)),
-        None,
-    )
-    if type_node is None:
-        return content
-
-    assert type_node.end_lineno is not None  # noqa: S101
-    lines = content.split('\n')
-    del lines[type_node.lineno - 1 : type_node.end_lineno]
-    content = '\n'.join(lines)
-
-    # Lookbehinds are deliberately narrow: matching bare `\bType\b` would also rewrite `Type` in
-    # docstrings (`Content-Type`, `Type of event`), which broke an earlier version.
-    content = re.sub(r'(?<=: )Type\b|(?<=\| )Type\b|(?<=\[)Type\b', 'ErrorType', content)
-    return _collapse_blank_lines(content)
 
 
 def convert_enums_to_literals(content: str) -> str:
@@ -425,7 +398,6 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     """
     original = models_path.read_text()
     fixed = fix_discriminators(original)
-    fixed = deduplicate_error_type_enum(fixed)
     fixed = convert_enums_to_literals(fixed)
     fixed = add_docs_group_decorators(fixed, 'Models')
     models_content, literals_content = split_literals_to_file(fixed)

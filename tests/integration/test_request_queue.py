@@ -411,17 +411,23 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
                 rq_client.add_request({'url': f'https://example.com/lock-{i}', 'unique_key': f'lock-{i}'})
             )
 
-        # Poll until requests are available for locking (eventual consistency)
-        lock_response: LockedRequestQueueHead | None = None
+        # Poll (without side effects) until all requests are visible. Using `list_and_lock_head` for polling
+        # would lock items across iterations, leading to an ambiguous count of actually-locked requests.
+        head_response: RequestQueueHead | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
-            assert isinstance(result, LockedRequestQueueHead)
-            lock_response = result
-            if len(lock_response.items) == 3:
+            result = await maybe_await(rq_client.list_head(limit=5))
+            assert isinstance(result, RequestQueueHead)
+            head_response = result
+            if len(head_response.items) == 5:
                 break
 
-        assert lock_response is not None
+        assert head_response is not None
+        assert len(head_response.items) == 5
+
+        result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
+        assert isinstance(result, LockedRequestQueueHead)
+        lock_response = result
         assert len(lock_response.items) == 3
 
         # Verify requests are locked
@@ -522,17 +528,23 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
                 rq_client.add_request({'url': f'https://example.com/unlock-{i}', 'unique_key': f'unlock-{i}'})
             )
 
-        # Poll until requests are available for locking (eventual consistency)
-        lock_response: LockedRequestQueueHead | None = None
+        # Poll (without side effects) until all requests are visible. Using `list_and_lock_head` for polling
+        # would lock items across iterations, leading to an ambiguous count of actually-locked requests.
+        head_response: RequestQueueHead | None = None
         for _ in range(5):
             await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
-            assert isinstance(result, LockedRequestQueueHead)
-            lock_response = result
-            if len(lock_response.items) == 3:
+            result = await maybe_await(rq_client.list_head(limit=5))
+            assert isinstance(result, RequestQueueHead)
+            head_response = result
+            if len(head_response.items) == 5:
                 break
 
-        assert lock_response is not None
+        assert head_response is not None
+        assert len(head_response.items) == 5
+
+        result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
+        assert isinstance(result, LockedRequestQueueHead)
+        lock_response = result
         assert len(lock_response.items) == 3
 
         # Unlock all requests

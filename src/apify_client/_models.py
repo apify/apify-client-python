@@ -842,15 +842,6 @@ class DecodeAndVerifyData(BaseModel):
 
 
 @docs_group('Models')
-class DecodeAndVerifyRequest(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    encoded: Annotated[str, Field(examples=['eyJwYXlsb2FkIjoiLi4uIiwic2lnbmF0dXJlIjoiLi4uIn0='])]
-
-
-@docs_group('Models')
 class DecodeAndVerifyResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -959,6 +950,11 @@ class EncodeAndSignData(BaseModel):
         populate_by_name=True,
     )
     encoded: Annotated[str, Field(examples=['eyJwYXlsb2FkIjoiLi4uIiwic2lnbmF0dXJlIjoiLi4uIn0='])]
+
+
+@docs_group('Models')
+class DecodeAndVerifyRequest(EncodeAndSignData):
+    pass
 
 
 @docs_group('Models')
@@ -3230,13 +3226,8 @@ class UpdateRunRequest(BaseModel):
 
 
 @docs_group('Models')
-class UpdateStoreRequest(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    name: str | None = None
-    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
+class UpdateStoreRequest(UpdateDatasetRequest):
+    pass
 
 
 @docs_group('Models')
@@ -3448,12 +3439,8 @@ class WebhookDispatch(BaseModel):
 
 
 @docs_group('Models')
-class WebhookDispatchResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    data: WebhookDispatch
+class WebhookDispatchResponse(TestWebhookResponse):
+    pass
 
 
 @docs_group('Models')

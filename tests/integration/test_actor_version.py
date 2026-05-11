@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+
+from ._utils import get_random_resource_name, maybe_await
+from apify_client._models import Actor, ListOfVersions, Version
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, ListOfVersions, Version
-
-
-from ._utils import get_random_resource_name, maybe_await
 
 
 async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> None:
@@ -17,7 +16,7 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with an initial version
-    result = await maybe_await(
+    actor = await maybe_await(
         client.actors().create(
             name=actor_name,
             versions=[
@@ -36,15 +35,13 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
             ],
         )
     )
-    actor = cast('Actor', result)
+    assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
 
     try:
         # List versions
-        result = await maybe_await(actor_client.versions().list())
-        versions = cast('ListOfVersions', result)
-
-        assert versions is not None
+        versions = await maybe_await(actor_client.versions().list())
+        assert isinstance(versions, ListOfVersions)
         assert versions.items is not None
         assert len(versions.items) >= 1
 
@@ -62,13 +59,13 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
     actor_name = get_random_resource_name('actor')
 
     # Create an actor without versions
-    result = await maybe_await(client.actors().create(name=actor_name))
-    actor = cast('Actor', result)
+    actor = await maybe_await(client.actors().create(name=actor_name))
+    assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
 
     try:
         # Create a new version
-        result = await maybe_await(
+        created_version = await maybe_await(
             actor_client.versions().create(
                 version_number='1.0',
                 source_type='SOURCE_FILES',
@@ -82,19 +79,15 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
                 ],
             )
         )
-        created_version = cast('Version', result)
-
-        assert created_version is not None
+        assert isinstance(created_version, Version)
         assert created_version.version_number == '1.0'
         assert created_version.build_tag == 'test'
         assert created_version.source_type == 'SOURCE_FILES'
 
         # Get the same version
         version_client = actor_client.version('1.0')
-        result = await maybe_await(version_client.get())
-        retrieved_version = cast('Version | None', result)
-
-        assert retrieved_version is not None
+        retrieved_version = await maybe_await(version_client.get())
+        assert isinstance(retrieved_version, Version)
         assert retrieved_version.version_number == '1.0'
         assert retrieved_version.build_tag == 'test'
 
@@ -107,7 +100,7 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with a version
-    result = await maybe_await(
+    actor = await maybe_await(
         client.actors().create(
             name=actor_name,
             versions=[
@@ -126,13 +119,13 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    actor = cast('Actor', result)
+    assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.1')
 
     try:
         # Update the version
-        result = await maybe_await(
+        updated_version = await maybe_await(
             version_client.update(
                 build_tag='updated',
                 source_files=[
@@ -144,16 +137,13 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
                 ],
             )
         )
-        updated_version = cast('Version', result)
-
-        assert updated_version is not None
+        assert isinstance(updated_version, Version)
         assert updated_version.version_number == '0.1'
         assert updated_version.build_tag == 'updated'
 
         # Verify the update persisted
-        result = await maybe_await(version_client.get())
-        retrieved_version = cast('Version | None', result)
-        assert retrieved_version is not None
+        retrieved_version = await maybe_await(version_client.get())
+        assert isinstance(retrieved_version, Version)
         assert retrieved_version.build_tag == 'updated'
 
     finally:
@@ -165,7 +155,7 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with two versions
-    result = await maybe_await(
+    actor = await maybe_await(
         client.actors().create(
             name=actor_name,
             versions=[
@@ -196,7 +186,7 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    actor = cast('Actor', result)
+    assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
 
     try:
@@ -209,9 +199,8 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert deleted_version is None
 
         # Verify version 0.2 still exists
-        result = await maybe_await(actor_client.version('0.2').get())
-        remaining_version = cast('Version | None', result)
-        assert remaining_version is not None
+        remaining_version = await maybe_await(actor_client.version('0.2').get())
+        assert isinstance(remaining_version, Version)
         assert remaining_version.version_number == '0.2'
 
     finally:

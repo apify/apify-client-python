@@ -3,23 +3,21 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
+from apify_client._models import Actor, Build, ListOfActors, Run
+from apify_client._resource_clients import BuildClient, BuildClientAsync
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, Build, ListOfActors, Run
-    from apify_client._resource_clients import BuildClient, BuildClientAsync
 
 
 async def test_get_public_actor(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting a public Actor by ID."""
     # Use a well-known public actor (Apify's web scraper)
-    result = await maybe_await(client.actor('apify/web-scraper').get())
-    actor = cast('Actor', result)
-
-    assert actor is not None
+    actor = await maybe_await(client.actor('apify/web-scraper').get())
+    assert isinstance(actor, Actor)
     assert actor.id is not None
     assert actor.name == 'web-scraper'
     assert actor.username == 'apify'
@@ -27,20 +25,16 @@ async def test_get_public_actor(client: ApifyClient | ApifyClientAsync) -> None:
 
 async def test_get_actor_by_full_name(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting an Actor using username/actorname format."""
-    result = await maybe_await(client.actor('apify/hello-world').get())
-    actor = cast('Actor', result)
-
-    assert actor is not None
+    actor = await maybe_await(client.actor('apify/hello-world').get())
+    assert isinstance(actor, Actor)
     assert actor.name == 'hello-world'
     assert actor.username == 'apify'
 
 
 async def test_list_actors_my(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing Actors created by the user."""
-    result = await maybe_await(client.actors().list(my=True, limit=10))
-    actors_page = cast('ListOfActors', result)
-
-    assert actors_page is not None
+    actors_page = await maybe_await(client.actors().list(my=True, limit=10))
+    assert isinstance(actors_page, ListOfActors)
     assert actors_page.items is not None
     # User may have 0 actors
     assert isinstance(actors_page.items, list)
@@ -49,10 +43,8 @@ async def test_list_actors_my(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_list_actors_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing Actors with pagination parameters."""
     # List all actors (public + owned), should return some results
-    result = await maybe_await(client.actors().list(limit=5, offset=0))
-    actors_page = cast('ListOfActors', result)
-
-    assert actors_page is not None
+    actors_page = await maybe_await(client.actors().list(limit=5, offset=0))
+    assert isinstance(actors_page, ListOfActors)
     assert actors_page.items is not None
     assert isinstance(actors_page.items, list)
     # Should have at least some actors (public ones exist)
@@ -61,10 +53,8 @@ async def test_list_actors_pagination(client: ApifyClient | ApifyClientAsync) ->
 
 async def test_list_actors_sorting(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing Actors with sorting."""
-    result = await maybe_await(client.actors().list(limit=10, desc=True, sort_by='stats.lastRunStartedAt'))
-    actors_page = cast('ListOfActors', result)
-
-    assert actors_page is not None
+    actors_page = await maybe_await(client.actors().list(limit=10, desc=True, sort_by='stats.lastRunStartedAt'))
+    assert isinstance(actors_page, ListOfActors)
     assert actors_page.items is not None
     assert isinstance(actors_page.items, list)
 
@@ -82,7 +72,7 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
     actor_name = get_random_resource_name('actor')
 
     # Create actor
-    result = await maybe_await(
+    created_actor = await maybe_await(
         client.actors().create(
             name=actor_name,
             title='Test Actor',
@@ -103,8 +93,7 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
             ],
         )
     )
-    created_actor = cast('Actor', result)
-    assert created_actor is not None
+    assert isinstance(created_actor, Actor)
     assert created_actor.id is not None
     assert created_actor.name == actor_name
 
@@ -114,21 +103,19 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
         # Update actor (only title and description - updating defaultRunOptions requires build to be set)
         new_title = 'Updated Test Actor'
         new_description = 'Updated description'
-        result = await maybe_await(
+        updated_actor = await maybe_await(
             actor_client.update(
                 title=new_title,
                 description=new_description,
             )
         )
-        updated_actor = cast('Actor', result)
-        assert updated_actor is not None
+        assert isinstance(updated_actor, Actor)
         assert updated_actor.title == new_title
         assert updated_actor.description == new_description
 
         # Verify update persisted
-        result = await maybe_await(actor_client.get())
-        retrieved_actor = cast('Actor', result)
-        assert retrieved_actor is not None
+        retrieved_actor = await maybe_await(actor_client.get())
+        assert isinstance(retrieved_actor, Actor)
         assert retrieved_actor.title == new_title
 
     finally:
@@ -146,14 +133,12 @@ async def test_actor_default_build(client: ApifyClient | ApifyClientAsync) -> No
     actor_client = client.actor('apify/hello-world')
 
     # Get default build client
-    result = await maybe_await(actor_client.default_build())
-    build_client = cast('BuildClient | BuildClientAsync', result)
-    assert build_client is not None
+    build_client = await maybe_await(actor_client.default_build())
+    assert isinstance(build_client, BuildClient | BuildClientAsync)
 
     # Use the returned client to get the build
-    result = await maybe_await(build_client.get())
-    build = cast('Build', result)
-    assert build is not None
+    build = await maybe_await(build_client.get())
+    assert isinstance(build, Build)
     assert build.id is not None
     assert build.status is not None
 
@@ -162,9 +147,8 @@ async def test_actor_last_run(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting an Actor's last run."""
     # First run an actor to ensure there is a last run
     actor_client = client.actor('apify/hello-world')
-    result = await maybe_await(actor_client.call())
-    run = cast('Run', result)
-    assert run is not None
+    run = await maybe_await(actor_client.call())
+    assert isinstance(run, Run)
 
     try:
         # Get last run client
@@ -172,9 +156,8 @@ async def test_actor_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         assert last_run_client is not None
 
         # Use the returned client to get the run
-        result = await maybe_await(last_run_client.get())
-        last_run = cast('Run', result)
-        assert last_run is not None
+        last_run = await maybe_await(last_run_client.get())
+        assert isinstance(last_run, Run)
         assert last_run.id is not None
 
     finally:

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+
+from ._utils import maybe_await
+from apify_client._models import ListOfBuilds, Run
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import ListOfBuilds, Run
-
-
-from ._utils import maybe_await
 
 # Use a simple, fast public actor for testing
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -19,9 +18,8 @@ async def test_log_get_from_run(client: ApifyClient | ApifyClientAsync) -> None:
     """Test retrieving log from an Actor run."""
     # Run hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.call())
-    assert result is not None
-    run = cast('Run', result)
+    run = await maybe_await(actor.call())
+    assert isinstance(run, Run)
 
     # Get log as text
     run_client = client.run(run.id)
@@ -39,8 +37,8 @@ async def test_log_get_from_build(client: ApifyClient | ApifyClientAsync) -> Non
     """Test retrieving log from a build."""
     # Get a build from hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.builds().list(limit=1))
-    builds_page = cast('ListOfBuilds', result)
+    builds_page = await maybe_await(actor.builds().list(limit=1))
+    assert isinstance(builds_page, ListOfBuilds)
     assert builds_page.items
     build_id = builds_page.items[0].id
 
@@ -57,9 +55,8 @@ async def test_log_get_as_bytes(client: ApifyClient | ApifyClientAsync) -> None:
     """Test retrieving log as raw bytes."""
     # Run hello-world actor
     actor = client.actor(HELLO_WORLD_ACTOR)
-    result = await maybe_await(actor.call())
-    assert result is not None
-    run = cast('Run', result)
+    run = await maybe_await(actor.call())
+    assert isinstance(run, Run)
 
     # Get log as bytes
     run_client = client.run(run.id)

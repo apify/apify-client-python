@@ -68,6 +68,16 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/apify_client"]
 
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "src/apify_client",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "README.md",
+    "pyproject.toml",
+]
+
 [tool.ruff]
 line-length = 120
 include = [

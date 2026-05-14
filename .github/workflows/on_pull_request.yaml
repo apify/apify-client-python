@@ -37,6 +37,10 @@ jobs:
       src_package_dir: src/apify_client
       dist_dir: dist
       python_version: "3.14"
+      smoke_code: |
+        from apify_client import ApifyClient, ApifyClientAsync
+        ApifyClient(token='x')
+        ApifyClientAsync(token='x')
 
   tests:
     name: Tests

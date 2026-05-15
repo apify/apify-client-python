@@ -17,9 +17,6 @@ persistent-webhook definition can be reused; their fields not relevant to ad-hoc
 `condition`) are ignored at runtime.
 """
 
-TerminalActorJobStatus = Literal['SUCCEEDED', 'FAILED', 'TIMED-OUT', 'ABORTED']
-"""Subset of `ActorJobStatus` values that indicate the job has finished and will not change again."""
-
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
 
@@ -32,3 +29,10 @@ JsonSerializable = dict[str, 'JsonSerializable'] | list['JsonSerializable'] | st
 
 Based on the definition discussed in https://github.com/python/typing/issues/182.
 """
+
+
+__all__ = [
+    'JsonSerializable',
+    'Timeout',
+    'WebhooksList',
+]

@@ -15,7 +15,6 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_SHORT,
 )
 from apify_client._docs import docs_group
-from apify_client._http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client._resource_clients import (
     ActorClient,
     ActorClientAsync,
@@ -74,6 +73,7 @@ from apify_client._resource_clients import (
 )
 from apify_client._statistics import ClientStatistics
 from apify_client._utils import check_custom_headers
+from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -224,7 +224,8 @@ class ApifyClient:
         ### Usage
 
         ```python
-        from apify_client import ApifyClient, HttpClient, HttpResponse
+        from apify_client import ApifyClient
+        from apify_client.http_clients import HttpClient, HttpResponse
 
         class MyHttpClient(HttpClient):
             def call(self, *, method, url, **kwargs) -> HttpResponse:
@@ -577,7 +578,8 @@ class ApifyClientAsync:
         ### Usage
 
         ```python
-        from apify_client import ApifyClientAsync, HttpClientAsync, HttpResponse
+        from apify_client import ApifyClientAsync
+        from apify_client.http_clients import HttpClientAsync, HttpResponse
 
         class MyHttpClient(HttpClientAsync):
             async def call(self, *, method, url, **kwargs) -> HttpResponse:

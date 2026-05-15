@@ -1,4 +1,4 @@
-from apify_client import (
+from apify_client.http_clients import (
     HttpClient,
     HttpClientAsync,
     HttpResponse,

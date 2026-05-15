@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from werkzeug import Request, Response
 
-from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer

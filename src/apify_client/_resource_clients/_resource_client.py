@@ -4,12 +4,11 @@ import asyncio
 import time
 from datetime import UTC, datetime, timedelta
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, get_args
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
-from apify_client._types import TerminalActorJobStatus
 from apify_client._utils import (
     catch_not_found_for_resource_or_throw,
     catch_not_found_or_throw,
@@ -21,10 +20,13 @@ from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
-    from apify_client._http_clients import HttpClient, HttpClientAsync
-    from apify_client._types import Timeout
+    from apify_client.http_clients import HttpClient, HttpClientAsync
+    from apify_client.types import Timeout
 
-_TERMINAL_STATUSES: frozenset[TerminalActorJobStatus] = frozenset(get_args(TerminalActorJobStatus))
+_TerminalActorJobStatus = Literal['SUCCEEDED', 'FAILED', 'TIMED-OUT', 'ABORTED']
+"""Subset of `ActorJobStatus` values that indicate the job has finished and will not change again."""
+
+_TERMINAL_STATUSES: frozenset[_TerminalActorJobStatus] = frozenset(get_args(_TerminalActorJobStatus))
 
 
 class ResourceClientBase(metaclass=WithLogDetailsClient):

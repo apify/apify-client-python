@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._http_clients import HttpResponse
     from apify_client._literals import GeneralAccess
-    from apify_client._types import JsonSerializable, Timeout
+    from apify_client.http_clients import HttpResponse
+    from apify_client.types import JsonSerializable, Timeout
 
 
 @docs_group('Other')

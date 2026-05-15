@@ -1,6 +1,8 @@
 from typing import Any
 
-from apify_client import ApifyClient, HttpClient, HttpResponse, Timeout
+from apify_client import ApifyClient
+from apify_client.http_clients import HttpClient, HttpResponse
+from apify_client.types import Timeout
 
 TOKEN = 'MY-APIFY-TOKEN'
 

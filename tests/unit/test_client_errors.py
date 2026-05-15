@@ -7,7 +7,6 @@ import pytest
 from werkzeug import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.errors import (
     ApifyApiError,
     ConflictError,
@@ -18,6 +17,7 @@ from apify_client.errors import (
     ServerError,
     UnauthorizedError,
 )
+from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable

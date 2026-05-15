@@ -112,7 +112,8 @@ The HTTP layer is now abstracted behind <ApiLink to="class/HttpClient">`HttpClie
 To use a custom HTTP client, implement the `call()` method and pass the instance via the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client()`</ApiLink> class method:
 
 ```python
-from apify_client import ApifyClient, HttpClient, HttpResponse, Timeout
+from apify_client import ApifyClient
+from apify_client.http_clients import HttpClient, HttpResponse
 
 class MyHttpClient(HttpClient):
     def call(self, *, method, url, headers=None, params=None,
@@ -126,6 +127,8 @@ client = ApifyClient.with_custom_http_client(
 ```
 
 The response must satisfy the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol (properties: `status_code`, `text`, `content`, `headers`; methods: `json()`, `read()`, `close()`, `iter_bytes()`). Many popular libraries like `httpx` already satisfy this protocol out of the box.
+
+The HTTP base classes, the `HttpResponse` protocol, and the default `ImpitHttpClient` / `ImpitHttpClientAsync` implementations live in the `apify_client.http_clients` submodule. The `Timeout` alias used on the `call()` signature lives in `apify_client.types`.
 
 For a full walkthrough and working examples, see the [Custom HTTP clients](/docs/concepts/custom-http-clients) concept page and the [Custom HTTP client](/docs/guides/custom-http-client-httpx) guide.
 

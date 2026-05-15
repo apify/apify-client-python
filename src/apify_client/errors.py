@@ -8,7 +8,7 @@ from apify_client._docs import docs_group
 if TYPE_CHECKING:
     from typing import Self
 
-    from apify_client._http_clients import HttpResponse
+    from apify_client.http_clients import HttpResponse
 
 
 @docs_group('Errors')
@@ -161,3 +161,17 @@ _STATUS_TO_CLASS: dict[int, type[ApifyApiError]] = {
     409: ConflictError,
     429: RateLimitError,
 }
+
+
+__all__ = [
+    'ApifyApiError',
+    'ApifyClientError',
+    'ConflictError',
+    'ForbiddenError',
+    'InvalidRequestError',
+    'InvalidResponseBodyError',
+    'NotFoundError',
+    'RateLimitError',
+    'ServerError',
+    'UnauthorizedError',
+]

@@ -9,6 +9,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
+import ApiLink from '@theme/ApiLink';
+
 import AuthAsyncExample from '!!raw-loader!./code/02_auth_async.py';
 import AuthSyncExample from '!!raw-loader!./code/02_auth_sync.py';
 import UsageAsyncExample from '!!raw-loader!./code/01_usage_async.py';
@@ -47,7 +49,7 @@ The API token is used to authorize your requests to the Apify API. You can be ch
 
 ## Step 2: Run an Actor
 
-To start an Actor, you need its ID (e.g., `john-doe/my-cool-actor`) and an API token. The Actor's ID is a combination of the username and the Actor owner's username. Use the [`ActorClient`](/reference/class/ActorClient) to run the Actor and wait for it to complete. You can run both your own Actors and [Actors from Apify store](https://docs.apify.com/platform/actors/running/actors-in-store).
+To start an Actor, you need its ID (e.g., `john-doe/my-cool-actor`) and an API token. The Actor's ID is a combination of the username and the Actor owner's username. Use the <ApiLink to="class/ActorClient">`ActorClient`</ApiLink> to run the Actor and wait for it to complete. You can run both your own Actors and [Actors from Apify store](https://docs.apify.com/platform/actors/running/actors-in-store).
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -64,7 +66,7 @@ To start an Actor, you need its ID (e.g., `john-doe/my-cool-actor`) and an API t
 
 ## Step 3: Provide input to an Actor
 
-Actors often require input, such as URLs to scrape, search terms, or other configuration data. You can pass input as a JSON object when starting the Actor using the [`ActorClient.call`](/reference/class/ActorClient#call) method. Actors respect the input schema defined in the Actor's [input schema](https://docs.apify.com/platform/actors/development/actor-definition/input-schema).
+Actors often require input, such as URLs to scrape, search terms, or other configuration data. You can pass input as a JSON object when starting the Actor using the <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink> method. Actors respect the input schema defined in the Actor's [input schema](https://docs.apify.com/platform/actors/development/actor-definition/input-schema).
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -81,7 +83,7 @@ Actors often require input, such as URLs to scrape, search terms, or other confi
 
 ## Step 4: Get results from the dataset
 
-To get the results from the dataset, you can use the [`DatasetClient`](/reference/class/DatasetClient) ([`ApifyClient.dataset`](/reference/class/ApifyClient#dataset)) and [`DatasetClient.list_items`](/reference/class/DatasetClient#list_items) method. You need to pass the dataset ID to define which dataset you want to access. You can get the dataset ID from the Actor's run dictionary (represented by `defaultDatasetId`).
+To get the results from the dataset, you can use the <ApiLink to="class/DatasetClient">`DatasetClient`</ApiLink> (<ApiLink to="class/ApifyClient#dataset">`ApifyClient.dataset`</ApiLink>) and <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items`</ApiLink> method. You need to pass the dataset ID to define which dataset you want to access. You can get the dataset ID from the Actor's run dictionary (represented by `defaultDatasetId`).
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

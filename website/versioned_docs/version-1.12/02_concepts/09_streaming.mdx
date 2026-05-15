@@ -7,6 +7,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
+import ApiLink from '@theme/ApiLink';
+
 import StreamingAsyncExample from '!!raw-loader!./code/09_streaming_async.py';
 import StreamingSyncExample from '!!raw-loader!./code/09_streaming_sync.py';
 
@@ -14,9 +16,9 @@ Certain resources, such as dataset items, key-value store records, and logs, sup
 
 Supported streaming methods:
 
-- [`DatasetClient.stream_items`](/reference/class/DatasetClient#stream_items) - Stream dataset items incrementally.
-- [`KeyValueStoreClient.stream_record`](/reference/class/KeyValueStoreClient#stream_record) - Stream key-value store records as raw data.
-- [`LogClient.stream`](/reference/class/LogClient#stream) - Stream logs in real time.
+- <ApiLink to="class/DatasetClient#stream_items">`DatasetClient.stream_items`</ApiLink> - Stream dataset items incrementally.
+- <ApiLink to="class/KeyValueStoreClient#stream_record">`KeyValueStoreClient.stream_record`</ApiLink> - Stream key-value store records as raw data.
+- <ApiLink to="class/LogClient#stream">`LogClient.stream`</ApiLink> - Stream logs in real time.
 
 These methods return a raw, context-managed `httpx.Response` object. The response must be consumed within a with block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
 

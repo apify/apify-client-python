@@ -104,16 +104,15 @@ jobs:
             uv run poe generate-models
           fi
 
-      - name: Commit and push model changes
+      - name: Commit model changes
         id: commit
-        uses: EndBug/add-and-commit@v10
+        uses: apify/actions/signed-commit@v1.0.0
         with:
-          add: 'src/apify_client/_*_generated.py'
-          author_name: apify-service-account
-          author_email: apify-service-account@users.noreply.github.com
           message: ${{ env.TITLE }}
-          commit: --no-verify
-          push: -u origin ${{ env.BRANCH }}
+          add: 'src/apify_client/_*_generated.py'
+          github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH }}
+          create-branch: 'true'
 
       - name: Create or update PR
         if: steps.commit.outputs.committed == 'true'

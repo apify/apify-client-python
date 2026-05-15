@@ -104,27 +104,18 @@ jobs:
             uv run poe generate-models
           fi
 
-      - name: Stage model changes
-        id: stage
-        run: |
-          git add 'src/apify_client/_*_generated.py'
-          if git diff --cached --quiet; then
-            echo "has-changes=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "has-changes=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Commit model changes
-        if: steps.stage.outputs.has-changes == 'true'
-        uses: apify/workflows/commit@v0.44.0
+        id: commit
+        uses: apify/actions/signed-commit@v1.0.0
         with:
-          commit-message: ${{ env.TITLE }}
+          message: ${{ env.TITLE }}
+          add: 'src/apify_client/_*_generated.py'
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
           create-branch: 'true'
 
       - name: Create or update PR
-        if: steps.stage.outputs.has-changes == 'true'
+        if: steps.commit.outputs.committed == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
@@ -158,7 +149,7 @@ jobs:
 
       # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding client-python PR.
       - name: Comment on apify-docs PR
-        if: steps.stage.outputs.has-changes == 'true' && inputs.docs_pr_number
+        if: steps.commit.outputs.committed == 'true' && inputs.docs_pr_number
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}

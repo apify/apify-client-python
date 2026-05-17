@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from pytest_httpserver import HTTPServer
 
-    from apify_client.types import Timeout
+    from apify_client._types import Timeout
 
 
 # -- Test response and client implementations --

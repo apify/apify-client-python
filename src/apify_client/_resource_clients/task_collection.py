@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from apify_client._models import TaskShort
     from apify_client._typeddicts import TaskInputDict
-    from apify_client.types import Timeout
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

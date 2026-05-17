@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from apify_client._literals import ActorJobStatus
     from apify_client._models import RunShort
-    from apify_client.types import Timeout
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

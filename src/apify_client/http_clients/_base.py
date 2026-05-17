@@ -25,7 +25,7 @@ from apify_client._utils import to_seconds
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator, Mapping
 
-    from apify_client.types import JsonSerializable, Timeout
+    from apify_client._types import JsonSerializable, Timeout
 
 
 @docs_group('HTTP clients')

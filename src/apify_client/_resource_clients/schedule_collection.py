@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._models import ScheduleShort
-    from apify_client.types import Timeout
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

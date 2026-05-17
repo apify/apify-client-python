@@ -20,8 +20,8 @@ from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
+    from apify_client._types import Timeout
     from apify_client.http_clients import HttpClient, HttpClientAsync
-    from apify_client.types import Timeout
 
 _TerminalActorJobStatus = Literal['SUCCEEDED', 'FAILED', 'TIMED-OUT', 'ABORTED']
 """Subset of `ActorJobStatus` values that indicate the job has finished and will not change again."""

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._resource_clients import LogClient, LogClientAsync
-    from apify_client.types import Timeout
+    from apify_client._types import Timeout
 
 
 @docs_group('Resource clients')

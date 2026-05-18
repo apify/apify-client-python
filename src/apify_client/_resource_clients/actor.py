@@ -52,7 +52,7 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client._types import Timeout, WebhooksList
+    from apify_client.types import Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo

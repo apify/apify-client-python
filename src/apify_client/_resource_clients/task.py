@@ -29,7 +29,7 @@ if TYPE_CHECKING:
         WebhookCollectionClientAsync,
     )
     from apify_client._typeddicts import TaskInputDict
-    from apify_client._types import Timeout, WebhooksList
+    from apify_client.types import Timeout, WebhooksList
 
 
 @docs_group('Resource clients')

@@ -9,7 +9,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    from apify_client._types import Timeout
+    from apify_client.types import Timeout
 
 
 @docs_group('Resource clients')

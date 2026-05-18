@@ -27,9 +27,10 @@ from apify_client.http_clients._base import HttpClient, HttpClientAsync
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
+    from apify_client._internal_types import JsonSerializable
     from apify_client._statistics import ClientStatistics
     from apify_client.http_clients._base import HttpResponse
-    from apify_client.types import JsonSerializable, Timeout
+    from apify_client.types import Timeout
 
 T = TypeVar('T')
 

@@ -126,7 +126,7 @@ client = ApifyClient.with_custom_http_client(
 )
 ```
 
-The response must satisfy the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol (properties: `status_code`, `text`, `content`, `headers`; methods: `json()`, `read()`, `close()`, `iter_bytes()`). Many popular libraries like `httpx` already satisfy this protocol out of the box.
+The response must satisfy the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol (properties: `status_code`, `text`, `content`, `headers`; sync methods: `json()`, `read()`, `close()`, `iter_bytes()`; async methods: `aread()`, `aclose()`, `aiter_bytes()`). Many popular libraries like `httpx` already satisfy this protocol out of the box.
 
 The HTTP base classes, the `HttpResponse` protocol, and the default `ImpitHttpClient` / `ImpitHttpClientAsync` implementations live in the `apify_client.http_clients` submodule. The `Timeout` alias used on the `call()` signature lives in `apify_client.types`.
 

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
     from apify_client._literals import StorageOwnership
     from apify_client._models import RequestQueueShort
-    from apify_client._types import Timeout
+    from apify_client.types import Timeout
 
 
 @docs_group('Resource clients')

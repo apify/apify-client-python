@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 from impit import HTTPError, Response, TimeoutException
 
-from apify_client._http_clients import ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

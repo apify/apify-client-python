@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
-from apify_client import ApifyClientAsync, HttpClientAsync, HttpResponse, Timeout
+from apify_client import ApifyClientAsync
+from apify_client.http_clients import HttpClientAsync, HttpResponse
+
+if TYPE_CHECKING:
+    from apify_client.types import Timeout
 
 TOKEN = 'MY-APIFY-TOKEN'
 

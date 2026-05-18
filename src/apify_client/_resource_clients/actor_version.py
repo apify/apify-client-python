@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
     )
-    from apify_client._types import Timeout
+    from apify_client.types import Timeout
 
 _source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])
 

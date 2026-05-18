@@ -19,17 +19,18 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_SHORT,
 )
 from apify_client._docs import docs_group
-from apify_client._http_clients import HttpClient, HttpClientAsync
 from apify_client._logging import log_context, logger_name
 from apify_client._utils import to_seconds
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+from apify_client.http_clients._base import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from apify_client._http_clients import HttpResponse
+    from apify_client._internal_types import JsonSerializable
     from apify_client._statistics import ClientStatistics
-    from apify_client._types import JsonSerializable, Timeout
+    from apify_client.http_clients._base import HttpResponse
+    from apify_client.types import Timeout
 
 T = TypeVar('T')
 

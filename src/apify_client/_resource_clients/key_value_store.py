@@ -29,9 +29,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._http_clients import HttpResponse
     from apify_client._literals import GeneralAccess
-    from apify_client._types import Timeout
+    from apify_client.http_clients import HttpResponse
+    from apify_client.types import Timeout
 
 
 def _parse_get_record_response(response: HttpResponse) -> Any:

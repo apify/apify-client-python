@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._literals import VersionSourceType
-    from apify_client._types import Timeout
+    from apify_client.types import Timeout
 
 
 _source_file_list_adapter = TypeAdapter(list[SourceCodeFile | SourceCodeFolder])

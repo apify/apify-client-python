@@ -8,10 +8,10 @@ from unittest.mock import Mock
 import impit
 import pytest
 
-from apify_client._http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
-from apify_client._http_clients._impit import _is_retryable_error
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
+from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients._impit import _is_retryable_error
 
 
 class _ConcreteHttpClient(HttpClient):

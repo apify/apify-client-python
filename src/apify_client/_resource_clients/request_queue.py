@@ -45,7 +45,14 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
-    from apify_client._typeddicts import RequestDict, RequestDraftDeleteDict, RequestDraftDict
+    from apify_client._typeddicts import (
+        RequestCamelDict,
+        RequestDict,
+        RequestDraftCamelDict,
+        RequestDraftDeleteCamelDict,
+        RequestDraftDeleteDict,
+        RequestDraftDict,
+    )
     from apify_client.types import Timeout
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
@@ -190,7 +197,7 @@ class RequestQueueClient(ResourceClient):
 
     def add_request(
         self,
-        request: RequestDraftDict | RequestDraft,
+        request: RequestDraftDict | RequestDraftCamelDict | RequestDraft,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -252,7 +259,7 @@ class RequestQueueClient(ResourceClient):
 
     def update_request(
         self,
-        request: RequestDict | Request,
+        request: RequestDict | RequestCamelDict | Request,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'medium',
@@ -366,7 +373,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_add_requests(
         self,
-        requests: list[RequestDraft] | list[RequestDraftDict],
+        requests: list[RequestDraft] | list[RequestDraftDict] | list[RequestDraftCamelDict],
         *,
         forefront: bool = False,
         max_parallel: int = 1,
@@ -464,7 +471,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_delete_requests(
         self,
-        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict],
+        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict] | list[RequestDraftDeleteCamelDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -747,7 +754,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def add_request(
         self,
-        request: RequestDraftDict | RequestDraft,
+        request: RequestDraftDict | RequestDraftCamelDict | RequestDraft,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -807,7 +814,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def update_request(
         self,
-        request: RequestDict | Request,
+        request: RequestDict | RequestCamelDict | Request,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'medium',
@@ -968,7 +975,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_add_requests(
         self,
-        requests: list[RequestDraft] | list[RequestDraftDict],
+        requests: list[RequestDraft] | list[RequestDraftDict] | list[RequestDraftCamelDict],
         *,
         forefront: bool = False,
         max_parallel: int = 5,
@@ -1077,7 +1084,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_delete_requests(
         self,
-        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict],
+        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict] | list[RequestDraftDeleteCamelDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:

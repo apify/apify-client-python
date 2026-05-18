@@ -50,7 +50,59 @@ class RequestBaseDict(TypedDict):
 
 
 @docs_group('Typed dicts')
+class RequestBaseCamelDict(TypedDict):
+    uniqueKey: NotRequired[str]
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+    url: NotRequired[str]
+    """
+    The URL of the request.
+    """
+    method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
+    retryCount: NotRequired[int]
+    """
+    The number of times this request has been retried.
+    """
+    loadedUrl: NotRequired[str | None]
+    """
+    The final URL that was loaded, after redirects (if any).
+    """
+    payload: NotRequired[str | dict[str, Any] | None]
+    """
+    The request payload, typically used with POST or PUT requests.
+    """
+    headers: NotRequired[dict[str, Any] | None]
+    """
+    HTTP headers sent with the request.
+    """
+    userData: NotRequired[RequestUserDataCamelDict]
+    noRetry: NotRequired[bool | None]
+    """
+    Indicates whether the request should not be retried if processing fails.
+    """
+    errorMessages: NotRequired[list[str]]
+    """
+    Error messages recorded from failed processing attempts.
+    """
+    handledAt: NotRequired[str | None]
+    """
+    The timestamp when the request was marked as handled, if applicable.
+    """
+
+
+@docs_group('Typed dicts')
 class RequestDict(RequestBaseDict):
+    """A request stored in the request queue, including its metadata and processing state."""
+
+    id: NotRequired[str]
+    """
+    A unique identifier assigned to the request.
+    """
+
+
+@docs_group('Typed dicts')
+class RequestCamelDict(RequestBaseCamelDict):
     """A request stored in the request queue, including its metadata and processing state."""
 
     id: NotRequired[str]
@@ -79,6 +131,25 @@ class RequestDraftDict(TypedDict):
 
 
 @docs_group('Typed dicts')
+class RequestDraftCamelDict(TypedDict):
+    """A request that failed to be processed during a request queue operation and can be retried."""
+
+    id: NotRequired[str]
+    """
+    A unique identifier assigned to the request.
+    """
+    uniqueKey: str
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+    url: str
+    """
+    The URL of the request.
+    """
+    method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
+
+
+@docs_group('Typed dicts')
 class RequestDraftDeleteByIdDict(TypedDict):
     """A request that should be deleted, identified by its ID."""
 
@@ -87,6 +158,20 @@ class RequestDraftDeleteByIdDict(TypedDict):
     A unique identifier assigned to the request.
     """
     unique_key: NotRequired[str]
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+
+
+@docs_group('Typed dicts')
+class RequestDraftDeleteByIdCamelDict(TypedDict):
+    """A request that should be deleted, identified by its ID."""
+
+    id: str
+    """
+    A unique identifier assigned to the request.
+    """
+    uniqueKey: NotRequired[str]
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
@@ -106,7 +191,26 @@ class RequestDraftDeleteByUniqueKeyDict(TypedDict):
     """
 
 
+@docs_group('Typed dicts')
+class RequestDraftDeleteByUniqueKeyCamelDict(TypedDict):
+    """A request that should be deleted, identified by its unique key."""
+
+    id: NotRequired[str]
+    """
+    A unique identifier assigned to the request.
+    """
+    uniqueKey: str
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+
+
 RequestDraftDeleteDict: TypeAlias = RequestDraftDeleteByIdDict | RequestDraftDeleteByUniqueKeyDict
+"""
+A request that should be deleted.
+"""
+
+RequestDraftDeleteCamelDict: TypeAlias = RequestDraftDeleteByIdCamelDict | RequestDraftDeleteByUniqueKeyCamelDict
 """
 A request that should be deleted.
 """
@@ -114,8 +218,12 @@ A request that should be deleted.
 
 RequestUserDataDict: TypeAlias = dict[str, Any]
 
+RequestUserDataCamelDict: TypeAlias = dict[str, Any]
+
 
 TaskInputDict: TypeAlias = dict[str, Any]
+
+TaskInputCamelDict: TypeAlias = dict[str, Any]
 
 
 @docs_group('Typed dicts')
@@ -123,6 +231,13 @@ class WebhookConditionDict(TypedDict):
     actor_id: NotRequired[str | None]
     actor_task_id: NotRequired[str | None]
     actor_run_id: NotRequired[str | None]
+
+
+@docs_group('Typed dicts')
+class WebhookConditionCamelDict(TypedDict):
+    actorId: NotRequired[str | None]
+    actorTaskId: NotRequired[str | None]
+    actorRunId: NotRequired[str | None]
 
 
 @docs_group('Typed dicts')
@@ -153,6 +268,36 @@ class WebhookCreateDict(TypedDict):
     headers_template: NotRequired[str | None]
     description: NotRequired[str | None]
     should_interpolate_strings: NotRequired[bool | None]
+
+
+@docs_group('Typed dicts')
+class WebhookCreateCamelDict(TypedDict):
+    isAdHoc: NotRequired[bool | None]
+    eventTypes: list[
+        Literal[
+            'ACTOR.BUILD.ABORTED',
+            'ACTOR.BUILD.CREATED',
+            'ACTOR.BUILD.FAILED',
+            'ACTOR.BUILD.SUCCEEDED',
+            'ACTOR.BUILD.TIMED_OUT',
+            'ACTOR.RUN.ABORTED',
+            'ACTOR.RUN.CREATED',
+            'ACTOR.RUN.FAILED',
+            'ACTOR.RUN.RESURRECTED',
+            'ACTOR.RUN.SUCCEEDED',
+            'ACTOR.RUN.TIMED_OUT',
+            'TEST',
+        ]
+    ]
+    condition: WebhookConditionCamelDict
+    idempotencyKey: NotRequired[str | None]
+    ignoreSslErrors: NotRequired[bool | None]
+    doNotRetry: NotRequired[bool | None]
+    requestUrl: str
+    payloadTemplate: NotRequired[str | None]
+    headersTemplate: NotRequired[str | None]
+    description: NotRequired[str | None]
+    shouldInterpolateStrings: NotRequired[bool | None]
 
 
 @docs_group('Typed dicts')
@@ -188,6 +333,44 @@ class WebhookRepresentationDict(TypedDict):
     Optional template for the JSON payload sent by the webhook.
     """
     headers_template: NotRequired[str | None]
+    """
+    Optional template for the HTTP headers sent by the webhook.
+    """
+
+
+@docs_group('Typed dicts')
+class WebhookRepresentationCamelDict(TypedDict):
+    """Minimal representation of an ad-hoc webhook attached to a single Actor run or build via the
+    `webhooks` query parameter. The query parameter value is a Base64-encoded JSON array whose
+    items match this schema. Persistent webhook fields (e.g. `condition`) are not used here.
+
+    """
+
+    eventTypes: list[
+        Literal[
+            'ACTOR.BUILD.ABORTED',
+            'ACTOR.BUILD.CREATED',
+            'ACTOR.BUILD.FAILED',
+            'ACTOR.BUILD.SUCCEEDED',
+            'ACTOR.BUILD.TIMED_OUT',
+            'ACTOR.RUN.ABORTED',
+            'ACTOR.RUN.CREATED',
+            'ACTOR.RUN.FAILED',
+            'ACTOR.RUN.RESURRECTED',
+            'ACTOR.RUN.SUCCEEDED',
+            'ACTOR.RUN.TIMED_OUT',
+            'TEST',
+        ]
+    ]
+    requestUrl: str
+    """
+    The URL to which the webhook sends its payload.
+    """
+    payloadTemplate: NotRequired[str | None]
+    """
+    Optional template for the JSON payload sent by the webhook.
+    """
+    headersTemplate: NotRequired[str | None]
     """
     Optional template for the HTTP headers sent by the webhook.
     """

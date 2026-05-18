@@ -3,16 +3,28 @@ from __future__ import annotations
 from typing import Literal
 
 from apify_client._models import WebhookCreate, WebhookRepresentation
-from apify_client._typeddicts import WebhookCreateDict, WebhookRepresentationDict
+from apify_client._typeddicts import (
+    WebhookCreateCamelDict,
+    WebhookCreateDict,
+    WebhookRepresentationCamelDict,
+    WebhookRepresentationDict,
+)
 
 WebhooksList = (
-    list[WebhookCreate] | list[WebhookCreateDict] | list[WebhookRepresentation] | list[WebhookRepresentationDict]
+    list[WebhookCreate]
+    | list[WebhookCreateDict]
+    | list[WebhookCreateCamelDict]
+    | list[WebhookRepresentation]
+    | list[WebhookRepresentationDict]
+    | list[WebhookRepresentationCamelDict]
 )
 """Type for the `webhooks` parameter on resource-client `start`/`call` methods and `from_webhooks`.
 
-`WebhookRepresentation` / `WebhookRepresentationDict` are the minimal ad-hoc webhook shape (only `event_types` and
-`request_url` required). `WebhookCreate` / `WebhookCreateDict` are accepted so  persistent-webhook definition can
-be reused; their fields not relevant to ad-hoc webhooks (e.g. `condition`) are ignored at runtime.
+`WebhookRepresentation` / `WebhookRepresentationDict` / `WebhookRepresentationCamelDict` are the minimal ad-hoc
+webhook shape (only `event_types` and `request_url` required). `WebhookCreate` / `WebhookCreateDict` /
+`WebhookCreateCamelDict` are accepted so a persistent-webhook definition can be reused; their fields not relevant
+to ad-hoc webhooks (e.g. `condition`) are ignored at runtime. The `*CamelDict` variants accept camelCase keys
+matching the Apify API spelling.
 """
 
 TerminalActorJobStatus = Literal['SUCCEEDED', 'FAILED', 'TIMED-OUT', 'ABORTED']

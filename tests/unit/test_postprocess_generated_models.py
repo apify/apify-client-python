@@ -3,11 +3,15 @@ from __future__ import annotations
 import textwrap
 
 from scripts.postprocess_generated_models import (
+    add_camel_case_typeddicts,
     add_docs_group_decorators,
+    build_alias_map,
     convert_enums_to_literals,
     fix_discriminators,
     split_literals_to_file,
 )
+
+from apify_client._models import Request
 
 # -- fix_discriminators -------------------------------------------------------
 
@@ -412,3 +416,151 @@ def test_split_literals_to_file_output_has_valid_header() -> None:
     _, literals = split_literals_to_file(content)
     assert 'from __future__ import annotations' in literals
     assert 'from typing import Literal' in literals
+
+
+# -- build_alias_map ----------------------------------------------------------
+
+
+def test_build_alias_map_extracts_field_aliases() -> None:
+    """`Field(alias='camelName')` annotations are captured as the API spelling."""
+    models = textwrap.dedent("""\
+        from typing import Annotated
+        from pydantic import BaseModel, Field
+
+        class Foo(BaseModel):
+            user_id: Annotated[str, Field(alias='userId')]
+            retry_count: Annotated[int, Field(alias='retryCount')] = 0
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'user_id': 'userId', 'retry_count': 'retryCount'}
+
+
+def test_build_alias_map_treats_unaliased_fields_as_self_named() -> None:
+    """Fields without `Field(alias=...)` map to themselves — single-word API spellings."""
+    models = textwrap.dedent("""\
+        from pydantic import BaseModel
+
+        class Foo(BaseModel):
+            url: str
+            method: str
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'url': 'url', 'method': 'method'}
+
+
+def test_build_alias_map_skips_model_config() -> None:
+    """`model_config` is Pydantic plumbing, not a data field — exclude it from the alias map."""
+    models = textwrap.dedent("""\
+        from pydantic import BaseModel, ConfigDict
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow')
+            url: str
+    """)
+    result = build_alias_map(models)
+    assert 'model_config' not in result['Foo']
+    assert result['Foo'] == {'url': 'url'}
+
+
+# -- add_camel_case_typeddicts -----------------------------------------------
+
+
+def test_add_camel_case_typeddicts_creates_sibling_class() -> None:
+    """A snake_case TypedDict gets a CamelDict sibling with renamed fields."""
+    content = textwrap.dedent("""\
+        from typing import NotRequired, TypedDict
+
+        class FooDict(TypedDict):
+            user_id: NotRequired[str]
+            retry_count: NotRequired[int]
+    """)
+    alias_map = {'Foo': {'user_id': 'userId', 'retry_count': 'retryCount'}}
+    result = add_camel_case_typeddicts(content, alias_map)
+    assert 'class FooCamelDict(TypedDict):' in result
+    assert 'userId: NotRequired[str]' in result
+    assert 'retryCount: NotRequired[int]' in result
+
+
+def test_add_camel_case_typeddicts_rewires_nested_refs() -> None:
+    """References to other snake TypedDicts in a cloned annotation are renamed to their camel form."""
+    content = textwrap.dedent("""\
+        from typing import NotRequired, TypedDict
+
+        class BarDict(TypedDict):
+            x: int
+
+        class FooDict(TypedDict):
+            nested: NotRequired[BarDict]
+    """)
+    alias_map = {'Foo': {'nested': 'nested'}, 'Bar': {'x': 'x'}}
+    result = add_camel_case_typeddicts(content, alias_map)
+    assert 'class FooCamelDict(TypedDict):' in result
+    assert 'nested: NotRequired[BarCamelDict]' in result
+
+
+def test_add_camel_case_typeddicts_clones_typealias_unions() -> None:
+    """A `TypeAlias = A | B` union over TypedDicts gets a camel sibling referencing the camel members."""
+    content = textwrap.dedent("""\
+        from typing import TypeAlias, TypedDict
+
+        class ADict(TypedDict):
+            x: int
+
+        class BDict(TypedDict):
+            y: int
+
+        UDict: TypeAlias = ADict | BDict
+    """)
+    alias_map = {'A': {'x': 'x'}, 'B': {'y': 'y'}}
+    result = add_camel_case_typeddicts(content, alias_map)
+    assert 'UCamelDict: TypeAlias = ACamelDict | BCamelDict' in result
+
+
+def test_add_camel_case_typeddicts_creates_camel_for_dict_str_any_alias() -> None:
+    """A `dict[str, Any]` TypeAlias is casing-agnostic but still gets a Camel partner so refs resolve."""
+    content = textwrap.dedent("""\
+        from typing import Any, NotRequired, TypeAlias, TypedDict
+
+        UserDataDict: TypeAlias = dict[str, Any]
+
+        class FooDict(TypedDict):
+            data: NotRequired[UserDataDict]
+    """)
+    alias_map = {'Foo': {'data': 'data'}}
+    result = add_camel_case_typeddicts(content, alias_map)
+    assert 'UserDataCamelDict: TypeAlias = dict[str, Any]' in result
+    assert 'data: NotRequired[UserDataCamelDict]' in result
+
+
+def test_add_camel_case_typeddicts_is_idempotent() -> None:
+    """Re-running on a file that already has Camel siblings doesn't duplicate them."""
+    content = textwrap.dedent("""\
+        from typing import NotRequired, TypedDict
+
+        class FooDict(TypedDict):
+            user_id: NotRequired[str]
+    """)
+    alias_map = {'Foo': {'user_id': 'userId'}}
+    once = add_camel_case_typeddicts(content, alias_map)
+    twice = add_camel_case_typeddicts(once, alias_map)
+    assert once == twice
+    assert twice.count('class FooCamelDict(TypedDict):') == 1
+
+
+def test_add_camel_case_typeddicts_camel_validates_with_pydantic() -> None:
+    """A camel-keyed dict literal round-trips through the corresponding Pydantic model — runtime parity."""
+    camel_payload = {
+        'uniqueKey': 'GET|abc',
+        'url': 'https://example.com',
+        'retryCount': 0,
+        'loadedUrl': 'https://example.com/final',
+        'userData': {'tag': 'x'},
+    }
+    snake_payload = {
+        'unique_key': 'GET|abc',
+        'url': 'https://example.com',
+        'retry_count': 0,
+        'loaded_url': 'https://example.com/final',
+        'user_data': {'tag': 'x'},
+    }
+    assert Request.model_validate(camel_payload) == Request.model_validate(snake_payload)

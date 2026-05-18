@@ -1,20 +1,22 @@
 """Post-process datamodel-codegen output to fix known issues and prune the TypedDict file.
 
 Applied to `_models.py`:
-- Fix discriminator field names that use camelCase instead of snake_case (known issue with
-  discriminators on schemas referenced from array items).
+- Fix discriminator field names that use camelCase instead of snake_case (known issue with discriminators on schemas
+  referenced from array items).
 - Rewrite every `class X(StrEnum)` as `X = Literal[...]` so downstream code can pass plain strings
   (and reuse the named alias in resource-client signatures) instead of enum members.
-- Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving
-  `_models.py` importing them — so consumers can depend on a dedicated literals module
-  without pulling in every Pydantic model.
+- Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving `_models.py` importing them — so
+  consumers can depend on a dedicated literals module without pulling in every Pydantic model.
 - Add `@docs_group('Models')` to every model class (plus the required import).
 
 Applied to `_typeddicts.py`:
-- Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive
-  dependencies). The file is generated in full by datamodel-codegen; the trimming happens here.
+- Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive dependencies).
+  The file is generated in full by datamodel-codegen; the trimming happens here.
 - Rename every kept class to add a `Dict` suffix so it doesn't clash with the Pydantic model name
   (e.g. `WebhookCreate` -> `WebhookCreateDict`) and rewire references.
+- Generate a camelCase sibling for every kept TypedDict (`FooDict` -> `FooCamelDict`) so users can pass API-shaped
+  dicts and still satisfy the type checker. Field identifiers are looked up in the Pydantic alias map extracted
+  from `_models.py`; nested TypedDict refs are rewired to the camel variant.
 - Add `@docs_group('Typed dicts')` to every kept class.
 """
 
@@ -391,6 +393,194 @@ def rename_with_dict_suffix(content: str, names: set[str]) -> str:
     return content
 
 
+def _extract_alias_from_field_call(field_call: ast.Call) -> str | None:
+    """Return the `alias=` kwarg value from a `Field(...)` call, or None if not present."""
+    for kw in field_call.keywords:
+        if kw.arg == 'alias' and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+            return kw.value.value
+    return None
+
+
+def _extract_class_field_aliases(class_node: ast.ClassDef) -> dict[str, str]:
+    """Return `{snake_field: api_field}` for every annotated field declared on `class_node`.
+
+    Fields without a `Field(alias=...)` map to themselves (their declared Python name matches the API name — typical
+    for single-word fields like `url`, `id`).
+    """
+    aliases: dict[str, str] = {}
+    for stmt in class_node.body:
+        if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
+            continue
+        field_name = stmt.target.id
+        if field_name == 'model_config':
+            continue
+        # Default: no alias means snake name == API name.
+        api_name = field_name
+        # Walk the annotation to find a nested `Field(alias='...')` call inside `Annotated[...]`.
+        for sub in ast.walk(stmt.annotation):
+            if isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name) and sub.func.id == 'Field':
+                found = _extract_alias_from_field_call(sub)
+                if found is not None:
+                    api_name = found
+                    break
+        aliases[field_name] = api_name
+    return aliases
+
+
+def build_alias_map(models_source: str) -> dict[str, dict[str, str]]:
+    """Return `{ModelName: {snake_field: api_field}}` for every Pydantic model in `models_source`.
+
+    The map is the source of truth for camelCase field names: it captures both `Field(alias=...)` overrides
+    and the bare-name case (single-word fields without an alias). Used when synthesizing camelCase TypedDict
+    variants so the API spelling round-trips losslessly.
+    """
+    tree = ast.parse(models_source)
+    return {node.name: _extract_class_field_aliases(node) for node in tree.body if isinstance(node, ast.ClassDef)}
+
+
+def _camel_dict_name(snake_name: str) -> str:
+    """Insert `Camel` before the trailing `Dict` (e.g. `RequestDict` -> `RequestCamelDict`)."""
+    if not snake_name.endswith('Dict'):
+        raise ValueError(f"Expected name to end with 'Dict': {snake_name!r}")
+    return snake_name[: -len('Dict')] + 'CamelDict'
+
+
+def _is_dict_str_any(node: ast.expr) -> bool:
+    """Return True if `node` is a `dict[str, Any]` subscript (casing-agnostic open mapping)."""
+    return isinstance(node, ast.Subscript) and isinstance(node.value, ast.Name) and node.value.id == 'dict'
+
+
+def _rename_fields_in_class_block(block: list[str], field_aliases: dict[str, str]) -> list[str]:
+    """Rewrite each field declaration line in `block` using `field_aliases`.
+
+    Matches lines of the form `<indent><snake_ident>:` and substitutes the identifier when an alias is present.
+    Multi-line annotations and trailing default values are preserved verbatim because only the field name
+    on the first line is replaced.
+    """
+    field_decl = re.compile(r'^(\s+)([a-z_][a-z0-9_]*)(\s*:)')
+    out: list[str] = []
+    for line in block:
+        m = field_decl.match(line)
+        if m is None:
+            out.append(line)
+            continue
+        indent, name, colon = m.group(1), m.group(2), m.group(3)
+        api_name = field_aliases.get(name)
+        if api_name is None or api_name == name:
+            out.append(line)
+            continue
+        out.append(f'{indent}{api_name}{colon}{line[m.end() :]}')
+    return out
+
+
+def _rename_typeddict_refs_in_block(block: list[str], rename_set: set[str]) -> list[str]:
+    """Rewrite every whole-word occurrence of each name in `rename_set` to its camel form.
+
+    Operates on the block as a single string so refs spanning multiple lines (e.g. annotations wrapped across lines)
+    are caught.
+    """
+    if not rename_set:
+        return block
+    text = '\n'.join(block)
+    # `\b` anchors already prevent partial-prefix matches; we just iterate the set in any stable
+    # order. Sorting keeps the substitution deterministic across Python hash seeds.
+    for snake in sorted(rename_set):
+        text = re.sub(rf'\b{re.escape(snake)}\b', _camel_dict_name(snake), text)
+    return text.split('\n')
+
+
+def add_camel_case_typeddicts(content: str, alias_map: dict[str, dict[str, str]]) -> str:
+    """Insert a camelCase sibling for every TypedDict and TypeAlias in `content`.
+
+    For each class `<Name>Dict(TypedDict)` and each `<Name>Dict: TypeAlias = ...`, emit a sibling `<Name>CamelDict`
+    directly after the original. Field identifiers are renamed using `alias_map[<Name>]`; nested TypedDict references
+    in annotations are rewired to their camel variant via whole-word substitution.
+
+    `TaskInputDict: TypeAlias = dict[str, Any]` and similar casing-agnostic aliases get a trivial camel alias too,
+    so refs from other camel TypedDicts (e.g. `RequestBaseCamelDict.user_data: NotRequired[RequestUserDataCamelDict]`)
+    resolve cleanly.
+
+    Idempotent: blocks whose name already ends with `CamelDict` are skipped.
+    """
+    tree = ast.parse(content)
+    lines = content.split('\n')
+
+    # Pass 1: gather every snake-side symbol that needs a camel sibling.
+    snake_classes: list[tuple[ast.ClassDef, int, int]] = []  # node, block_start, block_end (exclusive)
+    snake_aliases: list[tuple[int, int]] = []  # block_start, block_end
+    flat_aliases: list[tuple[int, str]] = []  # block_end, alias_name
+
+    body_with_trailing_docstrings = _extract_top_level_symbols(tree)
+    end_by_name: dict[str, int] = {name: end for name, _, end in body_with_trailing_docstrings}
+    existing_symbols: set[str] = {name for name, _, _ in body_with_trailing_docstrings}
+
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            # Every class kept in `_typeddicts.py` is a TypedDict — either directly (base is `TypedDict`) or by
+            # inheriting from a sibling TypedDict (e.g. `RequestDict(RequestBaseDict)`). The `Dict` suffix
+            # is the load-bearing filter; the base check is informational only.
+            if not node.name.endswith('Dict') or node.name.endswith('CamelDict'):
+                continue
+            if _camel_dict_name(node.name) in existing_symbols:
+                continue
+            start = node.lineno - 1
+            if start > 0 and lines[start - 1].lstrip().startswith('@'):
+                start -= 1
+            end = end_by_name.get(node.name, node.end_lineno or node.lineno)
+            snake_classes.append((node, start, end))
+        elif (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and isinstance(node.annotation, ast.Name)
+            and node.annotation.id == 'TypeAlias'
+        ):
+            name = node.target.id
+            if not name.endswith('Dict') or name.endswith('CamelDict'):
+                continue
+            if _camel_dict_name(name) in existing_symbols:
+                continue
+            if node.value is None:
+                continue
+            start = node.lineno - 1
+            end = end_by_name.get(name, node.end_lineno or node.lineno)
+            if _is_dict_str_any(node.value):
+                flat_aliases.append((end, name))
+            else:
+                snake_aliases.append((start, end))
+
+    # The rename set covers EVERY snake-side `*Dict` symbol in the file (not just the ones we need to clone)
+    # so nested refs inside a cloned block still rewire correctly even on re-runs where most camel siblings
+    # already exist.
+    rename_set: set[str] = {
+        name for name in existing_symbols if name.endswith('Dict') and not name.endswith('CamelDict')
+    }
+
+    # Pass 2: build camel blocks.
+    insertions: list[tuple[int, list[str]]] = []
+
+    for class_node, start, end in snake_classes:
+        block = lines[start:end]
+        renamed_refs = _rename_typeddict_refs_in_block(block, rename_set)
+        field_aliases = alias_map.get(class_node.name[: -len('Dict')], {})
+        camel_block = _rename_fields_in_class_block(renamed_refs, field_aliases)
+        insertions.append((end, ['', *camel_block]))
+
+    for start, end in snake_aliases:
+        block = lines[start:end]
+        camel_block = _rename_typeddict_refs_in_block(block, rename_set)
+        insertions.append((end, ['', *camel_block]))
+
+    for end, name in flat_aliases:
+        insertions.append((end, ['', f'{_camel_dict_name(name)}: TypeAlias = dict[str, Any]']))
+
+    # Insert in reverse line order so earlier indices stay valid.
+    new_lines = lines[:]
+    for after, block in sorted(insertions, key=lambda i: i[0], reverse=True):
+        new_lines[after:after] = block
+
+    return _collapse_blank_lines('\n'.join(new_lines))
+
+
 def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     """Apply `_models.py`-specific fixes and emit `_literals.py`.
 
@@ -414,13 +604,14 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     return changed
 
 
-def postprocess_typeddicts(path: Path) -> bool:
+def postprocess_typeddicts(path: Path, alias_map: dict[str, dict[str, str]]) -> bool:
     """Apply `_typeddicts.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
     pruned, kept = prune_typeddicts(original, RESOURCE_INPUT_TYPEDDICTS)
     renamed = rename_with_dict_suffix(pruned, kept)
     flattened = flatten_empty_typeddicts(renamed)
-    final = add_docs_group_decorators(flattened, 'Typed dicts')
+    camelized = add_camel_case_typeddicts(flattened, alias_map)
+    final = add_docs_group_decorators(camelized, 'Typed dicts')
     if final == original:
         return False
     path.write_text(final)
@@ -442,9 +633,10 @@ def main() -> None:
     else:
         print('No fixes needed for _models.py / _literals.py')
 
-    if postprocess_typeddicts(TYPEDDICTS_PATH):
+    alias_map = build_alias_map(MODELS_PATH.read_text())
+    if postprocess_typeddicts(TYPEDDICTS_PATH, alias_map):
         changed.append(TYPEDDICTS_PATH)
-        print(f'Pruned and renamed TypedDicts in {TYPEDDICTS_PATH}')
+        print(f'Pruned, renamed, and camelized TypedDicts in {TYPEDDICTS_PATH}')
     else:
         print('No fixes needed for _typeddicts.py')
 

@@ -302,22 +302,22 @@ class RequestQueueClient(ResourceClient):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.0.0.
-            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.0.0.
+            max_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
+            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
         if max_unprocessed_requests_retries:
             warnings.warn(
-                'The `max_unprocessed_requests_retries` argument is deprecated and will be removed in v3.0.0.',
+                'The `max_unprocessed_requests_retries` argument is deprecated and will be removed in v3.',
                 DeprecationWarning,
                 stacklevel=2,
             )
         if min_delay_between_unprocessed_requests_retries:
             warnings.warn(
                 'The `min_delay_between_unprocessed_requests_retries` argument is deprecated and will be removed '
-                'in v3.0.0.',
+                'in v3.',
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -400,11 +400,11 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: Deprecated argument. Will be removed in v3.0.0.
+            exclusive_start_id: Deprecated argument. Will be removed in v3.
         """
         if exclusive_start_id is not None:
             warnings.warn(
-                'The `exclusive_start_id` argument is deprecated and will be removed in v3.0.0.',
+                'The `exclusive_start_id` argument is deprecated and will be removed in v3.',
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -745,22 +745,22 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.0.0.
-            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.0.0.
+            max_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
+            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
         if max_unprocessed_requests_retries:
             warnings.warn(
-                'The `max_unprocessed_requests_retries` argument is deprecated and will be removed in v3.0.0.',
+                'The `max_unprocessed_requests_retries` argument is deprecated and will be removed in v3.',
                 DeprecationWarning,
                 stacklevel=2,
             )
         if min_delay_between_unprocessed_requests_retries:
             warnings.warn(
                 'The `min_delay_between_unprocessed_requests_retries` argument is deprecated and will be removed '
-                'in v3.0.0.',
+                'in v3.',
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -844,11 +844,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: Deprecated argument. Will be removed in v3.0.0.
+            exclusive_start_id: Deprecated argument. Will be removed in v3.
         """
         if exclusive_start_id is not None:
             warnings.warn(
-                'The `exclusive_start_id` argument is deprecated and will be removed in v3.0.0.',
+                'The `exclusive_start_id` argument is deprecated and will be removed in v3.',
                 DeprecationWarning,
                 stacklevel=2,
             )

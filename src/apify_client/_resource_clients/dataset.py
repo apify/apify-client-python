@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -289,104 +288,6 @@ class DatasetClient(ResourceClient):
             )
 
         return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE)
-
-    def download_items(
-        self,
-        *,
-        item_format: str = 'json',
-        offset: int | None = None,
-        limit: int | None = None,
-        desc: bool | None = None,
-        clean: bool | None = None,
-        bom: bool | None = None,
-        delimiter: str | None = None,
-        fields: list[str] | None = None,
-        omit: list[str] | None = None,
-        unwind: list[str] | None = None,
-        skip_empty: bool | None = None,
-        skip_header_row: bool | None = None,
-        skip_hidden: bool | None = None,
-        xml_root: str | None = None,
-        xml_row: str | None = None,
-        flatten: list[str] | None = None,
-        signature: str | None = None,
-        timeout: Timeout = 'long',
-    ) -> bytes:
-        """Get the items in the dataset as raw bytes.
-
-        Deprecated: this function is a deprecated alias of `get_items_as_bytes`. It will be removed in
-        a future version.
-
-        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
-
-        Args:
-            item_format: Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss.
-                The default value is json.
-            offset: Number of items that should be skipped at the start. The default value is 0.
-            limit: Maximum number of items to return. By default there is no limit.
-            desc: By default, results are returned in the same order as they were stored. To reverse the order,
-                set this parameter to True.
-            clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with
-                the # character). The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True
-                parameters. Note that since some objects might be skipped from the output, that the result might
-                contain less items than the limit value.
-            bom: All text responses are encoded in UTF-8 encoding. By default, csv files are prefixed with
-                the UTF-8 Byte Order Mark (BOM), while json, jsonl, xml, html and rss files are not. If you want
-                to override this default behavior, specify bom=True query parameter to include the BOM or bom=False
-                to skip it.
-            delimiter: A delimiter character for CSV files. The default delimiter is a simple comma (,).
-            fields: A list of fields which should be picked from the items, only these fields will remain in
-                the resulting record objects. Note that the fields in the outputted items are sorted the same way
-                as they are specified in the fields parameter. You can use this feature to effectively fix the
-                output format.
-            omit: A list of fields which should be omitted from the items.
-            unwind: A list of fields which should be unwound, in order which they should be processed. Each field
-                should be either an array or an object. If the field is an array then every element of the array
-                will become a separate record and merged with parent object. If the unwound field is an object then
-                it is merged with the parent object. If the unwound field is missing or its value is neither an array
-                nor an object and therefore cannot be merged with a parent object, then the item gets preserved
-                as it is. Note that the unwound items ignore the desc parameter.
-            skip_empty: If True, then empty items are skipped from the output. Note that if used, the results might
-                contain less items than the limit value.
-            skip_header_row: If True, then header row in the csv format is skipped.
-            skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
-                the # character.
-            xml_root: Overrides default root element name of xml output. By default the root element is items.
-            xml_row: Overrides default element name that wraps each page or page function result object in xml output.
-                By default the element name is item.
-            flatten: A list of fields that should be flattened.
-            signature: Signature used to access the items.
-            timeout: Timeout for the API HTTP request.
-
-        Returns:
-            The dataset items as raw bytes.
-        """
-        warnings.warn(
-            '`DatasetClient.download_items()` is deprecated, use `DatasetClient.get_items_as_bytes()` instead.',
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        return self.get_items_as_bytes(
-            item_format=item_format,
-            offset=offset,
-            limit=limit,
-            desc=desc,
-            clean=clean,
-            bom=bom,
-            delimiter=delimiter,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_header_row=skip_header_row,
-            skip_hidden=skip_hidden,
-            xml_root=xml_root,
-            xml_row=xml_row,
-            flatten=flatten,
-            signature=signature,
-            timeout=timeout,
-        )
 
     def get_items_as_bytes(
         self,

@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Generate Literal type aliases instead of StrEnum classes ([#759](https://github.com/apify/apify-client-python/pull/759)) ([2bf5a75](https://github.com/apify/apify-client-python/commit/2bf5a75f38a74a48c5c9a9682d9eaf330da27935)) by [@vdusek](https://github.com/vdusek), closes [#576](https://github.com/apify/apify-client-python/issues/576)
 - Add iterate methods for paginated collections ([#771](https://github.com/apify/apify-client-python/pull/771)) ([3f3129c](https://github.com/apify/apify-client-python/commit/3f3129c729791d0e012070a77d7245b44a1f1180)) by [@Pijukatel](https://github.com/Pijukatel), closes [#539](https://github.com/apify/apify-client-python/issues/539)
 - Accept camelCase keys in input TypedDicts ([#793](https://github.com/apify/apify-client-python/pull/793)) ([7a579bf](https://github.com/apify/apify-client-python/commit/7a579bf2083e93092cfa5ba411c1c38d5cba2085)) by [@vdusek](https://github.com/vdusek), closes [#756](https://github.com/apify/apify-client-python/issues/756)
+- Expose WebhooksList and JsonSerializable from public types module ([#800](https://github.com/apify/apify-client-python/pull/800)) ([104011c](https://github.com/apify/apify-client-python/commit/104011c28bc08197d61e384126a4403acc3579f1)) by [@vdusek](https://github.com/vdusek)
 
 ### 🐛 Bug Fixes
 

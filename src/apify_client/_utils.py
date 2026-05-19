@@ -20,9 +20,9 @@ from apify_client.errors import InvalidResponseBodyError, NotFoundError
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from apify_client._internal_types import WebhooksList
     from apify_client.errors import ApifyApiError
     from apify_client.http_clients import HttpResponse
+    from apify_client.types import WebhooksList
 
 T = TypeVar('T')
 

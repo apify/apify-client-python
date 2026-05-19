@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import math
+import warnings
 from collections.abc import Iterable
 from queue import Queue
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -22,8 +22,6 @@ if TYPE_CHECKING:
     from datetime import timedelta
 
     from apify_shared.consts import StorageGeneralAccess
-
-logger = logging.getLogger(__name__)
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
@@ -304,16 +302,25 @@ class RequestQueueClient(ResourceClient):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
-            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
+            max_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
+            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
         if max_unprocessed_requests_retries:
-            logger.warning('`max_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                'The `max_unprocessed_requests_retries` argument is deprecated and will be removed in v3.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if min_delay_between_unprocessed_requests_retries:
-            logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                'The `min_delay_between_unprocessed_requests_retries` argument is deprecated and will be removed '
+                'in v3.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         if max_parallel != 1:
             raise NotImplementedError('max_parallel is only supported in async client')
@@ -393,8 +400,15 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: All requests up to this one (including) are skipped from the result.
+            exclusive_start_id: Deprecated argument. Will be removed in v3.
         """
+        if exclusive_start_id is not None:
+            warnings.warn(
+                'The `exclusive_start_id` argument is deprecated and will be removed in v3.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         request_params = self._params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
 
         response = self.http_client.call(
@@ -731,16 +745,25 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
-            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
+            max_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
+            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in v3.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
         if max_unprocessed_requests_retries:
-            logger.warning('`max_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                'The `max_unprocessed_requests_retries` argument is deprecated and will be removed in v3.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if min_delay_between_unprocessed_requests_retries:
-            logger.warning('`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.')
+            warnings.warn(
+                'The `min_delay_between_unprocessed_requests_retries` argument is deprecated and will be removed '
+                'in v3.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         tasks = set[asyncio.Task]()
         queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
@@ -821,8 +844,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         Args:
             limit: How many requests to retrieve.
-            exclusive_start_id: All requests up to this one (including) are skipped from the result.
+            exclusive_start_id: Deprecated argument. Will be removed in v3.
         """
+        if exclusive_start_id is not None:
+            warnings.warn(
+                'The `exclusive_start_id` argument is deprecated and will be removed in v3.',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         request_params = self._params(limit=limit, exclusiveStartId=exclusive_start_id, clientKey=self.client_key)
 
         response = await self.http_client.call(

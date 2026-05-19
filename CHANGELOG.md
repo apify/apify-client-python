@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Update default timeout tiers on non-storage resource clients ([#664](https://github.com/apify/apify-client-python/pull/664)) ([0b35bbe](https://github.com/apify/apify-client-python/commit/0b35bbe212a8a64c5aea5d5d813315252760b055)) by [@vdusek](https://github.com/vdusek)
 - [**breaking**] Use snake case for `actors().list(sort_by=...)` ([#736](https://github.com/apify/apify-client-python/pull/736)) ([eb70b64](https://github.com/apify/apify-client-python/commit/eb70b64eac86faba5cbe943845ad144ec0277896)) by [@vdusek](https://github.com/vdusek), closes [#700](https://github.com/apify/apify-client-python/issues/700)
 - [**breaking**] Mark secondary arguments as keyword-only ([#766](https://github.com/apify/apify-client-python/pull/766)) ([4ca99fd](https://github.com/apify/apify-client-python/commit/4ca99fd6a442ad12adbdfc866e72543c0feaf96b)) by [@vdusek](https://github.com/vdusek)
+- [**breaking**] Remove deprecated APIs ([#799](https://github.com/apify/apify-client-python/pull/799)) ([6e5df35](https://github.com/apify/apify-client-python/commit/6e5df3595e5f858d944887445a9019dea1008e97)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

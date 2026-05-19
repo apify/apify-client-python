@@ -334,3 +334,61 @@ The difference matters only if your code inspects the function itself:
 - Type checkers see `def (...) -> AsyncIterator[T]` instead of `async def (...) -> AsyncIterator[T]`. Annotations on variables that hold the call's result may need to change from `AsyncGenerator[T, None]` to `AsyncIterator[T]`.
 
 A new <ApiLink to="class/RequestQueueClientAsync#iterate_requests">`RequestQueueClientAsync.iterate_requests()`</ApiLink> helper is also introduced and follows the same `def ... -> AsyncIterator[T]` shape.
+
+## Removal of deprecated APIs
+
+Methods and arguments that had been deprecated in v2 are removed in v3.
+
+### `DatasetClient.download_items()`
+
+The deprecated alias has been removed. Use <ApiLink to="class/DatasetClient#get_items_as_bytes">`DatasetClient.get_items_as_bytes()`</ApiLink> instead — the signature and behavior are identical.
+
+Before (v2):
+
+```python
+raw = client.dataset('my-dataset').download_items(item_format='csv')
+```
+
+After (v3):
+
+```python
+raw = client.dataset('my-dataset').get_items_as_bytes(item_format='csv')
+```
+
+### `batch_add_requests`: `max_unprocessed_requests_retries` and `min_delay_between_unprocessed_requests_retries`
+
+Both arguments have been removed from <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests()`</ApiLink> and <ApiLink to="class/RequestQueueClientAsync#batch_add_requests">`RequestQueueClientAsync.batch_add_requests()`</ApiLink>. They had no effect already in v2 — passing them only emitted a `DeprecationWarning`. Drop them from your call sites.
+
+Before (v2):
+
+```python
+rq_client.batch_add_requests(
+    requests,
+    max_unprocessed_requests_retries=3,
+    min_delay_between_unprocessed_requests_retries=timedelta(seconds=1),
+)
+```
+
+After (v3):
+
+```python
+rq_client.batch_add_requests(requests)
+```
+
+### `list_requests`: `exclusive_start_id`
+
+The deprecated `exclusive_start_id` argument has been removed from <ApiLink to="class/RequestQueueClient#list_requests">`RequestQueueClient.list_requests()`</ApiLink> and <ApiLink to="class/RequestQueueClientAsync#list_requests">`RequestQueueClientAsync.list_requests()`</ApiLink>. Use the `cursor` argument together with `next_cursor` from the previous response (or <ApiLink to="class/RequestQueueClient#iterate_requests">`iterate_requests()`</ApiLink>, which handles pagination for you).
+
+Before (v2):
+
+```python
+page = rq_client.list_requests(limit=100)
+next_page = rq_client.list_requests(limit=100, exclusive_start_id=page.items[-1].id)
+```
+
+After (v3):
+
+```python
+page = rq_client.list_requests(limit=100)
+next_page = rq_client.list_requests(limit=100, cursor=page.next_cursor)
+```

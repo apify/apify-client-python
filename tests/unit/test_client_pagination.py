@@ -235,14 +235,14 @@ def _handle_cursor_pagination(request: Request) -> Response:
     """Serve a cursor-paginated Apify API response for KVS keys and RQ requests.
 
     Holds 2500 synthetic items whose integer `id` equals their position. Each page is capped at 1000 items. KVS uses
-    `exclusiveStartKey`; RQ accepts either the deprecated `exclusiveStartId` on the initial call or the opaque `cursor`
-    on subsequent calls. All three values encode the last-seen item id as a string — the next page starts at id + 1.
+    `exclusiveStartKey`; RQ uses the opaque `cursor`. Both values encode the last-seen item id as a string — the
+    next page starts at id + 1.
     """
     params = request.args
     limit = _parse_int_param(params.get('limit'))
     assert limit >= 0, 'Invalid limit sent to API'
 
-    cursor_raw = params.get('exclusiveStartKey') or params.get('exclusiveStartId') or params.get('cursor')
+    cursor_raw = params.get('exclusiveStartKey') or params.get('cursor')
 
     total_items = NORMAL_ITEMS
     start = int(cursor_raw) + 1 if cursor_raw not in (None, '') else 0
@@ -617,17 +617,3 @@ async def test_rq_list_requests_iterable_async(
     client: RequestQueueClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
     returned_items = [dict(item) async for item in client.iterate_requests(**inputs)]
     assert returned_items == expected_items
-
-
-def test_rq_list_requests_rejects_cursor_and_exclusive_start_id() -> None:
-    """Passing both `cursor` and `exclusive_start_id` is mutually exclusive and must error."""
-    client = ApifyClient(token='').request_queue(ID_PLACEHOLDER)
-    with pytest.raises(ValueError, match='Cannot use both'):
-        client.list_requests(cursor='a', exclusive_start_id='b')
-
-
-async def test_rq_list_requests_rejects_cursor_and_exclusive_start_id_async() -> None:
-    """Async variant of the mutual-exclusion check."""
-    client = ApifyClientAsync(token='').request_queue(ID_PLACEHOLDER)
-    with pytest.raises(ValueError, match='Cannot use both'):
-        await client.list_requests(cursor='a', exclusive_start_id='b')

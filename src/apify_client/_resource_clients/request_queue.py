@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import math
-import warnings
 from collections.abc import Iterable
 from queue import Queue
 from typing import TYPE_CHECKING, Any, Literal
@@ -377,8 +376,6 @@ class RequestQueueClient(ResourceClient):
         *,
         forefront: bool = False,
         max_parallel: int = 1,
-        max_unprocessed_requests_retries: int | None = None,
-        min_delay_between_unprocessed_requests_retries: timedelta | None = None,
         timeout: Timeout = 'medium',
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
@@ -393,26 +390,11 @@ class RequestQueueClient(ResourceClient):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
-            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
-        if max_unprocessed_requests_retries:
-            warnings.warn(
-                '`max_unprocessed_requests_retries` is deprecated and not used anymore.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if min_delay_between_unprocessed_requests_retries:
-            warnings.warn(
-                '`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         if max_parallel != 1:
             raise NotImplementedError('max_parallel is only supported in async client')
 
@@ -514,7 +496,6 @@ class RequestQueueClient(ResourceClient):
         filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
         timeout: Timeout = 'medium',
         cursor: str | None = None,
-        exclusive_start_id: str | None = None,
     ) -> ListOfRequests:
         """List requests in the queue.
 
@@ -525,23 +506,11 @@ class RequestQueueClient(ResourceClient):
             filter: List of request states to use as a filter. Multiple values mean union of the given filters.
             timeout: Timeout for the API HTTP request.
             cursor: A token returned in previous API response, to continue listing next page of requests
-            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
         """
-        if exclusive_start_id and cursor:
-            raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')
-
-        if exclusive_start_id is not None:
-            warnings.warn(
-                '`exclusive_start_id` is deprecated for paginating requests. Use pagination using `cursor` instead.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         request_params = self._build_params(
             limit=limit,
             filter=','.join(filter) if filter else None,
             clientKey=self.client_key,
-            exclusiveStartId=exclusive_start_id,
             cursor=cursor,
         )
 
@@ -979,8 +948,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
         *,
         forefront: bool = False,
         max_parallel: int = 5,
-        max_unprocessed_requests_retries: int | None = None,
-        min_delay_between_unprocessed_requests_retries: timedelta | None = None,
         timeout: Timeout = 'medium',
     ) -> BatchAddResult:
         """Add requests to the request queue in batches.
@@ -995,26 +962,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
                 is not supported.
-            max_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
-            min_delay_between_unprocessed_requests_retries: Deprecated argument. Will be removed in next major release.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             Result containing lists of processed and unprocessed requests.
         """
-        if max_unprocessed_requests_retries:
-            warnings.warn(
-                '`max_unprocessed_requests_retries` is deprecated and not used anymore.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if min_delay_between_unprocessed_requests_retries:
-            warnings.warn(
-                '`min_delay_between_unprocessed_requests_retries` is deprecated and not used anymore.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         requests_as_dicts = [
             (
                 request
@@ -1126,7 +1078,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
         filter: list[Literal['pending', 'locked']] | None = None,  # noqa: A002
         timeout: Timeout = 'medium',
         cursor: str | None = None,
-        exclusive_start_id: str | None = None,
     ) -> ListOfRequests:
         """List requests in the queue.
 
@@ -1137,23 +1088,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
             filter: List of request states to use as a filter. Multiple values mean union of the given filters.
             timeout: Timeout for the API HTTP request.
             cursor: A token returned in previous API response, to continue listing next page of requests
-            exclusive_start_id: (deprecated) All requests up to this one (including) are skipped from the result.
         """
-        if exclusive_start_id and cursor:
-            raise ValueError('Cannot use both `exclusive_start_id` and `cursor` for paginating requests.')
-
-        if exclusive_start_id is not None:
-            warnings.warn(
-                '`exclusive_start_id` is deprecated for paginating requests. Use pagination using `cursor` instead.',
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         request_params = self._build_params(
             limit=limit,
             filter=','.join(filter) if filter else None,
             clientKey=self.client_key,
-            exclusiveStartId=exclusive_start_id,
             cursor=cursor,
         )
 

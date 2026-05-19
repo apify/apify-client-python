@@ -46,6 +46,10 @@ status = run.status
 
 All model classes are generated from the Apify OpenAPI specification and live in `apify_client._models` module. They are configured with `extra='allow'`, so any new fields added to the API in the future are preserved on the model instance. Fields are accessed using their Python snake_case names:
 
+:::warning
+The `apify_client._models`, `apify_client._typeddicts`, and `apify_client._literals` modules are internal. The examples below import from them for convenience, but use them at your own risk — their contents are regenerated from the OpenAPI specification and the public API of these modules is not stable across minor versions of `apify-client`.
+:::
+
 ```python
 run.default_dataset_id   # ✓ use snake_case attribute names
 run.id
@@ -191,19 +195,7 @@ If your code relied on the previous global timeout behavior, review the timeout 
 
 ## Exception subclasses for API errors
 
-<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> now dispatches to a dedicated subclass based on the HTTP status code of the failed response. Instantiating `ApifyApiError` directly still works — it returns the most specific subclass for the status — so existing `except ApifyApiError` handlers are unaffected.
-
-The following subclasses are available:
-
-| Status | Subclass |
-|---|---|
-| 400 | <ApiLink to="class/InvalidRequestError">`InvalidRequestError`</ApiLink> |
-| 401 | <ApiLink to="class/UnauthorizedError">`UnauthorizedError`</ApiLink> |
-| 403 | <ApiLink to="class/ForbiddenError">`ForbiddenError`</ApiLink> |
-| 404 | <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> |
-| 409 | <ApiLink to="class/ConflictError">`ConflictError`</ApiLink> |
-| 429 | <ApiLink to="class/RateLimitError">`RateLimitError`</ApiLink> |
-| 5xx | <ApiLink to="class/ServerError">`ServerError`</ApiLink> |
+<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> now dispatches to a dedicated subclass based on the HTTP status code of the failed response. Instantiating `ApifyApiError` directly still works — it returns the most specific subclass for the status — so existing `except ApifyApiError` handlers are unaffected. See the [Error handling](/docs/concepts/error-handling#error-subclasses) concept page for the full status-to-subclass mapping.
 
 You can now branch on error kind without inspecting `status_code` or `type`:
 

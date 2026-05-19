@@ -195,7 +195,7 @@ If your code relied on the previous global timeout behavior, review the timeout 
 
 ## Exception subclasses for API errors
 
-<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> now dispatches to a dedicated subclass based on the HTTP status code of the failed response. Instantiating `ApifyApiError` directly still works — it returns the most specific subclass for the status — so existing `except ApifyApiError` handlers are unaffected. See the [Error handling](/docs/concepts/error-handling#error-subclasses) concept page for the full status-to-subclass mapping.
+The Apify client now provides dedicated error subclasses based on the HTTP status code of the failed response. Instantiating <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> directly still works — it returns the most specific subclass for the status — so existing `except ApifyApiError` handlers are unaffected. See the [Error handling](/docs/concepts/error-handling#error-subclasses) concept page for the full status-to-subclass mapping.
 
 You can now branch on error kind without inspecting `status_code` or `type`:
 

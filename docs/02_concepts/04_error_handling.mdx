@@ -16,7 +16,7 @@ When you use the Apify client, it automatically extracts all relevant data from 
 
 ## Error subclasses
 
-<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> dispatches to a dedicated subclass based on the HTTP status code of the failed response, so you can branch on error kind without inspecting `status_code` or `type`:
+The Apify client provides dedicated error subclasses based on the HTTP status code of the failed response, so you can branch on error kind without inspecting `status_code` or `type`:
 
 | Status | Subclass |
 |---|---|

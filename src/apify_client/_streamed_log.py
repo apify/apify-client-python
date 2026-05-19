@@ -5,9 +5,9 @@ import logging
 import re
 import threading
 from asyncio import Task
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from threading import Thread
-from typing import TYPE_CHECKING, Self, cast
+from typing import TYPE_CHECKING, ClassVar, Self, cast
 
 from apify_client._docs import docs_group
 
@@ -90,6 +90,10 @@ class StreamedLog(StreamedLogBase):
     call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
     """
 
+    # Caps how long `iter_bytes()` can block on a silent stream so `stop()` can unblock within
+    # this window instead of waiting for the long-polling default.
+    _read_timeout: ClassVar[timedelta] = timedelta(seconds=30)
+
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         """Initialize `StreamedLog`.
 
@@ -138,17 +142,17 @@ class StreamedLog(StreamedLogBase):
         self.stop()
 
     def _stream_log(self) -> None:
-        with self._log_client.stream(raw=True) as log_stream:
+        with self._log_client.stream(raw=True, timeout=self._read_timeout) as log_stream:
             if not log_stream:
                 return
-            for data in log_stream.iter_bytes():
-                self._process_new_data(data)
-                if self._stop_logging:
-                    break
-
-            # If the stream is finished, then the last part will be also processed.
-            self._log_buffer_content(include_last_part=True)
-        return
+            try:
+                for data in log_stream.iter_bytes():
+                    self._process_new_data(data)
+                    if self._stop_logging:
+                        break
+            finally:
+                # Flush the last buffered part even if the read timed out or was stopped.
+                self._log_buffer_content(include_last_part=True)
 
 
 @docs_group('Other')
@@ -214,8 +218,9 @@ class StreamedLogAsync(StreamedLogBase):
         async with self._log_client.stream(raw=True) as log_stream:
             if not log_stream:
                 return
-            async for data in log_stream.aiter_bytes():
-                self._process_new_data(data)
-
-            # If the stream is finished, then the last part will be also processed.
-            self._log_buffer_content(include_last_part=True)
+            try:
+                async for data in log_stream.aiter_bytes():
+                    self._process_new_data(data)
+            finally:
+                # Flush the last buffered part even if the task is cancelled by `stop()`.
+                self._log_buffer_content(include_last_part=True)

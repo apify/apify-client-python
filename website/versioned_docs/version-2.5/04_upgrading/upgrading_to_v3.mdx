@@ -1,0 +1,394 @@
+---
+id: upgrading-to-v3
+title: Upgrading to v3
+description: Breaking changes and migration guide from v2 to v3.
+---
+
+import ApiLink from '@theme/ApiLink';
+
+This page summarizes the breaking changes between Apify Python API Client v2.x and v3.0.
+
+## Python version support
+
+Support for Python 3.10 has been dropped. The Apify Python API Client v3.x now requires Python 3.11 or later. Make sure your environment is running a compatible version before upgrading.
+
+## Fully typed clients
+
+Resource client methods now return [Pydantic](https://docs.pydantic.dev/latest/) models instead of plain dictionaries. This provides IDE autocompletion, type checking, and early validation of API responses.
+
+### Accessing response fields
+
+Before (v2):
+
+```python
+from apify_client import ApifyClient
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+# v2 — methods returned plain dicts
+run = client.actor('apify/hello-world').call(run_input={'key': 'value'})
+dataset_id = run['defaultDatasetId']
+status = run['status']
+```
+
+After (v3):
+
+```python
+from apify_client import ApifyClient
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+# v3 — methods return Pydantic models
+run = client.actor('apify/hello-world').call(run_input={'key': 'value'})
+dataset_id = run.default_dataset_id
+status = run.status
+```
+
+All model classes are generated from the Apify OpenAPI specification and live in `apify_client._models` module. They are configured with `extra='allow'`, so any new fields added to the API in the future are preserved on the model instance. Fields are accessed using their Python snake_case names:
+
+:::warning
+The `apify_client._models`, `apify_client._typeddicts`, and `apify_client._literals` modules are internal. The examples below import from them for convenience, but use them at your own risk — their contents are regenerated from the OpenAPI specification and the public API of these modules is not stable across minor versions of `apify-client`.
+:::
+
+```python
+run.default_dataset_id   # ✓ use snake_case attribute names
+run.id
+run.status
+```
+
+Models also use `populate_by_name=True`, which means you can use either the Python field name or the camelCase alias when **constructing** a model:
+
+```python
+from apify_client._models import Run
+
+# Both work when constructing models
+Run(default_dataset_id='abc')   # Python field name
+Run(defaultDatasetId='abc')     # camelCase API alias
+```
+
+### Exceptions
+
+Not every method returns a Pydantic model. Methods whose payloads are user-defined or inherently unstructured still return plain types:
+
+- <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items()`</ApiLink> returns `DatasetItemsPage`, a dataclass whose `items` field is `list[dict[str, Any]]`, because the structure of dataset items is defined by the [Actor output schema](https://docs.apify.com/platform/actors/development/actor-definition/output-schema), which the API Client or SDK has no knowledge of.
+- <ApiLink to="class/KeyValueStoreClient#get_record">`KeyValueStoreClient.get_record()`</ApiLink> returns a `dict` with `key`, `value`, and `content_type` keys.
+
+### Pydantic models as method parameters
+
+Resource client methods that previously accepted only dictionaries for structured input now also accept Pydantic models. Existing code that passes dictionaries continues to work — this change is additive for callers, but is listed here because method type signatures have changed.
+
+Before (v2):
+
+```python
+rq_client.add_request({
+    'url': 'https://example.com',
+    'uniqueKey': 'https://example.com',
+    'method': 'GET',
+})
+```
+
+After (v3) — both forms are accepted:
+
+```python
+from apify_client._models import RequestDraft
+
+# Option 1: dict (still works)
+rq_client.add_request({
+    'url': 'https://example.com',
+    'uniqueKey': 'https://example.com',
+    'method': 'GET',
+})
+
+# Option 2: Pydantic model (new)
+rq_client.add_request(RequestDraft(
+    url='https://example.com',
+    unique_key='https://example.com',
+    method='GET',
+))
+```
+
+Model input is available on methods such as <ApiLink to="class/RequestQueueClient#add_request">`RequestQueueClient.add_request()`</ApiLink>, <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests()`</ApiLink>, <ApiLink to="class/ActorClient#start">`ActorClient.start()`</ApiLink>, <ApiLink to="class/ActorClient#call">`ActorClient.call()`</ApiLink>, <ApiLink to="class/TaskClient#start">`TaskClient.start()`</ApiLink>, <ApiLink to="class/TaskClient#call">`TaskClient.call()`</ApiLink>, <ApiLink to="class/TaskClient#update">`TaskClient.update()`</ApiLink>, and <ApiLink to="class/TaskClient#update_input">`TaskClient.update_input()`</ApiLink>, among others. Check the API reference for the complete list.
+
+## Pluggable HTTP client architecture
+
+The HTTP layer is now abstracted behind <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> base classes. The default implementation based on [Impit](https://github.com/apify/impit) (<ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> / <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink>) is unchanged, but you can now replace it with your own.
+
+To use a custom HTTP client, implement the `call()` method and pass the instance via the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client()`</ApiLink> class method:
+
+```python
+from apify_client import ApifyClient
+from apify_client.http_clients import HttpClient, HttpResponse
+
+class MyHttpClient(HttpClient):
+    def call(self, *, method, url, headers=None, params=None,
+             data=None, json=None, stream=None, timeout='medium') -> HttpResponse:
+        ...
+
+client = ApifyClient.with_custom_http_client(
+    token='MY-APIFY-TOKEN',
+    http_client=MyHttpClient(),
+)
+```
+
+The response must satisfy the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol (properties: `status_code`, `text`, `content`, `headers`; sync methods: `json()`, `read()`, `close()`, `iter_bytes()`; async methods: `aread()`, `aclose()`, `aiter_bytes()`). Many popular libraries like `httpx` already satisfy this protocol out of the box.
+
+The HTTP base classes, the `HttpResponse` protocol, and the default `ImpitHttpClient` / `ImpitHttpClientAsync` implementations live in the `apify_client.http_clients` submodule. The `Timeout` alias used on the `call()` signature lives in `apify_client.types`.
+
+For a full walkthrough and working examples, see the [Custom HTTP clients](/docs/concepts/custom-http-clients) concept page and the [Custom HTTP client](/docs/guides/custom-http-client-httpx) guide.
+
+## Tiered timeout system
+
+Individual API methods now use a tiered timeout instead of a single global timeout. Each method declares a default tier appropriate for its expected latency.
+
+### Timeout tiers
+
+| Tier | Default | Typical use case |
+|---|---|---|
+| `short` | 5 s | Fast CRUD operations (get, update, delete) |
+| `medium` | 30 s | Batch and list operations, starting runs |
+| `long` | 360 s | Long-polling, streaming, data retrieval |
+| `no_timeout` | Disabled | Blocking calls like `actor.call()` that wait for a run to finish |
+
+A `timeout_max` value (default 360 s) caps the exponential growth of timeouts across retries.
+
+### Configuring default tiers
+
+You can override the default duration of any tier on the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor:
+
+```python
+from datetime import timedelta
+
+from apify_client import ApifyClient
+
+client = ApifyClient(
+    token='MY-APIFY-TOKEN',
+    timeout_short=timedelta(seconds=10),
+    timeout_medium=timedelta(seconds=60),
+    timeout_long=timedelta(seconds=600),
+    timeout_max=timedelta(seconds=600),
+)
+```
+
+### Per-call override
+
+Every resource client method exposes a `timeout` parameter. You can pass a tier name or a `timedelta` for a one-off override:
+
+```python
+from datetime import timedelta
+
+# Use the 'long' tier for this specific call
+actor = client.actor('apify/hello-world').get(timeout='long')
+
+# Or pass an explicit duration
+actor = client.actor('apify/hello-world').get(timeout=timedelta(seconds=120))
+```
+
+### Retry behavior
+
+On retries, the timeout doubles with each attempt (exponential backoff) up to `timeout_max`. For example, with `timeout_short=5s` and `timeout_max=360s`: attempt 1 uses 5 s, attempt 2 uses 10 s, attempt 3 uses 20 s, and so on.
+
+### Updated default timeout tiers
+
+The default timeout tier assigned to each method on non-storage resource clients has been revised to better match the expected latency of the underlying API endpoint. For example, a simple `get()` call now defaults to `short` (5 s), while `start()` defaults to `medium` (30 s) and `call()` defaults to `no_timeout`.
+
+If your code relied on the previous global timeout behavior, review the timeout tier on the methods you use and adjust via the `timeout` parameter or by overriding tier defaults on the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor (see [Tiered timeout system](#tiered-timeout-system) above).
+
+## Exception subclasses for API errors
+
+The Apify client now provides dedicated error subclasses based on the HTTP status code of the failed response. Instantiating <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> directly still works — it returns the most specific subclass for the status — so existing `except ApifyApiError` handlers are unaffected. See the [Error handling](/docs/concepts/error-handling#error-subclasses) concept page for the full status-to-subclass mapping.
+
+You can now branch on error kind without inspecting `status_code` or `type`:
+
+```python
+from apify_client import ApifyClient
+from apify_client.errors import NotFoundError, RateLimitError
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+try:
+    run = client.run('some-run-id').get()
+except NotFoundError:
+    run = None
+except RateLimitError:
+    ...
+```
+
+### Behavior change: 404 on ambiguous endpoints now raises `NotFoundError`
+
+Direct, ID-identified fetches like `client.dataset(id).get()` or `client.run(id).get()` continue to swallow 404 into `None` — a 404 there unambiguously means the named resource does not exist. Similarly, `.delete()` on an ID-identified client keeps its idempotent behavior (404 is silently swallowed).
+
+For calls where a 404 is *ambiguous*, the client now propagates <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> instead of returning `None` / silently succeeding. Three categories of endpoints are affected:
+
+1. **Chained calls that target a default sub-resource without an ID** — `run.dataset()`, `run.key_value_store()`, `run.request_queue()`, `run.log()`. A 404 here could mean the parent run is missing OR the default sub-resource is missing, and the API body does not disambiguate. Applies to both `.get()` and `.delete()`.
+2. **`.get()` / `.get_as_bytes()` / `.stream()` on a chained `LogClient`** — e.g. `run.log().get()`. Direct `client.log(build_or_run_id).get()` still returns `None` on 404.
+3. **Singleton sub-resource endpoints fetched via a fixed path** — <ApiLink to="class/ScheduleClient#get_log">`ScheduleClient.get_log()`</ApiLink>, <ApiLink to="class/TaskClient#get_input">`TaskClient.get_input()`</ApiLink>, <ApiLink to="class/DatasetClient#get_statistics">`DatasetClient.get_statistics()`</ApiLink>, <ApiLink to="class/UserClient#monthly_usage">`UserClient.monthly_usage()`</ApiLink>, <ApiLink to="class/UserClient#limits">`UserClient.limits()`</ApiLink>, <ApiLink to="class/WebhookClient#test">`WebhookClient.test()`</ApiLink>. These hit paths like `/schedules/{id}/log` or `/actor-tasks/{id}/input`, so a 404 effectively means the parent is missing. Return types moved from `T | None` to `T`.
+
+```python
+from apify_client import ApifyClient
+from apify_client.errors import NotFoundError
+
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+try:
+    dataset = client.run('some-run-id').dataset().get()
+except NotFoundError:
+    # Previously this returned `None`; now you must handle it explicitly.
+    dataset = None
+
+try:
+    schedule_log = client.schedule('some-schedule-id').get_log()
+except NotFoundError:
+    # `get_log()` previously returned `None` when the schedule was missing; now it raises.
+    schedule_log = None
+```
+
+Direct `.get()` also now swallows every 404 regardless of the `error.type` string in the response body (previously only `record-not-found` and `record-or-token-not-found` types were swallowed). If your code needs to distinguish between "resource missing" and "404 with an unexpected type", inspect `.type` on a caught <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> from a non-`.get()` call path.
+
+## Keyword-only arguments for secondary parameters
+
+Several methods and utility functions had additional `*` separators inserted into their signatures, so optional/secondary parameters can no longer be passed positionally. The "subject" arguments (e.g. `key` on KVS record methods, `event_name` on `charge()`) remain positional; only the parameters that follow them are affected.
+
+### Affected APIs
+
+<ApiLink to="class/KeyValueStoreClient">`KeyValueStoreClient`</ApiLink> / <ApiLink to="class/KeyValueStoreClientAsync">`KeyValueStoreClientAsync`</ApiLink>:
+
+- `get_record(key, *, signature=None, timeout='long')`
+- `get_record_as_bytes(key, *, signature=None, timeout='long')`
+- `stream_record(key, *, signature=None, timeout='long')`
+- `set_record(key, value, *, content_type=None, timeout='long')`
+
+<ApiLink to="class/RunClient">`RunClient`</ApiLink> / <ApiLink to="class/RunClientAsync">`RunClientAsync`</ApiLink>:
+
+- `charge(event_name, *, count=1, idempotency_key=None, timeout='short')`
+- `get_status_message_watcher(*, to_logger=None, check_period=..., timeout='long')`
+
+<ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> constructor:
+
+- `ApifyApiError(response, attempt, *, method='GET')`
+
+### Migration
+
+Before (v2):
+
+```python
+client.key_value_store('my-store').set_record('my-key', {'data': 1}, 'application/json')
+client.run('my-run').charge('my-event', 5, 'my-idempotency-key')
+```
+
+After (v3):
+
+```python
+client.key_value_store('my-store').set_record('my-key', {'data': 1}, content_type='application/json')
+client.run('my-run').charge('my-event', count=5, idempotency_key='my-idempotency-key')
+```
+
+## `Literal` type aliases instead of `StrEnum` classes
+
+Generated enum-like types are now [`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal) type aliases instead of `StrEnum` classes. Pass plain strings instead of enum members; type checkers will validate them against the allowed set.
+
+Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralAccess`, `HttpMethod`, `RunOrigin`, `SourceCodeFileFormat`, `StorageOwnership`, `VersionSourceType`, `WebhookDispatchStatus`, `WebhookEventType`.
+
+Before (v2):
+
+```python
+from apify_client._models import WebhookEventType
+
+client.actor('apify/hello-world').webhooks().create(
+    event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED],
+    request_url='https://example.com/webhook',
+)
+```
+
+After (v3):
+
+```python
+client.actor('apify/hello-world').webhooks().create(
+    event_types=['ACTOR.RUN.SUCCEEDED'],
+    request_url='https://example.com/webhook',
+)
+```
+
+The aliases now live in `apify_client._literals` (previously `apify_client._models`) and can be imported for use in type annotations:
+
+```python
+from apify_client._literals import WebhookEventType
+
+events: list[WebhookEventType] = ['ACTOR.RUN.SUCCEEDED', 'ACTOR.RUN.FAILED']
+```
+
+## Async `iterate_*` methods are plain functions, not async generators
+
+Async iteration helpers — <ApiLink to="class/DatasetClientAsync#iterate_items">`DatasetClientAsync.iterate_items()`</ApiLink> and <ApiLink to="class/KeyValueStoreClientAsync#iterate_keys">`KeyValueStoreClientAsync.iterate_keys()`</ApiLink> — were previously declared as `async def` (async generator functions). They are now plain `def` functions that return an `AsyncIterator` produced by a shared pagination helper.
+
+Consumer-side iteration is unchanged — `async for item in client.iterate_items(...)` works the same in both versions:
+
+```python
+# Works in both v2 and v3
+async for item in client.dataset('my-dataset').iterate_items():
+    print(item)
+```
+
+The difference matters only if your code inspects the function itself:
+
+- The call is no longer a coroutine function — `inspect.iscoroutinefunction(client.iterate_items)` returns `False`, and `inspect.isasyncgenfunction(client.iterate_items)` also returns `False` (it returns a regular function whose result is an async iterator).
+- Type checkers see `def (...) -> AsyncIterator[T]` instead of `async def (...) -> AsyncIterator[T]`. Annotations on variables that hold the call's result may need to change from `AsyncGenerator[T, None]` to `AsyncIterator[T]`.
+
+A new <ApiLink to="class/RequestQueueClientAsync#iterate_requests">`RequestQueueClientAsync.iterate_requests()`</ApiLink> helper is also introduced and follows the same `def ... -> AsyncIterator[T]` shape.
+
+## Removal of deprecated APIs
+
+Methods and arguments that had been deprecated in v2 are removed in v3.
+
+### `DatasetClient.download_items()`
+
+The deprecated alias has been removed. Use <ApiLink to="class/DatasetClient#get_items_as_bytes">`DatasetClient.get_items_as_bytes()`</ApiLink> instead — the signature and behavior are identical.
+
+Before (v2):
+
+```python
+raw = client.dataset('my-dataset').download_items(item_format='csv')
+```
+
+After (v3):
+
+```python
+raw = client.dataset('my-dataset').get_items_as_bytes(item_format='csv')
+```
+
+### `batch_add_requests`: `max_unprocessed_requests_retries` and `min_delay_between_unprocessed_requests_retries`
+
+Both arguments have been removed from <ApiLink to="class/RequestQueueClient#batch_add_requests">`RequestQueueClient.batch_add_requests()`</ApiLink> and <ApiLink to="class/RequestQueueClientAsync#batch_add_requests">`RequestQueueClientAsync.batch_add_requests()`</ApiLink>. They had no effect already in v2 — passing them only emitted a `DeprecationWarning`. Drop them from your call sites.
+
+Before (v2):
+
+```python
+rq_client.batch_add_requests(
+    requests,
+    max_unprocessed_requests_retries=3,
+    min_delay_between_unprocessed_requests_retries=timedelta(seconds=1),
+)
+```
+
+After (v3):
+
+```python
+rq_client.batch_add_requests(requests)
+```
+
+### `list_requests`: `exclusive_start_id`
+
+The deprecated `exclusive_start_id` argument has been removed from <ApiLink to="class/RequestQueueClient#list_requests">`RequestQueueClient.list_requests()`</ApiLink> and <ApiLink to="class/RequestQueueClientAsync#list_requests">`RequestQueueClientAsync.list_requests()`</ApiLink>. Use the `cursor` argument together with `next_cursor` from the previous response (or <ApiLink to="class/RequestQueueClient#iterate_requests">`iterate_requests()`</ApiLink>, which handles pagination for you).
+
+Before (v2):
+
+```python
+page = rq_client.list_requests(limit=100)
+next_page = rq_client.list_requests(limit=100, exclusive_start_id=page.items[-1].id)
+```
+
+After (v3):
+
+```python
+page = rq_client.list_requests(limit=100)
+next_page = rq_client.list_requests(limit=100, cursor=page.next_cursor)
+```

@@ -2,9 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-
-## 3.0.0 - **not yet released**
+## [3.0.0](https://github.com/apify/apify-client-python/releases/tag/v3.0.0) (2026-05-20)
 
 - Check out the [Upgrading guide](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v3) to ensure a smooth update.
 
@@ -41,8 +39,6 @@ All notable changes to this project will be documented in this file.
 ### ⚙️ Miscellaneous Tasks
 
 - [**breaking**] Drop support for Python 3.10 ([#636](https://github.com/apify/apify-client-python/pull/636)) ([7895a4e](https://github.com/apify/apify-client-python/commit/7895a4e60145f490911044da4aa7e3c1c424d416)) by [@vdusek](https://github.com/vdusek)
-
-<!-- git-cliff-unreleased-end -->
 
 ## [2.5.1](https://github.com/apify/apify-client-python/releases/tag/v2.5.1) (2026-05-20)
 

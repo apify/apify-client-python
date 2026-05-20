@@ -1,6 +1,7 @@
 ---
 id: passing-input-to-actor
-title: Passing input to Actor
+title: Pass input to an Actor
+description: Run an Actor with custom input data and retrieve results.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -10,9 +11,9 @@ import CodeBlock from '@theme/CodeBlock';
 import StreamingAsyncExample from '!!raw-loader!./code/01_input_async.py';
 import StreamingSyncExample from '!!raw-loader!./code/01_input_sync.py';
 
-The efficient way to run an Actor and retrieve results is by passing input data directly to the `call` method. This method allows you to configure the Actor's input, execute it, and either get a reference to the running Actor or wait for its completion.
+You can pass input data directly to the `call` method to configure and run an Actor in a single step.
 
-The following example demonstrates how to pass input to the `apify/instagram-hashtag-scraper` Actor and wait for it to finish.
+The following example shows how to pass input to the `apify/instagram-hashtag-scraper` Actor and wait for it to finish.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

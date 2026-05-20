@@ -1,6 +1,7 @@
 ---
 id: nested-clients
 title: Nested clients
+description: Access related resources directly through nested client methods.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -12,7 +13,7 @@ import ApiLink from '@theme/ApiLink';
 import NestedAsyncExample from '!!raw-loader!./code/03_nested_async.py';
 import NestedSyncExample from '!!raw-loader!./code/03_nested_sync.py';
 
-In some cases, the Apify client provides nested clients to simplify working with related collections. For example, you can easily manage the runs of a specific Actor without having to construct multiple endpoints or client instances manually.
+Nested clients let you access related resources directly from a parent resource client, without manually constructing new client instances.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

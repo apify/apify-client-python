@@ -12,5 +12,5 @@ def main() -> None:
         'some': 'input',
     }
 
-    # Start an Actor and wait for it to finish.
+    # Start an Actor and waits for it to finish.
     call_result = actor_client.call(run_input=run_input)

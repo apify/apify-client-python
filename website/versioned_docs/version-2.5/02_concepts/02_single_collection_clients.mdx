@@ -1,7 +1,6 @@
 ---
 id: single-and-collection-clients
 title: Single and collection clients
-description: Understand the two types of resource clients, single-resource and collection clients.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -15,7 +14,7 @@ import CollectionSyncExample from '!!raw-loader!./code/02_collection_sync.py';
 import SingleAsyncExample from '!!raw-loader!./code/02_single_async.py';
 import SingleSyncExample from '!!raw-loader!./code/02_single_sync.py';
 
-The Apify client provides two types of resource clients: single-resource clients for managing an individual resource, and collection clients for listing or creating resources.
+The Apify client interface is designed to be consistent and intuitive across all of its components. When you call specific methods on the main client, you create specialized clients to manage individual API resources. There are two main types of clients:
 
 - <ApiLink to="class/ActorClient">`ActorClient`</ApiLink> - Manages a single resource.
 - <ApiLink to="class/ActorCollectionClient">`ActorCollectionClient`</ApiLink> - Manages a collection of resources.

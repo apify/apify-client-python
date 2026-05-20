@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 2.5.1 - **not yet released**
+## [3.0.0](https://github.com/apify/apify-client-python/releases/tag/v3.0.0) (2026-05-20)
 
 ### 🚀 Features
 
@@ -39,7 +38,6 @@ All notable changes to this project will be documented in this file.
 - [**breaking**] Remove deprecated APIs ([#799](https://github.com/apify/apify-client-python/pull/799)) ([6e5df35](https://github.com/apify/apify-client-python/commit/6e5df3595e5f858d944887445a9019dea1008e97)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [2.5.0](https://github.com/apify/apify-client-python/releases/tag/v2.5.0) (2026-02-18)
 
 ### 🚀 Features

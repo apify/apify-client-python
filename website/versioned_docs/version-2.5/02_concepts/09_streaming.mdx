@@ -1,7 +1,6 @@
 ---
 id: streaming-resources
 title: Streaming resources
-description: Stream large datasets, key-value store records, and logs without loading them into memory.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -23,7 +22,7 @@ Supported streaming methods:
 
 These methods return a raw, context-managed `impit.Response` object. The response must be consumed within a with block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
 
-The following example shows how to stream the logs of an Actor run incrementally:
+The following example demonstrates how to stream the logs of an Actor run incrementally:
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -38,4 +37,4 @@ The following example shows how to stream the logs of an Actor run incrementally
     </TabItem>
 </Tabs>
 
-Streaming is ideal for processing large logs, datasets, or files incrementally without downloading them entirely into memory.
+Streaming offers several key benefits. It ensures memory efficiency by loading only a small portion of the resource into memory at any given time, making it ideal for handling large data. It enables real-time processing, allowing you to start working with data immediately as it is received. With automatic resource management, using the `with` statement ensures that connections are properly closed, preventing memory leaks or unclosed connections. This approach is valuable for processing large logs, datasets, or files on the fly without the need to download them entirely.

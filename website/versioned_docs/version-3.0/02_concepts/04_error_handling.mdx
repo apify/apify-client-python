@@ -1,0 +1,46 @@
+---
+id: error-handling
+title: Error handling
+description: Handle API errors with the ApifyApiError exception and automatic data parsing.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@theme/ApiLink';
+
+import ErrorAsyncExample from '!!raw-loader!./code/04_error_async.py';
+import ErrorSyncExample from '!!raw-loader!./code/04_error_sync.py';
+
+When you use the Apify client, it automatically extracts all relevant data from the endpoint and returns it in the expected format. Date strings, for instance, are seamlessly converted to Python `datetime.datetime` objects. If an error occurs, the client raises an <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink>. This exception wraps the raw JSON errors returned by the API and provides additional context, making it easier to debug any issues that arise.
+
+## Error subclasses
+
+The Apify client provides dedicated error subclasses based on the HTTP status code of the failed response, so you can branch on error kind without inspecting `status_code` or `type`:
+
+| Status | Subclass |
+|---|---|
+| 400 | <ApiLink to="class/InvalidRequestError">`InvalidRequestError`</ApiLink> |
+| 401 | <ApiLink to="class/UnauthorizedError">`UnauthorizedError`</ApiLink> |
+| 403 | <ApiLink to="class/ForbiddenError">`ForbiddenError`</ApiLink> |
+| 404 | <ApiLink to="class/NotFoundError">`NotFoundError`</ApiLink> |
+| 409 | <ApiLink to="class/ConflictError">`ConflictError`</ApiLink> |
+| 429 | <ApiLink to="class/RateLimitError">`RateLimitError`</ApiLink> |
+| 5xx | <ApiLink to="class/ServerError">`ServerError`</ApiLink> |
+
+All subclasses inherit from <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink>, so an existing `except ApifyApiError` handler still catches every API error. Catch a specific subclass when you want to react differently to, for example, a missing resource or a rate-limit:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {ErrorAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {ErrorSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+For a complete list of error classes, see the <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> reference.

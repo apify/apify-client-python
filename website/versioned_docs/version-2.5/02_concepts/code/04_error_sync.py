@@ -1,5 +1,4 @@
 from apify_client import ApifyClient
-from apify_client.errors import ApifyApiError, NotFoundError
 
 TOKEN = 'MY-APIFY-TOKEN'
 
@@ -8,19 +7,9 @@ def main() -> None:
     apify_client = ApifyClient(TOKEN)
 
     try:
-        # Try to list items from a non-existing dataset.
-        dataset_client = apify_client.dataset('non-existing-dataset-id')
+        # Try to list items from non-existing dataset
+        dataset_client = apify_client.dataset('not-existing-dataset-id')
         dataset_items = dataset_client.list_items().items
-    except NotFoundError:
-        # 404 — branch on a specific subclass when you want to react to it.
-        dataset_items = []
-    except ApifyApiError as err:
-        # Catch-all for every other API error.
-        print(f'API error: {err}')
-        dataset_items = []
-
-    print(f'Fetched {len(dataset_items)} items.')
-
-
-if __name__ == '__main__':
-    main()
+    except Exception as ApifyApiError:
+        # The exception is an instance of ApifyApiError
+        print(ApifyApiError)

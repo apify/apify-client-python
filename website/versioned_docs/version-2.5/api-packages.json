@@ -1,1 +1,10 @@
-[{"entryPoints":{"index":{"label":"Index","path":"src/index.ts"}},"packageRoot":".","packagePath":".","packageSlug":".","packageName":"apify-client-python-website"}]
+[
+    {
+        "entryPoints": { "index": { "label": "Index", "path": "src/apify_client" } },
+        "packageRoot": "..",
+        "packagePath": ".",
+        "packageSlug": ".",
+        "packageName": "apify-client",
+        "packageVersion": "2.5.0"
+    }
+]

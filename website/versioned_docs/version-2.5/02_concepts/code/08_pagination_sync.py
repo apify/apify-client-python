@@ -10,15 +10,26 @@ def main() -> None:
     dataset_client = apify_client.dataset('dataset-id')
 
     # Define the pagination parameters
-    limit = 1000  # Number items to request from API
+    limit = 1000  # Number of items per page
     offset = 0  # Starting offset
+    all_items = []  # List to store all fetched items
 
-    # Send single API call to fetch paginated items.
-    # (number of items per single call can be limited by API)
-    paginated_items = dataset_client.list_items(limit=limit, offset=offset)
+    while True:
+        # Fetch a page of items
+        response = dataset_client.list_items(limit=limit, offset=offset)
+        items = response.items
+        total = response.total
 
-    # Inspect pagination metadata returned by API
-    print(paginated_items.total)
+        print(f'Fetched {len(items)} items')
 
-    for item in paginated_items.items:
-        print(item)  # Process the item as needed
+        # Add the fetched items to the complete list
+        all_items.extend(items)
+
+        # Exit the loop if there are no more items to fetch
+        if offset + limit >= total:
+            break
+
+        # Increment the offset for the next page
+        offset += limit
+
+    print(f'Overall fetched {len(all_items)} items')

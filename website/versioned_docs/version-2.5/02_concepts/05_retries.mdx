@@ -1,7 +1,6 @@
 ---
 id: retries
 title: Retries
-description: Configure automatic retries with exponential backoff for failed requests.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -13,13 +12,13 @@ import ApiLink from '@theme/ApiLink';
 import RetriesAsyncExample from '!!raw-loader!./code/05_retries_async.py';
 import RetriesSyncExample from '!!raw-loader!./code/05_retries_sync.py';
 
-The Apify client automatically retries requests that fail due to:
+When dealing with network communication, failures can occasionally occur. The Apify client automatically retries requests that fail due to:
 
 - Network errors
 - Internal errors in the Apify API (HTTP status codes 500 and above)
 - Rate limit errors (HTTP status code 429)
 
-By default, the client retries a failed request up to 4 times. The retry intervals use an exponential backoff strategy:
+By default, the client will retry a failed request up to 8 times. The retry intervals use an exponential backoff strategy:
 
 - The first retry occurs after approximately 500 milliseconds.
 - The second retry occurs after approximately 1,000 milliseconds, and so on.
@@ -27,9 +26,9 @@ By default, the client retries a failed request up to 4 times. The retry interva
 You can customize this behavior using the following options in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor:
 
 - `max_retries`: Defines the maximum number of retry attempts.
-- `min_delay_between_retries`: Sets the minimum delay between retries as a `timedelta`.
+- `min_delay_between_retries_millis`: Sets the minimum delay between retries (in milliseconds).
 
-Retries with exponential backoff help reduce the load on the server and increase the chances of a successful request.
+Retries with exponential backoff are a common strategy for handling network errors. They help to reduce the load on the server and increase the chances of a successful request.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

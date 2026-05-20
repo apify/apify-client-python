@@ -83,7 +83,4 @@ jobs:
       pages: write
       id-token: write
     uses: ./.github/workflows/manual_release_docs.yaml
-    with:
-      # Build docs from the post-bump commit so the rendered version matches the release.
-      ref: ${{ needs.changelog_update.outputs.changelog_commitish }}
     secrets: inherit

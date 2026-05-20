@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       version_number:
-        description: Version to snapshot (e.g. "3.0.0"). If empty, the current version in pyproject.toml is used.
+        description: Version to snapshot (e.g. "1.0.0"). If empty, the current version in pyproject.toml is used.
         required: false
         type: string
         default: ""
@@ -14,7 +14,7 @@ on:
   workflow_call:
     inputs:
       version_number:
-        description: Version to snapshot. When empty, the current version in pyproject.toml is used.
+        description: Version to snapshot (e.g. "1.0.0"). If empty, the current version in pyproject.toml is used.
         required: false
         type: string
         default: ""

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.1](https://github.com/apify/apify-client-python/releases/tag/v2.5.1) (2026-05-20)
+
+### 🐛 Bug Fixes
+
+- Use DeprecationWarning for deprecated methods and arguments (#802) ([0d91e12](https://github.com/apify/apify-client-python/commit/0d91e129014369534a9a37078f90c8f81f8236a6))
+
+
 ## [2.5.0](https://github.com/apify/apify-client-python/releases/tag/v2.5.0) (2026-02-18)
 
 ### 🚀 Features

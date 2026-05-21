@@ -1,4 +1,4 @@
-# This workflow regenerates Pydantic models and TypedDicts (src/apify_client/_{models,typeddicts}_generated.py) from the OpenAPI spec.
+# This workflow regenerates Pydantic models, TypedDicts, and Literal aliases (src/apify_client/_{models,typeddicts,literals}.py) from the OpenAPI spec.
 #
 # It can be triggered in two ways:
 #   1. Automatically via workflow_dispatch from the apify-docs CI pipeline.
@@ -109,7 +109,7 @@ jobs:
         uses: apify/actions/signed-commit@v1.0.0
         with:
           message: ${{ env.TITLE }}
-          add: 'src/apify_client/_*_generated.py'
+          add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
           create-branch: 'true'

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
 from apify_client._models import Actor, Build, ListOfBuilds
+from apify_client._resource_clients import BuildClient, BuildClientAsync
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -186,6 +187,27 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
     finally:
         # Cleanup - delete actor
         await maybe_await(actor_client.delete())
+
+
+async def test_default_build_with_semver_version(client: ApifyClient | ApifyClientAsync) -> None:
+    """Regression test for apify/apify-client-python#811.
+
+    `apify/facebook-pages-scraper` declares its actor version as `0.0.1`, a three-segment
+    SemVer string. The earlier OpenAPI pattern `^[0-9]+\\.[0-9]+$` rejected anything beyond
+    two segments, so simply fetching the default build raised a Pydantic validation error.
+    """
+    actor = client.actor('apify/facebook-pages-scraper')
+    build_client = await maybe_await(actor.default_build())
+    assert isinstance(build_client, BuildClient | BuildClientAsync)
+    build = await maybe_await(build_client.get())
+    assert isinstance(build, Build)
+    assert build.actor_definition is not None
+    assert build.actor_definition.version is not None
+    # The fix must accept any multi-segment dot-separated numeric version
+    # (e.g. "0.1", "1.0", "0.0.1").
+    segments = build.actor_definition.version.split('.')
+    assert len(segments) >= 2
+    assert all(seg.isdigit() for seg in segments)
 
 
 async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAsync) -> None:

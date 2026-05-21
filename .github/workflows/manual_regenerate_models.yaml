@@ -63,20 +63,15 @@ jobs:
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
-      # If the branch already exists on the remote (e.g. from a previous run, possibly with reviewer
-      # commits), check it out so regeneration builds on top of it. Otherwise stay on the default
-      # branch and let the signed-commit step below create the remote branch — its create-branch
-      # flow does `git fetch ... $BRANCH:refs/heads/$BRANCH` which fails if $BRANCH is already
-      # checked out locally.
-      - name: Set up branch
-        id: branch-setup
+      # If the branch already exists on the remote (e.g. from a previous run, possibly with reviewer commits),
+      # check it out to build on top of it instead of starting fresh.
+      - name: Switch to existing branch or create a new one
         run: |
           if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$BRANCH":"$BRANCH"
+            git fetch origin "$BRANCH"
             git switch "$BRANCH"
-            echo "create_branch=false" >> "$GITHUB_OUTPUT"
           else
-            echo "create_branch=true" >> "$GITHUB_OUTPUT"
+            git switch -c "$BRANCH"
           fi
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
@@ -117,7 +112,7 @@ jobs:
           add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
-          create-branch: ${{ steps.branch-setup.outputs.create_branch }}
+          create-branch: 'true'
 
       - name: Create or update PR
         if: steps.commit.outputs.committed == 'true'

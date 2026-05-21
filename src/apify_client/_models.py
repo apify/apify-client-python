@@ -78,13 +78,42 @@ class Actor(BaseModel):
 
 @docs_group('Models')
 class ActorChargeEvent(BaseModel):
+    """Definition of a single chargeable event for a pay-per-event Actor.
+    Each event is either flat-priced (`eventPriceUsd` is set) or
+    tier-priced (`eventTieredPricingUsd` is set); the two are mutually
+    exclusive.
+
+    """
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
-    event_price_usd: Annotated[float, Field(alias='eventPriceUsd')]
     event_title: Annotated[str, Field(alias='eventTitle')]
+    """
+    Human-readable title shown to users in the billing UI.
+    """
     event_description: Annotated[str, Field(alias='eventDescription')]
+    """
+    Human-readable description of what triggers this event.
+    """
+    event_price_usd: Annotated[float | None, Field(alias='eventPriceUsd')] = None
+    """
+    Flat price per event in USD. Present only for non-tiered events;
+    mutually exclusive with `eventTieredPricingUsd`.
+
+    """
+    event_tiered_pricing_usd: Annotated[
+        dict[str, TieredPricingPerEventEntry] | None, Field(alias='eventTieredPricingUsd')
+    ] = None
+    is_primary_event: Annotated[bool | None, Field(alias='isPrimaryEvent')] = None
+    """
+    Whether this event is the Actor's primary chargeable event.
+    """
+    is_one_time_event: Annotated[bool | None, Field(alias='isOneTimeEvent')] = None
+    """
+    Whether this event can only be charged once per Actor run.
+    """
 
 
 @docs_group('Models')
@@ -103,9 +132,9 @@ class ActorDefinition(BaseModel):
     """
     The name of the Actor.
     """
-    version: Annotated[str | None, Field(pattern='^[0-9]+\\.[0-9]+$')] = None
+    version: Annotated[str | None, Field(pattern='^[0-9]+(\\.[0-9]+)+$')] = None
     """
-    The version of the Actor, specified in the format [Number].[Number], e.g., 0.1, 1.0.
+    The version of the Actor, typically a dot-separated sequence of numbers (e.g., `0.1`, `1.0`, or `0.0.1`).
     """
     build_tag: Annotated[str | None, Field(alias='buildTag')] = None
     """
@@ -530,6 +559,12 @@ class CommonActorPricingInfo(BaseModel):
     notified_about_future_change_at: Annotated[AwareDatetime | None, Field(alias='notifiedAboutFutureChangeAt')] = None
     notified_about_change_at: Annotated[AwareDatetime | None, Field(alias='notifiedAboutChangeAt')] = None
     reason_for_change: Annotated[str | None, Field(alias='reasonForChange')] = None
+    is_price_change_notification_suppressed: Annotated[
+        bool | None, Field(alias='isPriceChangeNotificationSuppressed')
+    ] = None
+    force_contains_significant_price_change: Annotated[
+        bool | None, Field(alias='forceContainsSignificantPriceChange')
+    ] = None
 
 
 @docs_group('Models')
@@ -1793,7 +1828,13 @@ class PricePerDatasetItemActorPricingInfo(CommonActorPricingInfo):
     """
     Name of the unit that is being charged
     """
-    price_per_unit_usd: Annotated[float, Field(alias='pricePerUnitUsd')]
+    price_per_unit_usd: Annotated[float | None, Field(alias='pricePerUnitUsd')] = None
+    """
+    Price per unit in USD. Mutually exclusive with `tieredPricing` —
+    exactly one of the two is present on a pricing record.
+
+    """
+    tiered_pricing: Annotated[dict[str, TieredPricingPerDatasetItemEntry] | None, Field(alias='tieredPricing')] = None
 
 
 @docs_group('Models')
@@ -3034,23 +3075,30 @@ class TestWebhookResponse(BaseModel):
 
 
 @docs_group('Models')
-class UnknownBuildTagError(BaseModel):
+class TieredPricingPerDatasetItemEntry(BaseModel):
+    """A single tier's price-per-dataset-item entry."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
-    error: UnknownBuildTagErrorDetail | None = None
+    tiered_price_per_unit_usd: Annotated[float, Field(alias='tieredPricePerUnitUsd')]
+    """
+    Price per unit in USD for this tier.
+    """
 
 
 @docs_group('Models')
-class UnknownBuildTagErrorDetail(ErrorDetail):
+class TieredPricingPerEventEntry(BaseModel):
+    """A single tier's price-per-event entry."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
-    type: Annotated[Literal['unknown-build-tag'], Field(title='ErrorType')] = 'unknown-build-tag'
+    tiered_event_price_usd: Annotated[float, Field(alias='tieredEventPriceUsd')]
     """
-    Machine-processable error type identifier.
+    Price per event in USD for this tier.
     """
 
 

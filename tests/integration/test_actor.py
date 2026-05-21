@@ -6,7 +6,14 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
-from apify_client._models import Actor, Build, ListOfActors, Run
+from apify_client._models import (
+    Actor,
+    Build,
+    ListOfActors,
+    PayPerEventActorPricingInfo,
+    PricePerDatasetItemActorPricingInfo,
+    Run,
+)
 from apify_client._resource_clients import BuildClient, BuildClientAsync
 
 if TYPE_CHECKING:
@@ -172,3 +179,42 @@ async def test_actor_validate_input(client: ApifyClient | ApifyClientAsync) -> N
     # Valid input (hello-world accepts empty input or simple input)
     is_valid = await maybe_await(actor_client.validate_input({}))
     assert is_valid is True
+
+
+async def test_get_actor_with_tiered_pricing(client: ApifyClient | ApifyClientAsync) -> None:
+    """Regression test for apify/apify-client-python#811.
+
+    `apify/facebook-pages-scraper` historically returns `pricingInfos` entries that use tiered
+    pricing — both `PRICE_PER_DATASET_ITEM` with `tieredPricing` (instead of `pricePerUnitUsd`)
+    and `PAY_PER_EVENT` with `eventTieredPricingUsd` (instead of `eventPriceUsd`). Earlier
+    versions of the Pydantic models required the flat-price fields and rejected the response.
+    """
+    actor = await maybe_await(client.actor('apify/facebook-pages-scraper').get())
+    assert isinstance(actor, Actor)
+    assert actor.pricing_infos is not None
+
+    tiered_ppr = [
+        pi
+        for pi in actor.pricing_infos
+        if isinstance(pi, PricePerDatasetItemActorPricingInfo) and pi.tiered_pricing is not None
+    ]
+    assert tiered_ppr, 'expected at least one PRICE_PER_DATASET_ITEM entry with tiered_pricing'
+    tiered_pricing = tiered_ppr[0].tiered_pricing
+    assert tiered_pricing is not None
+    tiered_entry = next(iter(tiered_pricing.values()))
+    assert tiered_entry.tiered_price_per_unit_usd >= 0
+
+    tiered_ppe_events = [
+        event
+        for pi in actor.pricing_infos
+        if isinstance(pi, PayPerEventActorPricingInfo)
+        and pi.pricing_per_event is not None
+        and pi.pricing_per_event.actor_charge_events is not None
+        for event in pi.pricing_per_event.actor_charge_events.values()
+        if event.event_tiered_pricing_usd is not None
+    ]
+    assert tiered_ppe_events, 'expected at least one PAY_PER_EVENT charge event with event_tiered_pricing_usd'
+    event_tiered_pricing = tiered_ppe_events[0].event_tiered_pricing_usd
+    assert event_tiered_pricing is not None
+    tiered_event_entry = next(iter(event_tiered_pricing.values()))
+    assert tiered_event_entry.tiered_event_price_usd >= 0

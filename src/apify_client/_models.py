@@ -3034,27 +3034,6 @@ class TestWebhookResponse(BaseModel):
 
 
 @docs_group('Models')
-class UnknownBuildTagError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: UnknownBuildTagErrorDetail | None = None
-
-
-@docs_group('Models')
-class UnknownBuildTagErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['unknown-build-tag'], Field(title='ErrorType')] = 'unknown-build-tag'
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
 class UnlockRequestsResponse(BaseModel):
     """Response containing the result of unlocking requests."""
 

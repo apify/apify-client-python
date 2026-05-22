@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Add new API error codes and drop obsolete UnknownBuildTagError model ([#813](https://github.com/apify/apify-client-python/pull/813)) ([d1e2020](https://github.com/apify/apify-client-python/commit/d1e202087a37e6ab5048b0b8724cc73a3769ea8e)) by [@apify-service-account](https://github.com/apify-service-account)
+- Add support for tiered pricing in Actor charge events ([#818](https://github.com/apify/apify-client-python/pull/818)) ([c3ea8c1](https://github.com/apify/apify-client-python/commit/c3ea8c10ae1d606fd3954177b690703f220ae857)) by [@apify-service-account](https://github.com/apify-service-account), closes [#811](https://github.com/apify/apify-client-python/issues/811)
 
 
 <!-- git-cliff-unreleased-end -->

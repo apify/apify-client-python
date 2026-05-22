@@ -451,6 +451,7 @@ RunOrigin = Literal[
     'WEBHOOK',
     'ACTOR',
     'CLI',
+    'CI',
     'STANDBY',
 ]
 

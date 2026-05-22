@@ -166,11 +166,11 @@ class ActorDefinition(BaseModel):
     """
     Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](/platform/actors/development/actor-definition/dynamic-actor-memory).
     """
-    min_memory_mbytes: Annotated[int | None, Field(alias='minMemoryMbytes', ge=256)] = None
+    min_memory_mbytes: Annotated[int | None, Field(alias='minMemoryMbytes', ge=128)] = None
     """
     Specifies the minimum amount of memory in megabytes required by the Actor.
     """
-    max_memory_mbytes: Annotated[int | None, Field(alias='maxMemoryMbytes', ge=256)] = None
+    max_memory_mbytes: Annotated[int | None, Field(alias='maxMemoryMbytes', ge=128)] = None
     """
     Specifies the maximum amount of memory in megabytes required by the Actor.
     """

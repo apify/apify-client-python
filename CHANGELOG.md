@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.1 - **not yet released**
+## [3.0.1](https://github.com/apify/apify-client-python/releases/tag/v3.0.1) (2026-05-22)
 
 ### 🐛 Bug Fixes
 
@@ -12,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Allow 128MB memory limits and add CI to RunOrigin in models ([#819](https://github.com/apify/apify-client-python/pull/819)) ([01eb993](https://github.com/apify/apify-client-python/commit/01eb9934467e17e669c51d1c1e6f7e0bce1a608e)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.0](https://github.com/apify/apify-client-python/releases/tag/v3.0.0) (2026-05-20)
 
 - Check out the [Upgrading guide](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v3) to ensure a smooth update.

@@ -461,6 +461,7 @@ class BuildShort(BaseModel):
         None
     )
     usage_total_usd: Annotated[float, Field(alias='usageTotalUsd', examples=[0.02])]
+    build_number: Annotated[str, Field(alias='buildNumber', examples=['0.1.1'])]
     meta: BuildsMeta | None = None
 
 

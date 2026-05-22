@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
-from apify_client._models import ListOfSchedules, Schedule
+from apify_client._models import Actor, ListOfSchedules, Schedule, ScheduleActionRunActor, ScheduleShort
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -173,3 +174,88 @@ async def test_schedule_get_log(client: ApifyClient | ApifyClientAsync) -> None:
 
     finally:
         await maybe_await(schedule_client.delete())
+
+
+async def test_schedule_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over user schedules."""
+    created_ids: list[str] = []
+
+    for _ in range(3):
+        schedule = await maybe_await(
+            client.schedules().create(
+                cron_expression='0 0 * * *',
+                is_enabled=False,
+                is_exclusive=False,
+                name=get_random_resource_name('schedule'),
+            )
+        )
+        assert isinstance(schedule, Schedule)
+        created_ids.append(schedule.id)
+
+    try:
+        iterator = client.schedules().iterate(limit=10)
+        collected: list[ScheduleShort] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for s in iterator:
+                assert isinstance(s, ScheduleShort)
+                collected.append(s)
+        else:
+            assert isinstance(iterator, Iterator)
+            for s in iterator:
+                assert isinstance(s, ScheduleShort)
+                collected.append(s)
+
+        collected_ids = {s.id for s in collected}
+        for sched_id in created_ids:
+            assert sched_id in collected_ids
+    finally:
+        for sched_id in created_ids:
+            await maybe_await(client.schedule(sched_id).delete())
+
+
+async def test_schedule_with_actor_action(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test creating a schedule that runs an Actor on a cron expression."""
+    actor = await maybe_await(client.actor('apify/hello-world').get())
+    assert isinstance(actor, Actor)
+
+    schedule_name = get_random_resource_name('schedule')
+    created_schedule = await maybe_await(
+        client.schedules().create(
+            cron_expression='0 0 * * *',
+            is_enabled=False,
+            is_exclusive=False,
+            name=schedule_name,
+            actions=[
+                {
+                    'type': 'RUN_ACTOR',
+                    'actorId': actor.id,
+                }
+            ],
+        )
+    )
+    assert isinstance(created_schedule, Schedule)
+    schedule_client = client.schedule(created_schedule.id)
+
+    try:
+        # The created schedule should expose its action with the Actor ID.
+        assert created_schedule.actions is not None
+        assert len(created_schedule.actions) == 1
+        action = created_schedule.actions[0]
+        assert isinstance(action, ScheduleActionRunActor)
+        assert action.type == 'RUN_ACTOR'
+        assert action.actor_id == actor.id
+
+        # Round-trip: re-fetching from the API should preserve the action
+        retrieved = await maybe_await(schedule_client.get())
+        assert isinstance(retrieved, Schedule)
+        assert retrieved.actions is not None
+        assert len(retrieved.actions) == 1
+    finally:
+        await maybe_await(schedule_client.delete())
+
+
+async def test_schedule_get_nonexistent_returns_none(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that get() on a non-existent schedule returns None."""
+    schedule = await maybe_await(client.schedule('NoNeXiStEnT').get())
+    assert schedule is None

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,6 +17,7 @@ from apify_client._models import (
     Run,
     Webhook,
     WebhookDispatch,
+    WebhookShort,
 )
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -193,3 +195,91 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
     # Verify it's gone
     retrieved_webhook = await maybe_await(webhook_client.get())
     assert retrieved_webhook is None
+
+
+async def test_webhook_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over user webhooks."""
+    run_id = await _get_finished_run_id(client)
+
+    created_ids: list[str] = []
+    # Use distinct request URLs so the API does not dedupe webhooks by (event_types, run_id, url)
+    for i in range(3):
+        webhook = await maybe_await(
+            client.webhooks().create(
+                event_types=['ACTOR.RUN.SUCCEEDED'],
+                request_url=f'https://httpbin.org/post?n={i}',
+                actor_run_id=run_id,
+                is_ad_hoc=True,
+            )
+        )
+        assert isinstance(webhook, Webhook)
+        created_ids.append(webhook.id)
+
+    # The API must return 3 distinct webhooks - otherwise dedup happened
+    assert len(set(created_ids)) == 3
+
+    try:
+        iterator = client.webhooks().iterate(limit=10, desc=True)
+        collected: list[WebhookShort] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for w in iterator:
+                assert isinstance(w, WebhookShort)
+                collected.append(w)
+        else:
+            assert isinstance(iterator, Iterator)
+            for w in iterator:
+                assert isinstance(w, WebhookShort)
+                collected.append(w)
+
+        collected_ids = {w.id for w in collected}
+        for webhook_id in created_ids:
+            assert webhook_id in collected_ids
+    finally:
+        for webhook_id in created_ids:
+            await maybe_await(client.webhook(webhook_id).delete())
+
+
+async def test_webhook_get_nonexistent_returns_none(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that get() on a non-existent webhook returns None."""
+    webhook = await maybe_await(client.webhook('NoNeXiStEnTwH').get())
+    assert webhook is None
+
+
+async def test_webhook_dispatches_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over a webhook's dispatches."""
+    run_id = await _get_finished_run_id(client)
+
+    created_webhook = await maybe_await(
+        client.webhooks().create(
+            event_types=['ACTOR.RUN.SUCCEEDED'],
+            request_url='https://httpbin.org/post',
+            actor_run_id=run_id,
+            is_ad_hoc=True,
+        )
+    )
+    assert isinstance(created_webhook, Webhook)
+    webhook_client = client.webhook(created_webhook.id)
+
+    try:
+        # Generate at least one dispatch by hitting the test endpoint
+        await maybe_await(webhook_client.test())
+
+        iterator = webhook_client.dispatches().iterate(limit=10)
+        collected: list[WebhookDispatch] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for d in iterator:
+                assert isinstance(d, WebhookDispatch)
+                collected.append(d)
+        else:
+            assert isinstance(iterator, Iterator)
+            for d in iterator:
+                assert isinstance(d, WebhookDispatch)
+                collected.append(d)
+
+        assert len(collected) >= 1
+        for dispatch in collected:
+            assert dispatch.id is not None
+    finally:
+        await maybe_await(webhook_client.delete())

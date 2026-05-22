@@ -3,21 +3,19 @@
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import impit
 import pytest
 
 from ._utils import KvsFixture, get_random_resource_name, maybe_await, maybe_sleep
-from apify_client._models import KeyValueStore, ListOfKeys, ListOfKeyValueStores
+from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
-
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import KeyValueStoreKey
 
 
 async def test_key_value_store_collection_list(client: ApifyClient | ApifyClientAsync) -> None:
@@ -446,10 +444,18 @@ async def test_key_value_store_iterate_keys(client: ApifyClient | ApifyClientAsy
         await maybe_sleep(1, is_async=is_async)
 
         # Iterate over keys
+        iterator = store_client.iterate_keys()
+        collected_keys: list[KeyValueStoreKey] = []
         if is_async:
-            collected_keys = [key async for key in cast('AsyncIterator[KeyValueStoreKey]', store_client.iterate_keys())]
+            assert isinstance(iterator, AsyncIterator)
+            async for key in iterator:
+                assert isinstance(key, KeyValueStoreKey)
+                collected_keys.append(key)
         else:
-            collected_keys = list(cast('Iterator[KeyValueStoreKey]', store_client.iterate_keys()))
+            assert isinstance(iterator, Iterator)
+            for key in iterator:
+                assert isinstance(key, KeyValueStoreKey)
+                collected_keys.append(key)
 
         assert len(collected_keys) == 5
 
@@ -480,12 +486,18 @@ async def test_key_value_store_iterate_keys_with_limit(
         await maybe_sleep(1, is_async=is_async)
 
         # Iterate with limit
+        iterator = store_client.iterate_keys(limit=5)
+        collected_keys: list[KeyValueStoreKey] = []
         if is_async:
-            collected_keys = [
-                key async for key in cast('AsyncIterator[KeyValueStoreKey]', store_client.iterate_keys(limit=5))
-            ]
+            assert isinstance(iterator, AsyncIterator)
+            async for key in iterator:
+                assert isinstance(key, KeyValueStoreKey)
+                collected_keys.append(key)
         else:
-            collected_keys = list(cast('Iterator[KeyValueStoreKey]', store_client.iterate_keys(limit=5)))
+            assert isinstance(iterator, Iterator)
+            for key in iterator:
+                assert isinstance(key, KeyValueStoreKey)
+                collected_keys.append(key)
 
         assert len(collected_keys) == 5
     finally:
@@ -513,16 +525,189 @@ async def test_key_value_store_iterate_keys_with_prefix(
         await maybe_sleep(1, is_async=is_async)
 
         # Iterate with prefix filter
+        iterator = store_client.iterate_keys(prefix='prefix-a-')
+        collected_keys: list[KeyValueStoreKey] = []
         if is_async:
-            collected_keys = [
-                key
-                async for key in cast('AsyncIterator[KeyValueStoreKey]', store_client.iterate_keys(prefix='prefix-a-'))
-            ]
+            assert isinstance(iterator, AsyncIterator)
+            async for key in iterator:
+                assert isinstance(key, KeyValueStoreKey)
+                collected_keys.append(key)
         else:
-            collected_keys = list(cast('Iterator[KeyValueStoreKey]', store_client.iterate_keys(prefix='prefix-a-')))
+            assert isinstance(iterator, Iterator)
+            for key in iterator:
+                assert isinstance(key, KeyValueStoreKey)
+                collected_keys.append(key)
 
         assert len(collected_keys) == 3
         for key in collected_keys:
             assert key.key.startswith('prefix-a-')
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over the user's key-value stores."""
+    created_ids: list[str] = []
+
+    for _ in range(3):
+        kvs = await maybe_await(client.key_value_stores().get_or_create(name=get_random_resource_name('kvs')))
+        assert isinstance(kvs, KeyValueStore)
+        created_ids.append(kvs.id)
+
+    try:
+        iterator = client.key_value_stores().iterate(limit=10, desc=True)
+        collected: list[KeyValueStore] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for kvs in iterator:
+                assert isinstance(kvs, KeyValueStore)
+                collected.append(kvs)
+        else:
+            assert isinstance(iterator, Iterator)
+            for kvs in iterator:
+                assert isinstance(kvs, KeyValueStore)
+                collected.append(kvs)
+
+        collected_ids = {kvs.id for kvs in collected}
+        for created_id in created_ids:
+            assert created_id in collected_ids
+    finally:
+        for kvs_id in created_ids:
+            await maybe_await(client.key_value_store(kvs_id).delete())
+
+
+async def test_key_value_store_set_and_get_binary_record(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test setting and retrieving a binary (bytes) record."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        # Store an explicit bytes value with a binary content type
+        binary_value = b'\x89PNG\r\n\x1a\n' + b'fake-png-bytes'
+        await maybe_await(store_client.set_record('image.png', binary_value, content_type='image/png'))
+        await maybe_sleep(1, is_async=is_async)
+
+        # get_record_as_bytes returns raw bytes (no auto-decoding)
+        record = await maybe_await(store_client.get_record_as_bytes('image.png'))
+        assert isinstance(record, dict)
+        assert record['key'] == 'image.png'
+        assert record['value'] == binary_value
+        assert 'image/png' in record['content_type']
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_get_record_public_url(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test get_record_public_url returns a working signed URL."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        await maybe_await(store_client.set_record('my-record', {'hello': 'world'}))
+        await maybe_sleep(1, is_async=is_async)
+
+        public_url = await maybe_await(store_client.get_record_public_url('my-record'))
+        assert isinstance(public_url, str)
+        assert created_store.id in public_url
+        assert 'my-record' in public_url
+
+        # Fetching from the public URL should return the record
+        response = impit.get(public_url)
+        assert response.status_code == 200
+        assert json.loads(response.content) == {'hello': 'world'}
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_create_keys_public_url(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test create_keys_public_url returns a working signed URL for listing keys."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        for i in range(3):
+            await maybe_await(store_client.set_record(f'key-{i}', {'idx': i}))
+        await maybe_sleep(1, is_async=is_async)
+
+        public_url = await maybe_await(store_client.create_keys_public_url(limit=10, expires_in=timedelta(minutes=5)))
+        assert isinstance(public_url, str)
+        assert created_store.id in public_url
+        assert 'signature=' in public_url
+
+        # Fetching the URL should return a key listing
+        response = impit.get(public_url)
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        keys = data.get('data', {}).get('items', [])
+        key_names = [k['key'] for k in keys]
+        for i in range(3):
+            assert f'key-{i}' in key_names
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_stream_record_own(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test streaming a record from one's own key-value store (no signature)."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        await maybe_await(store_client.set_record('stream-key', {'data': 'streamed'}))
+        await maybe_sleep(1, is_async=is_async)
+
+        if is_async:
+            async with store_client.stream_record('stream-key') as stream:  # ty: ignore[invalid-context-manager]
+                assert isinstance(stream, dict)
+                value = json.loads(stream['value'].content.decode('utf-8'))
+        else:
+            with store_client.stream_record('stream-key') as stream:  # ty: ignore[invalid-context-manager]
+                assert isinstance(stream, dict)
+                value = json.loads(stream['value'].content.decode('utf-8'))
+
+        assert value == {'data': 'streamed'}
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_list_keys_with_exclusive_start_key(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test listing keys with the exclusive_start_key cursor parameter."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        # Use zero-padded names so lexicographic order is predictable
+        for i in range(5):
+            await maybe_await(store_client.set_record(f'key-{i:02d}', {'idx': i}))
+        await maybe_sleep(1, is_async=is_async)
+
+        # First page
+        first_page = await maybe_await(store_client.list_keys(limit=2))
+        assert isinstance(first_page, ListOfKeys)
+        assert len(first_page.items) == 2
+
+        # Continue from the last key of the first page
+        last_key_of_first = first_page.items[-1].key
+        second_page = await maybe_await(store_client.list_keys(exclusive_start_key=last_key_of_first))
+        assert isinstance(second_page, ListOfKeys)
+
+        first_keys = {k.key for k in first_page.items}
+        second_keys = {k.key for k in second_page.items}
+        assert first_keys.isdisjoint(second_keys)
     finally:
         await maybe_await(store_client.delete())

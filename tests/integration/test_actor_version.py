@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
@@ -203,5 +204,71 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert isinstance(remaining_version, Version)
         assert remaining_version.version_number == '0.2'
 
+    finally:
+        await maybe_await(actor_client.delete())
+
+
+async def test_actor_version_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over an Actor's versions (single-page endpoint)."""
+    actor_name = get_random_resource_name('actor')
+
+    actor = await maybe_await(
+        client.actors().create(
+            name=actor_name,
+            versions=[
+                {
+                    'versionNumber': f'0.{i}',
+                    'sourceType': 'SOURCE_FILES',
+                    'buildTag': 'latest' if i == 0 else f'v{i}',
+                    'sourceFiles': [
+                        {
+                            'name': 'main.js',
+                            'format': 'TEXT',
+                            'content': f'console.log({i})',
+                        }
+                    ],
+                }
+                for i in range(3)
+            ],
+        )
+    )
+    assert isinstance(actor, Actor)
+    actor_client = client.actor(actor.id)
+
+    try:
+        iterator = actor_client.versions().iterate()
+        collected: list[Version] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for v in iterator:
+                assert isinstance(v, Version)
+                collected.append(v)
+        else:
+            assert isinstance(iterator, Iterator)
+            for v in iterator:
+                assert isinstance(v, Version)
+                collected.append(v)
+
+        # All three versions should be present
+        assert len(collected) == 3
+        version_numbers = {v.version_number for v in collected}
+        assert version_numbers == {'0.0', '0.1', '0.2'}
+    finally:
+        await maybe_await(actor_client.delete())
+
+
+async def test_actor_version_get_nonexistent_returns_none(
+    client: ApifyClient | ApifyClientAsync,
+) -> None:
+    """Test that get() on a non-existent version returns None."""
+    actor_name = get_random_resource_name('actor')
+
+    actor = await maybe_await(client.actors().create(name=actor_name))
+    assert isinstance(actor, Actor)
+    actor_client = client.actor(actor.id)
+
+    try:
+        version = await maybe_await(actor_client.version('99.99').get())
+        assert version is None
     finally:
         await maybe_await(actor_client.delete())

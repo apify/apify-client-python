@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 from ._utils import maybe_await
@@ -36,3 +37,42 @@ async def test_webhook_dispatch_get(client: ApifyClient | ApifyClientAsync) -> N
         # If no dispatches, test that get returns None for non-existent ID
         dispatch = await maybe_await(client.webhook_dispatch('non-existent-id').get())
         assert dispatch is None
+
+
+async def test_webhook_dispatch_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over the user's webhook dispatches."""
+    iterator = client.webhook_dispatches().iterate(limit=5)
+    collected: list[WebhookDispatch] = []
+    if is_async:
+        assert isinstance(iterator, AsyncIterator)
+        async for d in iterator:
+            assert isinstance(d, WebhookDispatch)
+            collected.append(d)
+    else:
+        assert isinstance(iterator, Iterator)
+        for d in iterator:
+            assert isinstance(d, WebhookDispatch)
+            collected.append(d)
+
+    assert len(collected) <= 5
+    for dispatch in collected:
+        assert dispatch.id is not None
+
+
+async def test_webhook_dispatch_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test webhook_dispatches().list() with pagination parameters."""
+    page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=0, desc=True))
+    assert isinstance(page, ListOfWebhookDispatches)
+    assert isinstance(page.items, list)
+    # `limit=5` must cap the page size.
+    assert len(page.items) <= 5
+    # `desc=True` must return dispatches in non-increasing `created_at` order.
+    created_ats = [d.created_at for d in page.items if d.created_at is not None]
+    assert created_ats == sorted(created_ats, reverse=True)
+    # `offset` must move the window — second page must not start with the same id as the first
+    # (only meaningful when the first page is full, i.e. at least 5 items exist).
+    if len(page.items) == 5:
+        next_page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=5, desc=True))
+        assert isinstance(next_page, ListOfWebhookDispatches)
+        if next_page.items:
+            assert page.items[0].id != next_page.items[0].id

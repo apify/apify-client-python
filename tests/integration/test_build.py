@@ -2,17 +2,46 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
-from apify_client._models import Actor, Build, ListOfBuilds
+from apify_client._models import Actor, Build, BuildShort, ListOfBuilds
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
 # Use a public actor that has builds available
 HELLO_WORLD_ACTOR = 'apify/hello-world'
+
+# Apify-owned actor whose `latest` build sets `minMemoryMbytes: 128` (well below the spec's
+# previously-required minimum of 256). Also publishes `actorDefinition.version: "0.0.1"`,
+# exercising the semver-triplet version pattern.
+SMALL_MIN_MEMORY_ACTOR = 'apify/instagram-profile-scraper'
+
+# Apify-owned actor whose builds list includes entries with `meta.origin: "CI"`
+# from the internal CI pipeline. A deep `desc=True` pagination is needed because
+# CI builds are infrequent and rotate out of the most-recent window.
+CI_ORIGIN_ACTOR = 'apify/cheerio-scraper'
+
+
+def _pick_build_id(actor: Actor) -> str:
+    """Return a stable `build_id` from `actor.tagged_builds`, preferring the `latest` tag.
+
+    Avoids relying on API-side dict ordering (`next(iter(...))` would otherwise pick
+    whichever tag the API decides to serialize first).
+    """
+    assert actor.tagged_builds, f'{actor.username}/{actor.name} has no tagged builds'
+    latest = actor.tagged_builds.get('latest')
+    if latest is not None and latest.build_id is not None:
+        return latest.build_id
+    fallback = next(
+        (info.build_id for info in actor.tagged_builds.values() if info and info.build_id),
+        None,
+    )
+    assert fallback is not None, f'{actor.username}/{actor.name} has no tagged build with a build_id'
+    return fallback
 
 
 async def test_build_list_for_actor(client: ApifyClient | ApifyClientAsync) -> None:
@@ -188,6 +217,61 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
         await maybe_await(actor_client.delete())
 
 
+async def test_build_get_accepts_small_min_memory_mbytes(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that build.get() parses actorDefinition.minMemoryMbytes values below 256 MB."""
+    actor = await maybe_await(client.actor(SMALL_MIN_MEMORY_ACTOR).get())
+    assert isinstance(actor, Actor)
+    build_id = _pick_build_id(actor)
+
+    build = await maybe_await(client.build(build_id).get())
+    assert isinstance(build, Build)
+    assert build.actor_definition is not None, 'expected actorDefinition on a SUCCEEDED build'
+
+    # Fixture-drift guard: only meaningful if the chosen build actually carries a value
+    # below the old 256 threshold.
+    actual_min = build.actor_definition.min_memory_mbytes
+    assert actual_min is not None
+    assert actual_min < 256, (
+        f'{SMALL_MIN_MEMORY_ACTOR} latest build has min_memory_mbytes={actual_min!r} '
+        '(expected <256). Pick a different fixture to keep this test meaningful.'
+    )
+
+
+async def test_actor_builds_list_accepts_ci_origin(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that actor.builds().list() parses builds with meta.origin == 'CI'."""
+    builds = await maybe_await(client.actor(CI_ORIGIN_ACTOR).builds().list(limit=100, desc=True))
+    assert isinstance(builds, ListOfBuilds)
+    assert builds.items, f'{CI_ORIGIN_ACTOR} should have builds'
+
+    # Fixture-drift guard: only meaningful if the page actually contains a CI-origin build.
+    # Pydantic already validated every `meta.origin` against `RunOrigin` at deserialization,
+    # so the check is exercised iff at least one such entry exists.
+    ci_origin_builds = [b for b in builds.items if b.meta is not None and b.meta.origin == 'CI']
+    assert ci_origin_builds, (
+        f'{CI_ORIGIN_ACTOR}: no builds with meta.origin == "CI" in the most-recent 100. '
+        'CI builds may have rotated out of the window — pick a different actor or paginate deeper.'
+    )
+
+
+async def test_actor_definition_version_accepts_semver_triplet(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that ActorDefinition.version accepts semver-triplet strings like '0.0.1'."""
+    actor = await maybe_await(client.actor(SMALL_MIN_MEMORY_ACTOR).get())
+    assert isinstance(actor, Actor)
+    build_id = _pick_build_id(actor)
+
+    build = await maybe_await(client.build(build_id).get())
+    assert isinstance(build, Build)
+    assert build.actor_definition is not None
+    # Fixture-drift guard: only meaningful if the chosen build's version actually carries
+    # more than one dot.
+    version = build.actor_definition.version
+    assert version is not None
+    assert version.count('.') >= 2, (
+        f'{SMALL_MIN_MEMORY_ACTOR} no longer publishes a multi-dot version (got {version!r}) — '
+        'pick a different fixture to keep this test meaningful.'
+    )
+
+
 async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting OpenAPI definition for a build."""
     # Get builds for hello-world actor
@@ -204,3 +288,50 @@ async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAs
     # OpenAPI definition should be a dict with standard OpenAPI fields
     # Note: May be None if the actor doesn't have an OpenAPI definition
     assert isinstance(openapi_def, dict)
+
+
+async def test_builds_iterate_for_actor(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over an Actor's builds."""
+    iterator = client.actor(HELLO_WORLD_ACTOR).builds().iterate(limit=5)
+    collected: list[BuildShort] = []
+    if is_async:
+        assert isinstance(iterator, AsyncIterator)
+        async for b in iterator:
+            assert isinstance(b, BuildShort)
+            collected.append(b)
+    else:
+        assert isinstance(iterator, Iterator)
+        for b in iterator:
+            assert isinstance(b, BuildShort)
+            collected.append(b)
+
+    assert 1 <= len(collected) <= 5
+    for build in collected:
+        assert build.id is not None
+        assert build.act_id is not None
+
+
+async def test_user_builds_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over the user's builds."""
+    iterator = client.builds().iterate(limit=5)
+    collected: list[BuildShort] = []
+    if is_async:
+        assert isinstance(iterator, AsyncIterator)
+        async for b in iterator:
+            assert isinstance(b, BuildShort)
+            collected.append(b)
+    else:
+        assert isinstance(iterator, Iterator)
+        for b in iterator:
+            assert isinstance(b, BuildShort)
+            collected.append(b)
+
+    assert len(collected) <= 5
+    for build in collected:
+        assert build.id is not None
+
+
+async def test_get_nonexistent_build_returns_none(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that get() on a non-existent build returns None."""
+    build = await maybe_await(client.build('NoNeXiStEnTbUiLd').get())
+    assert build is None

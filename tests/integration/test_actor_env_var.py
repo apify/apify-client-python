@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
@@ -226,5 +227,120 @@ async def test_actor_env_var_delete(client: ApifyClient | ApifyClientAsync) -> N
         assert isinstance(remaining_env_var, EnvVar)
         assert remaining_env_var.name == 'VAR_TO_KEEP'
 
+    finally:
+        await maybe_await(actor_client.delete())
+
+
+async def test_actor_env_var_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over a version's environment variables."""
+    actor_name = get_random_resource_name('actor')
+
+    actor = await maybe_await(
+        client.actors().create(
+            name=actor_name,
+            versions=[
+                {
+                    'versionNumber': '0.0',
+                    'sourceType': 'SOURCE_FILES',
+                    'buildTag': 'latest',
+                    'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
+                    'envVars': [{'name': f'VAR_{i}', 'value': f'value_{i}', 'isSecret': False} for i in range(3)],
+                }
+            ],
+        )
+    )
+    assert isinstance(actor, Actor)
+    actor_client = client.actor(actor.id)
+    version_client = actor_client.version('0.0')
+
+    try:
+        iterator = version_client.env_vars().iterate()
+        collected: list[EnvVar] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for e in iterator:
+                assert isinstance(e, EnvVar)
+                collected.append(e)
+        else:
+            assert isinstance(iterator, Iterator)
+            for e in iterator:
+                assert isinstance(e, EnvVar)
+                collected.append(e)
+
+        assert len(collected) == 3
+        names = {e.name for e in collected}
+        assert names == {'VAR_0', 'VAR_1', 'VAR_2'}
+    finally:
+        await maybe_await(actor_client.delete())
+
+
+async def test_actor_env_var_secret(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that creating a secret env var hides its plaintext value on retrieval."""
+    actor_name = get_random_resource_name('actor')
+
+    actor = await maybe_await(
+        client.actors().create(
+            name=actor_name,
+            versions=[
+                {
+                    'versionNumber': '0.0',
+                    'sourceType': 'SOURCE_FILES',
+                    'buildTag': 'latest',
+                    'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
+                }
+            ],
+        )
+    )
+    assert isinstance(actor, Actor)
+    actor_client = client.actor(actor.id)
+    version_client = actor_client.version('0.0')
+
+    try:
+        created = await maybe_await(
+            version_client.env_vars().create(
+                name='MY_SECRET',
+                value='super-secret-token',
+                is_secret=True,
+            )
+        )
+        assert isinstance(created, EnvVar)
+        assert created.name == 'MY_SECRET'
+        assert created.is_secret is True
+
+        # When retrieved, secret values must not be exposed back to the API client
+        retrieved = await maybe_await(version_client.env_var('MY_SECRET').get())
+        assert isinstance(retrieved, EnvVar)
+        assert retrieved.is_secret is True
+        assert retrieved.value is None
+    finally:
+        await maybe_await(actor_client.delete())
+
+
+async def test_actor_env_var_get_nonexistent_returns_none(
+    client: ApifyClient | ApifyClientAsync,
+) -> None:
+    """Test that get() on a non-existent env var returns None."""
+    actor_name = get_random_resource_name('actor')
+
+    actor = await maybe_await(
+        client.actors().create(
+            name=actor_name,
+            versions=[
+                {
+                    'versionNumber': '0.0',
+                    'sourceType': 'SOURCE_FILES',
+                    'buildTag': 'latest',
+                    'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
+                }
+            ],
+        )
+    )
+    assert isinstance(actor, Actor)
+    actor_client = client.actor(actor.id)
+    version_client = actor_client.version('0.0')
+
+    try:
+        env_var = await maybe_await(version_client.env_var('THIS_DOES_NOT_EXIST').get())
+        assert env_var is None
     finally:
         await maybe_await(actor_client.delete())

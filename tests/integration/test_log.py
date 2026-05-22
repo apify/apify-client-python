@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TYPE_CHECKING
 
 from ._utils import maybe_await
 from apify_client._models import ListOfBuilds, Run
+from apify_client.http_clients import HttpResponse
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -68,3 +70,32 @@ async def test_log_get_as_bytes(client: ApifyClient | ApifyClientAsync) -> None:
 
     # Cleanup
     await maybe_await(run_client.delete())
+
+
+async def test_log_stream_from_run(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test streaming a run's log via the stream() context manager."""
+    actor = client.actor(HELLO_WORLD_ACTOR)
+    run = await maybe_await(actor.call())
+    assert isinstance(run, Run)
+
+    run_client = client.run(run.id)
+    try:
+        log_client = run_client.log()
+
+        stream_ctx = log_client.stream()
+        if is_async:
+            assert isinstance(stream_ctx, AbstractAsyncContextManager)
+            async with stream_ctx as response:
+                assert isinstance(response, HttpResponse)
+                content = await response.aread()
+                assert isinstance(content, bytes)
+                assert len(content) > 0
+        else:
+            assert isinstance(stream_ctx, AbstractContextManager)
+            with stream_ctx as response:
+                assert isinstance(response, HttpResponse)
+                content = response.read()
+                assert isinstance(content, bytes)
+                assert len(content) > 0
+    finally:
+        await maybe_await(run_client.delete())

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.0.1 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Add new API error codes and drop obsolete UnknownBuildTagError model ([#813](https://github.com/apify/apify-client-python/pull/813)) ([d1e2020](https://github.com/apify/apify-client-python/commit/d1e202087a37e6ab5048b0b8724cc73a3769ea8e)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.0.0](https://github.com/apify/apify-client-python/releases/tag/v3.0.0) (2026-05-20)
 
 - Check out the [Upgrading guide](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v3) to ensure a smooth update.

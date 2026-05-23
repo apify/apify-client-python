@@ -40,13 +40,20 @@ class ActVersion(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
+    source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
+    build_tag: Annotated[str | None, Field(alias='buildTag', examples=['experimental'])] = None
+    version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
     git_repo_url: Annotated[
         str | None,
         Field(alias='gitRepoUrl', examples=['https://github.com/apifytech/actor-crawler.git#experimental:web-scraper']),
     ] = None
-    source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
-    build_tag: Annotated[str | None, Field(alias='buildTag', examples=['experimental'])] = None
-    version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
+    """
+    URL of the git repository, present when sourceType is GIT_REPO.
+    """
+    source_files: Annotated[list[SourceCodeFile] | None, Field(alias='sourceFiles')] = None
+    """
+    Inline source files, present when sourceType is SOURCE_FILES.
+    """
 
 
 @docs_group('Models')
@@ -466,7 +473,7 @@ class Build(BaseModel):
     ] = None
     readme: Annotated[str | None, Field(deprecated=True, examples=['# Magic Actor\\nThis Actor is magic.'])] = None
     build_number: Annotated[str, Field(alias='buildNumber', examples=['0.1.1'])]
-    act_version: Annotated[ActVersion | None, Field(alias='actVersion')] = None
+    act_version: Annotated[ActVersion | None, Field(alias='actVersion', title='BuildActVersion')] = None
     """
     Snapshot of the Actor version that this build was created from.
     """
@@ -2928,7 +2935,7 @@ class Schedule(ScheduleBase):
     )
     description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
     title: str | None = None
-    notifications: Notifications | None = None
+    notifications: Annotated[Notifications | None, Field(title='ScheduleNotifications')] = None
     """
     Notification settings for this schedule.
     """
@@ -3112,10 +3119,6 @@ class StoreListActor(BaseModel):
     url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     stats: ActorStats
     current_pricing_info: Annotated[CurrentPricingInfo, Field(alias='currentPricingInfo')]
-    is_white_listed_for_agentic_payment: Annotated[bool | None, Field(alias='isWhiteListedForAgenticPayment')] = None
-    """
-    Whether the Actor is whitelisted for agentic payment processing.
-    """
     is_white_listed_for_agentic_payments: Annotated[bool | None, Field(alias='isWhiteListedForAgenticPayments')] = None
     """
     Whether the Actor is whitelisted for agentic payment processing.
@@ -3625,7 +3628,7 @@ class Webhook1(BaseModel):
         populate_by_name=True,
     )
     action_type: Annotated[str | None, Field(alias='actionType', examples=['HTTP_REQUEST'])] = None
-    condition: dict[str, Any] | None = None
+    condition: WebhookCondition | None = None
     request_url: Annotated[AnyUrl | None, Field(alias='requestUrl', examples=['https://example.com/webhook'])] = None
     is_ad_hoc: Annotated[bool | None, Field(alias='isAdHoc', examples=[False])] = None
 
@@ -3677,7 +3680,7 @@ class WebhookDispatch(BaseModel):
     status: WebhookDispatchStatus
     event_type: Annotated[WebhookEventType, Field(alias='eventType')]
     event_data: Annotated[EventData | None, Field(alias='eventData', title='eventData')] = None
-    webhook: Annotated[Webhook1 | None, Field(title='webhook')] = None
+    webhook: Annotated[Webhook1 | None, Field(title='WebhookDispatchWebhookSummary')] = None
     """
     A summary of the webhook that triggered this dispatch.
     """

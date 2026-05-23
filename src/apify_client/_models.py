@@ -42,7 +42,10 @@ class ActVersion(BaseModel):
     )
     source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
     build_tag: Annotated[str | None, Field(alias='buildTag', examples=['experimental'])] = None
-    version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
+    version_number: Annotated[
+        str | None,
+        Field(alias='versionNumber', examples=['0.0'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ] = None
     git_repo_url: Annotated[
         str | None,
         Field(alias='gitRepoUrl', examples=['https://github.com/apifytech/actor-crawler.git#experimental:web-scraper']),
@@ -472,7 +475,10 @@ class Build(BaseModel):
         str | None, Field(alias='inputSchema', deprecated=True, examples=['{\\n  "title": "Schema for ... }'])
     ] = None
     readme: Annotated[str | None, Field(deprecated=True, examples=['# Magic Actor\\nThis Actor is magic.'])] = None
-    build_number: Annotated[str, Field(alias='buildNumber', examples=['0.1.1'])]
+    build_number: Annotated[
+        str,
+        Field(alias='buildNumber', examples=['0.1.1'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ]
     act_version: Annotated[ActVersion | None, Field(alias='actVersion', title='BuildActVersion')] = None
     """
     Snapshot of the Actor version that this build was created from.
@@ -518,7 +524,10 @@ class BuildShort(BaseModel):
         None
     )
     usage_total_usd: Annotated[float, Field(alias='usageTotalUsd', examples=[0.02])]
-    build_number: Annotated[str, Field(alias='buildNumber', examples=['0.1.1'])]
+    build_number: Annotated[
+        str,
+        Field(alias='buildNumber', examples=['0.1.1'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ]
     build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[10000])] = None
     meta: BuildsMeta | None = None
 
@@ -664,7 +673,10 @@ class CreateOrUpdateVersionRequest(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
+    version_number: Annotated[
+        str | None,
+        Field(alias='versionNumber', examples=['0.0'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ] = None
     source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
     env_vars: Annotated[list[EnvVarRequest] | None, Field(alias='envVars')] = None
     apply_env_vars_to_build: Annotated[bool | None, Field(alias='applyEnvVarsToBuild', examples=[False])] = None
@@ -2640,7 +2652,12 @@ class Run(BaseModel):
     """
     A map of aliased storage IDs associated with this run, grouped by storage type.
     """
-    build_number: Annotated[str | None, Field(alias='buildNumber', examples=['0.0.36'])] = None
+    build_number: Annotated[
+        str | None,
+        Field(
+            alias='buildNumber', examples=['0.0.36'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'
+        ),
+    ] = None
     """
     Build number of the Actor build used for this run.
     """
@@ -2758,7 +2775,10 @@ class RunShort(BaseModel):
         None
     )
     build_id: Annotated[str, Field(alias='buildId', examples=['HG7ML7M8z78YcAPEB'])]
-    build_number: Annotated[str | None, Field(alias='buildNumber', examples=['0.0.2'])] = None
+    build_number: Annotated[
+        str | None,
+        Field(alias='buildNumber', examples=['0.0.2'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ] = None
     build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[10000])] = None
     meta: RunMeta
     usage_total_usd: Annotated[float, Field(alias='usageTotalUsd', examples=[0.2])]
@@ -3152,7 +3172,10 @@ class TaggedBuildInfo(BaseModel):
     """
     The ID of the build associated with this tag.
     """
-    build_number: Annotated[str | None, Field(alias='buildNumber', examples=['0.0.2'])] = None
+    build_number: Annotated[
+        str | None,
+        Field(alias='buildNumber', examples=['0.0.2'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ] = None
     """
     The build number/version string.
     """
@@ -3567,7 +3590,10 @@ class Version(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    version_number: Annotated[str, Field(alias='versionNumber', examples=['0.0'])]
+    version_number: Annotated[
+        str,
+        Field(alias='versionNumber', examples=['0.0'], pattern='^[0-9]+(\\.[0-9]+)+(-[0-9A-Za-z][0-9A-Za-z\\-\\.]*)?$'),
+    ]
     source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')]
     env_vars: Annotated[list[EnvVar] | None, Field(alias='envVars')] = None
     apply_env_vars_to_build: Annotated[bool | None, Field(alias='applyEnvVarsToBuild', examples=[False])] = None

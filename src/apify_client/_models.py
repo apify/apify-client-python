@@ -40,7 +40,10 @@ class ActVersion(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
+    source_type: Annotated[str | None, Field(alias='sourceType', examples=['SOURCE_FILES'])] = None
+    """
+    The source type of the Actor version (e.g. SOURCE_FILES, GIT_REPO, TARBALL, GITHUB_GIST).
+    """
     build_tag: Annotated[str | None, Field(alias='buildTag', examples=['experimental'])] = None
     version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
     git_repo_url: Annotated[
@@ -934,9 +937,16 @@ class DatasetStats(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    read_count: Annotated[int, Field(alias='readCount', examples=[22])]
-    write_count: Annotated[int, Field(alias='writeCount', examples=[3])]
-    storage_bytes: Annotated[int, Field(alias='storageBytes', examples=[783])]
+    read_count: Annotated[int | None, Field(alias='readCount', examples=[22])] = None
+    write_count: Annotated[int | None, Field(alias='writeCount', examples=[3])] = None
+    storage_bytes: Annotated[int | None, Field(alias='storageBytes', examples=[783])] = None
+    """
+    Total storage size in bytes. Only returned by the single-dataset endpoint.
+    """
+    inflated_bytes: Annotated[int | None, Field(alias='inflatedBytes', examples=[0])] = None
+    """
+    Uncompressed size in bytes. Only returned by the dataset list endpoint.
+    """
 
 
 @docs_group('Models')

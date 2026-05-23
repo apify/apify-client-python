@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator, Iterator
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import impit
 import pytest
 
 from ._utils import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
-from apify_client._models import Dataset, DatasetStatistics, ListOfDatasets
+from apify_client._models import Dataset, DatasetListItem, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
-    from contextlib import AbstractAsyncContextManager, AbstractContextManager
-
-    from impit import Response
-
     from apify_client import ApifyClient, ApifyClientAsync
 
 
@@ -142,24 +139,31 @@ async def test_iterate_items_signature(
         match=r"Insufficient permissions for the dataset. Make sure you're passing a "
         r'correct API token and that it has the required permissions.',
     ):
+        iterator = dataset.iterate_items()
         if is_async:
-            async for _ in cast('AsyncIterator[dict]', dataset.iterate_items()):
+            assert isinstance(iterator, AsyncIterator)
+            async for _ in iterator:
                 pass
         else:
-            for _ in cast('Iterator[dict]', dataset.iterate_items()):
+            assert isinstance(iterator, Iterator)
+            for _ in iterator:
                 pass
 
     # Dataset content retrieved with correct signature
     signature = test_dataset_of_another_user.signature
+    iterator = dataset.iterate_items(signature=signature)
+    collected_items: list[dict] = []
     if is_async:
-        collected_items = [
-            item async for item in cast('AsyncIterator[dict]', dataset.iterate_items(signature=signature))
-        ]
-        assert test_dataset_of_another_user.expected_content == collected_items
+        assert isinstance(iterator, AsyncIterator)
+        async for item in iterator:
+            assert isinstance(item, dict)
+            collected_items.append(item)
     else:
-        assert test_dataset_of_another_user.expected_content == list(
-            cast('Iterator[dict]', dataset.iterate_items(signature=signature))
-        )
+        assert isinstance(iterator, Iterator)
+        for item in iterator:
+            assert isinstance(item, dict)
+            collected_items.append(item)
+    assert test_dataset_of_another_user.expected_content == collected_items
 
 
 async def test_get_items_as_bytes_signature(
@@ -352,10 +356,18 @@ async def test_dataset_iterate_items(client: ApifyClient | ApifyClientAsync, *, 
         await maybe_sleep(1, is_async=is_async)
 
         # Iterate over items
+        iterator = dataset_client.iterate_items()
+        collected_items: list[dict] = []
         if is_async:
-            collected_items = [item async for item in cast('AsyncIterator[dict]', dataset_client.iterate_items())]
+            assert isinstance(iterator, AsyncIterator)
+            async for item in iterator:
+                assert isinstance(item, dict)
+                collected_items.append(item)
         else:
-            collected_items = list(cast('Iterator[dict]', dataset_client.iterate_items()))
+            assert isinstance(iterator, Iterator)
+            for item in iterator:
+                assert isinstance(item, dict)
+                collected_items.append(item)
 
         assert len(collected_items) == 5
         for i, item in enumerate(collected_items):
@@ -409,6 +421,233 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *,
         await maybe_await(dataset_client.delete())
 
 
+async def test_dataset_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over the user's datasets across pages."""
+    created_ids: list[str] = []
+
+    # Create three datasets so pagination has work to do
+    for _ in range(3):
+        dataset = await maybe_await(client.datasets().get_or_create(name=get_random_resource_name('dataset')))
+        assert isinstance(dataset, Dataset)
+        created_ids.append(dataset.id)
+
+    try:
+        # Iterate with a small chunk to force multiple API calls
+        iterator = client.datasets().iterate(limit=10, desc=True)
+        collected: list[DatasetListItem] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for ds in iterator:
+                assert isinstance(ds, DatasetListItem)
+                collected.append(ds)
+        else:
+            assert isinstance(iterator, Iterator)
+            for ds in iterator:
+                assert isinstance(ds, DatasetListItem)
+                collected.append(ds)
+
+        collected_ids = {ds.id for ds in collected}
+        for created_id in created_ids:
+            assert created_id in collected_ids
+    finally:
+        for ds_id in created_ids:
+            await maybe_await(client.dataset(ds_id).delete())
+
+
+async def test_dataset_list_items_desc(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test listing items in descending order."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        items_to_push = [{'idx': i} for i in range(5)]
+        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_sleep(1, is_async=is_async)
+
+        # Default ordering - ascending
+        page_asc = await maybe_await(dataset_client.list_items())
+        assert isinstance(page_asc, DatasetItemsPage)
+        # Reversed ordering
+        page_desc = await maybe_await(dataset_client.list_items(desc=True))
+        assert isinstance(page_desc, DatasetItemsPage)
+
+        assert page_asc.desc is False
+        assert page_desc.desc is True
+        assert [item['idx'] for item in page_desc.items] == list(reversed([item['idx'] for item in page_asc.items]))
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
+async def test_dataset_list_items_omit_and_clean(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test list_items with `omit`, `clean`, `skip_hidden`, and `skip_empty` filters."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        # Mix of regular, hidden (`#`), and empty items to exercise filters
+        items_to_push = [
+            {'id': 1, 'name': 'visible', '#secret': 'shh', 'extra': 'X'},
+            {},  # empty item - filtered out by skip_empty/clean
+            {'id': 2, 'name': 'also visible', '#secret': 'shh', 'extra': 'Y'},
+        ]
+        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_sleep(1, is_async=is_async)
+
+        # `omit` should remove the `extra` field
+        omit_page = await maybe_await(dataset_client.list_items(omit=['extra']))
+        assert isinstance(omit_page, DatasetItemsPage)
+        for item in omit_page.items:
+            assert 'extra' not in item
+
+        # `clean=True` drops both hidden (`#secret`) and empty items
+        clean_page = await maybe_await(dataset_client.list_items(clean=True))
+        assert isinstance(clean_page, DatasetItemsPage)
+        assert all(item for item in clean_page.items)  # no empties
+        for item in clean_page.items:
+            assert '#secret' not in item
+
+        # `skip_hidden=True` keeps empties but drops hidden fields
+        hidden_page = await maybe_await(dataset_client.list_items(skip_hidden=True))
+        assert isinstance(hidden_page, DatasetItemsPage)
+        for item in hidden_page.items:
+            assert '#secret' not in item
+
+        # `skip_empty=True` drops empty items but keeps hidden fields
+        empty_page = await maybe_await(dataset_client.list_items(skip_empty=True))
+        assert isinstance(empty_page, DatasetItemsPage)
+        non_empty_count = len([i for i in items_to_push if i])
+        assert len(empty_page.items) == non_empty_count
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
+async def test_dataset_iterate_items_chunked(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterate_items with a small chunk_size to force multiple API requests."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        items_to_push = [{'idx': i} for i in range(12)]
+        await maybe_await(dataset_client.push_items(items_to_push))
+
+        # Poll until all items are visible (eventual consistency); 12 items + 3 paginated reads
+        # is more demanding than other dataset tests, so a single 1s sleep is not safe.
+        for _ in range(5):
+            await maybe_sleep(1, is_async=is_async)
+            head = await maybe_await(dataset_client.list_items(limit=12))
+            assert isinstance(head, DatasetItemsPage)
+            if len(head.items) == 12:
+                break
+
+        # chunk_size=5 forces 3 underlying pages for 12 items
+        iterator = dataset_client.iterate_items(chunk_size=5)
+        collected: list[dict] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for item in iterator:
+                assert isinstance(item, dict)
+                collected.append(item)
+        else:
+            assert isinstance(iterator, Iterator)
+            for item in iterator:
+                assert isinstance(item, dict)
+                collected.append(item)
+
+        assert len(collected) == 12
+        # Ordering across multiple paginated reads is not strictly guaranteed mid-flight,
+        # so compare by membership / sorted view rather than positional equality.
+        assert sorted(item['idx'] for item in collected) == list(range(12))
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
+async def test_dataset_iterate_items_with_fields(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterate_items with `fields` filter."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        items_to_push = [{'id': i, 'name': f'item-{i}', 'extra': 'drop-me'} for i in range(3)]
+        await maybe_await(dataset_client.push_items(items_to_push))
+        await maybe_sleep(1, is_async=is_async)
+
+        iterator = dataset_client.iterate_items(fields=['id', 'name'])
+        collected: list[dict] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for item in iterator:
+                assert isinstance(item, dict)
+                collected.append(item)
+        else:
+            assert isinstance(iterator, Iterator)
+            for item in iterator:
+                assert isinstance(item, dict)
+                collected.append(item)
+
+        assert len(collected) == 3
+        for item in collected:
+            assert set(item.keys()) == {'id', 'name'}
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
+async def test_dataset_create_items_public_url(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test generating a signed public URL for dataset items and fetching from it."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        items = [{'id': i, 'value': i * 10} for i in range(3)]
+        await maybe_await(dataset_client.push_items(items))
+        await maybe_sleep(1, is_async=is_async)
+
+        public_url = await maybe_await(dataset_client.create_items_public_url(expires_in=timedelta(minutes=5)))
+        assert isinstance(public_url, str)
+        assert created_dataset.id in public_url
+        assert 'signature=' in public_url
+
+        # Fetch from the signed URL without any auth header - should succeed
+        response = impit.get(public_url)
+        assert response.status_code == 200
+        downloaded = json.loads(response.content)
+        assert downloaded == items
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
+async def test_dataset_get_items_as_bytes_csv(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test get_items_as_bytes with non-JSON item_format (csv)."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        items = [{'id': 1, 'name': 'first'}, {'id': 2, 'name': 'second'}]
+        await maybe_await(dataset_client.push_items(items))
+        await maybe_sleep(1, is_async=is_async)
+
+        raw = await maybe_await(dataset_client.get_items_as_bytes(item_format='csv'))
+        assert isinstance(raw, bytes)
+        decoded = raw.decode('utf-8')
+        # CSV output should contain a header row and the values
+        assert 'id' in decoded
+        assert 'first' in decoded
+        assert 'second' in decoded
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
 async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test streaming dataset items."""
     dataset_name = get_random_resource_name('dataset')
@@ -430,19 +669,20 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
         await maybe_sleep(1, is_async=is_async)
 
         # Stream items using context manager
+        stream_ctx = dataset_client.stream_items(item_format='json')
         if is_async:
-            stream_ctx = cast('AbstractAsyncContextManager[Response]', dataset_client.stream_items(item_format='json'))
+            assert isinstance(stream_ctx, AbstractAsyncContextManager)
             async with stream_ctx as response:
-                assert response is not None
+                assert isinstance(response, impit.Response)
                 assert response.status_code == 200
                 content = await response.aread()
                 items = json.loads(content)
                 assert len(items) == 3
                 assert items[0]['id'] == 1
         else:
-            stream_ctx = cast('AbstractContextManager[Response]', dataset_client.stream_items(item_format='json'))
+            assert isinstance(stream_ctx, AbstractContextManager)
             with stream_ctx as response:
-                assert response is not None
+                assert isinstance(response, impit.Response)
                 assert response.status_code == 200
                 content = response.read()
                 items = json.loads(content)

@@ -40,10 +40,7 @@ class ActVersion(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    source_type: Annotated[str | None, Field(alias='sourceType', examples=['SOURCE_FILES'])] = None
-    """
-    The source type of the Actor version (e.g. SOURCE_FILES, GIT_REPO, TARBALL, GITHUB_GIST).
-    """
+    source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
     build_tag: Annotated[str | None, Field(alias='buildTag', examples=['experimental'])] = None
     version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
     git_repo_url: Annotated[
@@ -3630,20 +3627,6 @@ class Webhook(BaseModel):
 
 
 @docs_group('Models')
-class Webhook1(BaseModel):
-    """A summary of the webhook that triggered this dispatch."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    action_type: Annotated[str | None, Field(alias='actionType', examples=['HTTP_REQUEST'])] = None
-    condition: WebhookCondition | None = None
-    request_url: Annotated[AnyUrl | None, Field(alias='requestUrl', examples=['https://example.com/webhook'])] = None
-    is_ad_hoc: Annotated[bool | None, Field(alias='isAdHoc', examples=[False])] = None
-
-
-@docs_group('Models')
 class WebhookCondition(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3690,16 +3673,27 @@ class WebhookDispatch(BaseModel):
     status: WebhookDispatchStatus
     event_type: Annotated[WebhookEventType, Field(alias='eventType')]
     event_data: Annotated[EventData | None, Field(alias='eventData', title='eventData')] = None
-    webhook: Annotated[Webhook1 | None, Field(title='WebhookDispatchWebhookSummary')] = None
-    """
-    A summary of the webhook that triggered this dispatch.
-    """
+    webhook: WebhookDispatchWebhookSummary | None = None
     calls: Annotated[list[Call] | None, Field(title='calls')] = None
 
 
 @docs_group('Models')
 class WebhookDispatchResponse(TestWebhookResponse):
     pass
+
+
+@docs_group('Models')
+class WebhookDispatchWebhookSummary(BaseModel):
+    """A summary of the webhook that triggered this dispatch."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    action_type: Annotated[str | None, Field(alias='actionType', examples=['HTTP_REQUEST'])] = None
+    condition: WebhookCondition | None = None
+    request_url: Annotated[AnyUrl | None, Field(alias='requestUrl', examples=['https://example.com/webhook'])] = None
+    is_ad_hoc: Annotated[bool | None, Field(alias='isAdHoc', examples=[False])] = None
 
 
 @docs_group('Models')

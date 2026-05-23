@@ -33,6 +33,23 @@ class AccountLimits(BaseModel):
 
 
 @docs_group('Models')
+class ActVersion(BaseModel):
+    """Snapshot of the Actor version that this build was created from."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    git_repo_url: Annotated[
+        str | None,
+        Field(alias='gitRepoUrl', examples=['https://github.com/apifytech/actor-crawler.git#experimental:web-scraper']),
+    ] = None
+    source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
+    build_tag: Annotated[str | None, Field(alias='buildTag', examples=['experimental'])] = None
+    version_number: Annotated[str | None, Field(alias='versionNumber', examples=['0.0'])] = None
+
+
+@docs_group('Models')
 class Actor(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -74,6 +91,25 @@ class Actor(BaseModel):
     """
     A brief, LLM-generated readme summary
     """
+    seo_title: Annotated[str | None, Field(alias='seoTitle', examples=['Web Scraper'])] = None
+    seo_description: Annotated[
+        str | None,
+        Field(
+            alias='seoDescription',
+            examples=['Crawls websites using Chrome and extracts data from pages using JavaScript.'],
+        ),
+    ] = None
+    picture_url: Annotated[
+        str | None,
+        Field(alias='pictureUrl', examples=['https://apify-image-uploads-prod.s3.amazonaws.com/.../actor-picture.png']),
+    ] = None
+    standby_url: Annotated[str | None, Field(alias='standbyUrl', examples=['https://my-actor.apify.actor'])] = None
+    notice: Annotated[str | None, Field(examples=['NONE'])] = None
+    categories: Annotated[list[str] | None, Field(examples=[['DEVELOPER_TOOLS', 'OPEN_SOURCE']])] = None
+    is_critical: Annotated[bool | None, Field(alias='isCritical', examples=[False])] = None
+    is_generic: Annotated[bool | None, Field(alias='isGeneric', examples=[False])] = None
+    is_source_code_hidden: Annotated[bool | None, Field(alias='isSourceCodeHidden', examples=[False])] = None
+    has_no_dataset: Annotated[bool | None, Field(alias='hasNoDataset', examples=[False])] = None
 
 
 @docs_group('Models')
@@ -256,6 +292,15 @@ class ActorStats(BaseModel):
     last_run_started_at: Annotated[
         AwareDatetime | None, Field(alias='lastRunStartedAt', examples=['2019-07-08T14:01:05.546Z'])
     ] = None
+    actor_review_count: Annotated[int | None, Field(alias='actorReviewCount', examples=[69])] = None
+    actor_review_rating: Annotated[float | None, Field(alias='actorReviewRating', examples=[4.7])] = None
+    bookmark_count: Annotated[int | None, Field(alias='bookmarkCount', examples=[1269])] = None
+    public_actor_run_stats30_days: Annotated[
+        PublicActorRunStats30Days | None, Field(alias='publicActorRunStats30Days')
+    ] = None
+    """
+    Run status counts over the past 30 days.
+    """
 
 
 @docs_group('Models')
@@ -421,6 +466,10 @@ class Build(BaseModel):
     ] = None
     readme: Annotated[str | None, Field(deprecated=True, examples=['# Magic Actor\\nThis Actor is magic.'])] = None
     build_number: Annotated[str, Field(alias='buildNumber', examples=['0.1.1'])]
+    act_version: Annotated[ActVersion | None, Field(alias='actVersion')] = None
+    """
+    Snapshot of the Actor version that this build was created from.
+    """
     actor_definition: Annotated[ActorDefinition | None, Field(alias='actorDefinition')] = None
 
 
@@ -455,6 +504,7 @@ class BuildShort(BaseModel):
     )
     id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
     act_id: Annotated[str | None, Field(alias='actId', examples=['janedoe~my-actor'])] = None
+    user_id: Annotated[str | None, Field(alias='userId', examples=['klmdEpoiojmdEMlk3'])] = None
     status: ActorJobStatus
     started_at: Annotated[AwareDatetime, Field(alias='startedAt', examples=['2019-11-30T07:34:24.202Z'])]
     finished_at: Annotated[AwareDatetime | None, Field(alias='finishedAt', examples=['2019-12-12T09:30:12.202Z'])] = (
@@ -462,6 +512,7 @@ class BuildShort(BaseModel):
     )
     usage_total_usd: Annotated[float, Field(alias='usageTotalUsd', examples=[0.02])]
     build_number: Annotated[str, Field(alias='buildNumber', examples=['0.1.1'])]
+    build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[10000])] = None
     meta: BuildsMeta | None = None
 
 
@@ -474,6 +525,7 @@ class BuildStats(BaseModel):
     duration_millis: Annotated[int | None, Field(alias='durationMillis', examples=[1000])] = None
     run_time_secs: Annotated[float | None, Field(alias='runTimeSecs', examples=[45.718])] = None
     compute_units: Annotated[float, Field(alias='computeUnits', examples=[0.0126994444444444])]
+    image_size_bytes: Annotated[int | None, Field(alias='imageSizeBytes', examples=[975770223])] = None
 
 
 @docs_group('Models')
@@ -659,6 +711,7 @@ class Current(BaseModel):
     actor_task_count: Annotated[int, Field(alias='actorTaskCount', examples=[130])]
     active_actor_job_count: Annotated[int, Field(alias='activeActorJobCount', examples=[0])]
     team_account_seat_count: Annotated[int, Field(alias='teamAccountSeatCount', examples=[5])]
+    schedule_count: Annotated[int | None, Field(alias='scheduleCount', examples=[77])] = None
 
 
 @docs_group('Models')
@@ -668,6 +721,35 @@ class CurrentPricingInfo(BaseModel):
         populate_by_name=True,
     )
     pricing_model: Annotated[str, Field(alias='pricingModel', examples=['FREE'])]
+    apify_margin_percentage: Annotated[float | None, Field(alias='apifyMarginPercentage', examples=[0.2])] = None
+    created_at: Annotated[AwareDatetime | None, Field(alias='createdAt', examples=['2023-01-01T00:00:00.000Z'])] = None
+    started_at: Annotated[AwareDatetime | None, Field(alias='startedAt', examples=['2023-01-01T00:00:00.000Z'])] = None
+    notified_about_change_at: Annotated[AwareDatetime | None, Field(alias='notifiedAboutChangeAt', examples=[None])] = (
+        None
+    )
+    notified_about_future_change_at: Annotated[
+        AwareDatetime | None, Field(alias='notifiedAboutFutureChangeAt', examples=[None])
+    ] = None
+    is_price_change_notification_suppressed: Annotated[
+        bool | None, Field(alias='isPriceChangeNotificationSuppressed', examples=[False])
+    ] = None
+    force_contains_significant_price_change: Annotated[
+        bool | None, Field(alias='forceContainsSignificantPriceChange', examples=[False])
+    ] = None
+    is_ppe_platform_usage_paid_by_user: Annotated[
+        bool | None, Field(alias='isPPEPlatformUsagePaidByUser', examples=[False])
+    ] = None
+    reason_for_change: Annotated[str | None, Field(alias='reasonForChange', examples=[None])] = None
+    trial_minutes: Annotated[int | None, Field(alias='trialMinutes', examples=[None])] = None
+    unit_name: Annotated[str | None, Field(alias='unitName', examples=[None])] = None
+    price_per_unit_usd: Annotated[float | None, Field(alias='pricePerUnitUsd', examples=[None])] = None
+    minimal_max_total_charge_usd: Annotated[float | None, Field(alias='minimalMaxTotalChargeUsd', examples=[0.5])] = (
+        None
+    )
+    pricing_per_event: Annotated[dict[str, Any] | None, Field(alias='pricingPerEvent')] = None
+    """
+    Per-event pricing configuration for pay-per-event Actors.
+    """
 
 
 @docs_group('Models')
@@ -784,6 +866,10 @@ class DatasetListItem(BaseModel):
     clean_item_count: Annotated[int, Field(alias='cleanItemCount', examples=[5])]
     act_id: Annotated[str | None, Field(alias='actId', examples=['zdc3Pyhyz3m8vjDeM'])] = None
     act_run_id: Annotated[str | None, Field(alias='actRunId', examples=['HG7ML7M8z78YcAPEB'])] = None
+    title: Annotated[str | None, Field(examples=['My Dataset'])] = None
+    username: Annotated[str | None, Field(examples=['janedoe'])] = None
+    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
+    stats: DatasetStats | None = None
 
 
 @docs_group('Models')
@@ -1082,6 +1168,7 @@ class ExampleWebhookDispatch(BaseModel):
     finished_at: Annotated[AwareDatetime | None, Field(alias='finishedAt', examples=['2019-12-13T08:36:13.202Z'])] = (
         None
     )
+    removed_at: Annotated[AwareDatetime | None, Field(alias='removedAt', examples=[None])] = None
 
 
 @docs_group('Models')
@@ -1204,6 +1291,19 @@ class KeyValueStore(BaseModel):
     """
     A public link to access keys of the key-value store directly.
     """
+    records_public_url: Annotated[
+        AnyUrl | None,
+        Field(
+            alias='recordsPublicUrl', examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/records']
+        ),
+    ] = None
+    """
+    A public link to access records of the key-value store directly.
+    """
+    schema_: Annotated[dict[str, Any] | None, Field(alias='schema')] = None
+    """
+    Optional JSON schema describing the keys stored in the key-value store.
+    """
     url_signing_secret_key: Annotated[str | None, Field(alias='urlSigningSecretKey')] = None
     """
     A secret key for generating signed public URLs. It is only provided to clients with WRITE permission for the key-value store.
@@ -1254,6 +1354,7 @@ class KeyValueStoreStats(BaseModel):
     delete_count: Annotated[int, Field(alias='deleteCount', examples=[6])]
     list_count: Annotated[int, Field(alias='listCount', examples=[2])]
     s3_storage_bytes: Annotated[int | None, Field(alias='s3StorageBytes', examples=[18])] = None
+    storage_bytes: Annotated[int | None, Field(alias='storageBytes', examples=[457225])] = None
 
 
 @docs_group('Models')
@@ -1291,6 +1392,7 @@ class Limits(BaseModel):
     max_concurrent_actor_jobs: Annotated[int, Field(alias='maxConcurrentActorJobs', examples=[256])]
     max_team_account_seat_count: Annotated[int, Field(alias='maxTeamAccountSeatCount', examples=[9])]
     data_retention_days: Annotated[int, Field(alias='dataRetentionDays', examples=[90])]
+    max_schedule_count: Annotated[int | None, Field(alias='maxScheduleCount', examples=[100])] = None
 
 
 @docs_group('Models')
@@ -1631,6 +1733,17 @@ class MonthlyUsageResponse(BaseModel):
 
 
 @docs_group('Models')
+class Notifications(BaseModel):
+    """Notification settings for this schedule."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    email: Annotated[bool | None, Field(examples=[True])] = None
+
+
+@docs_group('Models')
 class PaginationResponse(BaseModel):
     """Common pagination fields for list responses."""
 
@@ -1684,6 +1797,10 @@ class ListOfDatasets(PaginationResponse):
         extra='allow',
         populate_by_name=True,
     )
+    unnamed: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the listing was filtered to only unnamed datasets.
+    """
     items: list[DatasetListItem]
 
 
@@ -1693,6 +1810,10 @@ class ListOfKeyValueStores(PaginationResponse):
         extra='allow',
         populate_by_name=True,
     )
+    unnamed: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the listing was filtered to only unnamed key-value stores.
+    """
     items: list[KeyValueStore]
 
 
@@ -1704,6 +1825,10 @@ class ListOfRequestQueues(PaginationResponse):
         extra='allow',
         populate_by_name=True,
     )
+    unnamed: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the listing was filtered to only unnamed request queues.
+    """
     items: list[RequestQueueShort]
     """
     The array of request queues.
@@ -1813,6 +1938,14 @@ class Plan(BaseModel):
     team_account_seat_count: Annotated[int, Field(alias='teamAccountSeatCount', examples=[1])]
     support_level: Annotated[str, Field(alias='supportLevel', examples=['COMMUNITY'])]
     available_add_ons: Annotated[list[str], Field(alias='availableAddOns', examples=[[]])]
+    tier: Annotated[str | None, Field(examples=['FREE'])] = None
+    api_rate_limit_boosts: Annotated[int | None, Field(alias='apiRateLimitBoosts', examples=[0])] = None
+    max_schedule_count: Annotated[int | None, Field(alias='maxScheduleCount', examples=[100])] = None
+    max_concurrent_actor_runs: Annotated[int | None, Field(alias='maxConcurrentActorRuns', examples=[25])] = None
+    plan_pricing: Annotated[dict[str, Any] | None, Field(alias='planPricing')] = None
+    """
+    Pricing details for this plan.
+    """
 
 
 @docs_group('Models')
@@ -1910,8 +2043,23 @@ class ProxyGroup(BaseModel):
         populate_by_name=True,
     )
     name: Annotated[str, Field(examples=['Group1'])]
-    description: Annotated[str, Field(examples=['Group1 description'])]
+    description: Annotated[str | None, Field(examples=['Group1 description'])]
     available_count: Annotated[int, Field(alias='availableCount', examples=[10])]
+
+
+@docs_group('Models')
+class PublicActorRunStats30Days(BaseModel):
+    """Run status counts over the past 30 days."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    aborted: Annotated[int | None, Field(alias='ABORTED', examples=[2542])] = None
+    failed: Annotated[int | None, Field(alias='FAILED', examples=[1234])] = None
+    succeeded: Annotated[int | None, Field(alias='SUCCEEDED', examples=[732805])] = None
+    timed_out: Annotated[int | None, Field(alias='TIMED-OUT', examples=[12556])] = None
+    total: Annotated[int | None, Field(alias='TOTAL', examples=[749137])] = None
 
 
 @docs_group('Models')
@@ -2136,6 +2284,14 @@ class RequestQueue(BaseModel):
     """
     The ID of the user who owns the request queue.
     """
+    act_id: Annotated[str | None, Field(alias='actId')] = None
+    """
+    The ID of the Actor that created this request queue.
+    """
+    act_run_id: Annotated[str | None, Field(alias='actRunId')] = None
+    """
+    The ID of the Actor run that created this request queue.
+    """
     created_at: Annotated[AwareDatetime, Field(alias='createdAt', examples=['2019-12-12T07:34:14.202Z'])]
     """
     The timestamp when the request queue was created.
@@ -2275,6 +2431,8 @@ class RequestQueueShort(BaseModel):
     """
     Whether the request queue has been accessed by multiple different clients.
     """
+    general_access: Annotated[GeneralAccess | None, Field(alias='generalAccess')] = None
+    stats: RequestQueueStats | None = None
 
 
 @docs_group('Models')
@@ -2502,6 +2660,12 @@ class Run(BaseModel):
     """
     List of metamorph events that occurred during the run.
     """
+    platform_usage_billing_model: Annotated[str | None, Field(alias='platformUsageBillingModel', examples=['USER'])] = (
+        None
+    )
+    """
+    Indicates which party covers platform usage costs for this run.
+    """
 
 
 @docs_group('Models')
@@ -2572,6 +2736,7 @@ class RunShort(BaseModel):
     )
     id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
     act_id: Annotated[str, Field(alias='actId', examples=['HDSasDasz78YcAPEB'])]
+    user_id: Annotated[str | None, Field(alias='userId', examples=['7sT5jcggjjA9fNcxF'])] = None
     actor_task_id: Annotated[str | None, Field(alias='actorTaskId', examples=['KJHSKHausidyaJKHs'])] = None
     status: ActorJobStatus
     started_at: Annotated[AwareDatetime, Field(alias='startedAt', examples=['2019-11-30T07:34:24.202Z'])]
@@ -2580,6 +2745,7 @@ class RunShort(BaseModel):
     )
     build_id: Annotated[str, Field(alias='buildId', examples=['HG7ML7M8z78YcAPEB'])]
     build_number: Annotated[str | None, Field(alias='buildNumber', examples=['0.0.2'])] = None
+    build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[10000])] = None
     meta: RunMeta
     usage_total_usd: Annotated[float, Field(alias='usageTotalUsd', examples=[0.2])]
     default_key_value_store_id: Annotated[str, Field(alias='defaultKeyValueStoreId', examples=['sfAjeR4QmeJCQzTfe'])]
@@ -2762,6 +2928,10 @@ class Schedule(ScheduleBase):
     )
     description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
     title: str | None = None
+    notifications: Notifications | None = None
+    """
+    Notification settings for this schedule.
+    """
     actions: list[Annotated[ScheduleActionRunActor | ScheduleActionRunActorTask, Field(discriminator='type')]]
 
 
@@ -2946,6 +3116,14 @@ class StoreListActor(BaseModel):
     """
     Whether the Actor is whitelisted for agentic payment processing.
     """
+    is_white_listed_for_agentic_payments: Annotated[bool | None, Field(alias='isWhiteListedForAgenticPayments')] = None
+    """
+    Whether the Actor is whitelisted for agentic payment processing.
+    """
+    actor_review_count: Annotated[int | None, Field(alias='actorReviewCount', examples=[69])] = None
+    actor_review_rating: Annotated[float | None, Field(alias='actorReviewRating', examples=[4.7])] = None
+    bookmark_count: Annotated[int | None, Field(alias='bookmarkCount', examples=[1269])] = None
+    badge: Annotated[str | None, Field(examples=[None])] = None
     readme_summary: Annotated[str | None, Field(alias='readmeSummary')] = None
     """
     A brief, LLM-generated readme summary
@@ -2967,6 +3145,10 @@ class TaggedBuildInfo(BaseModel):
     build_number: Annotated[str | None, Field(alias='buildNumber', examples=['0.0.2'])] = None
     """
     The build number/version string.
+    """
+    build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[42])] = None
+    """
+    The build number encoded as a single integer.
     """
     finished_at: Annotated[AwareDatetime | None, Field(alias='finishedAt', examples=['2019-06-10T11:15:49.286Z'])] = (
         None
@@ -3435,6 +3617,20 @@ class Webhook(BaseModel):
 
 
 @docs_group('Models')
+class Webhook1(BaseModel):
+    """A summary of the webhook that triggered this dispatch."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+    )
+    action_type: Annotated[str | None, Field(alias='actionType', examples=['HTTP_REQUEST'])] = None
+    condition: dict[str, Any] | None = None
+    request_url: Annotated[AnyUrl | None, Field(alias='requestUrl', examples=['https://example.com/webhook'])] = None
+    is_ad_hoc: Annotated[bool | None, Field(alias='isAdHoc', examples=[False])] = None
+
+
+@docs_group('Models')
 class WebhookCondition(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3481,6 +3677,10 @@ class WebhookDispatch(BaseModel):
     status: WebhookDispatchStatus
     event_type: Annotated[WebhookEventType, Field(alias='eventType')]
     event_data: Annotated[EventData | None, Field(alias='eventData', title='eventData')] = None
+    webhook: Annotated[Webhook1 | None, Field(title='webhook')] = None
+    """
+    A summary of the webhook that triggered this dispatch.
+    """
     calls: Annotated[list[Call] | None, Field(title='calls')] = None
 
 
@@ -3542,6 +3742,9 @@ class WebhookShort(BaseModel):
     modified_at: Annotated[AwareDatetime, Field(alias='modifiedAt', examples=['2019-12-13T08:36:13.202Z'])]
     user_id: Annotated[str, Field(alias='userId', examples=['wRsJZtadYvn4mBZmm'])]
     is_ad_hoc: Annotated[bool | None, Field(alias='isAdHoc', examples=[False])] = None
+    is_apify_integration: Annotated[bool | None, Field(alias='isApifyIntegration', examples=[False])] = None
+    is_enabled: Annotated[bool | None, Field(alias='isEnabled', examples=[True])] = None
+    action_type: Annotated[str | None, Field(alias='actionType', examples=['HTTP_REQUEST'])] = None
     should_interpolate_strings: Annotated[bool | None, Field(alias='shouldInterpolateStrings', examples=[False])] = None
     event_types: Annotated[list[WebhookEventType], Field(alias='eventTypes', examples=[['ACTOR.RUN.SUCCEEDED']])]
     condition: WebhookCondition

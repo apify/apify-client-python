@@ -479,7 +479,7 @@ class Build(BaseModel):
         Field(
             alias='buildNumber',
             examples=['0.1.1'],
-            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})?$',
+            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$',
         ),
     ]
     act_version: Annotated[ActVersion | None, Field(alias='actVersion', title='BuildActVersion')] = None
@@ -532,7 +532,7 @@ class BuildShort(BaseModel):
         Field(
             alias='buildNumber',
             examples=['0.1.1'],
-            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})?$',
+            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$',
         ),
     ]
     build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[10000])] = None
@@ -2663,7 +2663,7 @@ class Run(BaseModel):
         Field(
             alias='buildNumber',
             examples=['0.0.36'],
-            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})?$',
+            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$',
         ),
     ] = None
     """
@@ -2788,7 +2788,7 @@ class RunShort(BaseModel):
         Field(
             alias='buildNumber',
             examples=['0.0.2'],
-            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})?$',
+            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$',
         ),
     ] = None
     build_number_int: Annotated[int | None, Field(alias='buildNumberInt', examples=[10000])] = None
@@ -3189,7 +3189,7 @@ class TaggedBuildInfo(BaseModel):
         Field(
             alias='buildNumber',
             examples=['0.0.2'],
-            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})?$',
+            pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$',
         ),
     ] = None
     """

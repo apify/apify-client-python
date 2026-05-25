@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -13,9 +14,11 @@ from apify_client._models import (
     ListOfRequests,
     LockedRequestQueueHead,
     Request,
+    RequestDraft,
     RequestLockInfo,
     RequestQueue,
     RequestQueueHead,
+    RequestQueueShort,
     RequestRegistration,
     UnlockRequestsResult,
 )
@@ -23,7 +26,11 @@ from apify_client._models import (
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
-    from apify_client._typeddicts import RequestDict, RequestDraftDeleteDict, RequestDraftDict
+    from apify_client._typeddicts import (
+        RequestDict,
+        RequestDraftDeleteDict,
+        RequestDraftDict,
+    )
 
 
 async def ensure_queue_is_populated(
@@ -594,5 +601,134 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
         update_result = await maybe_await(rq_client.update_request(updated_request_data))
         assert isinstance(update_result, RequestRegistration)
         assert update_result.request_id == add_result.request_id
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over user request queues."""
+    created_ids: list[str] = []
+
+    for _ in range(3):
+        rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+        assert isinstance(rq, RequestQueue)
+        created_ids.append(rq.id)
+
+    try:
+        iterator = client.request_queues().iterate(limit=10, desc=True)
+        collected: list[RequestQueueShort] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for rq in iterator:
+                assert isinstance(rq, RequestQueueShort)
+                collected.append(rq)
+        else:
+            assert isinstance(iterator, Iterator)
+            for rq in iterator:
+                assert isinstance(rq, RequestQueueShort)
+                collected.append(rq)
+
+        collected_ids = {rq.id for rq in collected}
+        for rq_id in created_ids:
+            assert rq_id in collected_ids
+    finally:
+        for rq_id in created_ids:
+            await maybe_await(client.request_queue(rq_id).delete())
+
+
+async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over requests within a queue."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        # Add several requests
+        added_urls: list[str] = []
+        for i in range(7):
+            request_draft = RequestDraft(url=f'https://example.com/page-{i}', unique_key=f'unique-{i}')
+            await maybe_await(rq_client.add_request(request_draft))
+            added_urls.append(request_draft.url)
+
+        # Wait until all 7 requests are indexed (eventual consistency)
+        await ensure_queue_is_populated(rq_client, expected_count=7, is_async=is_async)
+
+        # Iterate with a small chunk so multiple pages are fetched
+        iterator = rq_client.iterate_requests(chunk_size=3)
+        collected: list[Request] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for req in iterator:
+                assert isinstance(req, Request)
+                collected.append(req)
+        else:
+            assert isinstance(iterator, Iterator)
+            for req in iterator:
+                assert isinstance(req, Request)
+                collected.append(req)
+
+        assert len(collected) == 7
+        collected_urls = {r.url for r in collected if r.url is not None}
+        for url in added_urls:
+            assert url in collected_urls
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_list_requests_with_cursor(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test list_requests pagination via limit and the opaque cursor token."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        for i in range(5):
+            await maybe_await(
+                rq_client.add_request(RequestDraft(url=f'https://example.com/p-{i}', unique_key=f'u-{i}'))
+            )
+
+        # Wait for all 5 requests to be indexed so pagination is exercised, not truncated
+        await ensure_queue_is_populated(rq_client, expected_count=5, is_async=is_async)
+
+        # First page
+        first_page = await maybe_await(rq_client.list_requests(limit=2))
+        assert isinstance(first_page, ListOfRequests)
+        assert len(first_page.items) == 2
+
+        # The API must return a continuation token when more pages exist (5 items, limit=2)
+        assert first_page.next_cursor is not None
+        second_page = await maybe_await(rq_client.list_requests(limit=10, cursor=first_page.next_cursor))
+        assert isinstance(second_page, ListOfRequests)
+
+        first_ids = {r.id for r in first_page.items}
+        second_ids = {r.id for r in second_page.items}
+        assert first_ids.isdisjoint(second_ids)
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_list_requests_with_filter(
+    client: ApifyClient | ApifyClientAsync, *, is_async: bool
+) -> None:
+    """Test list_requests with the `filter` parameter (pending only)."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        for i in range(3):
+            await maybe_await(
+                rq_client.add_request(RequestDraft(url=f'https://example.com/f-{i}', unique_key=f'f-{i}'))
+            )
+
+        # Wait for all 3 requests to be indexed before filtering
+        await ensure_queue_is_populated(rq_client, expected_count=3, is_async=is_async)
+
+        # All three requests are pending - filter=['pending'] should return all of them.
+        pending_page = await maybe_await(rq_client.list_requests(filter=['pending']))
+        assert isinstance(pending_page, ListOfRequests)
+        assert len(pending_page.items) == 3
     finally:
         await maybe_await(rq_client.delete())

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from ._utils import maybe_await, maybe_sleep
-from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run
+from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -354,11 +355,7 @@ async def test_run_reboot(client: ApifyClient | ApifyClientAsync, *, is_async: b
 
 
 async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
-    """Test charging for an event in a pay-per-event run.
-
-    Note: This test may fail if the actor is not a pay-per-event actor. The test verifies that the charge method can
-    be called correctly.
-    """
+    """Test charging for an event in a pay-per-event run."""
     # Run an actor
     actor = client.actor(HELLO_WORLD_ACTOR)
     run = await maybe_await(actor.call())
@@ -379,3 +376,70 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
 
     finally:
         await maybe_await(run_client.delete())
+
+
+async def test_runs_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over user runs."""
+    iterator = client.runs().iterate(limit=5)
+    collected: list[RunShort] = []
+    if is_async:
+        assert isinstance(iterator, AsyncIterator)
+        async for run in iterator:
+            assert isinstance(run, RunShort)
+            collected.append(run)
+    else:
+        assert isinstance(iterator, Iterator)
+        for run in iterator:
+            assert isinstance(run, RunShort)
+            collected.append(run)
+
+    assert len(collected) <= 5
+    for run in collected:
+        assert run.id is not None
+        assert run.act_id is not None
+
+
+async def test_run_collection_list_desc(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that desc=True returns runs sorted by started_at descending."""
+    runs_page = await maybe_await(client.runs().list(limit=10, desc=True))
+    assert isinstance(runs_page, ListOfRuns)
+
+    # The user run feed is shared across parallel test workers — brand-new RUNNING runs may
+    # briefly lack `started_at`. Compare ordering on the timestamps that are present.
+    timestamps = [run.started_at for run in runs_page.items if run.started_at is not None]
+    if len(timestamps) >= 2:
+        assert timestamps == sorted(timestamps, reverse=True)
+
+
+async def test_run_get_nonexistent_returns_none(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that get() on a non-existent run returns None."""
+    run = await maybe_await(client.run('NoNExIsTeNtRuNiD123').get())
+    assert run is None
+
+
+async def test_run_collection_iterate_actor_runs(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterating over runs of a specific Actor."""
+    actor = client.actor(HELLO_WORLD_ACTOR)
+    # Ensure at least one run exists
+    run = await maybe_await(actor.call())
+    assert isinstance(run, Run)
+
+    try:
+        iterator = actor.runs().iterate(limit=3, desc=True)
+        collected: list[RunShort] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for r in iterator:
+                assert isinstance(r, RunShort)
+                collected.append(r)
+        else:
+            assert isinstance(iterator, Iterator)
+            for r in iterator:
+                assert isinstance(r, RunShort)
+                collected.append(r)
+
+        assert len(collected) >= 1
+        # All returned runs must be scoped to the requested actor.
+        assert all(r.act_id == run.act_id for r in collected)
+    finally:
+        await maybe_await(client.run(run.id).delete())

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from ._utils import get_random_resource_name, maybe_await
-from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, Task
+from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, RunShort, Task, TaskShort
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -350,3 +351,132 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     finally:
         # Cleanup task
         await maybe_await(task_client.delete())
+
+
+async def test_task_collection_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over user tasks."""
+    actor = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    assert isinstance(actor, Actor)
+
+    created_ids: list[str] = []
+    for _ in range(3):
+        task = await maybe_await(client.tasks().create(actor_id=actor.id, name=get_random_resource_name('task')))
+        assert isinstance(task, Task)
+        created_ids.append(task.id)
+
+    try:
+        iterator = client.tasks().iterate(limit=10, desc=True)
+        collected: list[TaskShort] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for t in iterator:
+                assert isinstance(t, TaskShort)
+                collected.append(t)
+        else:
+            assert isinstance(iterator, Iterator)
+            for t in iterator:
+                assert isinstance(t, TaskShort)
+                collected.append(t)
+
+        collected_ids = {t.id for t in collected}
+        for task_id in created_ids:
+            assert task_id in collected_ids
+    finally:
+        for task_id in created_ids:
+            await maybe_await(client.task(task_id).delete())
+
+
+async def test_task_start_with_input_override(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test starting a task with run input that overrides the saved input."""
+    actor = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    assert isinstance(actor, Actor)
+
+    task_name = get_random_resource_name('task')
+    created_task = await maybe_await(
+        client.tasks().create(
+            actor_id=actor.id,
+            name=task_name,
+            task_input={'message': 'original'},
+        )
+    )
+    assert isinstance(created_task, Task)
+    task_client = client.task(created_task.id)
+
+    try:
+        run = await maybe_await(task_client.start(task_input={'message': 'overridden'}, memory_mbytes=256))
+        assert isinstance(run, Run)
+
+        # Wait and clean up
+        await maybe_await(client.run(run.id).wait_for_finish())
+        await maybe_await(client.run(run.id).delete())
+    finally:
+        await maybe_await(task_client.delete())
+
+
+async def test_task_call_with_build_override(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test calling a task with explicit build/memory overrides."""
+    actor = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    assert isinstance(actor, Actor)
+
+    task_name = get_random_resource_name('task')
+    created_task = await maybe_await(client.tasks().create(actor_id=actor.id, name=task_name))
+    assert isinstance(created_task, Task)
+    task_client = client.task(created_task.id)
+
+    try:
+        run = await maybe_await(
+            task_client.call(
+                build='latest',
+                memory_mbytes=256,
+                run_timeout=timedelta(seconds=120),
+            )
+        )
+        assert isinstance(run, Run)
+        assert run.status == 'SUCCEEDED'
+        assert run.options is not None
+        assert run.options.memory_mbytes == 256
+
+        await maybe_await(client.run(run.id).delete())
+    finally:
+        await maybe_await(task_client.delete())
+
+
+async def test_task_runs_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test paginated iteration over a task's runs."""
+    actor = await maybe_await(client.actor(HELLO_WORLD_ACTOR).get())
+    assert isinstance(actor, Actor)
+
+    task_name = get_random_resource_name('task')
+    created_task = await maybe_await(client.tasks().create(actor_id=actor.id, name=task_name))
+    assert isinstance(created_task, Task)
+    task_client = client.task(created_task.id)
+
+    try:
+        run = await maybe_await(task_client.call())
+        assert isinstance(run, Run)
+
+        iterator = task_client.runs().iterate(limit=5)
+        collected: list[RunShort] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for r in iterator:
+                assert isinstance(r, RunShort)
+                collected.append(r)
+        else:
+            assert isinstance(iterator, Iterator)
+            for r in iterator:
+                assert isinstance(r, RunShort)
+                collected.append(r)
+
+        run_ids = [r.id for r in collected]
+        assert run.id in run_ids
+
+        await maybe_await(client.run(run.id).delete())
+    finally:
+        await maybe_await(task_client.delete())
+
+
+async def test_task_get_nonexistent_returns_none(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that get() on a non-existent task returns None."""
+    task = await maybe_await(client.task('NoNeXiStEnTtAsK1').get())
+    assert task is None

@@ -193,7 +193,7 @@ async def test_schedule_collection_iterate(client: ApifyClient | ApifyClientAsyn
         created_ids.append(schedule.id)
 
     try:
-        iterator = client.schedules().iterate(limit=10)
+        iterator = client.schedules().iterate()
         collected: list[ScheduleShort] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)

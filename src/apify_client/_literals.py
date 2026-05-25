@@ -473,6 +473,7 @@ VersionSourceType = Literal[
     'GIT_REPO',
     'TARBALL',
     'GITHUB_GIST',
+    'SOURCE_CODE',
 ]
 
 

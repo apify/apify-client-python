@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.0.2 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Add missing response fields returned by the live API ([#821](https://github.com/apify/apify-client-python/pull/821)) ([e794411](https://github.com/apify/apify-client-python/commit/e794411dd3935cd09941096abc9767f33c4a4cf9)) by [@apify-service-account](https://github.com/apify-service-account)
+- Prevent StreamedLog stop() from hanging on a silent stream ([#825](https://github.com/apify/apify-client-python/pull/825)) ([c15cb1b](https://github.com/apify/apify-client-python/commit/c15cb1bb2702120dd6fabe154a4b3d879248aafa)) by [@vdusek](https://github.com/vdusek)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.0.1](https://github.com/apify/apify-client-python/releases/tag/v3.0.1) (2026-05-22)
 
 ### 🐛 Bug Fixes

@@ -15,7 +15,7 @@ from werkzeug import Request, Response
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
 from apify_client._status_message_watcher import StatusMessageWatcherBase
-from apify_client._streamed_log import StreamedLogBase
+from apify_client._streamed_log import StreamedLog, StreamedLogBase
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -818,3 +818,45 @@ async def test_streamed_log_async_stop_flushes_buffered_tail(
     messages = [record.message for record in caplog.records]
     assert any(_TAIL_FIRST_MESSAGE in m for m in messages), f'First message missing. Got: {messages}'
     assert any(_TAIL_SECOND_MESSAGE in m for m in messages), f'Buffered tail dropped on async stop(). Got: {messages}'
+
+
+def test_streamed_log_sync_stop_does_not_hang_on_silent_stream(
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify `stop()` returns promptly even when the underlying stream is silent (no chunks)."""
+    # Shorten the read timeout so the test doesn't wait for the production default.
+    monkeypatch.setattr(StreamedLog, '_read_timeout', timedelta(seconds=1))
+
+    release_server = threading.Event()
+
+    def _silent_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            # Yield an empty chunk so werkzeug flushes headers and the client sees a streaming
+            # response; then block without emitting any log data.
+            yield b''
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_silent_handler)
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = run_client.get_streamed_log()
+
+    streamed_log.start()
+    try:
+        # Give the streaming thread time to start and block inside iter_bytes.
+        time.sleep(0.3)
+
+        # Call stop() from a helper thread so the test cannot hang indefinitely if the fix regresses.
+        stop_thread = threading.Thread(target=streamed_log.stop)
+        stop_thread.start()
+        stop_thread.join(timeout=5)
+        assert not stop_thread.is_alive(), 'stop() hangs when the underlying stream is silent'
+    finally:
+        release_server.set()

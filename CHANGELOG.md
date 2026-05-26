@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.2 - **not yet released**
+## [3.0.2](https://github.com/apify/apify-client-python/releases/tag/v3.0.2) (2026-05-26)
 
 ### 🐛 Bug Fixes
 
@@ -12,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Flush StreamedLogAsync tail when stop() cancels the task ([#754](https://github.com/apify/apify-client-python/pull/754)) ([ea23338](https://github.com/apify/apify-client-python/commit/ea2333822937c4ad9b72fbba63e6fd7b52343055)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.1](https://github.com/apify/apify-client-python/releases/tag/v3.0.1) (2026-05-22)
 
 ### 🐛 Bug Fixes

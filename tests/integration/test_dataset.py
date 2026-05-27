@@ -432,8 +432,7 @@ async def test_dataset_collection_iterate(client: ApifyClient | ApifyClientAsync
         created_ids.append(dataset.id)
 
     try:
-        # Iterate with a small chunk to force multiple API calls
-        iterator = client.datasets().iterate(limit=10, desc=True)
+        iterator = client.datasets().iterate(desc=True)
         collected: list[DatasetListItem] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)

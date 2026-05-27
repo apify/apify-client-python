@@ -615,7 +615,7 @@ async def test_request_queue_collection_iterate(client: ApifyClient | ApifyClien
         created_ids.append(rq.id)
 
     try:
-        iterator = client.request_queues().iterate(limit=10, desc=True)
+        iterator = client.request_queues().iterate(desc=True)
         collected: list[RequestQueueShort] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)

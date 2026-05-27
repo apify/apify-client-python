@@ -219,7 +219,7 @@ async def test_webhook_collection_iterate(client: ApifyClient | ApifyClientAsync
     assert len(set(created_ids)) == 3
 
     try:
-        iterator = client.webhooks().iterate(limit=10, desc=True)
+        iterator = client.webhooks().iterate(desc=True)
         collected: list[WebhookShort] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)

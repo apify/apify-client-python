@@ -365,7 +365,7 @@ async def test_task_collection_iterate(client: ApifyClient | ApifyClientAsync, *
         created_ids.append(task.id)
 
     try:
-        iterator = client.tasks().iterate(limit=10, desc=True)
+        iterator = client.tasks().iterate(desc=True)
         collected: list[TaskShort] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)

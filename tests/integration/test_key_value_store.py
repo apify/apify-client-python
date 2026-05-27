@@ -555,7 +555,7 @@ async def test_key_value_store_collection_iterate(client: ApifyClient | ApifyCli
         created_ids.append(kvs.id)
 
     try:
-        iterator = client.key_value_stores().iterate(limit=10, desc=True)
+        iterator = client.key_value_stores().iterate(desc=True)
         collected: list[KeyValueStore] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)

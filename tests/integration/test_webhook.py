@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
 
-from ._utils import maybe_await
+from ._utils import collect_iterate_until_present, maybe_await
 from apify_client._models import (
     ListOfRuns,
     ListOfWebhookDispatches,
@@ -219,19 +219,12 @@ async def test_webhook_collection_iterate(client: ApifyClient | ApifyClientAsync
     assert len(set(created_ids)) == 3
 
     try:
-        iterator = client.webhooks().iterate(desc=True)
-        collected: list[WebhookShort] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for w in iterator:
-                assert isinstance(w, WebhookShort)
-                collected.append(w)
-        else:
-            assert isinstance(iterator, Iterator)
-            for w in iterator:
-                assert isinstance(w, WebhookShort)
-                collected.append(w)
-
+        collected = await collect_iterate_until_present(
+            lambda: client.webhooks().iterate(desc=True),
+            set(created_ids),
+            item_type=WebhookShort,
+            is_async=is_async,
+        )
         collected_ids = {w.id for w in collected}
         for webhook_id in created_ids:
             assert webhook_id in collected_ids

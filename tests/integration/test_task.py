@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import get_random_resource_name, maybe_await
+from ._utils import collect_iterate_until_present, get_random_resource_name, maybe_await
 from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, RunShort, Task, TaskShort
 
 if TYPE_CHECKING:
@@ -365,19 +365,12 @@ async def test_task_collection_iterate(client: ApifyClient | ApifyClientAsync, *
         created_ids.append(task.id)
 
     try:
-        iterator = client.tasks().iterate(desc=True)
-        collected: list[TaskShort] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for t in iterator:
-                assert isinstance(t, TaskShort)
-                collected.append(t)
-        else:
-            assert isinstance(iterator, Iterator)
-            for t in iterator:
-                assert isinstance(t, TaskShort)
-                collected.append(t)
-
+        collected = await collect_iterate_until_present(
+            lambda: client.tasks().iterate(desc=True),
+            set(created_ids),
+            item_type=TaskShort,
+            is_async=is_async,
+        )
         collected_ids = {t.id for t in collected}
         for task_id in created_ids:
             assert task_id in collected_ids

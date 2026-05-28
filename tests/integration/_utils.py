@@ -4,13 +4,14 @@ import asyncio
 import secrets
 import string
 import time
+from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, overload
 
 import pytest
 
 if TYPE_CHECKING:
-    from collections.abc import Coroutine
+    from collections.abc import Callable, Coroutine
 
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -18,6 +19,16 @@ TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'
 API_URL_ENV_VAR = 'APIFY_INTEGRATION_TESTS_API_URL'
 
 T = TypeVar('T')
+
+
+class _HasId(Protocol):
+    """Items returned by collection `iterate()` endpoints all expose `.id`."""
+
+    @property
+    def id(self) -> str: ...
+
+
+_HasIdT = TypeVar('_HasIdT', bound=_HasId)
 
 
 # ============================================================================
@@ -106,6 +117,56 @@ async def maybe_sleep(seconds: float, *, is_async: bool) -> None:
         await asyncio.sleep(seconds)
     else:
         time.sleep(seconds)  # noqa: ASYNC251
+
+
+async def collect_iterate_until_present(
+    iterator_factory: Callable[[], Iterator[_HasIdT] | AsyncIterator[_HasIdT]],
+    expected_ids: set[str],
+    *,
+    item_type: type[_HasIdT],
+    is_async: bool,
+    max_attempts: int = 5,
+    interval: float = 1.0,
+) -> list[_HasIdT]:
+    """Drain a collection `iterate()` until every expected ID is present.
+
+    Handles eventual consistency on listing endpoints: under parallel load a freshly
+    created resource may not appear in the listing for a short window. Each attempt
+    builds a fresh iterator via `iterator_factory`, drains it, and breaks early once
+    `expected_ids` is a subset of the collected items' `.id` values. The most recent
+    collection is returned regardless of whether the condition was met, so the caller
+    can run its own assertion with a helpful failure message.
+
+    Args:
+        iterator_factory: No-arg callable returning a fresh iterator on each call.
+        expected_ids: IDs that must all appear in the collected items.
+        item_type: Asserted to match the runtime type of each yielded item.
+        is_async: Whether the iterator is async (and so are sleeps).
+        max_attempts: Maximum number of polling rounds.
+        interval: Seconds to sleep before each attempt.
+
+    Returns:
+        The most recently collected items.
+    """
+    collected: list[_HasIdT] = []
+    for attempt in range(max_attempts):
+        if attempt > 0:
+            await maybe_sleep(interval, is_async=is_async)
+        iterator = iterator_factory()
+        collected = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for item in iterator:
+                assert isinstance(item, item_type)
+                collected.append(item)
+        else:
+            assert isinstance(iterator, Iterator)
+            for item in iterator:
+                assert isinstance(item, item_type)
+                collected.append(item)
+        if expected_ids.issubset(item.id for item in collected):
+            break
+    return collected
 
 
 # ============================================================================

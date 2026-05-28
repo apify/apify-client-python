@@ -6,7 +6,13 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import get_random_resource_name, get_random_string, maybe_await, maybe_sleep
+from ._utils import (
+    collect_iterate_until_present,
+    get_random_resource_name,
+    get_random_string,
+    maybe_await,
+    maybe_sleep,
+)
 from apify_client._models import (
     BatchAddResult,
     BatchDeleteResult,
@@ -615,19 +621,12 @@ async def test_request_queue_collection_iterate(client: ApifyClient | ApifyClien
         created_ids.append(rq.id)
 
     try:
-        iterator = client.request_queues().iterate(desc=True)
-        collected: list[RequestQueueShort] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for rq in iterator:
-                assert isinstance(rq, RequestQueueShort)
-                collected.append(rq)
-        else:
-            assert isinstance(iterator, Iterator)
-            for rq in iterator:
-                assert isinstance(rq, RequestQueueShort)
-                collected.append(rq)
-
+        collected = await collect_iterate_until_present(
+            lambda: client.request_queues().iterate(desc=True),
+            set(created_ids),
+            item_type=RequestQueueShort,
+            is_async=is_async,
+        )
         collected_ids = {rq.id for rq in collected}
         for rq_id in created_ids:
             assert rq_id in collected_ids

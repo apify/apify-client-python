@@ -10,7 +10,13 @@ from typing import TYPE_CHECKING
 import impit
 import pytest
 
-from ._utils import KvsFixture, get_random_resource_name, maybe_await, maybe_sleep
+from ._utils import (
+    KvsFixture,
+    collect_iterate_until_present,
+    get_random_resource_name,
+    maybe_await,
+    maybe_sleep,
+)
 from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 from apify_client.errors import ApifyApiError
 
@@ -555,19 +561,12 @@ async def test_key_value_store_collection_iterate(client: ApifyClient | ApifyCli
         created_ids.append(kvs.id)
 
     try:
-        iterator = client.key_value_stores().iterate(desc=True)
-        collected: list[KeyValueStore] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for kvs in iterator:
-                assert isinstance(kvs, KeyValueStore)
-                collected.append(kvs)
-        else:
-            assert isinstance(iterator, Iterator)
-            for kvs in iterator:
-                assert isinstance(kvs, KeyValueStore)
-                collected.append(kvs)
-
+        collected = await collect_iterate_until_present(
+            lambda: client.key_value_stores().iterate(desc=True),
+            set(created_ids),
+            item_type=KeyValueStore,
+            is_async=is_async,
+        )
         collected_ids = {kvs.id for kvs in collected}
         for created_id in created_ids:
             assert created_id in collected_ids

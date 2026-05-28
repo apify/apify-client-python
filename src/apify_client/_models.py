@@ -136,7 +136,7 @@ class ActorChargeEvent(BaseModel):
     """
     Human-readable title shown to users in the billing UI.
     """
-    event_description: Annotated[str, Field(alias='eventDescription')]
+    event_description: Annotated[str | None, Field(alias='eventDescription')] = None
     """
     Human-readable description of what triggers this event.
     """
@@ -617,15 +617,15 @@ class CommonActorPricingInfo(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    apify_margin_percentage: Annotated[float, Field(alias='apifyMarginPercentage')]
+    apify_margin_percentage: Annotated[float | None, Field(alias='apifyMarginPercentage')] = None
     """
     In [0, 1], fraction of pricePerUnitUsd that goes to Apify
     """
-    created_at: Annotated[AwareDatetime, Field(alias='createdAt')]
+    created_at: Annotated[AwareDatetime | None, Field(alias='createdAt')] = None
     """
     When this pricing info record has been created
     """
-    started_at: Annotated[AwareDatetime, Field(alias='startedAt')]
+    started_at: Annotated[AwareDatetime | None, Field(alias='startedAt')] = None
     """
     Since when is this pricing info record effective for a given Actor
     """

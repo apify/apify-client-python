@@ -11,7 +11,13 @@ from typing import TYPE_CHECKING
 import impit
 import pytest
 
-from ._utils import DatasetFixture, get_random_resource_name, maybe_await, maybe_sleep
+from ._utils import (
+    DatasetFixture,
+    collect_iterate_until_present,
+    get_random_resource_name,
+    maybe_await,
+    maybe_sleep,
+)
 from apify_client._models import Dataset, DatasetListItem, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
@@ -432,19 +438,12 @@ async def test_dataset_collection_iterate(client: ApifyClient | ApifyClientAsync
         created_ids.append(dataset.id)
 
     try:
-        iterator = client.datasets().iterate(desc=True)
-        collected: list[DatasetListItem] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for ds in iterator:
-                assert isinstance(ds, DatasetListItem)
-                collected.append(ds)
-        else:
-            assert isinstance(iterator, Iterator)
-            for ds in iterator:
-                assert isinstance(ds, DatasetListItem)
-                collected.append(ds)
-
+        collected = await collect_iterate_until_present(
+            lambda: client.datasets().iterate(desc=True),
+            set(created_ids),
+            item_type=DatasetListItem,
+            is_async=is_async,
+        )
         collected_ids = {ds.id for ds in collected}
         for created_id in created_ids:
             assert created_id in collected_ids

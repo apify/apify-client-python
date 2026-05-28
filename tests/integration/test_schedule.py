@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
-from ._utils import get_random_resource_name, maybe_await
+from ._utils import collect_iterate_until_present, get_random_resource_name, maybe_await
 from apify_client._models import Actor, ListOfSchedules, Schedule, ScheduleActionRunActor, ScheduleShort
 
 if TYPE_CHECKING:
@@ -193,19 +192,12 @@ async def test_schedule_collection_iterate(client: ApifyClient | ApifyClientAsyn
         created_ids.append(schedule.id)
 
     try:
-        iterator = client.schedules().iterate()
-        collected: list[ScheduleShort] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for s in iterator:
-                assert isinstance(s, ScheduleShort)
-                collected.append(s)
-        else:
-            assert isinstance(iterator, Iterator)
-            for s in iterator:
-                assert isinstance(s, ScheduleShort)
-                collected.append(s)
-
+        collected = await collect_iterate_until_present(
+            lambda: client.schedules().iterate(),
+            set(created_ids),
+            item_type=ScheduleShort,
+            is_async=is_async,
+        )
         collected_ids = {s.id for s in collected}
         for sched_id in created_ids:
             assert sched_id in collected_ids

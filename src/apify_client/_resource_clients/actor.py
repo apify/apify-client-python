@@ -75,7 +75,7 @@ class ActorClient(ResourceClient):
         self,
         *,
         resource_id: str,
-        resource_path: str = 'acts',
+        resource_path: str = 'actors',
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -571,7 +571,7 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         *,
         resource_id: str,
-        resource_path: str = 'acts',
+        resource_path: str = 'actors',
         **kwargs: Any,
     ) -> None:
         super().__init__(

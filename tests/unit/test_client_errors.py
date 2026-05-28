@@ -281,7 +281,7 @@ def test_actor_last_run_dataset_get_raises_on_404(httpserver: HTTPServer, sync_c
     """404 covers missing actor, missing last_run, or missing dataset — all three are indistinguishable from the single
     HTTP response (the client only hits the final URL), so `NotFoundError` propagates uniformly.
     """
-    httpserver.expect_request('/v2/acts/actor-id/runs/last/dataset').respond_with_json(_not_found_body(), status=404)
+    httpserver.expect_request('/v2/actors/actor-id/runs/last/dataset').respond_with_json(_not_found_body(), status=404)
     with pytest.raises(NotFoundError):
         sync_client.actor('actor-id').last_run().dataset().get()
 
@@ -289,13 +289,13 @@ def test_actor_last_run_dataset_get_raises_on_404(httpserver: HTTPServer, sync_c
 async def test_actor_last_run_dataset_get_raises_on_404_async(
     httpserver: HTTPServer, async_client: ApifyClientAsync
 ) -> None:
-    httpserver.expect_request('/v2/acts/actor-id/runs/last/dataset').respond_with_json(_not_found_body(), status=404)
+    httpserver.expect_request('/v2/actors/actor-id/runs/last/dataset').respond_with_json(_not_found_body(), status=404)
     with pytest.raises(NotFoundError):
         await async_client.actor('actor-id').last_run().dataset().get()
 
 
 def test_actor_last_run_dataset_get_returns_dataset(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    httpserver.expect_request('/v2/acts/actor-id/runs/last/dataset').respond_with_json({'data': _DATASET_FIXTURE})
+    httpserver.expect_request('/v2/actors/actor-id/runs/last/dataset').respond_with_json({'data': _DATASET_FIXTURE})
     dataset = sync_client.actor('actor-id').last_run().dataset().get()
     assert dataset is not None
     assert dataset.id == 'ds-1'
@@ -304,7 +304,7 @@ def test_actor_last_run_dataset_get_returns_dataset(httpserver: HTTPServer, sync
 async def test_actor_last_run_dataset_get_returns_dataset_async(
     httpserver: HTTPServer, async_client: ApifyClientAsync
 ) -> None:
-    httpserver.expect_request('/v2/acts/actor-id/runs/last/dataset').respond_with_json({'data': _DATASET_FIXTURE})
+    httpserver.expect_request('/v2/actors/actor-id/runs/last/dataset').respond_with_json({'data': _DATASET_FIXTURE})
     dataset = await async_client.actor('actor-id').last_run().dataset().get()
     assert dataset is not None
     assert dataset.id == 'ds-1'

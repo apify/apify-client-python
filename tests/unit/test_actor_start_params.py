@@ -64,7 +64,7 @@ def test_actor_start_passes_timeout_param_sync(httpserver: HTTPServer) -> None:
         )
 
     httpserver.expect_request(
-        f'/v2/acts/{_MOCKED_ACTOR_ID}/runs',
+        f'/v2/actors/{_MOCKED_ACTOR_ID}/runs',
         method='POST',
     ).respond_with_handler(capture_request)
 
@@ -97,7 +97,7 @@ async def test_actor_start_passes_timeout_param_async(httpserver: HTTPServer) ->
         )
 
     httpserver.expect_request(
-        f'/v2/acts/{_MOCKED_ACTOR_ID}/runs',
+        f'/v2/actors/{_MOCKED_ACTOR_ID}/runs',
         method='POST',
     ).respond_with_handler(capture_request)
 
@@ -130,7 +130,7 @@ def test_actor_start_timeout_not_passed_when_none_sync(httpserver: HTTPServer) -
         )
 
     httpserver.expect_request(
-        f'/v2/acts/{_MOCKED_ACTOR_ID}/runs',
+        f'/v2/actors/{_MOCKED_ACTOR_ID}/runs',
         method='POST',
     ).respond_with_handler(capture_request)
 
@@ -160,7 +160,7 @@ async def test_actor_start_timeout_not_passed_when_none_async(httpserver: HTTPSe
         )
 
     httpserver.expect_request(
-        f'/v2/acts/{_MOCKED_ACTOR_ID}/runs',
+        f'/v2/actors/{_MOCKED_ACTOR_ID}/runs',
         method='POST',
     ).respond_with_handler(capture_request)
 
@@ -191,7 +191,7 @@ def test_actor_start_various_timeout_values_sync(httpserver: HTTPServer, timeout
         )
 
     httpserver.expect_request(
-        f'/v2/acts/{_MOCKED_ACTOR_ID}/runs',
+        f'/v2/actors/{_MOCKED_ACTOR_ID}/runs',
         method='POST',
     ).respond_with_handler(capture_request)
 
@@ -218,7 +218,7 @@ async def test_actor_start_various_timeout_values_async(httpserver: HTTPServer, 
         )
 
     httpserver.expect_request(
-        f'/v2/acts/{_MOCKED_ACTOR_ID}/runs',
+        f'/v2/actors/{_MOCKED_ACTOR_ID}/runs',
         method='POST',
     ).respond_with_handler(capture_request)
 

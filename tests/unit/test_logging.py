@@ -171,7 +171,7 @@ def mock_api(httpserver: HTTPServer) -> None:
     )
 
     # Add actor info endpoint
-    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
         {
             'data': {
                 'id': _MOCKED_ACTOR_ID,
@@ -203,7 +203,7 @@ def mock_api(httpserver: HTTPServer) -> None:
     )
 
     # Add actor run creation endpoint
-    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
         {
             'data': status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False),
         }
@@ -520,7 +520,7 @@ async def test_streamed_log_async_restart_after_normal_completion(httpserver: HT
     )
 
     # Set up actor info endpoint
-    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
         {
             'data': {
                 'id': _MOCKED_ACTOR_ID,
@@ -608,7 +608,7 @@ async def test_status_message_watcher_async_restart_after_normal_completion(http
     )
 
     # Set up actor info endpoint (needed for get_status_message_watcher)
-    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
         {
             'data': {
                 'id': _MOCKED_ACTOR_ID,
@@ -749,7 +749,7 @@ def _register_run_and_actor_endpoints(httpserver: HTTPServer) -> None:
             }
         }
     )
-    httpserver.expect_request(f'/v2/acts/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}', method='GET').respond_with_json(
         {
             'data': {
                 'id': _MOCKED_ACTOR_ID,

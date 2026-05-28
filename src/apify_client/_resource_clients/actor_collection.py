@@ -36,7 +36,7 @@ class ActorCollectionClient(ResourceClient):
     def __init__(
         self,
         *,
-        resource_path: str = 'acts',
+        resource_path: str = 'actors',
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -215,7 +215,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
     def __init__(
         self,
         *,
-        resource_path: str = 'acts',
+        resource_path: str = 'actors',
         **kwargs: Any,
     ) -> None:
         super().__init__(

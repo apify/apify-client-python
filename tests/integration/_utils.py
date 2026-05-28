@@ -149,8 +149,9 @@ async def collect_iterate_until_present(
         The most recently collected items.
     """
     collected: list[_HasIdT] = []
-    for _ in range(max_attempts):
-        await maybe_sleep(interval, is_async=is_async)
+    for attempt in range(max_attempts):
+        if attempt > 0:
+            await maybe_sleep(interval, is_async=is_async)
         iterator = iterator_factory()
         collected = []
         if is_async:

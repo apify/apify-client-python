@@ -61,18 +61,23 @@ async def test_webhook_dispatch_collection_iterate(client: ApifyClient | ApifyCl
 
 async def test_webhook_dispatch_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test webhook_dispatches().list() with pagination parameters."""
-    page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=0, desc=True))
+    # `desc=False` (oldest first) keeps the offset window stable against concurrent inserts:
+    # parallel xdist workers fire webhooks throughout the suite, so with `desc=True` the head
+    # of the list shifts down between the two `list()` calls and the offset=5 page can return
+    # the same item as offset=0. Listing oldest-first anchors offsets to historical dispatches
+    # that don't move.
+    page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=0, desc=False))
     assert isinstance(page, ListOfWebhookDispatches)
     assert isinstance(page.items, list)
     # `limit=5` must cap the page size.
     assert len(page.items) <= 5
-    # `desc=True` must return dispatches in non-increasing `created_at` order.
+    # `desc=False` must return dispatches in non-decreasing `created_at` order.
     created_ats = [d.created_at for d in page.items if d.created_at is not None]
-    assert created_ats == sorted(created_ats, reverse=True)
+    assert created_ats == sorted(created_ats)
     # `offset` must move the window — second page must not start with the same id as the first
     # (only meaningful when the first page is full, i.e. at least 5 items exist).
     if len(page.items) == 5:
-        next_page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=5, desc=True))
+        next_page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=5, desc=False))
         assert isinstance(next_page, ListOfWebhookDispatches)
         if next_page.items:
             assert page.items[0].id != next_page.items[0].id

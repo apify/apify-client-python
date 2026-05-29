@@ -61,11 +61,9 @@ async def test_webhook_dispatch_collection_iterate(client: ApifyClient | ApifyCl
 
 async def test_webhook_dispatch_list_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test webhook_dispatches().list() with pagination parameters."""
-    # `desc=False` (oldest first) keeps the offset window stable against concurrent inserts:
-    # parallel xdist workers fire webhooks throughout the suite, so with `desc=True` the head
-    # of the list shifts down between the two `list()` calls and the offset=5 page can return
-    # the same item as offset=0. Listing oldest-first anchors offsets to historical dispatches
-    # that don't move.
+    # `desc=False` (oldest first) keeps the offset window stable: parallel xdist workers fire
+    # webhooks throughout the suite, so with `desc=True` the list head shifts between the two
+    # `list()` calls and offset=5 can return the same item as offset=0.
     page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=0, desc=False))
     assert isinstance(page, ListOfWebhookDispatches)
     assert isinstance(page.items, list)

@@ -16,7 +16,7 @@ from ._utils import (
     collect_iterate_until_present,
     get_random_resource_name,
     maybe_await,
-    maybe_sleep,
+    poll_until_condition,
 )
 from apify_client._models import Dataset, DatasetListItem, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
@@ -238,7 +238,7 @@ async def test_dataset_update(client: ApifyClient | ApifyClientAsync) -> None:
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsync) -> None:
     """Test pushing items to dataset and listing them."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -255,12 +255,13 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
         ]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
 
-        # List items
-        items_page = await maybe_await(dataset_client.list_items())
-        assert isinstance(items_page, DatasetItemsPage)
+        items_page = await poll_until_condition(get_items, lambda page: len(page.items) == 3)
         assert len(items_page.items) == 3
         assert items_page.count == 3
         # Note: items_page.total may be 0 immediately after push due to eventual consistency
@@ -274,7 +275,7 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing items with pagination parameters."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -287,8 +288,13 @@ async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyCli
         items_to_push = [{'index': i, 'value': i * 10} for i in range(10)]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 10)
 
         # List with limit
         items_page = await maybe_await(dataset_client.list_items(limit=5))
@@ -311,7 +317,7 @@ async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyCli
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing items with field filtering."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -327,12 +333,13 @@ async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientA
         ]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all items are visible (eventual consistency), listing with the fields filter
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items(fields=['id', 'name']))
+            assert isinstance(page, DatasetItemsPage)
+            return page
 
-        # List with fields filter
-        items_page = await maybe_await(dataset_client.list_items(fields=['id', 'name']))
-        assert isinstance(items_page, DatasetItemsPage)
+        items_page = await poll_until_condition(get_items, lambda page: len(page.items) == 2)
         assert len(items_page.items) == 2
 
         # Verify only specified fields are returned
@@ -358,8 +365,13 @@ async def test_dataset_iterate_items(client: ApifyClient | ApifyClientAsync, *, 
         items_to_push = [{'index': i} for i in range(5)]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 5)
 
         # Iterate over items
         iterator = dataset_client.iterate_items()
@@ -398,7 +410,7 @@ async def test_dataset_delete_nonexistent(client: ApifyClient | ApifyClientAsync
     assert retrieved_dataset is None
 
 
-async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting dataset statistics."""
     dataset_name = get_random_resource_name('dataset')
 
@@ -414,8 +426,13 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync, *,
         ]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 2)
 
         # Get statistics
         statistics = await maybe_await(dataset_client.get_statistics())
@@ -452,7 +469,7 @@ async def test_dataset_collection_iterate(client: ApifyClient | ApifyClientAsync
             await maybe_await(client.dataset(ds_id).delete())
 
 
-async def test_dataset_list_items_desc(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_list_items_desc(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing items in descending order."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
@@ -462,7 +479,14 @@ async def test_dataset_list_items_desc(client: ApifyClient | ApifyClientAsync, *
     try:
         items_to_push = [{'idx': i} for i in range(5)]
         await maybe_await(dataset_client.push_items(items_to_push))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 5)
 
         # Default ordering - ascending
         page_asc = await maybe_await(dataset_client.list_items())
@@ -478,7 +502,7 @@ async def test_dataset_list_items_desc(client: ApifyClient | ApifyClientAsync, *
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_list_items_omit_and_clean(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_list_items_omit_and_clean(client: ApifyClient | ApifyClientAsync) -> None:
     """Test list_items with `omit`, `clean`, `skip_hidden`, and `skip_empty` filters."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
@@ -493,7 +517,14 @@ async def test_dataset_list_items_omit_and_clean(client: ApifyClient | ApifyClie
             {'id': 2, 'name': 'also visible', '#secret': 'shh', 'extra': 'Y'},
         ]
         await maybe_await(dataset_client.push_items(items_to_push))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == len(items_to_push))
 
         # `omit` should remove the `extra` field
         omit_page = await maybe_await(dataset_client.list_items(omit=['extra']))
@@ -534,14 +565,13 @@ async def test_dataset_iterate_items_chunked(client: ApifyClient | ApifyClientAs
         items_to_push = [{'idx': i} for i in range(12)]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Poll until all items are visible (eventual consistency); 12 items + 3 paginated reads
-        # is more demanding than other dataset tests, so a single 1s sleep is not safe.
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            head = await maybe_await(dataset_client.list_items(limit=12))
-            assert isinstance(head, DatasetItemsPage)
-            if len(head.items) == 12:
-                break
+        # Poll until all 12 items are visible (eventual consistency) so the chunked iteration sees every page
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items(limit=12))
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 12)
 
         # chunk_size=5 forces 3 underlying pages for 12 items
         iterator = dataset_client.iterate_items(chunk_size=5)
@@ -575,7 +605,14 @@ async def test_dataset_iterate_items_with_fields(client: ApifyClient | ApifyClie
     try:
         items_to_push = [{'id': i, 'name': f'item-{i}', 'extra': 'drop-me'} for i in range(3)]
         await maybe_await(dataset_client.push_items(items_to_push))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 3)
 
         iterator = dataset_client.iterate_items(fields=['id', 'name'])
         collected: list[dict] = []
@@ -597,7 +634,7 @@ async def test_dataset_iterate_items_with_fields(client: ApifyClient | ApifyClie
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_create_items_public_url(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_create_items_public_url(client: ApifyClient | ApifyClientAsync) -> None:
     """Test generating a signed public URL for dataset items and fetching from it."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
@@ -607,7 +644,14 @@ async def test_dataset_create_items_public_url(client: ApifyClient | ApifyClient
     try:
         items = [{'id': i, 'value': i * 10} for i in range(3)]
         await maybe_await(dataset_client.push_items(items))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all items are visible (eventual consistency) so the public URL serves all of them
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 3)
 
         public_url = await maybe_await(dataset_client.create_items_public_url(expires_in=timedelta(minutes=5)))
         assert isinstance(public_url, str)
@@ -623,7 +667,7 @@ async def test_dataset_create_items_public_url(client: ApifyClient | ApifyClient
         await maybe_await(dataset_client.delete())
 
 
-async def test_dataset_get_items_as_bytes_csv(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_dataset_get_items_as_bytes_csv(client: ApifyClient | ApifyClientAsync) -> None:
     """Test get_items_as_bytes with non-JSON item_format (csv)."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
@@ -633,7 +677,14 @@ async def test_dataset_get_items_as_bytes_csv(client: ApifyClient | ApifyClientA
     try:
         items = [{'id': 1, 'name': 'first'}, {'id': 2, 'name': 'second'}]
         await maybe_await(dataset_client.push_items(items))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 2)
 
         raw = await maybe_await(dataset_client.get_items_as_bytes(item_format='csv'))
         assert isinstance(raw, bytes)
@@ -663,8 +714,13 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
         ]
         await maybe_await(dataset_client.push_items(items_to_push))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all items are visible (eventual consistency)
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items())
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 3)
 
         # Stream items using context manager
         stream_ctx = dataset_client.stream_items(item_format='json')

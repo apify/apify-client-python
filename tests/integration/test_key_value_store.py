@@ -16,6 +16,7 @@ from ._utils import (
     get_random_resource_name,
     maybe_await,
     maybe_sleep,
+    poll_until_condition,
 )
 from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 from apify_client.errors import ApifyApiError
@@ -254,7 +255,7 @@ async def test_key_value_store_update(client: ApifyClient | ApifyClientAsync) ->
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyClientAsync) -> None:
     """Test setting and getting records from key-value store."""
     store_name = get_random_resource_name('kvs')
 
@@ -267,11 +268,11 @@ async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyCli
         test_value = {'name': 'Test Item', 'value': 123, 'nested': {'data': 'value'}}
         await maybe_await(store_client.set_record('test-key', test_value))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the record is visible (eventual consistency)
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record('test-key'))
 
-        # Get the record
-        record = await maybe_await(store_client.get_record('test-key'))
+        record = await poll_until_condition(get_record, lambda record: record is not None)
         assert isinstance(record, dict)
         assert record['key'] == 'test-key'
         assert record['value'] == test_value
@@ -280,9 +281,7 @@ async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyCli
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_set_and_get_text_record(
-    client: ApifyClient | ApifyClientAsync, *, is_async: bool
-) -> None:
+async def test_key_value_store_set_and_get_text_record(client: ApifyClient | ApifyClientAsync) -> None:
     """Test setting and getting text records."""
     store_name = get_random_resource_name('kvs')
 
@@ -295,11 +294,11 @@ async def test_key_value_store_set_and_get_text_record(
         test_text = 'Hello, this is a test text!'
         await maybe_await(store_client.set_record('text-key', test_text, content_type='text/plain'))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the record is visible (eventual consistency)
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record('text-key'))
 
-        # Get the record
-        record = await maybe_await(store_client.get_record('text-key'))
+        record = await poll_until_condition(get_record, lambda record: record is not None)
         assert isinstance(record, dict)
         assert record['key'] == 'text-key'
         assert record['value'] == test_text
@@ -308,7 +307,7 @@ async def test_key_value_store_set_and_get_text_record(
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing keys in the key-value store."""
     store_name = get_random_resource_name('kvs')
 
@@ -321,12 +320,13 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync,
         for i in range(5):
             await maybe_await(store_client.set_record(f'key-{i}', {'index': i}))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until all keys are visible (eventual consistency)
+        async def get_keys() -> ListOfKeys:
+            keys = await maybe_await(store_client.list_keys())
+            assert isinstance(keys, ListOfKeys)
+            return keys
 
-        # List keys
-        keys_response = await maybe_await(store_client.list_keys())
-        assert isinstance(keys_response, ListOfKeys)
+        keys_response = await poll_until_condition(get_keys, lambda keys: len(keys.items) == 5)
         assert len(keys_response.items) == 5
 
         # Verify key names
@@ -337,7 +337,7 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync,
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing keys with limit parameter."""
     store_name = get_random_resource_name('kvs')
 
@@ -350,18 +350,19 @@ async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyC
         for i in range(10):
             await maybe_await(store_client.set_record(f'item-{i:02d}', {'index': i}))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until enough keys are visible (eventual consistency), listing with the limit applied
+        async def get_keys() -> ListOfKeys:
+            keys = await maybe_await(store_client.list_keys(limit=5))
+            assert isinstance(keys, ListOfKeys)
+            return keys
 
-        # List with limit
-        keys_response = await maybe_await(store_client.list_keys(limit=5))
-        assert isinstance(keys_response, ListOfKeys)
+        keys_response = await poll_until_condition(get_keys, lambda keys: len(keys.items) == 5)
         assert len(keys_response.items) == 5
     finally:
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAsync) -> None:
     """Test checking if a record exists."""
     store_name = get_random_resource_name('kvs')
 
@@ -373,11 +374,13 @@ async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAs
         # Set a record
         await maybe_await(store_client.set_record('exists-key', {'data': 'value'}))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the record is visible (eventual consistency)
+        async def added_record_exists() -> bool:
+            exists = await maybe_await(store_client.record_exists('exists-key'))
+            assert isinstance(exists, bool)
+            return exists
 
-        # Check existence
-        exists = await maybe_await(store_client.record_exists('exists-key'))
+        exists = await poll_until_condition(added_record_exists)
         assert exists is True
         exists = await maybe_await(store_client.record_exists('non-existent-key'))
         assert exists is False
@@ -385,7 +388,7 @@ async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAs
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAsync) -> None:
     """Test deleting a record from the store."""
     store_name = get_random_resource_name('kvs')
 
@@ -397,21 +400,18 @@ async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAs
         # Set a record
         await maybe_await(store_client.set_record('delete-me', {'data': 'value'}))
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the record is visible (eventual consistency)
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record('delete-me'))
 
-        # Verify it exists
-        record = await maybe_await(store_client.get_record('delete-me'))
+        record = await poll_until_condition(get_record, lambda record: record is not None)
         assert record is not None
 
         # Delete the record
         await maybe_await(store_client.delete_record('delete-me'))
 
-        # Wait briefly
-        await maybe_sleep(1, is_async=is_async)
-
-        # Verify it's gone
-        record = await maybe_await(store_client.get_record('delete-me'))
+        # Poll until the deletion is reflected (eventual consistency)
+        record = await poll_until_condition(get_record, lambda record: record is None)
         assert record is None
     finally:
         await maybe_await(store_client.delete())
@@ -575,9 +575,7 @@ async def test_key_value_store_collection_iterate(client: ApifyClient | ApifyCli
             await maybe_await(client.key_value_store(kvs_id).delete())
 
 
-async def test_key_value_store_set_and_get_binary_record(
-    client: ApifyClient | ApifyClientAsync, *, is_async: bool
-) -> None:
+async def test_key_value_store_set_and_get_binary_record(client: ApifyClient | ApifyClientAsync) -> None:
     """Test setting and retrieving a binary (bytes) record."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
@@ -588,10 +586,13 @@ async def test_key_value_store_set_and_get_binary_record(
         # Store an explicit bytes value with a binary content type
         binary_value = b'\x89PNG\r\n\x1a\n' + b'fake-png-bytes'
         await maybe_await(store_client.set_record('image.png', binary_value, content_type='image/png'))
-        await maybe_sleep(1, is_async=is_async)
 
+        # Poll until the record is visible (eventual consistency);
         # get_record_as_bytes returns raw bytes (no auto-decoding)
-        record = await maybe_await(store_client.get_record_as_bytes('image.png'))
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record_as_bytes('image.png'))
+
+        record = await poll_until_condition(get_record, lambda record: record is not None)
         assert isinstance(record, dict)
         assert record['key'] == 'image.png'
         assert record['value'] == binary_value
@@ -600,7 +601,7 @@ async def test_key_value_store_set_and_get_binary_record(
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_get_record_public_url(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_key_value_store_get_record_public_url(client: ApifyClient | ApifyClientAsync) -> None:
     """Test get_record_public_url returns a working signed URL."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
@@ -609,7 +610,14 @@ async def test_key_value_store_get_record_public_url(client: ApifyClient | Apify
 
     try:
         await maybe_await(store_client.set_record('my-record', {'hello': 'world'}))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until the record is visible (eventual consistency) so the public URL serves it
+        async def added_record_exists() -> bool:
+            exists = await maybe_await(store_client.record_exists('my-record'))
+            assert isinstance(exists, bool)
+            return exists
+
+        await poll_until_condition(added_record_exists)
 
         public_url = await maybe_await(store_client.get_record_public_url('my-record'))
         assert isinstance(public_url, str)
@@ -624,9 +632,7 @@ async def test_key_value_store_get_record_public_url(client: ApifyClient | Apify
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_create_keys_public_url(
-    client: ApifyClient | ApifyClientAsync, *, is_async: bool
-) -> None:
+async def test_key_value_store_create_keys_public_url(client: ApifyClient | ApifyClientAsync) -> None:
     """Test create_keys_public_url returns a working signed URL for listing keys."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
@@ -636,7 +642,14 @@ async def test_key_value_store_create_keys_public_url(
     try:
         for i in range(3):
             await maybe_await(store_client.set_record(f'key-{i}', {'idx': i}))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all keys are visible (eventual consistency) so the public URL lists all of them
+        async def get_keys() -> ListOfKeys:
+            keys = await maybe_await(store_client.list_keys())
+            assert isinstance(keys, ListOfKeys)
+            return keys
+
+        await poll_until_condition(get_keys, lambda keys: len(keys.items) == 3)
 
         public_url = await maybe_await(store_client.create_keys_public_url(limit=10, expires_in=timedelta(minutes=5)))
         assert isinstance(public_url, str)
@@ -664,7 +677,14 @@ async def test_key_value_store_stream_record_own(client: ApifyClient | ApifyClie
 
     try:
         await maybe_await(store_client.set_record('stream-key', {'data': 'streamed'}))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until the record is visible (eventual consistency) before streaming it
+        async def added_record_exists() -> bool:
+            exists = await maybe_await(store_client.record_exists('stream-key'))
+            assert isinstance(exists, bool)
+            return exists
+
+        await poll_until_condition(added_record_exists)
 
         if is_async:
             async with store_client.stream_record('stream-key') as stream:  # ty: ignore[invalid-context-manager]
@@ -680,9 +700,7 @@ async def test_key_value_store_stream_record_own(client: ApifyClient | ApifyClie
         await maybe_await(store_client.delete())
 
 
-async def test_key_value_store_list_keys_with_exclusive_start_key(
-    client: ApifyClient | ApifyClientAsync, *, is_async: bool
-) -> None:
+async def test_key_value_store_list_keys_with_exclusive_start_key(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing keys with the exclusive_start_key cursor parameter."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
@@ -693,7 +711,14 @@ async def test_key_value_store_list_keys_with_exclusive_start_key(
         # Use zero-padded names so lexicographic order is predictable
         for i in range(5):
             await maybe_await(store_client.set_record(f'key-{i:02d}', {'idx': i}))
-        await maybe_sleep(1, is_async=is_async)
+
+        # Poll until all keys are visible (eventual consistency) so pagination is exercised, not truncated
+        async def get_keys() -> ListOfKeys:
+            keys = await maybe_await(store_client.list_keys())
+            assert isinstance(keys, ListOfKeys)
+            return keys
+
+        await poll_until_condition(get_keys, lambda keys: len(keys.items) == 5)
 
         # First page
         first_page = await maybe_await(store_client.list_keys(limit=2))

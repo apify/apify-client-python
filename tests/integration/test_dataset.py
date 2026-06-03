@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import impit
 import pytest
 
-from ._utils import (
+from .._utils import (
     DatasetFixture,
     collect_iterate_until_present,
     get_random_resource_name,

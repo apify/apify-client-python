@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import collect_iterate_until_present, get_random_resource_name, maybe_await
+from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await
 from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, RunShort, Task, TaskShort
 
 if TYPE_CHECKING:

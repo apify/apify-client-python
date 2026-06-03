@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
-from ._utils import maybe_await
+from .._utils import maybe_await
 from apify_client._models import ListOfWebhookDispatches, WebhookDispatch
 
 if TYPE_CHECKING:

@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import (
+from .._utils import (
     collect_iterate_until_present,
     get_random_resource_name,
     get_random_string,

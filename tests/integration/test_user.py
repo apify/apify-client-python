@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._utils import maybe_await
+from .._utils import maybe_await
 from apify_client._models import AccountLimits, MonthlyUsage, UserPrivateInfo, UserPublicInfo
 from apify_client.errors import ApifyApiError
 

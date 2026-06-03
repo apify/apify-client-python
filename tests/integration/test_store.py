@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ._utils import maybe_await
+from .._utils import maybe_await
 from apify_client._models import ListOfStoreActors, StoreListActor
 
 if TYPE_CHECKING:

@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import maybe_await, poll_until_condition
+from .._utils import maybe_await, poll_until_condition
 from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
 from apify_client.errors import ApifyApiError
 

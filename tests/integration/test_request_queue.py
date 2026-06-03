@@ -12,6 +12,7 @@ from ._utils import (
     get_random_string,
     maybe_await,
     maybe_sleep,
+    poll_until_condition,
 )
 from apify_client._models import (
     BatchAddResult,
@@ -560,6 +561,17 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
         assert isinstance(result, LockedRequestQueueHead)
         lock_response = result
         assert len(lock_response.items) == 3
+        locked_ids = {item.id for item in lock_response.items}
+
+        # Locks are acknowledged before they are visible to subsequent reads, so unlocking immediately can
+        # see fewer locks than were just acquired. Since locked requests are excluded from the queue head,
+        # poll `list_head` until the locked IDs disappear from it (best-effort mitigation of the race).
+        async def all_locks_visible() -> bool:
+            head = await maybe_await(rq_client.list_head(limit=5))
+            assert isinstance(head, RequestQueueHead)
+            return locked_ids.isdisjoint(item.id for item in head.items)
+
+        await poll_until_condition(all_locks_visible, timeout=30, poll_interval=1)
 
         # Unlock all requests
         unlock_response = await maybe_await(rq_client.unlock_requests())

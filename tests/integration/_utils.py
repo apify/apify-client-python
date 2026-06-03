@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import logging
 import secrets
 import string
 import time
@@ -14,8 +13,6 @@ import pytest
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
-
-logger = logging.getLogger(__name__)
 
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -116,57 +113,13 @@ async def maybe_sleep(seconds: float, *, is_async: bool) -> None:
 
 
 @overload
-async def call_with_exp_backoff(
-    fn: Callable[[], Awaitable[T]],
-    condition: Callable[[T], bool] = ...,
-    *,
-    max_retries: int = ...,
-    base_delay: float = ...,
-) -> T: ...
-@overload
-async def call_with_exp_backoff(
-    fn: Callable[[], T],
-    condition: Callable[[T], bool] = ...,
-    *,
-    max_retries: int = ...,
-    base_delay: float = ...,
-) -> T: ...
-async def call_with_exp_backoff(
-    fn: Callable[[], Awaitable[T] | T],
-    condition: Callable[[T], bool] = bool,
-    *,
-    max_retries: int = 5,
-    base_delay: float = 1.0,
-) -> T:
-    """Call `fn`, retrying with exponential backoff until `condition(result)` is True.
-
-    Calls `fn` and checks whether `condition` holds for its result. If it does not, `fn` is retried up to
-    `max_retries` times, sleeping `base_delay * 2 ** attempt` seconds before each retry. The last result is
-    returned regardless of whether the condition was ever satisfied, so the caller can run its own assertion.
-
-    Use this instead of `poll_until_condition` when the wait time is highly variable (e.g. an Actor run
-    container starting up): the growing delay covers a long horizon with few calls.
-    """
-    result = await maybe_await(fn())
-    for attempt in range(max_retries):
-        if condition(result):
-            return result
-        delay = base_delay * 2**attempt
-        logger.info(
-            'Condition not met for %r, retrying in %ss (attempt %d/%d).', result, delay, attempt + 1, max_retries
-        )
-        await asyncio.sleep(delay)
-        result = await maybe_await(fn())
-    return result
-
-
-@overload
 async def poll_until_condition(
     fn: Callable[[], Awaitable[T]],
     condition: Callable[[T], bool] = ...,
     *,
     timeout: float = ...,
     poll_interval: float = ...,
+    backoff_factor: float = ...,
 ) -> T: ...
 @overload
 async def poll_until_condition(
@@ -175,6 +128,7 @@ async def poll_until_condition(
     *,
     timeout: float = ...,
     poll_interval: float = ...,
+    backoff_factor: float = ...,
 ) -> T: ...
 async def poll_until_condition(
     fn: Callable[[], Awaitable[T] | T],
@@ -182,6 +136,7 @@ async def poll_until_condition(
     *,
     timeout: float = 5,
     poll_interval: float = 1,
+    backoff_factor: float = 1,
 ) -> T:
     """Poll `fn` until `condition(result)` is True or the timeout expires.
 
@@ -190,16 +145,19 @@ async def poll_until_condition(
     assertion. The default condition checks for a truthy result.
 
     Use this instead of a fixed `asyncio.sleep` when waiting for eventually-consistent state (e.g. a freshly
-    created resource appearing in a listing) that may take a variable amount of time to propagate. Unlike
-    `call_with_exp_backoff`, the interval between polls stays constant.
+    created resource appearing in a listing) that may take a variable amount of time to propagate. For highly
+    variable wait times (e.g. an Actor run container starting up), pass `backoff_factor` > 1 to multiply the
+    interval after each poll, covering a long timeout with few calls.
     """
     deadline = time.monotonic() + timeout
+    delay = poll_interval
     result = await maybe_await(fn())
     while not condition(result):
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             break
-        await asyncio.sleep(min(poll_interval, remaining))
+        await asyncio.sleep(min(delay, remaining))
+        delay *= backoff_factor
         result = await maybe_await(fn())
     return result
 

@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import call_with_exp_backoff, maybe_await
+from ._utils import maybe_await, poll_until_condition
 from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
 from apify_client.errors import ApifyApiError
 
@@ -294,7 +294,9 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync) -> None:
         async def get_run() -> Run | None:
             return await maybe_await(run_client.get())
 
-        await call_with_exp_backoff(get_run, lambda run: isinstance(run, Run) and run.status != 'READY')
+        await poll_until_condition(
+            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', timeout=30, backoff_factor=2
+        )
 
         # Metamorph the run into the same actor (allowed) with new input
         # Note: hello-world may finish before we can metamorph, so we handle that case
@@ -336,7 +338,9 @@ async def test_run_reboot(client: ApifyClient | ApifyClientAsync) -> None:
         async def get_run() -> Run | None:
             return await maybe_await(run_client.get())
 
-        current_run = await call_with_exp_backoff(get_run, lambda run: isinstance(run, Run) and run.status != 'READY')
+        current_run = await poll_until_condition(
+            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', timeout=30, backoff_factor=2
+        )
 
         # Only try to reboot if the run is still running
         # Note: There's a race condition - run may finish between check and reboot call

@@ -70,12 +70,10 @@ async def test_webhook_dispatch_list_pagination(client: ApifyClient | ApifyClien
     created_ats = [d.created_at for d in page.items if d.created_at is not None]
     assert created_ats == sorted(created_ats, reverse=True)
     # `offset` must move the window — the second page must not start with the same id as the first.
-    # Query in ascending order so the window is anchored to the oldest dispatches: with `desc=True`,
-    # dispatches created by other tests running in parallel land at the head and can shift the first
-    # page down into the second between the two calls, making both pages start with the same id.
+    # Use ascending order so dispatches created by parallel tests can't shift the pages between calls.
     asc_page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=0, desc=False))
     assert isinstance(asc_page, ListOfWebhookDispatches)
-    # Only meaningful when the first page is full, i.e. at least 5 dispatches exist.
+    # Only meaningful when the first page is full.
     if len(asc_page.items) == 5:
         next_page = await maybe_await(client.webhook_dispatches().list(limit=5, offset=5, desc=False))
         assert isinstance(next_page, ListOfWebhookDispatches)

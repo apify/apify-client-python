@@ -6,12 +6,12 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import (
+from .._utils import (
     collect_iterate_until_present,
     get_random_resource_name,
     get_random_string,
     maybe_await,
-    maybe_sleep,
+    poll_until_condition,
 )
 from apify_client._models import (
     BatchAddResult,
@@ -43,23 +43,19 @@ async def ensure_queue_is_populated(
     rq_client: RequestQueueClient | RequestQueueClientAsync,
     *,
     expected_count: int,
-    is_async: bool,
 ) -> None:
     """Poll the queue until `expected_count` requests are visible.
 
     Uses `list_head` (without side effects) so polling does not lock items, which would otherwise
     lead to an ambiguous count of actually-locked requests in tests that exercise locking.
     """
-    head_response: RequestQueueHead | None = None
-    for _ in range(5):
-        await maybe_sleep(1, is_async=is_async)
-        result = await maybe_await(rq_client.list_head(limit=expected_count))
-        assert isinstance(result, RequestQueueHead)
-        head_response = result
-        if len(head_response.items) == expected_count:
-            break
 
-    assert head_response is not None
+    async def get_head() -> RequestQueueHead:
+        head = await maybe_await(rq_client.list_head(limit=expected_count))
+        assert isinstance(head, RequestQueueHead)
+        return head
+
+    head_response = await poll_until_condition(get_head, lambda head: len(head.items) == expected_count)
     assert len(head_response.items) == expected_count
 
 
@@ -98,7 +94,7 @@ async def test_request_queue_collection_get_or_create(client: ApifyClient | Apif
         await maybe_await(client.request_queue(rq.id).delete())
 
 
-async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> None:
     created_rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('queue')))
     assert isinstance(created_rq, RequestQueue)
     rq = client.request_queue(created_rq.id, client_key=get_random_string(10))
@@ -111,16 +107,12 @@ async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync, *, is_
             )
 
         # Poll until all requests are available for locking (eventual consistency)
-        get_head_and_lock_response: LockedRequestQueueHead | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq.list_and_lock_head(limit=10, lock_duration=timedelta(seconds=10)))
-            assert isinstance(result, LockedRequestQueueHead)
-            get_head_and_lock_response = result
-            if len(get_head_and_lock_response.items) == 10:
-                break
+        async def lock_head() -> LockedRequestQueueHead:
+            head = await maybe_await(rq.list_and_lock_head(limit=10, lock_duration=timedelta(seconds=10)))
+            assert isinstance(head, LockedRequestQueueHead)
+            return head
 
-        assert get_head_and_lock_response is not None
+        get_head_and_lock_response = await poll_until_condition(lock_head, lambda head: len(head.items) == 10)
         assert len(get_head_and_lock_response.items) == 10
 
         for locked_request in get_head_and_lock_response.items:
@@ -202,7 +194,7 @@ async def test_request_queue_update(client: ApifyClient | ApifyClientAsync) -> N
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClientAsync) -> None:
     """Test adding and getting a request from the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -222,11 +214,11 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
         assert add_result.request_id is not None
         assert add_result.was_already_present is False
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the request is visible (eventual consistency)
+        async def get_added_request() -> Request | None:
+            return await maybe_await(rq_client.get_request(add_result.request_id))
 
-        # Get the request
-        request = await maybe_await(rq_client.get_request(add_result.request_id))
+        request = await poll_until_condition(get_added_request, lambda request: request is not None)
         assert isinstance(request, Request)
         assert str(request.url) == 'https://example.com/test'
         assert request.unique_key == 'test-key-1'
@@ -234,7 +226,7 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing requests from the head of the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -250,22 +242,18 @@ async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync, *
             )
 
         # Poll until requests are available (eventual consistency)
-        head_response: RequestQueueHead | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_head(limit=3))
-            assert isinstance(result, RequestQueueHead)
-            head_response = result
-            if len(head_response.items) == 3:
-                break
+        async def get_head() -> RequestQueueHead:
+            head = await maybe_await(rq_client.list_head(limit=3))
+            assert isinstance(head, RequestQueueHead)
+            return head
 
-        assert head_response is not None
+        head_response = await poll_until_condition(get_head, lambda head: len(head.items) == 3)
         assert len(head_response.items) == 3
     finally:
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsync) -> None:
     """Test listing all requests in the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -281,22 +269,18 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
             )
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListOfRequests | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            assert isinstance(result, ListOfRequests)
-            list_response = result
-            if len(list_response.items) == 5:
-                break
+        async def get_requests() -> ListOfRequests:
+            response = await maybe_await(rq_client.list_requests())
+            assert isinstance(response, ListOfRequests)
+            return response
 
-        assert list_response is not None
+        list_response = await poll_until_condition(get_requests, lambda response: len(response.items) == 5)
         assert len(list_response.items) == 5
     finally:
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsync) -> None:
     """Test deleting a request from the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -311,27 +295,24 @@ async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsy
         )
         assert isinstance(add_result, RequestRegistration)
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the request is visible (eventual consistency)
+        async def get_added_request() -> Request | None:
+            return await maybe_await(rq_client.get_request(add_result.request_id))
 
-        # Verify it exists
-        request = await maybe_await(rq_client.get_request(add_result.request_id))
+        request = await poll_until_condition(get_added_request, lambda request: request is not None)
         assert request is not None
 
         # Delete the request
         await maybe_await(rq_client.delete_request(add_result.request_id))
 
-        # Wait briefly
-        await maybe_sleep(1, is_async=is_async)
-
-        # Verify it's gone
-        deleted_request = await maybe_await(rq_client.get_request(add_result.request_id))
+        # Poll until the deletion is reflected (eventual consistency)
+        deleted_request = await poll_until_condition(get_added_request, lambda request: request is None)
         assert deleted_request is None
     finally:
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClientAsync) -> None:
     """Test adding multiple requests in batch."""
     rq_name = get_random_resource_name('queue')
 
@@ -350,22 +331,18 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
         assert len(batch_response.unprocessed_requests) == 0
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListOfRequests | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            assert isinstance(result, ListOfRequests)
-            list_response = result
-            if len(list_response.items) == 10:
-                break
+        async def get_requests() -> ListOfRequests:
+            response = await maybe_await(rq_client.list_requests())
+            assert isinstance(response, ListOfRequests)
+            return response
 
-        assert list_response is not None
+        list_response = await poll_until_condition(get_requests, lambda response: len(response.items) == 10)
         assert len(list_response.items) == 10
     finally:
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyClientAsync) -> None:
     """Test deleting multiple requests in batch."""
     rq_name = get_random_resource_name('queue')
 
@@ -381,16 +358,12 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
             )
 
         # Poll until all requests are available (eventual consistency)
-        list_response: ListOfRequests | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            assert isinstance(result, ListOfRequests)
-            list_response = result
-            if len(list_response.items) == 10:
-                break
+        async def get_requests() -> ListOfRequests:
+            response = await maybe_await(rq_client.list_requests())
+            assert isinstance(response, ListOfRequests)
+            return response
 
-        assert list_response is not None
+        list_response = await poll_until_condition(get_requests, lambda response: len(response.items) == 10)
         assert len(list_response.items) == 10
         requests_to_delete: list[RequestDraftDeleteDict] = []
         for item in list_response.items[:5]:
@@ -403,16 +376,7 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
         assert len(delete_response.processed_requests) == 5
 
         # Poll until deletions are reflected (eventual consistency)
-        remaining: ListOfRequests | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_requests())
-            assert isinstance(result, ListOfRequests)
-            remaining = result
-            if len(remaining.items) == 5:
-                break
-
-        assert remaining is not None
+        remaining = await poll_until_condition(get_requests, lambda response: len(response.items) == 5)
         assert len(remaining.items) == 5
     finally:
         await maybe_await(rq_client.delete())
@@ -434,7 +398,7 @@ async def test_request_queue_delete_nonexistent(client: ApifyClient | ApifyClien
     assert retrieved_rq is None
 
 
-async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClientAsync) -> None:
     """Test locking requests from the head of the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -449,7 +413,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
                 rq_client.add_request({'url': f'https://example.com/lock-{i}', 'unique_key': f'lock-{i}'})
             )
 
-        await ensure_queue_is_populated(rq_client, expected_count=5, is_async=is_async)
+        await ensure_queue_is_populated(rq_client, expected_count=5)
 
         result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
         assert isinstance(result, LockedRequestQueueHead)
@@ -464,7 +428,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyClientAsync) -> None:
     """Test prolonging a request lock."""
     rq_name = get_random_resource_name('queue')
 
@@ -477,16 +441,12 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
         await maybe_await(rq_client.add_request({'url': 'https://example.com/prolong', 'unique_key': 'prolong-test'}))
 
         # Poll until the request is available for locking (eventual consistency)
-        lock_response: LockedRequestQueueHead | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
-            assert isinstance(result, LockedRequestQueueHead)
-            lock_response = result
-            if len(lock_response.items) == 1:
-                break
+        async def lock_head() -> LockedRequestQueueHead:
+            head = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
+            assert isinstance(head, LockedRequestQueueHead)
+            return head
 
-        assert lock_response is not None
+        lock_response = await poll_until_condition(lock_head, lambda head: len(head.items) == 1)
         assert len(lock_response.items) == 1
         locked_request = lock_response.items[0]
         original_lock_expires = locked_request.lock_expires_at
@@ -502,7 +462,7 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClientAsync) -> None:
     """Test deleting a request lock."""
     rq_name = get_random_resource_name('queue')
 
@@ -515,16 +475,12 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
         await maybe_await(rq_client.add_request({'url': 'https://example.com/unlock', 'unique_key': 'unlock-test'}))
 
         # Poll until the request is available for locking (eventual consistency)
-        lock_response: LockedRequestQueueHead | None = None
-        for _ in range(5):
-            await maybe_sleep(1, is_async=is_async)
-            result = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
-            assert isinstance(result, LockedRequestQueueHead)
-            lock_response = result
-            if len(lock_response.items) == 1:
-                break
+        async def lock_head() -> LockedRequestQueueHead:
+            head = await maybe_await(rq_client.list_and_lock_head(limit=1, lock_duration=timedelta(seconds=60)))
+            assert isinstance(head, LockedRequestQueueHead)
+            return head
 
-        assert lock_response is not None
+        lock_response = await poll_until_condition(lock_head, lambda head: len(head.items) == 1)
         assert len(lock_response.items) == 1
         locked_request = lock_response.items[0]
 
@@ -539,7 +495,7 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAsync) -> None:
     """Test unlocking all requests locked by the client."""
     rq_name = get_random_resource_name('queue')
 
@@ -554,12 +510,23 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
                 rq_client.add_request({'url': f'https://example.com/unlock-{i}', 'unique_key': f'unlock-{i}'})
             )
 
-        await ensure_queue_is_populated(rq_client, expected_count=5, is_async=is_async)
+        await ensure_queue_is_populated(rq_client, expected_count=5)
 
         result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
         assert isinstance(result, LockedRequestQueueHead)
         lock_response = result
         assert len(lock_response.items) == 3
+        locked_ids = {item.id for item in lock_response.items}
+
+        # Locks are acknowledged before they are visible to subsequent reads, so unlocking immediately can
+        # see fewer locks than were just acquired. Since locked requests are excluded from the queue head,
+        # poll `list_head` until the locked IDs disappear from it (best-effort mitigation of the race).
+        async def all_locks_visible() -> bool:
+            head = await maybe_await(rq_client.list_head(limit=5))
+            assert isinstance(head, RequestQueueHead)
+            return locked_ids.isdisjoint(item.id for item in head.items)
+
+        await poll_until_condition(all_locks_visible, timeout=30, poll_interval=1)
 
         # Unlock all requests
         unlock_response = await maybe_await(rq_client.unlock_requests())
@@ -569,7 +536,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsync) -> None:
     """Test updating a request in the queue."""
     rq_name = get_random_resource_name('queue')
 
@@ -588,11 +555,11 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
         assert isinstance(add_result, RequestRegistration)
         assert add_result.request_id is not None
 
-        # Wait briefly for eventual consistency
-        await maybe_sleep(1, is_async=is_async)
+        # Poll until the request is visible (eventual consistency), then use its full data
+        async def get_added_request() -> Request | None:
+            return await maybe_await(rq_client.get_request(add_result.request_id))
 
-        # Get the request to get its full data
-        original_request = await maybe_await(rq_client.get_request(add_result.request_id))
+        original_request = await poll_until_condition(get_added_request, lambda request: request is not None)
         assert isinstance(original_request, Request)
 
         assert original_request.unique_key is not None
@@ -650,7 +617,7 @@ async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientA
             added_urls.append(request_draft.url)
 
         # Wait until all 7 requests are indexed (eventual consistency)
-        await ensure_queue_is_populated(rq_client, expected_count=7, is_async=is_async)
+        await ensure_queue_is_populated(rq_client, expected_count=7)
 
         # Iterate with a small chunk so multiple pages are fetched
         iterator = rq_client.iterate_requests(chunk_size=3)
@@ -674,9 +641,7 @@ async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientA
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_list_requests_with_cursor(
-    client: ApifyClient | ApifyClientAsync, *, is_async: bool
-) -> None:
+async def test_request_queue_list_requests_with_cursor(client: ApifyClient | ApifyClientAsync) -> None:
     """Test list_requests pagination via limit and the opaque cursor token."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
     assert isinstance(rq, RequestQueue)
@@ -689,7 +654,7 @@ async def test_request_queue_list_requests_with_cursor(
             )
 
         # Wait for all 5 requests to be indexed so pagination is exercised, not truncated
-        await ensure_queue_is_populated(rq_client, expected_count=5, is_async=is_async)
+        await ensure_queue_is_populated(rq_client, expected_count=5)
 
         # First page
         first_page = await maybe_await(rq_client.list_requests(limit=2))
@@ -708,9 +673,7 @@ async def test_request_queue_list_requests_with_cursor(
         await maybe_await(rq_client.delete())
 
 
-async def test_request_queue_list_requests_with_filter(
-    client: ApifyClient | ApifyClientAsync, *, is_async: bool
-) -> None:
+async def test_request_queue_list_requests_with_filter(client: ApifyClient | ApifyClientAsync) -> None:
     """Test list_requests with the `filter` parameter (pending only)."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
     assert isinstance(rq, RequestQueue)
@@ -723,7 +686,7 @@ async def test_request_queue_list_requests_with_filter(
             )
 
         # Wait for all 3 requests to be indexed before filtering
-        await ensure_queue_is_populated(rq_client, expected_count=3, is_async=is_async)
+        await ensure_queue_is_populated(rq_client, expected_count=3)
 
         # All three requests are pending - filter=['pending'] should return all of them.
         pending_page = await maybe_await(rq_client.list_requests(filter=['pending']))

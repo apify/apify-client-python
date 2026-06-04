@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TYPE_CHECKING
 
-from ._utils import maybe_await
+from .._utils import maybe_await
 from apify_client._models import ListOfBuilds, Run
 from apify_client.http_clients import HttpResponse
 

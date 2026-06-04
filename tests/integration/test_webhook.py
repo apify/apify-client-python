@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
 
-from ._utils import collect_iterate_until_present, maybe_await
+from .._utils import collect_iterate_until_present, maybe_await
 from apify_client._models import (
     ListOfRuns,
     ListOfWebhookDispatches,

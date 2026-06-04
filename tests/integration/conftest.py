@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ._utils import (
+from .._utils import (
     API_URL_ENV_VAR,
     TOKEN_ENV_VAR,
     TOKEN_ENV_VAR_2,

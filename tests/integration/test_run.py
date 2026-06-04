@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from ._utils import maybe_await, maybe_sleep
+from .._utils import maybe_await, poll_until_condition
 from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
 from apify_client.errors import ApifyApiError
 
@@ -279,7 +279,7 @@ async def test_run_runs_client(client: ApifyClient | ApifyClientAsync) -> None:
         assert first_run.act_id is not None
 
 
-async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_run_metamorph(client: ApifyClient | ApifyClientAsync) -> None:
     """Test metamorphing a run into another Actor."""
     # Start an actor that will run long enough to metamorph. We use hello-world and try to metamorph it into itself
     actor = client.actor(HELLO_WORLD_ACTOR)
@@ -290,8 +290,13 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, *, is_async
     run_client = client.run(run.id)
 
     try:
-        # Wait a bit for the run to start properly
-        await maybe_sleep(2, is_async=is_async)
+        # Wait until the run starts (leaves READY), with exponential backoff: container startup time varies widely
+        async def get_run() -> Run | None:
+            return await maybe_await(run_client.get())
+
+        await poll_until_condition(
+            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', timeout=30, backoff_factor=2
+        )
 
         # Metamorph the run into the same actor (allowed) with new input
         # Note: hello-world may finish before we can metamorph, so we handle that case
@@ -318,7 +323,7 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync, *, is_async
     await maybe_await(run_client.delete())
 
 
-async def test_run_reboot(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+async def test_run_reboot(client: ApifyClient | ApifyClientAsync) -> None:
     """Test rebooting a running Actor."""
     # Start an actor
     actor = client.actor(HELLO_WORLD_ACTOR)
@@ -329,9 +334,13 @@ async def test_run_reboot(client: ApifyClient | ApifyClientAsync, *, is_async: b
     run_client = client.run(run.id)
 
     try:
-        # Wait a bit and check if the run is still running
-        await maybe_sleep(1, is_async=is_async)
-        current_run = await maybe_await(run_client.get())
+        # Wait until the run starts (leaves READY), with exponential backoff: container startup time varies widely
+        async def get_run() -> Run | None:
+            return await maybe_await(run_client.get())
+
+        current_run = await poll_until_condition(
+            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', timeout=30, backoff_factor=2
+        )
 
         # Only try to reboot if the run is still running
         # Note: There's a race condition - run may finish between check and reboot call

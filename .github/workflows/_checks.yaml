@@ -138,7 +138,7 @@ jobs:
             matrix.python-version == '3.14' &&
             env.CODECOV_TOKEN != ''
           }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: coverage-integration.xml

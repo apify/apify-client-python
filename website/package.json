@@ -1,5 +1,5 @@
 {
-    "name": "apify-client-python-website",
+    "name": "apify-client",
     "private": true,
     "scripts": {
         "clean": "rimraf .docusaurus build",

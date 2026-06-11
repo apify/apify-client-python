@@ -307,6 +307,9 @@ def encode_webhooks_to_base64(webhooks: WebhooksList | None) -> str | None:
                     request_url=webhook.request_url,
                     payload_template=webhook.payload_template,
                     headers_template=webhook.headers_template,
+                    idempotency_key=webhook.idempotency_key,
+                    ignore_ssl_errors=webhook.ignore_ssl_errors,
+                    do_not_retry=webhook.do_not_retry,
                 )
             )
         else:

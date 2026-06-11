@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import io
+import json
+from base64 import b64decode
 from datetime import timedelta
 from http import HTTPStatus
 from typing import TYPE_CHECKING
@@ -56,6 +58,33 @@ def test_encode_webhooks_to_base64() -> None:
         )
         == 'W3siZXZlbnRUeXBlcyI6IFsiQUNUT1IuUlVOLkNSRUFURUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tY3JlYXRlZCJ9LCB7ImV2ZW50VHlwZXMiOiBbIkFDVE9SLlJVTi5TVUNDRUVERUQiXSwgInJlcXVlc3RVcmwiOiAiaHR0cHM6Ly9leGFtcGxlLmNvbS9ydW4tc3VjY2VlZGVkIiwgInBheWxvYWRUZW1wbGF0ZSI6ICJ7XCJoZWxsb1wiOiBcIndvcmxkXCIsIFwicmVzb3VyY2VcIjp7e3Jlc291cmNlfX19In1d'  # noqa: E501
     )
+
+
+def test_encode_webhooks_to_base64_keeps_adhoc_fields() -> None:
+    """Test that the idempotency key and the SSL/retry flags survive the projection onto `WebhookRepresentation`."""
+    result = encode_webhooks_to_base64(
+        [
+            WebhookCreate(
+                event_types=['ACTOR.RUN.SUCCEEDED'],
+                condition=WebhookCondition(),
+                request_url='https://example.com/run-succeeded',
+                idempotency_key='some-key',
+                ignore_ssl_errors=True,
+                do_not_retry=True,
+            ),
+        ]
+    )
+
+    assert result is not None
+    assert json.loads(b64decode(result)) == [
+        {
+            'eventTypes': ['ACTOR.RUN.SUCCEEDED'],
+            'requestUrl': 'https://example.com/run-succeeded',
+            'idempotencyKey': 'some-key',
+            'ignoreSslErrors': True,
+            'doNotRetry': True,
+        }
+    ]
 
 
 def test_encode_webhooks_to_base64_from_dicts() -> None:

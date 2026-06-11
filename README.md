@@ -7,7 +7,8 @@
 <p align="center">
   <a href="https://pypi.org/project/apify-client/"><img src="https://badge.fury.io/py/apify-client.svg" alt="PyPI version"></a>
   <a href="https://pypi.org/project/apify-client/"><img src="https://img.shields.io/pypi/dm/apify-client" alt="PyPI downloads"></a>
-  <a href="https://pypi.org/project/apify-client/"><img src="https://img.shields.io/pypi/pyversions/apify-client" alt="Python versions"></a>
+  <a href="https://pypi.org/project/apify-client/"><img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python versions"></a>
+  <a href="https://github.com/apify/apify-client-python/actions/workflows/on_master.yaml"><img src="https://github.com/apify/apify-client-python/actions/workflows/on_master.yaml/badge.svg?branch=master" alt="Build status"></a>
   <a href="https://codecov.io/gh/apify/apify-client-python"><img src="https://codecov.io/gh/apify/apify-client-python/graph/badge.svg?token=TYQQWYYZ7A" alt="Coverage"></a>
   <a href="https://github.com/apify/apify-client-python/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/apify-client" alt="License"></a>
   <a href="https://discord.gg/jyEM2PRvMU"><img src="https://img.shields.io/discord/801163717915574323?label=discord" alt="Chat on Discord"></a>

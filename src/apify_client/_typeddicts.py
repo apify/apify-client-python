@@ -336,6 +336,18 @@ class WebhookRepresentationDict(TypedDict):
     """
     Optional template for the HTTP headers sent by the webhook.
     """
+    idempotency_key: NotRequired[str | None]
+    """
+    Optional key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
+    """
+    ignore_ssl_errors: NotRequired[bool | None]
+    """
+    Optional flag to ignore SSL errors when the webhook sends the request.
+    """
+    do_not_retry: NotRequired[bool | None]
+    """
+    Optional flag to skip retrying the webhook request on failure.
+    """
 
 
 @docs_group('Typed dicts')
@@ -373,4 +385,16 @@ class WebhookRepresentationCamelDict(TypedDict):
     headersTemplate: NotRequired[str | None]
     """
     Optional template for the HTTP headers sent by the webhook.
+    """
+    idempotencyKey: NotRequired[str | None]
+    """
+    Optional key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
+    """
+    ignoreSslErrors: NotRequired[bool | None]
+    """
+    Optional flag to ignore SSL errors when the webhook sends the request.
+    """
+    doNotRetry: NotRequired[bool | None]
+    """
+    Optional flag to skip retrying the webhook request on failure.
     """

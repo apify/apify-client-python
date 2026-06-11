@@ -3766,6 +3766,18 @@ class WebhookRepresentation(BaseModel):
     """
     Optional template for the HTTP headers sent by the webhook.
     """
+    idempotency_key: Annotated[str | None, Field(alias='idempotencyKey', examples=['fdSJmdP3nfs7sfk3y'])] = None
+    """
+    Optional key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
+    """
+    ignore_ssl_errors: Annotated[bool | None, Field(alias='ignoreSslErrors', examples=[False])] = None
+    """
+    Optional flag to ignore SSL errors when the webhook sends the request.
+    """
+    do_not_retry: Annotated[bool | None, Field(alias='doNotRetry', examples=[False])] = None
+    """
+    Optional flag to skip retrying the webhook request on failure.
+    """
 
 
 @docs_group('Models')

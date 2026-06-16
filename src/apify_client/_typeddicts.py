@@ -336,17 +336,21 @@ class WebhookRepresentationDict(TypedDict):
     """
     Optional template for the HTTP headers sent by the webhook.
     """
+    should_interpolate_strings: NotRequired[bool | None]
+    """
+    Flag to also interpolate `{{...}}` variables inside string values of the payload and headers templates.
+    """
     idempotency_key: NotRequired[str | None]
     """
-    Optional key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
+    Key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
     """
     ignore_ssl_errors: NotRequired[bool | None]
     """
-    Optional flag to ignore SSL errors when the webhook sends the request.
+    Flag to ignore SSL errors when the webhook sends the request.
     """
     do_not_retry: NotRequired[bool | None]
     """
-    Optional flag to skip retrying the webhook request on failure.
+    Flag to skip retrying the webhook request on failure.
     """
 
 
@@ -386,15 +390,19 @@ class WebhookRepresentationCamelDict(TypedDict):
     """
     Optional template for the HTTP headers sent by the webhook.
     """
+    shouldInterpolateStrings: NotRequired[bool | None]
+    """
+    Flag to also interpolate `{{...}}` variables inside string values of the payload and headers templates.
+    """
     idempotencyKey: NotRequired[str | None]
     """
-    Optional key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
+    Key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
     """
     ignoreSslErrors: NotRequired[bool | None]
     """
-    Optional flag to ignore SSL errors when the webhook sends the request.
+    Flag to ignore SSL errors when the webhook sends the request.
     """
     doNotRetry: NotRequired[bool | None]
     """
-    Optional flag to skip retrying the webhook request on failure.
+    Flag to skip retrying the webhook request on failure.
     """

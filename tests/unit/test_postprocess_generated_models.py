@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import textwrap
+from typing import Any
 
 from scripts.postprocess_generated_models import (
     add_camel_case_typeddicts,
     add_docs_group_decorators,
+    apply_camel_alias_generator,
     build_alias_map,
     convert_enums_to_literals,
     fix_discriminators,
@@ -50,6 +52,103 @@ def test_fix_discriminators_does_not_touch_unrelated() -> None:
     content = "items: list[X] = Field(discriminator='event_type')"
     result = fix_discriminators(content)
     assert result == content
+
+
+# -- apply_camel_alias_generator ----------------------------------------------
+
+
+def _model_source(*fields: str) -> str:
+    """Build a minimal Pydantic model module with the standard generated `ConfigDict`.
+
+    Annotations are eager (no `from __future__ import annotations`) so the source can be `exec`'d in a bare namespace
+    and have Pydantic resolve the `Field` metadata directly — the text-based transform itself is import-agnostic.
+    """
+    body = '\n'.join(f'    {field}' for field in fields)
+    return (
+        textwrap.dedent("""\
+        from typing import Annotated
+        from pydantic import BaseModel, ConfigDict, Field
+
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(
+                extra='allow',
+                populate_by_name=True,
+            )
+    """)
+        + body
+        + '\n'
+    )
+
+
+def test_apply_camel_alias_generator_adds_generator_to_config() -> None:
+    """Every model `ConfigDict` gains `alias_generator=to_camel` plus the backing import."""
+    result = apply_camel_alias_generator(_model_source('url: str'))
+    assert 'alias_generator=to_camel' in result
+    assert 'from pydantic.alias_generators import to_camel' in result
+
+
+def test_apply_camel_alias_generator_drops_regular_alias_collapsing_annotated() -> None:
+    """A regular alias that is the only `Field` content is dropped and `Annotated[T, Field()]` collapses to `T`."""
+    result = apply_camel_alias_generator(
+        _model_source("source_type: Annotated[str | None, Field(alias='sourceType')] = None")
+    )
+    assert "Field(alias='sourceType')" not in result
+    assert 'source_type: str | None = None' in result
+
+
+def test_apply_camel_alias_generator_keeps_other_field_kwargs() -> None:
+    """A regular alias is removed but the rest of the `Field` (examples, pattern, ...) is preserved."""
+    result = apply_camel_alias_generator(
+        _model_source("build_tag: Annotated[str | None, Field(alias='buildTag', examples=['x'])] = None")
+    )
+    assert "alias='buildTag'" not in result
+    assert "build_tag: Annotated[str | None, Field(examples=['x'])] = None" in result
+
+
+def test_apply_camel_alias_generator_keeps_irregular_alias() -> None:
+    """An alias that `to_camel` cannot reproduce (e.g. `gitHubGistUrl`) is left in place."""
+    result = apply_camel_alias_generator(
+        _model_source("github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None")
+    )
+    assert "Field(alias='gitHubGistUrl')" in result
+
+
+def test_apply_camel_alias_generator_keeps_all_caps_alias() -> None:
+    """All-caps usage keys (e.g. `ACTOR_COMPUTE_UNITS`) are irregular and keep their explicit alias."""
+    result = apply_camel_alias_generator(
+        _model_source("actor_compute_units: Annotated[float | None, Field(alias='ACTOR_COMPUTE_UNITS')] = None")
+    )
+    assert "alias='ACTOR_COMPUTE_UNITS'" in result
+
+
+def test_apply_camel_alias_generator_is_idempotent() -> None:
+    """Re-running doesn't add a second `alias_generator` or otherwise change the output."""
+    once = apply_camel_alias_generator(_model_source("source_type: Annotated[str, Field(alias='sourceType')]"))
+    twice = apply_camel_alias_generator(once)
+    assert once == twice
+    assert once.count('alias_generator=to_camel') == 1
+
+
+def test_apply_camel_alias_generator_preserves_wire_format() -> None:
+    """The stripped model resolves the same field aliases at runtime as the per-field version — wire parity."""
+    namespace: dict[str, Any] = {}
+    source = apply_camel_alias_generator(
+        _model_source(
+            "source_type: Annotated[str | None, Field(alias='sourceType')] = None",
+            "github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None",
+            'url: str | None = None',
+        )
+    )
+    # `dont_inherit=True` keeps this module's `from __future__ import annotations` from stringizing the exec'd
+    # annotations, so Pydantic resolves the `Field` metadata directly in the bare namespace.
+    exec(compile(source, '<test>', 'exec', dont_inherit=True), namespace)
+    foo = namespace['Foo']
+    aliases = {name: (field.alias or name) for name, field in foo.model_fields.items()}
+    assert aliases == {'source_type': 'sourceType', 'github_gist_url': 'gitHubGistUrl', 'url': 'url'}
+    # Both API and Pythonic spellings still validate.
+    assert foo.model_validate({'sourceType': 'GIT_REPO'}).source_type == 'GIT_REPO'
+    assert foo.model_validate({'source_type': 'GIT_REPO'}).source_type == 'GIT_REPO'
 
 
 # -- add_docs_group_decorators ------------------------------------------------
@@ -446,6 +545,36 @@ def test_build_alias_map_treats_unaliased_fields_as_self_named() -> None:
     """)
     result = build_alias_map(models)
     assert result['Foo'] == {'url': 'url', 'method': 'method'}
+
+
+def test_build_alias_map_derives_camel_for_unaliased_generator_fields() -> None:
+    """On a model with `alias_generator=to_camel`, unaliased fields resolve to their camelCase API spelling."""
+    models = textwrap.dedent("""\
+        from pydantic import BaseModel, ConfigDict
+        from pydantic.alias_generators import to_camel
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow', populate_by_name=True, alias_generator=to_camel)
+            source_type: str | None = None
+            url: str | None = None
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'source_type': 'sourceType', 'url': 'url'}
+
+
+def test_build_alias_map_explicit_alias_wins_over_generator() -> None:
+    """An explicit irregular alias takes priority over the `to_camel` generator, matching Pydantic at runtime."""
+    models = textwrap.dedent("""\
+        from typing import Annotated
+        from pydantic import BaseModel, ConfigDict, Field
+        from pydantic.alias_generators import to_camel
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow', populate_by_name=True, alias_generator=to_camel)
+            github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'github_gist_url': 'gitHubGistUrl'}
 
 
 def test_build_alias_map_skips_model_config() -> None:

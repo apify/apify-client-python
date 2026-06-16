@@ -288,34 +288,25 @@ def encode_webhooks_to_base64(webhooks: WebhooksList | None) -> str | None:
 
     Returns `None` for `None` or an empty list, so the query parameter is omitted.
 
-    See `WebhooksList` for the accepted shapes. `WebhookRepresentation` instances are used as-is; `WebhookCreate`
-    instances are projected onto the `WebhookRepresentation` fields, dropping persistent-only fields like `condition`.
-    Dict shapes are validated into `WebhookRepresentation` and only fields it declares are kept.
+    See `WebhooksList` for the accepted shapes. `WebhookRepresentation` instances are used as-is. `WebhookCreate`
+    instances and dict shapes are projected onto the fields `WebhookRepresentation` declares, dropping anything else
+    (e.g. persistent-only fields like `condition`). Filtering by the declared field names and aliases means new
+    ad-hoc fields added to `WebhookRepresentation` flow through automatically, without touching this function.
     """
     if not webhooks:
         return None
 
     representations = list[WebhookRepresentation]()
+    allowed = _webhook_representation_keys()
 
     for webhook in webhooks:
         if isinstance(webhook, WebhookRepresentation):
             representations.append(webhook)
-        elif isinstance(webhook, WebhookCreate):
-            representations.append(
-                WebhookRepresentation(
-                    event_types=webhook.event_types,
-                    request_url=webhook.request_url,
-                    payload_template=webhook.payload_template,
-                    headers_template=webhook.headers_template,
-                    idempotency_key=webhook.idempotency_key,
-                    ignore_ssl_errors=webhook.ignore_ssl_errors,
-                    do_not_retry=webhook.do_not_retry,
-                )
-            )
-        else:
-            allowed = _webhook_representation_keys()
-            filtered = {k: v for k, v in webhook.items() if k in allowed}
-            representations.append(WebhookRepresentation.model_validate(filtered))
+            continue
+
+        data = webhook.model_dump(by_alias=True) if isinstance(webhook, WebhookCreate) else dict(webhook)
+        filtered = {key: value for key, value in data.items() if key in allowed}
+        representations.append(WebhookRepresentation.model_validate(filtered))
 
     data = [r.model_dump(by_alias=True, exclude_none=True) for r in representations]
     json_string = json.dumps(data).encode(encoding='utf-8')

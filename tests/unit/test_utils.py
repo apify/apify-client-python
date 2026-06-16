@@ -29,6 +29,7 @@ from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from apify_client._typeddicts import WebhookRepresentationDict
+    from apify_client.types import WebhooksList
 
 
 def test_to_safe_id() -> None:
@@ -60,20 +61,51 @@ def test_encode_webhooks_to_base64() -> None:
     )
 
 
-def test_encode_webhooks_to_base64_keeps_adhoc_fields() -> None:
-    """Test that the idempotency key and the SSL/retry flags survive the projection onto `WebhookRepresentation`."""
-    result = encode_webhooks_to_base64(
-        [
-            WebhookCreate(
-                event_types=['ACTOR.RUN.SUCCEEDED'],
-                condition=WebhookCondition(),
-                request_url='https://example.com/run-succeeded',
-                idempotency_key='some-key',
-                ignore_ssl_errors=True,
-                do_not_retry=True,
-            ),
-        ]
-    )
+@pytest.mark.parametrize(
+    'webhooks',
+    [
+        pytest.param(
+            [
+                WebhookCreate(
+                    event_types=['ACTOR.RUN.SUCCEEDED'],
+                    condition=WebhookCondition(),
+                    request_url='https://example.com/run-succeeded',
+                    idempotency_key='some-key',
+                    ignore_ssl_errors=True,
+                    do_not_retry=True,
+                ),
+            ],
+            id='webhook-create-model',
+        ),
+        pytest.param(
+            [
+                {
+                    'event_types': ['ACTOR.RUN.SUCCEEDED'],
+                    'request_url': 'https://example.com/run-succeeded',
+                    'idempotency_key': 'some-key',
+                    'ignore_ssl_errors': True,
+                    'do_not_retry': True,
+                },
+            ],
+            id='snake-case-dict',
+        ),
+        pytest.param(
+            [
+                {
+                    'eventTypes': ['ACTOR.RUN.SUCCEEDED'],
+                    'requestUrl': 'https://example.com/run-succeeded',
+                    'idempotencyKey': 'some-key',
+                    'ignoreSslErrors': True,
+                    'doNotRetry': True,
+                },
+            ],
+            id='camel-case-dict',
+        ),
+    ],
+)
+def test_encode_webhooks_to_base64_keeps_adhoc_fields(webhooks: WebhooksList) -> None:
+    """Test that the idempotency key and the SSL/retry flags survive the projection for every accepted shape."""
+    result = encode_webhooks_to_base64(webhooks)
 
     assert result is not None
     assert json.loads(b64decode(result)) == [

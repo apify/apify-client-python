@@ -3766,6 +3766,22 @@ class WebhookRepresentation(BaseModel):
     """
     Optional template for the HTTP headers sent by the webhook.
     """
+    should_interpolate_strings: Annotated[bool | None, Field(alias='shouldInterpolateStrings', examples=[False])] = None
+    """
+    Flag to also interpolate `{{...}}` variables inside string values of the payload and headers templates.
+    """
+    idempotency_key: Annotated[str | None, Field(alias='idempotencyKey', examples=['fdSJmdP3nfs7sfk3y'])] = None
+    """
+    Key that prevents creating duplicate webhooks, e.g. when the run-starting request is retried.
+    """
+    ignore_ssl_errors: Annotated[bool | None, Field(alias='ignoreSslErrors', examples=[False])] = None
+    """
+    Flag to ignore SSL errors when the webhook sends the request.
+    """
+    do_not_retry: Annotated[bool | None, Field(alias='doNotRetry', examples=[False])] = None
+    """
+    Flag to skip retrying the webhook request on failure.
+    """
 
 
 @docs_group('Models')

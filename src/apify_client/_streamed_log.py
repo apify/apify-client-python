@@ -226,4 +226,5 @@ class StreamedLogAsync(StreamedLogBase):
                     # Flush the last buffered part even if the task is cancelled by `stop()`.
                     self._log_buffer_content(include_last_part=True)
         except Exception:
-            self._to_logger.exception('Log redirection stoped due to unexpected error:')
+            # Exception in log redirection should not propagate further.
+            self._to_logger.exception('Log redirection stopped due to unexpected error:')

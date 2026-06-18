@@ -215,12 +215,15 @@ class StreamedLogAsync(StreamedLogBase):
         await self.stop()
 
     async def _stream_log(self) -> None:
-        async with self._log_client.stream(raw=True) as log_stream:
-            if not log_stream:
-                return
-            try:
-                async for data in log_stream.aiter_bytes():
-                    self._process_new_data(data)
-            finally:
-                # Flush the last buffered part even if the task is cancelled by `stop()`.
-                self._log_buffer_content(include_last_part=True)
+        try:
+            async with self._log_client.stream(raw=True) as log_stream:
+                if not log_stream:
+                    return
+                try:
+                    async for data in log_stream.aiter_bytes():
+                        self._process_new_data(data)
+                finally:
+                    # Flush the last buffered part even if the task is cancelled by `stop()`.
+                    self._log_buffer_content(include_last_part=True)
+        except Exception:
+            self._to_logger.exception('Log redirection stoped due to unexpected error:')

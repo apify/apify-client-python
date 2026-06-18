@@ -526,7 +526,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
             assert isinstance(head, RequestQueueHead)
             return locked_ids.isdisjoint(item.id for item in head.items)
 
-        await poll_until_condition(all_locks_visible, timeout=30, poll_interval=1)
+        await poll_until_condition(all_locks_visible)
 
         # Unlock all requests
         unlock_response = await maybe_await(rq_client.unlock_requests())

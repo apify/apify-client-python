@@ -59,7 +59,7 @@ jobs:
           fi
 
       - name: Checkout apify-client-python
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 

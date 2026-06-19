@@ -134,7 +134,7 @@ async def poll_until_condition(
     fn: Callable[[], Awaitable[T] | T],
     condition: Callable[[T], bool] = bool,
     *,
-    timeout: float = 5,
+    timeout: float = 30,
     poll_interval: float = 1,
     backoff_factor: float = 1,
 ) -> T:

@@ -209,7 +209,7 @@ class ActorDefinition(BaseModel):
     storages: Storages | None = None
     default_memory_mbytes: Annotated[str | int | None, Field(alias='defaultMemoryMbytes')] = None
     """
-    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](/platform/actors/development/actor-definition/dynamic-actor-memory).
+    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/platform/actors/development/actor-definition/dynamic-actor-memory).
     """
     min_memory_mbytes: Annotated[int | None, Field(alias='minMemoryMbytes', ge=128)] = None
     """
@@ -828,7 +828,7 @@ class Dataset(BaseModel):
         ),
     ] = None
     """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](/platform/actors/development/actor-definition/dataset-schema)
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema)
     """
     console_url: Annotated[
         AnyUrl, Field(alias='consoleUrl', examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])

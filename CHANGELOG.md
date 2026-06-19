@@ -2,15 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.3 - **not yet released**
+## [3.0.3](https://github.com/apify/apify-client-python/releases/tag/v3.0.3) (2026-06-18)
 
 ### 🐛 Bug Fixes
 
 - Include all supported fields for ad-hoc webhooks ([#855](https://github.com/apify/apify-client-python/pull/855)) ([6eb267d](https://github.com/apify/apify-client-python/commit/6eb267dbe620cb9d864c2390a84dfeb851cecc7c)) by [@apify-service-account](https://github.com/apify-service-account)
+- Only log any error that happens during log redirection ([#866](https://github.com/apify/apify-client-python/pull/866)) ([a2cc987](https://github.com/apify/apify-client-python/commit/a2cc987b6d1ef1d06b37a179876b12ee4f739f5f)) by [@Pijukatel](https://github.com/Pijukatel), closes [#864](https://github.com/apify/apify-client-python/issues/864)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.2](https://github.com/apify/apify-client-python/releases/tag/v3.0.2) (2026-05-26)
 
 ### 🐛 Bug Fixes

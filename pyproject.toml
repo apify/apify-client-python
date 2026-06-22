@@ -46,7 +46,7 @@ dev = [
     # See https://github.com/apify/apify-client-python/pull/582/ for more details.
     # We explicitly constrain black>=24.3.0 to override the transitive dependency.
     "black>=24.3.0",
-    "datamodel-code-generator[http,ruff]>=0.57.0,<1.0.0",
+    "datamodel-code-generator[http,ruff]>=0.64.1,<1.0.0",
     "dycw-pytest-only<3.0.0",
     "griffe<3.0.0",
     "poethepoet<1.0.0",
@@ -295,9 +295,12 @@ cwd = "website"
 shell = "./build_api_reference.sh && pnpm install && uv run pnpm start"
 cwd = "website"
 
+# The `--alias-generator to_camel` flag lives on the `_models.py` command (not in `[tool.datamodel-codegen]`)
+# because datamodel-codegen only allows it for `pydantic_v2.BaseModel` output and would reject the TypedDict run.
 [tool.poe.tasks.generate-models]
 shell = """
 uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json \
+        --alias-generator to_camel \
     && uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json \
         --output src/apify_client/_typeddicts.py \
         --output-model-type typing.TypedDict \
@@ -308,6 +311,7 @@ uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json \
 [tool.poe.tasks.generate-models-from-file]
 shell = """
 uv run datamodel-codegen --input $input_file \
+        --alias-generator to_camel \
     && uv run datamodel-codegen --input $input_file \
         --output src/apify_client/_typeddicts.py \
         --output-model-type typing.TypedDict \

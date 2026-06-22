@@ -23,6 +23,10 @@
         {
             "matchPackageNames": ["@apify/*", "@crawlee/*", "apify", "apify-client", "apify-shared", "apify-fingerprint-datapoints", "crawlee", "got-scraping"],
             "minimumReleaseAge": "0 days"
+        },
+        {
+          "matchUpdateTypes": ["lockFileMaintenance"],
+          "minimumReleaseAgeBehaviour": "timestamp-optional"
         }
     ],
     "minimumReleaseAge": "1 day",

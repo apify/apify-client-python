@@ -28,6 +28,8 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from pydantic.alias_generators import to_camel
+
 if TYPE_CHECKING:
     from apify_client._docs import GroupName
 
@@ -412,12 +414,38 @@ def _extract_alias_from_field_call(field_call: ast.Call) -> str | None:
     return None
 
 
+def _class_uses_camel_generator(class_node: ast.ClassDef) -> bool:
+    """Return True if `class_node` declares `model_config = ConfigDict(..., alias_generator=to_camel)`.
+
+    datamodel-codegen emits the generator (via `--alias-generator to_camel`) on every model, so unaliased fields
+    derive their API spelling through `to_camel` rather than mapping to themselves.
+    """
+    for stmt in class_node.body:
+        if isinstance(stmt, ast.Assign):
+            targets = stmt.targets
+        elif isinstance(stmt, ast.AnnAssign):
+            targets = [stmt.target]
+        else:
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == 'model_config' for t in targets):
+            continue
+        value = stmt.value
+        if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == 'ConfigDict':
+            return any(
+                kw.arg == 'alias_generator' and isinstance(kw.value, ast.Name) and kw.value.id == 'to_camel'
+                for kw in value.keywords
+            )
+    return False
+
+
 def _extract_class_field_aliases(class_node: ast.ClassDef) -> dict[str, str]:
     """Return `{snake_field: api_field}` for every annotated field declared on `class_node`.
 
-    Fields without a `Field(alias=...)` map to themselves (their declared Python name matches the API name — typical
-    for single-word fields like `url`, `id`).
+    The API spelling is resolved in priority order: an explicit `Field(alias=...)` wins; otherwise, on a model that
+    carries `alias_generator=to_camel`, the name is run through `to_camel` (matching Pydantic at runtime); otherwise
+    the field maps to itself (single-word fields like `url`, `id`, or models without the generator).
     """
+    uses_camel = _class_uses_camel_generator(class_node)
     aliases: dict[str, str] = {}
     for stmt in class_node.body:
         if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
@@ -425,15 +453,19 @@ def _extract_class_field_aliases(class_node: ast.ClassDef) -> dict[str, str]:
         field_name = stmt.target.id
         if field_name == 'model_config':
             continue
-        # Default: no alias means snake name == API name.
-        api_name = field_name
         # Walk the annotation to find a nested `Field(alias='...')` call inside `Annotated[...]`.
+        explicit_alias: str | None = None
         for sub in ast.walk(stmt.annotation):
             if isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name) and sub.func.id == 'Field':
-                found = _extract_alias_from_field_call(sub)
-                if found is not None:
-                    api_name = found
+                explicit_alias = _extract_alias_from_field_call(sub)
+                if explicit_alias is not None:
                     break
+        if explicit_alias is not None:
+            api_name = explicit_alias
+        elif uses_camel:
+            api_name = to_camel(field_name)
+        else:
+            api_name = field_name
         aliases[field_name] = api_name
     return aliases
 

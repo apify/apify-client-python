@@ -448,6 +448,36 @@ def test_build_alias_map_treats_unaliased_fields_as_self_named() -> None:
     assert result['Foo'] == {'url': 'url', 'method': 'method'}
 
 
+def test_build_alias_map_derives_camel_for_unaliased_generator_fields() -> None:
+    """On a model with `alias_generator=to_camel`, unaliased fields resolve to their camelCase API spelling."""
+    models = textwrap.dedent("""\
+        from pydantic import BaseModel, ConfigDict
+        from pydantic.alias_generators import to_camel
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow', populate_by_name=True, alias_generator=to_camel)
+            source_type: str | None = None
+            url: str | None = None
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'source_type': 'sourceType', 'url': 'url'}
+
+
+def test_build_alias_map_explicit_alias_wins_over_generator() -> None:
+    """An explicit irregular alias takes priority over the `to_camel` generator, matching Pydantic at runtime."""
+    models = textwrap.dedent("""\
+        from typing import Annotated
+        from pydantic import BaseModel, ConfigDict, Field
+        from pydantic.alias_generators import to_camel
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow', populate_by_name=True, alias_generator=to_camel)
+            github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'github_gist_url': 'gitHubGistUrl'}
+
+
 def test_build_alias_map_skips_model_config() -> None:
     """`model_config` is Pydantic plumbing, not a data field — exclude it from the alias map."""
     models = textwrap.dedent("""\

@@ -2,8 +2,7 @@ name: CI (master)
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master, renovate/** ]
     tags-ignore:
       - "**" # Ignore all tags to avoid duplicate executions triggered by tag pushes.
 

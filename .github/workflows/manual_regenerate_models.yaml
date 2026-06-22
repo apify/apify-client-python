@@ -59,25 +59,9 @@ jobs:
           fi
 
       - name: Checkout apify-client-python
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
-
-      # If the branch already exists on the remote (e.g. from a previous run, possibly with reviewer
-      # commits), check it out so regeneration builds on top of it. Otherwise stay on the default
-      # branch and let the signed-commit step below create the remote branch — its create-branch
-      # flow does `git fetch ... $BRANCH:refs/heads/$BRANCH` which fails if $BRANCH is already
-      # checked out locally.
-      - name: Set up branch
-        id: branch-setup
-        run: |
-          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$BRANCH":"$BRANCH"
-            git switch "$BRANCH"
-            echo "create_branch=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "create_branch=true" >> "$GITHUB_OUTPUT"
-          fi
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
       # Skipped for manual runs — datamodel-codegen will fetch from the published spec URL instead.
@@ -109,15 +93,43 @@ jobs:
             uv run poe generate-models
           fi
 
+      # Proceed only when regeneration actually changes the models relative to the current master.
+      # The job runs on a fresh master checkout, so anything already merged into master (e.g. a
+      # manually merged client PR carrying the same spec change, or a docs PR that merged master in
+      # and re-emits an already-applied change) produces no diff here and we skip — instead of
+      # opening a PR that just duplicates what master already has.
+      - name: Check for model changes
+        id: changes
+        run: |
+          if git diff --quiet -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py; then
+            echo "No model changes relative to master — nothing to regenerate."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Point the auto-update branch at the current master so the signed-commit step below records
+      # the regenerated models as a single commit on top of it. Resetting to master (instead of
+      # building on a possibly stale existing branch) is what keeps the committed diff relative to
+      # the current master: an already-merged change can never reappear. Any previous content on the
+      # branch is intentionally replaced, so the PR always reflects "current master + freshly
+      # regenerated models" — and it still updates whenever the source docs PR gets new commits.
+      - name: Point branch at current master
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git checkout -B "$BRANCH"
+          git push --force origin "HEAD:refs/heads/$BRANCH"
+
       - name: Commit model changes
         id: commit
+        if: steps.changes.outputs.has_changes == 'true'
         uses: apify/actions/signed-commit@v1.2.0
         with:
           message: ${{ env.TITLE }}
           add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
-          create-branch: ${{ steps.branch-setup.outputs.create_branch }}
+          create-branch: 'false'
 
       - name: Create or update PR
         if: steps.commit.outputs.committed == 'true'

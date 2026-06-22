@@ -2,11 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.3 - **not yet released**
+## [3.0.3](https://github.com/apify/apify-client-python/releases/tag/v3.0.3) (2026-06-18)
+
+### 🐛 Bug Fixes
+
+- Include all supported fields for ad-hoc webhooks ([#855](https://github.com/apify/apify-client-python/pull/855)) ([6eb267d](https://github.com/apify/apify-client-python/commit/6eb267dbe620cb9d864c2390a84dfeb851cecc7c)) by [@apify-service-account](https://github.com/apify-service-account)
+- Only log any error that happens during log redirection ([#866](https://github.com/apify/apify-client-python/pull/866)) ([a2cc987](https://github.com/apify/apify-client-python/commit/a2cc987b6d1ef1d06b37a179876b12ee4f739f5f)) by [@Pijukatel](https://github.com/Pijukatel), closes [#864](https://github.com/apify/apify-client-python/issues/864)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.2](https://github.com/apify/apify-client-python/releases/tag/v3.0.2) (2026-05-26)
 
 ### 🐛 Bug Fixes
@@ -253,14 +256,14 @@ All notable changes to this project will be documented in this file.
 - Add rate limit statistics ([#343](https://github.com/apify/apify-client-python/pull/343)) ([f35c68f](https://github.com/apify/apify-client-python/commit/f35c68ff824ce83bf9aca893589381782a1a48c7)) by [@Mantisus](https://github.com/Mantisus)
 
 
-## [1.8.1](https://github.com/apify/apify-client-python/releases/tags/v1.8.1) (2024-09-17)
+## [1.8.1](https://github.com/apify/apify-client-python/releases/tag/v1.8.1) (2024-09-17)
 
 ### 🐛 Bug Fixes
 
 - Batch add requests can handle more than 25 requests ([#268](https://github.com/apify/apify-client-python/pull/268)) ([9110ee0](https://github.com/apify/apify-client-python/commit/9110ee08954762aed00ac09cd042e802c1d041f7)) by [@vdusek](https://github.com/vdusek), closes [#264](https://github.com/apify/apify-client-python/issues/264)
 
 
-## [1.8.0](https://github.com/apify/apify-client-python/releases/tags/v1.8.0) (2024-08-30)
+## [1.8.0](https://github.com/apify/apify-client-python/releases/tag/v1.8.0) (2024-08-30)
 
 - drop support for Python 3.8
 
@@ -369,7 +372,7 @@ All notable changes to this project will be documented in this file.
 - Start importing general constants and utilities from the `apify-shared` library
 
 
-## [1.3.0](https://github.com/apify/apify-client-python/releases/tag/v1.3.0) (2023-07-24)
+## [1.3.0](https://github.com/apify/apify-client-python/releases/tag/1.3.0) (2023-07-24)
 
 ### 🚀 Features
 

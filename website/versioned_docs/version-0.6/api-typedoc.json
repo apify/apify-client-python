@@ -20562,7 +20562,7 @@
                             "version_number": "Actor version number to be built.",
                             "beta_packages": "If True, then the actor is built with beta versions of Apify NPM packages.\nBy default, the build uses latest stable packages.",
                             "tag": "Tag to be applied to the build on success. By default, the tag is taken from the actor version's buildTag property.",
-                            "use_cache": "If true, the actor's Docker container will be rebuilt using layer cache\n(https://docs.docker.com/develop/develop-images/dockerfile_best-practices/`leverage`-build-cache).\nThis is to enable quick rebuild during development.\nBy default, the cache is not used.",
+                            "use_cache": "If true, the actor's Docker container will be rebuilt using layer cache\n(https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).\nThis is to enable quick rebuild during development.\nBy default, the cache is not used.",
                             "wait_for_finish": "The maximum number of seconds the server waits for the build to finish before returning.\nBy default it is 0, the maximum value is 300.\n"
                         },
                         "returns": "dict: The build object"
@@ -20692,7 +20692,7 @@
                                         "summary": [
                                             {
                                                 "kind": "text",
-                                                "text": "If true, the actor's Docker container will be rebuilt using layer cache\n(https://docs.docker.com/develop/develop-images/dockerfile_best-practices/`leverage`-build-cache).\nThis is to enable quick rebuild during development.\nBy default, the cache is not used."
+                                                "text": "If true, the actor's Docker container will be rebuilt using layer cache\n(https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache).\nThis is to enable quick rebuild during development.\nBy default, the cache is not used."
                                             }
                                         ]
                                     },

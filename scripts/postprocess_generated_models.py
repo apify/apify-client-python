@@ -68,6 +68,17 @@ def _collapse_blank_lines(content: str) -> str:
     return re.sub(r'\n{3,}', '\n\n\n', content)
 
 
+def absolutize_doc_links(content: str) -> str:
+    """Rewrite root-relative Markdown links to absolute `docs.apify.com` URLs.
+
+    Descriptions come from the Apify API OpenAPI spec, where links to the Apify documentation are written
+    root-relative (e.g. `](/platform/...)`). Rendered under the API reference `baseUrl`, those resolve to a
+    non-existent `/api/client/python/platform/...` path, so prefix them with the docs domain. The negative
+    lookahead leaves protocol-relative `](//host)` links untouched.
+    """
+    return re.sub(r'\]\(/(?!/)', '](https://docs.apify.com/', content)
+
+
 def _ensure_typing_import(content: str, name: str) -> str:
     """Append `name` to the `from typing import ...` line if not already imported.
 
@@ -620,6 +631,7 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     """
     original = models_path.read_text()
     fixed = fix_discriminators(original)
+    fixed = absolutize_doc_links(fixed)
     fixed = convert_enums_to_literals(fixed)
     fixed = add_docs_group_decorators(fixed, 'Models')
     models_content, literals_content = split_literals_to_file(fixed)

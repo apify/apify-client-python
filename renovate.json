@@ -8,7 +8,7 @@
     "lockFileMaintenance": {
         "enabled": true,
         "automerge": true,
-        "automergeType": "branch"
+        "automergeType": "pr"
     },
     "packageRules": [
         {
@@ -18,11 +18,15 @@
             "groupName": "major/minor dev dependencies",
             "groupSlug": "dev-dependencies",
             "automerge": true,
-            "automergeType": "branch"
+            "automergeType": "pr"
         },
         {
             "matchPackageNames": ["@apify/*", "@crawlee/*", "apify", "apify-client", "apify-shared", "apify-fingerprint-datapoints", "crawlee", "got-scraping"],
             "minimumReleaseAge": "0 days"
+        },
+        {
+          "matchUpdateTypes": ["lockFileMaintenance"],
+          "minimumReleaseAgeBehaviour": "timestamp-optional"
         }
     ],
     "minimumReleaseAge": "1 day",

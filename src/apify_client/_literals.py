@@ -331,6 +331,7 @@ ErrorType = Literal[
     'schema-validation',
     'schema-validation-error',
     'schema-validation-failed',
+    'service-worker-registration-not-allowed',
     'sign-up-method-not-allowed',
     'slack-integration-not-custom',
     'socket-closed',

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 import apify_client as apify_client_module
+import apify_client.http_clients as http_clients_module
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import (
@@ -288,7 +289,6 @@ async def test_apify_client_async_with_custom_http_client_accepts_url_params() -
 
 def test_public_exports() -> None:
     """HTTP client types are exposed from `apify_client.http_clients`, not the root namespace."""
-    http_clients_module = apify_client_module.http_clients
     for name in ('HttpClient', 'HttpClientAsync', 'HttpResponse', 'ImpitHttpClient', 'ImpitHttpClientAsync'):
         assert hasattr(http_clients_module, name)
         assert not hasattr(apify_client_module, name)

@@ -63,16 +63,14 @@ jobs:
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
-      # Remember master's commit. A subsequent dispatch checks out the auto-update branch before
-      # regenerating, so "did regeneration change anything vs. master?" is answered against this
-      # recorded SHA rather than the current HEAD (which may be the branch tip by then).
+      # Record master's SHA now: a later dispatch checks out the auto-update branch before regenerating,
+      # so the "did anything change vs. master?" check below must compare against this SHA, not HEAD.
       - name: Record master ref
         id: base
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      # Detect whether the auto-update branch already exists on the remote. If it does, a previous
-      # dispatch for the same docs PR already opened a PR and we append to it; if not, the
-      # signed-commit step creates the branch from master.
+      # Does the auto-update branch already exist on the remote? If so, a previous dispatch opened the PR
+      # and we append to it. If not, the signed-commit step creates it from master.
       - name: Determine auto-update branch state
         id: branch
         run: |
@@ -84,13 +82,10 @@ jobs:
             echo "create=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # When the branch already exists, check it out before regenerating so the regenerated models
-      # are committed as a NEW commit on top of it — mirroring the new commit just pushed to the
-      # apify-docs PR. signed-commit checks out this same branch internally; switching to it now,
-      # while the tree is still clean, makes that internal checkout a no-op and keeps the regenerated
-      # files staged. Staying on master and letting signed-commit switch branches would fail: the
-      # regenerated files differ between master and the branch, and a plain `git checkout` refuses to
-      # overwrite local modifications.
+      # Check out the existing branch before regenerating so the new models land as a NEW commit on top,
+      # mirroring the commit just pushed to the docs PR. We must switch now, while the tree is clean:
+      # signed-commit's own checkout is a plain `git checkout` that would refuse to overwrite the
+      # regenerated files (which differ between master and the branch) once they're in the working tree.
       - name: Check out existing auto-update branch
         if: steps.branch.outputs.exists == 'true'
         run: |
@@ -127,11 +122,9 @@ jobs:
             uv run poe generate-models
           fi
 
-      # Proceed only when the regenerated models differ from the current master. Comparing against
-      # the recorded master SHA (the working tree may now sit on the auto-update branch) skips runs
-      # that would produce an empty PR — a spec change that doesn't affect the client models, or a
-      # change already merged into master. On a brand-new branch it also avoids creating the branch
-      # at all when there is nothing to regenerate.
+      # Proceed only when the regenerated models differ from master (compared against the recorded SHA,
+      # since the tree may now sit on the branch), which skips empty-PR runs: a spec change that doesn't
+      # affect the client models, or one already merged into master. Also avoids creating an empty branch.
       - name: Check for model changes
         id: changes
         run: |
@@ -142,20 +135,16 @@ jobs:
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Append the regenerated models to the auto-update branch as a single signed ("Verified")
-      # commit via apify/actions/signed-commit (GitHub's createCommitOnBranch GraphQL mutation).
+      # Append the regenerated models to the auto-update branch as a single signed ("Verified") commit
+      # via apify/actions/signed-commit (GitHub's createCommitOnBranch GraphQL mutation). It's added on
+      # top of the branch tip, never resetting to master: a fresh docs PR creates the branch
+      # (create-branch) and its first commit, and each later docs-PR commit triggers a dispatch that
+      # appends another, so the client PR mirrors the docs PR and stays open.
       #
-      # The commit is APPENDED on top of the branch's current tip — the branch is never reset to
-      # master. A fresh docs PR creates the branch (create-branch) and its first commit; every later
-      # dispatch, triggered by a new commit on the docs PR, adds another commit, so the client PR
-      # mirrors the docs PR commit-for-commit and stays open throughout. The previous flow instead
-      # force-pushed the branch to master before committing, and that intermediate "branch == master"
-      # state made the open PR's head identical to its base, which GitHub auto-closes; each dispatch
-      # then opened a brand-new duplicate PR (`gh pr list --head` only matches open PRs) and left the
-      # auto-closed one looking empty.
-      #
-      # signed-commit stages the files against the branch tip and sets committed=false when they are
-      # identical, so a repeated dispatch that regenerates the same models adds no commit.
+      # Appending (rather than force-pushing the branch to master, as before) is what keeps the PR open:
+      # a "branch == master" tip makes the PR head equal its base, which GitHub auto-closes, and each
+      # dispatch then opens a duplicate PR. signed-commit also sets committed=false when the staged
+      # files match the tip, so a repeated dispatch regenerating identical models adds no commit.
       - name: Commit regenerated models
         id: commit
         if: steps.changes.outputs.has_changes == 'true'
@@ -168,9 +157,8 @@ jobs:
           create-branch: ${{ steps.branch.outputs.create }}
           retries: '3'
 
-      # Ensure exactly one PR exists for this branch. The branch is never auto-closed now, so an
-      # existing open PR is found and reused; only the first run (or one whose PR step was cancelled
-      # by a concurrent dispatch before it could open the PR) actually creates it.
+      # Ensure exactly one PR exists for this branch. It's no longer auto-closed, so an existing PR is
+      # reused. Only the first run (or one whose PR step a concurrent dispatch cancelled) creates it.
       - name: Create or update PR
         if: steps.changes.outputs.has_changes == 'true'
         id: pr
@@ -204,10 +192,9 @@ jobs:
             echo "created=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding
-      # client-python PR. Comment only when something actually happened — the companion PR was just
-      # created, or a new commit was appended to it. Repeated dispatches that change nothing
-      # (committed=false) post no comment, avoiding noise on the docs PR.
+      # Post a cross-repo comment on the docs PR pointing reviewers to the companion client-python PR.
+      # Only when something happened: the PR was just created, or a commit was appended. A repeated
+      # dispatch that changes nothing (committed=false) posts no comment, avoiding noise on the docs PR.
       - name: Comment on apify-docs PR
         if: inputs.docs_pr_number && (steps.pr.outputs.created == 'true' || steps.commit.outputs.committed == 'true')
         env:

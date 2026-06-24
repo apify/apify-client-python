@@ -73,7 +73,7 @@ jobs:
           echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
 
       # Does the auto-update branch already exist on the remote? If so, a previous dispatch opened the PR
-      # and we append to it. If not, the signed-commit step creates it from master.
+      # and we append to it. If not, we start it from master (below) so signed-commit creates it there.
       - name: Determine auto-update branch state
         id: branch
         run: |
@@ -94,6 +94,13 @@ jobs:
         run: |
           git fetch --depth=1 origin "$BRANCH"
           git checkout -B "$BRANCH" FETCH_HEAD
+
+      # The branch doesn't exist yet, so regenerate from the recorded master SHA rather than the dispatched
+      # ref (a manual run may be dispatched from a non-master ref). Regenerating on master keeps the codegen
+      # tooling current, and signed-commit then creates the branch (the PR head) on top of master, the PR base.
+      - name: Start the auto-update branch from master
+        if: steps.branch.outputs.exists == 'false'
+        run: git checkout "${{ steps.base.outputs.sha }}"
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
       # Skipped for manual runs — datamodel-codegen will fetch from the published spec URL instead.

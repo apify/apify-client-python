@@ -278,13 +278,37 @@ class ActorStandby(BaseModel):
         alias_generator=to_camel,
     )
     is_enabled: bool | None = None
+    """
+    Whether standby mode is enabled for the Actor.
+    """
     desired_requests_per_actor_run: int | None = None
+    """
+    Target number of concurrent HTTP requests a single run is configured to handle.
+    """
     max_requests_per_actor_run: int | None = None
+    """
+    Maximum number of concurrent HTTP requests that can be routed to a single run.
+    """
     idle_timeout_secs: int | None = None
+    """
+    In seconds, how long a run can stay idle without incoming requests before it's terminated.
+    """
     build: str | None = None
+    """
+    Which build to run in standby mode. Either a build tag or a version number.
+    """
     memory_mbytes: int | None = None
+    """
+    In MB, the amount of memory allocated to the run.
+    """
     disable_standby_fields_override: bool | None = None
+    """
+    If `true`, prevents the standby mode configuration from being overridden elsewhere.
+    """
     should_pass_actor_input: bool | None = None
+    """
+    Whether to pass the Actor's input to the standby run. If `false`, the standby runs start with no input.
+    """
 
 
 @docs_group('Models')
@@ -640,14 +664,37 @@ class CreateActorRequest(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    name: Annotated[str | None, Field(examples=['MyActor'])] = None
-    description: Annotated[str | None, Field(examples=['My favourite actor!'])] = None
-    title: Annotated[str | None, Field(examples=['My actor'])] = None
+    name: Annotated[str | None, Field(examples=['instagram-scraper'])] = None
+    """
+    The identifier of the Actor. Use lowercase letters, numbers, and hyphens. Spaces or special characters aren't allowed. Must be unique across your account.
+    """
+    description: Annotated[str | None, Field(examples=['This scraper extracts posts and comments from Instagram.'])] = (
+        None
+    )
+    """
+    Short description of the Actor, displayed in Apify Store and Console.
+    """
+    title: Annotated[str | None, Field(examples=['Instagram scraper'])] = None
+    """
+    Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
+    """
     is_public: Annotated[bool | None, Field(examples=[False])] = None
-    seo_title: Annotated[str | None, Field(examples=['My actor'])] = None
-    seo_description: Annotated[str | None, Field(examples=['My actor is the best'])] = None
+    """
+    Whether the Actor is available to users in Apify Store. If `false`, the Actor is private and only visible to you.
+    """
+    seo_title: Annotated[str | None, Field(examples=['Free Instagram scraper'])] = None
+    """
+    Name of the Actor to display by search engines such as Google. Can be different from the Actor's name displayed in Apify Store and Console. Recommended length is 40-50 characters.
+    """
+    seo_description: Annotated[str | None, Field(examples=['The best scraper for Instagram'])] = None
+    """
+    Description of the Actor to display by search engines such as Google. Recommended length is 140-156 characters.
+    """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
     versions: list[Version] | None = None
+    """
+    An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
+    """
     pricing_infos: (
         list[
             Annotated[
@@ -660,11 +707,23 @@ class CreateActorRequest(BaseModel):
         ]
         | None
     ) = None
-    categories: list[str] | None = None
+    categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
+    """
+    A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
+    """
     default_run_options: DefaultRunOptions | None = None
     actor_standby: ActorStandby | None = None
+    """
+    The configuration of the Actor's standby mode. For details, see [Standby mode](https://docs.apify.com/platform/actors/development/programming-interface/standby).
+    """
     example_run_input: ExampleRunInput | None = None
+    """
+    Sample input payload that demonstrates what a typical run input for an Actor looks like. Used when no explicit input for a run is provided.
+    """
     is_deprecated: bool | None = None
+    """
+    Whether the Actor is deprecated.
+    """
 
 
 @docs_group('Models')
@@ -996,16 +1055,33 @@ class DecodeAndVerifyResponse(BaseModel):
 
 @docs_group('Models')
 class DefaultRunOptions(BaseModel):
+    """The default settings applied to an Actor run. Can be overridden elsewhere."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
     build: Annotated[str | None, Field(examples=['latest'])] = None
+    """
+    Which build to run. Either a build tag or a version number.
+    """
     timeout_secs: Annotated[int | None, Field(examples=[3600])] = None
+    """
+    Timeout in seconds. 0 if no timeout.
+    """
     memory_mbytes: Annotated[int | None, Field(examples=[2048])] = None
+    """
+    In MB, the amount of memory allocated to the run.
+    """
     restart_on_error: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether to automatically restart the run if it fails.
+    """
     max_items: int | None = None
+    """
+    Maximum number of items the run might produce.
+    """
     force_permission_level: ActorPermissionLevel | None = None
 
 
@@ -1120,11 +1196,17 @@ class EnvVar(BaseModel):
         alias_generator=to_camel,
     )
     name: Annotated[str, Field(examples=['MY_ENV_VAR'])]
+    """
+    The name of the environment variable.
+    """
     value: Annotated[str | None, Field(examples=['my-value'])] = None
     """
-    The environment variable value. This field is absent in responses when `isSecret` is `true`, as secret values are never returned by the API.
+    The value of the environment variable. If `isSecret` is `true`, this value isn't returned by the API.
     """
     is_secret: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the environment variable is encrypted. Secret values aren't returned by the API.
+    """
 
 
 @docs_group('Models')
@@ -1189,7 +1271,13 @@ class ExampleRunInput(BaseModel):
         alias_generator=to_camel,
     )
     body: Annotated[str | None, Field(examples=['{ "helloWorld": 123 }'])] = None
+    """
+    Sample input, serialized as a string.
+    """
     content_type: Annotated[str | None, Field(examples=['application/json; charset=utf-8'])] = None
+    """
+    MIME type of `body`.
+    """
 
 
 @docs_group('Models')
@@ -3136,14 +3224,25 @@ class SchemaValidationErrorData(BaseModel):
 
 @docs_group('Models')
 class SourceCodeFile(BaseModel):
+    """Represents a single file in the Actor's source code."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
     format: SourceCodeFileFormat | None = None
+    """
+    Format of the file's content, `TEXT` for plain text and `BASE64` for encoded content.
+    """
     content: Annotated[str | None, Field(examples=["console.log('This is the main.js file');"])] = None
+    """
+    The contents of the file. Interpreted based on the value of `format`.
+    """
     name: Annotated[str, Field(examples=['src/main.js'])]
+    """
+    The path of the file relative to the Actor's root directory.
+    """
 
 
 @docs_group('Models')
@@ -3160,11 +3259,11 @@ class SourceCodeFolder(BaseModel):
     )
     name: Annotated[str, Field(examples=['src/utils'])]
     """
-    The folder path relative to the Actor's root directory.
+    The path of the folder relative to the Actor's root directory.
     """
     folder: Annotated[bool, Field(examples=[True])]
     """
-    Always `true` for folders. Used to distinguish folders from files.
+    Whether it's a folder. Distinguishes folders from files.
     """
 
 
@@ -3687,22 +3786,40 @@ class Version(BaseModel):
         alias_generator=to_camel,
     )
     version_number: Annotated[str, Field(examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')]
+    """
+    The version number of the Actor. Must be a dot-separated sequence of numbers.
+    """
     source_type: VersionSourceType | None
+    """
+    Where the source code of the version lives.
+    """
     env_vars: list[EnvVar] | None = None
+    """
+    Environment variables for the version.
+    """
     apply_env_vars_to_build: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether to inject the environment variables at build time.
+    """
     build_tag: Annotated[str | None, Field(examples=['latest'])] = None
+    """
+    The tag name to apply to a successful build of this version.
+    """
     source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
+    """
+    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    """
     git_repo_url: str | None = None
     """
-    URL of the Git repository when sourceType is GIT_REPO.
+    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
     """
     tarball_url: str | None = None
     """
-    URL of the tarball when sourceType is TARBALL.
+    URL to download the source code from as a tarball or ZIP file. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
-    URL of the GitHub Gist when sourceType is GITHUB_GIST.
+    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
 
 

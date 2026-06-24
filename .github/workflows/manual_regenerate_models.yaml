@@ -63,11 +63,14 @@ jobs:
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
-      # Record master's SHA now: a later dispatch checks out the auto-update branch before regenerating,
-      # so the "did anything change vs. master?" check below must compare against this SHA, not HEAD.
+      # Record master's SHA up front: a later step checks out the auto-update branch, so the change check below
+      # can't compare against HEAD. Resolve master from the remote rather than the checked-out ref: the run may be
+      # dispatched from a non-master ref, but that check and the PR both target master, so master is the baseline.
       - name: Record master ref
         id: base
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          git fetch --depth=1 origin master
+          echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
 
       # Does the auto-update branch already exist on the remote? If so, a previous dispatch opened the PR
       # and we append to it. If not, the signed-commit step creates it from master.
@@ -155,7 +158,6 @@ jobs:
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
           create-branch: ${{ steps.branch.outputs.create }}
-          retries: "3"
 
       # Ensure exactly one PR exists for this branch. It's no longer auto-closed, so an existing PR is
       # reused. Only the first run (or one whose PR step a concurrent dispatch cancelled) creates it.

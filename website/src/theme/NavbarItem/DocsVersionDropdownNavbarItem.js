@@ -1,11 +1,11 @@
-import React from 'react';
-import { useVersions, useActiveDocContext, useDocsVersionCandidates } from '@docusaurus/plugin-content-docs/client';
-import { useDocsPreferredVersion } from '@docusaurus/theme-common';
-import { translate } from '@docusaurus/Translate';
-import { useLocation } from '@docusaurus/router';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import DefaultNavbarItem from '@theme/NavbarItem/DefaultNavbarItem';
-import DropdownNavbarItem from '@theme/NavbarItem/DropdownNavbarItem';
+import React from "react";
+import { useVersions, useActiveDocContext, useDocsVersionCandidates } from "@docusaurus/plugin-content-docs/client";
+import { useDocsPreferredVersion } from "@docusaurus/theme-common";
+import { translate } from "@docusaurus/Translate";
+import { useLocation } from "@docusaurus/router";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import DefaultNavbarItem from "@theme/NavbarItem/DefaultNavbarItem";
+import DropdownNavbarItem from "@theme/NavbarItem/DropdownNavbarItem";
 
 const getVersionMainDoc = (version) => version.docs.find((doc) => doc.id === version.mainDocId);
 
@@ -15,7 +15,7 @@ function getApiLinks(props, pathname, baseUrl) {
     }
 
     try {
-        return JSON.parse(props['data-api-links']);
+        return JSON.parse(props["data-api-links"]);
     } catch {
         return [];
     }
@@ -32,7 +32,7 @@ export default function DocsVersionDropdownNavbarItem({
 }) {
     const { search, hash, pathname } = useLocation();
     const { siteConfig } = useDocusaurusContext();
-    const baseUrl = siteConfig.baseUrl.endsWith('/') ? siteConfig.baseUrl : `${siteConfig.baseUrl}/`;
+    const baseUrl = siteConfig.baseUrl.endsWith("/") ? siteConfig.baseUrl : `${siteConfig.baseUrl}/`;
     const apiLinks = getApiLinks(props, pathname, baseUrl);
 
     const activeDocContext = useActiveDocContext(docsPluginId);
@@ -56,9 +56,9 @@ export default function DocsVersionDropdownNavbarItem({
     const dropdownLabel =
         mobile && items.length > 1
             ? translate({
-                  id: 'theme.navbar.mobileVersionsDropdown.label',
-                  message: 'Versions',
-                  description: 'The label for the navbar versions dropdown on mobile view',
+                  id: "theme.navbar.mobileVersionsDropdown.label",
+                  message: "Versions",
+                  description: "The label for the navbar versions dropdown on mobile view",
               })
             : dropdownVersion.label;
     let dropdownTo = mobile && items.length > 1 ? undefined : getVersionMainDoc(dropdownVersion).path;

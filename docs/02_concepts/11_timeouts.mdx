@@ -15,7 +15,7 @@ import TimeoutsSyncExample from '!!raw-loader!./code/11_timeouts_sync.py';
 The Apify client uses a tiered timeout system to set appropriate time limits for different types of API requests. Each tier has a default value suited to its use case:
 
 | Tier | Default | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `short` | 5 seconds | Fast CRUD operations (get, update, delete) |
 | `medium` | 30 seconds | Batch, list, and data transfer operations |
 | `long` | 360 seconds | Long-polling, streaming, and heavy operations |

@@ -19,7 +19,7 @@ When you use the Apify client, it automatically extracts all relevant data from 
 The Apify client provides dedicated error subclasses based on the HTTP status code of the failed response, so you can branch on error kind without inspecting `status_code` or `type`:
 
 | Status | Subclass |
-|---|---|
+| --- | --- |
 | 400 | <ApiLink to="class/InvalidRequestError">`InvalidRequestError`</ApiLink> |
 | 401 | <ApiLink to="class/UnauthorizedError">`UnauthorizedError`</ApiLink> |
 | 403 | <ApiLink to="class/ForbiddenError">`ForbiddenError`</ApiLink> |

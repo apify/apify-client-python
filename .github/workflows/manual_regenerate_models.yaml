@@ -108,31 +108,56 @@ jobs:
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Point the auto-update branch at the current master so the signed-commit step below records
-      # the regenerated models as a single commit on top of it. Resetting to master (instead of
-      # building on a possibly stale existing branch) is what keeps the committed diff relative to
-      # the current master: an already-merged change can never reappear. Any previous content on the
-      # branch is intentionally replaced, so the PR always reflects "current master + freshly
-      # regenerated models" — and it still updates whenever the source docs PR gets new commits.
-      - name: Point branch at current master
-        if: steps.changes.outputs.has_changes == 'true'
-        run: |
-          git checkout -B "$BRANCH"
-          git push --force origin "HEAD:refs/heads/$BRANCH"
-
-      - name: Commit model changes
+      # Commit the regenerated models as a single commit on top of the current master and move the
+      # auto-update branch to it with one atomic force-push. Building on a fresh master checkout (not
+      # on the possibly stale existing branch) keeps the committed diff relative to the current
+      # master, so an already-merged change can never reappear as a fresh diff.
+      #
+      # The branch goes straight from its previous state to "master + commit" in a single push — it
+      # is never published as being equal to master. This is the crux of the fix: the previous flow
+      # force-pushed the branch to master first and committed on top in a second step, and that
+      # intermediate "branch == master" state made the open PR's head identical to its base, which
+      # GitHub auto-closes. The next dispatch then opened a brand-new PR (`gh pr list --head` only
+      # matches open PRs), and the auto-closed one was left looking empty once its commit was orphaned
+      # by the following reset. Moving the branch forward in one step keeps the single existing PR
+      # open and simply updates it.
+      #
+      # Trade-off vs. apify/actions/signed-commit (used before): the commit is authored with a plain
+      # `git commit` and is therefore not GPG-"Verified". Signed commits are not required on master
+      # (branch protection has required_signatures disabled) and this branch is always squash-merged
+      # through a reviewed PR, so the verified badge carries no weight here.
+      - name: Update branch with regenerated models
         id: commit
         if: steps.changes.outputs.has_changes == 'true'
-        uses: apify/actions/signed-commit@v1.2.0
-        with:
-          message: ${{ env.TITLE }}
-          add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
-          github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
-          branch: ${{ env.BRANCH }}
-          create-branch: 'false'
+        run: |
+          git config user.name 'Apify Service Account'
+          git config user.email '64261774+apify-service-account@users.noreply.github.com'
 
+          files='src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
+
+          # If the remote branch already carries exactly these regenerated files, there is nothing to
+          # do. Skipping the push avoids a redundant commit and the CI re-run it triggers when the
+          # same docs PR dispatches this workflow repeatedly without actually changing the spec.
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch --depth=1 origin "$BRANCH"
+            if git diff --quiet FETCH_HEAD -- $files; then
+              echo "Remote branch '$BRANCH' already has the current regenerated models — skipping push."
+              echo "pushed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          git checkout -B "$BRANCH"
+          git add $files
+          git commit -m "$TITLE"
+          git push --force origin "$BRANCH"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      # Ensure exactly one PR exists for this branch. The branch is never auto-closed now, so an
+      # existing open PR is found and reused; only the first run (or one whose PR step was cancelled
+      # by a concurrent dispatch before it could open the PR) actually creates it.
       - name: Create or update PR
-        if: steps.commit.outputs.committed == 'true'
+        if: steps.changes.outputs.has_changes == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
@@ -164,9 +189,12 @@ jobs:
             echo "created=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding client-python PR.
+      # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding
+      # client-python PR. Comment only when something actually happened — the companion PR was just
+      # created, or a real spec change was pushed to it. Repeated dispatches that change nothing
+      # (pushed=false) post no comment, avoiding noise on the docs PR.
       - name: Comment on apify-docs PR
-        if: steps.commit.outputs.committed == 'true' && inputs.docs_pr_number
+        if: inputs.docs_pr_number && (steps.pr.outputs.created == 'true' || steps.commit.outputs.pushed == 'true')
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}

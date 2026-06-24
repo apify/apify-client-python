@@ -151,11 +151,11 @@ jobs:
         uses: apify/actions/signed-commit@v1.2.0
         with:
           message: ${{ env.TITLE }}
-          add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
+          add: "src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py"
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
           create-branch: ${{ steps.branch.outputs.create }}
-          retries: '3'
+          retries: "3"
 
       # Ensure exactly one PR exists for this branch. It's no longer auto-closed, so an existing PR is
       # reused. Only the first run (or one whose PR step a concurrent dispatch cancelled) creates it.

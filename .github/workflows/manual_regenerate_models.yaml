@@ -38,7 +38,13 @@ jobs:
     env:
       DOCS_PR_NUMBER: ${{ inputs.docs_pr_number }}
       BRANCH: ${{ inputs.docs_pr_number && format('update-models-docs-pr-{0}', inputs.docs_pr_number) || 'update-models-manual' }}
-      TITLE: "${{ inputs.docs_pr_number && format('[TODO]: update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || '[TODO]: update generated models from published OpenAPI spec' }}"
+      # Message for the automated regeneration commit. Kept descriptive (and traceable to the docs PR) for the
+      # branch history. It is deliberately NOT reused as the PR title.
+      COMMIT_MESSAGE: "${{ inputs.docs_pr_number && format('chore: update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || 'chore: update generated models from published OpenAPI spec' }}"
+      # Placeholder PR title — just `TODO`, so it carries no valid commit type and `pr-title-check` stays red
+      # until a human replaces it (the default can never be merged as-is). The required action, the apify-docs
+      # reference, and its link all live in the PR body, not the title.
+      PR_TITLE: 'TODO'
       ASSIGNEE: ${{ inputs.docs_pr_author || github.actor }}
       REVIEWER: vdusek
       LABEL: t-tooling
@@ -160,7 +166,7 @@ jobs:
         if: steps.changes.outputs.has_changes == 'true'
         uses: apify/actions/signed-commit@v1.3.0
         with:
-          message: ${{ env.TITLE }}
+          message: ${{ env.COMMIT_MESSAGE }}
           add: "src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py"
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
@@ -181,15 +187,18 @@ jobs:
             echo "pr_url=$EXISTING_PR" >> "$GITHUB_OUTPUT"
             echo "created=false" >> "$GITHUB_OUTPUT"
           else
+            # The PR opens with a `TODO` placeholder title that fails `pr-title-check`. Spell out the required
+            # action: the assignee must replace both the PR title and this description before merging.
+            ACTION_NOTE=$'> [!IMPORTANT]\n> **Replace this PR title and description before merging.**\n> - Title: a Conventional Commits message describing the actual model changes (e.g. `chore: ...` for a routine sync, or `refactor:`/`feat:`/`fix:` when models meaningfully change).\n> - Description: summarize what changed in the models.\n\n'
             if [[ -n "$DOCS_PR_NUMBER" ]]; then
               DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
-              BODY="This PR updates the auto-generated Pydantic models and TypedDicts based on OpenAPI specification changes in [apify-docs PR #${DOCS_PR_NUMBER}](${DOCS_PR_URL})."
+              BODY="${ACTION_NOTE}This PR updates the auto-generated Pydantic models and TypedDicts based on OpenAPI specification changes in [apify-docs PR #${DOCS_PR_NUMBER}](${DOCS_PR_URL})."
             else
-              BODY="This PR updates the auto-generated Pydantic models and TypedDicts from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json)."
+              BODY="${ACTION_NOTE}This PR updates the auto-generated Pydantic models and TypedDicts from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json)."
             fi
 
             PR_URL=$(gh pr create \
-              --title "$TITLE" \
+              --title "$PR_TITLE" \
               --body "$BODY" \
               --head "$BRANCH" \
               --base master \

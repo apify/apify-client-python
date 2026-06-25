@@ -235,26 +235,6 @@ class ActorResponse(BaseModel):
 
 
 @docs_group('Models')
-class ActorRunFailedError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    error: RunFailedErrorDetail | None = None
-
-
-@docs_group('Models')
-class ActorRunTimeoutExceededError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    error: RunTimeoutExceededErrorDetail | None = None
-
-
-@docs_group('Models')
 class ActorShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2840,19 +2820,6 @@ class Run(BaseModel):
 
 
 @docs_group('Models')
-class RunFailedErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    type: Annotated[Literal['run-failed'] | None, Field(title='ErrorType')] = None
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
 class RunMeta(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2953,19 +2920,6 @@ class RunStats(BaseModel):
     run_time_secs: Annotated[float | None, Field(examples=[248.472], ge=0.0)] = None
     metamorph: Annotated[int | None, Field(examples=[0], ge=0)] = None
     compute_units: Annotated[float, Field(examples=[0.13804], ge=0.0)]
-
-
-@docs_group('Models')
-class RunTimeoutExceededErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    type: Annotated[Literal['run-timeout-exceeded'] | None, Field(title='ErrorType')] = None
-    """
-    Machine-processable error type identifier.
-    """
 
 
 @docs_group('Models')

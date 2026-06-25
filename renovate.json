@@ -9,7 +9,7 @@
         "enabled": true,
         "automerge": true,
         "automergeType": "pr",
-        "schedule": ["* 1-3 * * 1"]
+        "schedule": ["* 1-2 * * 1"]
     },
     "packageRules": [
         {
@@ -32,6 +32,6 @@
     ],
     "minimumReleaseAge": "1 day",
     "internalChecksFilter": "strict",
-    "schedule": ["* 4-6 * * 1-5"],
+    "schedule": ["* 1-2 * * 2-5"],
     "ignoreDeps": ["apify_client", "docusaurus-plugin-typedoc-api"]
 }

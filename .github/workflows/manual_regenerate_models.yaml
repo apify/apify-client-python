@@ -123,7 +123,7 @@ jobs:
       - name: Commit model changes
         id: commit
         if: steps.changes.outputs.has_changes == 'true'
-        uses: apify/actions/signed-commit@v1.2.0
+        uses: apify/actions/signed-commit@v1.3.0
         with:
           message: ${{ env.TITLE }}
           add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'

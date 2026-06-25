@@ -54,10 +54,8 @@ module.exports = {
     projectName: 'apify-client-python',
     favicon: 'img/favicon.ico',
     scripts: ['/js/custom.js', ...(config.scripts ?? [])],
-    onBrokenLinks:
-    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('warn'),
-    onBrokenMarkdownLinks:
-    /** @type {import('@docusaurus/types').ReportingSeverity} */ ('warn'),
+    onBrokenLinks: /** @type {import('@docusaurus/types').ReportingSeverity} */ ('warn'),
+    onBrokenMarkdownLinks: /** @type {import('@docusaurus/types').ReportingSeverity} */ ('warn'),
     themes: [
         [
             '@apify/docs-theme',

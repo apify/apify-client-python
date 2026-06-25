@@ -166,7 +166,7 @@ For end-to-end recipes — passing input, managing tasks for reusable input, ret
 The full documentation lives at **[docs.apify.com/api/client/python](https://docs.apify.com/api/client/python)**.
 
 | Section | What you'll find |
-|---|---|
+| --- | --- |
 | [Introduction](https://docs.apify.com/api/client/python/docs) | Overview, prerequisites, and a tour of the client. |
 | [Quick start](https://docs.apify.com/api/client/python/docs/quick-start) | Authenticate, run an Actor, and fetch its results step by step. |
 | [Concepts](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support) | Asyncio, single vs. collection clients, nested clients, error handling, retries, logging, convenience methods, pagination, streaming, custom HTTP clients, timeouts. |

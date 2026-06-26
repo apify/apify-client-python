@@ -3091,6 +3091,9 @@ packages:
   '@types/node@26.0.0':
     resolution: {integrity: sha512-vf2YFi1iY9lHGwNJMs01biZFbKJkrZR1T6/MlzjhJLPdntOHLhTrDSnSVcdtvjihi4VQNlrFRIxLsDBlQpAipA==}
 
+  '@types/node@26.0.1':
+    resolution: {integrity: sha512-fc3KiUoBt6kie0N9bIW3E47vZsuaMf0PM2AaUpLCLT0s/LvX1nxAim6Fc049cNxODPpGm6qRAuUOB86SkRuPQw==}
+
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
@@ -4089,8 +4092,8 @@ packages:
   encoding-sniffer@0.2.1:
     resolution: {integrity: sha512-5gvq20T6vfpekVtqrYQsSCFZ1wEg5+wW0/QaZMWkFr6BqD3NfKs0rLCx4rrVlSWJeZb5NBJgVLswK/w2MWU+Gw==}
 
-  enhanced-resolve@5.24.0:
-    resolution: {integrity: sha512-SkE2t82KlkkxQRVMVLAGKxLfORGQfrkx5dkj+vlgXRVNEdPc4eZcR+J/Fvj8C+yKSFH5L0q3NFlyufOVQnCcYQ==}
+  enhanced-resolve@5.24.1:
+    resolution: {integrity: sha512-7DdUaTjmNwMcH2gLr1qycesKII3BK4RLy/mdAb7x10Lq7bR4aNKHt1BR1ZALSv0rPM/hF5wYF0PhGop/rJm8vw==}
     engines: {node: '>=10.13.0'}
 
   entities@2.2.0:
@@ -5436,8 +5439,8 @@ packages:
     resolution: {integrity: sha512-Z3lTE9pLaJF47NyMhd4ww1yFTAP8YhYI8SleJiHzM46Fgpm5cnNzSl9XfzFNqbaz+VlJrIj3fXQ4DeN1Rjm6cw==}
     engines: {node: '>=18'}
 
-  node-releases@2.0.49:
-    resolution: {integrity: sha512-f06bl1D+8ZDkn2oOQQKAh5/otFWqVnM1Q5oerA8Pex7UfT66Tx4IPHIqVVFKqFT3FUtaDstdgkM7yT7JWhqxfw==}
+  node-releases@2.0.50:
+    resolution: {integrity: sha512-J6l92tKHX6w8Jy5nO1Vuc01NoIiRGi/d6qBKVxh+IQ8Cr3b6HbVNfKiF8ZpFKufTwpwxMmce2W3iQZ861ZRyTg==}
     engines: {node: '>=18'}
 
   normalize-path@3.0.0:
@@ -11490,6 +11493,10 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  '@types/node@26.0.1':
+    dependencies:
+      undici-types: 8.3.0
+
   '@types/parse-json@4.0.2': {}
 
   '@types/prismjs@1.26.6': {}
@@ -11953,7 +11960,7 @@ snapshots:
       baseline-browser-mapping: 2.10.38
       caniuse-lite: 1.0.30001799
       electron-to-chromium: 1.5.378
-      node-releases: 2.0.49
+      node-releases: 2.0.50
       update-browserslist-db: 1.2.3(browserslist@4.28.4)
 
   buffer-from@1.1.2: {}
@@ -12577,7 +12584,7 @@ snapshots:
       iconv-lite: 0.6.3
       whatwg-encoding: 3.1.1
 
-  enhanced-resolve@5.24.0:
+  enhanced-resolve@5.24.1:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.3
@@ -13470,7 +13477,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 26.0.0
+      '@types/node': 26.0.1
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -14335,7 +14342,7 @@ snapshots:
       emojilib: 2.4.0
       skin-tone: 2.0.0
 
-  node-releases@2.0.49: {}
+  node-releases@2.0.50: {}
 
   normalize-path@3.0.0: {}
 
@@ -16474,7 +16481,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.17.0)
       browserslist: 4.28.4
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.24.0
+      enhanced-resolve: 5.24.1
       es-module-lexer: 2.1.0
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -16513,7 +16520,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.17.0)
       browserslist: 4.28.4
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.24.0
+      enhanced-resolve: 5.24.1
       es-module-lexer: 2.1.0
       eslint-scope: 5.1.1
       events: 3.3.0

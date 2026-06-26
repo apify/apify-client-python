@@ -7,10 +7,9 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Fix casing in `isAtHome` in `User-Agent` header ([#903](https://github.com/apify/apify-client-python/pull/903)) ([1e50374](https://github.com/apify/apify-client-python/commit/1e50374e91bc39282bc724f77770963a14e051eb)) by [@Pijukatel](https://github.com/Pijukatel)
+- Update impit to ~=0.13.0 ([#871](https://github.com/apify/apify-client-python/pull/871)) ([8dffe34](https://github.com/apify/apify-client-python/commit/8dffe34defbcd7b7c4a9cba9a1e1a2751c0096cd)) by [@renovate](https://github.com/apps/renovate)
+- Remove unused run-failed and run-timeout-exceeded error models ([#900](https://github.com/apify/apify-client-python/pull/900)) ([8c48a06](https://github.com/apify/apify-client-python/commit/8c48a06395fc000ec1df15ccd27cc79d5a2dc46b)) by [@apify-service-account](https://github.com/apify-service-account)
 
-### 🚀 Features
-
-- Bump impit to 0.13.0 ([#871](https://github.com/apify/apify-client-python/pull/871))
 
 ## [3.0.3](https://github.com/apify/apify-client-python/releases/tag/v3.0.3) (2026-06-18)
 

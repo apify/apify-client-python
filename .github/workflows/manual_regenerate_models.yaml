@@ -192,9 +192,9 @@ jobs:
             ACTION_NOTE=$'> [!IMPORTANT]\n> **Replace this PR title and description before merging.**\n> - Title: a Conventional Commits message describing the actual model changes (e.g. `chore: ...` for a routine sync, or `refactor:`/`feat:`/`fix:` when models meaningfully change).\n> - Description: summarize what changed in the models.\n\n'
             if [[ -n "$DOCS_PR_NUMBER" ]]; then
               DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
-              BODY="${ACTION_NOTE}This PR updates the auto-generated Pydantic models and TypedDicts based on OpenAPI specification changes in [apify-docs PR #${DOCS_PR_NUMBER}](${DOCS_PR_URL})."
+              BODY="${ACTION_NOTE}- Updates the auto-generated Pydantic models and TypedDicts based on the proposed OpenAPI specification changes."$'\n'"- Based on apify-docs PR [#${DOCS_PR_NUMBER}](${DOCS_PR_URL})."
             else
-              BODY="${ACTION_NOTE}This PR updates the auto-generated Pydantic models and TypedDicts from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json)."
+              BODY="${ACTION_NOTE}- Updates the auto-generated Pydantic models and TypedDicts based on the latest OpenAPI specification changes."$'\n'"- Based on the [published OpenAPI specification](https://docs.apify.com/api/openapi.json)."
             fi
 
             PR_URL=$(gh pr create \

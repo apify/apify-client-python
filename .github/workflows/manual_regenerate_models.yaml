@@ -40,7 +40,7 @@ jobs:
       BRANCH: ${{ inputs.docs_pr_number && format('update-models-docs-pr-{0}', inputs.docs_pr_number) || 'update-models-manual' }}
       # Message for the automated regeneration commit. Kept descriptive (and traceable to the docs PR) for the
       # branch history. It is deliberately NOT reused as the PR title.
-      COMMIT_MESSAGE: "${{ inputs.docs_pr_number && format('chore: update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || 'chore: update generated models from published OpenAPI spec' }}"
+      COMMIT_MESSAGE: "${{ inputs.docs_pr_number && format('update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || 'update generated models from published OpenAPI spec' }}"
       # Placeholder PR title — just `TODO`, so it carries no valid commit type and `pr-title-check` stays red
       # until a human replaces it (the default can never be merged as-is). The required action, the apify-docs
       # reference, and its link all live in the PR body, not the title.

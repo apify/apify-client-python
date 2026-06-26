@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 3.0.4 - **not yet released**
 
+### 🐛 Bug Fixes
+
+- Fix casing in `isAtHome` in `User-Agent` header ([#903](https://github.com/apify/apify-client-python/pull/903)) ([1e50374](https://github.com/apify/apify-client-python/commit/1e50374e91bc39282bc724f77770963a14e051eb)) by [@Pijukatel](https://github.com/Pijukatel)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.0.3](https://github.com/apify/apify-client-python/releases/tag/v3.0.3) (2026-06-18)

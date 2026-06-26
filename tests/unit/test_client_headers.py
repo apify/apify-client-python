@@ -28,7 +28,7 @@ def _header_handler(request: Request) -> Response:
 
 
 def _get_user_agent() -> str:
-    is_at_home = 'APIFY_IS_AT_HOME' in os.environ
+    is_at_home = str('APIFY_IS_AT_HOME' in os.environ).lower()
     python_version = '.'.join([str(x) for x in sys.version_info[:3]])
     client_version = metadata.version('apify-client')
     return f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'

@@ -2043,31 +2043,33 @@ class Plan(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    id: Annotated[str, Field(examples=['Personal'])]
-    description: Annotated[str, Field(examples=['Cost-effective plan for freelancers, developers and students.'])]
-    is_enabled: Annotated[bool, Field(examples=[True])]
-    monthly_base_price_usd: Annotated[float, Field(examples=[49])]
-    monthly_usage_credits_usd: Annotated[float, Field(examples=[49])]
+    id: Annotated[str | None, Field(examples=['Personal'])] = None
+    description: Annotated[
+        str | None, Field(examples=['Cost-effective plan for freelancers, developers and students.'])
+    ] = None
+    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
+    monthly_base_price_usd: Annotated[float | None, Field(examples=[49])] = None
+    monthly_usage_credits_usd: Annotated[float | None, Field(examples=[49])] = None
     usage_discount_percent: Annotated[float | None, Field(examples=[0])] = None
     enabled_platform_features: Annotated[
-        list[str], Field(examples=[['ACTORS', 'STORAGE', 'PROXY_SERPS', 'SCHEDULER', 'WEBHOOKS']])
-    ]
-    max_monthly_usage_usd: Annotated[float, Field(examples=[9999])]
-    max_actor_memory_gbytes: Annotated[float, Field(examples=[32])]
-    max_monthly_actor_compute_units: Annotated[float, Field(examples=[1000])]
-    max_monthly_residential_proxy_gbytes: Annotated[float, Field(examples=[10])]
-    max_monthly_proxy_serps: Annotated[int, Field(examples=[30000])]
-    max_monthly_external_data_transfer_gbytes: Annotated[float, Field(examples=[1000])]
-    max_actor_count: Annotated[int, Field(examples=[100])]
-    max_actor_task_count: Annotated[int, Field(examples=[1000])]
-    data_retention_days: Annotated[int, Field(examples=[14])]
+        list[str] | None, Field(examples=[['ACTORS', 'STORAGE', 'PROXY_SERPS', 'SCHEDULER', 'WEBHOOKS']])
+    ] = None
+    max_monthly_usage_usd: Annotated[float | None, Field(examples=[9999])] = None
+    max_actor_memory_gbytes: Annotated[float | None, Field(examples=[32])] = None
+    max_monthly_actor_compute_units: Annotated[float | None, Field(examples=[1000])] = None
+    max_monthly_residential_proxy_gbytes: Annotated[float | None, Field(examples=[10])] = None
+    max_monthly_proxy_serps: Annotated[int | None, Field(examples=[30000])] = None
+    max_monthly_external_data_transfer_gbytes: Annotated[float | None, Field(examples=[1000])] = None
+    max_actor_count: Annotated[int | None, Field(examples=[100])] = None
+    max_actor_task_count: Annotated[int | None, Field(examples=[1000])] = None
+    data_retention_days: Annotated[int | None, Field(examples=[14])] = None
     available_proxy_groups: dict[str, int]
     """
     The number of available proxies in this group.
     """
-    team_account_seat_count: Annotated[int, Field(examples=[1])]
-    support_level: Annotated[str, Field(examples=['COMMUNITY'])]
-    available_add_ons: Annotated[list[str], Field(examples=[[]])]
+    team_account_seat_count: Annotated[int | None, Field(examples=[1])] = None
+    support_level: Annotated[str | None, Field(examples=['COMMUNITY'])] = None
+    available_add_ons: Annotated[list[str] | None, Field(examples=[[]])] = None
     tier: Annotated[str | None, Field(examples=['FREE'])] = None
     api_rate_limit_boosts: Annotated[int | None, Field(examples=[0])] = None
     max_schedule_count: Annotated[int | None, Field(examples=[100])] = None
@@ -3268,8 +3270,8 @@ class StoreListActor(BaseModel):
     title: Annotated[str, Field(examples=['My Public Actor'])]
     name: Annotated[str, Field(examples=['my-public-actor'])]
     username: Annotated[str, Field(examples=['jane35'])]
-    user_full_name: Annotated[str, Field(examples=['Jane H. Doe'])]
-    description: Annotated[str, Field(examples=['My public actor!'])]
+    user_full_name: Annotated[str | None, Field(examples=['Jane H. Doe'])] = None
+    description: Annotated[str | None, Field(examples=['My public actor!'])] = None
     categories: Annotated[list[str] | None, Field(examples=[['MARKETING', 'LEAD_GENERATION']])] = None
     notice: str | None = None
     picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
@@ -3681,14 +3683,14 @@ class UserPrivateInfo(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    id: Annotated[str, Field(examples=['YiKoxjkaS9gjGTqhF'])]
+    id: Annotated[str | None, Field(examples=['YiKoxjkaS9gjGTqhF'])] = None
     username: Annotated[str, Field(examples=['myusername'])]
-    profile: Profile
-    email: Annotated[EmailStr, Field(examples=['bob@example.com'])]
+    profile: Profile | None = None
+    email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
     proxy: Proxy
     plan: Plan
     effective_platform_features: EffectivePlatformFeatures
-    created_at: Annotated[AwareDatetime, Field(examples=['2022-11-29T14:48:29.381Z'])]
+    created_at: Annotated[AwareDatetime | None, Field(examples=['2022-11-29T14:48:29.381Z'])] = None
     is_paying: Annotated[bool, Field(examples=[True])]
 
 
@@ -3757,7 +3759,7 @@ class Version(BaseModel):
     """
     build_tag: Annotated[str | None, Field(examples=['latest'])] = None
     """
-    The tag name to apply to a successful build of this version.
+    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
     """
     source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
     """

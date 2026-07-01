@@ -50,6 +50,7 @@
 
 
 - From [conda-forge](https://anaconda.org/channels/conda-forge/packages/apify-client/overview), it can be installed with [conda](https://docs.conda.io/en/latest/):
+
     ```bash
     conda install conda-forge::apify-client
     ```

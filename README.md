@@ -32,7 +32,7 @@
 
 ## Installation
 
-`apify-client` requires **Python 3.11 or higher** and it is published on [PyPI](https://pypi.org/project/apify-client/) and on [conda-forge](https://anaconda.org/channels/conda-forge/packages/apify-client/overview)
+`apify-client` requires **Python 3.11 or higher** and is published on [PyPI](https://pypi.org/project/apify-client/) and [conda-forge](https://anaconda.org/conda-forge/apify-client).
 
 - From [PyPI](https://pypi.org/project/apify-client/), it can be installed for example with [pip](https://pip.pypa.io/):
 
@@ -49,7 +49,7 @@
     or any other Python package manager that consumes PyPI.
 
 
-- From [conda-forge](https://anaconda.org/channels/conda-forge/packages/apify-client/overview), it can be installed with [conda](https://docs.conda.io/en/latest/):
+- From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):
 
     ```bash
     conda install conda-forge::apify-client

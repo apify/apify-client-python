@@ -206,7 +206,7 @@ class ActorDefinition(BaseModel):
     storages: Storages | None = None
     default_memory_mbytes: str | int | None = None
     """
-    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/actors/development/actor-definition/dynamic-actor-memory).
+    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/platform/actors/development/actor-definition/dynamic-actor-memory).
     """
     min_memory_mbytes: Annotated[int | None, Field(ge=128)] = None
     """
@@ -545,7 +545,7 @@ class BuildStats(BaseModel):
     duration_millis: Annotated[int | None, Field(examples=[1000])] = None
     run_time_secs: Annotated[float | None, Field(examples=[45.718])] = None
     compute_units: Annotated[float, Field(examples=[0.0126994444444444])]
-    image_size_bytes: Annotated[int | None, Field(examples=[975770223])] = None
+    image_size_bytes: Annotated[float | None, Field(examples=[975770223])] = None
 
 
 @docs_group('Models')
@@ -852,7 +852,7 @@ class Dataset(BaseModel):
         ),
     ] = None
     """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/actors/development/actor-definition/dataset-schema)
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema)
     """
     console_url: Annotated[AnyUrl, Field(examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])]
     items_public_url: Annotated[
@@ -1240,7 +1240,9 @@ class EventData(BaseModel):
         alias_generator=to_camel,
     )
     actor_id: Annotated[str, Field(examples=['vvE7iMKuMc5qTHHsR'])]
-    actor_run_id: Annotated[str, Field(examples=['JgwXN9BdwxGcu9MMF'])]
+    actor_run_id: Annotated[str | None, Field(examples=['JgwXN9BdwxGcu9MMF'])] = None
+    actor_build_id: Annotated[str | None, Field(examples=['HG7ML7M8z78YcAPEB'])] = None
+    actor_task_id: Annotated[str | None, Field(examples=['zRLp8SDOZz2NyLg7K'])] = None
 
 
 @docs_group('Models')
@@ -3586,7 +3588,7 @@ class UpdateLimitsRequest(BaseModel):
     """
     data_retention_days: Annotated[int | None, Field(examples=[90])] = None
     """
-    Apify securely stores your ten most recent Actor runs indefinitely, ensuring they are always accessible. Unnamed storages and other Actor runs are automatically deleted after the retention period. If you're subscribed, you can change it to keep data for longer or to limit your usage. [Lear more](https://docs.apify.com/storage#data-retention).
+    Apify securely stores your ten most recent Actor runs indefinitely, ensuring they are always accessible. Unnamed storages and other Actor runs are automatically deleted after the retention period. If you're subscribed, you can change it to keep data for longer or to limit your usage. [Lear more](https://docs.apify.com/platform/storage/usage#data-retention).
 
     """
 

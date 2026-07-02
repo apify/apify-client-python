@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Relax model validation constraints for `Plan` and `StoreListActor` ([#910](https://github.com/apify/apify-client-python/pull/910)) ([7a5b157](https://github.com/apify/apify-client-python/commit/7a5b157a20a1c6d04175a8f33d3f048af3ab5f9d)) by [@apify-service-account](https://github.com/apify-service-account)
+- Add missing EventData fields and new error type ([#917](https://github.com/apify/apify-client-python/pull/917)) ([93566b8](https://github.com/apify/apify-client-python/commit/93566b883b269d1f7fb098c51c0677cd10ebcc7d)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
 <!-- git-cliff-unreleased-end -->

@@ -545,7 +545,7 @@ class BuildStats(BaseModel):
     duration_millis: Annotated[int | None, Field(examples=[1000])] = None
     run_time_secs: Annotated[float | None, Field(examples=[45.718])] = None
     compute_units: Annotated[float, Field(examples=[0.0126994444444444])]
-    image_size_bytes: Annotated[float | None, Field(examples=[975770223])] = None
+    image_size_bytes: Annotated[int | None, Field(examples=[975770223])] = None
 
 
 @docs_group('Models')

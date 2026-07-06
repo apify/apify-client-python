@@ -719,10 +719,10 @@ class CreateOrUpdateVersionRequest(BaseModel):
         alias_generator=to_camel,
     )
     version_number: Annotated[
-        str | None, Field(examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
+        str | None, Field(examples=['1.6'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
     ] = None
     """
-    The version number of the Actor. Must be a dot-separated sequence of numbers.
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
     """
     source_type: VersionSourceType | None = None
     """
@@ -3768,7 +3768,7 @@ class Version(BaseModel):
     )
     version_number: Annotated[str, Field(examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')]
     """
-    The version number of the Actor. Must be a dot-separated sequence of numbers.
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
     """
     source_type: VersionSourceType | None
     """

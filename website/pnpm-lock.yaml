@@ -3523,6 +3523,9 @@ packages:
   caniuse-lite@1.0.30001800:
     resolution: {integrity: sha512-MMHtuAz9Ys840zAY5F4k6fV5GaivZ9sPk+nz0mY+GYVzRBnYkN0mpqkSR92oWRQ19yQWo4HvBV/FnC16AJX8MA==}
 
+  caniuse-lite@1.0.30001802:
+    resolution: {integrity: sha512-vmv8ub2xwTNmljSKf82mtCk5JH7hC+YgzLj3P5zotvA0tPQ9016tdNNOG8WRca1IxOnhSsivB+J0z5FeE5LOUw==}
+
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
@@ -4080,8 +4083,8 @@ packages:
   encoding-sniffer@0.2.1:
     resolution: {integrity: sha512-5gvq20T6vfpekVtqrYQsSCFZ1wEg5+wW0/QaZMWkFr6BqD3NfKs0rLCx4rrVlSWJeZb5NBJgVLswK/w2MWU+Gw==}
 
-  enhanced-resolve@5.24.1:
-    resolution: {integrity: sha512-7DdUaTjmNwMcH2gLr1qycesKII3BK4RLy/mdAb7x10Lq7bR4aNKHt1BR1ZALSv0rPM/hF5wYF0PhGop/rJm8vw==}
+  enhanced-resolve@5.24.2:
+    resolution: {integrity: sha512-rpsZEGT1jFuve6QlpyRp9ckQ+kN61hvF9BzCPyMdaKTm8UJce96KBn3sorXOFXlzjPrs3Vc4T1NsSroZ3PxlFw==}
     engines: {node: '>=10.13.0'}
 
   entities@2.2.0:
@@ -7281,8 +7284,8 @@ packages:
     resolution: {integrity: sha512-hXXvrjtx2PLYx4qruKl+kyRSLc52V+cCvMxRjmKwoA+CBbbF5GfIBtR6kCvl0fYGqTUPKB+1ktVmTHqMOzgCBg==}
     engines: {node: '>=18.0.0'}
 
-  webpack-sources@3.5.0:
-    resolution: {integrity: sha512-HPuy+uuoTCaaoEoI1LQ3JN9+vrPBvEesnnX1jADHy728cHSMlq4wUc4afYqahq2B1mhQVZxCXOkNTnXltr+2vQ==}
+  webpack-sources@3.5.1:
+    resolution: {integrity: sha512-jyuiGJdtvY434z5bUZrjz67v76/ePNvFZTp9Mdz29IlH4+GPsgyGjiv0fKI+M7BdkU6ADjulUcKAd3tUK3WlEw==}
     engines: {node: '>=10.13.0'}
 
   webpack@5.108.4:
@@ -11990,7 +11993,7 @@ snapshots:
   browserslist@4.28.4:
     dependencies:
       baseline-browser-mapping: 2.10.42
-      caniuse-lite: 1.0.30001800
+      caniuse-lite: 1.0.30001802
       electron-to-chromium: 1.5.387
       node-releases: 2.0.50
       update-browserslist-db: 1.2.3(browserslist@4.28.4)
@@ -12057,6 +12060,8 @@ snapshots:
       lodash.uniq: 4.5.0
 
   caniuse-lite@1.0.30001800: {}
+
+  caniuse-lite@1.0.30001802: {}
 
   ccount@2.0.1: {}
 
@@ -12616,7 +12621,7 @@ snapshots:
       iconv-lite: 0.6.3
       whatwg-encoding: 3.1.1
 
-  enhanced-resolve@5.24.1:
+  enhanced-resolve@5.24.2:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.3
@@ -16528,7 +16533,7 @@ snapshots:
       flat: 5.0.2
       wildcard: 2.0.1
 
-  webpack-sources@3.5.0: {}
+  webpack-sources@3.5.1: {}
 
   webpack@5.108.4(@swc/core@1.15.43)(@swc/html@1.15.43)(lightningcss@1.32.0)(postcss@8.5.16):
     dependencies:
@@ -16541,7 +16546,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.17.0)
       browserslist: 4.28.4
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.24.1
+      enhanced-resolve: 5.24.2
       es-module-lexer: 2.3.0
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -16553,7 +16558,7 @@ snapshots:
       schema-utils: 4.3.3
       tapable: 2.3.3
       watchpack: 2.5.2
-      webpack-sources: 3.5.0
+      webpack-sources: 3.5.1
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -16579,7 +16584,7 @@ snapshots:
       acorn-import-phases: 1.0.4(acorn@8.17.0)
       browserslist: 4.28.4
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.24.1
+      enhanced-resolve: 5.24.2
       es-module-lexer: 2.3.0
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -16591,7 +16596,7 @@ snapshots:
       schema-utils: 4.3.3
       tapable: 2.3.3
       watchpack: 2.5.2
-      webpack-sources: 3.5.0
+      webpack-sources: 3.5.1
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'

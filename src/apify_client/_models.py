@@ -206,7 +206,7 @@ class ActorDefinition(BaseModel):
     storages: Storages | None = None
     default_memory_mbytes: str | int | None = None
     """
-    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/platform/actors/development/actor-definition/dynamic-actor-memory).
+    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/actors/development/actor-definition/dynamic-actor-memory).
     """
     min_memory_mbytes: Annotated[int | None, Field(ge=128)] = None
     """
@@ -550,12 +550,17 @@ class BuildStats(BaseModel):
 
 @docs_group('Models')
 class BuildTag(BaseModel):
+    """The name of the build tag."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
     build_id: str
+    """
+    The ID of the build to assign to the tag.
+    """
 
 
 @docs_group('Models')
@@ -714,24 +719,42 @@ class CreateOrUpdateVersionRequest(BaseModel):
         alias_generator=to_camel,
     )
     version_number: Annotated[
-        str | None, Field(examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
+        str | None, Field(examples=['1.6'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
     ] = None
+    """
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
+    """
     source_type: VersionSourceType | None = None
-    env_vars: list[EnvVarRequest] | None = None
+    """
+    Where the source code of the version lives.
+    """
+    env_vars: list[EnvVar] | None = None
+    """
+    Environment variables for the version.
+    """
     apply_env_vars_to_build: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether to inject the environment variables at build time.
+    """
     build_tag: Annotated[str | None, Field(examples=['latest'])] = None
+    """
+    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
+    """
     source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
+    """
+    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    """
     git_repo_url: str | None = None
     """
-    URL of the Git repository when sourceType is GIT_REPO.
+    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
     """
     tarball_url: str | None = None
     """
-    URL of the tarball when sourceType is TARBALL.
+    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
-    URL of the GitHub Gist when sourceType is GITHUB_GIST.
+    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
 
 
@@ -852,7 +875,7 @@ class Dataset(BaseModel):
         ),
     ] = None
     """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema)
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/actors/development/actor-definition/dataset-schema)
     """
     console_url: Annotated[AnyUrl, Field(examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])]
     items_public_url: Annotated[
@@ -3491,15 +3514,38 @@ class UpdateActorRequest(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    name: Annotated[str | None, Field(examples=['MyActor'])] = None
-    description: Annotated[str | None, Field(examples=['My favourite actor!'])] = None
+    name: Annotated[str | None, Field(examples=['instagram-scraper'])] = None
+    """
+    The identifier of the Actor. Use lowercase letters, numbers, and hyphens. Spaces or special characters aren't allowed. Must be unique across your account.
+    """
+    description: Annotated[str | None, Field(examples=['This scraper extracts posts and comments from Instagram.'])] = (
+        None
+    )
+    """
+    Short description of the Actor, displayed in Apify Store and Console.
+    """
     is_public: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the Actor is available to users in Apify Store. If `false`, the Actor is private and only visible to you.
+    """
     actor_permission_level: ActorPermissionLevel | None = None
-    seo_title: Annotated[str | None, Field(examples=['My actor'])] = None
-    seo_description: Annotated[str | None, Field(examples=['My actor is the best'])] = None
-    title: Annotated[str | None, Field(examples=['My Actor'])] = None
+    seo_title: Annotated[str | None, Field(examples=['Free Instagram scraper'])] = None
+    """
+    Name of the Actor to display by search engines such as Google. Can be different from the Actor's name displayed in Apify Store and Console. Recommended length is 40-50 characters.
+    """
+    seo_description: Annotated[str | None, Field(examples=['The best scraper for Instagram'])] = None
+    """
+    Description of the Actor to display by search engines such as Google. Recommended length is 140-156 characters.
+    """
+    title: Annotated[str | None, Field(examples=['Instagram scraper'])] = None
+    """
+    Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
+    """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
     versions: list[CreateOrUpdateVersionRequest] | None = None
+    """
+    An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
+    """
     pricing_infos: (
         list[
             Annotated[
@@ -3512,55 +3558,32 @@ class UpdateActorRequest(BaseModel):
         ]
         | None
     ) = None
-    categories: list[str] | None = None
+    categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
+    """
+    A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
+    """
     default_run_options: DefaultRunOptions | None = None
+    """
+    The default settings applied to an Actor run. Can be overridden by the user.
+    """
     tagged_builds: Annotated[
         dict[str, Any] | None, Field(examples=[{'latest': {'buildId': 'z2EryhbfhgSyqj6Hn'}, 'beta': None}])
     ] = None
     """
-    An object to modify tags on the Actor's builds. The key is the tag name (e.g., _latest_), and the value is either an object with a `buildId` or `null`.
-
-    This operation is a patch; any existing tags that you omit from this object will be preserved.
-
-    - **To create or reassign a tag**, provide the tag name with a `buildId`. e.g., to assign the _latest_ tag:
-
-      &nbsp;
-
-      ```json
-      {
-        "latest": {
-          "buildId": "z2EryhbfhgSyqj6Hn"
-        }
-      }
-      ```
-
-    - **To remove a tag**, provide the tag name with a `null` value. e.g., to remove the _beta_ tag:
-
-      &nbsp;
-
-      ```json
-      {
-        "beta": null
-      }
-      ```
-
-    - **To perform multiple operations**, combine them. The following reassigns _latest_ and removes _beta_, while preserving any other existing tags.
-
-      &nbsp;
-
-      ```json
-      {
-        "latest": {
-          "buildId": "z2EryhbfhgSyqj6Hn"
-        },
-        "beta": null
-      }
-      ```
-
+    A dictionary that maps tag names to specific builds. For details, see [Update build tags](#update-build-tags).
     """
     actor_standby: ActorStandby | None = None
+    """
+    The configuration of the Actor's standby mode. For details, see [Standby mode](https://docs.apify.com/platform/actors/development/programming-interface/standby).
+    """
     example_run_input: ExampleRunInput | None = None
+    """
+    Sample input payload that demonstrates what a typical run input for an Actor looks like. Used when no explicit input for a run is provided.
+    """
     is_deprecated: bool | None = None
+    """
+    Whether the Actor is deprecated.
+    """
 
 
 @docs_group('Models')
@@ -3588,7 +3611,7 @@ class UpdateLimitsRequest(BaseModel):
     """
     data_retention_days: Annotated[int | None, Field(examples=[90])] = None
     """
-    Apify securely stores your ten most recent Actor runs indefinitely, ensuring they are always accessible. Unnamed storages and other Actor runs are automatically deleted after the retention period. If you're subscribed, you can change it to keep data for longer or to limit your usage. [Lear more](https://docs.apify.com/platform/storage/usage#data-retention).
+    Apify securely stores your ten most recent Actor runs indefinitely, ensuring they are always accessible. Unnamed storages and other Actor runs are automatically deleted after the retention period. If you're subscribed, you can change it to keep data for longer or to limit your usage. [Lear more](https://docs.apify.com/storage#data-retention).
 
     """
 
@@ -3745,7 +3768,7 @@ class Version(BaseModel):
     )
     version_number: Annotated[str, Field(examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')]
     """
-    The version number of the Actor. Must be a dot-separated sequence of numbers.
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
     """
     source_type: VersionSourceType | None
     """

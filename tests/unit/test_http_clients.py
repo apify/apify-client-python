@@ -13,28 +13,10 @@ from apify_client.errors import InvalidResponseBodyError
 from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_clients._impit import _is_retryable_error
 
-try:
-    import brotli as _brotli_mod
+import brotli
 
-    _EXPECTED_ENCODING = 'br'
-
-    def _decompress(data: bytes) -> bytes:
-        return _brotli_mod.decompress(data)
-
-except ImportError:
-    try:
-        import brotlicffi as _brotli_mod
-
-        _EXPECTED_ENCODING = 'br'
-
-        def _decompress(data: bytes) -> bytes:
-            return _brotli_mod.decompress(data)
-
-    except ImportError:
-        _EXPECTED_ENCODING = 'gzip'
-
-        def _decompress(data: bytes) -> bytes:
-            return gzip.decompress(data)
+def _decompress(data: bytes) -> bytes:
+    return brotli.decompress(data)
 
 
 class _ConcreteHttpClient(HttpClient):
@@ -301,7 +283,7 @@ def test_prepare_request_call_with_json() -> None:
     headers, _params, data = client._prepare_request_call(json=json_data)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
 
@@ -313,7 +295,7 @@ def test_prepare_request_call_with_empty_dict_json() -> None:
     headers, _params, data = client._prepare_request_call(json={})
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
     assert _decompress(data) == b'{}'
@@ -326,7 +308,7 @@ def test_prepare_request_call_with_empty_list_json() -> None:
     headers, _params, data = client._prepare_request_call(json=[])
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
     assert _decompress(data) == b'[]'
@@ -339,7 +321,7 @@ def test_prepare_request_call_with_zero_json() -> None:
     headers, _params, data = client._prepare_request_call(json=0)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
     assert _decompress(data) == b'0'
@@ -352,7 +334,7 @@ def test_prepare_request_call_with_false_json() -> None:
     headers, _params, data = client._prepare_request_call(json=False)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
     assert _decompress(data) == b'false'
@@ -365,7 +347,7 @@ def test_prepare_request_call_with_empty_string_json() -> None:
     headers, _params, data = client._prepare_request_call(json='')
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
     assert _decompress(data) == b'""'
@@ -377,7 +359,7 @@ def test_prepare_request_call_with_string_data() -> None:
 
     headers, _params, data = client._prepare_request_call(data='test string')
 
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert isinstance(data, bytes)
 
 
@@ -387,8 +369,18 @@ def test_prepare_request_call_with_bytes_data() -> None:
 
     headers, _params, data = client._prepare_request_call(data=b'test bytes')
 
-    assert headers['Content-Encoding'] == _EXPECTED_ENCODING
+    assert headers['Content-Encoding'] == 'br'
     assert isinstance(data, bytes)
+
+
+def test_prepare_request_call_with_bytearray_data() -> None:
+    """bytearray body is compressed correctly."""
+    client = _ConcreteHttpClient()
+    headers, _, data = client._prepare_request_call(data=bytearray(b'test bytearray'))
+
+    assert headers['Content-Encoding'] == 'br'
+    assert data is not None
+    assert _decompress(data) == b'test bytearray'
 
 
 def test_prepare_request_call_json_and_data_error() -> None:
@@ -468,21 +460,7 @@ def test_build_url_with_params_mixed() -> None:
 
 
 def test_prepare_request_call_brotli_compression(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When a brotli compressor is available, request body uses brotli (Content-Encoding: br)."""
-    brotlicffi = pytest.importorskip('brotlicffi')
-    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', brotlicffi.compress)
-
-    client = _ConcreteHttpClient()
-    headers, _, data = client._prepare_request_call(json={'k': 'v'})
-
-    assert headers['Content-Encoding'] == 'br'
-    assert data is not None
-    assert brotlicffi.decompress(data) == b'{"k": "v"}'
-
-
-def test_prepare_request_call_brotli_library_compression(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When the brotli (C extension) library is available, request body uses brotli (Content-Encoding: br)."""
-    brotli = pytest.importorskip('brotli')
+    """When brotli is installed, request body uses brotli (Content-Encoding: br)."""
     monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', brotli.compress)
 
     client = _ConcreteHttpClient()

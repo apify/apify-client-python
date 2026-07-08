@@ -35,12 +35,7 @@ if not TYPE_CHECKING:
 
         _brotli_compress = brotli.compress
     except ImportError:
-        try:
-            import brotlicffi
-
-            _brotli_compress = brotlicffi.compress
-        except ImportError:
-            pass
+        pass
 
 
 @docs_group('HTTP clients')
@@ -220,7 +215,7 @@ class HttpClientBase:
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
         """Prepare headers, params, and body for an HTTP request. Serializes JSON and compresses the body.
 
-        Uses brotli compression (`Content-Encoding: br`) when `brotli` or `brotlicffi` is installed,
+        Uses brotli compression (`Content-Encoding: br`) when `brotli` is installed,
         otherwise falls back to gzip (`Content-Encoding: gzip`).
         """
         if json is not None and data is not None:

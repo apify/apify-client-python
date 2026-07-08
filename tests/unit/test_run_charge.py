@@ -4,23 +4,11 @@ import gzip
 import json
 from typing import TYPE_CHECKING
 
-try:
-    import brotlicffi as _brotli_mod
+import brotli
 
-    def _decompress(data: bytes) -> bytes:
-        return _brotli_mod.decompress(data)
 
-except ImportError:
-    try:
-        import brotli as _brotli_mod  # type: ignore[no-redef]
-
-        def _decompress(data: bytes) -> bytes:
-            return _brotli_mod.decompress(data)
-
-    except ImportError:
-
-        def _decompress(data: bytes) -> bytes:
-            return gzip.decompress(data)
+def _decompress(data: bytes) -> bytes:
+    return brotli.decompress(data)
 
 
 import pytest

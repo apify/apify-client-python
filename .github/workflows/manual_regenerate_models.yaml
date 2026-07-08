@@ -164,7 +164,7 @@ jobs:
       - name: Commit regenerated models
         id: commit
         if: steps.changes.outputs.has_changes == 'true'
-        uses: apify/actions/signed-commit@v1.3.2
+        uses: apify/actions/signed-commit@v1.4.0
         with:
           message: ${{ env.COMMIT_MESSAGE }}
           add: "src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py"

@@ -15,9 +15,6 @@ from apify_client.http_clients._impit import _is_retryable_error
 
 import brotli
 
-def _decompress(data: bytes) -> bytes:
-    return brotli.decompress(data)
-
 
 class _ConcreteHttpClient(HttpClient):
     """Minimal concrete HttpClient for testing base class helpers."""
@@ -298,7 +295,7 @@ def test_prepare_request_call_with_empty_dict_json() -> None:
     assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
-    assert _decompress(data) == b'{}'
+    assert brotli.decompress(data) == b'{}'
 
 
 def test_prepare_request_call_with_empty_list_json() -> None:
@@ -311,7 +308,7 @@ def test_prepare_request_call_with_empty_list_json() -> None:
     assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
-    assert _decompress(data) == b'[]'
+    assert brotli.decompress(data) == b'[]'
 
 
 def test_prepare_request_call_with_zero_json() -> None:
@@ -324,7 +321,7 @@ def test_prepare_request_call_with_zero_json() -> None:
     assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
-    assert _decompress(data) == b'0'
+    assert brotli.decompress(data) == b'0'
 
 
 def test_prepare_request_call_with_false_json() -> None:
@@ -337,7 +334,7 @@ def test_prepare_request_call_with_false_json() -> None:
     assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
-    assert _decompress(data) == b'false'
+    assert brotli.decompress(data) == b'false'
 
 
 def test_prepare_request_call_with_empty_string_json() -> None:
@@ -350,7 +347,7 @@ def test_prepare_request_call_with_empty_string_json() -> None:
     assert headers['Content-Encoding'] == 'br'
     assert data is not None
     assert isinstance(data, bytes)
-    assert _decompress(data) == b'""'
+    assert brotli.decompress(data) == b'""'
 
 
 def test_prepare_request_call_with_string_data() -> None:
@@ -380,7 +377,7 @@ def test_prepare_request_call_with_bytearray_data() -> None:
 
     assert headers['Content-Encoding'] == 'br'
     assert data is not None
-    assert _decompress(data) == b'test bytearray'
+    assert brotli.decompress(data) == b'test bytearray'
 
 
 def test_prepare_request_call_json_and_data_error() -> None:

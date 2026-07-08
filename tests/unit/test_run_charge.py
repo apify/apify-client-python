@@ -7,10 +7,6 @@ from typing import TYPE_CHECKING
 import brotli
 
 
-def _decompress(data: bytes) -> bytes:
-    return brotli.decompress(data)
-
-
 import pytest
 from werkzeug import Request, Response
 
@@ -27,7 +23,7 @@ def _decode_body(request: Request) -> dict:
     raw = request.get_data()
     encoding = request.headers.get('Content-Encoding')
     if encoding == 'br':
-        raw = _decompress(raw)
+        raw = brotli.decompress(raw)
     elif encoding == 'gzip':
         raw = gzip.decompress(raw)
     return json.loads(raw)

@@ -455,7 +455,6 @@ RunOrigin = Literal[
     'CLI',
     'CI',
     'STANDBY',
-    'MCP',
 ]
 
 

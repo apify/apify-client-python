@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.5 - **not yet released**
+## [3.0.5](https://github.com/apify/apify-client-python/releases/tag/v3.0.5) (2026-07-08)
 
 ### 🐛 Bug Fixes
 
@@ -12,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Add missing MCP to RunOrigin enum ([#929](https://github.com/apify/apify-client-python/pull/929)) ([3536c18](https://github.com/apify/apify-client-python/commit/3536c183adf495c26e65d50fd12fbdf584819a07)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
-<!-- git-cliff-unreleased-end -->
 
 ## [3.0.4](https://github.com/apify/apify-client-python/releases/tag/v3.0.4) (2026-06-26)
 

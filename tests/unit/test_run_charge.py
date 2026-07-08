@@ -4,6 +4,25 @@ import gzip
 import json
 from typing import TYPE_CHECKING
 
+try:
+    import brotlicffi as _brotli_mod
+
+    def _decompress(data: bytes) -> bytes:
+        return _brotli_mod.decompress(data)
+
+except ImportError:
+    try:
+        import brotli as _brotli_mod  # type: ignore[no-redef]
+
+        def _decompress(data: bytes) -> bytes:
+            return _brotli_mod.decompress(data)
+
+    except ImportError:
+
+        def _decompress(data: bytes) -> bytes:
+            return gzip.decompress(data)
+
+
 import pytest
 from werkzeug import Request, Response
 
@@ -18,7 +37,10 @@ _CHARGE_PATH = f'/v2/actor-runs/{_MOCKED_RUN_ID}/charge'
 
 def _decode_body(request: Request) -> dict:
     raw = request.get_data()
-    if request.headers.get('Content-Encoding') == 'gzip':
+    encoding = request.headers.get('Content-Encoding')
+    if encoding == 'br':
+        raw = _decompress(raw)
+    elif encoding == 'gzip':
         raw = gzip.decompress(raw)
     return json.loads(raw)
 

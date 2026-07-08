@@ -30,6 +30,12 @@ dependencies = [
     "pydantic[email]>=2.11.0",
 ]
 
+[project.optional-dependencies]
+brotli = [
+    "brotli>=1.0.9; platform_python_implementation == 'CPython'",
+    "brotlicffi>=1.0.9; platform_python_implementation != 'CPython'",
+]
+
 [project.urls]
 "Apify Homepage" = "https://apify.com"
 "Homepage" = "https://docs.apify.com/api/client/python/"
@@ -203,7 +209,7 @@ exclude = ["website/versioned_docs"]
 unused-ignore-comment = "error"
 
 [[tool.ty.overrides]]
-include = ["docs/**/*.py", "website/**/*.py"]
+include = ["docs/**/*.py", "website/**/*.py", "tests/unit/test_http_clients.py", "tests/unit/test_run_charge.py"]
 [tool.ty.overrides.rules]
 unresolved-import = "ignore"
 

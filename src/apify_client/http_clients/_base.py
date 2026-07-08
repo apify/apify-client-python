@@ -23,9 +23,24 @@ from apify_client._statistics import ClientStatistics
 from apify_client._utils import to_seconds
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator, Mapping
+    from collections.abc import AsyncIterator, Callable, Iterator, Mapping
 
     from apify_client.types import JsonSerializable, Timeout
+
+_brotli_compress: Callable[[bytes | bytearray], bytes] | None = None
+
+if not TYPE_CHECKING:
+    try:
+        import brotli
+
+        _brotli_compress = brotli.compress
+    except ImportError:
+        try:
+            import brotlicffi
+
+            _brotli_compress = brotlicffi.compress
+        except ImportError:
+            pass
 
 
 @docs_group('HTTP clients')
@@ -203,13 +218,17 @@ class HttpClientBase:
         data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
-        """Prepare headers, params, and body for an HTTP request. Serializes JSON and applies gzip compression."""
+        """Prepare headers, params, and body for an HTTP request. Serializes JSON and compresses the body.
+
+        Uses brotli compression (`Content-Encoding: br`) when `brotli` or `brotlicffi` is installed,
+        otherwise falls back to gzip (`Content-Encoding: gzip`).
+        """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         headers = dict(headers) if headers else {}
 
-        # Dump JSON data to string so it can be gzipped.
+        # Dump JSON data to string so it can be compressed.
         if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
@@ -217,8 +236,12 @@ class HttpClientBase:
         if isinstance(data, (str, bytes, bytearray)):
             if isinstance(data, str):
                 data = data.encode('utf-8')
-            data = gzip.compress(data)
-            headers['Content-Encoding'] = 'gzip'
+            if _brotli_compress is not None:
+                data = _brotli_compress(data)
+                headers['Content-Encoding'] = 'br'
+            else:
+                data = gzip.compress(data)
+                headers['Content-Encoding'] = 'gzip'
 
         return (headers, self._parse_params(params), data)
 

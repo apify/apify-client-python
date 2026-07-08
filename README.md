@@ -48,6 +48,15 @@
 
     or any other Python package manager that consumes PyPI.
 
+    To enable brotli request-body compression (better than gzip, especially for large payloads), install the optional extra:
+
+    ```bash
+    pip install "apify-client[brotli]"
+    # or
+    uv add "apify-client[brotli]"
+    ```
+
+    Without this extra the client falls back to gzip automatically — no code changes needed.
 
 - From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):
 

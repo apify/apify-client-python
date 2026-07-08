@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import gzip
 import json as jsonlib
 import os
@@ -33,7 +34,7 @@ if not TYPE_CHECKING:
     try:
         import brotli
 
-        _brotli_compress = brotli.compress
+        _brotli_compress = functools.partial(brotli.compress, quality=6)
     except ImportError:
         pass
 

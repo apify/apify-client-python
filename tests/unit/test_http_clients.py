@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import Mock
 
+import brotli
 import impit
 import pytest
 
@@ -12,8 +13,6 @@ from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_clients._impit import _is_retryable_error
-
-import brotli
 
 
 class _ConcreteHttpClient(HttpClient):

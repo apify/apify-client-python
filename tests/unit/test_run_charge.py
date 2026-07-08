@@ -5,8 +5,6 @@ import json
 from typing import TYPE_CHECKING
 
 import brotli
-
-
 import pytest
 from werkzeug import Request, Response
 

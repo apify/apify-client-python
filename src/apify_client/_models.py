@@ -209,7 +209,7 @@ class ActorDefinition(BaseModel):
     storages: Storages | None = None
     default_memory_mbytes: Annotated[str | int | None, Field(alias='defaultMemoryMbytes')] = None
     """
-    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](/platform/actors/development/actor-definition/dynamic-actor-memory).
+    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](/actors/development/actor-definition/dynamic-actor-memory).
     """
     min_memory_mbytes: Annotated[int | None, Field(alias='minMemoryMbytes', ge=128)] = None
     """
@@ -237,24 +237,6 @@ class ActorResponse(BaseModel):
 
 
 @docs_group('Models')
-class ActorRunFailedError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RunFailedErrorDetail | None = None
-
-
-@docs_group('Models')
-class ActorRunTimeoutExceededError(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    error: RunTimeoutExceededErrorDetail | None = None
-
-
-@docs_group('Models')
 class ActorShort(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -276,13 +258,37 @@ class ActorStandby(BaseModel):
         populate_by_name=True,
     )
     is_enabled: Annotated[bool | None, Field(alias='isEnabled')] = None
+    """
+    Whether standby mode is enabled for the Actor.
+    """
     desired_requests_per_actor_run: Annotated[int | None, Field(alias='desiredRequestsPerActorRun')] = None
+    """
+    Target number of concurrent HTTP requests a single run is configured to handle.
+    """
     max_requests_per_actor_run: Annotated[int | None, Field(alias='maxRequestsPerActorRun')] = None
+    """
+    Maximum number of concurrent HTTP requests that can be routed to a single run.
+    """
     idle_timeout_secs: Annotated[int | None, Field(alias='idleTimeoutSecs')] = None
+    """
+    In seconds, how long a run can stay idle without incoming requests before it's terminated.
+    """
     build: str | None = None
+    """
+    Which build to run in standby mode. Either a build tag or a version number.
+    """
     memory_mbytes: Annotated[int | None, Field(alias='memoryMbytes')] = None
+    """
+    In MB, the amount of memory allocated to the run.
+    """
     disable_standby_fields_override: Annotated[bool | None, Field(alias='disableStandbyFieldsOverride')] = None
+    """
+    If `true`, prevents the standby mode configuration from being overridden elsewhere.
+    """
     should_pass_actor_input: Annotated[bool | None, Field(alias='shouldPassActorInput')] = None
+    """
+    Whether to pass the Actor's input to the standby run. If `false`, the standby runs start with no input.
+    """
 
 
 @docs_group('Models')
@@ -553,11 +559,16 @@ class BuildStats(BaseModel):
 
 @docs_group('Models')
 class BuildTag(BaseModel):
+    """The name of the build tag."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
     build_id: Annotated[str, Field(alias='buildId')]
+    """
+    The ID of the build to assign to the tag.
+    """
 
 
 @docs_group('Models')
@@ -646,14 +657,39 @@ class CreateActorRequest(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    name: Annotated[str | None, Field(examples=['MyActor'])] = None
-    description: Annotated[str | None, Field(examples=['My favourite actor!'])] = None
-    title: Annotated[str | None, Field(examples=['My actor'])] = None
+    name: Annotated[str | None, Field(examples=['instagram-scraper'])] = None
+    """
+    The identifier of the Actor. Use lowercase letters, numbers, and hyphens. Spaces or special characters aren't allowed. Must be unique across your account.
+    """
+    description: Annotated[str | None, Field(examples=['This scraper extracts posts and comments from Instagram.'])] = (
+        None
+    )
+    """
+    Short description of the Actor, displayed in Apify Store and Console.
+    """
+    title: Annotated[str | None, Field(examples=['Instagram scraper'])] = None
+    """
+    Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
+    """
     is_public: Annotated[bool | None, Field(alias='isPublic', examples=[False])] = None
-    seo_title: Annotated[str | None, Field(alias='seoTitle', examples=['My actor'])] = None
-    seo_description: Annotated[str | None, Field(alias='seoDescription', examples=['My actor is the best'])] = None
+    """
+    Whether the Actor is available to users in Apify Store. If `false`, the Actor is private and only visible to you.
+    """
+    seo_title: Annotated[str | None, Field(alias='seoTitle', examples=['Free Instagram scraper'])] = None
+    """
+    Name of the Actor to display by search engines such as Google. Can be different from the Actor's name displayed in Apify Store and Console. Recommended length is 40-50 characters.
+    """
+    seo_description: Annotated[
+        str | None, Field(alias='seoDescription', examples=['The best scraper for Instagram'])
+    ] = None
+    """
+    Description of the Actor to display by search engines such as Google. Recommended length is 140-156 characters.
+    """
     restart_on_error: Annotated[bool | None, Field(alias='restartOnError', deprecated=True, examples=[False])] = None
     versions: list[Version] | None = None
+    """
+    An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
+    """
     pricing_infos: Annotated[
         list[
             Annotated[
@@ -667,11 +703,23 @@ class CreateActorRequest(BaseModel):
         | None,
         Field(alias='pricingInfos'),
     ] = None
-    categories: list[str] | None = None
+    categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
+    """
+    A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
+    """
     default_run_options: Annotated[DefaultRunOptions | None, Field(alias='defaultRunOptions')] = None
     actor_standby: Annotated[ActorStandby | None, Field(alias='actorStandby')] = None
+    """
+    The configuration of the Actor's standby mode. For details, see [Standby mode](https://docs.apify.com/platform/actors/development/programming-interface/standby).
+    """
     example_run_input: Annotated[ExampleRunInput | None, Field(alias='exampleRunInput')] = None
+    """
+    Sample input payload that demonstrates what a typical run input for an Actor looks like. Used when no explicit input for a run is provided.
+    """
     is_deprecated: Annotated[bool | None, Field(alias='isDeprecated')] = None
+    """
+    Whether the Actor is deprecated.
+    """
 
 
 @docs_group('Models')
@@ -681,26 +729,44 @@ class CreateOrUpdateVersionRequest(BaseModel):
         populate_by_name=True,
     )
     version_number: Annotated[
-        str | None, Field(alias='versionNumber', examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
+        str | None, Field(alias='versionNumber', examples=['1.6'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
     ] = None
+    """
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
+    """
     source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')] = None
-    env_vars: Annotated[list[EnvVarRequest] | None, Field(alias='envVars')] = None
+    """
+    Where the source code of the version lives.
+    """
+    env_vars: Annotated[list[EnvVar] | None, Field(alias='envVars')] = None
+    """
+    Environment variables for the version.
+    """
     apply_env_vars_to_build: Annotated[bool | None, Field(alias='applyEnvVarsToBuild', examples=[False])] = None
+    """
+    Whether to inject the environment variables at build time.
+    """
     build_tag: Annotated[str | None, Field(alias='buildTag', examples=['latest'])] = None
+    """
+    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
+    """
     source_files: Annotated[
         list[SourceCodeFile | SourceCodeFolder] | None, Field(alias='sourceFiles', title='VersionSourceFiles')
     ] = None
+    """
+    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    """
     git_repo_url: Annotated[str | None, Field(alias='gitRepoUrl')] = None
     """
-    URL of the Git repository when sourceType is GIT_REPO.
+    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
     """
     tarball_url: Annotated[str | None, Field(alias='tarballUrl')] = None
     """
-    URL of the tarball when sourceType is TARBALL.
+    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
-    URL of the GitHub Gist when sourceType is GITHUB_GIST.
+    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
 
 
@@ -828,7 +894,7 @@ class Dataset(BaseModel):
         ),
     ] = None
     """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](/platform/actors/development/actor-definition/dataset-schema)
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](/actors/development/actor-definition/dataset-schema)
     """
     console_url: Annotated[
         AnyUrl, Field(alias='consoleUrl', examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])
@@ -1003,15 +1069,32 @@ class DecodeAndVerifyResponse(BaseModel):
 
 @docs_group('Models')
 class DefaultRunOptions(BaseModel):
+    """The default settings applied to an Actor run. Can be overridden elsewhere."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
     build: Annotated[str | None, Field(examples=['latest'])] = None
+    """
+    Which build to run. Either a build tag or a version number.
+    """
     timeout_secs: Annotated[int | None, Field(alias='timeoutSecs', examples=[3600])] = None
+    """
+    Timeout in seconds. 0 if no timeout.
+    """
     memory_mbytes: Annotated[int | None, Field(alias='memoryMbytes', examples=[2048])] = None
+    """
+    In MB, the amount of memory allocated to the run.
+    """
     restart_on_error: Annotated[bool | None, Field(alias='restartOnError', examples=[False])] = None
+    """
+    Whether to automatically restart the run if it fails.
+    """
     max_items: Annotated[int | None, Field(alias='maxItems')] = None
+    """
+    Maximum number of items the run might produce.
+    """
     force_permission_level: Annotated[ActorPermissionLevel | None, Field(alias='forcePermissionLevel')] = None
 
 
@@ -1124,11 +1207,17 @@ class EnvVar(BaseModel):
         populate_by_name=True,
     )
     name: Annotated[str, Field(examples=['MY_ENV_VAR'])]
+    """
+    The name of the environment variable.
+    """
     value: Annotated[str | None, Field(examples=['my-value'])] = None
     """
-    The environment variable value. This field is absent in responses when `isSecret` is `true`, as secret values are never returned by the API.
+    The value of the environment variable. If `isSecret` is `true`, this value isn't returned by the API.
     """
     is_secret: Annotated[bool | None, Field(alias='isSecret', examples=[False])] = None
+    """
+    Whether the environment variable is encrypted. Secret values aren't returned by the API.
+    """
 
 
 @docs_group('Models')
@@ -1177,7 +1266,9 @@ class EventData(BaseModel):
         populate_by_name=True,
     )
     actor_id: Annotated[str, Field(alias='actorId', examples=['vvE7iMKuMc5qTHHsR'])]
-    actor_run_id: Annotated[str, Field(alias='actorRunId', examples=['JgwXN9BdwxGcu9MMF'])]
+    actor_run_id: Annotated[str | None, Field(alias='actorRunId', examples=['JgwXN9BdwxGcu9MMF'])] = None
+    actor_build_id: Annotated[str | None, Field(alias='actorBuildId', examples=['HG7ML7M8z78YcAPEB'])] = None
+    actor_task_id: Annotated[str | None, Field(alias='actorTaskId', examples=['zRLp8SDOZz2NyLg7K'])] = None
 
 
 @docs_group('Models')
@@ -1187,7 +1278,13 @@ class ExampleRunInput(BaseModel):
         populate_by_name=True,
     )
     body: Annotated[str | None, Field(examples=['{ "helloWorld": 123 }'])] = None
+    """
+    Sample input, serialized as a string.
+    """
     content_type: Annotated[str | None, Field(alias='contentType', examples=['application/json; charset=utf-8'])] = None
+    """
+    MIME type of `body`.
+    """
 
 
 @docs_group('Models')
@@ -1938,38 +2035,42 @@ class Plan(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    id: Annotated[str, Field(examples=['Personal'])]
-    description: Annotated[str, Field(examples=['Cost-effective plan for freelancers, developers and students.'])]
-    is_enabled: Annotated[bool, Field(alias='isEnabled', examples=[True])]
-    monthly_base_price_usd: Annotated[float, Field(alias='monthlyBasePriceUsd', examples=[49])]
-    monthly_usage_credits_usd: Annotated[float, Field(alias='monthlyUsageCreditsUsd', examples=[49])]
+    id: Annotated[str | None, Field(examples=['Personal'])] = None
+    description: Annotated[
+        str | None, Field(examples=['Cost-effective plan for freelancers, developers and students.'])
+    ] = None
+    is_enabled: Annotated[bool | None, Field(alias='isEnabled', examples=[True])] = None
+    monthly_base_price_usd: Annotated[float | None, Field(alias='monthlyBasePriceUsd', examples=[49])] = None
+    monthly_usage_credits_usd: Annotated[float | None, Field(alias='monthlyUsageCreditsUsd', examples=[49])] = None
     usage_discount_percent: Annotated[float | None, Field(alias='usageDiscountPercent', examples=[0])] = None
     enabled_platform_features: Annotated[
-        list[str],
+        list[str] | None,
         Field(
             alias='enabledPlatformFeatures', examples=[['ACTORS', 'STORAGE', 'PROXY_SERPS', 'SCHEDULER', 'WEBHOOKS']]
         ),
-    ]
-    max_monthly_usage_usd: Annotated[float, Field(alias='maxMonthlyUsageUsd', examples=[9999])]
-    max_actor_memory_gbytes: Annotated[float, Field(alias='maxActorMemoryGbytes', examples=[32])]
-    max_monthly_actor_compute_units: Annotated[float, Field(alias='maxMonthlyActorComputeUnits', examples=[1000])]
+    ] = None
+    max_monthly_usage_usd: Annotated[float | None, Field(alias='maxMonthlyUsageUsd', examples=[9999])] = None
+    max_actor_memory_gbytes: Annotated[float | None, Field(alias='maxActorMemoryGbytes', examples=[32])] = None
+    max_monthly_actor_compute_units: Annotated[
+        float | None, Field(alias='maxMonthlyActorComputeUnits', examples=[1000])
+    ] = None
     max_monthly_residential_proxy_gbytes: Annotated[
-        float, Field(alias='maxMonthlyResidentialProxyGbytes', examples=[10])
-    ]
-    max_monthly_proxy_serps: Annotated[int, Field(alias='maxMonthlyProxySerps', examples=[30000])]
+        float | None, Field(alias='maxMonthlyResidentialProxyGbytes', examples=[10])
+    ] = None
+    max_monthly_proxy_serps: Annotated[int | None, Field(alias='maxMonthlyProxySerps', examples=[30000])] = None
     max_monthly_external_data_transfer_gbytes: Annotated[
-        float, Field(alias='maxMonthlyExternalDataTransferGbytes', examples=[1000])
-    ]
-    max_actor_count: Annotated[int, Field(alias='maxActorCount', examples=[100])]
-    max_actor_task_count: Annotated[int, Field(alias='maxActorTaskCount', examples=[1000])]
-    data_retention_days: Annotated[int, Field(alias='dataRetentionDays', examples=[14])]
+        float | None, Field(alias='maxMonthlyExternalDataTransferGbytes', examples=[1000])
+    ] = None
+    max_actor_count: Annotated[int | None, Field(alias='maxActorCount', examples=[100])] = None
+    max_actor_task_count: Annotated[int | None, Field(alias='maxActorTaskCount', examples=[1000])] = None
+    data_retention_days: Annotated[int | None, Field(alias='dataRetentionDays', examples=[14])] = None
     available_proxy_groups: Annotated[dict[str, int], Field(alias='availableProxyGroups')]
     """
     The number of available proxies in this group.
     """
-    team_account_seat_count: Annotated[int, Field(alias='teamAccountSeatCount', examples=[1])]
-    support_level: Annotated[str, Field(alias='supportLevel', examples=['COMMUNITY'])]
-    available_add_ons: Annotated[list[str], Field(alias='availableAddOns', examples=[[]])]
+    team_account_seat_count: Annotated[int | None, Field(alias='teamAccountSeatCount', examples=[1])] = None
+    support_level: Annotated[str | None, Field(alias='supportLevel', examples=['COMMUNITY'])] = None
+    available_add_ons: Annotated[list[str] | None, Field(alias='availableAddOns', examples=[[]])] = None
     tier: Annotated[str | None, Field(examples=['FREE'])] = None
     api_rate_limit_boosts: Annotated[int | None, Field(alias='apiRateLimitBoosts', examples=[0])] = None
     max_schedule_count: Annotated[int | None, Field(alias='maxScheduleCount', examples=[100])] = None
@@ -2708,18 +2809,6 @@ class Run(BaseModel):
 
 
 @docs_group('Models')
-class RunFailedErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['run-failed'], Field(title='ErrorType')] = 'run-failed'
-    """
-    Machine-processable error type identifier.
-    """
-
-
-@docs_group('Models')
 class RunMeta(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2822,18 +2911,6 @@ class RunStats(BaseModel):
     run_time_secs: Annotated[float | None, Field(alias='runTimeSecs', examples=[248.472], ge=0.0)] = None
     metamorph: Annotated[int | None, Field(examples=[0], ge=0)] = None
     compute_units: Annotated[float, Field(alias='computeUnits', examples=[0.13804], ge=0.0)]
-
-
-@docs_group('Models')
-class RunTimeoutExceededErrorDetail(ErrorDetail):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-    )
-    type: Annotated[Literal['run-timeout-exceeded'], Field(title='ErrorType')] = 'run-timeout-exceeded'
-    """
-    Machine-processable error type identifier.
-    """
 
 
 @docs_group('Models')
@@ -3075,13 +3152,24 @@ class SchemaValidationErrorData(BaseModel):
 
 @docs_group('Models')
 class SourceCodeFile(BaseModel):
+    """Represents a single file in the Actor's source code."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
     )
     format: SourceCodeFileFormat | None = None
+    """
+    Format of the file's content, `TEXT` for plain text and `BASE64` for encoded content.
+    """
     content: Annotated[str | None, Field(examples=["console.log('This is the main.js file');"])] = None
+    """
+    The contents of the file. Interpreted based on the value of `format`.
+    """
     name: Annotated[str, Field(examples=['src/main.js'])]
+    """
+    The path of the file relative to the Actor's root directory.
+    """
 
 
 @docs_group('Models')
@@ -3097,11 +3185,11 @@ class SourceCodeFolder(BaseModel):
     )
     name: Annotated[str, Field(examples=['src/utils'])]
     """
-    The folder path relative to the Actor's root directory.
+    The path of the folder relative to the Actor's root directory.
     """
     folder: Annotated[bool, Field(examples=[True])]
     """
-    Always `true` for folders. Used to distinguish folders from files.
+    Whether it's a folder. Distinguishes folders from files.
     """
 
 
@@ -3149,8 +3237,8 @@ class StoreListActor(BaseModel):
     title: Annotated[str, Field(examples=['My Public Actor'])]
     name: Annotated[str, Field(examples=['my-public-actor'])]
     username: Annotated[str, Field(examples=['jane35'])]
-    user_full_name: Annotated[str, Field(alias='userFullName', examples=['Jane H. Doe'])]
-    description: Annotated[str, Field(examples=['My public actor!'])]
+    user_full_name: Annotated[str | None, Field(alias='userFullName', examples=['Jane H. Doe'])] = None
+    description: Annotated[str | None, Field(examples=['My public actor!'])] = None
     categories: Annotated[list[str] | None, Field(examples=[['MARKETING', 'LEAD_GENERATION']])] = None
     notice: str | None = None
     picture_url: Annotated[AnyUrl | None, Field(alias='pictureUrl', examples=['https://...'])] = None
@@ -3362,15 +3450,40 @@ class UpdateActorRequest(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    name: Annotated[str | None, Field(examples=['MyActor'])] = None
-    description: Annotated[str | None, Field(examples=['My favourite actor!'])] = None
+    name: Annotated[str | None, Field(examples=['instagram-scraper'])] = None
+    """
+    The identifier of the Actor. Use lowercase letters, numbers, and hyphens. Spaces or special characters aren't allowed. Must be unique across your account.
+    """
+    description: Annotated[str | None, Field(examples=['This scraper extracts posts and comments from Instagram.'])] = (
+        None
+    )
+    """
+    Short description of the Actor, displayed in Apify Store and Console.
+    """
     is_public: Annotated[bool | None, Field(alias='isPublic', examples=[False])] = None
+    """
+    Whether the Actor is available to users in Apify Store. If `false`, the Actor is private and only visible to you.
+    """
     actor_permission_level: Annotated[ActorPermissionLevel | None, Field(alias='actorPermissionLevel')] = None
-    seo_title: Annotated[str | None, Field(alias='seoTitle', examples=['My actor'])] = None
-    seo_description: Annotated[str | None, Field(alias='seoDescription', examples=['My actor is the best'])] = None
-    title: Annotated[str | None, Field(examples=['My Actor'])] = None
+    seo_title: Annotated[str | None, Field(alias='seoTitle', examples=['Free Instagram scraper'])] = None
+    """
+    Name of the Actor to display by search engines such as Google. Can be different from the Actor's name displayed in Apify Store and Console. Recommended length is 40-50 characters.
+    """
+    seo_description: Annotated[
+        str | None, Field(alias='seoDescription', examples=['The best scraper for Instagram'])
+    ] = None
+    """
+    Description of the Actor to display by search engines such as Google. Recommended length is 140-156 characters.
+    """
+    title: Annotated[str | None, Field(examples=['Instagram scraper'])] = None
+    """
+    Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
+    """
     restart_on_error: Annotated[bool | None, Field(alias='restartOnError', deprecated=True, examples=[False])] = None
     versions: list[CreateOrUpdateVersionRequest] | None = None
+    """
+    An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
+    """
     pricing_infos: Annotated[
         list[
             Annotated[
@@ -3384,56 +3497,33 @@ class UpdateActorRequest(BaseModel):
         | None,
         Field(alias='pricingInfos'),
     ] = None
-    categories: list[str] | None = None
+    categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
+    """
+    A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
+    """
     default_run_options: Annotated[DefaultRunOptions | None, Field(alias='defaultRunOptions')] = None
+    """
+    The default settings applied to an Actor run. Can be overridden by the user.
+    """
     tagged_builds: Annotated[
         dict[str, Any] | None,
         Field(alias='taggedBuilds', examples=[{'latest': {'buildId': 'z2EryhbfhgSyqj6Hn'}, 'beta': None}]),
     ] = None
     """
-    An object to modify tags on the Actor's builds. The key is the tag name (e.g., _latest_), and the value is either an object with a `buildId` or `null`.
-
-    This operation is a patch; any existing tags that you omit from this object will be preserved.
-
-    - **To create or reassign a tag**, provide the tag name with a `buildId`. e.g., to assign the _latest_ tag:
-
-      &nbsp;
-
-      ```json
-      {
-        "latest": {
-          "buildId": "z2EryhbfhgSyqj6Hn"
-        }
-      }
-      ```
-
-    - **To remove a tag**, provide the tag name with a `null` value. e.g., to remove the _beta_ tag:
-
-      &nbsp;
-
-      ```json
-      {
-        "beta": null
-      }
-      ```
-
-    - **To perform multiple operations**, combine them. The following reassigns _latest_ and removes _beta_, while preserving any other existing tags.
-
-      &nbsp;
-
-      ```json
-      {
-        "latest": {
-          "buildId": "z2EryhbfhgSyqj6Hn"
-        },
-        "beta": null
-      }
-      ```
-
+    A dictionary that maps tag names to specific builds. For details, see [Update build tags](#update-build-tags).
     """
     actor_standby: Annotated[ActorStandby | None, Field(alias='actorStandby')] = None
+    """
+    The configuration of the Actor's standby mode. For details, see [Standby mode](https://docs.apify.com/platform/actors/development/programming-interface/standby).
+    """
     example_run_input: Annotated[ExampleRunInput | None, Field(alias='exampleRunInput')] = None
+    """
+    Sample input payload that demonstrates what a typical run input for an Actor looks like. Used when no explicit input for a run is provided.
+    """
     is_deprecated: Annotated[bool | None, Field(alias='isDeprecated')] = None
+    """
+    Whether the Actor is deprecated.
+    """
 
 
 @docs_group('Models')
@@ -3459,7 +3549,7 @@ class UpdateLimitsRequest(BaseModel):
     """
     data_retention_days: Annotated[int | None, Field(alias='dataRetentionDays', examples=[90])] = None
     """
-    Apify securely stores your ten most recent Actor runs indefinitely, ensuring they are always accessible. Unnamed storages and other Actor runs are automatically deleted after the retention period. If you're subscribed, you can change it to keep data for longer or to limit your usage. [Lear more](https://docs.apify.com/platform/storage/usage#data-retention).
+    Apify securely stores your ten most recent Actor runs indefinitely, ensuring they are always accessible. Unnamed storages and other Actor runs are automatically deleted after the retention period. If you're subscribed, you can change it to keep data for longer or to limit your usage. [Lear more](https://docs.apify.com/storage#data-retention).
 
     """
 
@@ -3551,14 +3641,14 @@ class UserPrivateInfo(BaseModel):
         extra='allow',
         populate_by_name=True,
     )
-    id: Annotated[str, Field(examples=['YiKoxjkaS9gjGTqhF'])]
+    id: Annotated[str | None, Field(examples=['YiKoxjkaS9gjGTqhF'])] = None
     username: Annotated[str, Field(examples=['myusername'])]
-    profile: Profile
-    email: Annotated[EmailStr, Field(examples=['bob@example.com'])]
+    profile: Profile | None = None
+    email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
     proxy: Proxy
     plan: Plan
     effective_platform_features: Annotated[EffectivePlatformFeatures, Field(alias='effectivePlatformFeatures')]
-    created_at: Annotated[AwareDatetime, Field(alias='createdAt', examples=['2022-11-29T14:48:29.381Z'])]
+    created_at: Annotated[AwareDatetime | None, Field(alias='createdAt', examples=['2022-11-29T14:48:29.381Z'])] = None
     is_paying: Annotated[bool, Field(alias='isPaying', examples=[True])]
 
 
@@ -3609,24 +3699,42 @@ class Version(BaseModel):
     version_number: Annotated[
         str, Field(alias='versionNumber', examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
     ]
+    """
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
+    """
     source_type: Annotated[VersionSourceType | None, Field(alias='sourceType')]
+    """
+    Where the source code of the version lives.
+    """
     env_vars: Annotated[list[EnvVar] | None, Field(alias='envVars')] = None
+    """
+    Environment variables for the version.
+    """
     apply_env_vars_to_build: Annotated[bool | None, Field(alias='applyEnvVarsToBuild', examples=[False])] = None
+    """
+    Whether to inject the environment variables at build time.
+    """
     build_tag: Annotated[str | None, Field(alias='buildTag', examples=['latest'])] = None
+    """
+    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
+    """
     source_files: Annotated[
         list[SourceCodeFile | SourceCodeFolder] | None, Field(alias='sourceFiles', title='VersionSourceFiles')
     ] = None
+    """
+    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    """
     git_repo_url: Annotated[str | None, Field(alias='gitRepoUrl')] = None
     """
-    URL of the Git repository when sourceType is GIT_REPO.
+    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
     """
     tarball_url: Annotated[str | None, Field(alias='tarballUrl')] = None
     """
-    URL of the tarball when sourceType is TARBALL.
+    URL to download the source code from as a tarball or ZIP file. Applies when the `sourceType` is `TARBALL`.
     """
     github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
-    URL of the GitHub Gist when sourceType is GITHUB_GIST.
+    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
 
 

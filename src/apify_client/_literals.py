@@ -21,7 +21,7 @@ ActorPermissionLevel = Literal[
     'LIMITED_PERMISSIONS',
     'FULL_PERMISSIONS',
 ]
-"""Determines permissions that the Actor requires to run. For more information, see the [Actor permissions documentation](https://docs.apify.com/platform/actors/development/permissions)."""
+"""Determines the permission level that the Actor requires to run. For details, see [Actor permissions](https://docs.apify.com/platform/actors/development/permissions)."""
 
 
 ErrorType = Literal[
@@ -149,6 +149,7 @@ ErrorType = Literal[
     'expired-conference-token',
     'failed-to-charge-user',
     'final-invoice-negative',
+    'full-permission-actor-blocked-for-admin',
     'full-permission-actor-not-approved',
     'github-branch-empty',
     'github-issue-already-exists',
@@ -331,6 +332,7 @@ ErrorType = Literal[
     'schema-validation',
     'schema-validation-error',
     'schema-validation-failed',
+    'service-worker-registration-not-allowed',
     'sign-up-method-not-allowed',
     'slack-integration-not-custom',
     'socket-closed',

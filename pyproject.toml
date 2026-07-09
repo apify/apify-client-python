@@ -67,7 +67,6 @@ dev = [
     "setuptools", # setuptools are used by pytest but not explicitly required
     "types-colorama<0.5.0",
     "ty~=0.0.0",
-    "brotli>=1.0.9",
     "werkzeug<4.0.0", # Werkzeug is used by pytest-httpserver
 ]
 

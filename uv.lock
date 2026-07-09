@@ -58,7 +58,6 @@ brotli = [
 [package.dev-dependencies]
 dev = [
     { name = "black" },
-    { name = "brotli" },
     { name = "datamodel-code-generator", extra = ["http", "ruff"] },
     { name = "dycw-pytest-only" },
     { name = "griffe" },
@@ -91,7 +90,6 @@ provides-extras = ["brotli"]
 [package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=24.3.0" },
-    { name = "brotli", specifier = ">=1.0.9" },
     { name = "datamodel-code-generator", extras = ["http", "ruff"], specifier = ">=0.64.1,<1.0.0" },
     { name = "dycw-pytest-only", specifier = "<3.0.0" },
     { name = "griffe", specifier = "<3.0.0" },

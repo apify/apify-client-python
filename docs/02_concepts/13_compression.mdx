@@ -1,0 +1,42 @@
+---
+id: compression
+title: Request body compression
+description: The client compresses every request body automatically, using brotli when available or gzip as a fallback.
+---
+
+The Apify client compresses every request body before sending it to the API. This reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage — especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+
+## How it works
+
+The client selects the compression algorithm automatically at startup, with no configuration required:
+
+1. If the [`brotli`](https://pypi.org/project/brotli/) package is installed, the client uses brotli compression at quality level 6 (out of a maximum of 11) and sends the `Content-Encoding: br` header. Quality 6 is a deliberate trade-off: it compresses better than gzip while keeping CPU overhead low compared to maximum-quality brotli.
+2. Otherwise, it falls back to gzip compression and sends the `Content-Encoding: gzip` header.
+
+The server supports both algorithms and decompresses the request body transparently.
+
+## Enabling brotli
+
+Brotli is available as an optional extra. Install it alongside the client:
+
+```bash
+pip install "apify-client[brotli]"
+# or
+uv add "apify-client[brotli]"
+```
+
+Once installed, the client detects it at startup and switches to brotli automatically — no code changes needed. To revert to gzip, uninstall the extra.
+
+## Comparison
+
+| | Brotli | Gzip |
+|---|---|---|
+| **Compression ratio** | Better than gzip at quality 6 | Good |
+| **CPU cost** | Moderate at quality 6 | Low |
+| **Availability** | Requires the `brotli` extra | Built-in — no extra needed |
+| **`Content-Encoding` header** | `br` | `gzip` |
+| **Best for** | Large payloads where bandwidth matters | Minimal-dependency environments |
+
+:::tip
+For most workloads, the bandwidth savings from brotli outweigh the small CPU overhead. Install the `brotli` extra unless you are running in an environment where installing additional packages is not feasible.
+:::

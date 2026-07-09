@@ -47,7 +47,6 @@ dev = [
     # We explicitly constrain black>=24.3.0 to override the transitive dependency.
     "black>=24.3.0",
     "datamodel-code-generator[http,ruff]>=0.64.1,<1.0.0",
-    "dycw-pytest-only<3.0.0",
     "griffe<3.0.0",
     "poethepoet<1.0.0",
     "pre-commit<5.0.0",

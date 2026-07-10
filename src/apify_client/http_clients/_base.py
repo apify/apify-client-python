@@ -129,7 +129,7 @@ class HttpClientBase:
         if workflow_key is not None:
             default_headers['X-Apify-Workflow-Key'] = workflow_key
 
-        is_at_home = 'APIFY_IS_AT_HOME' in os.environ
+        is_at_home = str('APIFY_IS_AT_HOME' in os.environ).lower()
         python_version = '.'.join([str(x) for x in sys.version_info[:3]])
         client_version = metadata.version('apify-client')
 

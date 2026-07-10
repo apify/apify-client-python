@@ -3,8 +3,10 @@
 Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with discriminators on schemas
   referenced from array items).
-- Rewrite every `class X(StrEnum)` as `X = Literal[...]` so downstream code can pass plain strings
-  (and reuse the named alias in resource-client signatures) instead of enum members.
+- Rewrite every `class X(StrEnum)` as an open literal `X = Literal[...] | str` so downstream code can pass plain
+  strings (and reuse the named alias in resource-client signatures) instead of enum members. The trailing `| str`
+  keeps the known members as autocomplete hints while letting Pydantic validate any value the platform sends that
+  this (possibly older) client doesn't know about yet, instead of raising a `ValidationError` on the whole response.
 - Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving `_models.py` importing them — so
   consumers can depend on a dedicated literals module without pulling in every Pydantic model.
 - Add `@docs_group('Models')` to every model class (plus the required import).
@@ -27,6 +29,8 @@ import re
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from pydantic.alias_generators import to_camel
 
 if TYPE_CHECKING:
     from apify_client._docs import GroupName
@@ -66,6 +70,17 @@ def _collapse_blank_lines(content: str) -> str:
     return re.sub(r'\n{3,}', '\n\n\n', content)
 
 
+def absolutize_doc_links(content: str) -> str:
+    """Rewrite root-relative Markdown links to absolute `docs.apify.com` URLs.
+
+    Descriptions come from the Apify API OpenAPI spec, where links to the Apify documentation are written
+    root-relative (e.g. `](/platform/...)`). Rendered under the API reference `baseUrl`, those resolve to a
+    non-existent `/api/client/python/platform/...` path, so prefix them with the docs domain. The negative
+    lookahead leaves protocol-relative `](//host)` links untouched.
+    """
+    return re.sub(r'\]\(/(?!/)', '](https://docs.apify.com/', content)
+
+
 def _ensure_typing_import(content: str, name: str) -> str:
     """Append `name` to the `from typing import ...` line if not already imported.
 
@@ -99,12 +114,14 @@ def fix_discriminators(content: str) -> str:
 
 
 def convert_enums_to_literals(content: str) -> str:
-    """Rewrite every `class X(StrEnum): ...` into an `X = Literal[...]` alias.
+    """Rewrite every `class X(StrEnum): ...` into an open literal `X = Literal[...] | str` alias.
 
     Each member assignment (`NAME = 'value'`) contributes its string value to the literal in
-    declaration order. The class docstring, if present, is preserved as a trailing bare-string
-    docstring after the alias — matching the field-doc convention datamodel-codegen already uses
-    elsewhere in the generated file.
+    declaration order. The trailing `| str` widens the alias so unknown values (e.g. a new enum
+    member the platform introduces before this client is regenerated) still validate against the
+    Pydantic models, while the known members remain as autocomplete hints. The class docstring, if
+    present, is preserved as a trailing bare-string docstring after the alias — matching the
+    field-doc convention datamodel-codegen already uses elsewhere in the generated file.
 
     Runs before `add_docs_group_decorators`, so the enum classes have no `@docs_group` decorator
     to strip. The `from enum import StrEnum` import is left alone and removed by ruff's F401 fix.
@@ -133,7 +150,7 @@ def convert_enums_to_literals(content: str) -> str:
 
         new_lines: list[str] = [f'{node.name} = Literal[']
         new_lines.extend(f'    {v!r},' for v in values)
-        new_lines.append(']')
+        new_lines.append('] | str')
         if docstring is not None:
             if '\n' in docstring:
                 new_lines.append('"""')
@@ -166,15 +183,26 @@ from typing import Literal
 """
 
 
+def _is_literal_expr(value: ast.expr) -> bool:
+    """Return True if `value` is a bare `Literal[...]` or an open `Literal[...] | str` union."""
+    if isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name) and value.value.id == 'Literal':
+        return True
+    return (
+        isinstance(value, ast.BinOp)
+        and isinstance(value.op, ast.BitOr)
+        and _is_literal_expr(value.left)
+        and isinstance(value.right, ast.Name)
+        and value.right.id == 'str'
+    )
+
+
 def _is_literal_alias(node: ast.stmt) -> bool:
-    """Return True if `node` is a top-level `Name = Literal[...]` statement."""
+    """Return True if `node` is a top-level `Name = Literal[...]` or `Name = Literal[...] | str` statement."""
     return (
         isinstance(node, ast.Assign)
         and len(node.targets) == 1
         and isinstance(node.targets[0], ast.Name)
-        and isinstance(node.value, ast.Subscript)
-        and isinstance(node.value.value, ast.Name)
-        and node.value.value.id == 'Literal'
+        and _is_literal_expr(node.value)
     )
 
 
@@ -401,12 +429,38 @@ def _extract_alias_from_field_call(field_call: ast.Call) -> str | None:
     return None
 
 
+def _class_uses_camel_generator(class_node: ast.ClassDef) -> bool:
+    """Return True if `class_node` declares `model_config = ConfigDict(..., alias_generator=to_camel)`.
+
+    datamodel-codegen emits the generator (via `--alias-generator to_camel`) on every model, so unaliased fields
+    derive their API spelling through `to_camel` rather than mapping to themselves.
+    """
+    for stmt in class_node.body:
+        if isinstance(stmt, ast.Assign):
+            targets = stmt.targets
+        elif isinstance(stmt, ast.AnnAssign):
+            targets = [stmt.target]
+        else:
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == 'model_config' for t in targets):
+            continue
+        value = stmt.value
+        if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == 'ConfigDict':
+            return any(
+                kw.arg == 'alias_generator' and isinstance(kw.value, ast.Name) and kw.value.id == 'to_camel'
+                for kw in value.keywords
+            )
+    return False
+
+
 def _extract_class_field_aliases(class_node: ast.ClassDef) -> dict[str, str]:
     """Return `{snake_field: api_field}` for every annotated field declared on `class_node`.
 
-    Fields without a `Field(alias=...)` map to themselves (their declared Python name matches the API name — typical
-    for single-word fields like `url`, `id`).
+    The API spelling is resolved in priority order: an explicit `Field(alias=...)` wins; otherwise, on a model that
+    carries `alias_generator=to_camel`, the name is run through `to_camel` (matching Pydantic at runtime); otherwise
+    the field maps to itself (single-word fields like `url`, `id`, or models without the generator).
     """
+    uses_camel = _class_uses_camel_generator(class_node)
     aliases: dict[str, str] = {}
     for stmt in class_node.body:
         if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
@@ -414,15 +468,19 @@ def _extract_class_field_aliases(class_node: ast.ClassDef) -> dict[str, str]:
         field_name = stmt.target.id
         if field_name == 'model_config':
             continue
-        # Default: no alias means snake name == API name.
-        api_name = field_name
         # Walk the annotation to find a nested `Field(alias='...')` call inside `Annotated[...]`.
+        explicit_alias: str | None = None
         for sub in ast.walk(stmt.annotation):
             if isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name) and sub.func.id == 'Field':
-                found = _extract_alias_from_field_call(sub)
-                if found is not None:
-                    api_name = found
+                explicit_alias = _extract_alias_from_field_call(sub)
+                if explicit_alias is not None:
                     break
+        if explicit_alias is not None:
+            api_name = explicit_alias
+        elif uses_camel:
+            api_name = to_camel(field_name)
+        else:
+            api_name = field_name
         aliases[field_name] = api_name
     return aliases
 
@@ -588,6 +646,7 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     """
     original = models_path.read_text()
     fixed = fix_discriminators(original)
+    fixed = absolutize_doc_links(fixed)
     fixed = convert_enums_to_literals(fixed)
     fixed = add_docs_group_decorators(fixed, 'Models')
     models_content, literals_content = split_literals_to_file(fixed)

@@ -3,14 +3,42 @@
 All notable changes to this project will be documented in this file.
 
 <!-- git-cliff-unreleased-start -->
-## 3.0.3 - **not yet released**
+## 3.0.6 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Relax constraints on generated models based on updated specification ([#936](https://github.com/apify/apify-client-python/pull/936)) ([a02247e](https://github.com/apify/apify-client-python/commit/a02247e817fd801c315d2848d3000af904deb95f)) by [@apify-service-account](https://github.com/apify-service-account)
+- Relax enum validation to tolerate unknown API values ([#941](https://github.com/apify/apify-client-python/pull/941)) ([587baa7](https://github.com/apify/apify-client-python/commit/587baa77e023d7ba925a7d4eecaff58da3b55237)) by [@vdusek](https://github.com/vdusek), closes [#931](https://github.com/apify/apify-client-python/issues/931)
+
+
+<!-- git-cliff-unreleased-end -->
+## [3.0.5](https://github.com/apify/apify-client-python/releases/tag/v3.0.5) (2026-07-08)
+
+### 🐛 Bug Fixes
+
+- Relax model validation constraints for `Plan` and `StoreListActor` ([#910](https://github.com/apify/apify-client-python/pull/910)) ([7a5b157](https://github.com/apify/apify-client-python/commit/7a5b157a20a1c6d04175a8f33d3f048af3ab5f9d)) by [@apify-service-account](https://github.com/apify-service-account)
+- Add missing EventData fields and new error type ([#917](https://github.com/apify/apify-client-python/pull/917)) ([93566b8](https://github.com/apify/apify-client-python/commit/93566b883b269d1f7fb098c51c0677cd10ebcc7d)) by [@apify-service-account](https://github.com/apify-service-account)
+- Add missing MCP to RunOrigin enum ([#929](https://github.com/apify/apify-client-python/pull/929)) ([3536c18](https://github.com/apify/apify-client-python/commit/3536c183adf495c26e65d50fd12fbdf584819a07)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+
+## [3.0.4](https://github.com/apify/apify-client-python/releases/tag/v3.0.4) (2026-06-26)
+
+### 🐛 Bug Fixes
+
+- Fix casing in `isAtHome` in `User-Agent` header ([#903](https://github.com/apify/apify-client-python/pull/903)) ([1e50374](https://github.com/apify/apify-client-python/commit/1e50374e91bc39282bc724f77770963a14e051eb)) by [@Pijukatel](https://github.com/Pijukatel)
+- Update impit to ~=0.13.0 ([#871](https://github.com/apify/apify-client-python/pull/871)) ([8dffe34](https://github.com/apify/apify-client-python/commit/8dffe34defbcd7b7c4a9cba9a1e1a2751c0096cd)) by [@renovate](https://github.com/apps/renovate)
+- Remove unused run-failed and run-timeout-exceeded error models ([#900](https://github.com/apify/apify-client-python/pull/900)) ([8c48a06](https://github.com/apify/apify-client-python/commit/8c48a06395fc000ec1df15ccd27cc79d5a2dc46b)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+## [3.0.3](https://github.com/apify/apify-client-python/releases/tag/v3.0.3) (2026-06-18)
 
 ### 🐛 Bug Fixes
 
 - Include all supported fields for ad-hoc webhooks ([#855](https://github.com/apify/apify-client-python/pull/855)) ([6eb267d](https://github.com/apify/apify-client-python/commit/6eb267dbe620cb9d864c2390a84dfeb851cecc7c)) by [@apify-service-account](https://github.com/apify-service-account)
+- Only log any error that happens during log redirection ([#866](https://github.com/apify/apify-client-python/pull/866)) ([a2cc987](https://github.com/apify/apify-client-python/commit/a2cc987b6d1ef1d06b37a179876b12ee4f739f5f)) by [@Pijukatel](https://github.com/Pijukatel), closes [#864](https://github.com/apify/apify-client-python/issues/864)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.2](https://github.com/apify/apify-client-python/releases/tag/v3.0.2) (2026-05-26)
 
 ### 🐛 Bug Fixes
@@ -257,14 +285,14 @@ All notable changes to this project will be documented in this file.
 - Add rate limit statistics ([#343](https://github.com/apify/apify-client-python/pull/343)) ([f35c68f](https://github.com/apify/apify-client-python/commit/f35c68ff824ce83bf9aca893589381782a1a48c7)) by [@Mantisus](https://github.com/Mantisus)
 
 
-## [1.8.1](https://github.com/apify/apify-client-python/releases/tags/v1.8.1) (2024-09-17)
+## [1.8.1](https://github.com/apify/apify-client-python/releases/tag/v1.8.1) (2024-09-17)
 
 ### 🐛 Bug Fixes
 
 - Batch add requests can handle more than 25 requests ([#268](https://github.com/apify/apify-client-python/pull/268)) ([9110ee0](https://github.com/apify/apify-client-python/commit/9110ee08954762aed00ac09cd042e802c1d041f7)) by [@vdusek](https://github.com/vdusek), closes [#264](https://github.com/apify/apify-client-python/issues/264)
 
 
-## [1.8.0](https://github.com/apify/apify-client-python/releases/tags/v1.8.0) (2024-08-30)
+## [1.8.0](https://github.com/apify/apify-client-python/releases/tag/v1.8.0) (2024-08-30)
 
 - drop support for Python 3.8
 
@@ -373,7 +401,7 @@ All notable changes to this project will be documented in this file.
 - Start importing general constants and utilities from the `apify-shared` library
 
 
-## [1.3.0](https://github.com/apify/apify-client-python/releases/tag/v1.3.0) (2023-07-24)
+## [1.3.0](https://github.com/apify/apify-client-python/releases/tag/1.3.0) (2023-07-24)
 
 ### 🚀 Features
 

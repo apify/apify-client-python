@@ -1,32 +1,37 @@
 {
-    "extends": ["config:base", ":semanticCommitTypeAll(chore)"],
+    "extends": ["config:recommended", ":semanticCommitTypeAll(chore)"],
     "ignorePaths": ["docs/**", "website/versioned_docs/**"],
-    "pinVersions": false,
+    "rangeStrategy": "replace",
     "separateMajorMinor": false,
     "dependencyDashboard": false,
     "semanticCommits": "enabled",
     "lockFileMaintenance": {
         "enabled": true,
         "automerge": true,
-        "automergeType": "branch"
+        "automergeType": "pr",
+        "schedule": ["* 0-5 * * 1"]
     },
     "packageRules": [
         {
-            "matchPaths": ["pyproject.toml"],
+            "matchFileNames": ["pyproject.toml"],
             "matchDepTypes": ["devDependencies"],
             "matchUpdateTypes": ["major", "minor"],
             "groupName": "major/minor dev dependencies",
             "groupSlug": "dev-dependencies",
             "automerge": true,
-            "automergeType": "branch"
+            "automergeType": "pr"
         },
         {
             "matchPackageNames": ["@apify/*", "@crawlee/*", "apify", "apify-client", "apify-shared", "apify-fingerprint-datapoints", "crawlee", "got-scraping"],
             "minimumReleaseAge": "0 days"
+        },
+        {
+            "matchUpdateTypes": ["lockFileMaintenance"],
+            "minimumReleaseAgeBehaviour": "timestamp-optional"
         }
     ],
     "minimumReleaseAge": "1 day",
     "internalChecksFilter": "strict",
-    "schedule": ["before 7am every weekday"],
+    "schedule": ["* 0-5 * * 2"],
     "ignoreDeps": ["apify_client", "docusaurus-plugin-typedoc-api"]
 }

@@ -32,19 +32,29 @@
 
 ## Installation
 
-`apify-client` requires **Python 3.11 or higher**. It is published on [PyPI](https://pypi.org/project/apify-client/) and can be installed for example with [pip](https://pip.pypa.io/):
+`apify-client` requires **Python 3.11 or higher** and is published on [PyPI](https://pypi.org/project/apify-client/) and [conda-forge](https://anaconda.org/conda-forge/apify-client).
 
-```bash
-pip install apify-client
-```
+- From [PyPI](https://pypi.org/project/apify-client/), it can be installed for example with [pip](https://pip.pypa.io/):
 
-or with [uv](https://docs.astral.sh/uv/):
+    ```bash
+    pip install apify-client
+    ```
 
-```bash
-uv add apify-client
-```
+    or with [uv](https://docs.astral.sh/uv/):
 
-or any other Python package manager that consumes PyPI.
+    ```bash
+    uv add apify-client
+    ```
+
+    or any other Python package manager that consumes PyPI.
+
+
+- From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):
+
+    ```bash
+    conda install conda-forge::apify-client
+    ```
+
 
 ## Quick start
 
@@ -166,7 +176,7 @@ For end-to-end recipes — passing input, managing tasks for reusable input, ret
 The full documentation lives at **[docs.apify.com/api/client/python](https://docs.apify.com/api/client/python)**.
 
 | Section | What you'll find |
-|---|---|
+| --- | --- |
 | [Introduction](https://docs.apify.com/api/client/python/docs) | Overview, prerequisites, and a tour of the client. |
 | [Quick start](https://docs.apify.com/api/client/python/docs/quick-start) | Authenticate, run an Actor, and fetch its results step by step. |
 | [Concepts](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support) | Asyncio, single vs. collection clients, nested clients, error handling, retries, logging, convenience methods, pagination, streaming, custom HTTP clients, timeouts. |

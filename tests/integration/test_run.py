@@ -295,7 +295,7 @@ async def test_run_metamorph(client: ApifyClient | ApifyClientAsync) -> None:
             return await maybe_await(run_client.get())
 
         await poll_until_condition(
-            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', timeout=30, backoff_factor=2
+            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', backoff_factor=2
         )
 
         # Metamorph the run into the same actor (allowed) with new input
@@ -339,7 +339,7 @@ async def test_run_reboot(client: ApifyClient | ApifyClientAsync) -> None:
             return await maybe_await(run_client.get())
 
         current_run = await poll_until_condition(
-            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', timeout=30, backoff_factor=2
+            get_run, lambda run: isinstance(run, Run) and run.status != 'READY', backoff_factor=2
         )
 
         # Only try to reboot if the run is still running

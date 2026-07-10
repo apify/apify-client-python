@@ -164,6 +164,21 @@ def test_convert_enums_to_literals_replaces_single_enum() -> None:
     assert "'RUNNING'," in result
 
 
+def test_convert_enums_to_literals_emits_open_union() -> None:
+    """The alias is widened with a trailing `| str` so unknown API values still validate against the models."""
+    content = textwrap.dedent("""\
+        from typing import Literal
+
+        class Status(StrEnum):
+            READY = 'READY'
+            RUNNING = 'RUNNING'
+    """)
+    result = convert_enums_to_literals(content)
+    assert '] | str' in result
+    # The `| str` widens the alias itself, right after its closing bracket.
+    assert result.index('Status = Literal[') < result.index('] | str')
+
+
 def test_convert_enums_to_literals_preserves_value_order() -> None:
     """Literal values appear in the alias in the same order as the enum's member declarations."""
     content = textwrap.dedent("""\
@@ -355,6 +370,75 @@ def test_split_literals_to_file_moves_literal_aliases() -> None:
     assert '"""Alpha status docstring."""' in literals
 
 
+def test_split_literals_to_file_moves_open_literal_union() -> None:
+    """An open `Literal[...] | str` alias (what `convert_enums_to_literals` emits) is moved to the literals file."""
+    content = textwrap.dedent("""\
+        from __future__ import annotations
+
+        from typing import Literal
+
+        from apify_client._docs import docs_group
+
+
+        class Alpha(BaseModel):
+            status: Status
+
+
+        Status = Literal[
+            'READY',
+            'RUNNING',
+        ] | str
+        \"\"\"Status docstring.\"\"\"
+    """)
+    models, literals = split_literals_to_file(content)
+
+    assert 'Status = Literal[' not in models
+    assert 'from apify_client._literals import Status' in models
+    assert 'status: Status' in models
+
+    assert 'Status = Literal[' in literals
+    assert '] | str' in literals
+    assert '"""Status docstring."""' in literals
+
+
+def test_convert_then_split_preserves_open_union() -> None:
+    """Composing convert + split moves the enum out as an open `Literal[...] | str` alias in the literals file."""
+    content = textwrap.dedent("""\
+        from enum import StrEnum
+        from typing import Literal
+
+        from apify_client._docs import docs_group
+
+
+        class Status(StrEnum):
+            READY = 'READY'
+            RUNNING = 'RUNNING'
+    """)
+    _, literals = split_literals_to_file(convert_enums_to_literals(content))
+    assert 'Status = Literal[' in literals
+    assert '] | str' in literals
+
+
+def test_split_literals_to_file_ignores_non_str_open_union() -> None:
+    """Only `Literal[...]` and `Literal[...] | str` count as shared aliases; `Literal[...] | None` stays in models."""
+    content = textwrap.dedent("""\
+        from __future__ import annotations
+
+        from typing import Literal
+
+        from apify_client._docs import docs_group
+
+
+        Status = Literal[
+            'READY',
+            'RUNNING',
+        ] | None
+    """)
+    models, literals = split_literals_to_file(content)
+    assert models == content
+    assert literals == ''
+
+
 def test_split_literals_to_file_handles_multiple_aliases() -> None:
     """Several aliases all move out and are re-imported together in a single import line."""
     content = textwrap.dedent("""\
@@ -446,6 +530,36 @@ def test_build_alias_map_treats_unaliased_fields_as_self_named() -> None:
     """)
     result = build_alias_map(models)
     assert result['Foo'] == {'url': 'url', 'method': 'method'}
+
+
+def test_build_alias_map_derives_camel_for_unaliased_generator_fields() -> None:
+    """On a model with `alias_generator=to_camel`, unaliased fields resolve to their camelCase API spelling."""
+    models = textwrap.dedent("""\
+        from pydantic import BaseModel, ConfigDict
+        from pydantic.alias_generators import to_camel
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow', populate_by_name=True, alias_generator=to_camel)
+            source_type: str | None = None
+            url: str | None = None
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'source_type': 'sourceType', 'url': 'url'}
+
+
+def test_build_alias_map_explicit_alias_wins_over_generator() -> None:
+    """An explicit irregular alias takes priority over the `to_camel` generator, matching Pydantic at runtime."""
+    models = textwrap.dedent("""\
+        from typing import Annotated
+        from pydantic import BaseModel, ConfigDict, Field
+        from pydantic.alias_generators import to_camel
+
+        class Foo(BaseModel):
+            model_config = ConfigDict(extra='allow', populate_by_name=True, alias_generator=to_camel)
+            github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
+    """)
+    result = build_alias_map(models)
+    assert result['Foo'] == {'github_gist_url': 'gitHubGistUrl'}
 
 
 def test_build_alias_map_skips_model_config() -> None:

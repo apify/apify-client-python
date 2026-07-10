@@ -38,7 +38,13 @@ jobs:
     env:
       DOCS_PR_NUMBER: ${{ inputs.docs_pr_number }}
       BRANCH: ${{ inputs.docs_pr_number && format('update-models-docs-pr-{0}', inputs.docs_pr_number) || 'update-models-manual' }}
-      TITLE: "${{ inputs.docs_pr_number && format('[TODO]: update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || '[TODO]: update generated models from published OpenAPI spec' }}"
+      # Message for the automated regeneration commit. Kept descriptive (and traceable to the docs PR) for the
+      # branch history. It is deliberately NOT reused as the PR title.
+      COMMIT_MESSAGE: "${{ inputs.docs_pr_number && format('update generated models from apify-docs PR #{0}', inputs.docs_pr_number) || 'update generated models from published OpenAPI spec' }}"
+      # Placeholder PR title — just `TODO`, so it carries no valid commit type and `pr-title-check` stays red
+      # until a human replaces it (the default can never be merged as-is). The apify-docs reference and its
+      # link live in the PR body, not the title.
+      PR_TITLE: 'TODO'
       ASSIGNEE: ${{ inputs.docs_pr_author || github.actor }}
       REVIEWER: vdusek
       LABEL: t-tooling
@@ -59,25 +65,48 @@ jobs:
           fi
 
       - name: Checkout apify-client-python
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
-      # If the branch already exists on the remote (e.g. from a previous run, possibly with reviewer
-      # commits), check it out so regeneration builds on top of it. Otherwise stay on the default
-      # branch and let the signed-commit step below create the remote branch — its create-branch
-      # flow does `git fetch ... $BRANCH:refs/heads/$BRANCH` which fails if $BRANCH is already
-      # checked out locally.
-      - name: Set up branch
-        id: branch-setup
+      # Record master's SHA up front: a later step checks out the auto-update branch, so the change check below
+      # can't compare against HEAD. Resolve master from the remote rather than the checked-out ref: the run may be
+      # dispatched from a non-master ref, but that check and the PR both target master, so master is the baseline.
+      - name: Record master ref
+        id: base
         run: |
-          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$BRANCH":"$BRANCH"
-            git switch "$BRANCH"
-            echo "create_branch=false" >> "$GITHUB_OUTPUT"
+          git fetch --depth=1 origin master
+          echo "sha=$(git rev-parse FETCH_HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Does the auto-update branch already exist on the remote? If so, a previous dispatch opened the PR
+      # and we append to it. If not, we start it from master (below) so signed-commit creates it there.
+      - name: Determine auto-update branch state
+        id: branch
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "create=false" >> "$GITHUB_OUTPUT"
           else
-            echo "create_branch=true" >> "$GITHUB_OUTPUT"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "create=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Check out the existing branch before regenerating so the new models land as a NEW commit on top,
+      # mirroring the commit just pushed to the docs PR. We must switch now, while the tree is clean:
+      # signed-commit's own checkout is a plain `git checkout` that would refuse to overwrite the
+      # regenerated files (which differ between master and the branch) once they're in the working tree.
+      - name: Check out existing auto-update branch
+        if: steps.branch.outputs.exists == 'true'
+        run: |
+          git fetch --depth=1 origin "$BRANCH"
+          git checkout -B "$BRANCH" FETCH_HEAD
+
+      # The branch doesn't exist yet, so regenerate from the recorded master SHA rather than the dispatched
+      # ref (a manual run may be dispatched from a non-master ref). Regenerating on master keeps the codegen
+      # tooling current, and signed-commit then creates the branch (the PR head) on top of master, the PR base.
+      - name: Start the auto-update branch from master
+        if: steps.branch.outputs.exists == 'false'
+        run: git checkout "${{ steps.base.outputs.sha }}"
 
       # Download the pre-built OpenAPI spec artifact from the apify-docs workflow run.
       # Skipped for manual runs — datamodel-codegen will fetch from the published spec URL instead.
@@ -92,7 +121,7 @@ jobs:
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8.2.0
+        uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: "3.14"
 
@@ -109,18 +138,44 @@ jobs:
             uv run poe generate-models
           fi
 
-      - name: Commit model changes
+      # Proceed only when the regenerated models differ from master (compared against the recorded SHA,
+      # since the tree may now sit on the branch), which skips empty-PR runs: a spec change that doesn't
+      # affect the client models, or one already merged into master. Also avoids creating an empty branch.
+      - name: Check for model changes
+        id: changes
+        run: |
+          if git diff --quiet "${{ steps.base.outputs.sha }}" -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py; then
+            echo "No model changes relative to master — nothing to regenerate."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Append the regenerated models to the auto-update branch as a single signed ("Verified") commit
+      # via apify/actions/signed-commit (GitHub's createCommitOnBranch GraphQL mutation). It's added on
+      # top of the branch tip, never resetting to master: a fresh docs PR creates the branch
+      # (create-branch) and its first commit, and each later docs-PR commit triggers a dispatch that
+      # appends another, so the client PR mirrors the docs PR and stays open.
+      #
+      # Appending (rather than force-pushing the branch to master, as before) is what keeps the PR open:
+      # a "branch == master" tip makes the PR head equal its base, which GitHub auto-closes, and each
+      # dispatch then opens a duplicate PR. signed-commit also sets committed=false when the staged
+      # files match the tip, so a repeated dispatch regenerating identical models adds no commit.
+      - name: Commit regenerated models
         id: commit
-        uses: apify/actions/signed-commit@v1.2.0
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: apify/actions/signed-commit@v1.4.0
         with:
-          message: ${{ env.TITLE }}
-          add: 'src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py'
+          message: ${{ env.COMMIT_MESSAGE }}
+          add: "src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py"
           github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           branch: ${{ env.BRANCH }}
-          create-branch: ${{ steps.branch-setup.outputs.create_branch }}
+          create-branch: "${{ steps.branch.outputs.create }}"
 
+      # Ensure exactly one PR exists for this branch. It's no longer auto-closed, so an existing PR is
+      # reused. Only the first run (or one whose PR step a concurrent dispatch cancelled) creates it.
       - name: Create or update PR
-        if: steps.commit.outputs.committed == 'true'
+        if: steps.changes.outputs.has_changes == 'true'
         id: pr
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
@@ -132,15 +187,17 @@ jobs:
             echo "pr_url=$EXISTING_PR" >> "$GITHUB_OUTPUT"
             echo "created=false" >> "$GITHUB_OUTPUT"
           else
+            # The PR opens with a `TODO` placeholder title that fails `pr-title-check`, so it can't be merged
+            # until a human replaces it with a proper Conventional Commits title.
             if [[ -n "$DOCS_PR_NUMBER" ]]; then
               DOCS_PR_URL="https://github.com/apify/apify-docs/pull/${DOCS_PR_NUMBER}"
-              BODY="This PR updates the auto-generated Pydantic models and TypedDicts based on OpenAPI specification changes in [apify-docs PR #${DOCS_PR_NUMBER}](${DOCS_PR_URL})."
+              BODY="- Updates the auto-generated Pydantic models and TypedDicts based on the proposed OpenAPI specification changes."$'\n'"- Based on apify-docs PR [#${DOCS_PR_NUMBER}](${DOCS_PR_URL})."
             else
-              BODY="This PR updates the auto-generated Pydantic models and TypedDicts from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json)."
+              BODY="- Updates the auto-generated Pydantic models and TypedDicts based on the latest OpenAPI specification changes."$'\n'"- Based on the [published OpenAPI specification](https://docs.apify.com/api/openapi.json)."
             fi
 
             PR_URL=$(gh pr create \
-              --title "$TITLE" \
+              --title "$PR_TITLE" \
               --body "$BODY" \
               --head "$BRANCH" \
               --base master \
@@ -152,9 +209,11 @@ jobs:
             echo "created=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Post a cross-repo comment on the original docs PR so reviewers know about the corresponding client-python PR.
+      # Post a cross-repo comment on the docs PR pointing reviewers to the companion client-python PR.
+      # Only when something happened: the PR was just created, or a commit was appended. A repeated
+      # dispatch that changes nothing (committed=false) posts no comment, avoiding noise on the docs PR.
       - name: Comment on apify-docs PR
-        if: steps.commit.outputs.committed == 'true' && inputs.docs_pr_number
+        if: inputs.docs_pr_number && (steps.pr.outputs.created == 'true' || steps.commit.outputs.committed == 'true')
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           PR_CREATED: ${{ steps.pr.outputs.created }}

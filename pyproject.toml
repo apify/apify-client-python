@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "apify_client"
-version = "3.0.3"
+version = "3.0.6"
 description = "Apify API client for Python"
 authors = [{ name = "Apify Technologies s.r.o.", email = "support@apify.com" }]
 license = { file = "LICENSE" }
@@ -25,7 +25,7 @@ classifiers = [
 keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]
 dependencies = [
     "colorama>=0.4.0",
-    "impit>=0.9.2",
+    "impit~=0.13.0",
     "more_itertools>=10.0.0",
     "pydantic[email]>=2.11.0",
 ]
@@ -46,8 +46,7 @@ dev = [
     # See https://github.com/apify/apify-client-python/pull/582/ for more details.
     # We explicitly constrain black>=24.3.0 to override the transitive dependency.
     "black>=24.3.0",
-    "datamodel-code-generator[http,ruff]>=0.57.0,<1.0.0",
-    "dycw-pytest-only<3.0.0",
+    "datamodel-code-generator[http,ruff]>=0.64.1,<1.0.0",
     "griffe<3.0.0",
     "poethepoet<1.0.0",
     "pre-commit<5.0.0",
@@ -170,6 +169,9 @@ indent-style = "space"
     "E501",   # Line too long
     "ERA001", # Commented-out code
     "TC003",  # Move standard library import into a type-checking block
+]
+"src/apify_client/_literals.py" = [
+    "PYI051", # `Literal[...]` is redundant in a union with `str`; the open `Literal[...] | str` is deliberate — it keeps known members as hints while tolerating unknown API values (see scripts/postprocess_generated_models.py)
 ]
 
 [tool.ruff.lint.flake8-quotes]
@@ -295,9 +297,12 @@ cwd = "website"
 shell = "./build_api_reference.sh && pnpm install && uv run pnpm start"
 cwd = "website"
 
+# The `--alias-generator to_camel` flag lives on the `_models.py` command (not in `[tool.datamodel-codegen]`)
+# because datamodel-codegen only allows it for `pydantic_v2.BaseModel` output and would reject the TypedDict run.
 [tool.poe.tasks.generate-models]
 shell = """
 uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json \
+        --alias-generator to_camel \
     && uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json \
         --output src/apify_client/_typeddicts.py \
         --output-model-type typing.TypedDict \
@@ -308,6 +313,7 @@ uv run datamodel-codegen --url https://docs.apify.com/api/openapi.json \
 [tool.poe.tasks.generate-models-from-file]
 shell = """
 uv run datamodel-codegen --input $input_file \
+        --alias-generator to_camel \
     && uv run datamodel-codegen --input $input_file \
         --output src/apify_client/_typeddicts.py \
         --output-model-type typing.TypedDict \

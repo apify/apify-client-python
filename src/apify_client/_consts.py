@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from apify_client.types import CompressionAlgorithm
 
 DEFAULT_API_URL = 'https://api.apify.com'
 """Default base URL for the Apify API."""
@@ -34,3 +38,21 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST = timedelta(seconds=3)
 
 OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 """Headers that can be overridden by users, but will trigger a warning if they do so, as it may lead to API errors."""
+
+DEFAULT_COMPRESSION_ALGORITHM: CompressionAlgorithm = 'brotli'
+"""Default compression algorithm for request bodies."""
+
+DEFAULT_COMPRESSION_QUALITY: int = 6
+"""Default compression quality for request bodies (brotli: 1-11, gzip: 1-9)."""
+
+BROTLI_QUALITY_MIN: int = 1
+"""Minimum quality level for brotli compression."""
+
+BROTLI_QUALITY_MAX: int = 11
+"""Maximum quality level for brotli compression."""
+
+GZIP_QUALITY_MIN: int = 1
+"""Minimum quality level for gzip compression."""
+
+GZIP_QUALITY_MAX: int = 9
+"""Maximum quality level for gzip compression."""

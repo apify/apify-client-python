@@ -456,10 +456,10 @@ def test_build_url_with_params_mixed() -> None:
 
 
 def test_prepare_request_call_brotli_compression(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When brotli is installed, request body uses brotli (Content-Encoding: br)."""
+    """When compression_algorithm='brotli' and brotli is installed, request body uses brotli."""
     monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', brotli.compress)
 
-    client = _ConcreteHttpClient()
+    client = _ConcreteHttpClient(compression_algorithm='brotli')
     headers, _, data = client._prepare_request_call(json={'k': 'v'})
 
     assert headers['Content-Encoding'] == 'br'
@@ -468,12 +468,73 @@ def test_prepare_request_call_brotli_compression(monkeypatch: pytest.MonkeyPatch
 
 
 def test_prepare_request_call_gzip_fallback_without_brotli(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When no brotli library is available, request body falls back to gzip (Content-Encoding: gzip)."""
+    """When compression_algorithm='brotli' but the library is unavailable, falls back to gzip."""
     monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', None)
 
-    client = _ConcreteHttpClient()
+    client = _ConcreteHttpClient(compression_algorithm='brotli')
     headers, _, data = client._prepare_request_call(json={'k': 'v'})
 
     assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert gzip.decompress(data) == b'{"k": "v"}'
+
+
+def test_prepare_request_call_explicit_gzip(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When compression_algorithm='gzip', always uses gzip even when brotli is available."""
+    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', brotli.compress)
+
+    client = _ConcreteHttpClient(compression_algorithm='gzip')
+    headers, _, data = client._prepare_request_call(json={'k': 'v'})
+
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert gzip.decompress(data) == b'{"k": "v"}'
+
+
+def test_prepare_request_call_brotli_custom_quality(monkeypatch: pytest.MonkeyPatch) -> None:
+    """compression_quality is forwarded to the brotli compressor."""
+    captured_kwargs: dict = {}
+
+    def capturing_compress(data: bytes, **kwargs: object) -> bytes:
+        captured_kwargs.update(kwargs)
+        return brotli.compress(data, **kwargs)
+
+    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', capturing_compress)
+
+    client = _ConcreteHttpClient(compression_algorithm='brotli', compression_quality=1)
+    headers, _, data = client._prepare_request_call(json={'k': 'v'})
+
+    assert headers['Content-Encoding'] == 'br'
+    assert captured_kwargs.get('quality') == 1
+    assert data is not None
+    assert brotli.decompress(data) == b'{"k": "v"}'
+
+
+def test_prepare_request_call_gzip_custom_quality(monkeypatch: pytest.MonkeyPatch) -> None:
+    """compression_quality is forwarded to the gzip compressor."""
+    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', None)
+
+    client = _ConcreteHttpClient(compression_algorithm='gzip', compression_quality=1)
+    headers, _, data = client._prepare_request_call(json={'k': 'v'})
+
+    assert headers['Content-Encoding'] == 'gzip'
+    assert data is not None
+    assert gzip.decompress(data) == b'{"k": "v"}'
+
+
+def test_prepare_request_call_invalid_brotli_quality() -> None:
+    """Raises ValueError when brotli quality is out of range 1-11."""
+    with pytest.raises(ValueError, match='Brotli compression quality'):
+        _ConcreteHttpClient(compression_algorithm='brotli', compression_quality=12)
+
+    with pytest.raises(ValueError, match='Brotli compression quality'):
+        _ConcreteHttpClient(compression_algorithm='brotli', compression_quality=0)
+
+
+def test_prepare_request_call_invalid_gzip_quality() -> None:
+    """Raises ValueError when gzip quality is out of range 1-9."""
+    with pytest.raises(ValueError, match='Gzip compression quality'):
+        _ConcreteHttpClient(compression_algorithm='gzip', compression_quality=10)
+
+    with pytest.raises(ValueError, match='Gzip compression quality'):
+        _ConcreteHttpClient(compression_algorithm='gzip', compression_quality=0)

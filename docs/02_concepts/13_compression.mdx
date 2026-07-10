@@ -8,10 +8,10 @@ The Apify client compresses every request body before sending it to the API. Thi
 
 ## How it works
 
-The client selects the compression algorithm automatically at startup, with no configuration required:
+The client compresses request bodies using the algorithm set by `compression_algorithm` (default `'brotli'`) at the quality level set by `compression_quality` (default `6`):
 
-1. If the [`brotli`](https://pypi.org/project/brotli/) package is installed, the client uses brotli compression at quality level 6 (out of a maximum of 11) and sends the `Content-Encoding: br` header. Quality 6 is a deliberate trade-off: it compresses better than gzip while keeping CPU overhead low compared to maximum-quality brotli.
-2. Otherwise, it falls back to gzip compression and sends the `Content-Encoding: gzip` header.
+- **`'brotli'` (default)**: Uses brotli compression (`Content-Encoding: br`) when the [`brotli`](https://pypi.org/project/brotli/) extra is installed. Falls back to gzip at the default level when the extra is not installed.
+- **`'gzip'`**: Always uses gzip compression (`Content-Encoding: gzip`) with the configured quality level, regardless of whether the brotli extra is installed.
 
 The server supports both algorithms and decompresses the request body transparently.
 
@@ -25,7 +25,27 @@ pip install "apify-client[brotli]"
 uv add "apify-client[brotli]"
 ```
 
-Once installed, the client detects it at startup and switches to brotli automatically. No code changes are needed. To revert to gzip, uninstall the extra.
+Once installed, the client detects it at startup and switches to brotli automatically. No code changes are needed.
+
+## Configuration
+
+Pass `compression_algorithm` and `compression_quality` to the client constructor to override the defaults:
+
+```python
+from apify_client import ApifyClient
+
+# Force gzip without uninstalling the brotli extra
+client = ApifyClient(token='MY-APIFY-TOKEN', compression_algorithm='gzip', compression_quality=9)
+
+# Use brotli at a lower quality for faster compression
+client = ApifyClient(token='MY-APIFY-TOKEN', compression_algorithm='brotli', compression_quality=4)
+```
+
+Valid quality ranges:
+- **Brotli**: `1–11` (higher = better compression, more CPU)
+- **Gzip**: `1–9` (higher = better compression, more CPU)
+
+The default quality of `6` for brotli is a deliberate trade-off: it compresses better than gzip defaults while keeping CPU overhead low compared to maximum-quality brotli.
 
 ## Comparison
 
@@ -35,6 +55,8 @@ Once installed, the client detects it at startup and switches to brotli automati
 | **CPU cost**                  | Moderate at quality 6                  | Low                             |
 | **Availability**              | Requires the `brotli` extra            | Built-in — no extra needed      |
 | **`Content-Encoding` header** | `br`                                   | `gzip`                          |
+| **Quality range**             | `1–11`                                 | `1–9`                           |
+| **Force via config**          | `compression_algorithm='brotli'`       | `compression_algorithm='gzip'`  |
 | **Best for**                  | Large payloads where bandwidth matters | Minimal-dependency environments |
 
 :::tip

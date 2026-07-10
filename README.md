@@ -56,7 +56,13 @@
     uv add "apify-client[brotli]"
     ```
 
-    Without this extra the client falls back to gzip automatically — no code changes needed.
+    Without this extra the client falls back to gzip automatically. You can also force gzip at runtime without uninstalling the extra:
+
+    ```python
+    client = ApifyClient(token='MY-APIFY-TOKEN', compression_algorithm='gzip', compression_quality=9)
+    ```
+
+    Both `compression_algorithm` (`'brotli'` or `'gzip'`) and `compression_quality` (brotli: `1–11`, gzip: `1–9`, default `6`) are configurable on the client constructor.
 
 - From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):
 

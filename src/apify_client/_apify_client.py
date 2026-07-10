@@ -7,6 +7,8 @@ from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
     API_VERSION,
     DEFAULT_API_URL,
+    DEFAULT_COMPRESSION_ALGORITHM,
+    DEFAULT_COMPRESSION_QUALITY,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
     DEFAULT_TIMEOUT_LONG,
@@ -78,6 +80,8 @@ from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClie
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client.types import CompressionAlgorithm
+
 
 @docs_group('Apify API clients')
 class ApifyClient:
@@ -122,6 +126,8 @@ class ApifyClient:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
+        compression_algorithm: CompressionAlgorithm = DEFAULT_COMPRESSION_ALGORITHM,
+        compression_quality: int = DEFAULT_COMPRESSION_QUALITY,
     ) -> None:
         """Initialize the Apify API client.
 
@@ -143,6 +149,11 @@ class ApifyClient:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
+            compression_algorithm: Algorithm used to compress request bodies. `'brotli'` (default) uses brotli
+                when the `brotli` extra is installed and falls back to gzip when unavailable. `'gzip'` always
+                uses gzip regardless of whether the extra is installed.
+            compression_quality: Compression quality level. Valid range is `1-11` for brotli and `1-9` for gzip.
+                Defaults to `6`.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -205,6 +216,8 @@ class ApifyClient:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
+        self._compression_algorithm = compression_algorithm
+        self._compression_quality = compression_quality
 
     @classmethod
     def with_custom_http_client(
@@ -270,6 +283,8 @@ class ApifyClient:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
+                compression_algorithm=self._compression_algorithm,
+                compression_quality=self._compression_quality,
             )
 
         return self._http_client
@@ -476,6 +491,8 @@ class ApifyClientAsync:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
+        compression_algorithm: CompressionAlgorithm = DEFAULT_COMPRESSION_ALGORITHM,
+        compression_quality: int = DEFAULT_COMPRESSION_QUALITY,
     ) -> None:
         """Initialize the Apify API client.
 
@@ -497,6 +514,11 @@ class ApifyClientAsync:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
+            compression_algorithm: Algorithm used to compress request bodies. `'brotli'` (default) uses brotli
+                when the `brotli` extra is installed and falls back to gzip when unavailable. `'gzip'` always
+                uses gzip regardless of whether the extra is installed.
+            compression_quality: Compression quality level. Valid range is `1-11` for brotli and `1-9` for gzip.
+                Defaults to `6`.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -559,6 +581,8 @@ class ApifyClientAsync:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
+        self._compression_algorithm = compression_algorithm
+        self._compression_quality = compression_quality
 
     @classmethod
     def with_custom_http_client(
@@ -624,6 +648,8 @@ class ApifyClientAsync:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
+                compression_algorithm=self._compression_algorithm,
+                compression_quality=self._compression_quality,
             )
         return self._http_client
 

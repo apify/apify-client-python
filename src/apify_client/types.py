@@ -11,6 +11,13 @@ from apify_client._typeddicts import (
     WebhookRepresentationDict,
 )
 
+CompressionAlgorithm = Literal['brotli', 'gzip']
+"""Compression algorithm for request bodies.
+
+`'brotli'` uses brotli when the `brotli` extra is installed, falling back to gzip when unavailable.
+`'gzip'` always uses gzip regardless of whether the brotli extra is installed.
+"""
+
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
 
@@ -42,6 +49,7 @@ Based on the definition discussed in https://github.com/python/typing/issues/182
 """
 
 __all__ = [
+    'CompressionAlgorithm',
     'JsonSerializable',
     'Timeout',
     'WebhooksList',

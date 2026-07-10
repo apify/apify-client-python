@@ -1479,8 +1479,8 @@ class KeyValueStoreStats(BaseModel):
     )
     read_count: Annotated[int, Field(examples=[9])]
     write_count: Annotated[int, Field(examples=[3])]
-    delete_count: Annotated[int, Field(examples=[6])]
-    list_count: Annotated[int, Field(examples=[2])]
+    delete_count: Annotated[int | None, Field(examples=[6])] = None
+    list_count: Annotated[int | None, Field(examples=[2])] = None
     s3_storage_bytes: Annotated[int | None, Field(examples=[18])] = None
     storage_bytes: Annotated[int | None, Field(examples=[457225])] = None
 
@@ -2883,7 +2883,7 @@ class RunOptions(BaseModel):
     timeout_secs: Annotated[int, Field(examples=[300], ge=0)]
     memory_mbytes: Annotated[int, Field(examples=[1024], ge=128, le=32768)]
     disk_mbytes: Annotated[int, Field(examples=[2048], ge=0)]
-    max_items: Annotated[int | None, Field(examples=[1000], ge=1)] = None
+    max_items: Annotated[int | None, Field(examples=[1000], ge=0)] = None
     max_total_charge_usd: Annotated[float | None, Field(examples=[5], ge=0.0)] = None
 
 
@@ -3303,7 +3303,7 @@ class StoreListActor(BaseModel):
     user_picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     stats: ActorStats
-    current_pricing_info: CurrentPricingInfo
+    current_pricing_info: CurrentPricingInfo | None = None
     is_white_listed_for_agentic_payments: bool | None = None
     """
     Whether the Actor is whitelisted for agentic payment processing.
@@ -3712,7 +3712,7 @@ class UserPrivateInfo(BaseModel):
     username: Annotated[str, Field(examples=['myusername'])]
     profile: Profile | None = None
     email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
-    proxy: Proxy
+    proxy: Proxy | None = None
     plan: Plan
     effective_platform_features: EffectivePlatformFeatures
     created_at: Annotated[AwareDatetime | None, Field(examples=['2022-11-29T14:48:29.381Z'])] = None
@@ -3831,7 +3831,7 @@ class Webhook(BaseModel):
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
     do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl, Field(examples=['http://example.com/'])]
+    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])]
     payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
     headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
     description: Annotated[str | None, Field(examples=['this is webhook description'])] = None

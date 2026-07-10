@@ -875,7 +875,7 @@ class Dataset(BaseModel):
         ),
     ] = None
     """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/actors/development/actor-definition/dataset-schema)
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/storage/dataset-schema)
     """
     console_url: Annotated[AnyUrl, Field(examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])]
     items_public_url: Annotated[

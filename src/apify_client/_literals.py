@@ -459,21 +459,6 @@ HttpMethod = (
 )
 
 
-<<<<<<< HEAD
-RunOrigin = Literal[
-    'DEVELOPMENT',
-    'WEB',
-    'API',
-    'SCHEDULER',
-    'TEST',
-    'WEBHOOK',
-    'ACTOR',
-    'CLI',
-    'CI',
-    'STANDBY',
-    'MCP',
-]
-=======
 RunOrigin = (
     Literal[
         'DEVELOPMENT',
@@ -490,7 +475,6 @@ RunOrigin = (
     ]
     | str
 )
->>>>>>> origin/master
 
 
 SourceCodeFileFormat = (

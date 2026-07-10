@@ -4,7 +4,7 @@ title: Request body compression
 description: The client compresses every request body automatically, using brotli when available or gzip as a fallback.
 ---
 
-The Apify client compresses every request body before sending it to the API. This reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage — especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+The Apify client compresses every request body before sending it to the API. This reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
 
@@ -25,7 +25,7 @@ pip install "apify-client[brotli]"
 uv add "apify-client[brotli]"
 ```
 
-Once installed, the client detects it at startup and switches to brotli automatically — no code changes needed. To revert to gzip, uninstall the extra.
+Once installed, the client detects it at startup and switches to brotli automatically. No code changes are needed. To revert to gzip, uninstall the extra.
 
 ## Comparison
 
@@ -38,5 +38,5 @@ Once installed, the client detects it at startup and switches to brotli automati
 | **Best for**                  | Large payloads where bandwidth matters | Minimal-dependency environments |
 
 :::tip
-For most workloads, the bandwidth savings from brotli outweigh the small CPU overhead. Install the `brotli` extra unless you are running in an environment where installing additional packages is not feasible.
+For most workloads, the bandwidth savings from brotli outweigh the small CPU overhead. Install the `brotli` extra unless you're running in an environment where installing additional packages isn't feasible.
 :::

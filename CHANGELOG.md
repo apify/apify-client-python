@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Relax constraints on generated models based on updated specification ([#936](https://github.com/apify/apify-client-python/pull/936)) ([a02247e](https://github.com/apify/apify-client-python/commit/a02247e817fd801c315d2848d3000af904deb95f)) by [@apify-service-account](https://github.com/apify-service-account)
+- Relax enum validation to tolerate unknown API values ([#941](https://github.com/apify/apify-client-python/pull/941)) ([587baa7](https://github.com/apify/apify-client-python/commit/587baa77e023d7ba925a7d4eecaff58da3b55237)) by [@vdusek](https://github.com/vdusek), closes [#931](https://github.com/apify/apify-client-python/issues/931)
 
 
 <!-- git-cliff-unreleased-end -->

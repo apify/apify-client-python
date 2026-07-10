@@ -170,6 +170,9 @@ indent-style = "space"
     "ERA001", # Commented-out code
     "TC003",  # Move standard library import into a type-checking block
 ]
+"src/apify_client/_literals.py" = [
+    "PYI051", # `Literal[...]` is redundant in a union with `str`; the open `Literal[...] | str` is deliberate — it keeps known members as hints while tolerating unknown API values (see scripts/postprocess_generated_models.py)
+]
 
 [tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"

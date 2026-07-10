@@ -3,8 +3,10 @@
 Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with discriminators on schemas
   referenced from array items).
-- Rewrite every `class X(StrEnum)` as `X = Literal[...]` so downstream code can pass plain strings
-  (and reuse the named alias in resource-client signatures) instead of enum members.
+- Rewrite every `class X(StrEnum)` as an open literal `X = Literal[...] | str` so downstream code can pass plain
+  strings (and reuse the named alias in resource-client signatures) instead of enum members. The trailing `| str`
+  keeps the known members as autocomplete hints while letting Pydantic validate any value the platform sends that
+  this (possibly older) client doesn't know about yet, instead of raising a `ValidationError` on the whole response.
 - Move the resulting `X = Literal[...]` definitions into `_literals.py`, leaving `_models.py` importing them — so
   consumers can depend on a dedicated literals module without pulling in every Pydantic model.
 - Add `@docs_group('Models')` to every model class (plus the required import).
@@ -112,12 +114,14 @@ def fix_discriminators(content: str) -> str:
 
 
 def convert_enums_to_literals(content: str) -> str:
-    """Rewrite every `class X(StrEnum): ...` into an `X = Literal[...]` alias.
+    """Rewrite every `class X(StrEnum): ...` into an open literal `X = Literal[...] | str` alias.
 
     Each member assignment (`NAME = 'value'`) contributes its string value to the literal in
-    declaration order. The class docstring, if present, is preserved as a trailing bare-string
-    docstring after the alias — matching the field-doc convention datamodel-codegen already uses
-    elsewhere in the generated file.
+    declaration order. The trailing `| str` widens the alias so unknown values (e.g. a new enum
+    member the platform introduces before this client is regenerated) still validate against the
+    Pydantic models, while the known members remain as autocomplete hints. The class docstring, if
+    present, is preserved as a trailing bare-string docstring after the alias — matching the
+    field-doc convention datamodel-codegen already uses elsewhere in the generated file.
 
     Runs before `add_docs_group_decorators`, so the enum classes have no `@docs_group` decorator
     to strip. The `from enum import StrEnum` import is left alone and removed by ruff's F401 fix.
@@ -146,7 +150,7 @@ def convert_enums_to_literals(content: str) -> str:
 
         new_lines: list[str] = [f'{node.name} = Literal[']
         new_lines.extend(f'    {v!r},' for v in values)
-        new_lines.append(']')
+        new_lines.append('] | str')
         if docstring is not None:
             if '\n' in docstring:
                 new_lines.append('"""')
@@ -179,15 +183,26 @@ from typing import Literal
 """
 
 
+def _is_literal_expr(value: ast.expr) -> bool:
+    """Return True if `value` is a bare `Literal[...]` or an open `Literal[...] | str` union."""
+    if isinstance(value, ast.Subscript) and isinstance(value.value, ast.Name) and value.value.id == 'Literal':
+        return True
+    return (
+        isinstance(value, ast.BinOp)
+        and isinstance(value.op, ast.BitOr)
+        and _is_literal_expr(value.left)
+        and isinstance(value.right, ast.Name)
+        and value.right.id == 'str'
+    )
+
+
 def _is_literal_alias(node: ast.stmt) -> bool:
-    """Return True if `node` is a top-level `Name = Literal[...]` statement."""
+    """Return True if `node` is a top-level `Name = Literal[...]` or `Name = Literal[...] | str` statement."""
     return (
         isinstance(node, ast.Assign)
         and len(node.targets) == 1
         and isinstance(node.targets[0], ast.Name)
-        and isinstance(node.value, ast.Subscript)
-        and isinstance(node.value.value, ast.Name)
-        and node.value.value.id == 'Literal'
+        and _is_literal_expr(node.value)
     )
 
 

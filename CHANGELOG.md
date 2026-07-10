@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.0.6 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Relax constraints on generated models based on updated specification ([#936](https://github.com/apify/apify-client-python/pull/936)) ([a02247e](https://github.com/apify/apify-client-python/commit/a02247e817fd801c315d2848d3000af904deb95f)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.0.5](https://github.com/apify/apify-client-python/releases/tag/v3.0.5) (2026-07-08)
 
 ### 🐛 Bug Fixes

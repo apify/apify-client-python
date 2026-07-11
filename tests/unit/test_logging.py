@@ -820,7 +820,7 @@ async def test_streamed_log_async_stop_flushes_buffered_tail(
     assert any(_TAIL_SECOND_MESSAGE in m for m in messages), f'Buffered tail dropped on async stop(). Got: {messages}'
 
 
-def test_streamed_log_sync_stop_does_not_hang_on_silent_stream(
+def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
     httpserver: HTTPServer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -857,7 +857,7 @@ def test_streamed_log_sync_stop_does_not_hang_on_silent_stream(
         stop_thread = threading.Thread(target=streamed_log.stop)
         stop_thread.start()
         stop_thread.join(timeout=5)
-        assert not stop_thread.is_alive(), 'stop() hangs when the underlying stream is silent'
+        assert not stop_thread.is_alive(), 'stop() did not unblock within the finite stream timeout'
     finally:
         release_server.set()
 
@@ -909,6 +909,9 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
 
     leaked = [args.exc_type.__name__ for args in thread_exceptions]
     assert not leaked, f'streaming thread leaked an uncaught exception: {leaked}'
+    # The timeout is expected, so it must be swallowed quietly, not funnelled through the generic error handler.
+    error_records = [r for r in caplog.records if r.levelno >= logging.ERROR and 'Log redirection stopped' in r.message]
+    assert not error_records, f'sync thread logged an error on stream timeout: {[r.message for r in error_records]}'
     # The line received before the timeout must still have been redirected.
     assert any('ACTOR: still running' in record.message for record in caplog.records)
 
@@ -990,7 +993,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
 
     assert not task.cancelled()
     assert task.exception() is None, f'async streaming task raised on stream timeout: {task.exception()!r}'
-    error_records = [record for record in caplog.records if record.levelno >= logging.ERROR]
+    error_records = [r for r in caplog.records if r.levelno >= logging.ERROR and 'Log redirection stopped' in r.message]
     assert not error_records, f'async task logged an error on stream timeout: {[r.message for r in error_records]}'
     # The line received before the timeout must still have been redirected.
     assert any('ACTOR: still running' in record.message for record in caplog.records)

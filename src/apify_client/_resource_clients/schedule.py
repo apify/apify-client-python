@@ -92,7 +92,7 @@ class ScheduleClient(ResourceClient):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions or None,  # ty: ignore[invalid-argument-type]
+            actions=actions or None,
             description=description,
             timezone=timezone,
             title=title,
@@ -209,7 +209,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
             name=name,
-            actions=actions or None,  # ty: ignore[invalid-argument-type]
+            actions=actions or None,
             description=description,
             timezone=timezone,
             title=title,

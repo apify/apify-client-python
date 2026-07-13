@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.6 - **not yet released**
+## [3.0.6](https://github.com/apify/apify-client-python/releases/tag/v3.0.6) (2026-07-13)
 
 ### 🐛 Bug Fixes
 
@@ -13,7 +12,6 @@ All notable changes to this project will be documented in this file.
 - Prevent Actor log-streaming thread from crashing on stream timeout ([#944](https://github.com/apify/apify-client-python/pull/944)) ([24dd614](https://github.com/apify/apify-client-python/commit/24dd614bd083a93735a12dccb4b7b1588e87f3ec)) by [@vdusek](https://github.com/vdusek), closes [#945](https://github.com/apify/apify-client-python/issues/945)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.5](https://github.com/apify/apify-client-python/releases/tag/v3.0.5) (2026-07-08)
 
 ### 🐛 Bug Fixes

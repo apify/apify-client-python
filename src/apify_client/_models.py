@@ -544,7 +544,7 @@ class BuildStats(BaseModel):
     )
     duration_millis: Annotated[int | None, Field(examples=[1000])] = None
     run_time_secs: Annotated[float | None, Field(examples=[45.718])] = None
-    compute_units: Annotated[float, Field(examples=[0.0126994444444444])]
+    compute_units: Annotated[float | None, Field(examples=[0.0126994444444444])] = None
     image_size_bytes: Annotated[int | None, Field(examples=[975770223])] = None
 
 
@@ -1021,14 +1021,13 @@ class Datasets(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    __annotations__ = {
+        '__pydantic_extra__': dict[str, str],
+    }
     default: Annotated[str | None, Field(examples=['wmKPijuyDnPZAPRMk'])] = None
     """
     ID of the default dataset for this run.
     """
-
-
-Datasets.__annotations__['__pydantic_extra__'] = dict[str, str]
-Datasets.model_rebuild(force=True)
 
 
 @docs_group('Models')
@@ -1477,8 +1476,8 @@ class KeyValueStoreStats(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    read_count: Annotated[int, Field(examples=[9])]
-    write_count: Annotated[int, Field(examples=[3])]
+    read_count: Annotated[int | None, Field(examples=[9])] = None
+    write_count: Annotated[int | None, Field(examples=[3])] = None
     delete_count: Annotated[int | None, Field(examples=[6])] = None
     list_count: Annotated[int | None, Field(examples=[2])] = None
     s3_storage_bytes: Annotated[int | None, Field(examples=[18])] = None
@@ -1494,14 +1493,13 @@ class KeyValueStores(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    __annotations__ = {
+        '__pydantic_extra__': dict[str, str],
+    }
     default: Annotated[str | None, Field(examples=['eJNzqsbPiopwJcgGQ'])] = None
     """
     ID of the default key-value store for this run.
     """
-
-
-KeyValueStores.__annotations__['__pydantic_extra__'] = dict[str, str]
-KeyValueStores.model_rebuild(force=True)
 
 
 @docs_group('Models')
@@ -2648,14 +2646,13 @@ class RequestQueues(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    __annotations__ = {
+        '__pydantic_extra__': dict[str, str],
+    }
     default: Annotated[str | None, Field(examples=['FL35cSF7jrxr3BY39'])] = None
     """
     ID of the default request queue for this run.
     """
-
-
-RequestQueues.__annotations__['__pydantic_extra__'] = dict[str, str]
-RequestQueues.model_rebuild(force=True)
 
 
 @docs_group('Models')
@@ -2933,8 +2930,8 @@ class RunStats(BaseModel):
     input_body_len: Annotated[int | None, Field(examples=[240], ge=0)] = None
     migration_count: Annotated[int | None, Field(examples=[0], ge=0)] = None
     reboot_count: Annotated[int | None, Field(examples=[0], ge=0)] = None
-    restart_count: Annotated[int, Field(examples=[0], ge=0)]
-    resurrect_count: Annotated[int, Field(examples=[2], ge=0)]
+    restart_count: Annotated[int | None, Field(examples=[0], ge=0)] = None
+    resurrect_count: Annotated[int | None, Field(examples=[2], ge=0)] = None
     mem_avg_bytes: Annotated[float | None, Field(examples=[267874071.9])] = None
     mem_max_bytes: Annotated[int | None, Field(examples=[404713472], ge=0)] = None
     mem_current_bytes: Annotated[int | None, Field(examples=[0], ge=0)] = None
@@ -2946,7 +2943,7 @@ class RunStats(BaseModel):
     duration_millis: Annotated[int | None, Field(examples=[248472], ge=0)] = None
     run_time_secs: Annotated[float | None, Field(examples=[248.472], ge=0.0)] = None
     metamorph: Annotated[int | None, Field(examples=[0], ge=0)] = None
-    compute_units: Annotated[float, Field(examples=[0.13804], ge=0.0)]
+    compute_units: Annotated[float | None, Field(examples=[0.13804], ge=0.0)] = None
 
 
 @docs_group('Models')
@@ -3997,7 +3994,7 @@ class WebhookStats(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    total_dispatches: Annotated[int, Field(examples=[1])]
+    total_dispatches: Annotated[int | None, Field(examples=[1])] = None
 
 
 @docs_group('Models')

@@ -15,7 +15,7 @@ from werkzeug import Request, Response
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import RedirectLogFormatter
 from apify_client._status_message_watcher import StatusMessageWatcherBase
-from apify_client._streamed_log import StreamedLog, StreamedLogBase
+from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -820,13 +820,13 @@ async def test_streamed_log_async_stop_flushes_buffered_tail(
     assert any(_TAIL_SECOND_MESSAGE in m for m in messages), f'Buffered tail dropped on async stop(). Got: {messages}'
 
 
-def test_streamed_log_sync_stop_does_not_hang_on_silent_stream(
+def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
     httpserver: HTTPServer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify `stop()` returns promptly even when the underlying stream is silent (no chunks)."""
-    # Shorten the read timeout so the test doesn't wait for the production default.
-    monkeypatch.setattr(StreamedLog, '_read_timeout', timedelta(seconds=1))
+    """A finite `_stream_timeout` bounds how long `stop()` waits on a silent stream, since the blocking read cannot
+    otherwise be interrupted (the production default is `no_timeout`, so the test configures a short finite one)."""
+    monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
 
     release_server = threading.Event()
 
@@ -857,6 +857,143 @@ def test_streamed_log_sync_stop_does_not_hang_on_silent_stream(
         stop_thread = threading.Thread(target=streamed_log.stop)
         stop_thread.start()
         stop_thread.join(timeout=5)
-        assert not stop_thread.is_alive(), 'stop() hangs when the underlying stream is silent'
+        assert not stop_thread.is_alive(), 'stop() did not unblock within the finite stream timeout'
     finally:
         release_server.set()
+
+
+@pytest.mark.usefixtures('propagate_stream_logs')
+def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The streaming thread ends quietly when the log-stream request hits its total timeout (regression #1040)."""
+    # impit enforces a whole-request timeout, so a still-running Actor whose run outlives the timeout makes
+    # `iter_bytes()` raise `impit.TimeoutException`. Shorten the timeout to trigger this quickly.
+    monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
+
+    release_server = threading.Event()
+
+    def _slow_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            # Emit one complete line, then keep the connection open (as a running Actor would) past the
+            # client-side total timeout without sending anything more.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_slow_handler)
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = run_client.get_streamed_log()
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+
+    thread_exceptions: list[threading.ExceptHookArgs] = []
+    monkeypatch.setattr(threading, 'excepthook', thread_exceptions.append)
+
+    try:
+        with caplog.at_level(logging.DEBUG, logger=logger_name):
+            thread = streamed_log.start()
+            # Wait past the 1s total timeout so the streaming request fails inside the thread.
+            thread.join(timeout=5)
+            assert not thread.is_alive(), 'streaming thread did not end after the stream timed out'
+    finally:
+        release_server.set()
+        streamed_log.stop()
+
+    leaked = [args.exc_type.__name__ for args in thread_exceptions]
+    assert not leaked, f'streaming thread leaked an uncaught exception: {leaked}'
+    # The timeout is expected, so it must be swallowed quietly, not funnelled through the generic error handler.
+    error_records = [r for r in caplog.records if r.levelno >= logging.ERROR and 'Log redirection stopped' in r.message]
+    assert not error_records, f'sync thread logged an error on stream timeout: {[r.message for r in error_records]}'
+    # The line received before the timeout must still have been redirected.
+    assert any('ACTOR: still running' in record.message for record in caplog.records)
+
+
+@pytest.mark.usefixtures('propagate_stream_logs')
+def test_streamed_log_sync_requests_stream_with_no_timeout(
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The log stream is requested with `no_timeout`, so a long run is not truncated mid-stream (#1040)."""
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_data(b'2025-05-13T07:24:12.588Z ACTOR: done\n', content_type='application/octet-stream')
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+
+    # Capture the timeout the log stream is requested with. impit applies it to the whole request (body included),
+    # so anything but `no_timeout` would cut a long run off mid-stream, which is the root cause of #1040.
+    log_stream_timeouts: list[object] = []
+    original_call = run_client._http_client.call
+
+    def _recording_call(**kwargs: object) -> object:
+        if str(kwargs.get('url', '')).endswith('/log'):
+            log_stream_timeouts.append(kwargs.get('timeout'))
+        return original_call(**kwargs)
+
+    monkeypatch.setattr(run_client._http_client, 'call', _recording_call)
+
+    streamed_log = run_client.get_streamed_log()
+    thread = streamed_log.start()
+    thread.join(timeout=5)
+    streamed_log.stop()
+
+    assert log_stream_timeouts == ['no_timeout'], (
+        f'log stream requested with timeout={log_stream_timeouts}, expected no_timeout so long runs are not truncated'
+    )
+
+
+@pytest.mark.usefixtures('propagate_stream_logs')
+async def test_streamed_log_async_does_not_error_on_stream_timeout(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The async streaming task ends quietly on a stream-request timeout, matching the sync regression for #1040."""
+    monkeypatch.setattr(StreamedLogAsync, '_stream_timeout', timedelta(seconds=1))
+
+    release_server = threading.Event()
+
+    def _slow_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            # Emit one complete line, then keep the connection open past the client-side total timeout.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_slow_handler)
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = await run_client.get_streamed_log()
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME}-{_MOCKED_RUN_ID}'
+
+    try:
+        with caplog.at_level(logging.DEBUG, logger=logger_name):
+            task = streamed_log.start()
+            # The 1s total timeout fails the request inside the task; it must end on its own without our help.
+            done, _pending = await asyncio.wait({task}, timeout=5)
+            assert task in done, 'async streaming task did not end after the stream timed out'
+    finally:
+        release_server.set()
+        await streamed_log.stop()
+
+    assert not task.cancelled()
+    assert task.exception() is None, f'async streaming task raised on stream timeout: {task.exception()!r}'
+    error_records = [r for r in caplog.records if r.levelno >= logging.ERROR and 'Log redirection stopped' in r.message]
+    assert not error_records, f'async task logged an error on stream timeout: {[r.message for r in error_records]}'
+    # The line received before the timeout must still have been redirected.
+    assert any('ACTOR: still running' in record.message for record in caplog.records)

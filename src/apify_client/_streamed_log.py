@@ -5,9 +5,11 @@ import logging
 import re
 import threading
 from asyncio import Task
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from threading import Thread
 from typing import TYPE_CHECKING, ClassVar, Self, cast
+
+import impit
 
 from apify_client._docs import docs_group
 
@@ -15,13 +17,22 @@ if TYPE_CHECKING:
     from types import TracebackType
 
     from apify_client._resource_clients import LogClient, LogClientAsync
+    from apify_client.types import Timeout
 
 
 class StreamedLogBase:
     """Base class for streaming and buffering chunked Actor run logs."""
 
-    # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
     _force_propagate = False
+    """Test related flag to enable propagation of logs to the `caplog` fixture during tests."""
+
+    _stream_timeout: ClassVar[Timeout] = 'no_timeout'
+    """Timeout for the log-stream long-poll request, which stays open for the whole Actor run.
+
+    impit applies its `timeout` to the whole request including the streamed body, so any bounded value truncates a
+    longer run mid-stream and raises `impit.TimeoutException` (#1040). `no_timeout` maps to impit's ~24h cap, which
+    is effectively unbounded for real runs and mirrors the JS client.
+    """
 
     def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
         if self._force_propagate:
@@ -90,10 +101,6 @@ class StreamedLog(StreamedLogBase):
     call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
     """
 
-    # Caps how long `iter_bytes()` can block on a silent stream so `stop()` can unblock within
-    # this window instead of waiting for the long-polling default.
-    _read_timeout: ClassVar[timedelta] = timedelta(seconds=30)
-
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         """Initialize `StreamedLog`.
 
@@ -117,7 +124,8 @@ class StreamedLog(StreamedLogBase):
         if self._streaming_thread:
             raise RuntimeError('Streaming thread already active')
         self._stop_logging = False
-        self._streaming_thread = threading.Thread(target=self._stream_log)
+        # A daemon thread so a stream still blocked on a read can never hold up interpreter shutdown.
+        self._streaming_thread = threading.Thread(target=self._stream_log, daemon=True)
         self._streaming_thread.start()
         return self._streaming_thread
 
@@ -142,17 +150,25 @@ class StreamedLog(StreamedLogBase):
         self.stop()
 
     def _stream_log(self) -> None:
-        with self._log_client.stream(raw=True, timeout=self._read_timeout) as log_stream:
-            if not log_stream:
-                return
-            try:
-                for data in log_stream.iter_bytes():
-                    self._process_new_data(data)
-                    if self._stop_logging:
-                        break
-            finally:
-                # Flush the last buffered part even if the read timed out or was stopped.
-                self._log_buffer_content(include_last_part=True)
+        try:
+            with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
+                if not log_stream:
+                    return
+                try:
+                    for data in log_stream.iter_bytes():
+                        self._process_new_data(data)
+                        if self._stop_logging:
+                            break
+                finally:
+                    # Flush the last buffered part even if the read timed out or was stopped.
+                    self._log_buffer_content(include_last_part=True)
+        except impit.TimeoutException:
+            # With `no_timeout` this fires only if the run outlives impit's ~24h cap or the connection stalls.
+            # The stream cannot continue, so warn and let the thread end instead of leaking a traceback (#1040).
+            self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
+        except Exception:
+            # Any other failure in log redirection must not escape the background thread; log it instead.
+            self._to_logger.exception('Log redirection stopped due to unexpected error:')
 
 
 @docs_group('Other')
@@ -216,7 +232,7 @@ class StreamedLogAsync(StreamedLogBase):
 
     async def _stream_log(self) -> None:
         try:
-            async with self._log_client.stream(raw=True) as log_stream:
+            async with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
                 if not log_stream:
                     return
                 try:
@@ -225,6 +241,10 @@ class StreamedLogAsync(StreamedLogBase):
                 finally:
                     # Flush the last buffered part even if the task is cancelled by `stop()`.
                     self._log_buffer_content(include_last_part=True)
+        except impit.TimeoutException:
+            # As in `StreamedLog._stream_log`, impit's whole-request timeout on the long-lived stream is an
+            # expected terminal condition, not an error, so log a warning and end the task instead of a traceback.
+            self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
         except Exception:
             # Exception in log redirection should not propagate further.
             self._to_logger.exception('Log redirection stopped due to unexpected error:')

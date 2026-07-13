@@ -23,15 +23,16 @@ if TYPE_CHECKING:
 class StreamedLogBase:
     """Base class for streaming and buffering chunked Actor run logs."""
 
-    # Test related flag to enable propagation of logs to the `caplog` fixture during tests.
     _force_propagate = False
+    """Test related flag to enable propagation of logs to the `caplog` fixture during tests."""
 
-    # The log stream is a long-poll request that should stay open for the whole Actor run; the server ends it
-    # with EOF once the run finishes. impit applies its `timeout` to the whole request (streamed body included),
-    # so any bounded value truncates a longer run mid-stream, which raised `impit.TimeoutException` here (#1040).
-    # `no_timeout` is the only tier above `DEFAULT_TIMEOUT_MAX`; it maps to impit's ~24h cap, which is effectively
-    # unbounded for real runs and mirrors the JS client, which sets no body timeout on its log stream.
     _stream_timeout: ClassVar[Timeout] = 'no_timeout'
+    """Timeout for the log-stream long-poll request, which stays open for the whole Actor run.
+
+    impit applies its `timeout` to the whole request including the streamed body, so any bounded value truncates a
+    longer run mid-stream and raises `impit.TimeoutException` (#1040). `no_timeout` maps to impit's ~24h cap, which
+    is effectively unbounded for real runs and mirrors the JS client.
+    """
 
     def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
         if self._force_propagate:
@@ -162,10 +163,9 @@ class StreamedLog(StreamedLogBase):
                     # Flush the last buffered part even if the read timed out or was stopped.
                     self._log_buffer_content(include_last_part=True)
         except impit.TimeoutException:
-            # With `no_timeout` the stream is bounded only by impit's ~24h whole-request cap, so this fires only
-            # if the run outlives that cap or the connection stalls. The stream cannot continue either way, so the
-            # thread ends quietly rather than surfacing a traceback via `threading.excepthook` (#1040).
-            pass
+            # With `no_timeout` this fires only if the run outlives impit's ~24h cap or the connection stalls.
+            # The stream cannot continue, so warn and let the thread end instead of leaking a traceback (#1040).
+            self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
         except Exception:
             # Any other failure in log redirection must not escape the background thread; log it instead.
             self._to_logger.exception('Log redirection stopped due to unexpected error:')
@@ -243,8 +243,8 @@ class StreamedLogAsync(StreamedLogBase):
                     self._log_buffer_content(include_last_part=True)
         except impit.TimeoutException:
             # As in `StreamedLog._stream_log`, impit's whole-request timeout on the long-lived stream is an
-            # expected terminal condition, not an error, so end the task quietly instead of logging a traceback.
-            pass
+            # expected terminal condition, not an error, so log a warning and end the task instead of a traceback.
+            self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
         except Exception:
             # Exception in log redirection should not propagate further.
             self._to_logger.exception('Log redirection stopped due to unexpected error:')

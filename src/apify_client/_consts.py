@@ -3,7 +3,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 DEFAULT_API_URL = 'https://api.apify.com'
-"""Default base URL for the Apify API."""
+"""Default base URL for the Apify API. Overridable via the `APIFY_API_BASE_URL` environment variable."""
+
+DEFAULT_API_PUBLIC_URL = DEFAULT_API_URL
+"""Default globally accessible base URL for the Apify API.
+
+Overridable via the `APIFY_API_PUBLIC_BASE_URL` environment variable.
+"""
 
 API_VERSION = 'v2'
 """Current Apify API version."""

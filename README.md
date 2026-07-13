@@ -169,6 +169,23 @@ client = ApifyClient(
 )
 ```
 
+### Point the client at a different API server
+
+```python
+from apify_client import ApifyClient
+
+client = ApifyClient(
+    token='MY-APIFY-TOKEN',
+    api_url='http://localhost:8080',
+)
+```
+
+`api_url` and `api_public_url` also fall back to the `APIFY_API_BASE_URL` and `APIFY_API_PUBLIC_BASE_URL`
+environment variables (in that precedence order: explicit argument > environment variable > the
+`https://api.apify.com` default) — handy for pointing the client at a local or staging instance of the
+Apify platform without changing code. The two variables are independent, so setting one does not affect
+the default of the other.
+
 For end-to-end recipes — passing input, managing tasks for reusable input, retrieving and merging Actor data, integrating with Pandas, plugging in a custom HTTP client — see the [Guides](https://docs.apify.com/api/client/python/docs/guides/passing-input-to-actor).
 
 ## Documentation

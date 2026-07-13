@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import io
 import json
+import os
 import string
 import time
 import warnings
@@ -256,6 +257,23 @@ def create_storage_content_signature(
 
     base64url_encoded_payload = urlsafe_b64encode(f'{version}.{expires_at}.{hmac_sig}'.encode())
     return base64url_encoded_payload.decode('utf-8')
+
+
+def resolve_base_url(explicit_url: str | None, env_var_name: str, default_url: str) -> str:
+    """Resolve a base URL using the explicit-argument > environment-variable > default precedence.
+
+    Args:
+        explicit_url: The value explicitly passed by the caller, if any. Wins over everything else when not `None`.
+        env_var_name: The name of the environment variable to fall back to when `explicit_url` is `None`.
+        default_url: The value to fall back to when neither `explicit_url` nor the environment variable is set.
+
+    Returns:
+        The resolved base URL.
+    """
+    if explicit_url is not None:
+        return explicit_url
+
+    return os.environ.get(env_var_name) or default_url
 
 
 def check_custom_headers(class_name: str, headers: dict[str, str]) -> None:

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
     API_VERSION,
+    DEFAULT_API_PUBLIC_URL,
     DEFAULT_API_URL,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
@@ -72,7 +73,7 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
-from apify_client._utils import check_custom_headers
+from apify_client._utils import check_custom_headers, resolve_base_url
 from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
@@ -113,8 +114,8 @@ class ApifyClient:
         self,
         token: str | None = None,
         *,
-        api_url: str = DEFAULT_API_URL,
-        api_public_url: str | None = DEFAULT_API_URL,
+        api_url: str | None = None,
+        api_public_url: str | None = None,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
@@ -130,11 +131,12 @@ class ApifyClient:
         Args:
             token: The Apify API token. You can find your token on the
                 [Integrations](https://console.apify.com/account/integrations) page in the Apify Console.
-            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com. It can
-                be an internal URL that is not globally accessible, in which case `api_public_url` should be set
-                as well.
+            api_url: The URL of the Apify API server to connect to. Defaults to the `APIFY_API_BASE_URL`
+                environment variable if set, otherwise https://api.apify.com. It can be an internal URL that is
+                not globally accessible, in which case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
-                is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
+                is an internal URL that is not globally accessible. Defaults to the `APIFY_API_PUBLIC_BASE_URL`
+                environment variable if set, otherwise https://api.apify.com.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
@@ -144,9 +146,10 @@ class ApifyClient:
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
         """
-        # We need to do this because of mocking in tests and default mutable arguments.
-        api_url = DEFAULT_API_URL if api_url is None else api_url
-        api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+        # Resolve as explicit argument > environment variable > default, so an unset env var still yields the
+        # production default while an explicitly passed value always wins.
+        api_url = resolve_base_url(api_url, 'APIFY_API_BASE_URL', DEFAULT_API_URL)
+        api_public_url = resolve_base_url(api_public_url, 'APIFY_API_PUBLIC_BASE_URL', DEFAULT_API_PUBLIC_URL)
 
         if headers:
             check_custom_headers(self.__class__.__name__, headers)
@@ -211,8 +214,8 @@ class ApifyClient:
         cls,
         token: str | None = None,
         *,
-        api_url: str = DEFAULT_API_URL,
-        api_public_url: str | None = DEFAULT_API_URL,
+        api_url: str | None = None,
+        api_public_url: str | None = None,
         http_client: HttpClient,
     ) -> ApifyClient:
         """Create an `ApifyClient` instance with a custom HTTP client.
@@ -239,8 +242,10 @@ class ApifyClient:
 
         Args:
             token: The Apify API token.
-            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
-            api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
+            api_url: The URL of the Apify API server to connect to. Defaults to the `APIFY_API_BASE_URL`
+                environment variable if set, otherwise https://api.apify.com.
+            api_public_url: The globally accessible URL of the Apify API server. Defaults to the
+                `APIFY_API_PUBLIC_BASE_URL` environment variable if set, otherwise https://api.apify.com.
             http_client: A custom HTTP client instance extending `HttpClient`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
@@ -467,8 +472,8 @@ class ApifyClientAsync:
         self,
         token: str | None = None,
         *,
-        api_url: str = DEFAULT_API_URL,
-        api_public_url: str | None = DEFAULT_API_URL,
+        api_url: str | None = None,
+        api_public_url: str | None = None,
         max_retries: int = DEFAULT_MAX_RETRIES,
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         timeout_short: timedelta = DEFAULT_TIMEOUT_SHORT,
@@ -484,11 +489,12 @@ class ApifyClientAsync:
         Args:
             token: The Apify API token. You can find your token on the
                 [Integrations](https://console.apify.com/account/integrations) page in the Apify Console.
-            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com. It can
-                be an internal URL that is not globally accessible, in which case `api_public_url` should be set
-                as well.
+            api_url: The URL of the Apify API server to connect to. Defaults to the `APIFY_API_BASE_URL`
+                environment variable if set, otherwise https://api.apify.com. It can be an internal URL that is
+                not globally accessible, in which case `api_public_url` should be set as well.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
-                is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
+                is an internal URL that is not globally accessible. Defaults to the `APIFY_API_PUBLIC_BASE_URL`
+                environment variable if set, otherwise https://api.apify.com.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
@@ -498,9 +504,10 @@ class ApifyClientAsync:
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
         """
-        # We need to do this because of mocking in tests and default mutable arguments.
-        api_url = DEFAULT_API_URL if api_url is None else api_url
-        api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
+        # Resolve as explicit argument > environment variable > default, so an unset env var still yields the
+        # production default while an explicitly passed value always wins.
+        api_url = resolve_base_url(api_url, 'APIFY_API_BASE_URL', DEFAULT_API_URL)
+        api_public_url = resolve_base_url(api_public_url, 'APIFY_API_PUBLIC_BASE_URL', DEFAULT_API_PUBLIC_URL)
 
         if headers:
             check_custom_headers(self.__class__.__name__, headers)
@@ -565,8 +572,8 @@ class ApifyClientAsync:
         cls,
         token: str | None = None,
         *,
-        api_url: str = DEFAULT_API_URL,
-        api_public_url: str | None = DEFAULT_API_URL,
+        api_url: str | None = None,
+        api_public_url: str | None = None,
         http_client: HttpClientAsync,
     ) -> ApifyClientAsync:
         """Create an `ApifyClientAsync` instance with a custom HTTP client.
@@ -593,8 +600,10 @@ class ApifyClientAsync:
 
         Args:
             token: The Apify API token.
-            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
-            api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
+            api_url: The URL of the Apify API server to connect to. Defaults to the `APIFY_API_BASE_URL`
+                environment variable if set, otherwise https://api.apify.com.
+            api_public_url: The globally accessible URL of the Apify API server. Defaults to the
+                `APIFY_API_PUBLIC_BASE_URL` environment variable if set, otherwise https://api.apify.com.
             http_client: A custom HTTP client instance extending `HttpClientAsync`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)

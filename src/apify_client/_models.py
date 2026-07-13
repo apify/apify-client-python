@@ -1021,14 +1021,13 @@ class Datasets(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    __annotations__ = {
+        '__pydantic_extra__': dict[str, str],
+    }
     default: Annotated[str | None, Field(examples=['wmKPijuyDnPZAPRMk'])] = None
     """
     ID of the default dataset for this run.
     """
-
-
-Datasets.__annotations__['__pydantic_extra__'] = dict[str, str]
-Datasets.model_rebuild(force=True)
 
 
 @docs_group('Models')
@@ -1477,8 +1476,8 @@ class KeyValueStoreStats(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    read_count: Annotated[int, Field(examples=[9])]
-    write_count: Annotated[int, Field(examples=[3])]
+    read_count: Annotated[int | None, Field(examples=[9])] = None
+    write_count: Annotated[int | None, Field(examples=[3])] = None
     delete_count: Annotated[int | None, Field(examples=[6])] = None
     list_count: Annotated[int | None, Field(examples=[2])] = None
     s3_storage_bytes: Annotated[int | None, Field(examples=[18])] = None
@@ -1494,14 +1493,13 @@ class KeyValueStores(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    __annotations__ = {
+        '__pydantic_extra__': dict[str, str],
+    }
     default: Annotated[str | None, Field(examples=['eJNzqsbPiopwJcgGQ'])] = None
     """
     ID of the default key-value store for this run.
     """
-
-
-KeyValueStores.__annotations__['__pydantic_extra__'] = dict[str, str]
-KeyValueStores.model_rebuild(force=True)
 
 
 @docs_group('Models')
@@ -2648,14 +2646,13 @@ class RequestQueues(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    __annotations__ = {
+        '__pydantic_extra__': dict[str, str],
+    }
     default: Annotated[str | None, Field(examples=['FL35cSF7jrxr3BY39'])] = None
     """
     ID of the default request queue for this run.
     """
-
-
-RequestQueues.__annotations__['__pydantic_extra__'] = dict[str, str]
-RequestQueues.model_rebuild(force=True)
 
 
 @docs_group('Models')

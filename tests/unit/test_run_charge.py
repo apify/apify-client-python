@@ -29,10 +29,20 @@ def _decode_body(request: Request) -> dict:
     return json.loads(raw)
 
 
-@pytest.mark.parametrize('compression', ['gzip', 'brotli'])
+@pytest.mark.parametrize(
+    'compression',
+    [
+        pytest.param('gzip', id='gzip'),
+        pytest.param('brotli', id='brotli'),
+    ],
+)
 @pytest.mark.parametrize(
     'count',
-    [0, 1, 5],
+    [
+        pytest.param(0, id='zero'),
+        pytest.param(1, id='one'),
+        pytest.param(5, id='five'),
+    ],
 )
 def test_run_charge_preserves_count_sync(
     httpserver: HTTPServer,
@@ -58,10 +68,20 @@ def test_run_charge_preserves_count_sync(
     assert body['count'] == count
 
 
-@pytest.mark.parametrize('compression', ['gzip', 'brotli'])
+@pytest.mark.parametrize(
+    'compression',
+    [
+        pytest.param('gzip', id='gzip'),
+        pytest.param('brotli', id='brotli'),
+    ],
+)
 @pytest.mark.parametrize(
     'count',
-    [0, 1, 5],
+    [
+        pytest.param(0, id='zero'),
+        pytest.param(1, id='one'),
+        pytest.param(5, id='five'),
+    ],
 )
 async def test_run_charge_preserves_count_async(
     httpserver: HTTPServer,

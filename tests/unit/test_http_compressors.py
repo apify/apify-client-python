@@ -48,26 +48,51 @@ def _brotli_unavailable() -> Iterator[None]:
         sys.modules.update(saved)
 
 
-@pytest.mark.parametrize('quality', [1, 9])
+@pytest.mark.parametrize(
+    'quality',
+    [
+        pytest.param(1, id='fastest'),
+        pytest.param(9, id='best'),
+    ],
+)
 def test_gzip_compressor_round_trips_at_quality(quality: int) -> None:
     """Gzip compressor round-trips data at the boundary quality levels."""
     assert gzip.decompress(GzipHttpCompressor(quality=quality).compress(b'payload')) == b'payload'
 
 
-@pytest.mark.parametrize('quality', [0, 11])
+@pytest.mark.parametrize(
+    'quality',
+    [
+        pytest.param(0, id='fastest'),
+        pytest.param(11, id='best'),
+    ],
+)
 def test_brotli_compressor_round_trips_at_quality(quality: int) -> None:
     """Brotli compressor round-trips data at the boundary quality levels."""
     assert brotli.decompress(BrotliHttpCompressor(quality=quality).compress(b'payload')) == b'payload'
 
 
-@pytest.mark.parametrize('quality', [0, 10, -1])
+@pytest.mark.parametrize(
+    'quality',
+    [
+        pytest.param(0, id='below minimum'),
+        pytest.param(10, id='above maximum'),
+        pytest.param(-1, id='negative'),
+    ],
+)
 def test_gzip_compressor_rejects_out_of_range_quality(quality: int) -> None:
     """Gzip compressor raises `ValueError` at construction for a quality not between `1` and `9`."""
     with pytest.raises(ValueError, match='gzip quality must be between 1 and 9'):
         GzipHttpCompressor(quality=quality)
 
 
-@pytest.mark.parametrize('quality', [-1, 12])
+@pytest.mark.parametrize(
+    'quality',
+    [
+        pytest.param(-1, id='negative'),
+        pytest.param(12, id='above maximum'),
+    ],
+)
 def test_brotli_compressor_rejects_out_of_range_quality(quality: int) -> None:
     """Brotli compressor raises `ValueError` at construction for a quality not between `0` and `11`."""
     with pytest.raises(ValueError, match='brotli quality must be between 0 and 11'):

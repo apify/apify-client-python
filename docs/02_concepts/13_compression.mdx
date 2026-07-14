@@ -34,7 +34,7 @@ pip install "apify-client[brotli]"
 uv add "apify-client[brotli]"
 ```
 
-Then pass `encoding='brotli'` to the client constructor. If you request brotli without installing the extra, the client raises a clear `ImportError` immediately — there is no silent fallback.
+Then pass `encoding='brotli'` to the client constructor. If you request brotli without installing the extra, the client raises a clear `ImportError`. There is no silent fallback.
 
 ## Custom quality and advanced control
 
@@ -83,7 +83,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', encoding=IdentityCompressor())
 |-------------------------------|-----------------------------------------|---------------------------------|
 | **Compression ratio**         | Typically better than gzip              | Good                            |
 | **CPU cost**                  | Moderate, depends on quality            | Low                             |
-| **Availability**              | Requires the `brotli` extra             | Built-in — no extra needed      |
+| **Availability**              | Requires the `brotli` extra             | Built-in, no extra needed       |
 | **`Content-Encoding` header** | `br`                                    | `gzip`                          |
 | **Quality range**             | `0–11`                                  | `1–9`                           |
 | **Default quality**           | `6`                                     | `9`                             |

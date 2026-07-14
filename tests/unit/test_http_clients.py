@@ -270,7 +270,7 @@ def test_is_retryable_error() -> None:
     ]
 )
 def compressor_case(request: pytest.FixtureRequest) -> tuple:
-    return request.param  # type: ignore[return-value]
+    return request.param
 
 
 def test_prepare_request_call_basic() -> None:
@@ -390,6 +390,18 @@ def test_prepare_request_call_with_bytes_data(compressor_case: tuple) -> None:
     assert headers['Content-Encoding'] == content_encoding
     assert isinstance(data, bytes)
     assert decompress(data) == b'test bytes'
+
+
+def test_prepare_request_call_with_bytearray_data(compressor_case: tuple) -> None:
+    """Test _prepare_request_call with bytearray data (regression: must compress without error)."""
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(compressor=compressor)
+
+    headers, _params, data = client._prepare_request_call(data=bytearray(b'test bytearray'))
+
+    assert headers['Content-Encoding'] == content_encoding
+    assert isinstance(data, bytes)
+    assert decompress(data) == b'test bytearray'
 
 
 def test_prepare_request_call_json_and_data_error() -> None:

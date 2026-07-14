@@ -48,27 +48,13 @@
 
     or any other Python package manager that consumes PyPI.
 
-    The client compresses request bodies with gzip by default (no extra dependencies required). To opt in to brotli
-    (better compression ratio), install the optional extra and pass `encoding='brotli'`:
+    The client compresses request bodies with `gzip` by default (no extra dependencies required). To opt in to
+    `brotli` (better compression ratio), install the optional extra and pass `compression='brotli'`:
 
     ```bash
     pip install "apify-client[brotli]"
     # or
     uv add "apify-client[brotli]"
-    ```
-
-    ```python
-    client = ApifyClient(token='MY-APIFY-TOKEN', encoding='brotli')
-    ```
-
-    For fine-grained control over compression quality, inject a compressor instance directly:
-
-    ```python
-    from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor
-
-    client = ApifyClient(token='MY-APIFY-TOKEN', encoding=BrotliHttpCompressor(quality=11))
-    # or
-    client = ApifyClient(token='MY-APIFY-TOKEN', encoding=GzipHttpCompressor(quality=9))
     ```
 
 - From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):

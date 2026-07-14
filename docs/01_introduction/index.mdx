@@ -46,7 +46,7 @@ The Apify client is available as the `apify-client` package [on PyPI](https://py
     </TabItem>
 </Tabs>
 
-To enable brotli request-body compression (better than gzip, especially for large payloads), install the optional extra and [configure the compression](../02_concepts/13_compression.mdx):
+For better request-body compression, opt in to `brotli`, which compresses better than `gzip`, especially for large payloads. Install the optional extra:
 
 <Tabs>
     <TabItem value="PyPI" label="PyPI" default>
@@ -60,6 +60,8 @@ To enable brotli request-body compression (better than gzip, especially for larg
         ```
     </TabItem>
 </Tabs>
+
+For details, see [HTTP compression](../02_concepts/13_http_compression.mdx).
 
 ## Quick example
 

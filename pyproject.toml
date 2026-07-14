@@ -31,9 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-brotli = [
-    "brotli>=1.0.9",
-]
+brotli = ["brotli>=1.0.9"]
 
 [project.urls]
 "Apify Homepage" = "https://apify.com"

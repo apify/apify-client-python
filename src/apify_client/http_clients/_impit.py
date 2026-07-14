@@ -74,7 +74,7 @@ class ImpitHttpClient(HttpClient):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
-        compressor: HttpCompressor | None = None,
+        http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based synchronous HTTP client.
 
@@ -88,7 +88,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
-            compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
+            http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
             token=token,
@@ -100,7 +100,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
-            compressor=compressor,
+            http_compressor=http_compressor,
         )
 
         self._impit_client = impit.Client(
@@ -324,7 +324,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
-        compressor: HttpCompressor | None = None,
+        http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based asynchronous HTTP client.
 
@@ -338,7 +338,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
-            compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
+            http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
             token=token,
@@ -350,7 +350,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
-            compressor=compressor,
+            http_compressor=http_compressor,
         )
 
         self._impit_async_client = impit.AsyncClient(

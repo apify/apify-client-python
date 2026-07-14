@@ -74,42 +74,13 @@ from apify_client._resource_clients import (
 from apify_client._statistics import ClientStatistics
 from apify_client._utils.http import check_custom_headers
 from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
-from apify_client.http_compressors import GzipHttpCompressor
-from apify_client.http_compressors._base import HttpCompressor
+from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
     from datetime import timedelta
 
+    from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import HttpCompressionAlgorithm
-
-
-def _resolve_compressor(encoding: HttpCompressionAlgorithm | HttpCompressor) -> HttpCompressor:
-    """Convert an encoding string or `HttpCompressor` instance into a concrete `HttpCompressor`.
-
-    Args:
-        encoding: Either a string literal (`'gzip'` or `'brotli'`) or an `HttpCompressor` instance.
-
-    Returns:
-        A ready-to-use `HttpCompressor`.
-
-    Raises:
-        ImportError: If `'brotli'` is requested but the `brotli` extra is not installed.
-        ValueError: If `encoding` is not a recognized compression algorithm.
-    """
-    if isinstance(encoding, HttpCompressor):
-        return encoding
-    if encoding == 'gzip':
-        return GzipHttpCompressor()
-    if encoding == 'brotli':
-        # The import is here so the ImportError is raised at call time,
-        # not at module import time, giving users a clear message.
-        from apify_client.http_compressors import BrotliHttpCompressor  # noqa: PLC0415
-
-        return BrotliHttpCompressor()
-
-    # The backend supports also `deflate` and `identity` (no compression). One can build
-    # a custom compressor if needed.
-    raise ValueError(f'Unsupported compression algorithm: {encoding!r}')
 
 
 @docs_group('Apify API clients')
@@ -155,7 +126,7 @@ class ApifyClient:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
-        encoding: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
+        compression: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
     ) -> None:
         """Initialize the Apify API client.
 
@@ -177,9 +148,8 @@ class ApifyClient:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
-            encoding: Compression algorithm for request bodies. Pass `'gzip'` (default, no extra required) or
-                `'brotli'` (requires `pip install "apify-client[brotli]"`). For custom quality or full control,
-                pass an `HttpCompressor` instance directly, e.g. `BrotliHttpCompressor(quality=11)`.
+            compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
+                or an `HttpCompressor` instance for finer-grained control.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -242,7 +212,7 @@ class ApifyClient:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
-        self._encoding = encoding
+        self._compression = compression
 
     @classmethod
     def with_custom_http_client(
@@ -308,7 +278,7 @@ class ApifyClient:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
-                compressor=_resolve_compressor(self._encoding),
+                http_compressor=resolve_compressor(self._compression),
             )
 
         return self._http_client
@@ -515,7 +485,7 @@ class ApifyClientAsync:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
-        encoding: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
+        compression: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
     ) -> None:
         """Initialize the Apify API client.
 
@@ -537,9 +507,8 @@ class ApifyClientAsync:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
-            encoding: Compression algorithm for request bodies. Pass `'gzip'` (default, no extra required) or
-                `'brotli'` (requires `pip install "apify-client[brotli]"`). For custom quality or full control,
-                pass an `HttpCompressor` instance directly, e.g. `BrotliHttpCompressor(quality=11)`.
+            compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
+                or an `HttpCompressor` instance for finer-grained control.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -602,7 +571,7 @@ class ApifyClientAsync:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
-        self._encoding = encoding
+        self._compression = compression
 
     @classmethod
     def with_custom_http_client(
@@ -668,7 +637,7 @@ class ApifyClientAsync:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
-                compressor=_resolve_compressor(self._encoding),
+                http_compressor=resolve_compressor(self._compression),
             )
         return self._http_client
 

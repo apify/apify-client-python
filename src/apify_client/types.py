@@ -12,14 +12,7 @@ from apify_client._typeddicts import (
 )
 
 HttpCompressionAlgorithm = Literal['brotli', 'gzip']
-"""Accepted string literals for the `encoding` parameter on `ApifyClient` and `ApifyClientAsync`.
-
-`'gzip'` (the default) always uses gzip with no extra dependencies.
-`'brotli'` requires the `brotli` extra (`pip install "apify-client[brotli]"`) and raises `ImportError`
-if the extra is not installed.
-
-For custom quality or full control, inject an `HttpCompressor` instance directly instead.
-"""
+"""Accepted string literals for the `compression` parameter on `ApifyClient` and `ApifyClientAsync`."""
 
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.

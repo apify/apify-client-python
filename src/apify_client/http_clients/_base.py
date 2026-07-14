@@ -101,7 +101,7 @@ class HttpClientBase:
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
-        compressor: HttpCompressor | None = None,
+        http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the HTTP client base.
 
@@ -115,9 +115,9 @@ class HttpClientBase:
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
-            compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
+            http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
-        self._compressor = compressor if compressor is not None else GzipHttpCompressor()
+        self._http_compressor = http_compressor if http_compressor is not None else GzipHttpCompressor()
         self._timeout_short = timeout_short
         self._timeout_medium = timeout_medium
         self._timeout_long = timeout_long
@@ -223,8 +223,8 @@ class HttpClientBase:
                 data = data.encode('utf-8')
             elif isinstance(data, bytearray):
                 data = bytes(data)
-            data = self._compressor.compress(data)
-            headers['Content-Encoding'] = self._compressor.content_encoding
+            data = self._http_compressor.compress(data)
+            headers['Content-Encoding'] = self._http_compressor.content_encoding
 
         return (headers, self._parse_params(params), data)
 

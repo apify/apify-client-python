@@ -11,10 +11,15 @@ class GzipHttpCompressor(HttpCompressor):
     Uses the standard library `gzip` module — no extra dependencies required.
     """
 
-    content_encoding = 'gzip'
-    max_quality = 9
+    _fast_quality = 1
+    """The fastest compression, but the lowest compression ratio."""
 
-    def __init__(self, *, quality: int = 9) -> None:
+    _best_quality = 9
+    """The best compression ratio, but the slowest compression."""
+
+    content_encoding = 'gzip'
+
+    def __init__(self, *, quality: int = _best_quality) -> None:
         """Initialize the gzip compressor.
 
         Args:
@@ -23,7 +28,7 @@ class GzipHttpCompressor(HttpCompressor):
         Raises:
             ValueError: If `quality` is out of range.
         """
-        if 1 > quality > self.max_quality:
+        if self._fast_quality > quality > self._best_quality:
             raise ValueError(f'Compression quality out of range: {quality}')
 
         self._quality = quality

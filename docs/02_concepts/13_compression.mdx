@@ -60,9 +60,18 @@ from apify_client.http_compressors import HttpCompressor
 
 class IdentityCompressor(HttpCompressor):
     content_encoding = 'identity'
+    """Value sent in the `Content-Encoding` header."""
 
     def compress(self, data: bytes) -> bytes:
-          return data
+        """Compress a request body.
+
+        Args:
+            data: The raw bytes to compress.
+
+        Returns:
+            The compressed bytes.
+        """
+        return data
 
 
 client = ApifyClient(token='MY-APIFY-TOKEN', encoding=IdentityCompressor())
@@ -72,11 +81,11 @@ client = ApifyClient(token='MY-APIFY-TOKEN', encoding=IdentityCompressor())
 
 |                               | Brotli                                  | Gzip                            |
 |-------------------------------|-----------------------------------------|---------------------------------|
-| **Compression ratio**         | Better than gzip at comparable quality  | Good                            |
-| **CPU cost**                  | Moderate at quality 6                   | Low                             |
+| **Compression ratio**         | Typically better than gzip              | Good                            |
+| **CPU cost**                  | Moderate, depends on quality            | Low                             |
 | **Availability**              | Requires the `brotli` extra             | Built-in — no extra needed      |
 | **`Content-Encoding` header** | `br`                                    | `gzip`                          |
-| **Quality range**             | `1–11`                                  | `1–9`                           |
+| **Quality range**             | `0–11`                                  | `1–9`                           |
 | **Default quality**           | `6`                                     | `9`                             |
 | **Enable via config**         | `encoding='brotli'`                     | `encoding='gzip'` (default)     |
 | **Best for**                  | Large payloads where bandwidth matters  | Minimal-dependency environments |

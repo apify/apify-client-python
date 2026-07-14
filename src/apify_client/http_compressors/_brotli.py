@@ -11,19 +11,27 @@ class BrotliHttpCompressor(HttpCompressor):
     Requires the `brotli` extra: `pip install "apify-client[brotli]"`.
     """
 
-    content_encoding = 'br'
-    max_quality = 11
+    _fast_quality = 0
+    """The fastest compression, but the lowest compression ratio."""
 
-    def __init__(self, *, quality: int = 6) -> None:
+    _default_quality = 6
+    """Reasonable compromise between the speed and compression ratio."""
+
+    _best_quality = 11
+    """The best compression ratio, but the slowest compression."""
+
+    content_encoding = 'br'
+
+    def __init__(self, *, quality: int = _default_quality) -> None:
         """Initialize the brotli compressor.
 
         Args:
-            quality: Compression level, `1` (fastest) to `11` (the best compression). Defaults to `6`.
+            quality: Compression level, `0` (fastest) to `11` (the best compression). Defaults to `6`.
 
         Raises:
             ValueError: If `quality` is out of range.
         """
-        if 1 > quality > self.max_quality:
+        if self._fast_quality > quality > self._best_quality:
             raise ValueError(f'Compression quality out of range: {quality}')
 
         self._quality = quality

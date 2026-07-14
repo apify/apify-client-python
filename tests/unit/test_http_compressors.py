@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 import brotli
 import pytest
 
-from apify_client._apify_client import _resolve_compressor
 from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor
+from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -48,9 +48,6 @@ def _brotli_unavailable() -> Iterator[None]:
         sys.modules.update(saved)
 
 
-# Round-trip and content encoding
-
-
 @pytest.mark.parametrize('quality', [1, 9])
 def test_gzip_compressor_round_trips_at_quality(quality: int) -> None:
     """Gzip compressor round-trips data at the boundary quality levels."""
@@ -77,32 +74,26 @@ def test_brotli_compressor_round_trips_and_sets_content_encoding() -> None:
     assert brotli.decompress(compressor.compress(b'hello world')) == b'hello world'
 
 
-# Compressor resolution
-
-
 def test_resolve_compressor_gzip() -> None:
     """The `'gzip'` literal resolves to a `GzipHttpCompressor`."""
-    assert isinstance(_resolve_compressor('gzip'), GzipHttpCompressor)
+    assert isinstance(resolve_compressor('gzip'), GzipHttpCompressor)
 
 
 def test_resolve_compressor_brotli() -> None:
     """The `'brotli'` literal resolves to a `BrotliHttpCompressor`."""
-    assert isinstance(_resolve_compressor('brotli'), BrotliHttpCompressor)
+    assert isinstance(resolve_compressor('brotli'), BrotliHttpCompressor)
 
 
 def test_resolve_compressor_passes_through_instance() -> None:
     """An `HttpCompressor` instance is returned unchanged."""
     compressor = BrotliHttpCompressor(quality=11)
-    assert _resolve_compressor(compressor) is compressor
+    assert resolve_compressor(compressor) is compressor
 
 
 def test_resolve_compressor_rejects_unknown_algorithm() -> None:
     """An unrecognized encoding raises `ValueError`."""
     with pytest.raises(ValueError, match='Unsupported compression algorithm'):
-        _resolve_compressor('deflate')  # ty: ignore[invalid-argument-type]
-
-
-# Optional brotli extra
+        resolve_compressor('deflate')  # ty: ignore[invalid-argument-type]
 
 
 def test_brotli_import_hook_raises_clear_error_when_extra_missing() -> None:
@@ -114,6 +105,6 @@ def test_brotli_import_hook_raises_clear_error_when_extra_missing() -> None:
 
 
 def test_resolve_compressor_brotli_raises_clear_error_when_extra_missing() -> None:
-    """Resolving `encoding='brotli'` without the extra raises `ImportError` at resolution time."""
+    """Resolving `compression='brotli'` without the extra raises `ImportError` at resolution time."""
     with _brotli_unavailable(), pytest.raises(ImportError):
-        _resolve_compressor('brotli')
+        resolve_compressor('brotli')

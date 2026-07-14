@@ -286,7 +286,7 @@ def test_prepare_request_call_basic() -> None:
 def test_prepare_request_call_with_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with JSON data."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     json_data = {'key': 'value', 'number': 42}
     headers, _params, data = client._prepare_request_call(json=json_data)
@@ -301,7 +301,7 @@ def test_prepare_request_call_with_json(compressor_case: tuple) -> None:
 def test_prepare_request_call_with_empty_dict_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with empty dict JSON (falsy but valid)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json={})
 
@@ -315,7 +315,7 @@ def test_prepare_request_call_with_empty_dict_json(compressor_case: tuple) -> No
 def test_prepare_request_call_with_empty_list_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with empty list JSON (falsy but valid)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json=[])
 
@@ -329,7 +329,7 @@ def test_prepare_request_call_with_empty_list_json(compressor_case: tuple) -> No
 def test_prepare_request_call_with_zero_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with zero JSON (falsy but valid)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json=0)
 
@@ -343,7 +343,7 @@ def test_prepare_request_call_with_zero_json(compressor_case: tuple) -> None:
 def test_prepare_request_call_with_false_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with False JSON (falsy but valid)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json=False)
 
@@ -357,7 +357,7 @@ def test_prepare_request_call_with_false_json(compressor_case: tuple) -> None:
 def test_prepare_request_call_with_empty_string_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with empty string JSON (falsy but valid)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json='')
 
@@ -371,7 +371,7 @@ def test_prepare_request_call_with_empty_string_json(compressor_case: tuple) -> 
 def test_prepare_request_call_with_string_data(compressor_case: tuple) -> None:
     """Test _prepare_request_call with string data."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(data='test string')
 
@@ -383,7 +383,7 @@ def test_prepare_request_call_with_string_data(compressor_case: tuple) -> None:
 def test_prepare_request_call_with_bytes_data(compressor_case: tuple) -> None:
     """Test _prepare_request_call with bytes data."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(data=b'test bytes')
 
@@ -395,7 +395,7 @@ def test_prepare_request_call_with_bytes_data(compressor_case: tuple) -> None:
 def test_prepare_request_call_with_bytearray_data(compressor_case: tuple) -> None:
     """Test _prepare_request_call with bytearray data (regression: must compress without error)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(compressor=compressor)
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(data=bytearray(b'test bytearray'))
 

@@ -9,7 +9,7 @@ from threading import Thread
 from typing import TYPE_CHECKING, Self
 
 from apify_client._docs import docs_group
-from apify_client._utils import to_seconds
+from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
     import logging

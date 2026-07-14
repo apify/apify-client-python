@@ -15,7 +15,7 @@ from apify_client._models import (
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import to_seconds
+from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator

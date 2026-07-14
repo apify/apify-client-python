@@ -9,13 +9,9 @@ from typing import TYPE_CHECKING, Any, Literal, get_args
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
 from apify_client._docs import docs_group
 from apify_client._logging import WithLogDetailsClient
-from apify_client._utils import (
-    catch_not_found_for_resource_or_throw,
-    catch_not_found_or_throw,
-    response_to_dict,
-    to_safe_id,
-    to_seconds,
-)
+from apify_client._utils.errors import catch_not_found_for_resource_or_throw, catch_not_found_or_throw
+from apify_client._utils.http import response_to_dict, to_safe_id
+from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:

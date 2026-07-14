@@ -13,18 +13,10 @@ import pytest
 
 from apify_client._models import WebhookCondition, WebhookCreate
 from apify_client._resource_clients._resource_client import ResourceClientBase
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    create_hmac_signature,
-    create_storage_content_signature,
-    encode_base62,
-    encode_key_value_store_record_value,
-    encode_webhooks_to_base64,
-    is_retryable_error,
-    response_to_dict,
-    response_to_list,
-    to_safe_id,
-)
+from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature, encode_base62
+from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
+from apify_client._utils.errors import catch_not_found_or_throw, is_retryable_error
+from apify_client._utils.http import response_to_dict, response_to_list, to_safe_id
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:

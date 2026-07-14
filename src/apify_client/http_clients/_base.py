@@ -19,7 +19,7 @@ from apify_client._consts import (
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
-from apify_client._utils import to_seconds
+from apify_client._utils.time import to_seconds
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:

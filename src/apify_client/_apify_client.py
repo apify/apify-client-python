@@ -72,7 +72,7 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
-from apify_client._utils import check_custom_headers
+from apify_client._utils.http import check_custom_headers
 from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_compressors import GzipHttpCompressor
 from apify_client.http_compressors._base import HttpCompressor

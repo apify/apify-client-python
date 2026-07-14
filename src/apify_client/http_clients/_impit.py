@@ -20,7 +20,7 @@ from apify_client._consts import (
 )
 from apify_client._docs import docs_group
 from apify_client._logging import log_context, logger_name
-from apify_client._utils import to_seconds
+from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 from apify_client.http_clients._base import HttpClient, HttpClientAsync
 

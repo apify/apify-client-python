@@ -8,7 +8,7 @@ import pytest
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
-from apify_client._utils import create_hmac_signature, create_storage_content_signature
+from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 
 # ============================================================================
 # Test data and helpers

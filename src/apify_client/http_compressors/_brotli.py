@@ -13,14 +13,25 @@ class BrotliHttpCompressor(HttpCompressor):
 
     content_encoding = 'br'
 
+    _min_quality = 0
+    """Lowest valid quality (fastest, least compression)."""
+
+    _max_quality = 11
+    """Highest valid quality (slowest, best compression)."""
+
     def __init__(self, *, quality: int = 6) -> None:
         """Initialize the brotli compressor.
 
         Args:
-            quality: Compression level, `0` (fastest) to `11` (the best compression). Defaults to `6`,
-                a reasonable compromise between speed and compression ratio. Passed straight to the
-                `brotli` module, which validates it.
+            quality: Compression level, from the fastest to the best compression.
+
+        Raises:
+            ValueError: If `quality` is out of the valid range.
         """
+        if not self._min_quality <= quality <= self._max_quality:
+            raise ValueError(
+                f'brotli quality must be between {self._min_quality} and {self._max_quality}, got {quality}.'
+            )
         self._quality = quality
 
     def compress(self, data: bytes) -> bytes:

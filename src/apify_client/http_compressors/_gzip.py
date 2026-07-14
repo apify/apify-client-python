@@ -13,13 +13,25 @@ class GzipHttpCompressor(HttpCompressor):
 
     content_encoding = 'gzip'
 
-    def __init__(self, *, quality: int = 9) -> None:
+    _min_quality = 1
+    """Lowest valid quality (fastest, least compression)."""
+
+    _max_quality = 9
+    """Highest valid quality (slowest, best compression)."""
+
+    def __init__(self, *, quality: int = _max_quality) -> None:
         """Initialize the gzip compressor.
 
         Args:
-            quality: Compression level, `1` (fastest) to `9` (the best compression). Defaults to `9`.
-                Passed straight to the `gzip` module, which validates it.
+            quality: Compression level, from the fastest to the best compression.
+
+        Raises:
+            ValueError: If `quality` is out of the valid range.
         """
+        if not self._min_quality <= quality <= self._max_quality:
+            raise ValueError(
+                f'gzip quality must be between {self._min_quality} and {self._max_quality}, got {quality}.'
+            )
         self._quality = quality
 
     def compress(self, data: bytes) -> bytes:

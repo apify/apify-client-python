@@ -60,6 +60,20 @@ def test_brotli_compressor_round_trips_at_quality(quality: int) -> None:
     assert brotli.decompress(BrotliHttpCompressor(quality=quality).compress(b'payload')) == b'payload'
 
 
+@pytest.mark.parametrize('quality', [0, 10, -1])
+def test_gzip_compressor_rejects_out_of_range_quality(quality: int) -> None:
+    """Gzip compressor raises `ValueError` at construction for a quality not between `1` and `9`."""
+    with pytest.raises(ValueError, match='gzip quality must be between 1 and 9'):
+        GzipHttpCompressor(quality=quality)
+
+
+@pytest.mark.parametrize('quality', [-1, 12])
+def test_brotli_compressor_rejects_out_of_range_quality(quality: int) -> None:
+    """Brotli compressor raises `ValueError` at construction for a quality not between `0` and `11`."""
+    with pytest.raises(ValueError, match='brotli quality must be between 0 and 11'):
+        BrotliHttpCompressor(quality=quality)
+
+
 def test_gzip_compressor_round_trips_and_sets_content_encoding() -> None:
     """Gzip compressor round-trips data and reports `gzip` as its content encoding."""
     compressor = GzipHttpCompressor()

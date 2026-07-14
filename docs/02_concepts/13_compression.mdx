@@ -1,19 +1,28 @@
 ---
 id: compression
 title: Request body compression
-description: The client compresses every request body automatically, using brotli when available or gzip as a fallback.
+description: The client compresses every request body automatically using gzip by default, with optional brotli via an explicit opt-in.
 ---
 
 The Apify client compresses every request body before sending it to the API. This reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
 
-The client compresses request bodies using the algorithm set by `compression_algorithm` (default `'brotli'`) at the quality level set by `compression_quality` (default `6`):
+The client compresses request bodies using the compressor configured via the `encoding` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
 
-- **`'brotli'` (default)**: Uses brotli compression (`Content-Encoding: br`) when the [`brotli`](https://pypi.org/project/brotli/) extra is installed. Falls back to gzip at the default level when the extra is not installed.
-- **`'gzip'`**: Always uses gzip compression (`Content-Encoding: gzip`) with the configured quality level, regardless of whether the brotli extra is installed.
+## Configuration
 
-The server supports both algorithms and decompresses the request body transparently.
+Pass `encoding` to the client constructor to choose the compression algorithm:
+
+```python
+from apify_client import ApifyClient
+
+# Default: gzip, no extra dependency required
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+# Opt in to brotli (requires apify-client[brotli])
+client = ApifyClient(token='MY-APIFY-TOKEN', encoding='brotli')
+```
 
 ## Enabling brotli
 
@@ -25,41 +34,53 @@ pip install "apify-client[brotli]"
 uv add "apify-client[brotli]"
 ```
 
-Once installed, the client detects it at startup and switches to brotli automatically. No code changes are needed.
+Then pass `encoding='brotli'` to the client constructor. If you request brotli without installing the extra, the client raises a clear `ImportError` immediately — there is no silent fallback.
 
-## Configuration
+## Custom quality and advanced control
 
-Pass `compression_algorithm` and `compression_quality` to the client constructor to override the defaults:
+For fine-grained control over compression quality, inject an `HttpCompressor` instance directly instead of a string literal:
 
 ```python
 from apify_client import ApifyClient
+from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor
 
-# Force gzip without uninstalling the brotli extra
-client = ApifyClient(token='MY-APIFY-TOKEN', compression_algorithm='gzip', compression_quality=9)
+# Brotli at maximum quality
+client = ApifyClient(token='MY-APIFY-TOKEN', encoding=BrotliHttpCompressor(quality=11))
 
-# Use brotli at a lower quality for faster compression
-client = ApifyClient(token='MY-APIFY-TOKEN', compression_algorithm='brotli', compression_quality=4)
+# Gzip at maximum quality
+client = ApifyClient(token='MY-APIFY-TOKEN', encoding=GzipHttpCompressor(quality=9))
 ```
 
-Valid quality ranges:
+You can also implement a fully custom compressor by subclassing `HttpCompressor`:
 
-- **Brotli**: `1–11` (higher = better compression, more CPU)
-- **Gzip**: `1–9` (higher = better compression, more CPU)
+```python
+from apify_client import ApifyClient
+from apify_client.http_compressors import HttpCompressor
 
-The default quality of `6` for brotli is a deliberate trade-off: it compresses better than gzip defaults while keeping CPU overhead low compared to maximum-quality brotli.
+
+class IdentityCompressor(HttpCompressor):
+    content_encoding = 'identity'
+
+    def compress(self, data: bytes) -> bytes:
+          return data
+
+
+client = ApifyClient(token='MY-APIFY-TOKEN', encoding=IdentityCompressor())
+```
 
 ## Comparison
 
-|                               | Brotli                                 | Gzip                            |
-|-------------------------------|----------------------------------------|---------------------------------|
-| **Compression ratio**         | Better than gzip at quality 6          | Good                            |
-| **CPU cost**                  | Moderate at quality 6                  | Low                             |
-| **Availability**              | Requires the `brotli` extra            | Built-in — no extra needed      |
-| **`Content-Encoding` header** | `br`                                   | `gzip`                          |
-| **Quality range**             | `1–11`                                 | `1–9`                           |
-| **Force via config**          | `compression_algorithm='brotli'`       | `compression_algorithm='gzip'`  |
-| **Best for**                  | Large payloads where bandwidth matters | Minimal-dependency environments |
+|                               | Brotli                                  | Gzip                            |
+|-------------------------------|-----------------------------------------|---------------------------------|
+| **Compression ratio**         | Better than gzip at comparable quality  | Good                            |
+| **CPU cost**                  | Moderate at quality 6                   | Low                             |
+| **Availability**              | Requires the `brotli` extra             | Built-in — no extra needed      |
+| **`Content-Encoding` header** | `br`                                    | `gzip`                          |
+| **Quality range**             | `1–11`                                  | `1–9`                           |
+| **Default quality**           | `6`                                     | `9`                             |
+| **Enable via config**         | `encoding='brotli'`                     | `encoding='gzip'` (default)     |
+| **Best for**                  | Large payloads where bandwidth matters  | Minimal-dependency environments |
 
 :::tip
-For most workloads, the bandwidth savings from brotli outweigh the small CPU overhead. Install the `brotli` extra unless you're running in an environment where installing additional packages isn't feasible.
+For most workloads, the bandwidth savings from brotli outweigh the small CPU overhead. Install the `brotli` extra and pass `encoding='brotli'` unless you're running in an environment where installing additional packages isn't feasible.
 :::

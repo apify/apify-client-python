@@ -98,18 +98,18 @@ def _resolve_compressor(encoding: HttpCompressionAlgorithm | HttpCompressor) -> 
     """
     if isinstance(encoding, HttpCompressor):
         return encoding
-    elif encoding == 'gzip':
+    if encoding == 'gzip':
         return GzipHttpCompressor()
-    elif encoding == 'brotli':
+    if encoding == 'brotli':
         # The import is here so the ImportError is raised at call time,
         # not at module import time, giving users a clear message.
         from apify_client.http_compressors import BrotliHttpCompressor  # noqa: PLC0415
 
         return BrotliHttpCompressor()
-    else:
-        # The backend supports also `deflate` and `identity` (no compression). One can build
-        # a custom compressor if needed.
-        raise ValueError(f'Unsupported compression algorithm: {encoding!r}')
+
+    # The backend supports also `deflate` and `identity` (no compression). One can build
+    # a custom compressor if needed.
+    raise ValueError(f'Unsupported compression algorithm: {encoding!r}')
 
 
 @docs_group('Apify API clients')

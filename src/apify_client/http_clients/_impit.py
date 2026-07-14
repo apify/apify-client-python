@@ -11,8 +11,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import impit
 
 from apify_client._consts import (
-    DEFAULT_COMPRESSION_ALGORITHM,
-    DEFAULT_COMPRESSION_QUALITY,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
     DEFAULT_TIMEOUT_LONG,
@@ -31,7 +29,8 @@ if TYPE_CHECKING:
 
     from apify_client._statistics import ClientStatistics
     from apify_client.http_clients._base import HttpResponse
-    from apify_client.types import CompressionAlgorithm, JsonSerializable, Timeout
+    from apify_client.http_compressors._base import HttpCompressor
+    from apify_client.types import JsonSerializable, Timeout
 
 T = TypeVar('T')
 
@@ -75,8 +74,7 @@ class ImpitHttpClient(HttpClient):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
-        compression_algorithm: CompressionAlgorithm = DEFAULT_COMPRESSION_ALGORITHM,
-        compression_quality: int = DEFAULT_COMPRESSION_QUALITY,
+        compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based synchronous HTTP client.
 
@@ -90,9 +88,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
-            compression_algorithm: Algorithm used to compress request bodies. `'brotli'` uses brotli when the
-                `brotli` extra is installed and falls back to gzip when unavailable. `'gzip'` always uses gzip.
-            compression_quality: Compression quality level. Valid range is `1-11` for brotli and `1-9` for gzip.
+            compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
             token=token,
@@ -104,8 +100,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
-            compression_algorithm=compression_algorithm,
-            compression_quality=compression_quality,
+            compressor=compressor,
         )
 
         self._impit_client = impit.Client(
@@ -329,8 +324,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
-        compression_algorithm: CompressionAlgorithm = DEFAULT_COMPRESSION_ALGORITHM,
-        compression_quality: int = DEFAULT_COMPRESSION_QUALITY,
+        compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based asynchronous HTTP client.
 
@@ -344,9 +338,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
-            compression_algorithm: Algorithm used to compress request bodies. `'brotli'` uses brotli when the
-                `brotli` extra is installed and falls back to gzip when unavailable. `'gzip'` always uses gzip.
-            compression_quality: Compression quality level. Valid range is `1-11` for brotli and `1-9` for gzip.
+            compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
             token=token,
@@ -358,8 +350,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
-            compression_algorithm=compression_algorithm,
-            compression_quality=compression_quality,
+            compressor=compressor,
         )
 
         self._impit_async_client = impit.AsyncClient(

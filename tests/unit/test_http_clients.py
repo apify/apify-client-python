@@ -13,6 +13,7 @@ from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_clients._impit import _is_retryable_error
+from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor
 
 
 class _ConcreteHttpClient(HttpClient):
@@ -272,16 +273,17 @@ def test_prepare_request_call_basic() -> None:
 
 
 def test_prepare_request_call_with_json() -> None:
-    """Test _prepare_request_call with JSON data."""
+    """Default compressor is gzip — JSON body is compressed with gzip."""
     client = _ConcreteHttpClient()
 
     json_data = {'key': 'value', 'number': 42}
     headers, _params, data = client._prepare_request_call(json=json_data)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
+    assert gzip.decompress(data) == b'{"key": "value", "number": 42}'
 
 
 def test_prepare_request_call_with_empty_dict_json() -> None:
@@ -291,10 +293,10 @@ def test_prepare_request_call_with_empty_dict_json() -> None:
     headers, _params, data = client._prepare_request_call(json={})
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
-    assert brotli.decompress(data) == b'{}'
+    assert gzip.decompress(data) == b'{}'
 
 
 def test_prepare_request_call_with_empty_list_json() -> None:
@@ -304,10 +306,10 @@ def test_prepare_request_call_with_empty_list_json() -> None:
     headers, _params, data = client._prepare_request_call(json=[])
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
-    assert brotli.decompress(data) == b'[]'
+    assert gzip.decompress(data) == b'[]'
 
 
 def test_prepare_request_call_with_zero_json() -> None:
@@ -317,10 +319,10 @@ def test_prepare_request_call_with_zero_json() -> None:
     headers, _params, data = client._prepare_request_call(json=0)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
-    assert brotli.decompress(data) == b'0'
+    assert gzip.decompress(data) == b'0'
 
 
 def test_prepare_request_call_with_false_json() -> None:
@@ -330,10 +332,10 @@ def test_prepare_request_call_with_false_json() -> None:
     headers, _params, data = client._prepare_request_call(json=False)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
-    assert brotli.decompress(data) == b'false'
+    assert gzip.decompress(data) == b'false'
 
 
 def test_prepare_request_call_with_empty_string_json() -> None:
@@ -343,10 +345,10 @@ def test_prepare_request_call_with_empty_string_json() -> None:
     headers, _params, data = client._prepare_request_call(json='')
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
     assert isinstance(data, bytes)
-    assert brotli.decompress(data) == b'""'
+    assert gzip.decompress(data) == b'""'
 
 
 def test_prepare_request_call_with_string_data() -> None:
@@ -355,7 +357,7 @@ def test_prepare_request_call_with_string_data() -> None:
 
     headers, _params, data = client._prepare_request_call(data='test string')
 
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert isinstance(data, bytes)
 
 
@@ -365,7 +367,7 @@ def test_prepare_request_call_with_bytes_data() -> None:
 
     headers, _params, data = client._prepare_request_call(data=b'test bytes')
 
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert isinstance(data, bytes)
 
 
@@ -374,9 +376,9 @@ def test_prepare_request_call_with_bytearray_data() -> None:
     client = _ConcreteHttpClient()
     headers, _, data = client._prepare_request_call(data=bytearray(b'test bytearray'))
 
-    assert headers['Content-Encoding'] == 'br'
+    assert headers['Content-Encoding'] == 'gzip'
     assert data is not None
-    assert brotli.decompress(data) == b'test bytearray'
+    assert gzip.decompress(data) == b'test bytearray'
 
 
 def test_prepare_request_call_json_and_data_error() -> None:
@@ -455,11 +457,9 @@ def test_build_url_with_params_mixed() -> None:
     assert 'name=test' in url
 
 
-def test_prepare_request_call_brotli_compression(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When compression_algorithm='brotli' and brotli is installed, request body uses brotli."""
-    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', brotli.compress)
-
-    client = _ConcreteHttpClient(compression_algorithm='brotli')
+def test_prepare_request_call_brotli_compression() -> None:
+    """When a BrotliHttpCompressor is injected, request body uses brotli."""
+    client = _ConcreteHttpClient(compressor=BrotliHttpCompressor())
     headers, _, data = client._prepare_request_call(json={'k': 'v'})
 
     assert headers['Content-Encoding'] == 'br'
@@ -467,11 +467,9 @@ def test_prepare_request_call_brotli_compression(monkeypatch: pytest.MonkeyPatch
     assert brotli.decompress(data) == b'{"k": "v"}'
 
 
-def test_prepare_request_call_gzip_fallback_without_brotli(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When compression_algorithm='brotli' but the library is unavailable, falls back to gzip."""
-    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', None)
-
-    client = _ConcreteHttpClient(compression_algorithm='brotli')
+def test_prepare_request_call_explicit_gzip() -> None:
+    """When a GzipHttpCompressor is injected, request body uses gzip."""
+    client = _ConcreteHttpClient(compressor=GzipHttpCompressor())
     headers, _, data = client._prepare_request_call(json={'k': 'v'})
 
     assert headers['Content-Encoding'] == 'gzip'
@@ -479,42 +477,19 @@ def test_prepare_request_call_gzip_fallback_without_brotli(monkeypatch: pytest.M
     assert gzip.decompress(data) == b'{"k": "v"}'
 
 
-def test_prepare_request_call_explicit_gzip(monkeypatch: pytest.MonkeyPatch) -> None:
-    """When compression_algorithm='gzip', always uses gzip even when brotli is available."""
-    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', brotli.compress)
-
-    client = _ConcreteHttpClient(compression_algorithm='gzip')
-    headers, _, data = client._prepare_request_call(json={'k': 'v'})
-
-    assert headers['Content-Encoding'] == 'gzip'
-    assert data is not None
-    assert gzip.decompress(data) == b'{"k": "v"}'
-
-
-def test_prepare_request_call_brotli_custom_quality(monkeypatch: pytest.MonkeyPatch) -> None:
-    """compression_quality is forwarded to the brotli compressor."""
-    captured_kwargs: dict = {}
-
-    def capturing_compress(data: bytes, **kwargs: object) -> bytes:
-        captured_kwargs.update(kwargs)
-        return brotli.compress(data, **kwargs)
-
-    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', capturing_compress)
-
-    client = _ConcreteHttpClient(compression_algorithm='brotli', compression_quality=1)
+def test_prepare_request_call_brotli_custom_quality() -> None:
+    """Custom quality is forwarded to the brotli compressor."""
+    client = _ConcreteHttpClient(compressor=BrotliHttpCompressor(quality=1))
     headers, _, data = client._prepare_request_call(json={'k': 'v'})
 
     assert headers['Content-Encoding'] == 'br'
-    assert captured_kwargs.get('quality') == 1
     assert data is not None
     assert brotli.decompress(data) == b'{"k": "v"}'
 
 
-def test_prepare_request_call_gzip_custom_quality(monkeypatch: pytest.MonkeyPatch) -> None:
-    """compression_quality is forwarded to the gzip compressor."""
-    monkeypatch.setattr('apify_client.http_clients._base._brotli_compress', None)
-
-    client = _ConcreteHttpClient(compression_algorithm='gzip', compression_quality=1)
+def test_prepare_request_call_gzip_custom_quality() -> None:
+    """Custom quality is forwarded to the gzip compressor."""
+    client = _ConcreteHttpClient(compressor=GzipHttpCompressor(quality=1))
     headers, _, data = client._prepare_request_call(json={'k': 'v'})
 
     assert headers['Content-Encoding'] == 'gzip'
@@ -522,19 +497,15 @@ def test_prepare_request_call_gzip_custom_quality(monkeypatch: pytest.MonkeyPatc
     assert gzip.decompress(data) == b'{"k": "v"}'
 
 
-def test_prepare_request_call_invalid_brotli_quality() -> None:
-    """Raises ValueError when brotli quality is out of range 1-11."""
-    with pytest.raises(ValueError, match='Brotli compression quality'):
-        _ConcreteHttpClient(compression_algorithm='brotli', compression_quality=12)
-
-    with pytest.raises(ValueError, match='Brotli compression quality'):
-        _ConcreteHttpClient(compression_algorithm='brotli', compression_quality=0)
+def test_default_compressor_is_gzip() -> None:
+    """HttpClientBase uses GzipHttpCompressor when no compressor is specified."""
+    client = _ConcreteHttpClient()
+    assert isinstance(client._compressor, GzipHttpCompressor)
+    assert client._compressor.content_encoding == 'gzip'
 
 
-def test_prepare_request_call_invalid_gzip_quality() -> None:
-    """Raises ValueError when gzip quality is out of range 1-9."""
-    with pytest.raises(ValueError, match='Gzip compression quality'):
-        _ConcreteHttpClient(compression_algorithm='gzip', compression_quality=10)
-
-    with pytest.raises(ValueError, match='Gzip compression quality'):
-        _ConcreteHttpClient(compression_algorithm='gzip', compression_quality=0)
+def test_custom_compressor_is_stored() -> None:
+    """An injected compressor is stored and used."""
+    compressor = BrotliHttpCompressor(quality=9)
+    client = _ConcreteHttpClient(compressor=compressor)
+    assert client._compressor is compressor

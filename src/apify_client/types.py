@@ -11,11 +11,14 @@ from apify_client._typeddicts import (
     WebhookRepresentationDict,
 )
 
-CompressionAlgorithm = Literal['brotli', 'gzip']
-"""Compression algorithm for request bodies.
+HttpCompressionAlgorithm = Literal['brotli', 'gzip']
+"""Accepted string literals for the `encoding` parameter on `ApifyClient` and `ApifyClientAsync`.
 
-`'brotli'` uses brotli when the `brotli` extra is installed, falling back to gzip when unavailable.
-`'gzip'` always uses gzip regardless of whether the brotli extra is installed.
+`'gzip'` (the default) always uses gzip with no extra dependencies.
+`'brotli'` requires the `brotli` extra (`pip install "apify-client[brotli]"`) and raises `ImportError`
+if the extra is not installed.
+
+For custom quality or full control, inject an `HttpCompressor` instance directly instead.
 """
 
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
@@ -49,7 +52,7 @@ Based on the definition discussed in https://github.com/python/typing/issues/182
 """
 
 __all__ = [
-    'CompressionAlgorithm',
+    'HttpCompressionAlgorithm',
     'JsonSerializable',
     'Timeout',
     'WebhooksList',

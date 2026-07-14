@@ -5,10 +5,14 @@ import hmac
 import io
 import json
 import string
+import sys
 import time
 import warnings
 from base64 import b64encode, urlsafe_b64encode
+from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import cache
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import impit
@@ -18,6 +22,7 @@ from apify_client._models import WebhookCreate, WebhookRepresentation
 from apify_client.errors import InvalidResponseBodyError, NotFoundError
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from datetime import timedelta
 
     from apify_client.errors import ApifyApiError
@@ -27,7 +32,50 @@ if TYPE_CHECKING:
 T = TypeVar('T')
 
 _BASE62_CHARSET = string.digits + string.ascii_letters
-"""Module-level constant for base62 encoding."""
+
+
+@dataclass
+class _FailedImport:
+    message: str
+
+
+class _ImportWrapper(ModuleType):
+    """Module subclass that converts `_FailedImport` attribute accesses into `ImportError`."""
+
+    def __getattr__(self, name: str) -> object:
+        obj = super().__getattribute__(name)
+        if isinstance(obj, _FailedImport):
+            raise ImportError(obj.message)  # noqa: TRY004
+        return obj
+
+
+@contextmanager
+def try_import(module_name: str, symbol_name: str) -> Generator[None, None, None]:
+    """Context manager for optional imports.
+
+    If the import inside the block raises `ImportError`, the named symbol in the given module is
+    replaced with a `_FailedImport` placeholder. Accessing that placeholder later (after
+    `install_import_hook` has been called) raises a clear `ImportError` with the original message.
+
+    Args:
+        module_name: Fully-qualified name of the module whose namespace to update (pass `__name__`).
+        symbol_name: The name that would have been imported, used as the placeholder key.
+    """
+    try:
+        yield
+    except ImportError as exc:
+        sys.modules[module_name].__dict__[symbol_name] = _FailedImport(str(exc))
+
+
+def install_import_hook(module_name: str) -> None:
+    """Replace a module's class with `_ImportWrapper` to activate deferred `ImportError` raising.
+
+    Must be called after all `try_import` blocks in the same `__init__.py`.
+
+    Args:
+        module_name: Fully-qualified name of the module to wrap (pass `__name__`).
+    """
+    sys.modules[module_name].__class__ = _ImportWrapper
 
 
 @overload

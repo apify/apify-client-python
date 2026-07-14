@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import gzip
 import json as jsonlib
 import os
 import sys
@@ -11,37 +10,23 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlencode
 
 from apify_client._consts import (
-    BROTLI_QUALITY_MAX,
-    BROTLI_QUALITY_MIN,
-    DEFAULT_COMPRESSION_ALGORITHM,
-    DEFAULT_COMPRESSION_QUALITY,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
     DEFAULT_TIMEOUT_LONG,
     DEFAULT_TIMEOUT_MAX,
     DEFAULT_TIMEOUT_MEDIUM,
     DEFAULT_TIMEOUT_SHORT,
-    GZIP_QUALITY_MAX,
-    GZIP_QUALITY_MIN,
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
 from apify_client._utils import to_seconds
+from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Callable, Iterator, Mapping
+    from collections.abc import AsyncIterator, Iterator, Mapping
 
-    from apify_client.types import CompressionAlgorithm, JsonSerializable, Timeout
-
-_brotli_compress: Callable[..., bytes] | None = None
-
-if not TYPE_CHECKING:
-    try:
-        import brotli as _brotli_module
-
-        _brotli_compress = _brotli_module.compress
-    except ImportError:
-        pass
+    from apify_client.http_compressors._base import HttpCompressor
+    from apify_client.types import JsonSerializable, Timeout
 
 
 @docs_group('HTTP clients')
@@ -116,8 +101,7 @@ class HttpClientBase:
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
-        compression_algorithm: CompressionAlgorithm = DEFAULT_COMPRESSION_ALGORITHM,
-        compression_quality: int = DEFAULT_COMPRESSION_QUALITY,
+        compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the HTTP client base.
 
@@ -131,23 +115,9 @@ class HttpClientBase:
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
-            compression_algorithm: Algorithm used to compress request bodies. `'brotli'` uses brotli when the
-                `brotli` extra is installed and falls back to gzip when unavailable. `'gzip'` always uses gzip.
-            compression_quality: Compression quality level. Valid range is `1-11` for brotli and `1-9` for gzip.
+            compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
-        if compression_algorithm == 'brotli' and not (BROTLI_QUALITY_MIN <= compression_quality <= BROTLI_QUALITY_MAX):
-            raise ValueError(
-                f'Brotli compression quality must be between {BROTLI_QUALITY_MIN} and {BROTLI_QUALITY_MAX},'
-                f' got {compression_quality}.'
-            )
-        if compression_algorithm == 'gzip' and not (GZIP_QUALITY_MIN <= compression_quality <= GZIP_QUALITY_MAX):
-            raise ValueError(
-                f'Gzip compression quality must be between {GZIP_QUALITY_MIN} and {GZIP_QUALITY_MAX},'
-                f' got {compression_quality}.'
-            )
-
-        self._compression_algorithm = compression_algorithm
-        self._compression_quality = compression_quality
+        self._compressor = compressor if compressor is not None else GzipHttpCompressor()
         self._timeout_short = timeout_short
         self._timeout_medium = timeout_medium
         self._timeout_long = timeout_long
@@ -237,13 +207,7 @@ class HttpClientBase:
         data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
-        """Prepare headers, params, and body for an HTTP request. Serializes JSON and compresses the body.
-
-        Uses the configured `compression_algorithm`. When `'brotli'` is selected and the `brotli` library is
-        installed, uses brotli (`Content-Encoding: br`) with the configured quality. When `'brotli'` is selected
-        but the library is unavailable, falls back to gzip at the default level. When `'gzip'` is selected,
-        always uses gzip (`Content-Encoding: gzip`) with the configured quality.
-        """
+        """Prepare headers, params, and body for an HTTP request. Serializes JSON and compresses the body."""
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
@@ -257,16 +221,10 @@ class HttpClientBase:
         if isinstance(data, (str, bytes, bytearray)):
             if isinstance(data, str):
                 data = data.encode('utf-8')
-            if self._compression_algorithm == 'brotli' and _brotli_compress is not None:
-                data = _brotli_compress(data, quality=self._compression_quality)
-                headers['Content-Encoding'] = 'br'
-            elif self._compression_algorithm == 'gzip':
-                data = gzip.compress(data, compresslevel=self._compression_quality)
-                headers['Content-Encoding'] = 'gzip'
-            else:
-                # brotli requested but library not installed — fall back to gzip at the default level
-                data = gzip.compress(data)
-                headers['Content-Encoding'] = 'gzip'
+            elif isinstance(data, bytearray):
+                data = bytes(data)
+            data = self._compressor.compress(data)
+            headers['Content-Encoding'] = self._compressor.content_encoding
 
         return (headers, self._parse_params(params), data)
 

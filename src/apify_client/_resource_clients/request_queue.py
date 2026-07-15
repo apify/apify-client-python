@@ -36,7 +36,9 @@ from apify_client._models import (
 )
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_or_throw, response_to_dict, to_seconds
+from apify_client._utils.errors import catch_not_found_or_throw
+from apify_client._utils.http import response_to_dict
+from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:

@@ -20,7 +20,7 @@ from apify_client._consts import (
 )
 from apify_client._docs import docs_group
 from apify_client._logging import log_context, logger_name
-from apify_client._utils import to_seconds
+from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 from apify_client.http_clients._base import HttpClient, HttpClientAsync
 
@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
     from apify_client._statistics import ClientStatistics
     from apify_client.http_clients._base import HttpResponse
+    from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import JsonSerializable, Timeout
 
 T = TypeVar('T')
@@ -73,6 +74,7 @@ class ImpitHttpClient(HttpClient):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
+        http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based synchronous HTTP client.
 
@@ -86,6 +88,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
+            http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
             token=token,
@@ -97,6 +100,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
+            http_compressor=http_compressor,
         )
 
         self._impit_client = impit.Client(
@@ -320,6 +324,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
+        http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based asynchronous HTTP client.
 
@@ -333,6 +338,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
+            http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
             token=token,
@@ -344,6 +350,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
+            http_compressor=http_compressor,
         )
 
         self._impit_async_client = impit.AsyncClient(

@@ -72,11 +72,15 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
-from apify_client._utils import check_custom_headers
+from apify_client._utils.http import check_custom_headers
 from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
     from datetime import timedelta
+
+    from apify_client.http_compressors._base import HttpCompressor
+    from apify_client.types import HttpCompressionAlgorithm
 
 
 @docs_group('Apify API clients')
@@ -122,6 +126,7 @@ class ApifyClient:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
     ) -> None:
         """Initialize the Apify API client.
 
@@ -143,6 +148,8 @@ class ApifyClient:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
+            compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
+                or an `HttpCompressor` instance for finer-grained control.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -205,6 +212,7 @@ class ApifyClient:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
+        self._http_compressor = resolve_compressor(compression)
 
     @classmethod
     def with_custom_http_client(
@@ -270,6 +278,7 @@ class ApifyClient:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
+                http_compressor=self._http_compressor,
             )
 
         return self._http_client
@@ -476,6 +485,7 @@ class ApifyClientAsync:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
     ) -> None:
         """Initialize the Apify API client.
 
@@ -497,6 +507,8 @@ class ApifyClientAsync:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for exponential timeout growth across retries.
             headers: Additional HTTP headers to include in all API requests.
+            compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
+                or an `HttpCompressor` instance for finer-grained control.
         """
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
@@ -559,6 +571,7 @@ class ApifyClientAsync:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
+        self._http_compressor = resolve_compressor(compression)
 
     @classmethod
     def with_custom_http_client(
@@ -624,6 +637,7 @@ class ApifyClientAsync:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
+                http_compressor=self._http_compressor,
             )
         return self._http_client
 

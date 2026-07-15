@@ -4,6 +4,7 @@ import gzip
 import json
 from typing import TYPE_CHECKING
 
+import brotli
 import pytest
 from werkzeug import Request, Response
 
@@ -12,26 +13,43 @@ from apify_client import ApifyClient, ApifyClientAsync
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
+    from apify_client.types import HttpCompressionAlgorithm
+
 _MOCKED_RUN_ID = 'test_run_id'
 _CHARGE_PATH = f'/v2/actor-runs/{_MOCKED_RUN_ID}/charge'
 
 
 def _decode_body(request: Request) -> dict:
     raw = request.get_data()
-    if request.headers.get('Content-Encoding') == 'gzip':
+    encoding = request.headers.get('Content-Encoding')
+    if encoding == 'br':
+        raw = brotli.decompress(raw)
+    elif encoding == 'gzip':
         raw = gzip.decompress(raw)
     return json.loads(raw)
 
 
 @pytest.mark.parametrize(
+    'compression',
+    [
+        pytest.param('gzip', id='gzip'),
+        pytest.param('brotli', id='brotli'),
+    ],
+)
+@pytest.mark.parametrize(
     'count',
-    [0, 1, 5],
+    [
+        pytest.param(0, id='zero'),
+        pytest.param(1, id='one'),
+        pytest.param(5, id='five'),
+    ],
 )
 def test_run_charge_preserves_count_sync(
     httpserver: HTTPServer,
     count: int,
+    compression: HttpCompressionAlgorithm,
 ) -> None:
-    """Ensure `count` is sent as-is (in particular, `0` is preserved)."""
+    """Ensure `count` is sent as-is (in particular, `0` is preserved), regardless of the request-body compression."""
     captured_requests: list[Request] = []
 
     def capture_request(request: Request) -> Response:
@@ -41,7 +59,7 @@ def test_run_charge_preserves_count_sync(
     httpserver.expect_request(_CHARGE_PATH, method='POST').respond_with_handler(capture_request)
 
     api_url = httpserver.url_for('/').removesuffix('/')
-    client = ApifyClient(token='test_token', api_url=api_url)
+    client = ApifyClient(token='test_token', api_url=api_url, compression=compression)
 
     client.run(_MOCKED_RUN_ID).charge('test-event', count=count)
 
@@ -51,12 +69,24 @@ def test_run_charge_preserves_count_sync(
 
 
 @pytest.mark.parametrize(
+    'compression',
+    [
+        pytest.param('gzip', id='gzip'),
+        pytest.param('brotli', id='brotli'),
+    ],
+)
+@pytest.mark.parametrize(
     'count',
-    [0, 1, 5],
+    [
+        pytest.param(0, id='zero'),
+        pytest.param(1, id='one'),
+        pytest.param(5, id='five'),
+    ],
 )
 async def test_run_charge_preserves_count_async(
     httpserver: HTTPServer,
     count: int,
+    compression: HttpCompressionAlgorithm,
 ) -> None:
     """Async variant of `test_run_charge_preserves_count_sync`."""
     captured_requests: list[Request] = []
@@ -68,7 +98,7 @@ async def test_run_charge_preserves_count_async(
     httpserver.expect_request(_CHARGE_PATH, method='POST').respond_with_handler(capture_request)
 
     api_url = httpserver.url_for('/').removesuffix('/')
-    client = ApifyClientAsync(token='test_token', api_url=api_url)
+    client = ApifyClientAsync(token='test_token', api_url=api_url, compression=compression)
 
     await client.run(_MOCKED_RUN_ID).charge('test-event', count=count)
 

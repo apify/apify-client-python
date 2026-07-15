@@ -46,6 +46,23 @@ The Apify client is available as the `apify-client` package [on PyPI](https://py
     </TabItem>
 </Tabs>
 
+For better request-body compression, opt in to `brotli`, which compresses better than `gzip`, especially for large payloads. Install the optional extra:
+
+<Tabs>
+    <TabItem value="PyPI" label="PyPI" default>
+        ```bash
+        pip install "apify-client[brotli]"
+        ```
+    </TabItem>
+    <TabItem value="conda-forge" label="conda-forge">
+        ```bash
+        conda install conda-forge::apify-client conda-forge::brotli
+        ```
+    </TabItem>
+</Tabs>
+
+For details, see [HTTP compression](../02_concepts/13_http_compression.mdx).
+
 ## Quick example
 
 The following example shows how to run an Actor and retrieve its results:

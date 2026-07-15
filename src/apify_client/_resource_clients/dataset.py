@@ -9,11 +9,8 @@ from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    create_storage_content_signature,
-    response_to_dict,
-    response_to_list,
-)
+from apify_client._utils.crypto import create_storage_content_signature
+from apify_client._utils.http import response_to_dict, response_to_list
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator

@@ -11,6 +11,9 @@ from apify_client._typeddicts import (
     WebhookRepresentationDict,
 )
 
+HttpCompressionAlgorithm = Literal['brotli', 'gzip']
+"""Accepted string literals for the `compression` parameter on `ApifyClient` and `ApifyClientAsync`."""
+
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
 
@@ -42,6 +45,7 @@ Based on the definition discussed in https://github.com/python/typing/issues/182
 """
 
 __all__ = [
+    'HttpCompressionAlgorithm',
     'JsonSerializable',
     'Timeout',
     'WebhooksList',

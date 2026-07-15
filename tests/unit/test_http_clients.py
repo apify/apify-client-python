@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import gzip
 import time
-from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
+import brotli
 import impit
 import pytest
 
@@ -12,6 +14,12 @@ from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_clients._impit import _is_retryable_error
+from apify_client.http_compressors._brotli import BrotliHttpCompressor
+from apify_client.http_compressors._gzip import GzipHttpCompressor
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
 
 
 class _ConcreteHttpClient(HttpClient):
@@ -260,6 +268,16 @@ def test_is_retryable_error() -> None:
     assert not _is_retryable_error(Exception('test'))
 
 
+@pytest.fixture(
+    params=[
+        pytest.param((GzipHttpCompressor(), 'gzip', gzip.decompress), id='gzip'),
+        pytest.param((BrotliHttpCompressor(), 'br', brotli.decompress), id='brotli'),
+    ]
+)
+def compressor_case(request: pytest.FixtureRequest) -> tuple:
+    return request.param
+
+
 def test_prepare_request_call_basic() -> None:
     """Test _prepare_request_call with basic parameters."""
     client = _ConcreteHttpClient()
@@ -270,112 +288,125 @@ def test_prepare_request_call_basic() -> None:
     assert data is None
 
 
-def test_prepare_request_call_with_json() -> None:
+def test_prepare_request_call_with_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with JSON data."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     json_data = {'key': 'value', 'number': 42}
     headers, _params, data = client._prepare_request_call(json=json_data)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert data is not None
     assert isinstance(data, bytes)
+    assert decompress(data) == b'{"key": "value", "number": 42}'
 
 
-def test_prepare_request_call_with_empty_dict_json() -> None:
+def test_prepare_request_call_with_empty_dict_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with empty dict JSON (falsy but valid)."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json={})
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert data is not None
     assert isinstance(data, bytes)
-    # Verify the gzipped data contains the JSON
-    decompressed = gzip.decompress(data)
-    assert decompressed == b'{}'
+    assert decompress(data) == b'{}'
 
 
-def test_prepare_request_call_with_empty_list_json() -> None:
+def test_prepare_request_call_with_empty_list_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with empty list JSON (falsy but valid)."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json=[])
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert data is not None
     assert isinstance(data, bytes)
-    # Verify the gzipped data contains the JSON
-    decompressed = gzip.decompress(data)
-    assert decompressed == b'[]'
+    assert decompress(data) == b'[]'
 
 
-def test_prepare_request_call_with_zero_json() -> None:
+def test_prepare_request_call_with_zero_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with zero JSON (falsy but valid)."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json=0)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert data is not None
     assert isinstance(data, bytes)
-    # Verify the gzipped data contains the JSON
-    decompressed = gzip.decompress(data)
-    assert decompressed == b'0'
+    assert decompress(data) == b'0'
 
 
-def test_prepare_request_call_with_false_json() -> None:
+def test_prepare_request_call_with_false_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with False JSON (falsy but valid)."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json=False)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert data is not None
     assert isinstance(data, bytes)
-    # Verify the gzipped data contains the JSON
-    decompressed = gzip.decompress(data)
-    assert decompressed == b'false'
+    assert decompress(data) == b'false'
 
 
-def test_prepare_request_call_with_empty_string_json() -> None:
+def test_prepare_request_call_with_empty_string_json(compressor_case: tuple) -> None:
     """Test _prepare_request_call with empty string JSON (falsy but valid)."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(json='')
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert data is not None
     assert isinstance(data, bytes)
-    # Verify the gzipped data contains the JSON
-    decompressed = gzip.decompress(data)
-    assert decompressed == b'""'
+    assert decompress(data) == b'""'
 
 
-def test_prepare_request_call_with_string_data() -> None:
+def test_prepare_request_call_with_string_data(compressor_case: tuple) -> None:
     """Test _prepare_request_call with string data."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(data='test string')
 
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert isinstance(data, bytes)
+    assert decompress(data) == b'test string'
 
 
-def test_prepare_request_call_with_bytes_data() -> None:
+def test_prepare_request_call_with_bytes_data(compressor_case: tuple) -> None:
     """Test _prepare_request_call with bytes data."""
-    client = _ConcreteHttpClient()
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
 
     headers, _params, data = client._prepare_request_call(data=b'test bytes')
 
-    assert headers['Content-Encoding'] == 'gzip'
+    assert headers['Content-Encoding'] == content_encoding
     assert isinstance(data, bytes)
+    assert decompress(data) == b'test bytes'
+
+
+def test_prepare_request_call_with_bytearray_data(compressor_case: tuple) -> None:
+    """Test _prepare_request_call with bytearray data (regression: must compress without error)."""
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
+
+    headers, _params, data = client._prepare_request_call(data=bytearray(b'test bytearray'))
+
+    assert headers['Content-Encoding'] == content_encoding
+    assert isinstance(data, bytes)
+    assert decompress(data) == b'test bytearray'
 
 
 def test_prepare_request_call_json_and_data_error() -> None:

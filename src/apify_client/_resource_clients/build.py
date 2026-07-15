@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import Build, BuildResponse
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import response_to_dict
+from apify_client._utils.http import response_to_dict
 
 if TYPE_CHECKING:
     from datetime import timedelta

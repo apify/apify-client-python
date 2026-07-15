@@ -23,12 +23,9 @@ from apify_client._models import (
     UpdateActorRequest,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    encode_key_value_store_record_value,
-    encode_webhooks_to_base64,
-    response_to_dict,
-    to_seconds,
-)
+from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
+from apify_client._utils.http import response_to_dict
+from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
     from datetime import timedelta

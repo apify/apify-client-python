@@ -16,13 +16,10 @@ from apify_client._models import (
 )
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import (
-    catch_not_found_or_throw,
-    create_hmac_signature,
-    create_storage_content_signature,
-    encode_key_value_store_record_value,
-    response_to_dict,
-)
+from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
+from apify_client._utils.encoding import encode_key_value_store_record_value
+from apify_client._utils.errors import catch_not_found_or_throw
+from apify_client._utils.http import response_to_dict
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:

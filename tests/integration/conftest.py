@@ -16,7 +16,7 @@ from .._utils import (
 )
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
-from apify_client._utils import create_hmac_signature, create_storage_content_signature
+from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 
 if TYPE_CHECKING:
     from collections.abc import Generator

@@ -1,8 +1,13 @@
-from collections.abc import Iterable
+from __future__ import annotations
+
 from logging import getLogger
+from typing import TYPE_CHECKING
 
 import pytest
 from pytest_httpserver import HTTPServer
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @pytest.fixture(scope='session')

@@ -30,6 +30,9 @@ dependencies = [
     "pydantic[email]>=2.11.0",
 ]
 
+[project.optional-dependencies]
+brotli = ["brotli>=1.0.9"]
+
 [project.urls]
 "Apify Homepage" = "https://apify.com"
 "Homepage" = "https://docs.apify.com/api/client/python/"

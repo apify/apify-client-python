@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
-from apify_client._utils import catch_not_found_for_resource_or_throw
+from apify_client._utils.errors import catch_not_found_for_resource_or_throw
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:

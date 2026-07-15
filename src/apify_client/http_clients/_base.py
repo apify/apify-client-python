@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import gzip
 import json as jsonlib
 import os
 import sys
@@ -20,11 +19,13 @@ from apify_client._consts import (
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
-from apify_client._utils import to_seconds
+from apify_client._utils.time import to_seconds
+from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator, Mapping
 
+    from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import JsonSerializable, Timeout
 
 
@@ -100,6 +101,7 @@ class HttpClientBase:
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
+        http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the HTTP client base.
 
@@ -113,7 +115,9 @@ class HttpClientBase:
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
+            http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
+        self._http_compressor = http_compressor if http_compressor is not None else GzipHttpCompressor()
         self._timeout_short = timeout_short
         self._timeout_medium = timeout_medium
         self._timeout_long = timeout_long
@@ -203,13 +207,13 @@ class HttpClientBase:
         data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
-        """Prepare headers, params, and body for an HTTP request. Serializes JSON and applies gzip compression."""
+        """Prepare headers, params, and body for an HTTP request. Serializes JSON and compresses the body."""
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         headers = dict(headers) if headers else {}
 
-        # Dump JSON data to string so it can be gzipped.
+        # Dump JSON data to string so it can be compressed.
         if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             headers['Content-Type'] = 'application/json'
@@ -217,8 +221,10 @@ class HttpClientBase:
         if isinstance(data, (str, bytes, bytearray)):
             if isinstance(data, str):
                 data = data.encode('utf-8')
-            data = gzip.compress(data)
-            headers['Content-Encoding'] = 'gzip'
+            elif isinstance(data, bytearray):
+                data = bytes(data)
+            data = self._http_compressor.compress(data)
+            headers['Content-Encoding'] = self._http_compressor.content_encoding
 
         return (headers, self._parse_params(params), data)
 

@@ -212,7 +212,7 @@ class ApifyClient:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
-        self._compression = compression
+        self._http_compressor = resolve_compressor(compression)
 
     @classmethod
     def with_custom_http_client(
@@ -278,7 +278,7 @@ class ApifyClient:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
-                http_compressor=resolve_compressor(self._compression),
+                http_compressor=self._http_compressor,
             )
 
         return self._http_client
@@ -571,7 +571,7 @@ class ApifyClientAsync:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
-        self._compression = compression
+        self._http_compressor = resolve_compressor(compression)
 
     @classmethod
     def with_custom_http_client(
@@ -637,7 +637,7 @@ class ApifyClientAsync:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
-                http_compressor=resolve_compressor(self._compression),
+                http_compressor=self._http_compressor,
             )
         return self._http_client
 

@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import gzip
 import time
-from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import brotli
@@ -15,6 +16,10 @@ from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse,
 from apify_client.http_clients._impit import _is_retryable_error
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import Any
 
 
 class _ConcreteHttpClient(HttpClient):

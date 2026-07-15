@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import sys
-from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from typing import Any
 
 
 @contextmanager

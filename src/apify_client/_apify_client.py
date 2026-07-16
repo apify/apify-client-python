@@ -254,7 +254,7 @@ class ApifyClient:
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
         if token is not None:
-            http_client._set_default_authorization(token)  # noqa: SLF001
+            http_client.set_default_authorization(token)
         instance._http_client = http_client
         return instance
 
@@ -616,7 +616,7 @@ class ApifyClientAsync:
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
         if token is not None:
-            http_client._set_default_authorization(token)  # noqa: SLF001
+            http_client.set_default_authorization(token)
         instance._http_client = http_client
         return instance
 

@@ -145,8 +145,12 @@ class HttpClientBase:
 
         self._headers = {**default_headers, **(headers or {})}
 
-    def _set_default_authorization(self, token: str) -> None:
-        """Set the `Authorization` header from the token, unless an authorization header is already configured."""
+    def set_default_authorization(self, token: str) -> None:
+        """Set the `Authorization` header from the token, unless an authorization header is already configured.
+
+        Args:
+            token: The Apify API token to set as the `Bearer` authorization.
+        """
         if not any(key.title() == 'Authorization' for key in self._headers):
             self._headers['Authorization'] = f'Bearer {token}'
 

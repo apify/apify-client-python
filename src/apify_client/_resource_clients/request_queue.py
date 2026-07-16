@@ -7,6 +7,7 @@ from queue import Queue
 from typing import TYPE_CHECKING, Any, Literal
 
 from more_itertools import constrained_batches
+from pydantic.alias_generators import to_camel
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -59,6 +60,21 @@ if TYPE_CHECKING:
 _RQ_MAX_REQUESTS_PER_BATCH = 25
 _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
+
+
+def _dump_request_draft(request: RequestDraft) -> dict:
+    """Dump the request draft with camelCase aliases, including extra (undeclared) fields.
+
+    `RequestDraft` declares only a subset of the request fields; the rest (e.g. `user_data`) are captured as
+    Pydantic extras, which bypass the `to_camel` alias generator on dump, so their keys have to be camelized here.
+    An extra whose camelCase form is already present in the dump is kept as-is, so it never overwrites another field.
+    """
+    dumped = request.model_dump(by_alias=True, exclude_none=True)
+    for key in request.model_extra or {}:
+        camel_key = to_camel(key)
+        if key in dumped and camel_key not in dumped:
+            dumped[camel_key] = dumped.pop(key)
+    return dumped
 
 
 @docs_group('Resource clients')
@@ -223,7 +239,7 @@ class RequestQueueClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=_dump_request_draft(request),
             params=request_params,
             timeout=timeout,
         )
@@ -401,10 +417,7 @@ class RequestQueueClient(ResourceClient):
             raise NotImplementedError('max_parallel is only supported in async client')
 
         requests_as_dicts = [
-            (r if isinstance(r, RequestDraft) else RequestDraft.model_validate(r)).model_dump(
-                by_alias=True, exclude_none=True
-            )
-            for r in requests
+            _dump_request_draft(r if isinstance(r, RequestDraft) else RequestDraft.model_validate(r)) for r in requests
         ]
 
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
@@ -750,7 +763,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=_dump_request_draft(request),
             params=request_params,
             timeout=timeout,
         )
@@ -970,16 +983,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
             Result containing lists of processed and unprocessed requests.
         """
         requests_as_dicts = [
-            (
-                request
-                if isinstance(request, RequestDraft)
-                else RequestDraft.model_validate(
-                    request,
-                )
-            ).model_dump(
-                by_alias=True,
-                exclude_none=True,
-            )
+            _dump_request_draft(request if isinstance(request, RequestDraft) else RequestDraft.model_validate(request))
             for request in requests
         ]
 

@@ -62,6 +62,15 @@ _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
+def _get_payload_size_bytes(request: dict) -> int:
+    """Return the byte size of a request as it will be serialized into the request body.
+
+    Must mirror the JSON serialization in `HttpClientBase._prepare_request_call`, so that measured sizes match the
+    bytes actually sent.
+    """
+    return len(json.dumps(request, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8'))
+
+
 @docs_group('Resource clients')
 class RequestQueueClient(ResourceClient):
     """Sub-client for managing a specific request queue.
@@ -414,12 +423,11 @@ class RequestQueueClient(ResourceClient):
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
 
         # Split the requests into batches, constrained by the max payload size and max requests per batch.
-        # Sizes are measured with the same JSON serialization the HTTP client applies to request bodies.
         batches = constrained_batches(
             requests_as_dicts,
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
-            get_len=lambda r: len(json.dumps(r, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')),
+            get_len=_get_payload_size_bytes,
             # An individually oversized request gets its own batch and is left for the API to reject.
             strict=False,
         )
@@ -995,12 +1003,11 @@ class RequestQueueClientAsync(ResourceClientAsync):
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
 
         # Split the requests into batches, constrained by the max payload size and max requests per batch.
-        # Sizes are measured with the same JSON serialization the HTTP client applies to request bodies.
         batches = constrained_batches(
             requests_as_dicts,
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
-            get_len=lambda r: len(json.dumps(r, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')),
+            get_len=_get_payload_size_bytes,
             # An individually oversized request gets its own batch and is left for the API to reject.
             strict=False,
         )

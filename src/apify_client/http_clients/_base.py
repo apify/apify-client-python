@@ -207,11 +207,15 @@ class HttpClientBase:
         data: str | bytes | bytearray | None = None,
         json: JsonSerializable | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
-        """Prepare headers, params, and body for an HTTP request. Serializes JSON and compresses the body."""
+        """Prepare headers, params, and body for an HTTP request.
+
+        Merges the client's default headers (including authorization) with per-request headers,
+        serializes JSON and compresses the body.
+        """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
-        headers = dict(headers) if headers else {}
+        headers = {**self._headers, **(headers or {})}
 
         # Dump JSON data to string so it can be compressed.
         if json is not None:
@@ -252,6 +256,10 @@ class HttpClient(HttpClientBase, ABC):
     Extend this class to create a custom synchronous HTTP client. Override the `call` method
     with your implementation. Helper methods from the base class are available for request
     preparation, URL building, and parameter parsing.
+
+    Implementations must send the client's default headers from `self._headers` with every request,
+    otherwise the `Authorization` header never reaches the API. The `_prepare_request_call` helper
+    merges them into the per-request headers automatically.
     """
 
     @abstractmethod

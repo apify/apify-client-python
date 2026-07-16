@@ -35,6 +35,10 @@ class HttpxClientAsync(HttpClientAsync):
     ) -> HttpResponse:
         timeout_secs = self._compute_timeout(timeout, attempt=1) or 0
 
+        # Merge the client's default headers (including authorization)
+        # with the per-request ones.
+        headers = {**self._headers, **(headers or {})}
+
         # httpx.Response satisfies the HttpResponse protocol,
         # so it can be returned directly.
         return await self._client.request(

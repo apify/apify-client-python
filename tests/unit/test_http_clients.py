@@ -279,11 +279,13 @@ def compressor_case(request: pytest.FixtureRequest) -> tuple:
 
 
 def test_prepare_request_call_basic() -> None:
-    """Test _prepare_request_call with basic parameters."""
-    client = _ConcreteHttpClient()
+    """Test _prepare_request_call returns the client default headers when no per-request values are given."""
+    client = _ConcreteHttpClient(token='test_token')
 
     headers, params, data = client._prepare_request_call()
-    assert headers == {}
+    assert headers == client._headers
+    assert headers is not client._headers
+    assert headers['Authorization'] == 'Bearer test_token'
     assert params is None
     assert data is None
 

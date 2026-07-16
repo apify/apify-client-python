@@ -10,18 +10,18 @@ from apify_client.errors import NotFoundError
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
-_CHILD_CLIENT_PARAMS = [
-    pytest.param('dataset', 'dataset', id='dataset'),
-    pytest.param('key_value_store', 'key-value-store', id='key-value-store'),
-    pytest.param('request_queue', 'request-queue', id='request-queue'),
-    pytest.param('log', 'log', id='log'),
-]
-
-
 _NOT_FOUND_BODY = {'error': {'type': 'record-not-found', 'message': 'not found'}}
 
 
-@pytest.mark.parametrize(('child_method', 'child_path'), _CHILD_CLIENT_PARAMS)
+@pytest.mark.parametrize(
+    ('child_method', 'child_path'),
+    [
+        pytest.param('dataset', 'dataset', id='dataset'),
+        pytest.param('key_value_store', 'key-value-store', id='key-value-store'),
+        pytest.param('request_queue', 'request-queue', id='request-queue'),
+        pytest.param('log', 'log', id='log'),
+    ],
+)
 def test_last_run_filters_propagate_to_chained_clients(
     httpserver: HTTPServer,
     child_method: str,
@@ -42,7 +42,15 @@ def test_last_run_filters_propagate_to_chained_clients(
     assert request.args.get('origin') == 'WEB'
 
 
-@pytest.mark.parametrize(('child_method', 'child_path'), _CHILD_CLIENT_PARAMS)
+@pytest.mark.parametrize(
+    ('child_method', 'child_path'),
+    [
+        pytest.param('dataset', 'dataset', id='dataset'),
+        pytest.param('key_value_store', 'key-value-store', id='key-value-store'),
+        pytest.param('request_queue', 'request-queue', id='request-queue'),
+        pytest.param('log', 'log', id='log'),
+    ],
+)
 async def test_last_run_filters_propagate_to_chained_clients_async(
     httpserver: HTTPServer,
     child_method: str,

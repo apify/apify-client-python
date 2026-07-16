@@ -396,12 +396,24 @@ class ImpitHttpClientAsync(HttpClientAsync):
 
         self._statistics.calls += 1
 
-        prepared_headers, prepared_params, content = self._prepare_request_call(
-            headers=headers,
-            params=params,
-            data=data,
-            json=json,
-        )
+        # Serializing and compressing a request body is CPU-bound and would block the event loop, so
+        # offload request preparation to a worker thread whenever there is a body to compress. Bodyless
+        # requests skip the thread hop, as they have no expensive work to move off the loop.
+        if json is not None or data is not None:
+            prepared_headers, prepared_params, content = await asyncio.to_thread(
+                self._prepare_request_call,
+                headers=headers,
+                params=params,
+                data=data,
+                json=json,
+            )
+        else:
+            prepared_headers, prepared_params, content = self._prepare_request_call(
+                headers=headers,
+                params=params,
+                data=data,
+                json=json,
+            )
 
         return await self._retry_with_exp_backoff(
             lambda stop_retrying, attempt: self._make_request(

@@ -145,6 +145,11 @@ class HttpClientBase:
 
         self._headers = {**default_headers, **(headers or {})}
 
+    def _set_default_authorization(self, token: str) -> None:
+        """Set the `Authorization` header from the token, unless an authorization header is already configured."""
+        if not any(key.title() == 'Authorization' for key in self._headers):
+            self._headers['Authorization'] = f'Bearer {token}'
+
     @staticmethod
     def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
         """Convert request parameters to Apify API-compatible formats.

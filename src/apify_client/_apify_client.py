@@ -253,9 +253,8 @@ class ApifyClient:
             http_client: A custom HTTP client instance extending `HttpClient`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
-        client_headers = http_client._headers  # noqa: SLF001
-        if token is not None and not any(key.title() == 'Authorization' for key in client_headers):
-            client_headers['Authorization'] = f'Bearer {token}'
+        if token is not None:
+            http_client._set_default_authorization(token)  # noqa: SLF001
         instance._http_client = http_client
         return instance
 
@@ -616,9 +615,8 @@ class ApifyClientAsync:
             http_client: A custom HTTP client instance extending `HttpClientAsync`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
-        client_headers = http_client._headers  # noqa: SLF001
-        if token is not None and not any(key.title() == 'Authorization' for key in client_headers):
-            client_headers['Authorization'] = f'Bearer {token}'
+        if token is not None:
+            http_client._set_default_authorization(token)  # noqa: SLF001
         instance._http_client = http_client
         return instance
 

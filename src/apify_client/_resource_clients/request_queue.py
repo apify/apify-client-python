@@ -428,7 +428,6 @@ class RequestQueueClient(ResourceClient):
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
             get_len=_get_payload_size_bytes,
-            # An individually oversized request gets its own batch and is left for the API to reject.
             strict=False,
         )
 
@@ -1008,7 +1007,6 @@ class RequestQueueClientAsync(ResourceClientAsync):
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
             get_len=_get_payload_size_bytes,
-            # An individually oversized request gets its own batch and is left for the API to reject.
             strict=False,
         )
 

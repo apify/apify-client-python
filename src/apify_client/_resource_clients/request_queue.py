@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import math
 from collections.abc import Iterable
 from queue import Queue
@@ -413,10 +414,14 @@ class RequestQueueClient(ResourceClient):
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
 
         # Split the requests into batches, constrained by the max payload size and max requests per batch.
+        # Sizes are measured with the same JSON serialization the HTTP client applies to request bodies.
         batches = constrained_batches(
             requests_as_dicts,
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
+            get_len=lambda r: len(json.dumps(r, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')),
+            # An individually oversized request gets its own batch and is left for the API to reject.
+            strict=False,
         )
 
         # Put the batches into the queue for processing.
@@ -990,10 +995,14 @@ class RequestQueueClientAsync(ResourceClientAsync):
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
 
         # Split the requests into batches, constrained by the max payload size and max requests per batch.
+        # Sizes are measured with the same JSON serialization the HTTP client applies to request bodies.
         batches = constrained_batches(
             requests_as_dicts,
             max_size=payload_size_limit_bytes,
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
+            get_len=lambda r: len(json.dumps(r, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')),
+            # An individually oversized request gets its own batch and is left for the API to reject.
+            strict=False,
         )
 
         for batch in batches:

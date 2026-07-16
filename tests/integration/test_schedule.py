@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await
+from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await, poll_until_condition
 from apify_client._models import Actor, ListOfSchedules, Schedule, ScheduleActionRunActor, ScheduleShort
 
 if TYPE_CHECKING:
@@ -110,10 +110,16 @@ async def test_schedule_list(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(created_2, Schedule)
 
     try:
-        # List schedules
-        schedules_page = await maybe_await(client.schedules().list(limit=100))
-        assert isinstance(schedules_page, ListOfSchedules)
-        assert schedules_page.items is not None
+        # Poll until both fresh schedules appear in the listing (eventual consistency)
+        async def list_schedules() -> ListOfSchedules:
+            page = await maybe_await(client.schedules().list(limit=100))
+            assert isinstance(page, ListOfSchedules)
+            return page
+
+        schedules_page = await poll_until_condition(
+            list_schedules,
+            lambda page: {created_1.id, created_2.id} <= {s.id for s in page.items},
+        )
 
         # Verify our schedules are in the list
         schedule_ids = [s.id for s in schedules_page.items]

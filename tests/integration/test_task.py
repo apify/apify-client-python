@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await
+from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await, poll_until_condition
 from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, RunShort, Task, TaskShort
 
 if TYPE_CHECKING:
@@ -106,10 +106,16 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(created_task, Task)
 
     try:
-        # List tasks
-        tasks_page = await maybe_await(client.tasks().list(limit=100))
-        assert isinstance(tasks_page, ListOfTasks)
-        assert tasks_page.items is not None
+        # Poll until the fresh task appears in the listing (eventual consistency)
+        async def list_tasks() -> ListOfTasks:
+            page = await maybe_await(client.tasks().list(limit=100))
+            assert isinstance(page, ListOfTasks)
+            return page
+
+        tasks_page = await poll_until_condition(
+            list_tasks,
+            lambda page: created_task.id in {t.id for t in page.items},
+        )
 
         # Verify our task is in the list
         task_ids = [t.id for t in tasks_page.items]

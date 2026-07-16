@@ -2293,11 +2293,11 @@ class RequestBase(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    unique_key: Annotated[str | None, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])] = None
+    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: Annotated[str | None, Field(examples=['https://apify.com'])] = None
+    url: Annotated[str, Field(examples=['https://apify.com'])]
     """
     The URL of the request.
     """
@@ -2693,6 +2693,17 @@ class RequestResponse(BaseModel):
 @docs_group('Models')
 class RequestUserData(BaseModel):
     """Custom user data attached to the request. Can contain arbitrary fields."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+
+
+@docs_group('Models')
+class RequestWithoutId(RequestBase):
+    """A request stored in the request queue, including its metadata and processing state, without the assigned ID."""
 
     model_config = ConfigDict(
         extra='allow',

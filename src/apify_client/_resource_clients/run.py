@@ -148,7 +148,7 @@ class RunClient(ResourceClient):
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
-                TIMED_OUT, ABORTED), then the run has not yet finished.
+                TIMED-OUT, ABORTED), then the run has not yet finished.
         """
         response = self._wait_for_finish(
             url=self._build_url(),
@@ -218,7 +218,7 @@ class RunClient(ResourceClient):
     ) -> Run:
         """Resurrect a finished Actor run.
 
-        Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
+        Only finished runs, i.e. runs with status SUCCEEDED, FAILED, ABORTED and TIMED-OUT can be resurrected.
         Run status will be updated to RUNNING and its container will be restarted with the same default storages.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run
@@ -570,7 +570,7 @@ class RunClientAsync(ResourceClientAsync):
 
         Returns:
             The Actor run data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
-                TIMED_OUT, ABORTED), then the run has not yet finished.
+                TIMED-OUT, ABORTED), then the run has not yet finished.
         """
         response = await self._wait_for_finish(
             url=self._build_url(),
@@ -649,7 +649,7 @@ class RunClientAsync(ResourceClientAsync):
     ) -> Run:
         """Resurrect a finished Actor run.
 
-        Only finished runs, i.e. runs with status FINISHED, FAILED, ABORTED and TIMED-OUT can be resurrected.
+        Only finished runs, i.e. runs with status SUCCEEDED, FAILED, ABORTED and TIMED-OUT can be resurrected.
         Run status will be updated to RUNNING and its container will be restarted with the same default storages.
 
         https://docs.apify.com/api/v2#/reference/actor-runs/resurrect-run/resurrect-run

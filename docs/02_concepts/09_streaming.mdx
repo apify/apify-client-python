@@ -17,11 +17,11 @@ Certain resources, such as dataset items, key-value store records, and logs, sup
 
 Supported streaming methods:
 
-- <ApiLink to="class/DatasetClient#stream_items">`DatasetClient.stream_items`</ApiLink> - Stream dataset items incrementally.
-- <ApiLink to="class/KeyValueStoreClient#stream_record">`KeyValueStoreClient.stream_record`</ApiLink> - Stream key-value store records as raw data.
-- <ApiLink to="class/LogClient#stream">`LogClient.stream`</ApiLink> - Stream logs in real time.
+- <ApiLink to="class/DatasetClient#stream_items">`DatasetClient.stream_items`</ApiLink> - Stream dataset items incrementally. Yields a raw streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink>.
+- <ApiLink to="class/KeyValueStoreClient#stream_record">`KeyValueStoreClient.stream_record`</ApiLink> - Stream a key-value store record as raw data. Yields a `dict` with the `key`, `value`, and `content_type` fields, where `value` holds the raw streaming response, or `None` when the record doesn't exist.
+- <ApiLink to="class/LogClient#stream">`LogClient.stream`</ApiLink> - Stream logs in real time. Yields a raw streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink>, or `None` when the log doesn't exist.
 
-These methods return a raw, context-managed `impit.Response` object. The response must be consumed within a with block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
+All three methods are context managers. Consume the streamed data within a `with` block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
 
 The following example shows how to stream the logs of an Actor run incrementally:
 

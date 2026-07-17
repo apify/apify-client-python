@@ -65,7 +65,7 @@ To define the Actor's input, pass a dictionary to the <ApiLink to="class/ActorCl
 
 ## Step 3: Get results from the dataset
 
-To get the results from the dataset, call the <ApiLink to="class/DatasetClient">`apify_client.dataset()`</ApiLink> method with the dataset ID, then call <ApiLink to="class/DatasetClient#list_items">`list_items()`</ApiLink> to retrieve the data. You can get the dataset ID from the Actor's run dictionary (represented by `defaultDatasetId`).
+To get the results from the dataset, call the <ApiLink to="class/DatasetClient">`apify_client.dataset()`</ApiLink> method with the dataset ID, then call <ApiLink to="class/DatasetClient#list_items">`list_items()`</ApiLink> to retrieve the data. You can get the dataset ID from the `default_dataset_id` attribute of the <ApiLink to="class/Run">`Run`</ApiLink> object returned by `call()`.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

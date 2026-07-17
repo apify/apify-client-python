@@ -110,7 +110,7 @@ class BuildClient(ResourceClient):
 
         Returns:
             The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
-                TIMED_OUT, ABORTED), then the build has not yet finished.
+                TIMED-OUT, ABORTED), then the build has not yet finished.
         """
         result = self._wait_for_finish(
             url=self._build_url(),
@@ -230,7 +230,7 @@ class BuildClientAsync(ResourceClientAsync):
 
         Returns:
             The Actor build data. If the status on the object is not one of the terminal statuses (SUCCEEDED, FAILED,
-                TIMED_OUT, ABORTED), then the build has not yet finished.
+                TIMED-OUT, ABORTED), then the build has not yet finished.
         """
         result = await self._wait_for_finish(
             url=self._build_url(),

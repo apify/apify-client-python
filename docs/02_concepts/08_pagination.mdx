@@ -17,7 +17,7 @@ import IterateItemsSyncExample from '!!raw-loader!./code/08_iterate_items_sync.p
 import IterateCollectionAsyncExample from '!!raw-loader!./code/08_iterate_collection_async.py';
 import IterateCollectionSyncExample from '!!raw-loader!./code/08_iterate_collection_sync.py';
 
-Most methods named `list` or `list_something` in the Apify client return a page model — a [Pydantic](https://docs.pydantic.dev/latest/) model such as <ApiLink to="class/ListOfActors">`ListOfActors`</ApiLink>, <ApiLink to="class/ListOfDatasets">`ListOfDatasets`</ApiLink>, or <ApiLink to="class/ListOfRequests">`ListOfRequests`</ApiLink>. Unstructured dataset items use the <ApiLink to="class/DatasetItemsPage">`DatasetItemsPage`</ApiLink> dataclass instead. All page models share a consistent interface for working with paginated data and expose the following fields:
+Most methods named `list` or `list_something` in the Apify client return a page model — a [Pydantic](https://docs.pydantic.dev/latest/) model such as <ApiLink to="class/ListOfActors">`ListOfActors`</ApiLink> or <ApiLink to="class/ListOfDatasets">`ListOfDatasets`</ApiLink>. Unstructured dataset items use the <ApiLink to="class/DatasetItemsPage">`DatasetItemsPage`</ApiLink> dataclass instead. All page models share a consistent interface for working with paginated data and expose the following fields:
 
 - `items` - The main results you're looking for.
 - `total` - The total number of items available.
@@ -25,7 +25,7 @@ Most methods named `list` or `list_something` in the Apify client return a page 
 - `count` - The number of items in the current page.
 - `limit` - The maximum number of items per page.
 
-Some methods, such as `list_keys` or `list_head`, paginate differently. Regardless, the primary results are always stored under the `items` field, and the `limit` field can be used to control the number of results returned.
+Some methods paginate differently. For example, <ApiLink to="class/RequestQueueClient#list_requests">`RequestQueueClient.list_requests`</ApiLink> returns a cursor-based <ApiLink to="class/ListOfRequests">`ListOfRequests`</ApiLink> without the `total`, `offset`, and `count` fields. To fetch the next page, pass its `next_cursor` value back as the `cursor` parameter. Other examples include `list_keys` and `list_head`. Regardless, the primary results are always stored under the `items` field, and the `limit` field can be used to control the number of results returned.
 
 The following example shows how to fetch all items from a dataset using pagination:
 

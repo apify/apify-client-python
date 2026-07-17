@@ -289,6 +289,7 @@ class RunClient(ResourceClient):
         """
         return self._client_registry.dataset_client(
             resource_path='dataset',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -302,6 +303,7 @@ class RunClient(ResourceClient):
         """
         return self._client_registry.key_value_store_client(
             resource_path='key-value-store',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -315,6 +317,7 @@ class RunClient(ResourceClient):
         """
         return self._client_registry.request_queue_client(
             resource_path='request-queue',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -328,6 +331,7 @@ class RunClient(ResourceClient):
         """
         return self._client_registry.log_client(
             resource_path='log',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -716,6 +720,7 @@ class RunClientAsync(ResourceClientAsync):
         """
         return self._client_registry.dataset_client(
             resource_path='dataset',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -729,6 +734,7 @@ class RunClientAsync(ResourceClientAsync):
         """
         return self._client_registry.key_value_store_client(
             resource_path='key-value-store',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -742,6 +748,7 @@ class RunClientAsync(ResourceClientAsync):
         """
         return self._client_registry.request_queue_client(
             resource_path='request-queue',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 
@@ -755,6 +762,7 @@ class RunClientAsync(ResourceClientAsync):
         """
         return self._client_registry.log_client(
             resource_path='log',
+            params=self._default_params,
             **self._base_client_kwargs,
         )
 

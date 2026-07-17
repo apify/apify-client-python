@@ -62,13 +62,15 @@ _MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024  # 9 MB
 _SAFETY_BUFFER_PERCENT = 0.01 / 100  # 0.01%
 
 
-def _get_payload_size_bytes(request: dict) -> int:
-    """Return the byte size of a request as it will be serialized into the request body.
+def _serialize_request(request: dict) -> bytes:
+    """Serialize a request into the JSON bytes it will occupy in the batch request body.
 
-    Must mirror the JSON serialization in `HttpClientBase._prepare_request_call`, so that measured sizes match the
-    bytes actually sent.
+    Each request is serialized exactly once: the same bytes are measured when splitting requests into batches and
+    then assembled into the request body, so batch sizes are computed on exactly the bytes that get sent. Uses the
+    same `json.dumps` options as `HttpClientBase._prepare_request_call` to keep the wire format consistent with
+    other endpoints.
     """
-    return len(json.dumps(request, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8'))
+    return json.dumps(request, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
 
 
 @docs_group('Resource clients')
@@ -417,22 +419,26 @@ class RequestQueueClient(ResourceClient):
             for r in requests
         ]
 
+        serialized_requests = [_serialize_request(r) for r in requests_as_dicts]
+
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
         # Compute the payload size limit to ensure it doesn't exceed the maximum allowed size.
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
 
-        # Split the requests into batches, constrained by the max payload size and max requests per batch.
+        # Split the requests into batches, constrained by the max payload size and max requests per batch. Each
+        # request costs its serialized bytes plus a separator, and the brackets are reserved up front, so an
+        # assembled `[...]` body can never exceed the limit.
         batches = constrained_batches(
-            requests_as_dicts,
-            max_size=payload_size_limit_bytes,
+            serialized_requests,
+            max_size=payload_size_limit_bytes - len(b'[]'),
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
-            get_len=_get_payload_size_bytes,
+            get_len=lambda serialized: len(serialized) + len(b','),
             strict=False,
         )
 
         # Put the batches into the queue for processing.
-        queue = Queue[Iterable[dict]]()
+        queue = Queue[Iterable[bytes]]()
 
         for batch in batches:
             queue.put(batch)
@@ -444,12 +450,13 @@ class RequestQueueClient(ResourceClient):
         while not queue.empty():
             request_batch = queue.get()
 
-            # Send the batch to the API.
+            # Send the batch to the API, assembling the body from the already serialized requests.
             response = self._http_client.call(
                 url=self._build_url('requests/batch'),
                 method='POST',
+                headers={'content-type': 'application/json'},
                 params=request_params,
-                json=list(request_batch),
+                data=b'[' + b','.join(request_batch) + b']',
                 timeout=timeout,
             )
 
@@ -910,7 +917,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
     async def _batch_add_requests_worker(
         self,
         *,
-        queue: asyncio.Queue[Iterable[dict]],
+        queue: asyncio.Queue[Iterable[bytes]],
         request_params: dict,
         timeout: Timeout,
     ) -> BatchAddResponse:
@@ -931,12 +938,13 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 break
 
             try:
-                # Send the batch to the API.
+                # Send the batch to the API, assembling the body from the already serialized requests.
                 response = await self._http_client.call(
                     url=self._build_url('requests/batch'),
                     method='POST',
+                    headers={'content-type': 'application/json'},
                     params=request_params,
-                    json=list(request_batch),
+                    data=b'[' + b','.join(request_batch) + b']',
                     timeout=timeout,
                 )
 
@@ -995,18 +1003,26 @@ class RequestQueueClientAsync(ResourceClientAsync):
             for request in requests
         ]
 
-        asyncio_queue: asyncio.Queue[Iterable[dict]] = asyncio.Queue()
+        # Serializing many requests is CPU-bound and would block the event loop, so offload it to a worker
+        # thread (the HTTP client offloads request body compression the same way).
+        serialized_requests = await asyncio.to_thread(
+            lambda: [_serialize_request(request) for request in requests_as_dicts]
+        )
+
+        asyncio_queue: asyncio.Queue[Iterable[bytes]] = asyncio.Queue()
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
         # Compute the payload size limit to ensure it doesn't exceed the maximum allowed size.
         payload_size_limit_bytes = _MAX_PAYLOAD_SIZE_BYTES - math.ceil(_MAX_PAYLOAD_SIZE_BYTES * _SAFETY_BUFFER_PERCENT)
 
-        # Split the requests into batches, constrained by the max payload size and max requests per batch.
+        # Split the requests into batches, constrained by the max payload size and max requests per batch. Each
+        # request costs its serialized bytes plus a separator, and the brackets are reserved up front, so an
+        # assembled `[...]` body can never exceed the limit.
         batches = constrained_batches(
-            requests_as_dicts,
-            max_size=payload_size_limit_bytes,
+            serialized_requests,
+            max_size=payload_size_limit_bytes - len(b'[]'),
             max_count=_RQ_MAX_REQUESTS_PER_BATCH,
-            get_len=_get_payload_size_bytes,
+            get_len=lambda serialized: len(serialized) + len(b','),
             strict=False,
         )
 

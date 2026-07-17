@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import gzip
+import threading
 import time
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import brotli
 import impit
@@ -14,6 +16,7 @@ from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_clients._impit import _is_retryable_error
+from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
@@ -483,3 +486,48 @@ def test_build_url_with_params_mixed() -> None:
     assert 'tags=a' in url
     assert 'tags=b' in url
     assert 'name=test' in url
+
+
+class _ThreadRecordingCompressor(HttpCompressor):
+    """Compressor that records the thread `compress` ran on, to prove the work is offloaded."""
+
+    content_encoding = 'gzip'
+
+    def __init__(self) -> None:
+        self.compress_thread_id: int | None = None
+
+    def compress(self, data: bytes) -> bytes:
+        self.compress_thread_id = threading.get_ident()
+        return gzip.compress(data)
+
+
+async def test_async_call_compresses_request_body_off_the_event_loop() -> None:
+    """Body serialization and compression must run in a worker thread, not block the event loop."""
+    compressor = _ThreadRecordingCompressor()
+    client = ImpitHttpClientAsync(token='test_token', http_compressor=compressor)
+    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+
+    await client.call(method='POST', url='https://api.test.com/endpoint', json={'key': 'value'})
+
+    assert compressor.compress_thread_id is not None
+    assert compressor.compress_thread_id != threading.get_ident()
+
+
+async def test_async_call_skips_thread_offload_without_a_body(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A bodyless request has nothing to compress, so it must not pay the worker-thread hop."""
+    client = ImpitHttpClientAsync(token='test_token')
+    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+
+    offloaded = False
+    real_to_thread = asyncio.to_thread
+
+    async def spy_to_thread(func: Any, /, *args: Any, **kwargs: Any) -> Any:
+        nonlocal offloaded
+        offloaded = True
+        return await real_to_thread(func, *args, **kwargs)
+
+    monkeypatch.setattr(asyncio, 'to_thread', spy_to_thread)
+
+    await client.call(method='GET', url='https://api.test.com/endpoint')
+
+    assert offloaded is False

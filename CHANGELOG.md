@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 
 - Add request body compression with optional brotli ([#927](https://github.com/apify/apify-client-python/pull/927)) ([a8a393b](https://github.com/apify/apify-client-python/commit/a8a393bfcca01c8396b461036a9978fa5b28e6bf)) by [@mixalturek](https://github.com/mixalturek), closes [#942](https://github.com/apify/apify-client-python/issues/942)
 
+### 🐛 Bug Fixes
+
+- Offload async request body compression to a worker thread ([#950](https://github.com/apify/apify-client-python/pull/950)) ([7ac3885](https://github.com/apify/apify-client-python/commit/7ac3885826f0010df63eee9f1d30b5aed825872e)) by [@vdusek](https://github.com/vdusek)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.0.6](https://github.com/apify/apify-client-python/releases/tag/v3.0.6) (2026-07-13)

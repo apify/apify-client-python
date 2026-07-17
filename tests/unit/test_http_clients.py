@@ -170,6 +170,53 @@ def test_base_http_client_initialization() -> None:
     assert isinstance(client2._statistics, ClientStatistics)
 
 
+def test_http_client_init_headers_override_defaults_case_insensitively() -> None:
+    """Constructor headers replace same-named default headers even when their casings differ."""
+    client = _ConcreteHttpClient(token='default_token', headers={'authorization': 'Bearer custom'})
+
+    auth_headers = {key: value for key, value in client._headers.items() if key.lower() == 'authorization'}
+    assert auth_headers == {'authorization': 'Bearer custom'}
+
+
+def test_http_client_init_workflow_key_header(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The X-Apify-Workflow-Key default header is set from the APIFY_WORKFLOW_KEY env var."""
+    monkeypatch.setenv('APIFY_WORKFLOW_KEY', 'workflow_key_123')
+
+    client = _ConcreteHttpClient()
+
+    assert client._headers['X-Apify-Workflow-Key'] == 'workflow_key_123'
+
+
+def test_set_default_authorization_sets_token_when_missing() -> None:
+    """set_default_authorization sets the Bearer token when no authorization header is configured."""
+    client = _ConcreteHttpClient()
+
+    client.set_default_authorization('test_token')
+
+    assert client._headers['Authorization'] == 'Bearer test_token'
+
+
+@pytest.mark.parametrize(
+    ('base', 'override', 'expected'),
+    [
+        pytest.param(None, None, {}, id='both none'),
+        pytest.param({'Accept': 'a'}, None, {'Accept': 'a'}, id='override none'),
+        pytest.param(None, {'Accept': 'a'}, {'Accept': 'a'}, id='base none'),
+        pytest.param({'Accept': 'a'}, {'X-Custom': 'b'}, {'Accept': 'a', 'X-Custom': 'b'}, id='disjoint names'),
+        pytest.param({'Authorization': 'x'}, {'Authorization': 'y'}, {'Authorization': 'y'}, id='same casing'),
+        pytest.param({'Authorization': 'x'}, {'authorization': 'y'}, {'authorization': 'y'}, id='lowercase override'),
+        pytest.param({'authorization': 'x'}, {'AUTHORIZATION': 'y'}, {'AUTHORIZATION': 'y'}, id='uppercase override'),
+    ],
+)
+def test_merge_headers(
+    base: dict[str, str] | None,
+    override: dict[str, str] | None,
+    expected: dict[str, str],
+) -> None:
+    """_merge_headers merges case-insensitively, override values win and keep their casing."""
+    assert HttpClient._merge_headers(base, override) == expected
+
+
 def test_http_client_creates_sync_impit_client() -> None:
     """Test that ImpitHttpClient creates sync impit client correctly."""
     client = ImpitHttpClient(token='test_token_123')
@@ -282,11 +329,13 @@ def compressor_case(request: pytest.FixtureRequest) -> tuple:
 
 
 def test_prepare_request_call_basic() -> None:
-    """Test _prepare_request_call with basic parameters."""
-    client = _ConcreteHttpClient()
+    """Test _prepare_request_call returns the client default headers when no per-request values are given."""
+    client = _ConcreteHttpClient(token='test_token')
 
     headers, params, data = client._prepare_request_call()
-    assert headers == {}
+    assert headers == client._headers
+    assert headers is not client._headers
+    assert headers['Authorization'] == 'Bearer test_token'
     assert params is None
     assert data is None
 
@@ -445,6 +494,39 @@ def test_prepare_request_call_does_not_mutate_caller_headers() -> None:
 
     client._prepare_request_call(headers=caller_headers, data='payload')
     assert caller_headers == original
+
+
+def test_prepare_request_call_per_request_headers_override_defaults_case_insensitively() -> None:
+    """A per-request header replaces a same-named default header even when their casings differ."""
+    client = _ConcreteHttpClient(token='default_token')
+
+    headers, _params, _data = client._prepare_request_call(headers={'authorization': 'Bearer per-request'})
+
+    auth_headers = {key: value for key, value in headers.items() if key.lower() == 'authorization'}
+    assert auth_headers == {'authorization': 'Bearer per-request'}
+
+
+def test_prepare_request_call_json_keeps_caller_content_type() -> None:
+    """A caller-supplied content type is not overwritten by the JSON default, regardless of casing."""
+    client = _ConcreteHttpClient()
+
+    headers, _params, _data = client._prepare_request_call(
+        headers={'content-type': 'application/json; charset=utf-8'},
+        json={'key': 'value'},
+    )
+
+    content_type_headers = {key: value for key, value in headers.items() if key.lower() == 'content-type'}
+    assert content_type_headers == {'content-type': 'application/json; charset=utf-8'}
+
+
+def test_prepare_request_call_replaces_caller_content_encoding() -> None:
+    """The Content-Encoding header always reflects the compressor actually applied, replacing any caller value."""
+    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+
+    headers, _params, _data = client._prepare_request_call(headers={'content-encoding': 'br'}, data='payload')
+
+    encoding_headers = {key: value for key, value in headers.items() if key.lower() == 'content-encoding'}
+    assert encoding_headers == {'Content-Encoding': 'gzip'}
 
 
 def test_build_url_with_params_none() -> None:

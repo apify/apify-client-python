@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json as jsonlib
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+import impit
 import pytest
+from werkzeug import Request, Response
 
 import apify_client as apify_client_module
 import apify_client.http_clients as http_clients_module
@@ -423,3 +426,125 @@ async def test_custom_http_client_async_with_real_server(httpserver: HTTPServer)
 
     assert result is not None
     assert result['data']['id'] == 'test-dataset'
+
+
+class PreparingHttpClient(HttpClient):
+    """A custom sync HTTP client that sends requests prepared by the base-class helpers."""
+
+    def __init__(self, token: str | None = None) -> None:
+        super().__init__(token=token)
+        self._impit_client = impit.Client()
+
+    def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        data: str | bytes | bytearray | None = None,
+        json: Any = None,
+        **_kwargs: Any,
+    ) -> HttpResponse:
+        headers, params, content = self._prepare_request_call(headers=headers, params=params, data=data, json=json)
+        url = self._build_url_with_params(url, params=params)
+        return self._impit_client.request(method=method, url=url, headers=headers, content=content)
+
+
+class PreparingHttpClientAsync(HttpClientAsync):
+    """A custom async HTTP client that sends requests prepared by the base-class helpers."""
+
+    def __init__(self, token: str | None = None) -> None:
+        super().__init__(token=token)
+        self._impit_client = impit.AsyncClient()
+
+    async def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        data: str | bytes | bytearray | None = None,
+        json: Any = None,
+        **_kwargs: Any,
+    ) -> HttpResponse:
+        headers, params, content = self._prepare_request_call(headers=headers, params=params, data=data, json=json)
+        url = self._build_url_with_params(url, params=params)
+        return await self._impit_client.request(method=method, url=url, headers=headers, content=content)
+
+
+def _echo_headers(request: Request) -> Response:
+    """Respond with the received request headers so tests can assert on them."""
+    return Response(
+        response=jsonlib.dumps({'received_headers': dict(request.headers)}),
+        status=200,
+        content_type='application/json',
+    )
+
+
+def test_custom_http_client_sends_token_from_classmethod(httpserver: HTTPServer) -> None:
+    """Token passed to with_custom_http_client is sent as the Authorization header by the custom client."""
+    httpserver.expect_request('/v2/datasets/test-dataset').respond_with_handler(_echo_headers)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient.with_custom_http_client(
+        token='test_token',
+        api_url=api_url,
+        http_client=PreparingHttpClient(),
+    )
+
+    result = client.dataset('test-dataset')._get(timeout='short')
+
+    assert result is not None
+    assert result['received_headers']['Authorization'] == 'Bearer test_token'
+
+
+async def test_custom_http_client_async_sends_token_from_classmethod(httpserver: HTTPServer) -> None:
+    """Token passed to async with_custom_http_client is sent as the Authorization header by the custom client."""
+    httpserver.expect_request('/v2/datasets/test-dataset').respond_with_handler(_echo_headers)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync.with_custom_http_client(
+        token='test_token',
+        api_url=api_url,
+        http_client=PreparingHttpClientAsync(),
+    )
+
+    result = await client.dataset('test-dataset')._get(timeout='short')
+
+    assert result is not None
+    assert result['received_headers']['Authorization'] == 'Bearer test_token'
+
+
+def test_custom_http_client_impit_instance_sends_token(httpserver: HTTPServer) -> None:
+    """Token from with_custom_http_client reaches the wire even for a pre-built tokenless ImpitHttpClient."""
+    httpserver.expect_request('/v2/datasets/test-dataset').respond_with_handler(_echo_headers)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient.with_custom_http_client(token='test_token', api_url=api_url, http_client=ImpitHttpClient())
+
+    result = client.dataset('test-dataset')._get(timeout='short')
+
+    assert result is not None
+    assert result['received_headers']['Authorization'] == 'Bearer test_token'
+
+
+def test_custom_http_client_keeps_own_token() -> None:
+    """An Authorization header configured on the custom client itself is not overridden by with_custom_http_client."""
+    http_client = PreparingHttpClient(token='client_token')
+
+    ApifyClient.with_custom_http_client(token='outer_token', http_client=http_client)
+
+    assert http_client._headers['Authorization'] == 'Bearer client_token'
+
+
+def test_custom_http_client_keeps_differently_cased_authorization() -> None:
+    """A lowercase 'authorization' header on the custom client is not duplicated by the token injection."""
+    http_client = PreparingHttpClient()
+    http_client._headers['authorization'] = 'Bearer client_token'
+
+    ApifyClient.with_custom_http_client(token='outer_token', http_client=http_client)
+
+    assert 'Authorization' not in http_client._headers
+    assert http_client._headers['authorization'] == 'Bearer client_token'

@@ -227,7 +227,7 @@ class ApifyClient:
 
         Use this alternative constructor when you want to provide your own HTTP client implementation
         instead of the default one. The custom client is responsible for its own configuration
-        (retries, timeouts, headers, etc.).
+        (retries, timeouts, etc.); only the token is applied to it, as described below.
 
         ### Usage
 
@@ -246,12 +246,15 @@ class ApifyClient:
         ```
 
         Args:
-            token: The Apify API token.
+            token: The Apify API token. It is set as the `Authorization` header on the custom client,
+                unless the client already has one configured.
             api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
             api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
             http_client: A custom HTTP client instance extending `HttpClient`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
+        if token is not None:
+            http_client.set_default_authorization(token)
         instance._http_client = http_client
         return instance
 
@@ -586,7 +589,7 @@ class ApifyClientAsync:
 
         Use this alternative constructor when you want to provide your own HTTP client implementation
         instead of the default one. The custom client is responsible for its own configuration
-        (retries, timeouts, headers, etc.).
+        (retries, timeouts, etc.); only the token is applied to it, as described below.
 
         ### Usage
 
@@ -605,12 +608,15 @@ class ApifyClientAsync:
         ```
 
         Args:
-            token: The Apify API token.
+            token: The Apify API token. It is set as the `Authorization` header on the custom client,
+                unless the client already has one configured.
             api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
             api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
             http_client: A custom HTTP client instance extending `HttpClientAsync`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
+        if token is not None:
+            http_client.set_default_authorization(token)
         instance._http_client = http_client
         return instance
 

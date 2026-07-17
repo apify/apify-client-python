@@ -124,3 +124,33 @@ def test_headers_sync(httpserver: HTTPServer) -> None:
     }
     assert {k: v for k, v in request_headers.items() if k != 'Accept-Encoding'} == expected_headers
     assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
+
+
+async def test_per_request_headers_override_defaults_async(httpserver: HTTPServer) -> None:
+    """Test that a per-request header overrides a same-named default header on the wire, without duplication."""
+    client = ImpitHttpClientAsync(token='placeholder_token')
+    httpserver.expect_request('/').respond_with_handler(_header_handler)
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    response = await client.call(method='GET', url=f'{api_url}/', headers={'authorization': 'Bearer per-request'})
+
+    request_headers = json.loads(response.text)['received_headers']
+
+    # WSGI joins duplicate headers into one comma-separated value, so exact equality
+    # also proves the authorization header was sent only once.
+    assert request_headers['Authorization'] == 'Bearer per-request'
+
+
+def test_per_request_headers_override_defaults_sync(httpserver: HTTPServer) -> None:
+    """Test that a per-request header overrides a same-named default header on the wire, without duplication."""
+    client = ImpitHttpClient(token='placeholder_token')
+    httpserver.expect_request('/').respond_with_handler(_header_handler)
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    response = client.call(method='GET', url=f'{api_url}/', headers={'authorization': 'Bearer per-request'})
+
+    request_headers = json.loads(response.text)['received_headers']
+
+    # WSGI joins duplicate headers into one comma-separated value, so exact equality
+    # also proves the authorization header was sent only once.
+    assert request_headers['Authorization'] == 'Bearer per-request'

@@ -37,7 +37,7 @@ class HttpxClientAsync(HttpClientAsync):
 
         # Merge the client's default headers (including authorization)
         # with the per-request ones.
-        headers = {**self._headers, **(headers or {})}
+        headers = self._merge_headers(self._headers, headers)
 
         # httpx.Response satisfies the HttpResponse protocol,
         # so it can be returned directly.

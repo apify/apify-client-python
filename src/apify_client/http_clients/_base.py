@@ -143,7 +143,7 @@ class HttpClientBase:
         if token is not None:
             default_headers['Authorization'] = f'Bearer {token}'
 
-        self._headers = {**default_headers, **(headers or {})}
+        self._headers = self._merge_headers(default_headers, headers)
 
     def set_default_authorization(self, token: str) -> None:
         """Set the `Authorization` header from the token, unless an authorization header is already configured.
@@ -151,8 +151,22 @@ class HttpClientBase:
         Args:
             token: The Apify API token to set as the `Bearer` authorization.
         """
-        if not any(key.title() == 'Authorization' for key in self._headers):
+        if not any(key.lower() == 'authorization' for key in self._headers):
             self._headers['Authorization'] = f'Bearer {token}'
+
+    @staticmethod
+    def _merge_headers(base: dict[str, str] | None, override: dict[str, str] | None) -> dict[str, str]:
+        """Merge two header dicts, treating header names case-insensitively.
+
+        A header from `override` replaces a same-named header in `base` regardless of the casing
+        of either name, and keeps the casing it was passed with.
+        """
+        merged = dict(base) if base else {}
+        for key, value in (override or {}).items():
+            for existing_key in [k for k in merged if k.lower() == key.lower()]:
+                del merged[existing_key]
+            merged[key] = value
+        return merged
 
     @staticmethod
     def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -219,17 +233,20 @@ class HttpClientBase:
         """Prepare headers, params, and body for an HTTP request.
 
         Merges the client's default headers (including authorization) with per-request headers,
-        serializes JSON and compresses the body.
+        serializes JSON and compresses the body. Header names are treated case-insensitively and
+        per-request values win over the client defaults. For JSON bodies, a `Content-Type` header
+        is set unless the caller supplied one.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
-        headers = {**self._headers, **(headers or {})}
+        headers = self._merge_headers(self._headers, headers)
 
         # Dump JSON data to string so it can be compressed.
         if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
-            headers['Content-Type'] = 'application/json'
+            if not any(key.lower() == 'content-type' for key in headers):
+                headers['Content-Type'] = 'application/json'
 
         if isinstance(data, (str, bytes, bytearray)):
             if isinstance(data, str):
@@ -237,7 +254,7 @@ class HttpClientBase:
             elif isinstance(data, bytearray):
                 data = bytes(data)
             data = self._http_compressor.compress(data)
-            headers['Content-Encoding'] = self._http_compressor.content_encoding
+            headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
 
         return (headers, self._parse_params(params), data)
 

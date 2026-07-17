@@ -104,7 +104,6 @@ class ImpitHttpClient(HttpClient):
         )
 
         self._impit_client = impit.Client(
-            headers=self._headers,
             follow_redirects=True,
         )
 
@@ -354,7 +353,6 @@ class ImpitHttpClientAsync(HttpClientAsync):
         )
 
         self._impit_async_client = impit.AsyncClient(
-            headers=self._headers,
             follow_redirects=True,
         )
 

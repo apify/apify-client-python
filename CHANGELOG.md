@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Offload async request body compression to a worker thread ([#950](https://github.com/apify/apify-client-python/pull/950)) ([7ac3885](https://github.com/apify/apify-client-python/commit/7ac3885826f0010df63eee9f1d30b5aed825872e)) by [@vdusek](https://github.com/vdusek)
+- Propagate last_run status&#x2F;origin filters to chained storage clients ([#954](https://github.com/apify/apify-client-python/pull/954)) ([fe24058](https://github.com/apify/apify-client-python/commit/fe24058bb29ed6e2f42ae754dce3f15e5f6628e6)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

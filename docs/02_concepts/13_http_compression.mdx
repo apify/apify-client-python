@@ -34,6 +34,12 @@ pip install "apify-client[brotli]"
 uv add "apify-client[brotli]"
 ```
 
+On conda-forge, extras don't exist as a concept. Install the `brotli-python` package (which provides the `brotli` module) alongside the client instead:
+
+```bash
+conda install conda-forge::apify-client conda-forge::brotli-python
+```
+
 Then pass `compression='brotli'` to the client constructor. If you request brotli without installing the extra, the client raises a clear `ImportError`. There is no silent fallback.
 
 ## Custom quality and advanced control

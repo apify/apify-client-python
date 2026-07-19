@@ -33,6 +33,8 @@ The `call` method receives parameters like `method`, `url`, `headers`, `params`,
 
 A convenient property of HTTPX is that its `httpx.Response` object already satisfies the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol, so you can return it directly without wrapping.
 
+One part of the contract isn't visible in the method signature: `call` must raise <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> for error responses instead of returning them. The resource clients rely on that error to work correctly. For example, `get` methods translate a 404 raised this way into a `None` return value, and user code handling `ApifyApiError` keeps working.
+
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
         <CodeBlock className="language-python">

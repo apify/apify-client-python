@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from apify_client import ApifyClientAsync
+from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpClientAsync, HttpResponse
 
 if TYPE_CHECKING:
@@ -39,9 +41,7 @@ class HttpxClientAsync(HttpClientAsync):
         # with the per-request ones.
         headers = self._merge_headers(self._headers, headers)
 
-        # httpx.Response satisfies the HttpResponse protocol,
-        # so it can be returned directly.
-        return await self._client.request(
+        response = await self._client.request(
             method=method,
             url=url,
             headers=headers,
@@ -50,6 +50,16 @@ class HttpxClientAsync(HttpClientAsync):
             json=json,
             timeout=timeout_secs,
         )
+
+        # Raising `ApifyApiError` for error responses is part of the `call`
+        # contract. The resource clients rely on it, e.g. to translate a 404
+        # into a `None` return value of `get` methods.
+        if response.status_code >= HTTPStatus.BAD_REQUEST:
+            raise ApifyApiError(response, attempt=1, method=method)
+
+        # httpx.Response satisfies the HttpResponse protocol,
+        # so it can be returned directly.
+        return response
 
 
 async def main() -> None:

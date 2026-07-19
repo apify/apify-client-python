@@ -19,7 +19,7 @@ The Apify client uses a tiered timeout system to set appropriate time limits for
 | `short` | 5 seconds | Fast CRUD operations (get, update, delete) |
 | `medium` | 30 seconds | Batch, list, and data transfer operations |
 | `long` | 360 seconds | Long-polling, streaming, and heavy operations |
-| `no_timeout` | — | Disables the timeout entirely |
+| `no_timeout` | — | Effectively disables the timeout (the default client caps it at 24 hours) |
 
 Every client method has a pre-assigned tier that matches the expected duration of the underlying API call. You generally don't need to change these unless you're working with unusually large payloads or slow network conditions.
 
@@ -53,7 +53,7 @@ client.dataset('id').list_items(timeout=timedelta(seconds=120))
 # Switch to a different tier.
 client.dataset('id').list_items(timeout='long')
 
-# Disable the timeout entirely.
+# Effectively disable the timeout (capped at 24 hours by the default client).
 client.dataset('id').list_items(timeout='no_timeout')
 ```
 

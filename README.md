@@ -79,6 +79,8 @@ client = ApifyClient('MY-APIFY-TOKEN')
 run = client.actor('apify/hello-world').call(
     run_input={'message': 'Hello, Apify!'},
 )
+if run is None:
+    raise RuntimeError('Actor run was not found.')
 
 # Iterate items from the run's default dataset.
 for item in client.dataset(run.default_dataset_id).iterate_items():
@@ -99,6 +101,8 @@ async def main() -> None:
     run = await client.actor('apify/hello-world').call(
         run_input={'message': 'Hello, Apify!'},
     )
+    if run is None:
+        raise RuntimeError('Actor run was not found.')
 
     # Iterate items from the run's default dataset.
     async for item in client.dataset(run.default_dataset_id).iterate_items():
@@ -158,7 +162,7 @@ record = store.get_record('greeting')
 ### Iterate dataset items with automatic pagination
 
 ```python
-for item in client.dataset('DATASET-ID').iterate_items(fields='title,url'):
+for item in client.dataset('DATASET-ID').iterate_items(fields=['title', 'url']):
     process(item)
 ```
 

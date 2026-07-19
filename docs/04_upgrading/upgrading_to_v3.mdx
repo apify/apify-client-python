@@ -28,7 +28,7 @@ dataset_id = run.default_dataset_id
 
 Two endpoints still return plain types because their payloads are user-defined: <ApiLink to="class/DatasetClient#list_items">`DatasetClient.list_items()`</ApiLink> returns <ApiLink to="class/DatasetItemsPage">`DatasetItemsPage`</ApiLink> (with `items: list[dict[str, Any]]` following the [Actor output schema](https://docs.apify.com/platform/actors/development/actor-definition/output-schema)), and <ApiLink to="class/KeyValueStoreClient#get_record">`KeyValueStoreClient.get_record()`</ApiLink> returns a `dict`.
 
-On the input side, methods now also accept Pydantic models in addition to dicts. Plain dicts continue to work — keys may use either snake_case or camelCase, and each input shape has a matching [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) so editors and type checkers can validate the keys. See [Typed models](/docs/concepts/typed-models) for details.
+On the input side, methods now also accept Pydantic models in addition to dicts. Plain dicts continue to work — keys may use either snake_case or camelCase, and each input shape has a matching [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) so editors and type checkers can validate the keys. See [Typed models](/api/client/python/docs/concepts/typed-models) for details.
 
 ## Tiered timeouts
 
@@ -44,7 +44,7 @@ client.actor('apify/hello-world').get(timeout='long')
 client.actor('apify/hello-world').get(timeout=timedelta(seconds=120))
 ```
 
-If your code relied on the previous global timeout, review the methods you use. See [Timeouts](/docs/concepts/timeouts) for the full reference.
+If your code relied on the previous global timeout, review the methods you use. See [Timeouts](/api/client/python/docs/concepts/timeouts) for the full reference.
 
 ## 404 raises NotFoundError on ambiguous endpoints
 
@@ -69,7 +69,7 @@ Affected paths:
 - Chained `LogClient` reads — `run.log().get()`, `.get_as_bytes()`, `.stream()`.
 - Singleton endpoints fetched via a fixed path — <ApiLink to="class/ScheduleClient#get_log">`ScheduleClient.get_log()`</ApiLink>, <ApiLink to="class/TaskClient#get_input">`TaskClient.get_input()`</ApiLink>, <ApiLink to="class/DatasetClient#get_statistics">`DatasetClient.get_statistics()`</ApiLink>, <ApiLink to="class/UserClient#monthly_usage">`UserClient.monthly_usage()`</ApiLink>, <ApiLink to="class/UserClient#limits">`UserClient.limits()`</ApiLink>, <ApiLink to="class/WebhookClient#test">`WebhookClient.test()`</ApiLink>. Their return types changed from `T | None` to `T`.
 
-Status-specific subclasses such as <ApiLink to="class/RateLimitError">`RateLimitError`</ApiLink> are now available too — see [Error handling](/docs/concepts/error-handling#error-subclasses). Existing `except ApifyApiError` handlers are unaffected.
+Status-specific subclasses such as <ApiLink to="class/RateLimitError">`RateLimitError`</ApiLink> are now available too — see [Error handling](/api/client/python/docs/concepts/error-handling#error-subclasses). Existing `except ApifyApiError` handlers are unaffected.
 
 ## Keyword-only arguments
 
@@ -103,11 +103,11 @@ event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED]
 event_types=['ACTOR.RUN.SUCCEEDED']
 ```
 
-Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralAccess`, `HttpMethod`, `RunOrigin`, `SourceCodeFileFormat`, `StorageOwnership`, `VersionSourceType`, `WebhookDispatchStatus`, `WebhookEventType`. For more on the generated types and how they fit into the typed client surface, see [Typed models](/docs/concepts/typed-models).
+Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralAccess`, `HttpMethod`, `RunOrigin`, `SourceCodeFileFormat`, `StorageOwnership`, `VersionSourceType`, `WebhookDispatchStatus`, `WebhookEventType`. For more on the generated types and how they fit into the typed client surface, see [Typed models](/api/client/python/docs/concepts/typed-models).
 
 ## Async iterate_* are no longer coroutine functions
 
-<ApiLink to="class/DatasetClientAsync#iterate_items">`DatasetClientAsync.iterate_items()`</ApiLink> and <ApiLink to="class/KeyValueStoreClientAsync#iterate_keys">`KeyValueStoreClientAsync.iterate_keys()`</ApiLink> are now plain `def` functions returning `AsyncIterator[T]`. Consumer code (`async for ...`) is unchanged. If you annotate the call's return value, change `AsyncGenerator[T, None]` to `AsyncIterator[T]`. For background on these helpers and how they fit alongside page models, see [Pagination](/docs/concepts/pagination).
+<ApiLink to="class/DatasetClientAsync#iterate_items">`DatasetClientAsync.iterate_items()`</ApiLink> and <ApiLink to="class/KeyValueStoreClientAsync#iterate_keys">`KeyValueStoreClientAsync.iterate_keys()`</ApiLink> are now plain `def` functions returning `AsyncIterator[T]`. Consumer code (`async for ...`) is unchanged. If you annotate the call's return value, change `AsyncGenerator[T, None]` to `AsyncIterator[T]`. For background on these helpers and how they fit alongside page models, see [Pagination](/api/client/python/docs/concepts/pagination).
 
 ## Removed deprecated APIs
 
@@ -117,4 +117,4 @@ Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralA
 
 ## Pluggable HTTP client
 
-Additive change, non-breaking. The HTTP layer is now abstracted behind the <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> base classes, so you can swap the underlying transport for your own implementation. The default client built on [Impit](https://github.com/apify/impit) is unchanged and existing code keeps working out of the box. To plug in a custom client, pass an instance to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client()`</ApiLink> — see [Custom HTTP clients](/docs/concepts/custom-http-clients) for the full walkthrough.
+Additive change, non-breaking. The HTTP layer is now abstracted behind the <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> base classes, so you can swap the underlying transport for your own implementation. The default client built on [Impit](https://github.com/apify/impit) is unchanged and existing code keeps working out of the box. To plug in a custom client, pass an instance to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client()`</ApiLink> — see [Custom HTTP clients](/api/client/python/docs/concepts/custom-http-clients) for the full walkthrough.

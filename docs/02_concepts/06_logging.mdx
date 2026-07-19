@@ -20,12 +20,12 @@ The library logs useful debug information to the `apify_client` logger whenever 
 The log records include additional properties, provided via the extra argument, which can be helpful for debugging. Some of these properties are:
 
 - `attempt` - Number of retry attempts for the request.
-- `status_code` - HTTP status code of the response.
+- `status_code` - HTTP status code of the response. Only present on records about a request's outcome.
 - `url` - URL of the API endpoint being called.
 - `client_method` - Method name of the client that initiated the request.
 - `resource_id` - Identifier of the resource being accessed.
 
-To display these additional properties in the log output, you need to use a custom log formatter. Here's a basic example:
+To display these additional properties in the log output, you need to use a custom log formatter. Reference only the properties present on every record, since a `%`-style formatter raises an error for records that lack a referenced property. Here's a basic example:
 
 <CodeBlock className="language-python">
     {LoggingFormatterExample}

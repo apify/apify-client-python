@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.1.1 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Add missing cannot-monetize-without-payout-billing-info error code ([#960](https://github.com/apify/apify-client-python/pull/960)) ([c1bffc6](https://github.com/apify/apify-client-python/commit/c1bffc6e9f67a8358769591006f46bb2831594d8)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.1.0](https://github.com/apify/apify-client-python/releases/tag/v3.1.0) (2026-07-20)
 
 ### 🚀 Features

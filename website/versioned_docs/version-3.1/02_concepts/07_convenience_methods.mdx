@@ -1,0 +1,42 @@
+---
+id: convenience-methods
+title: Convenience methods
+description: Use high-level methods for running Actors, waiting for results, and accessing data.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import ApiLink from '@theme/ApiLink';
+
+import CallAsyncExample from '!!raw-loader!./code/07_call_async.py';
+import CallSyncExample from '!!raw-loader!./code/07_call_sync.py';
+
+The Apify client provides several convenience methods to handle actions that the API alone cannot perform efficiently, such as waiting for an Actor run to finish without running into network timeouts. These methods simplify common tasks and enhance the usability of the client.
+
+- <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink> - Starts an Actor and waits for it to finish, handling network timeouts internally. Waits indefinitely by default, or up to the specified `wait_duration`.
+- <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink> - Starts an Actor and immediately returns the Run object without waiting for it to finish.
+- <ApiLink to="class/RunClient#wait_for_finish">`RunClient.wait_for_finish`</ApiLink> - Waits for an already-started run to reach a terminal status.
+
+Additionally, storage-related resources offer flexible options for data retrieval:
+
+- [Key-value store](https://docs.apify.com/platform/storage/key-value-store) records can be retrieved as objects, buffers, or streams.
+- [Dataset](https://docs.apify.com/platform/storage/dataset) items can be fetched as individual objects, serialized data, or iterated asynchronously.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {CallAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {CallSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::tip
+The `call()` method polls internally and may take a long time for long-running Actors. Use `start()` and `wait_for_finish()` separately if you need more control over the waiting behavior.
+:::

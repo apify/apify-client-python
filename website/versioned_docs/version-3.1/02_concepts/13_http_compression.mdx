@@ -1,0 +1,95 @@
+---
+id: http-compression
+title: HTTP compression
+description: The client compresses every request body automatically using gzip by default, with optional brotli via an explicit opt-in.
+---
+
+The Apify client compresses every request body before sending it to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+
+## How it works
+
+The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
+
+## Configuration
+
+To choose the compression algorithm, pass `compression` to the client constructor:
+
+```python
+from apify_client import ApifyClient
+
+# Default: gzip, no extra dependency required
+client = ApifyClient(token='MY-APIFY-TOKEN')
+
+# Opt in to brotli (requires apify-client[brotli])
+client = ApifyClient(token='MY-APIFY-TOKEN', compression='brotli')
+```
+
+## Enabling brotli
+
+Brotli is available as an optional extra. Install it alongside the client:
+
+```bash
+pip install "apify-client[brotli]"
+# or
+uv add "apify-client[brotli]"
+```
+
+Then pass `compression='brotli'` to the client constructor. If you request brotli without installing the extra, the client raises a clear `ImportError`. There is no silent fallback.
+
+## Custom quality and advanced control
+
+For fine-grained control over compression quality, inject an `HttpCompressor` instance directly instead of a string literal:
+
+```python
+from apify_client import ApifyClient
+from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor
+
+# Brotli at maximum quality
+client = ApifyClient(token='MY-APIFY-TOKEN', compression=BrotliHttpCompressor(quality=11))
+
+# Gzip at maximum quality
+client = ApifyClient(token='MY-APIFY-TOKEN', compression=GzipHttpCompressor(quality=9))
+```
+
+You can also implement a fully custom compressor by subclassing `HttpCompressor`:
+
+```python
+from apify_client import ApifyClient
+from apify_client.http_compressors import HttpCompressor
+
+
+class IdentityCompressor(HttpCompressor):
+    content_encoding = 'identity'
+    """Value sent in the `Content-Encoding` header."""
+
+    def compress(self, data: bytes) -> bytes:
+        """Compress a request body.
+
+        Args:
+            data: The raw bytes to compress.
+
+        Returns:
+            The compressed bytes.
+        """
+        return data
+
+
+client = ApifyClient(token='MY-APIFY-TOKEN', compression=IdentityCompressor())
+```
+
+## Comparison
+
+|                               | Brotli                                  | Gzip                            |
+|-------------------------------|-----------------------------------------|---------------------------------|
+| **Compression ratio**         | Typically better than gzip              | Good                            |
+| **CPU cost**                  | Moderate, depends on quality            | Low                             |
+| **Availability**              | Requires the `brotli` extra             | Built-in, no extra needed       |
+| **`Content-Encoding` header** | `br`                                    | `gzip`                          |
+| **Quality range**             | `0–11`                                  | `1–9`                           |
+| **Default quality**           | `6`                                     | `9`                             |
+| **Enable via config**         | `compression='brotli'`                  | `compression='gzip'` (default)  |
+| **Best for**                  | Large payloads where bandwidth matters  | Minimal-dependency environments |
+
+:::tip
+For most workloads, the bandwidth savings from brotli outweigh the CPU costs. Install the `brotli` extra and pass `compression='brotli'` unless you can't install additional packages in your environment.
+:::

@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+import asyncio
+from http import HTTPStatus
+from typing import TYPE_CHECKING, Any
+
+import httpx
+
+from apify_client import ApifyClientAsync
+from apify_client.errors import ApifyApiError
+from apify_client.http_clients import HttpClientAsync, HttpResponse
+
+if TYPE_CHECKING:
+    from apify_client.types import Timeout
+
+TOKEN = 'MY-APIFY-TOKEN'
+
+
+class HttpxClientAsync(HttpClientAsync):
+    """Custom async HTTP client using HTTPX library."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._client = httpx.AsyncClient()
+
+    async def call(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        data: str | bytes | bytearray | None = None,
+        json: Any = None,
+        stream: bool | None = None,
+        timeout: Timeout = 'medium',
+    ) -> HttpResponse:
+        timeout_secs = self._compute_timeout(timeout, attempt=1) or 0
+
+        # Merge the client's default headers (including authorization)
+        # with the per-request ones.
+        headers = self._merge_headers(self._headers, headers)
+
+        response = await self._client.request(
+            method=method,
+            url=url,
+            headers=headers,
+            params=params,
+            content=data,
+            json=json,
+            timeout=timeout_secs,
+        )
+
+        # Raising `ApifyApiError` for error responses is part of the `call`
+        # contract. The resource clients rely on it, e.g. to translate a 404
+        # into a `None` return value of `get` methods.
+        if response.status_code >= HTTPStatus.BAD_REQUEST:
+            raise ApifyApiError(response, attempt=1, method=method)
+
+        # httpx.Response satisfies the HttpResponse protocol,
+        # so it can be returned directly.
+        return response
+
+
+async def main() -> None:
+    client = ApifyClientAsync.with_custom_http_client(
+        token=TOKEN,
+        http_client=HttpxClientAsync(),
+    )
+
+    actor = await client.actor('apify/hello-world').get()
+    print(actor)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

@@ -95,6 +95,7 @@ ErrorType = (
         'cannot-metamorph-to-pay-per-result-actor',
         'cannot-modify-actor-pricing-too-frequently',
         'cannot-modify-actor-pricing-with-immediate-effect',
+        'cannot-monetize-without-payout-billing-info',
         'cannot-override-paid-actor-trial',
         'cannot-permanently-delete-subscription',
         'cannot-publish-actor',

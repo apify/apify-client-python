@@ -249,11 +249,19 @@ def test_encode_key_value_store_record_value(
 
 
 def test_encode_key_value_store_record_value_bytesio() -> None:
-    """Test that BytesIO is encoded as octet-stream."""
+    """Test that BytesIO is read into bytes and encoded as octet-stream."""
     buffer = io.BytesIO(b'buffer data')
     value, content_type = encode_key_value_store_record_value(buffer)
-    assert value == buffer
+    assert value == b'buffer data'
     assert content_type == 'application/octet-stream'
+
+
+def test_encode_key_value_store_record_value_stringio() -> None:
+    """Test that StringIO is read into text and encoded as text/plain."""
+    buffer = io.StringIO('buffer data')
+    value, content_type = encode_key_value_store_record_value(buffer)
+    assert value == 'buffer data'
+    assert content_type == 'text/plain; charset=utf-8'
 
 
 def test_response_to_dict() -> None:

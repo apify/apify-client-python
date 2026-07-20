@@ -198,7 +198,8 @@ class HttpClientBase:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
         For `no_timeout`, returns `None` to indicate no timeout. For tier literals and explicit `timedelta` values,
-        doubles the timeout with each attempt but caps at `timeout_max`.
+        doubles the timeout with each attempt, capping exponential growth at `timeout_max` but never below the
+        resolved base timeout (so an explicit `timedelta` larger than `timeout_max` is honored).
 
         Args:
             timeout: The timeout specification to resolve (tier literal or explicit `timedelta`).
@@ -219,7 +220,9 @@ class HttpClientBase:
         else:
             resolved = timeout
 
-        new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
+        # `timeout_max` caps exponential growth across retries, but must never shrink the resolved base
+        # timeout itself - an explicit `timedelta` larger than `timeout_max` overrides it for the call.
+        new_timeout = min(resolved * (2 ** (attempt - 1)), max(self._timeout_max, resolved))
         return to_seconds(new_timeout)
 
     def _prepare_request_call(

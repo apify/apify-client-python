@@ -149,6 +149,15 @@ def test_compute_timeout_no_timeout_returns_none() -> None:
     assert client._compute_timeout('no_timeout', attempt=1) is None
 
 
+def test_compute_timeout_explicit_timedelta_above_max_not_clamped() -> None:
+    """Test an explicit timedelta larger than timeout_max is honored, not clamped."""
+    client = ImpitHttpClient(timeout_max=timedelta(seconds=360))
+
+    assert client._compute_timeout(timedelta(minutes=30), attempt=1) == 1800.0
+    # Exponential growth stays bounded by the explicit timedelta itself.
+    assert client._compute_timeout(timedelta(minutes=30), attempt=2) == 1800.0
+
+
 async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests timeout values for request with retriable errors.
 

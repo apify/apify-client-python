@@ -607,7 +607,8 @@ class DatasetClient(ResourceClient):
             request_params['signature'] = signature
 
         items_public_url = urlparse(self._build_url('items', public=True))
-        filtered_params = {k: v for k, v in request_params.items() if v is not None}
+        # Normalize params (bool→true/false, list→comma-joined) the same way the HTTP request path does.
+        filtered_params = self._http_client._parse_params(request_params)  # noqa: SLF001
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))
 
@@ -1173,7 +1174,8 @@ class DatasetClientAsync(ResourceClientAsync):
             request_params['signature'] = signature
 
         items_public_url = urlparse(self._build_url('items', public=True))
-        filtered_params = {k: v for k, v in request_params.items() if v is not None}
+        # Normalize params (bool→true/false, list→comma-joined) the same way the HTTP request path does.
+        filtered_params = self._http_client._parse_params(request_params)  # noqa: SLF001
         if filtered_params:
             items_public_url = items_public_url._replace(query=urlencode(filtered_params))
 

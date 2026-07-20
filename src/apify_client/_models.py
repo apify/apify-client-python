@@ -3332,7 +3332,7 @@ class TaggedBuildInfo(BaseModel):
         str | None, Field(examples=['0.0.2'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
     ] = None
     """
-    The build number/version string.
+    The build number/version string. Can be `null` for legacy builds that lack a valid build number.
     """
     build_number_int: Annotated[int | None, Field(examples=[42])] = None
     """

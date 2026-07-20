@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.0.7 - **not yet released**
+## [3.1.0](https://github.com/apify/apify-client-python/releases/tag/v3.1.0) (2026-07-20)
 
 ### 🚀 Features
 
@@ -17,7 +16,6 @@ All notable changes to this project will be documented in this file.
 - Make batch_add_requests split batches by serialized payload size ([#953](https://github.com/apify/apify-client-python/pull/953)) ([2adf515](https://github.com/apify/apify-client-python/commit/2adf515d3e8db47b7f75d69931580ab9269cb2e3)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.0.6](https://github.com/apify/apify-client-python/releases/tag/v3.0.6) (2026-07-13)
 
 ### 🐛 Bug Fixes

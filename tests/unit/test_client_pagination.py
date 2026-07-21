@@ -119,7 +119,7 @@ _RELAXED_LIST_MODELS = (
 )
 
 # Outer wrappers that embed a relaxed list model via `.data`. Their compiled schema pins the inner's schema at
-# construction time, so they need a forced rebuild to pick up the relaxation. The wrappers themselves are not mutated —
+# construction time, so they need a forced rebuild to pick up the relaxation. The wrappers themselves are not mutated -
 # their own field annotations stay as-is.
 _REBUILT_RESPONSE_WRAPPERS = (
     'ListOfActorsInStoreResponse',
@@ -144,9 +144,9 @@ def _relax_item_validation() -> Any:
     """Relax only the element type of `items` on paginated list models for the test run.
 
     Pagination tests feed synthetic `{'id': N}` items that don't satisfy the real API schemas (`ActorShort`,
-    `BuildShort`, `Request`, `EnvVar`, …). Instead of bypassing validation wholesale, each inner `ListOf*` model has its
-    `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every pagination-metadata field remain
-    validated.
+    `BuildShort`, `Request`, `EnvVar`, ...). Instead of bypassing validation wholesale, each inner `ListOf*` model
+    has its `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every pagination-metadata
+    field remain validated.
     """
     relaxed_field = FieldInfo.from_annotation(list[dict])
     originals: dict[type[BaseModel], FieldInfo] = {}
@@ -177,7 +177,7 @@ def create_items(start: int, end: int, step: int | None = None) -> list[dict[str
 
 
 def _is_true(value: str | None) -> bool:
-    """Match the `'true'` wire form produced by the client's bool→string serialization."""
+    """Match the `'true'` wire form produced by the client's bool->string serialization."""
     return value == 'true'
 
 
@@ -241,7 +241,7 @@ def _handle_cursor_pagination(request: Request) -> Response:
     """Serve a cursor-paginated Apify API response for KVS keys and RQ requests.
 
     Holds 2500 synthetic items whose integer `id` equals their position. Each page is capped at 1000 items. KVS uses
-    `exclusiveStartKey`; RQ uses the opaque `cursor`. Both values encode the last-seen item id as a string — the
+    `exclusiveStartKey`; RQ uses the opaque `cursor`. Both values encode the last-seen item id as a string - the
     next page starts at id + 1.
     """
     params = request.args
@@ -625,7 +625,7 @@ async def test_rq_list_requests_iterable_async(
     assert returned_items == expected_items
 
 
-class _FakeOffsetPage:
+class FakeOffsetPage:
     """Offset-paginated page whose `count` (items scanned) may exceed `len(items)` when filters drop items."""
 
     def __init__(self, items: list[dict[str, int]], count: int) -> None:
@@ -633,7 +633,7 @@ class _FakeOffsetPage:
         self.count = count
 
 
-class _FakeCursorPage:
+class FakeCursorPage:
     """Cursor-paginated page mirroring `ListOfRequests`: no scanned-`count`, so a filtered page is just `items=[]`."""
 
     def __init__(self, items: list[dict[str, int]], next_cursor: str | None) -> None:
@@ -644,51 +644,51 @@ class _FakeCursorPage:
 def test_items_iterator_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`, `count>0`) must not stop the offset iterator while more data was scanned."""
     pages = {
-        0: _FakeOffsetPage(items=[], count=1000),
-        1000: _FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
+        0: FakeOffsetPage(items=[], count=1000),
+        1000: FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
     }
 
-    def _callback(*, limit: int | None = None, offset: int | None = None) -> _FakeOffsetPage:  # noqa: ARG001
-        return pages.get(offset or 0, _FakeOffsetPage(items=[], count=0))
+    def callback(*, limit: int | None = None, offset: int | None = None) -> FakeOffsetPage:  # noqa: ARG001
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
 
-    assert list(get_items_iterator(_callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
+    assert list(get_items_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
 
 
 async def test_items_iterator_async_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`, `count>0`) must not stop the async offset iterator while more was scanned."""
     pages = {
-        0: _FakeOffsetPage(items=[], count=1000),
-        1000: _FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
+        0: FakeOffsetPage(items=[], count=1000),
+        1000: FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
     }
 
-    async def _callback(*, limit: int | None = None, offset: int | None = None) -> _FakeOffsetPage:  # noqa: ARG001
-        return pages.get(offset or 0, _FakeOffsetPage(items=[], count=0))
+    async def callback(*, limit: int | None = None, offset: int | None = None) -> FakeOffsetPage:  # noqa: ARG001
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
 
-    assert [item async for item in get_items_iterator_async(_callback, chunk_size=1000)] == [{'id': 1}, {'id': 2}]
+    assert [item async for item in get_items_iterator_async(callback, chunk_size=1000)] == [{'id': 1}, {'id': 2}]
 
 
 def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`) with a live cursor must not stop the cursor iterator."""
     pages = {
-        None: _FakeCursorPage(items=[], next_cursor='c1'),
-        'c1': _FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
+        None: FakeCursorPage(items=[], next_cursor='c1'),
+        'c1': FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
     }
 
-    def _callback(*, limit: int | None = None, cursor: str | None = None) -> _FakeCursorPage:  # noqa: ARG001
+    def callback(*, limit: int | None = None, cursor: str | None = None) -> FakeCursorPage:  # noqa: ARG001
         return pages[cursor]
 
-    assert list(get_cursor_iterator(_callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]  # ty: ignore[no-matching-overload]
+    assert list(get_cursor_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]  # ty: ignore[no-matching-overload]
 
 
 async def test_cursor_iterator_async_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`) with a live cursor must not stop the async cursor iterator."""
     pages = {
-        None: _FakeCursorPage(items=[], next_cursor='c1'),
-        'c1': _FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
+        None: FakeCursorPage(items=[], next_cursor='c1'),
+        'c1': FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
     }
 
-    async def _callback(*, limit: int | None = None, cursor: str | None = None) -> _FakeCursorPage:  # noqa: ARG001
+    async def callback(*, limit: int | None = None, cursor: str | None = None) -> FakeCursorPage:  # noqa: ARG001
         return pages[cursor]
 
-    collected = [item async for item in get_cursor_iterator_async(_callback, chunk_size=1000)]  # ty: ignore[no-matching-overload]
+    collected = [item async for item in get_cursor_iterator_async(callback, chunk_size=1000)]  # ty: ignore[no-matching-overload]
     assert collected == [{'id': 1}, {'id': 2}]

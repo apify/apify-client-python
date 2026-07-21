@@ -19,7 +19,7 @@ The value of 1000 keeps backwards compatibility with the previous fixed cache si
 class HasItems(Protocol[T]):
     """Structural contract for a single page of results from a paginated API endpoint.
 
-    Implementations must expose `items`. They may optionally expose `count` — the number of items scanned by the API for
+    Implementations must expose `items`. They may optionally expose `count` - the number of items scanned by the API for
     this page, which can exceed `len(items)` when filters drop items from the response. The iterator helpers consult
     `count` opportunistically via `getattr` for offset bookkeeping and fall back to `len(items)` when it is absent.
     """
@@ -42,8 +42,8 @@ def get_items_iterator(
     filters are applied).
 
     Iteration stops when a page scans no items (`count` is `0`, or `items` is empty when `count` is absent) or when the
-    user-requested `limit` is reached. A page can scan items while returning none — filters like `clean` drop items from
-    `items` but still count toward `count` — so terminating on scanned rather than returned items keeps the iterator
+    user-requested `limit` is reached. A page can scan items while returning none - filters like `clean` drop items from
+    `items` but still count toward `count` - so terminating on scanned rather than returned items keeps the iterator
     advancing across fully-filtered pages. The `total` field is intentionally not consulted, because it can change
     between calls.
 

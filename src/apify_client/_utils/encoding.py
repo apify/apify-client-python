@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import json
 from base64 import b64encode
 from functools import cache
@@ -23,9 +22,12 @@ def encode_key_value_store_record_value(value: Any, *, content_type: str | None 
         A tuple of (encoded_value, content_type).
     """
     # Read file-like values into memory; the underlying HTTP transport only accepts bytes-like bodies,
-    # so a file object would otherwise reach it unread and raise a raw `TypeError`.
-    if isinstance(value, io.IOBase):
-        value = value.read()
+    # so a file object would otherwise reach it unread and raise a raw `TypeError`. Detect them by a
+    # callable `read` rather than `io.IOBase` so duck-typed file-likes (upload wrappers, raw streams)
+    # are read too, instead of falling through to JSON serialization.
+    read = getattr(value, 'read', None)
+    if callable(read):
+        value = read()
 
     if not content_type:
         if isinstance(value, (bytes, bytearray)):

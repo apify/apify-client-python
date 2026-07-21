@@ -110,7 +110,7 @@ class HttpClientBase:
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
+            timeout_max: Caps exponential timeout growth across retries. A larger base timeout is honored, not clamped.
             max_retries: Maximum number of retries for failed requests.
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.

@@ -5,6 +5,7 @@ import time
 from datetime import UTC, datetime, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Literal, get_args
+from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
 from apify_client._docs import docs_group
@@ -114,6 +115,25 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
             url = url.replace(self._base_url, self._public_base_url, 1)
 
         return url
+
+    def _build_public_url(self, path: str, params: dict[str, Any]) -> str:
+        """Build a public resource URL with API-normalized query params.
+
+        Normalizes `params` the same way the HTTP request path does (bool→true/false, list→comma-joined,
+        datetime→ISO 8601 Zulu) so the shareable URL matches what the client would send over the wire.
+
+        Args:
+            path: Path segment appended to the resource URL (e.g. 'items', 'keys').
+            params: Query parameters to normalize and append.
+
+        Returns:
+            The public URL with a normalized query string.
+        """
+        public_url = urlparse(self._build_url(path, public=True))
+        filtered_params = self._http_client._parse_params(params)  # noqa: SLF001
+        if filtered_params:
+            public_url = public_url._replace(query=urlencode(filtered_params))
+        return urlunparse(public_url)
 
     def _build_params(self, **kwargs: Any) -> dict:
         """Merge default params with method params, filtering out None values.

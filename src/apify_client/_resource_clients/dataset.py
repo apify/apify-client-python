@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
-from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
 from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
@@ -606,13 +605,7 @@ class DatasetClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._build_url('items', public=True))
-        # Normalize params (bool→true/false, list→comma-joined) the same way the HTTP request path does.
-        filtered_params = self._http_client._parse_params(request_params)  # noqa: SLF001
-        if filtered_params:
-            items_public_url = items_public_url._replace(query=urlencode(filtered_params))
-
-        return urlunparse(items_public_url)
+        return self._build_public_url('items', request_params)
 
 
 @docs_group('Resource clients')
@@ -1173,10 +1166,4 @@ class DatasetClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        items_public_url = urlparse(self._build_url('items', public=True))
-        # Normalize params (bool→true/false, list→comma-joined) the same way the HTTP request path does.
-        filtered_params = self._http_client._parse_params(request_params)  # noqa: SLF001
-        if filtered_params:
-            items_public_url = items_public_url._replace(query=urlencode(filtered_params))
-
-        return urlunparse(items_public_url)
+        return self._build_public_url('items', request_params)

@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Add missing cannot-monetize-without-payout-billing-info error code ([#960](https://github.com/apify/apify-client-python/pull/960)) ([c1bffc6](https://github.com/apify/apify-client-python/commit/c1bffc6e9f67a8358769591006f46bb2831594d8)) by [@apify-service-account](https://github.com/apify-service-account)
+- Normalize query params in dataset create_items_public_url ([#963](https://github.com/apify/apify-client-python/pull/963)) ([c3ecaa9](https://github.com/apify/apify-client-python/commit/c3ecaa96a43415d70d71c27e7dd177e9992c84e4)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

@@ -5,6 +5,7 @@ import time
 from datetime import UTC, datetime, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Literal, get_args
+from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._consts import DEFAULT_WAIT_FOR_FINISH, DEFAULT_WAIT_WHEN_JOB_NOT_EXIST
 from apify_client._docs import docs_group
@@ -115,6 +116,25 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
         return url
 
+    def _build_public_url(self, path: str, params: dict[str, Any]) -> str:
+        """Build a public resource URL with API-normalized query params.
+
+        Normalizes `params` the same way the HTTP request path does (bool -> true/false, list -> comma-joined,
+        datetime -> ISO 8601 Zulu) so the shareable URL matches what the client would send over the wire.
+
+        Args:
+            path: Path segment appended to the resource URL (e.g. 'items', 'keys').
+            params: Query parameters to normalize and append.
+
+        Returns:
+            The public URL with a normalized query string.
+        """
+        public_url = urlparse(self._build_url(path, public=True))
+        filtered_params = self._http_client._parse_params(params)  # noqa: SLF001
+        if filtered_params:
+            public_url = public_url._replace(query=urlencode(filtered_params))
+        return urlunparse(public_url)
+
     def _build_params(self, **kwargs: Any) -> dict:
         """Merge default params with method params, filtering out None values.
 
@@ -133,7 +153,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
         The Apify API ignores missing fields but may reject fields explicitly set to None.
         Nested sub-models serialized by Pydantic may produce empty dicts when all their
-        fields are None — these are also removed.
+        fields are None - these are also removed.
 
         Uses an iterative stack-based approach, analogous to _build_params for query params.
         """
@@ -203,7 +223,7 @@ class ResourceClient(ResourceClientBase):
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
         404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
-        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        (e.g. `run.dataset()`) propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             response = self._http_client.call(
@@ -232,7 +252,7 @@ class ResourceClient(ResourceClientBase):
         """Perform a DELETE request to delete this resource.
 
         404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
-        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        `resource_id` propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             self._http_client.call(
@@ -395,7 +415,7 @@ class ResourceClientAsync(ResourceClientBase):
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
         404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
-        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        (e.g. `run.dataset()`) propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             response = await self._http_client.call(
@@ -424,7 +444,7 @@ class ResourceClientAsync(ResourceClientBase):
         """Perform a DELETE request to delete this resource.
 
         404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
-        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        `resource_id` propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             await self._http_client.call(

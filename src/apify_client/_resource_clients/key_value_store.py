@@ -4,7 +4,6 @@ import re
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
-from urllib.parse import urlencode, urlparse, urlunparse
 
 from apify_client._docs import docs_group
 from apify_client._models import (
@@ -425,13 +424,7 @@ class KeyValueStoreClient(ResourceClient):
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        key_public_url = urlparse(self._build_url(f'records/{key}', public=True))
-        filtered_params = {k: v for k, v in request_params.items() if v is not None}
-
-        if filtered_params:
-            key_public_url = key_public_url._replace(query=urlencode(filtered_params))
-
-        return urlunparse(key_public_url)
+        return self._build_public_url(f'records/{key}', request_params)
 
     def create_keys_public_url(
         self,
@@ -482,13 +475,7 @@ class KeyValueStoreClient(ResourceClient):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._build_url('keys', public=True))
-
-        filtered_params = {k: v for k, v in request_params.items() if v is not None}
-        if filtered_params:
-            keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))
-
-        return urlunparse(keys_public_url)
+        return self._build_public_url('keys', request_params)
 
 
 @docs_group('Resource clients')
@@ -853,13 +840,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        key_public_url = urlparse(self._build_url(f'records/{key}', public=True))
-        filtered_params = {k: v for k, v in request_params.items() if v is not None}
-
-        if filtered_params:
-            key_public_url = key_public_url._replace(query=urlencode(filtered_params))
-
-        return urlunparse(key_public_url)
+        return self._build_public_url(f'records/{key}', request_params)
 
     async def create_keys_public_url(
         self,
@@ -910,10 +891,4 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             )
             request_params['signature'] = signature
 
-        keys_public_url = urlparse(self._build_url('keys', public=True))
-
-        filtered_params = {k: v for k, v in request_params.items() if v is not None}
-        if filtered_params:
-            keys_public_url = keys_public_url._replace(query=urlencode(filtered_params))
-
-        return urlunparse(keys_public_url)
+        return self._build_public_url('keys', request_params)

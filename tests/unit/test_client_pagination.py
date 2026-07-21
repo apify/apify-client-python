@@ -11,6 +11,7 @@ from werkzeug import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client import _models as _models_module
+from apify_client._models import ListOfRequests
 from apify_client._pagination import (
     get_cursor_iterator,
     get_cursor_iterator_async,
@@ -633,14 +634,6 @@ class FakeOffsetPage:
         self.count = count
 
 
-class FakeCursorPage:
-    """Cursor-paginated page mirroring `ListOfRequests`: no scanned-`count`, so a filtered page is just `items=[]`."""
-
-    def __init__(self, items: list[dict[str, int]], next_cursor: str | None) -> None:
-        self.items = items
-        self.next_cursor = next_cursor
-
-
 def test_items_iterator_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`, `count>0`) must not stop the offset iterator while more data was scanned."""
     pages = {
@@ -648,7 +641,7 @@ def test_items_iterator_continues_past_fully_filtered_page() -> None:
         1000: FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
     }
 
-    def callback(*, limit: int | None = None, offset: int | None = None) -> FakeOffsetPage:  # noqa: ARG001
+    def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
         return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
 
     assert list(get_items_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
@@ -661,7 +654,7 @@ async def test_items_iterator_async_continues_past_fully_filtered_page() -> None
         1000: FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
     }
 
-    async def callback(*, limit: int | None = None, offset: int | None = None) -> FakeOffsetPage:  # noqa: ARG001
+    async def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
         return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
 
     assert [item async for item in get_items_iterator_async(callback, chunk_size=1000)] == [{'id': 1}, {'id': 2}]
@@ -670,25 +663,25 @@ async def test_items_iterator_async_continues_past_fully_filtered_page() -> None
 def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`) with a live cursor must not stop the cursor iterator."""
     pages = {
-        None: FakeCursorPage(items=[], next_cursor='c1'),
-        'c1': FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
+        None: ListOfRequests(items=[], limit=1000, next_cursor='c1'),
+        'c1': ListOfRequests(items=[{'id': 1}, {'id': 2}], limit=1000, next_cursor=None),
     }
 
-    def callback(*, limit: int | None = None, cursor: str | None = None) -> FakeCursorPage:  # noqa: ARG001
+    def callback(*, cursor: str | None = None, **_kwargs: object) -> ListOfRequests:
         return pages[cursor]
 
-    assert list(get_cursor_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]  # ty: ignore[no-matching-overload]
+    assert list(get_cursor_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
 
 
 async def test_cursor_iterator_async_continues_past_fully_filtered_page() -> None:
     """A fully-filtered page (`items=[]`) with a live cursor must not stop the async cursor iterator."""
     pages = {
-        None: FakeCursorPage(items=[], next_cursor='c1'),
-        'c1': FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
+        None: ListOfRequests(items=[], limit=1000, next_cursor='c1'),
+        'c1': ListOfRequests(items=[{'id': 1}, {'id': 2}], limit=1000, next_cursor=None),
     }
 
-    async def callback(*, limit: int | None = None, cursor: str | None = None) -> FakeCursorPage:  # noqa: ARG001
+    async def callback(*, cursor: str | None = None, **_kwargs: object) -> ListOfRequests:
         return pages[cursor]
 
-    collected = [item async for item in get_cursor_iterator_async(callback, chunk_size=1000)]  # ty: ignore[no-matching-overload]
+    collected = [item async for item in get_cursor_iterator_async(callback, chunk_size=1000)]
     assert collected == [{'id': 1}, {'id': 2}]

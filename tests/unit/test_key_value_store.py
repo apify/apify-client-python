@@ -44,7 +44,7 @@ def decode_body(request: Request) -> bytes:
 def test_set_record_reads_file_like_value_sync(
     httpserver: HTTPServer, compression_case: tuple[HttpCompressionAlgorithm, str]
 ) -> None:
-    """Regression test: a file-like value is read and its bytes are uploaded, not passed through unread."""
+    """A file-like value is read and its bytes are uploaded, not passed through unread."""
     algorithm, content_encoding = compression_case
     captured_requests: list[Request] = []
 
@@ -68,7 +68,7 @@ def test_set_record_reads_file_like_value_sync(
 async def test_set_record_reads_file_like_value_async(
     httpserver: HTTPServer, compression_case: tuple[HttpCompressionAlgorithm, str]
 ) -> None:
-    """Regression test: a file-like value is read and its bytes are uploaded, not passed through unread."""
+    """A file-like value is read and its bytes are uploaded, not passed through unread."""
     algorithm, content_encoding = compression_case
     captured_requests: list[Request] = []
 
@@ -92,7 +92,7 @@ async def test_set_record_reads_file_like_value_async(
 def test_set_record_reads_stringio_value_sync(
     httpserver: HTTPServer, compression_case: tuple[HttpCompressionAlgorithm, str]
 ) -> None:
-    """Regression test: a text file-like value is read and uploaded as text/plain through the HTTP stack."""
+    """A text file-like value is read and uploaded as text/plain through the HTTP stack."""
     algorithm, content_encoding = compression_case
     captured_requests: list[Request] = []
 

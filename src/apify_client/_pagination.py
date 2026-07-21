@@ -129,8 +129,11 @@ def get_cursor_iterator(
     """Yield individual items from cursor-paginated API responses.
 
     Cursor pagination is restricted to the two API responses that expose it: `ListOfKeys` (for key-value store keys) and
-    `ListOfRequests` (for request queue requests). Iteration ends when a page scans no items, the next cursor is `None`,
-    or the user-requested `limit` is reached.
+    `ListOfRequests` (for request queue requests). Iteration ends when the next cursor is `None` or the user-requested
+    `limit` is reached. Emptiness alone does not stop iteration: server-side filters (such as the request-queue state
+    `filter`) can drop every item on a page while a live cursor still points at more data, so termination relies on the
+    cursor, not on whether a page returned items. Unlike offset responses, cursor responses expose no scanned-item
+    `count`, so `count` cannot be used to detect a fully-filtered page here.
 
     Args:
         callback: Function returning a single page of items. Receives `cursor` and `limit` kwargs.
@@ -149,13 +152,12 @@ def get_cursor_iterator(
         )
         yield from current_page.items
 
-        page_scanned = max(getattr(current_page, 'count', 0), len(current_page.items))
-        fetched_items += page_scanned
+        fetched_items += len(current_page.items)
         cursor = (
             current_page.next_exclusive_start_key if isinstance(current_page, ListOfKeys) else current_page.next_cursor
         )
 
-        if not page_scanned or cursor is None or (initial_limit and fetched_items >= initial_limit):
+        if cursor is None or (initial_limit and fetched_items >= initial_limit):
             break
 
 
@@ -195,13 +197,12 @@ async def get_cursor_iterator_async(
         for item in current_page.items:
             yield item
 
-        page_scanned = max(getattr(current_page, 'count', 0), len(current_page.items))
-        fetched_items += page_scanned
+        fetched_items += len(current_page.items)
         cursor = (
             current_page.next_exclusive_start_key if isinstance(current_page, ListOfKeys) else current_page.next_cursor
         )
 
-        if not page_scanned or cursor is None or (initial_limit and fetched_items >= initial_limit):
+        if cursor is None or (initial_limit and fetched_items >= initial_limit):
             break
 
 

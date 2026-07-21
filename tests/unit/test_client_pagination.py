@@ -634,11 +634,10 @@ class _FakeOffsetPage:
 
 
 class _FakeCursorPage:
-    """Cursor-paginated page whose `count` (items scanned) may exceed `len(items)` when filters drop items."""
+    """Cursor-paginated page mirroring `ListOfRequests`: no scanned-`count`, so a filtered page is just `items=[]`."""
 
-    def __init__(self, items: list[dict[str, int]], count: int, next_cursor: str | None) -> None:
+    def __init__(self, items: list[dict[str, int]], next_cursor: str | None) -> None:
         self.items = items
-        self.count = count
         self.next_cursor = next_cursor
 
 
@@ -669,10 +668,10 @@ async def test_items_iterator_async_continues_past_fully_filtered_page() -> None
 
 
 def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
-    """A fully-filtered page (`items=[]`, `count>0`) with a live cursor must not stop the cursor iterator."""
+    """A fully-filtered page (`items=[]`) with a live cursor must not stop the cursor iterator."""
     pages = {
-        None: _FakeCursorPage(items=[], count=1000, next_cursor='c1'),
-        'c1': _FakeCursorPage(items=[{'id': 1}, {'id': 2}], count=2, next_cursor=None),
+        None: _FakeCursorPage(items=[], next_cursor='c1'),
+        'c1': _FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
     }
 
     def _callback(*, limit: int | None = None, cursor: str | None = None) -> _FakeCursorPage:  # noqa: ARG001
@@ -682,10 +681,10 @@ def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
 
 
 async def test_cursor_iterator_async_continues_past_fully_filtered_page() -> None:
-    """A fully-filtered page (`items=[]`, `count>0`) with a live cursor must not stop the async cursor iterator."""
+    """A fully-filtered page (`items=[]`) with a live cursor must not stop the async cursor iterator."""
     pages = {
-        None: _FakeCursorPage(items=[], count=1000, next_cursor='c1'),
-        'c1': _FakeCursorPage(items=[{'id': 1}, {'id': 2}], count=2, next_cursor=None),
+        None: _FakeCursorPage(items=[], next_cursor='c1'),
+        'c1': _FakeCursorPage(items=[{'id': 1}, {'id': 2}], next_cursor=None),
     }
 
     async def _callback(*, limit: int | None = None, cursor: str | None = None) -> _FakeCursorPage:  # noqa: ARG001

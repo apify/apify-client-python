@@ -267,11 +267,11 @@ def test_encode_key_value_store_record_value_stringio() -> None:
 def test_encode_key_value_store_record_value_duck_typed_file_like() -> None:
     """Test that a duck-typed file-like value (a callable `read`, not an `io.IOBase`) is read into bytes."""
 
-    class _Reader:
+    class Reader:
         def read(self) -> bytes:
             return b'buffer data'
 
-    value, content_type = encode_key_value_store_record_value(_Reader())
+    value, content_type = encode_key_value_store_record_value(Reader())
     assert value == b'buffer data'
     assert content_type == 'application/octet-stream'
 

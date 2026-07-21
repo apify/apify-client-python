@@ -802,8 +802,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             content_type: The content type of the saved value.
             timeout: Timeout for the API HTTP request.
         """
-        # Encoding reads file-like values and may serialize large payloads, which is blocking; offload it to a
-        # worker thread so it does not stall the event loop (mirrors the transport's own body-prep offload).
+        # Encoding may read a file or serialize a large payload (blocking), so run it off the event loop.
         value, content_type = await asyncio.to_thread(
             encode_key_value_store_record_value, value, content_type=content_type
         )

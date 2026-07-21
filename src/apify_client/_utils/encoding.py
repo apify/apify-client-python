@@ -21,10 +21,8 @@ def encode_key_value_store_record_value(value: Any, *, content_type: str | None 
     Returns:
         A tuple of (encoded_value, content_type).
     """
-    # Read file-like values into memory; the underlying HTTP transport only accepts bytes-like bodies,
-    # so a file object would otherwise reach it unread and raise a raw `TypeError`. Detect them by a
-    # callable `read` rather than `io.IOBase` so duck-typed file-likes (upload wrappers, raw streams)
-    # are read too, instead of falling through to JSON serialization.
+    # Read file-like values into memory; the transport only accepts bytes-like bodies. Detect them by a
+    # callable `read` (not `io.IOBase`) so duck-typed file-likes are read, not JSON-serialized.
     read = getattr(value, 'read', None)
     if callable(read):
         value = read()

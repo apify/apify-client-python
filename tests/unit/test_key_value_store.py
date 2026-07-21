@@ -15,7 +15,7 @@ _MOCKED_KVS_ID = 'test_kvs_id'
 _RECORD_PATH = f'/v2/key-value-stores/{_MOCKED_KVS_ID}/records/f'
 
 
-def _decode_body(request: Request) -> bytes:
+def decode_body(request: Request) -> bytes:
     raw = request.get_data()
     return gzip.decompress(raw) if request.headers.get('Content-Encoding') == 'gzip' else raw
 
@@ -36,7 +36,7 @@ def test_set_record_reads_file_like_value_sync(httpserver: HTTPServer) -> None:
     client.key_value_store(_MOCKED_KVS_ID).set_record('f', io.BytesIO(b'buffer data'))
 
     assert len(captured_requests) == 1
-    assert _decode_body(captured_requests[0]) == b'buffer data'
+    assert decode_body(captured_requests[0]) == b'buffer data'
     assert captured_requests[0].headers['content-type'] == 'application/octet-stream'
 
 
@@ -56,7 +56,7 @@ async def test_set_record_reads_file_like_value_async(httpserver: HTTPServer) ->
     await client.key_value_store(_MOCKED_KVS_ID).set_record('f', io.BytesIO(b'buffer data'))
 
     assert len(captured_requests) == 1
-    assert _decode_body(captured_requests[0]) == b'buffer data'
+    assert decode_body(captured_requests[0]) == b'buffer data'
     assert captured_requests[0].headers['content-type'] == 'application/octet-stream'
 
 
@@ -76,5 +76,5 @@ def test_set_record_reads_stringio_value_sync(httpserver: HTTPServer) -> None:
     client.key_value_store(_MOCKED_KVS_ID).set_record('f', io.StringIO('buffer data'))
 
     assert len(captured_requests) == 1
-    assert _decode_body(captured_requests[0]) == b'buffer data'
+    assert decode_body(captured_requests[0]) == b'buffer data'
     assert captured_requests[0].headers['content-type'] == 'text/plain; charset=utf-8'

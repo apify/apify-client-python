@@ -119,8 +119,8 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
     def _build_public_url(self, path: str, params: dict[str, Any]) -> str:
         """Build a public resource URL with API-normalized query params.
 
-        Normalizes `params` the same way the HTTP request path does (bool→true/false, list→comma-joined,
-        datetime→ISO 8601 Zulu) so the shareable URL matches what the client would send over the wire.
+        Normalizes `params` the same way the HTTP request path does (bool -> true/false, list -> comma-joined,
+        datetime -> ISO 8601 Zulu) so the shareable URL matches what the client would send over the wire.
 
         Args:
             path: Path segment appended to the resource URL (e.g. 'items', 'keys').
@@ -153,7 +153,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
         The Apify API ignores missing fields but may reject fields explicitly set to None.
         Nested sub-models serialized by Pydantic may produce empty dicts when all their
-        fields are None — these are also removed.
+        fields are None - these are also removed.
 
         Uses an iterative stack-based approach, analogous to _build_params for query params.
         """
@@ -223,7 +223,7 @@ class ResourceClient(ResourceClientBase):
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
         404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
-        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        (e.g. `run.dataset()`) propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             response = self._http_client.call(
@@ -252,7 +252,7 @@ class ResourceClient(ResourceClientBase):
         """Perform a DELETE request to delete this resource.
 
         404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
-        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        `resource_id` propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             self._http_client.call(
@@ -415,7 +415,7 @@ class ResourceClientAsync(ResourceClientBase):
         """Perform a GET request for this resource, returning the parsed response or None if not found.
 
         404s collapse to `None` only for ID-identified clients. Chained clients without a `resource_id`
-        (e.g. `run.dataset()`) propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        (e.g. `run.dataset()`) propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             response = await self._http_client.call(
@@ -444,7 +444,7 @@ class ResourceClientAsync(ResourceClientBase):
         """Perform a DELETE request to delete this resource.
 
         404s are swallowed (idempotent DELETE) only for ID-identified clients. Chained clients without a
-        `resource_id` propagate `NotFoundError` — see `catch_not_found_for_resource_or_throw`.
+        `resource_id` propagate `NotFoundError` - see `catch_not_found_for_resource_or_throw`.
         """
         try:
             await self._http_client.call(

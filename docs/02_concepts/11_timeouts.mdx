@@ -25,7 +25,7 @@ Every client method has a pre-assigned tier that matches the expected duration o
 
 ## Configuring default timeouts
 
-You can override the default values for each tier in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor. The `timeout_max` parameter sets an upper cap on the timeout for any individual API request, limiting exponential growth during retries.
+You can override the default values for each tier in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor. The `timeout_max` parameter caps the exponential timeout growth during retries. A base timeout that's already larger than `timeout_max`, whether an explicit `timedelta` or a tier configured above the cap, is honored as-is.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>

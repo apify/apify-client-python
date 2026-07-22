@@ -19,6 +19,7 @@ from apify_client._models import (
     Run,
 )
 from apify_client._resource_clients import BuildClient, BuildClientAsync
+from apify_client.errors import ConflictError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -88,27 +89,36 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
     actor_name = get_random_resource_name('actor')
 
     # Create actor
-    created_actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            title='Test Actor',
-            description='Test actor for integration tests',
-            versions=[
-                {
-                    'versionNumber': '0.1',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello")',
-                        }
-                    ],
-                }
-            ],
+    try:
+        created_actor = await maybe_await(
+            client.actors().create(
+                name=actor_name,
+                title='Test Actor',
+                description='Test actor for integration tests',
+                versions=[
+                    {
+                        'versionNumber': '0.1',
+                        'sourceType': 'SOURCE_FILES',
+                        'buildTag': 'latest',
+                        'sourceFiles': [
+                            {
+                                'name': 'main.js',
+                                'format': 'TEXT',
+                                'content': 'console.log("Hello")',
+                            }
+                        ],
+                    }
+                ],
+            )
         )
-    )
+    except ConflictError:
+        # The HTTP client retries requests on transient 5xx/network errors (at-least-once delivery), so a create
+        # POST can commit server-side on one attempt yet still be retried; the retry then fails with a 409 on the
+        # unique name it just took. Recover the Actor the first attempt created instead of flaking on this race.
+        user = await maybe_await(client.user().get())
+        assert user is not None
+        created_actor = await maybe_await(client.actor(f'{user.username}/{actor_name}').get())
+
     assert isinstance(created_actor, Actor)
     assert created_actor.id is not None
     assert created_actor.name == actor_name

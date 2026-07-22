@@ -11,6 +11,13 @@ from werkzeug import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client import _models as _models_module
+from apify_client._models import ListOfRequests
+from apify_client._pagination import (
+    get_cursor_iterator,
+    get_cursor_iterator_async,
+    get_items_iterator,
+    get_items_iterator_async,
+)
 from apify_client._resource_clients import (
     ActorCollectionClient,
     ActorCollectionClientAsync,
@@ -113,7 +120,7 @@ _RELAXED_LIST_MODELS = (
 )
 
 # Outer wrappers that embed a relaxed list model via `.data`. Their compiled schema pins the inner's schema at
-# construction time, so they need a forced rebuild to pick up the relaxation. The wrappers themselves are not mutated —
+# construction time, so they need a forced rebuild to pick up the relaxation. The wrappers themselves are not mutated -
 # their own field annotations stay as-is.
 _REBUILT_RESPONSE_WRAPPERS = (
     'ListOfActorsInStoreResponse',
@@ -138,9 +145,9 @@ def _relax_item_validation() -> Any:
     """Relax only the element type of `items` on paginated list models for the test run.
 
     Pagination tests feed synthetic `{'id': N}` items that don't satisfy the real API schemas (`ActorShort`,
-    `BuildShort`, `Request`, `EnvVar`, …). Instead of bypassing validation wholesale, each inner `ListOf*` model has its
-    `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every pagination-metadata field remain
-    validated.
+    `BuildShort`, `Request`, `EnvVar`, ...). Instead of bypassing validation wholesale, each inner `ListOf*` model
+    has its `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every pagination-metadata
+    field remain validated.
     """
     relaxed_field = FieldInfo.from_annotation(list[dict])
     originals: dict[type[BaseModel], FieldInfo] = {}
@@ -171,7 +178,7 @@ def create_items(start: int, end: int, step: int | None = None) -> list[dict[str
 
 
 def _is_true(value: str | None) -> bool:
-    """Match the `'true'` wire form produced by the client's bool→string serialization."""
+    """Match the `'true'` wire form produced by the client's bool->string serialization."""
     return value == 'true'
 
 
@@ -235,7 +242,7 @@ def _handle_cursor_pagination(request: Request) -> Response:
     """Serve a cursor-paginated Apify API response for KVS keys and RQ requests.
 
     Holds 2500 synthetic items whose integer `id` equals their position. Each page is capped at 1000 items. KVS uses
-    `exclusiveStartKey`; RQ uses the opaque `cursor`. Both values encode the last-seen item id as a string — the
+    `exclusiveStartKey`; RQ uses the opaque `cursor`. Both values encode the last-seen item id as a string - the
     next page starts at id + 1.
     """
     params = request.args
@@ -617,3 +624,64 @@ async def test_rq_list_requests_iterable_async(
     client: RequestQueueClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
     returned_items = [dict(item) async for item in client.iterate_requests(**inputs)]
     assert returned_items == expected_items
+
+
+class FakeOffsetPage:
+    """Offset-paginated page whose `count` (items scanned) may exceed `len(items)` when filters drop items."""
+
+    def __init__(self, items: list[dict[str, int]], count: int) -> None:
+        self.items = items
+        self.count = count
+
+
+def test_items_iterator_continues_past_fully_filtered_page() -> None:
+    """A fully-filtered page (`items=[]`, `count>0`) must not stop the offset iterator while more data was scanned."""
+    pages = {
+        0: FakeOffsetPage(items=[], count=1000),
+        1000: FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
+    }
+
+    def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
+
+    assert list(get_items_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
+
+
+async def test_items_iterator_async_continues_past_fully_filtered_page() -> None:
+    """A fully-filtered page (`items=[]`, `count>0`) must not stop the async offset iterator while more was scanned."""
+    pages = {
+        0: FakeOffsetPage(items=[], count=1000),
+        1000: FakeOffsetPage(items=[{'id': 1}, {'id': 2}], count=2),
+    }
+
+    async def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
+
+    assert [item async for item in get_items_iterator_async(callback, chunk_size=1000)] == [{'id': 1}, {'id': 2}]
+
+
+def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
+    """A fully-filtered page (`items=[]`) with a live cursor must not stop the cursor iterator."""
+    pages = {
+        None: ListOfRequests(items=[], limit=1000, next_cursor='c1'),
+        'c1': ListOfRequests(items=[{'id': 1}, {'id': 2}], limit=1000, next_cursor=None),
+    }
+
+    def callback(*, cursor: str | None = None, **_kwargs: object) -> ListOfRequests:
+        return pages[cursor]
+
+    assert list(get_cursor_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
+
+
+async def test_cursor_iterator_async_continues_past_fully_filtered_page() -> None:
+    """A fully-filtered page (`items=[]`) with a live cursor must not stop the async cursor iterator."""
+    pages = {
+        None: ListOfRequests(items=[], limit=1000, next_cursor='c1'),
+        'c1': ListOfRequests(items=[{'id': 1}, {'id': 2}], limit=1000, next_cursor=None),
+    }
+
+    async def callback(*, cursor: str | None = None, **_kwargs: object) -> ListOfRequests:
+        return pages[cursor]
+
+    collected = [item async for item in get_cursor_iterator_async(callback, chunk_size=1000)]
+    assert collected == [{'id': 1}, {'id': 2}]

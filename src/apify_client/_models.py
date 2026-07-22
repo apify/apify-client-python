@@ -3830,7 +3830,7 @@ class Webhook(BaseModel):
     do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
     request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
     """
-    URL of the HTTP request sent by the webhook. It is omitted or `null` for webhooks with a non-HTTP action type (e.g. Slack or email notifications).
+    URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
     """
     payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
     headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
@@ -3907,7 +3907,7 @@ class WebhookDispatchWebhookSummary(BaseModel):
     condition: WebhookCondition | None = None
     request_url: Annotated[AnyUrl | None, Field(examples=['https://example.com/webhook'])] = None
     """
-    URL of the HTTP request sent by the webhook. It is `null` for webhooks with a non-HTTP action type (e.g. Slack or email notifications).
+    URL of the HTTP request sent by the webhook. It is `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
     """
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
 

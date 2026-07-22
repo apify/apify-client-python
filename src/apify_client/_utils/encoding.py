@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 import json
 from base64 import b64encode
 from functools import cache
@@ -22,19 +21,21 @@ def encode_key_value_store_record_value(value: Any, *, content_type: str | None 
     Returns:
         A tuple of (encoded_value, content_type).
     """
+    # Read file-like values into memory; the transport only accepts bytes-like bodies. Detect them by a
+    # callable `read` (not `io.IOBase`) so duck-typed file-likes are read, not JSON-serialized.
+    read = getattr(value, 'read', None)
+    if callable(read):
+        value = read()
+
     if not content_type:
-        if isinstance(value, (bytes, bytearray, io.IOBase)):
+        if isinstance(value, (bytes, bytearray)):
             content_type = 'application/octet-stream'
         elif isinstance(value, str):
             content_type = 'text/plain; charset=utf-8'
         else:
             content_type = 'application/json; charset=utf-8'
 
-    if (
-        'application/json' in content_type
-        and not isinstance(value, (bytes, bytearray, io.IOBase))
-        and not isinstance(value, str)
-    ):
+    if 'application/json' in content_type and not isinstance(value, (bytes, bytearray, str)):
         # Don't use indentation to reduce size.
         value = json.dumps(
             value,

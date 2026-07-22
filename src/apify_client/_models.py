@@ -3828,7 +3828,10 @@ class Webhook(BaseModel):
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
     do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])]
+    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    """
+    URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
+    """
     payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
     headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
     description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
@@ -3903,6 +3906,9 @@ class WebhookDispatchWebhookSummary(BaseModel):
     action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
     condition: WebhookCondition | None = None
     request_url: Annotated[AnyUrl | None, Field(examples=['https://example.com/webhook'])] = None
+    """
+    URL of the HTTP request sent by the webhook. It is `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
+    """
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
 
 

@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from .._utils import get_random_resource_name, maybe_await
+from .._utils import create_actor, get_random_resource_name, maybe_await
 from apify_client._models import Actor, Build, BuildShort, ListOfBuilds
 
 if TYPE_CHECKING:
@@ -149,37 +149,36 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
     actor_name = get_random_resource_name('actor')
 
     # Create actor with two versions
-    created_actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            title='Test Actor for Build Delete',
-            versions=[
-                {
-                    'versionNumber': '0.1',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'beta',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello v0.1")',
-                        }
-                    ],
-                },
-                {
-                    'versionNumber': '0.2',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello v0.2")',
-                        }
-                    ],
-                },
-            ],
-        )
+    created_actor = await create_actor(
+        client,
+        name=actor_name,
+        title='Test Actor for Build Delete',
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'beta',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello v0.1")',
+                    }
+                ],
+            },
+            {
+                'versionNumber': '0.2',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello v0.2")',
+                    }
+                ],
+            },
+        ],
     )
     assert isinstance(created_actor, Actor)
     actor_client = client.actor(created_actor.id)

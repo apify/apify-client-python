@@ -11,8 +11,19 @@ from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
 import pytest
 
+from apify_client.errors import ApifyApiError
+
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
+
+    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client._models import Actor, EnvVar, Schedule, Task, Version
+    from apify_client._resource_clients import (
+        ActorClient,
+        ActorClientAsync,
+        ActorVersionClient,
+        ActorVersionClientAsync,
+    )
 
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -216,6 +227,143 @@ async def collect_iterate_until_present(
         await maybe_sleep(interval, is_async=is_async)
         collected = await drain()
     return collected
+
+
+async def _create_with_conflict_recovery(
+    create: Callable[[], Awaitable[T] | T],
+    recover: Callable[[], Awaitable[T | None] | T | None],
+    *,
+    error_type: str,
+    description: str,
+) -> T:
+    """Run `create`, recovering the resource if an already-committed retry made its name unavailable.
+
+    The HTTP client retries requests on transient 5xx and network errors, so a create POST can commit server-side on
+    one attempt yet still be retried; the retry then fails on the unique name or version number the first attempt
+    just took. Integration tests only create resources under freshly generated random names, so such a failure can
+    only be a self-conflict - `recover` fetches what the first attempt committed instead of letting the test flake.
+
+    Only an API error whose `type` equals `error_type` is recovered. Anything else propagates, and so does a matching
+    error whose resource cannot be found afterwards - a genuine create failure still fails the test.
+
+    Args:
+        create: No-arg callable performing the create request.
+        recover: No-arg callable fetching the resource by the name the create request asked for.
+        error_type: API error type identifying the name conflict for this resource.
+        description: Human-readable resource description used in the failure note.
+
+    Returns:
+        The created resource, or the one an earlier attempt of the same request committed.
+    """
+    try:
+        return await maybe_await(create())
+    except ApifyApiError as exc:
+        if exc.type != error_type:
+            raise
+        recovered = await maybe_await(recover())
+        if recovered is None:
+            exc.add_note(f'{description} hit {error_type} on create, but could not be retrieved afterwards.')
+            raise
+        return recovered
+
+
+async def create_actor(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Actor:
+    """Create an Actor, recovering it if a retried create already took its name.
+
+    Takes the same keyword arguments as `ActorCollectionClient.create` and requires `name` among them. See
+    `_create_with_conflict_recovery` for why the recovery is needed.
+    """
+    name = kwargs['name']
+
+    async def recover() -> Actor | None:
+        user = await maybe_await(client.user().get())
+        assert user is not None
+        return await maybe_await(client.actor(f'{user.username}/{name}').get())
+
+    return await _create_with_conflict_recovery(
+        lambda: client.actors().create(**kwargs),
+        recover,
+        error_type='actor-name-not-unique',
+        description=f'Actor {name!r}',
+    )
+
+
+async def create_task(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Task:
+    """Create an Actor task, recovering it if a retried create already took its name.
+
+    Takes the same keyword arguments as `TaskCollectionClient.create` and requires `name` among them. See
+    `_create_with_conflict_recovery` for why the recovery is needed.
+    """
+    name = kwargs['name']
+
+    async def recover() -> Task | None:
+        user = await maybe_await(client.user().get())
+        assert user is not None
+        return await maybe_await(client.task(f'{user.username}/{name}').get())
+
+    return await _create_with_conflict_recovery(
+        lambda: client.tasks().create(**kwargs),
+        recover,
+        error_type='actor-task-name-not-unique',
+        description=f'task {name!r}',
+    )
+
+
+async def create_schedule(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Schedule:
+    """Create a schedule, recovering it if a retried create already took its name.
+
+    Takes the same keyword arguments as `ScheduleCollectionClient.create` and requires `name` among them. See
+    `_create_with_conflict_recovery` for why the recovery is needed.
+    """
+    name = kwargs['name']
+
+    async def recover() -> Schedule | None:
+        # Unlike Actors and tasks, schedules can only be addressed by ID, so the committed one has to be located
+        # by name in the listing. Sorting by modification date puts the just-created schedule on the first page.
+        page = await maybe_await(client.schedules().list(limit=1000, desc=True))
+        existing = next((schedule for schedule in page.items if schedule.name == name), None)
+        if existing is None:
+            return None
+        return await maybe_await(client.schedule(existing.id).get())
+
+    return await _create_with_conflict_recovery(
+        lambda: client.schedules().create(**kwargs),
+        recover,
+        error_type='schedule-name-not-unique',
+        description=f'schedule {name!r}',
+    )
+
+
+async def create_actor_version(actor_client: ActorClient | ActorClientAsync, **kwargs: Any) -> Version:
+    """Create an Actor version, recovering it if a retried create already took its version number.
+
+    Takes the same keyword arguments as `ActorVersionCollectionClient.create` and requires `version_number` among
+    them. See `_create_with_conflict_recovery` for why the recovery is needed.
+    """
+    version_number = kwargs['version_number']
+
+    return await _create_with_conflict_recovery(
+        lambda: actor_client.versions().create(**kwargs),
+        lambda: actor_client.version(version_number).get(),
+        error_type='version-already-exists',
+        description=f'Actor version {version_number!r}',
+    )
+
+
+async def create_env_var(version_client: ActorVersionClient | ActorVersionClientAsync, **kwargs: Any) -> EnvVar:
+    """Create an Actor environment variable, recovering it if a retried create already took its name.
+
+    Takes the same keyword arguments as `ActorEnvVarCollectionClient.create` and requires `name` among them. See
+    `_create_with_conflict_recovery` for why the recovery is needed.
+    """
+    name = kwargs['name']
+
+    return await _create_with_conflict_recovery(
+        lambda: version_client.env_vars().create(**kwargs),
+        lambda: version_client.env_var(name).get(),
+        error_type='env-var-already-exists',
+        description=f'env var {name!r}',
+    )
 
 
 # ============================================================================

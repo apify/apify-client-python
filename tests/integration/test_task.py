@@ -6,7 +6,13 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await, poll_until_condition
+from .._utils import (
+    collect_iterate_until_present,
+    create_task,
+    get_random_resource_name,
+    maybe_await,
+    poll_until_condition,
+)
 from apify_client._models import Actor, ListOfRuns, ListOfTasks, ListOfWebhooks, Run, RunShort, Task, TaskShort
 
 if TYPE_CHECKING:
@@ -26,11 +32,10 @@ async def test_task_create_and_get(client: ApifyClient | ApifyClientAsync) -> No
     actor_id = actor.id
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor_id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor_id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -59,11 +64,10 @@ async def test_task_update(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -97,11 +101,10 @@ async def test_task_list(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create a task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
 
@@ -134,12 +137,11 @@ async def test_task_get_input(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task with input
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-            task_input=test_input,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
+        task_input=test_input,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -168,11 +170,10 @@ async def test_task_start(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -204,11 +205,10 @@ async def test_task_call(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -235,11 +235,10 @@ async def test_task_delete(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -261,11 +260,10 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -299,11 +297,10 @@ async def test_task_last_run(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -336,11 +333,10 @@ async def test_task_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
     assert isinstance(actor, Actor)
 
     # Create task
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -366,7 +362,7 @@ async def test_task_collection_iterate(client: ApifyClient | ApifyClientAsync, *
 
     created_ids: list[str] = []
     for _ in range(3):
-        task = await maybe_await(client.tasks().create(actor_id=actor.id, name=get_random_resource_name('task')))
+        task = await create_task(client, actor_id=actor.id, name=get_random_resource_name('task'))
         assert isinstance(task, Task)
         created_ids.append(task.id)
 
@@ -391,12 +387,11 @@ async def test_task_start_with_input_override(client: ApifyClient | ApifyClientA
     assert isinstance(actor, Actor)
 
     task_name = get_random_resource_name('task')
-    created_task = await maybe_await(
-        client.tasks().create(
-            actor_id=actor.id,
-            name=task_name,
-            task_input={'message': 'original'},
-        )
+    created_task = await create_task(
+        client,
+        actor_id=actor.id,
+        name=task_name,
+        task_input={'message': 'original'},
     )
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
@@ -418,7 +413,7 @@ async def test_task_call_with_build_override(client: ApifyClient | ApifyClientAs
     assert isinstance(actor, Actor)
 
     task_name = get_random_resource_name('task')
-    created_task = await maybe_await(client.tasks().create(actor_id=actor.id, name=task_name))
+    created_task = await create_task(client, actor_id=actor.id, name=task_name)
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
 
@@ -446,7 +441,7 @@ async def test_task_runs_iterate(client: ApifyClient | ApifyClientAsync, *, is_a
     assert isinstance(actor, Actor)
 
     task_name = get_random_resource_name('task')
-    created_task = await maybe_await(client.tasks().create(actor_id=actor.id, name=task_name))
+    created_task = await create_task(client, actor_id=actor.id, name=task_name)
     assert isinstance(created_task, Task)
     task_client = client.task(created_task.id)
 

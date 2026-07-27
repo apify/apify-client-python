@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
-from .._utils import get_random_resource_name, maybe_await
+from .._utils import create_actor, create_env_var, get_random_resource_name, maybe_await
 from apify_client._models import Actor, EnvVar, ListOfEnvVars
 
 if TYPE_CHECKING:
@@ -17,31 +17,30 @@ async def test_actor_env_var_list(client: ApifyClient | ApifyClientAsync) -> Non
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with a version that has env vars
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.0',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello")',
-                        }
-                    ],
-                    'envVars': [
-                        {
-                            'name': 'TEST_VAR',
-                            'value': 'test_value',
-                            'isSecret': False,
-                        }
-                    ],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+                'envVars': [
+                    {
+                        'name': 'TEST_VAR',
+                        'value': 'test_value',
+                        'isSecret': False,
+                    }
+                ],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -68,24 +67,23 @@ async def test_actor_env_var_create_and_get(client: ApifyClient | ApifyClientAsy
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with a version
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '1.0',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello")',
-                        }
-                    ],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '1.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -93,12 +91,11 @@ async def test_actor_env_var_create_and_get(client: ApifyClient | ApifyClientAsy
 
     try:
         # Create a new env var
-        created_env_var = await maybe_await(
-            version_client.env_vars().create(
-                name='MY_VAR',
-                value='my_value',
-                is_secret=False,
-            )
+        created_env_var = await create_env_var(
+            version_client,
+            name='MY_VAR',
+            value='my_value',
+            is_secret=False,
         )
         assert isinstance(created_env_var, EnvVar)
         assert created_env_var.name == 'MY_VAR'
@@ -121,31 +118,30 @@ async def test_actor_env_var_update(client: ApifyClient | ApifyClientAsync) -> N
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with a version and env var
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.1',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello")',
-                        }
-                    ],
-                    'envVars': [
-                        {
-                            'name': 'UPDATE_VAR',
-                            'value': 'initial_value',
-                            'isSecret': False,
-                        }
-                    ],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+                'envVars': [
+                    {
+                        'name': 'UPDATE_VAR',
+                        'value': 'initial_value',
+                        'isSecret': False,
+                    }
+                ],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -178,36 +174,35 @@ async def test_actor_env_var_delete(client: ApifyClient | ApifyClientAsync) -> N
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with a version and two env vars
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.1',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello")',
-                        }
-                    ],
-                    'envVars': [
-                        {
-                            'name': 'VAR_TO_DELETE',
-                            'value': 'delete_me',
-                            'isSecret': False,
-                        },
-                        {
-                            'name': 'VAR_TO_KEEP',
-                            'value': 'keep_me',
-                            'isSecret': False,
-                        },
-                    ],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+                'envVars': [
+                    {
+                        'name': 'VAR_TO_DELETE',
+                        'value': 'delete_me',
+                        'isSecret': False,
+                    },
+                    {
+                        'name': 'VAR_TO_KEEP',
+                        'value': 'keep_me',
+                        'isSecret': False,
+                    },
+                ],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -235,19 +230,18 @@ async def test_actor_env_var_collection_iterate(client: ApifyClient | ApifyClien
     """Test iterating over a version's environment variables."""
     actor_name = get_random_resource_name('actor')
 
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.0',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
-                    'envVars': [{'name': f'VAR_{i}', 'value': f'value_{i}', 'isSecret': False} for i in range(3)],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
+                'envVars': [{'name': f'VAR_{i}', 'value': f'value_{i}', 'isSecret': False} for i in range(3)],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -278,30 +272,28 @@ async def test_actor_env_var_secret(client: ApifyClient | ApifyClientAsync) -> N
     """Test that creating a secret env var hides its plaintext value on retrieval."""
     actor_name = get_random_resource_name('actor')
 
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.0',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.0')
 
     try:
-        created = await maybe_await(
-            version_client.env_vars().create(
-                name='MY_SECRET',
-                value='super-secret-token',
-                is_secret=True,
-            )
+        created = await create_env_var(
+            version_client,
+            name='MY_SECRET',
+            value='super-secret-token',
+            is_secret=True,
         )
         assert isinstance(created, EnvVar)
         assert created.name == 'MY_SECRET'
@@ -322,18 +314,17 @@ async def test_actor_env_var_get_nonexistent_returns_none(
     """Test that get() on a non-existent env var returns None."""
     actor_name = get_random_resource_name('actor')
 
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.0',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [{'name': 'main.js', 'format': 'TEXT', 'content': 'console.log("Hello")'}],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
-from .._utils import get_random_resource_name, maybe_await
+from .._utils import create_actor, create_actor_version, get_random_resource_name, maybe_await
 from apify_client._models import Actor, ListOfVersions, Version
 
 if TYPE_CHECKING:
@@ -17,24 +17,23 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with an initial version
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.0',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Hello")',
-                        }
-                    ],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.0',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello")',
+                    }
+                ],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -60,25 +59,24 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
     actor_name = get_random_resource_name('actor')
 
     # Create an actor without versions
-    actor = await maybe_await(client.actors().create(name=actor_name))
+    actor = await create_actor(client, name=actor_name)
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
 
     try:
         # Create a new version
-        created_version = await maybe_await(
-            actor_client.versions().create(
-                version_number='1.0',
-                source_type='SOURCE_FILES',
-                build_tag='test',
-                source_files=[
-                    {
-                        'name': 'main.js',
-                        'format': 'TEXT',
-                        'content': 'console.log("Hello from version 1.0")',
-                    }
-                ],
-            )
+        created_version = await create_actor_version(
+            actor_client,
+            version_number='1.0',
+            source_type='SOURCE_FILES',
+            build_tag='test',
+            source_files=[
+                {
+                    'name': 'main.js',
+                    'format': 'TEXT',
+                    'content': 'console.log("Hello from version 1.0")',
+                }
+            ],
         )
         assert isinstance(created_version, Version)
         assert created_version.version_number == '1.0'
@@ -101,24 +99,23 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with a version
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.1',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'initial',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("Initial")',
-                        }
-                    ],
-                }
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'initial',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Initial")',
+                    }
+                ],
+            }
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -156,36 +153,35 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
     actor_name = get_random_resource_name('actor')
 
     # Create an actor with two versions
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': '0.1',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'v1',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("v1")',
-                        }
-                    ],
-                },
-                {
-                    'versionNumber': '0.2',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'v2',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': 'console.log("v2")',
-                        }
-                    ],
-                },
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': '0.1',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'v1',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("v1")',
+                    }
+                ],
+            },
+            {
+                'versionNumber': '0.2',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'v2',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("v2")',
+                    }
+                ],
+            },
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -212,25 +208,24 @@ async def test_actor_version_collection_iterate(client: ApifyClient | ApifyClien
     """Test iterating over an Actor's versions (single-page endpoint)."""
     actor_name = get_random_resource_name('actor')
 
-    actor = await maybe_await(
-        client.actors().create(
-            name=actor_name,
-            versions=[
-                {
-                    'versionNumber': f'0.{i}',
-                    'sourceType': 'SOURCE_FILES',
-                    'buildTag': 'latest' if i == 0 else f'v{i}',
-                    'sourceFiles': [
-                        {
-                            'name': 'main.js',
-                            'format': 'TEXT',
-                            'content': f'console.log({i})',
-                        }
-                    ],
-                }
-                for i in range(3)
-            ],
-        )
+    actor = await create_actor(
+        client,
+        name=actor_name,
+        versions=[
+            {
+                'versionNumber': f'0.{i}',
+                'sourceType': 'SOURCE_FILES',
+                'buildTag': 'latest' if i == 0 else f'v{i}',
+                'sourceFiles': [
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': f'console.log({i})',
+                    }
+                ],
+            }
+            for i in range(3)
+        ],
     )
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
@@ -263,7 +258,7 @@ async def test_actor_version_get_nonexistent_returns_none(
     """Test that get() on a non-existent version returns None."""
     actor_name = get_random_resource_name('actor')
 
-    actor = await maybe_await(client.actors().create(name=actor_name))
+    actor = await create_actor(client, name=actor_name)
     assert isinstance(actor, Actor)
     actor_client = client.actor(actor.id)
 

@@ -29,17 +29,22 @@ _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'
 _MOCKED_ACTOR_ID = 'mocked_actor_id'
 _MOCKED_ACTOR_LOGS = (
-    b'2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.\n'
-    b'2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.\n'
-    b'2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.\n',  # Several logs merged into one chunk
+    # Several logs merged into one chunk
+    (
+        b'2025-05-13T07:24:12.588Z ACTOR: Pulling Docker image of build.\n'
+        b'2025-05-13T07:24:12.686Z ACTOR: Creating Docker container.\n'
+        b'2025-05-13T07:24:12.745Z ACTOR: Starting Docker container.\n'
+    ),
     b'2025-05-13T07:26:14.132Z [apify] DEBUG \xc3',  # Chunked log split in the middle of the multibyte character
     b'\xa1\n',  # part 2
     b'2025-05-13T07:24:14.132Z [apify] INFO multiline \n log\n',
     b'2025-05-13T07:25:14.132Z [apify] WARNING some warning\n',
     b'2025-05-13T07:26:14.132Z [apify] DEBUG c\n',
     b'2025-05-13T0',  # Chunked log that got split in the marker
-    b'7:26:14.132Z [apify] DEBUG d\n'  # part 2
-    b'2025-05-13T07:27:14.132Z [apify] DEB',  # Chunked log that got split outside of marker
+    (
+        b'7:26:14.132Z [apify] DEBUG d\n'  # part 2
+        b'2025-05-13T07:27:14.132Z [apify] DEB'  # Chunked log that got split outside of marker
+    ),
     b'UG e\n',  # part 2
     # Already redirected message
     b'2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> 2025-05-13T07:27:14.132Z ACTOR:...\n',
@@ -61,8 +66,10 @@ _EXPECTED_MESSAGES_AND_LEVELS = (
     ('2025-05-13T07:26:14.132Z [apify] DEBUG d', logging.DEBUG),
     ('2025-05-13T07:27:14.132Z [apify] DEBUG e', logging.DEBUG),
     (
-        '2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> '
-        '2025-05-13T07:27:14.132Z ACTOR:...',
+        (
+            '2025-05-13T07:28:14.132Z [apify.redirect-logger runId:4U1oAnKau6jpzjUuA] -> '
+            '2025-05-13T07:27:14.132Z ACTOR:...'
+        ),
         logging.INFO,
     ),
 )

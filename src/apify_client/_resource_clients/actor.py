@@ -124,7 +124,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
-        tagged_builds: dict[str, None | dict[str, str]] | None = None,
+        tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
     ) -> Actor:
         """Update the Actor with the specified fields.
@@ -305,7 +305,7 @@ class ActorClient(ResourceClient):
         webhooks: WebhooksList | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
-        logger: Logger | None | Literal['default'] = 'default',
+        logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.
@@ -620,7 +620,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
-        tagged_builds: dict[str, None | dict[str, str]] | None = None,
+        tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
     ) -> Actor:
         """Update the Actor with the specified fields.
@@ -801,7 +801,7 @@ class ActorClientAsync(ResourceClientAsync):
         webhooks: WebhooksList | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
-        logger: Logger | None | Literal['default'] = 'default',
+        logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start the Actor and wait for it to finish before returning the Run object.

@@ -544,7 +544,7 @@ class BuildStats(BaseModel):
     )
     duration_millis: Annotated[int | None, Field(examples=[1000])] = None
     run_time_secs: Annotated[float | None, Field(examples=[45.718])] = None
-    compute_units: Annotated[float, Field(examples=[0.0126994444444444])]
+    compute_units: Annotated[float | None, Field(examples=[0.0126994444444444])] = None
     image_size_bytes: Annotated[int | None, Field(examples=[975770223])] = None
 
 
@@ -875,7 +875,7 @@ class Dataset(BaseModel):
         ),
     ] = None
     """
-    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/actors/development/actor-definition/dataset-schema)
+    Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/storage/dataset-schema)
     """
     console_url: Annotated[AnyUrl, Field(examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])]
     items_public_url: Annotated[
@@ -1477,10 +1477,10 @@ class KeyValueStoreStats(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    read_count: Annotated[int, Field(examples=[9])]
-    write_count: Annotated[int, Field(examples=[3])]
-    delete_count: Annotated[int, Field(examples=[6])]
-    list_count: Annotated[int, Field(examples=[2])]
+    read_count: Annotated[int | None, Field(examples=[9])] = None
+    write_count: Annotated[int | None, Field(examples=[3])] = None
+    delete_count: Annotated[int | None, Field(examples=[6])] = None
+    list_count: Annotated[int | None, Field(examples=[2])] = None
     s3_storage_bytes: Annotated[int | None, Field(examples=[18])] = None
     storage_bytes: Annotated[int | None, Field(examples=[457225])] = None
 
@@ -2883,7 +2883,7 @@ class RunOptions(BaseModel):
     timeout_secs: Annotated[int, Field(examples=[300], ge=0)]
     memory_mbytes: Annotated[int, Field(examples=[1024], ge=128, le=32768)]
     disk_mbytes: Annotated[int, Field(examples=[2048], ge=0)]
-    max_items: Annotated[int | None, Field(examples=[1000], ge=1)] = None
+    max_items: Annotated[int | None, Field(examples=[1000], ge=0)] = None
     max_total_charge_usd: Annotated[float | None, Field(examples=[5], ge=0.0)] = None
 
 
@@ -2933,8 +2933,8 @@ class RunStats(BaseModel):
     input_body_len: Annotated[int | None, Field(examples=[240], ge=0)] = None
     migration_count: Annotated[int | None, Field(examples=[0], ge=0)] = None
     reboot_count: Annotated[int | None, Field(examples=[0], ge=0)] = None
-    restart_count: Annotated[int, Field(examples=[0], ge=0)]
-    resurrect_count: Annotated[int, Field(examples=[2], ge=0)]
+    restart_count: Annotated[int | None, Field(examples=[0], ge=0)] = None
+    resurrect_count: Annotated[int | None, Field(examples=[2], ge=0)] = None
     mem_avg_bytes: Annotated[float | None, Field(examples=[267874071.9])] = None
     mem_max_bytes: Annotated[int | None, Field(examples=[404713472], ge=0)] = None
     mem_current_bytes: Annotated[int | None, Field(examples=[0], ge=0)] = None
@@ -2946,7 +2946,7 @@ class RunStats(BaseModel):
     duration_millis: Annotated[int | None, Field(examples=[248472], ge=0)] = None
     run_time_secs: Annotated[float | None, Field(examples=[248.472], ge=0.0)] = None
     metamorph: Annotated[int | None, Field(examples=[0], ge=0)] = None
-    compute_units: Annotated[float, Field(examples=[0.13804], ge=0.0)]
+    compute_units: Annotated[float | None, Field(examples=[0.13804], ge=0.0)] = None
 
 
 @docs_group('Models')
@@ -3303,7 +3303,7 @@ class StoreListActor(BaseModel):
     user_picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     stats: ActorStats
-    current_pricing_info: CurrentPricingInfo
+    current_pricing_info: CurrentPricingInfo | None = None
     is_white_listed_for_agentic_payments: bool | None = None
     """
     Whether the Actor is whitelisted for agentic payment processing.
@@ -3335,7 +3335,7 @@ class TaggedBuildInfo(BaseModel):
         str | None, Field(examples=['0.0.2'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
     ] = None
     """
-    The build number/version string.
+    The build number/version string. Can be `null` for legacy builds that lack a valid build number.
     """
     build_number_int: Annotated[int | None, Field(examples=[42])] = None
     """
@@ -3712,7 +3712,7 @@ class UserPrivateInfo(BaseModel):
     username: Annotated[str, Field(examples=['myusername'])]
     profile: Profile | None = None
     email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
-    proxy: Proxy
+    proxy: Proxy | None = None
     plan: Plan
     effective_platform_features: EffectivePlatformFeatures
     created_at: Annotated[AwareDatetime | None, Field(examples=['2022-11-29T14:48:29.381Z'])] = None
@@ -3831,7 +3831,10 @@ class Webhook(BaseModel):
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
     do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl, Field(examples=['http://example.com/'])]
+    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    """
+    URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
+    """
     payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
     headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
     description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
@@ -3906,6 +3909,9 @@ class WebhookDispatchWebhookSummary(BaseModel):
     action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
     condition: WebhookCondition | None = None
     request_url: Annotated[AnyUrl | None, Field(examples=['https://example.com/webhook'])] = None
+    """
+    URL of the HTTP request sent by the webhook. It is `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
+    """
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
 
 
@@ -3997,7 +4003,7 @@ class WebhookStats(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    total_dispatches: Annotated[int, Field(examples=[1])]
+    total_dispatches: Annotated[int | None, Field(examples=[1])] = None
 
 
 @docs_group('Models')

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import re
 from contextlib import asynccontextmanager, contextmanager
 from http import HTTPStatus
@@ -802,10 +801,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             content_type: The content type of the saved value.
             timeout: Timeout for the API HTTP request.
         """
-        # Encoding may read a file or serialize a large payload (blocking), so run it off the event loop.
-        value, content_type = await asyncio.to_thread(
-            encode_key_value_store_record_value, value, content_type=content_type
-        )
+        value, content_type = encode_key_value_store_record_value(value, content_type=content_type)
 
         headers = {'content-type': content_type}
 

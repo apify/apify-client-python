@@ -80,6 +80,7 @@ def decode_body(request: Request) -> bytes:
 
 @pytest.mark.parametrize(('make_value', 'expected_body', 'expected_content_type'), _FILE_LIKE_VALUE_CASES)
 def test_set_record_reads_file_like_value_sync(
+    *,
     api_url: str,
     captured_records: list[Request],
     compression_case: tuple[HttpCompressionAlgorithm, str],
@@ -101,6 +102,7 @@ def test_set_record_reads_file_like_value_sync(
 
 @pytest.mark.parametrize(('make_value', 'expected_body', 'expected_content_type'), _FILE_LIKE_VALUE_CASES)
 async def test_set_record_reads_file_like_value_async(
+    *,
     api_url: str,
     captured_records: list[Request],
     compression_case: tuple[HttpCompressionAlgorithm, str],

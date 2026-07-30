@@ -1,20 +1,20 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "apify_client"
 version = "3.1.1"
 description = "Apify API client for Python"
 authors = [{ name = "Apify Technologies s.r.o.", email = "support@apify.com" }]
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -60,38 +60,30 @@ dev = [
     "pytest-timeout<3.0.0",
     "pytest-xdist<4.0.0",
     "pytest<10.0.0",
-    "ruff~=0.15.0",
+    "ruff~=0.16.0",
     "setuptools", # setuptools are used by pytest but not explicitly required
     "types-colorama<0.5.0",
     "ty~=0.0.0",
     "werkzeug<4.0.0", # Werkzeug is used by pytest-httpserver
 ]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/apify_client"]
-
-[tool.hatch.build.targets.sdist]
-only-include = [
-    "src/apify_client",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
-    "LICENSE",
-    "README.md",
-    "pyproject.toml",
-]
+[tool.uv.build-backend]
+# The module, pyproject.toml, README, and LICENSE are included in the sdist by default.
+source-include = ["CHANGELOG.md", "CONTRIBUTING.md"]
 
 [tool.ruff]
 line-length = 120
 include = [
-    "src/**/*.py",
-    "tests/**/*.py",
-    "scripts/**/*.py",
-    "docs/**/*.py",
-    "website/**/*.py",
+    "**/*.py",
+    # Ruff formats Python code blocks embedded in Markdown files.
+    "**/*.md",
+    "**/*.mdx",
 ]
 exclude = [
     "website/versioned_docs/**",
 ]
+# MDX is Markdown; without this mapping Ruff would try to parse `.mdx` files as Python.
+extension = { mdx = "markdown" }
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -101,6 +93,7 @@ ignore = [
     "BLE001",   # Do not catch blind exception
     "C901",     # `{name}` is too complex
     "COM812",   # This rule may cause conflicts when used with the formatter
+    "CPY001",   # Missing copyright notice at top of file
     "D100",     # Missing docstring in public module
     "D104",     # Missing docstring in public package
     "D107",     # Missing docstring in `__init__`

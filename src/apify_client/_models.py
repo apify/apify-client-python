@@ -2087,9 +2087,6 @@ class Plan(BaseModel):
     max_actor_task_count: Annotated[int | None, Field(examples=[1000])] = None
     data_retention_days: Annotated[int | None, Field(examples=[14])] = None
     available_proxy_groups: dict[str, int]
-    """
-    The number of available proxies in this group.
-    """
     team_account_seat_count: Annotated[int | None, Field(examples=[1])] = None
     support_level: Annotated[str | None, Field(examples=['COMMUNITY'])] = None
     available_add_ons: Annotated[list[str] | None, Field(examples=[[]])] = None
@@ -3365,6 +3362,7 @@ class Task(BaseModel):
     title: str | None = None
     actor_standby: ActorStandby | None = None
     standby_url: AnyUrl | None = None
+    public_config: TaskPublicConfig | None = None
 
 
 @docs_group('Models')
@@ -3394,6 +3392,53 @@ class TaskOptions(BaseModel):
     max_items: Annotated[int | None, Field(examples=[1000])] = None
     max_total_charge_usd: Annotated[float | None, Field(examples=[5])] = None
     restart_on_error: Annotated[bool | None, Field(examples=[False])] = None
+
+
+@docs_group('Models')
+class TaskPublicConfig(BaseModel):
+    """Public-facing configuration of a published task, used by the task's public landing page.
+    The task's publication state is determined by `publishedAt` - a task is published when
+    `publishedAt` is set and unpublished when it is `null`.
+
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    published_at: Annotated[AwareDatetime | None, Field(examples=['2025-06-16T09:20:45.777Z'])] = None
+    """
+    Time when the task was published, or `null` if the task is not published.
+    This field is server-controlled - to publish or unpublish a task, use the
+    [Publish task](https://docs.apify.com/api/v2/actor-task-publish-post) and
+    [Unpublish task](https://docs.apify.com/api/v2/actor-task-unpublish-post) endpoints.
+
+    """
+    seo_title: Annotated[str | None, Field(examples=['Scrape data from a website'])] = None
+    """
+    SEO title of the public task page. Defaults to the task title when not set.
+    """
+    seo_description: str | None = None
+    """
+    SEO description of the public task page. Defaults to the task description when not set.
+    """
+    categorization: str | None = None
+    """
+    Use-case category of the public task.
+    """
+    input_schema_fields: list[str] | None = None
+    """
+    Names of the task input fields displayed on the public task page.
+    """
+    dataset_name: str | None = None
+    """
+    Name of the dataset from the Actor's dataset schema whose results are displayed.
+    """
+    dataset_view: str | None = None
+    """
+    Key of the dataset view from the Actor's dataset schema used to display results.
+    """
 
 
 @docs_group('Models')
@@ -3671,6 +3716,16 @@ class UpdateTaskRequest(BaseModel):
     input: TaskInput | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
+    public_config: TaskPublicConfig | None = None
+    """
+    Public-facing display configuration of the task's public landing page. The provided
+    fields are merged into the stored configuration and validated.
+    [Publish task](https://docs.apify.com/api/v2/actor-task-publish-post) and
+    [Unpublish task](https://docs.apify.com/api/v2/actor-task-unpublish-post) endpoints to change the
+    publication state. Updating `publicConfig` requires write permission to the task's
+    Actor.
+
+    """
 
 
 @docs_group('Models')

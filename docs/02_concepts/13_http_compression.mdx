@@ -1,14 +1,47 @@
 ---
 id: http-compression
 title: HTTP compression
-description: The client compresses every request body automatically using gzip by default, with optional brotli via an explicit opt-in.
+description: The client compresses request bodies automatically using gzip by default, with optional brotli via an explicit opt-in.
 ---
 
-The Apify client compresses every request body before sending it to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import SkipCompressionAsyncExample from '!!raw-loader!./code/13_skip_compression_async.py';
+import SkipCompressionSyncExample from '!!raw-loader!./code/13_skip_compression_sync.py';
+
+The Apify client compresses request bodies before sending them to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
 
 The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
+
+## Already-compressed payloads
+
+Some payloads carry their own compression, so compressing them again costs CPU and memory while making the request slightly larger. The client skips compression when the request's `Content-Type` is one of these:
+
+- any `image/*`, `audio/*`, or `video/*` type
+- archives such as `application/zip`, `application/gzip`, or `application/x-7z-compressed`
+- office documents and packages built on ZIP, such as `.docx`, `.xlsx`, `.epub`, or `.apk`
+- web fonts (`font/woff`, `font/woff2`)
+
+Two kinds of media type are compressed anyway: raw formats such as `image/bmp`, `image/tiff`, and `audio/wav`, and subtypes with a structured syntax suffix such as `image/svg+xml`. Set an accurate `content_type` when uploading media to a key-value store:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {SkipCompressionAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {SkipCompressionSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. File-like values are streamed rather than buffered, so they're never compressed regardless of their content type.
 
 ## Configuration
 

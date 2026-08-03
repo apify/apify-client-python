@@ -16,7 +16,12 @@ from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature, encode_base62
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.errors import catch_not_found_or_throw, is_retryable_error
-from apify_client._utils.http import response_to_dict, response_to_list, to_safe_id
+from apify_client._utils.http import (
+    is_compressible_content_type,
+    response_to_dict,
+    response_to_list,
+    to_safe_id,
+)
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -301,6 +306,43 @@ def test_encode_key_value_store_record_value_non_encodable_with_explicit_content
     """Test that a non-bytes-like value with a non-JSON content type is rejected before it reaches the transport."""
     with pytest.raises(TypeError, match="Cannot encode a dict value as 'image/png'"):
         encode_key_value_store_record_value({'a': 1}, content_type='image/png')
+
+
+@pytest.mark.parametrize(
+    ('content_type', 'expected'),
+    [
+        pytest.param(None, True, id='missing'),
+        pytest.param('', True, id='empty'),
+        pytest.param('application/json', True, id='json'),
+        pytest.param('text/plain; charset=utf-8', True, id='text with parameters'),
+        pytest.param('application/octet-stream', True, id='unknown binary'),
+        pytest.param('application/vnd.api+json', True, id='structured json suffix'),
+        pytest.param('image/svg+xml', True, id='svg under a compressed prefix'),
+        pytest.param('IMAGE/SVG+XML; charset=utf-8', True, id='svg uppercase with parameters'),
+        pytest.param('image/bmp', True, id='raw bitmap under a compressed prefix'),
+        pytest.param('image/tiff', True, id='tiff under a compressed prefix'),
+        pytest.param('audio/wav', True, id='raw audio under a compressed prefix'),
+        pytest.param('audio/L24', True, id='raw pcm audio in its registered casing'),
+        pytest.param('audio/midi', True, id='midi event data under a compressed prefix'),
+        pytest.param('image/png', False, id='image prefix'),
+        pytest.param('video/mp4', False, id='video prefix'),
+        pytest.param('audio/mpeg', False, id='audio prefix'),
+        pytest.param('application/zip', False, id='archive'),
+        pytest.param('application/x-gzip', False, id='gzip archive'),
+        pytest.param('application/x-zip-compressed', False, id='windows zip archive'),
+        pytest.param('application/epub+zip', False, id='zip container with a suffix'),
+        pytest.param(
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            False,
+            id='office open xml document',
+        ),
+        pytest.param('font/woff2', False, id='web font'),
+        pytest.param('  Image/PNG  ', False, id='surrounding whitespace and mixed case'),
+    ],
+)
+def test_is_compressible_content_type(content_type: str | None, *, expected: bool) -> None:
+    """Already-compressed media types are reported as not worth compressing, everything else as compressible."""
+    assert is_compressible_content_type(content_type) is expected
 
 
 def test_response_to_dict() -> None:

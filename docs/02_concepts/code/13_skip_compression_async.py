@@ -14,3 +14,7 @@ async def main() -> None:
 
     # The explicit content type lets the client skip compressing the PNG.
     await kvs_client.set_record('screenshot', screenshot, content_type='image/png')
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

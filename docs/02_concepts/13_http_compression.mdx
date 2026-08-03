@@ -19,13 +19,14 @@ The client compresses request bodies using the compressor configured via the `co
 
 ## Already-compressed payloads
 
-Some payloads carry their own compression, so compressing them again costs CPU and memory while typically making the request slightly larger. The client skips compression when the request's `Content-Type` is one of these:
+Some payloads carry their own compression, so compressing them again costs CPU and memory while making the request slightly larger. The client skips compression when the request's `Content-Type` is one of these:
 
-- any `image/*`, `audio/*`, or `video/*` type,
-- archives such as `application/zip`, `application/gzip`, or `application/x-7z-compressed`,
-- web fonts (`font/woff`, `font/woff2`).
+- any `image/*`, `audio/*`, or `video/*` type
+- archives such as `application/zip`, `application/gzip`, or `application/x-7z-compressed`
+- office documents and packages built on ZIP, such as `.docx`, `.xlsx`, `.epub`, or `.apk`
+- web fonts (`font/woff`, `font/woff2`)
 
-Text-based types are still compressed even under those prefixes, so `image/svg+xml` is compressed as usual. Set an accurate `content_type` when uploading media to a key-value store to benefit from this:
+Two kinds of media type are compressed anyway: raw formats such as `image/bmp`, `image/tiff`, and `audio/wav`, and subtypes with a structured syntax suffix such as `image/svg+xml`. Set an accurate `content_type` when uploading media to a key-value store:
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -40,7 +41,7 @@ Text-based types are still compressed even under those prefixes, so `image/svg+x
     </TabItem>
 </Tabs>
 
-Without an explicit content type the record is sent as `application/octet-stream`, which the client cannot tell apart from uncompressed binary data and therefore still compresses.
+Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. File-like values are streamed rather than buffered, so they're never compressed regardless of their content type.
 
 ## Configuration
 

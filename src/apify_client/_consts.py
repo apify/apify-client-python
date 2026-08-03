@@ -35,6 +35,13 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST = timedelta(seconds=3)
 OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 """Headers that can be overridden by users, but will trigger a warning if they do so, as it may lead to API errors."""
 
+MIN_COMPRESSION_SIZE = 1024
+"""Smallest request body, in bytes, that is worth compressing.
+
+A smaller body already fits in a single network packet, so compressing it costs CPU time without
+saving a round trip.
+"""
+
 ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES = ('audio/', 'image/', 'video/')
 """Media type prefixes whose payloads carry their own compression, so compressing the request body is wasted work."""
 

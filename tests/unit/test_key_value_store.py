@@ -9,6 +9,7 @@ import pytest
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._consts import MIN_COMPRESSION_SIZE
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -20,20 +21,25 @@ if TYPE_CHECKING:
 _MOCKED_KVS_ID = 'test_kvs_id'
 _RECORD_PATH = f'/v2/key-value-stores/{_MOCKED_KVS_ID}/records/f'
 
+# The client compresses only bodies of at least `MIN_COMPRESSION_SIZE` bytes, so the value is padded past that
+# to keep the compression axis meaningful. A shorter one would go out uncompressed under either algorithm.
+_TEXT_VALUE = 'buffer data' + '.' * MIN_COMPRESSION_SIZE
+_BYTES_VALUE = _TEXT_VALUE.encode('utf-8')
+
 
 class DuckTypedReader:
     """A file-like object that is not an `io.IOBase`, so only duck-typed detection picks it up."""
 
     def read(self) -> bytes:
-        return b'buffer data'
+        return _BYTES_VALUE
 
 
 # The values are built by a factory because reading consumes them, and each case runs once per compression
 # algorithm. Each case is (value factory, expected uploaded body, expected content type).
 _FILE_LIKE_VALUE_CASES = [
-    pytest.param(lambda: io.BytesIO(b'buffer data'), b'buffer data', 'application/octet-stream', id='bytes io'),
-    pytest.param(lambda: io.StringIO('buffer data'), b'buffer data', 'text/plain; charset=utf-8', id='string io'),
-    pytest.param(DuckTypedReader, b'buffer data', 'application/octet-stream', id='duck-typed reader'),
+    pytest.param(lambda: io.BytesIO(_BYTES_VALUE), _BYTES_VALUE, 'application/octet-stream', id='bytes io'),
+    pytest.param(lambda: io.StringIO(_TEXT_VALUE), _BYTES_VALUE, 'text/plain; charset=utf-8', id='string io'),
+    pytest.param(DuckTypedReader, _BYTES_VALUE, 'application/octet-stream', id='duck-typed reader'),
 ]
 
 

@@ -15,7 +15,11 @@ The Apify client compresses request bodies before sending them to the API. It re
 
 ## How it works
 
-The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
+The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently. A body is compressed only when it is large enough to benefit and its content type isn't already compressed, as the next two sections describe.
+
+## Minimum body size
+
+The client sends bodies smaller than 1024 bytes without compression and without the `Content-Encoding` header. A body of this size fits in one network packet, so compression doesn't remove a network round trip and only costs CPU time. For very small bodies, the compression format adds bytes and can make the body larger.
 
 ## Already-compressed payloads
 
@@ -84,7 +88,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=BrotliHttpCompressor(qu
 client = ApifyClient(token='MY-APIFY-TOKEN', compression=GzipHttpCompressor(quality=9))
 ```
 
-You can also implement a fully custom compressor by subclassing `HttpCompressor`:
+You can also implement a fully custom compressor by subclassing `HttpCompressor`. The client calls it only for bodies that reach the [minimum body size](#minimum-body-size) and aren't [already compressed](#already-compressed-payloads):
 
 ```python
 from apify_client import ApifyClient

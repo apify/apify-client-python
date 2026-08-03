@@ -16,6 +16,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_MAX,
     DEFAULT_TIMEOUT_MEDIUM,
     DEFAULT_TIMEOUT_SHORT,
+    MIN_COMPRESSION_SIZE,
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
@@ -223,6 +224,24 @@ class HttpClientBase:
         new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
         return to_seconds(new_timeout)
 
+    @staticmethod
+    def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
+        """Whether this body clears the size threshold `_prepare_request_call` compresses at, cheaply.
+
+        Below the threshold nothing is ever compressed. At or above it the content type still decides, but
+        checking that here would buy nothing - a body that turns out to be already compressed only wastes the
+        thread hop this answer guards.
+
+        The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It is a
+        lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the encoded
+        length decides, and the body is then under 4 KiB, so encoding it here is cheap.
+        """
+        if isinstance(data, str):
+            return len(data) >= MIN_COMPRESSION_SIZE or len(data.encode('utf-8')) >= MIN_COMPRESSION_SIZE
+        if isinstance(data, (bytes, bytearray)):
+            return len(data) >= MIN_COMPRESSION_SIZE
+        return False
+
     def _prepare_request_call(
         self,
         *,
@@ -234,10 +253,11 @@ class HttpClientBase:
         """Prepare headers, params, and body for an HTTP request.
 
         Merges the client's default headers (including authorization) with per-request headers, serializes JSON
-        and compresses the body unless its content type says the payload is already compressed. Header names are
-        treated case-insensitively and per-request values win over the client defaults. For JSON bodies, a
-        `Content-Type` header is set unless the caller supplied one. `Content-Encoding` always describes what was
-        actually applied to the body, so a caller-supplied value is dropped whenever nothing was compressed.
+        and compresses the body unless it is smaller than `MIN_COMPRESSION_SIZE` or its content type says the
+        payload is already compressed. Header names are treated case-insensitively and per-request values win
+        over the client defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one.
+        `Content-Encoding` always describes what was actually applied to the body, so a caller-supplied value is
+        dropped whenever nothing was compressed.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
@@ -259,7 +279,7 @@ class HttpClientBase:
                 data = bytes(data)
 
             content_type = next((value for key, value in headers.items() if key.lower() == 'content-type'), None)
-            if is_compressible_content_type(content_type):
+            if len(data) >= MIN_COMPRESSION_SIZE and is_compressible_content_type(content_type):
                 data = self._http_compressor.compress(data)
                 headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
                 compressed = True

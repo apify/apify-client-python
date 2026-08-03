@@ -395,10 +395,9 @@ class ImpitHttpClientAsync(HttpClientAsync):
         self._statistics.calls += 1
 
         # Serializing and compressing a request body is CPU-bound and would block the event loop, so
-        # offload request preparation to a worker thread whenever there is a body to compress. Bodyless
-        # requests skip the thread hop, as they have no expensive work to move off the loop. So do raw
-        # bodies the client sends as they are, for which the hop would cost more than preparing them
-        # inline. The size of a `json` body is only known once serialized, so it always hops.
+        # offload preparation to a worker thread whenever there is something to compress. A body the
+        # client sends as it is costs less to prepare inline than the hop itself. A `json` body always
+        # hops, as its size is only known once serialized.
         if json is not None or self._is_body_worth_compressing(data):
             prepared_headers, prepared_params, content = await asyncio.to_thread(
                 self._prepare_request_call,

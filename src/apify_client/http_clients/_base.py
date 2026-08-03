@@ -227,11 +227,9 @@ class HttpClientBase:
     def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
         """Whether `_prepare_request_call` would compress this body, decided without encoding a large `str`.
 
-        Mirrors the rule applied in `_prepare_request_call`, which measures the threshold on the encoded
-        bytes. A `str` therefore cannot be judged by its character count alone. That count is a lower
-        bound on the UTF-8 length, so a `str` reaching the threshold in characters reaches it in bytes
-        too. Below that, the encoded length decides, and such a body is under 4 KiB, so encoding it here
-        is cheap. Any other type is passed through uncompressed.
+        The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It
+        is a lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the
+        encoded length decides, and the body is then under 4 KiB, so encoding it here is cheap.
         """
         if isinstance(data, str):
             return len(data) >= MIN_COMPRESSION_SIZE or len(data.encode('utf-8')) >= MIN_COMPRESSION_SIZE
@@ -275,8 +273,8 @@ class HttpClientBase:
                 data = self._http_compressor.compress(data)
                 headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
             else:
-                # `Content-Encoding` must always describe what was actually applied, so a value the
-                # caller supplied is dropped rather than left to mislabel an uncompressed body.
+                # `Content-Encoding` must describe what was actually applied, so drop a caller
+                # value rather than let it mislabel an uncompressed body.
                 headers = {key: value for key, value in headers.items() if key.lower() != 'content-encoding'}
 
         return (headers, self._parse_params(params), data)

@@ -467,8 +467,7 @@ def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compres
     """A `str` body under the threshold in characters but over it in UTF-8 bytes is still compressed."""
     compressor, content_encoding, decompress = compressor_case
     client = _ConcreteHttpClient(http_compressor=compressor)
-    # U+00E9 (e with an acute accent) encodes to 2 bytes, so this body is half the threshold
-    # in characters but just above it in bytes.
+    # U+00E9 encodes to 2 bytes, so this body is under the threshold in characters but over it in bytes.
     body = '\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1)
 
     headers, _params, data = client._prepare_request_call(data=body)
@@ -658,7 +657,7 @@ async def test_async_call_compresses_request_body_off_the_event_loop() -> None:
 
 
 async def test_async_call_compresses_a_multibyte_str_body_off_the_event_loop() -> None:
-    """A `str` body under the threshold in characters but over it in bytes gets compressed, so it must be offloaded."""
+    """A `str` body over the threshold only once encoded is still compressed, so it must be offloaded."""
     compressor = _ThreadRecordingCompressor()
     client = ImpitHttpClientAsync(token='test_token', http_compressor=compressor)
     client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
@@ -718,13 +717,12 @@ async def test_async_call_offloads_a_body_at_the_threshold(monkeypatch: pytest.M
 async def test_async_call_skips_thread_offload_for_a_body_it_cannot_compress(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A body of a type the client passes through has nothing to compress, so deciding must not need its length."""
+    """A body of a type the client passes through needs no hop, and deciding that must not need its length."""
     client = ImpitHttpClientAsync(token='test_token')
     client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
     spy = _to_thread_spy(monkeypatch)
 
-    # A file-like body sits outside the declared type, but `encode_key_value_store_record_value` passes
-    # one through, so the gate must not assume every body has a length.
+    # `encode_key_value_store_record_value` passes file-like bodies through, so the gate cannot assume a length.
     body: Any = BytesIO(b'x' * MIN_COMPRESSION_SIZE)
 
     await client.call(method='PUT', url='https://api.test.com/endpoint', data=body)

@@ -223,8 +223,7 @@ def test__clean_json_payload(input_dict: dict, expected: dict) -> None:
 def test_encode_key_value_store_record_value_dict() -> None:
     """Test that dictionaries are encoded as JSON."""
     value, content_type = encode_key_value_store_record_value({'key': 'value'})
-    assert b'"key"' in value
-    assert b'"value"' in value
+    assert value == b'{"key": "value"}'
     assert content_type == 'application/json; charset=utf-8'
 
 
@@ -249,11 +248,59 @@ def test_encode_key_value_store_record_value(
 
 
 def test_encode_key_value_store_record_value_bytesio() -> None:
-    """Test that BytesIO is encoded as octet-stream."""
+    """Test that BytesIO is read into bytes and encoded as octet-stream."""
     buffer = io.BytesIO(b'buffer data')
     value, content_type = encode_key_value_store_record_value(buffer)
-    assert value == buffer
+    assert value == b'buffer data'
     assert content_type == 'application/octet-stream'
+
+
+def test_encode_key_value_store_record_value_stringio() -> None:
+    """Test that StringIO is read into text and encoded as text/plain."""
+    buffer = io.StringIO('buffer data')
+    value, content_type = encode_key_value_store_record_value(buffer)
+    assert value == 'buffer data'
+    assert content_type == 'text/plain; charset=utf-8'
+
+
+def test_encode_key_value_store_record_value_duck_typed_file_like() -> None:
+    """Test that a duck-typed file-like value (a callable `read`, not an `io.IOBase`) is read into bytes."""
+
+    class Reader:
+        def read(self) -> bytes:
+            return b'buffer data'
+
+    value, content_type = encode_key_value_store_record_value(Reader())
+    assert value == b'buffer data'
+    assert content_type == 'application/octet-stream'
+
+
+def test_encode_key_value_store_record_value_async_file_like_raises() -> None:
+    """Test that an async file-like value is rejected instead of storing the repr of an un-awaited coroutine."""
+
+    class AsyncReader:
+        async def read(self) -> bytes:
+            return b'buffer data'
+
+    with pytest.raises(TypeError, match='Async file-like objects are not supported'):
+        encode_key_value_store_record_value(AsyncReader())
+
+
+def test_encode_key_value_store_record_value_non_bytes_read_raises() -> None:
+    """Test that a `read` returning neither bytes nor str is rejected instead of being JSON-serialized."""
+
+    class EmptyNonBlockingReader:
+        def read(self) -> None:
+            """Mimic a non-blocking raw stream with no data available."""
+
+    with pytest.raises(TypeError, match='returned NoneType, expected bytes or str'):
+        encode_key_value_store_record_value(EmptyNonBlockingReader())
+
+
+def test_encode_key_value_store_record_value_non_encodable_with_explicit_content_type_raises() -> None:
+    """Test that a non-bytes-like value with a non-JSON content type is rejected before it reaches the transport."""
+    with pytest.raises(TypeError, match="Cannot encode a dict value as 'image/png'"):
+        encode_key_value_store_record_value({'a': 1}, content_type='image/png')
 
 
 def test_response_to_dict() -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Annotated, Any, Literal
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, RootModel
@@ -68,17 +69,44 @@ class Actor(BaseModel):
         alias_generator=to_camel,
     )
     id: Annotated[str, Field(examples=['zdc3Pyhyz3m8vjDeM'])]
+    """
+    The ID of the Actor.
+    """
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
-    name: Annotated[str, Field(examples=['MyActor'])]
-    username: Annotated[str, Field(examples=['jane35'])]
-    description: Annotated[str | None, Field(examples=['My favourite actor!'])] = None
+    """
+    The ID of the user who owns the Actor.
+    """
+    name: Annotated[str, Field(examples=['google-search-extractor'])]
+    """
+    The name of the Actor.
+    """
+    username: Annotated[str, Field(examples=['compass'])]
+    """
+    The username of the Actor owner.
+    """
+    description: Annotated[str | None, Field(examples=['Extract data from hundreds of places fast.'])] = None
+    """
+    Short description of the Actor, displayed in Apify Store and Console.
+    """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
     is_public: Annotated[bool, Field(examples=[False])]
+    """
+    Whether the Actor is available to users in Apify Store.
+    """
     actor_permission_level: ActorPermissionLevel | None = None
     created_at: Annotated[AwareDatetime, Field(examples=['2019-07-08T11:27:57.401Z'])]
+    """
+    The date and time the Actor was created. Follows the ISO 8601 format.
+    """
     modified_at: Annotated[AwareDatetime, Field(examples=['2019-07-08T14:01:05.546Z'])]
+    """
+    The date and time the Actor was last modified. Follows the ISO 8601 format.
+    """
     stats: ActorStats
     versions: list[Version]
+    """
+    An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
+    """
     pricing_infos: (
         list[
             Annotated[
@@ -94,28 +122,66 @@ class Actor(BaseModel):
     default_run_options: DefaultRunOptions
     example_run_input: ExampleRunInput | None = None
     is_deprecated: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the Actor is deprecated.
+    """
     deployment_key: Annotated[str | None, Field(examples=['ssh-rsa AAAA ...'])] = None
-    title: Annotated[str | None, Field(examples=['My Actor'])] = None
+    """
+    The Actor's public SSH key, used as a deployment key for private Git repositories.
+    """
+    title: Annotated[str | None, Field(examples=['Google Search Extractor'])] = None
+    """
+    Human-readable name of the Actor, displayed in Apify Store and Console.
+    """
     tagged_builds: dict[str, TaggedBuildInfo | None] | None = None
     actor_standby: ActorStandby | None = None
     readme_summary: str | None = None
     """
-    A brief, LLM-generated readme summary
+    An AI-generated Markdown summary of the Actor's README, optimized for search and AI agents. Contains an overview and a list of use cases. Generated only for public Actors.
     """
     seo_title: Annotated[str | None, Field(examples=['Web Scraper'])] = None
+    """
+    Name of the Actor to display by search engines such as Google. Can be different from the Actor's name displayed in Apify Store and Console.
+    """
     seo_description: Annotated[
         str | None, Field(examples=['Crawls websites using Chrome and extracts data from pages using JavaScript.'])
     ] = None
+    """
+    Description of the Actor to display by search engines such as Google.
+    """
     picture_url: Annotated[
         str | None, Field(examples=['https://apify-image-uploads-prod.s3.amazonaws.com/.../actor-picture.png'])
     ] = None
-    standby_url: Annotated[str | None, Field(examples=['https://my-actor.apify.actor'])] = None
-    notice: Annotated[str | None, Field(examples=['NONE'])] = None
+    """
+    URL of the Actor's icon, displayed on the Actor's page in Apify Store and Console.
+    """
+    standby_url: Annotated[str | None, Field(examples=['https://jane35--my-actor.apify.actor'])] = None
+    """
+    URL for sending requests to the Actor in Standby mode.
+    `null` if the Standby mode isn't enabled.
+
+    """
+    notice: ActorNotice | None = None
     categories: Annotated[list[str] | None, Field(examples=[['DEVELOPER_TOOLS', 'OPEN_SOURCE']])] = None
+    """
+    A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
+    """
     is_critical: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the Actor is maintained by Apify.
+    """
     is_generic: Annotated[bool | None, Field(examples=[False])] = None
-    is_source_code_hidden: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the Actor is intended for developers. Set by Apify.
+    """
+    is_source_code_hidden: Annotated[bool | None, Field(examples=[True])] = True
+    """
+    Whether the Actor's source files are hidden on its detail page.
+    """
     has_no_dataset: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the Actor stores results in a dataset. Set by Apify.
+    """
 
 
 @docs_group('Models')
@@ -223,6 +289,15 @@ class ActorDefinition(BaseModel):
 
 
 @docs_group('Models')
+class ActorNotice(Enum):
+    """A warning displayed on the Actor's page in Apify Store and Console. Can be set by the Actor's developer or automatically by Apify's quality checks."""
+
+    NONE = 'NONE'
+    RESIDENTIAL_PROXY_REQUIRED = 'RESIDENTIAL_PROXY_REQUIRED'
+    UNDER_MAINTENANCE = 'UNDER_MAINTENANCE'
+
+
+@docs_group('Models')
 class ActorResponse(BaseModel):
     """Response containing Actor data."""
 
@@ -293,25 +368,62 @@ class ActorStandby(BaseModel):
 
 @docs_group('Models')
 class ActorStats(BaseModel):
+    """Usage statistics and Apify Store metrics for the Actor."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
     total_builds: Annotated[int | None, Field(examples=[9])] = None
+    """
+    The total number of builds of the Actor.
+    """
     total_runs: Annotated[int | None, Field(examples=[16])] = None
+    """
+    The total number of runs of the Actor.
+    """
     total_users: Annotated[int | None, Field(examples=[6])] = None
+    """
+    The total number of Actor users, including its owner.
+    """
     total_users7_days: Annotated[int | None, Field(examples=[2])] = None
+    """
+    The number of active users of the Actor in the last 7 days.
+    """
     total_users30_days: Annotated[int | None, Field(examples=[6])] = None
+    """
+    The number of active users of the Actor in the last 30 days.
+    """
     total_users90_days: Annotated[int | None, Field(examples=[6])] = None
+    """
+    The number of active users of the Actor in the last 90 days.
+    """
     total_metamorphs: Annotated[int | None, Field(examples=[2])] = None
+    """
+    The total number of times a run of another Actor was [metamorphed](https://docs.apify.com/platform/actors/development/programming-interface/metamorph) into this Actor.
+    """
     last_run_started_at: Annotated[AwareDatetime | None, Field(examples=['2019-07-08T14:01:05.546Z'])] = None
+    """
+    The date and time the most recent run of the Actor started.
+    """
     actor_review_count: Annotated[int | None, Field(examples=[69])] = None
+    """
+    The number of reviews the Actor has received in Apify Store.
+    """
     actor_review_rating: Annotated[float | None, Field(examples=[4.7])] = None
+    """
+    The average rating of the Actor in Apify Store.
+    """
     bookmark_count: Annotated[int | None, Field(examples=[1269])] = None
+    """
+    The number of users who bookmarked the Actor in Apify Store.
+    """
     public_actor_run_stats30_days: PublicActorRunStats30Days | None = None
     """
-    Run status counts over the past 30 days.
+    Run status counts from the last 30 days. Only for public Actors.
+    Excludes runs started by the Actor's owner.
+
     """
 
 
@@ -2087,9 +2199,6 @@ class Plan(BaseModel):
     max_actor_task_count: Annotated[int | None, Field(examples=[1000])] = None
     data_retention_days: Annotated[int | None, Field(examples=[14])] = None
     available_proxy_groups: dict[str, int]
-    """
-    The number of available proxies in this group.
-    """
     team_account_seat_count: Annotated[int | None, Field(examples=[1])] = None
     support_level: Annotated[str | None, Field(examples=['COMMUNITY'])] = None
     available_add_ons: Annotated[list[str] | None, Field(examples=[[]])] = None
@@ -2210,7 +2319,10 @@ class ProxyGroup(BaseModel):
 
 @docs_group('Models')
 class PublicActorRunStats30Days(BaseModel):
-    """Run status counts over the past 30 days."""
+    """Run status counts from the last 30 days. Only for public Actors.
+    Excludes runs started by the Actor's owner.
+
+    """
 
     model_config = ConfigDict(
         extra='allow',
@@ -2218,10 +2330,25 @@ class PublicActorRunStats30Days(BaseModel):
         alias_generator=to_camel,
     )
     aborted: Annotated[int | None, Field(alias='ABORTED', examples=[2542])] = None
+    """
+    The number of runs that were aborted.
+    """
     failed: Annotated[int | None, Field(alias='FAILED', examples=[1234])] = None
+    """
+    The number of runs that failed.
+    """
     succeeded: Annotated[int | None, Field(alias='SUCCEEDED', examples=[732805])] = None
+    """
+    The number of runs that succeeded.
+    """
     timed_out: Annotated[int | None, Field(alias='TIMED-OUT', examples=[12556])] = None
+    """
+    The number of runs that timed out.
+    """
     total: Annotated[int | None, Field(alias='TOTAL', examples=[749137])] = None
+    """
+    The total number of runs.
+    """
 
 
 @docs_group('Models')
@@ -3295,7 +3422,7 @@ class StoreListActor(BaseModel):
     user_full_name: Annotated[str | None, Field(examples=['Jane H. Doe'])] = None
     description: Annotated[str | None, Field(examples=['My public actor!'])] = None
     categories: Annotated[list[str] | None, Field(examples=[['MARKETING', 'LEAD_GENERATION']])] = None
-    notice: str | None = None
+    notice: ActorNotice | None = None
     picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     user_picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import io
 import json
 from base64 import b64encode
 from functools import cache
+from inspect import isawaitable, iscoroutine
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import WebhookCreate, WebhookRepresentation
@@ -12,29 +12,51 @@ if TYPE_CHECKING:
     from apify_client.types import WebhooksList
 
 
-def encode_key_value_store_record_value(value: Any, *, content_type: str | None = None) -> tuple[Any, str]:
+def encode_key_value_store_record_value(
+    value: Any, *, content_type: str | None = None
+) -> tuple[bytes | bytearray | str, str]:
     """Encode a value for storage in a key-value store record.
 
     Args:
-        value: The value to encode (can be dict, str, bytes, or file-like object).
+        value: The value to encode. Anything exposing a callable `read` is treated as a file-like object: `read`
+            is called with no arguments, so the value is consumed from its current position and buffered in
+            memory whole - the object is neither rewound nor closed, and async file-like objects are rejected.
+            Any other value is JSON-serialized unless it is already bytes or a string.
         content_type: The content type; if None, it's inferred from the value type.
 
     Returns:
         A tuple of (encoded_value, content_type).
+
+    Raises:
+        TypeError: If the value cannot be encoded into a body the transport accepts.
     """
+    # Read file-like values into memory; the transport only accepts bytes-like bodies. Detect them by a
+    # callable `read` (not `io.IOBase`) so duck-typed file-likes are read, not JSON-serialized. Impit exposes
+    # no streaming `content=` API, so the value has to be buffered whole.
+    read = getattr(value, 'read', None)
+    if callable(read):
+        value = read()
+
+        if isawaitable(value):
+            if iscoroutine(value):
+                value.close()  # Prevent a "coroutine was never awaited" warning.
+            raise TypeError(
+                'Async file-like objects are not supported. Await the read yourself and pass the resulting '
+                'bytes or string.'
+            )
+
+        if not isinstance(value, (bytes, bytearray, str)):
+            raise TypeError(f'Reading the file-like value returned {type(value).__name__}, expected bytes or str.')
+
     if not content_type:
-        if isinstance(value, (bytes, bytearray, io.IOBase)):
+        if isinstance(value, (bytes, bytearray)):
             content_type = 'application/octet-stream'
         elif isinstance(value, str):
             content_type = 'text/plain; charset=utf-8'
         else:
             content_type = 'application/json; charset=utf-8'
 
-    if (
-        'application/json' in content_type
-        and not isinstance(value, (bytes, bytearray, io.IOBase))
-        and not isinstance(value, str)
-    ):
+    if 'application/json' in content_type and not isinstance(value, (bytes, bytearray, str)):
         # Don't use indentation to reduce size.
         value = json.dumps(
             value,
@@ -42,6 +64,14 @@ def encode_key_value_store_record_value(value: Any, *, content_type: str | None 
             allow_nan=False,
             default=str,
         ).encode('utf-8')
+
+    # A non-JSON content type skips the serialization above, so anything that is not bytes-like would reach the
+    # transport unencoded and fail there with an opaque error.
+    if not isinstance(value, (bytes, bytearray, str)):
+        raise TypeError(
+            f'Cannot encode a {type(value).__name__} value as {content_type!r}. Pass bytes, a string, or a '
+            'file-like object, or use a JSON content type.'
+        )
 
     return (value, content_type)
 

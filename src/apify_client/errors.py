@@ -48,9 +48,7 @@ class ApifyApiError(ApifyClientError):
             if mapped is None and status >= HTTPStatus.INTERNAL_SERVER_ERROR:
                 mapped = ServerError
             if mapped is not None:
-                # Retag the freshly allocated instance instead of allocating `mapped` directly. Both are equivalent
-                # at runtime (the subclasses share the base layout), but only allocating `cls` keeps the return type
-                # `Self`, so `NotFoundError(...)` still infers as `NotFoundError` rather than widening to the base.
+                # Retagging is runtime-equivalent to allocating `mapped` directly, but keeps the return type `Self`.
                 instance.__class__ = mapped
         return instance
 

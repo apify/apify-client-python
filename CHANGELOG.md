@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 
 - Read file-like KVS values before upload and reject unencodable ones ([#965](https://github.com/apify/apify-client-python/pull/965)) ([064b5cc](https://github.com/apify/apify-client-python/commit/064b5cccbce8b585f58271b089e4987c6559a7d8)) by [@vdusek](https://github.com/vdusek)
 
+### ⚡ Performance
+
+- Skip request-body compression for already-compressed content types ([#987](https://github.com/apify/apify-client-python/pull/987)) ([808bdde](https://github.com/apify/apify-client-python/commit/808bdde06ed1befe9d30bede0f947320240747a6)) by [@vdusek](https://github.com/vdusek)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.1.1](https://github.com/apify/apify-client-python/releases/tag/v3.1.1) (2026-08-03)

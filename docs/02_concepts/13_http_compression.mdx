@@ -4,6 +4,13 @@ title: HTTP compression
 description: The client compresses request bodies automatically using gzip by default, with optional brotli via an explicit opt-in.
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import SkipCompressionAsyncExample from '!!raw-loader!./code/13_skip_compression_async.py';
+import SkipCompressionSyncExample from '!!raw-loader!./code/13_skip_compression_sync.py';
+
 The Apify client compresses request bodies before sending them to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
@@ -20,12 +27,18 @@ Some payloads carry their own compression, so compressing them again costs CPU a
 
 Text-based types are still compressed even under those prefixes, so `image/svg+xml` is compressed as usual. Set an accurate `content_type` when uploading media to a key-value store to benefit from this:
 
-```python
-kvs = client.key_value_store('MY-STORE-ID')
-
-with open('screenshot.png', 'rb') as file:
-    kvs.set_record('screenshot', file, content_type='image/png')
-```
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {SkipCompressionAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {SkipCompressionSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
 
 Without an explicit content type the record is sent as `application/octet-stream`, which the client cannot tell apart from uncompressed binary data and therefore still compresses.
 

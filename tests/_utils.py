@@ -7,7 +7,7 @@ import string
 import time
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar, cast, overload
 
 import pytest
 
@@ -229,11 +229,26 @@ async def collect_iterate_until_present(
     return collected
 
 
+ConflictErrorType = Literal[
+    'actor-name-not-unique',
+    'actor-task-name-not-unique',
+    'schedule-name-not-unique',
+    'version-already-exists',
+    'env-var-already-exists',
+]
+"""API error types signalling that a create request lost the resource's unique name or version number.
+
+Kept a closed set rather than a plain `str` so a typo in a call below fails the type check instead of silently
+disabling the recovery it was meant to enable. The values and their status codes come from the API itself - the
+`*-not-unique` ones are 409, `version-already-exists` and `env-var-already-exists` are 403.
+"""
+
+
 async def _create_with_conflict_recovery(
     create: Callable[[], Awaitable[T] | T],
     recover: Callable[[], Awaitable[T | None] | T | None],
     *,
-    error_type: str,
+    error_type: ConflictErrorType,
     description: str,
 ) -> T:
     """Run `create`, recovering the resource if an already-committed retry made its name unavailable.

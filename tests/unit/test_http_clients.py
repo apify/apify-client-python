@@ -461,6 +461,55 @@ def test_prepare_request_call_with_bytearray_data(compressor_case: tuple) -> Non
     assert decompress(data) == b'test bytearray'
 
 
+@pytest.mark.parametrize(
+    'content_type',
+    [
+        pytest.param('image/png', id='image'),
+        pytest.param('video/mp4', id='video'),
+        pytest.param('application/zip', id='archive'),
+    ],
+)
+def test_prepare_request_call_skips_compression_for_already_compressed_content(content_type: str) -> None:
+    """An already-compressed body is sent verbatim and carries no `Content-Encoding` header."""
+    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-type': content_type},
+        data=b'\x89PNG binary',
+    )
+
+    assert data == b'\x89PNG binary'
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_drops_caller_content_encoding_when_compression_is_skipped() -> None:
+    """Skipping compression also strips a caller-supplied `Content-Encoding`, which would misdescribe the body."""
+    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-type': 'image/jpeg', 'content-encoding': 'br'},
+        data=b'jpeg binary',
+    )
+
+    assert data == b'jpeg binary'
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_compresses_text_content_types(compressor_case: tuple) -> None:
+    """A text content type is still compressed, even when it sits under an already-compressed prefix."""
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-type': 'image/svg+xml'},
+        data=b'<svg />',
+    )
+
+    assert headers['Content-Encoding'] == content_encoding
+    assert isinstance(data, bytes)
+    assert decompress(data) == b'<svg />'
+
+
 def test_prepare_request_call_json_and_data_error() -> None:
     """Test _prepare_request_call raises error when both json and data are provided."""
     client = _ConcreteHttpClient()

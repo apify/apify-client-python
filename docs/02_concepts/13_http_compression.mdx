@@ -1,14 +1,33 @@
 ---
 id: http-compression
 title: HTTP compression
-description: The client compresses every request body automatically using gzip by default, with optional brotli via an explicit opt-in.
+description: The client compresses request bodies automatically using gzip by default, with optional brotli via an explicit opt-in.
 ---
 
-The Apify client compresses every request body before sending it to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+The Apify client compresses request bodies before sending them to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
 
 The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
+
+## Already-compressed payloads
+
+Some payloads carry their own compression, so compressing them again costs CPU and memory while typically making the request slightly larger. The client skips compression when the request's `Content-Type` is one of these:
+
+- any `image/*`, `audio/*`, or `video/*` type,
+- archives such as `application/zip`, `application/gzip`, or `application/x-7z-compressed`,
+- web fonts (`font/woff`, `font/woff2`).
+
+Text-based types are still compressed even under those prefixes, so `image/svg+xml` is compressed as usual. Set an accurate `content_type` when uploading media to a key-value store to benefit from this:
+
+```python
+kvs = client.key_value_store('MY-STORE-ID')
+
+with open('screenshot.png', 'rb') as file:
+    kvs.set_record('screenshot', file, content_type='image/png')
+```
+
+Without an explicit content type the record is sent as `application/octet-stream`, which the client cannot tell apart from uncompressed binary data and therefore still compresses.
 
 ## Configuration
 

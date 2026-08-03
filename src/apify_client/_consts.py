@@ -34,3 +34,28 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST = timedelta(seconds=3)
 
 OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 """Headers that can be overridden by users, but will trigger a warning if they do so, as it may lead to API errors."""
+
+ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES = ('audio/', 'image/', 'video/')
+"""Media type prefixes whose payloads carry their own compression, so compressing the request body is wasted work."""
+
+ALREADY_COMPRESSED_MEDIA_TYPES = frozenset(
+    {
+        'application/gzip',
+        'application/java-archive',
+        'application/vnd.rar',
+        'application/x-7z-compressed',
+        'application/x-bzip',
+        'application/x-bzip2',
+        'application/x-gzip',
+        'application/x-rar-compressed',
+        'application/x-xz',
+        'application/zip',
+        'application/zstd',
+        'font/woff',
+        'font/woff2',
+    }
+)
+"""Exact media types whose payloads carry their own compression."""
+
+COMPRESSIBLE_MEDIA_TYPE_SUFFIXES = ('+json', '+xml')
+"""Structured syntax suffixes marking a media type as text even under an already-compressed prefix (`image/svg+xml`)."""

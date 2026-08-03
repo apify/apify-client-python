@@ -19,6 +19,7 @@ from apify_client._consts import (
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
+from apify_client._utils.http import is_compressible_content_type
 from apify_client._utils.time import to_seconds
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
@@ -253,8 +254,14 @@ class HttpClientBase:
                 data = data.encode('utf-8')
             elif isinstance(data, bytearray):
                 data = bytes(data)
-            data = self._http_compressor.compress(data)
-            headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+
+            content_type = next((value for key, value in headers.items() if key.lower() == 'content-type'), None)
+            if is_compressible_content_type(content_type):
+                data = self._http_compressor.compress(data)
+                headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+            else:
+                # The body goes out as-is, so any caller-supplied encoding would misdescribe it.
+                headers = {key: value for key, value in headers.items() if key.lower() != 'content-encoding'}
 
         return (headers, self._parse_params(params), data)
 

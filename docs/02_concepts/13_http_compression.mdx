@@ -12,7 +12,7 @@ The client compresses request bodies using the compressor configured via the `co
 
 ## Minimum body size
 
-Bodies smaller than 1024 bytes are sent as they are, with no `Content-Encoding` header. Such a body already fits in a single network packet, so compressing it saves no round trips and only costs CPU time. At the very small end, the framing overhead of the compression format can even make the body larger than the original.
+The client sends bodies smaller than 1024 bytes without compression and without the `Content-Encoding` header. A body of this size fits in one network packet, so compression doesn't remove a network round trip and only costs CPU time. For very small bodies, the compression format adds bytes and can make the body larger.
 
 ## Configuration
 

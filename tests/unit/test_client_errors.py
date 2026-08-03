@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING, Any
+from unittest.mock import Mock
 
 import pytest
 from werkzeug import Response
@@ -241,6 +242,20 @@ def test_apify_api_error_dispatches_all_mapped_statuses(
     assert type(exc.value) is expected_cls
     assert isinstance(exc.value, ApifyApiError)
     assert exc.value.status_code == status_code
+
+
+def test_apify_api_error_subclass_constructed_directly_keeps_its_class() -> None:
+    """Only `ApifyApiError` itself dispatches - a subclass constructed directly is never re-dispatched by status."""
+    response = Mock()
+    response.status_code = 404
+    response.json.return_value = {'error': {'type': 'record-not-found', 'message': 'nope'}}
+
+    # 404 maps to `NotFoundError`, but the explicit class must win over the status.
+    error = ServerError(response, 1)
+
+    assert type(error) is ServerError
+    assert error.status_code == 404
+    assert error.type == 'record-not-found'
 
 
 def test_apify_api_error_falls_back_for_unparsable_body(httpserver: HTTPServer) -> None:

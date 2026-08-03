@@ -41,15 +41,16 @@ class ApifyApiError(ApifyClientError):
 
     def __new__(cls, response: HttpResponse, attempt: int, *, method: str = 'GET') -> Self:  # noqa: ARG004
         """Dispatch to the subclass matching the response's HTTP status code, if any."""
-        target_cls: type[ApifyApiError] = cls
+        instance = super().__new__(cls)
         if cls is ApifyApiError:
             status = response.status_code
             mapped = _STATUS_TO_CLASS.get(status)
             if mapped is None and status >= HTTPStatus.INTERNAL_SERVER_ERROR:
                 mapped = ServerError
             if mapped is not None:
-                target_cls = mapped
-        return super().__new__(target_cls)
+                # Retagging is runtime-equivalent to allocating `mapped` directly, but keeps the return type `Self`.
+                instance.__class__ = mapped
+        return instance
 
     def __init__(self, response: HttpResponse, attempt: int, *, method: str = 'GET') -> None:
         """Initialize the API error from a failed response.

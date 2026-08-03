@@ -20,6 +20,7 @@ from apify_client._consts import (
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
+from apify_client._utils.http import is_compressible_content_type
 from apify_client._utils.time import to_seconds
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
@@ -225,11 +226,15 @@ class HttpClientBase:
 
     @staticmethod
     def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
-        """Whether `_prepare_request_call` would compress this body, decided without encoding a large `str`.
+        """Whether this body clears the size threshold `_prepare_request_call` compresses at, cheaply.
 
-        The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It
-        is a lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the
-        encoded length decides, and the body is then under 4 KiB, so encoding it here is cheap.
+        Below the threshold nothing is ever compressed. At or above it the content type still decides, but
+        checking that here would buy nothing - a body that turns out to be already compressed only wastes the
+        thread hop this answer guards.
+
+        The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It is a
+        lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the encoded
+        length decides, and the body is then under 4 KiB, so encoding it here is cheap.
         """
         if isinstance(data, str):
             return len(data) >= MIN_COMPRESSION_SIZE or len(data.encode('utf-8')) >= MIN_COMPRESSION_SIZE
@@ -247,35 +252,42 @@ class HttpClientBase:
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
         """Prepare headers, params, and body for an HTTP request.
 
-        Merges the client's default headers (including authorization) with per-request headers,
-        serializes JSON and compresses the body. Header names are treated case-insensitively and
-        per-request values win over the client defaults. For JSON bodies, a `Content-Type` header
-        is set unless the caller supplied one. Bodies smaller than `MIN_COMPRESSION_SIZE` are sent
-        as-is, without a `Content-Encoding` header.
+        Merges the client's default headers (including authorization) with per-request headers, serializes JSON
+        and compresses the body unless it is smaller than `MIN_COMPRESSION_SIZE` or its content type says the
+        payload is already compressed. Header names are treated case-insensitively and per-request values win
+        over the client defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one.
+        `Content-Encoding` always describes what was actually applied to the body, so a caller-supplied value is
+        dropped whenever nothing was compressed.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
         headers = self._merge_headers(self._headers, headers)
 
-        # Dump JSON data to string so it can be compressed.
+        # Dump JSON data to a string so it can be sent as a request body.
         if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
             if not any(key.lower() == 'content-type' for key in headers):
                 headers['Content-Type'] = 'application/json'
+
+        compressed = False
 
         if isinstance(data, (str, bytes, bytearray)):
             if isinstance(data, str):
                 data = data.encode('utf-8')
             elif isinstance(data, bytearray):
                 data = bytes(data)
-            if len(data) >= MIN_COMPRESSION_SIZE:
+
+            content_type = next((value for key, value in headers.items() if key.lower() == 'content-type'), None)
+            if len(data) >= MIN_COMPRESSION_SIZE and is_compressible_content_type(content_type):
                 data = self._http_compressor.compress(data)
                 headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
-            else:
-                # `Content-Encoding` must describe what was actually applied, so drop a caller
-                # value rather than let it mislabel an uncompressed body.
-                headers = {key: value for key, value in headers.items() if key.lower() != 'content-encoding'}
+                compressed = True
+
+        # Anything left uncompressed goes out as-is - a file-like body included - so a caller-supplied encoding
+        # would misdescribe it.
+        if data is not None and not compressed:
+            headers = {key: value for key, value in headers.items() if key.lower() != 'content-encoding'}
 
         return (headers, self._parse_params(params), data)
 

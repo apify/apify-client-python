@@ -7,7 +7,7 @@ import threading
 import time
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, Mock
 
 import brotli
@@ -505,6 +505,88 @@ def test_is_body_not_worth_compressing(data: Any) -> None:
     assert not _ConcreteHttpClient._is_body_worth_compressing(data)
 
 
+@pytest.mark.parametrize(
+    'content_type',
+    [
+        pytest.param('image/png', id='image'),
+        pytest.param('video/mp4', id='video'),
+        pytest.param('application/zip', id='archive'),
+    ],
+)
+def test_prepare_request_call_skips_compression_for_already_compressed_content(content_type: str) -> None:
+    """An already-compressed body is sent verbatim, carries no `Content-Encoding`, and keeps every other header."""
+    client = _ConcreteHttpClient(token='test_token', http_compressor=GzipHttpCompressor())
+    # Above the size threshold, so the content type is what skips compression here.
+    payload = b'\x89PNG' + b'\xff' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-type': content_type},
+        data=payload,
+    )
+
+    assert data == payload
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+    assert headers['Authorization'] == 'Bearer test_token'
+    assert headers['content-type'] == content_type
+    assert headers['User-Agent'] == client._headers['User-Agent']
+
+
+def test_prepare_request_call_drops_caller_content_encoding_when_compression_is_skipped() -> None:
+    """Skipping compression also strips a caller-supplied `Content-Encoding`, which would misdescribe the body."""
+    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+    # Above the size threshold, so the content type is what skips compression here.
+    payload = b'\xff' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-type': 'image/jpeg', 'content-encoding': 'br'},
+        data=payload,
+    )
+
+    assert data == payload
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_drops_caller_content_encoding_for_a_streamed_body() -> None:
+    """A body that is streamed rather than compressed, such as a file-like object, also loses `Content-Encoding`."""
+    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+    stream = BytesIO(b'raw payload')
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-encoding': 'gzip'},
+        data=cast('bytes', stream),
+    )
+
+    assert data is stream
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+@pytest.mark.parametrize(
+    'content_type',
+    [
+        pytest.param('image/svg+xml', id='structured xml suffix'),
+        pytest.param('image/bmp', id='raw bitmap'),
+        pytest.param('audio/wav', id='raw audio'),
+    ],
+)
+def test_prepare_request_call_compresses_exceptions_to_compressed_prefixes(
+    content_type: str,
+    compressor_case: tuple,
+) -> None:
+    """Types that are text or raw are compressed even when they sit under an already-compressed prefix."""
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
+    payload = b'x' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(
+        headers={'content-type': content_type},
+        data=payload,
+    )
+
+    assert headers['Content-Encoding'] == content_encoding
+    assert isinstance(data, bytes)
+    assert decompress(data) == payload
+
+
 def test_prepare_request_call_json_and_data_error() -> None:
     """Test _prepare_request_call raises error when both json and data are provided."""
     client = _ConcreteHttpClient()
@@ -564,7 +646,7 @@ def test_prepare_request_call_json_keeps_caller_content_type() -> None:
 
 
 def test_prepare_request_call_replaces_caller_content_encoding() -> None:
-    """The Content-Encoding header always reflects the compressor actually applied, replacing any caller value."""
+    """A compressed body reports the compressor actually applied, replacing any caller-supplied Content-Encoding."""
     client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
 
     headers, _params, _data = client._prepare_request_call(

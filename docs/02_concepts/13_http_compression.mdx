@@ -47,7 +47,7 @@ Two kinds of media type are compressed anyway: raw formats such as `image/bmp`, 
     </TabItem>
 </Tabs>
 
-Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. File-like values are streamed rather than buffered, so they're never compressed regardless of their content type.
+Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. File-like values are read into memory before they're sent, so they follow the same rules as any other body.
 
 ## Pre-compressed bodies
 

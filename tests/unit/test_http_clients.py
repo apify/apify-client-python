@@ -531,8 +531,8 @@ def test_prepare_request_call_skips_compression_for_already_compressed_content(c
     assert headers['User-Agent'] == client._headers['User-Agent']
 
 
-def test_prepare_request_call_keeps_caller_content_encoding_for_a_streamed_body() -> None:
-    """A body the client streams rather than compresses, such as a file-like object, keeps its `Content-Encoding`."""
+def test_prepare_request_call_keeps_caller_content_encoding_for_a_file_like_body() -> None:
+    """A file-like body skips compression entirely, and its `Content-Encoding` reaches the transport untouched."""
     client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
     stream = BytesIO(gzip.compress(b'raw payload'))
 

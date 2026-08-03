@@ -153,7 +153,7 @@ class HttpClientBase:
         Args:
             token: The Apify API token to set as the `Bearer` authorization.
         """
-        if not any(key.lower() == 'authorization' for key in self._headers):
+        if self._get_header(self._headers, 'authorization') is None:
             self._headers['Authorization'] = f'Bearer {token}'
 
     @staticmethod

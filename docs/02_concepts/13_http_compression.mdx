@@ -12,7 +12,7 @@ The client compresses request bodies using the compressor configured via the `co
 
 ## Minimum body size
 
-Bodies smaller than 1024 bytes are sent as they are, with no `Content-Encoding` header. Such a body already fits in a single network packet, so compressing it saves no round trips, while the framing overhead of the compression format often makes it larger than the original. The JavaScript client uses the same threshold.
+Bodies smaller than 1024 bytes are sent as they are, with no `Content-Encoding` header. Such a body already fits in a single network packet, so compressing it saves no round trips and only costs CPU time. At the very small end, the framing overhead of the compression format can even make the body larger than the original.
 
 ## Configuration
 

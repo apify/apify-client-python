@@ -2087,9 +2087,6 @@ class Plan(BaseModel):
     max_actor_task_count: Annotated[int | None, Field(examples=[1000])] = None
     data_retention_days: Annotated[int | None, Field(examples=[14])] = None
     available_proxy_groups: dict[str, int]
-    """
-    The number of available proxies in this group.
-    """
     team_account_seat_count: Annotated[int | None, Field(examples=[1])] = None
     support_level: Annotated[str | None, Field(examples=['COMMUNITY'])] = None
     available_add_ons: Annotated[list[str] | None, Field(examples=[[]])] = None

@@ -15,6 +15,7 @@ extend-exclude = [
     "*.min.css",
     "**/CHANGELOG.md",
     "**/changelog.md",
+    "spec/openapi.json", # Vendored snapshot of the published API specification
 ]
 
 [default.extend-words]

@@ -1,0 +1,223 @@
+# This workflow keeps the generated API models in sync with the published OpenAPI specification. Every night it
+# refreshes the committed `spec/openapi.json` snapshot, regenerates the models from it, and opens a pull request
+# when the result differs from master.
+#
+# Two invariants make it safe to run unattended:
+#   1. Generation always happens on master, so the output is a function of the current spec and the current codegen
+#      tooling - never of whatever an older auto-update branch happens to carry.
+#   2. The auto-update branch is rebuilt from master instead of appended to, so the pull request diff is always
+#      "current spec vs current master" and can never resurrect a stale generated file.
+
+name: Regenerate models
+
+on:
+  # Runs when manually triggered from the GitHub UI.
+  workflow_dispatch:
+
+  # Runs every day at 02:00 UTC.
+  schedule:
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: regenerate-models
+  cancel-in-progress: false
+
+# Writes go through the service account token below, not through `GITHUB_TOKEN`.
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: 3.14
+  BRANCH_NAME: ci/regenerate-models
+  # A valid Conventional Commits title, so the pull request is mergeable without anyone having to rename it.
+  # Reviewers retitle it to `fix:`/`feat:` when the diff is user-facing - see the pull request body.
+  PR_TITLE: "chore: Regenerate models from the published OpenAPI spec"
+  ASSIGNEE: vdusek
+  LABEL: t-tooling
+
+jobs:
+  regenerate-models:
+    name: Regenerate models
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up uv package manager
+        uses: astral-sh/setup-uv@v8.3.2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv run poe install-dev
+
+      - name: Sync the OpenAPI specification snapshot
+        run: uv run poe update-spec
+
+      - name: Regenerate models
+        run: uv run poe generate-models
+
+      # Gate on the generated models rather than on the specification: `info.version` in the published spec carries
+      # a build timestamp that apify-docs bumps on every specification change, so a spec diff on its own says
+      # nothing about whether the client is affected. As a result the committed snapshot only moves together with
+      # the models it produces, which is exactly what `check-models` verifies.
+      - name: Check for model changes
+        id: changes
+        run: |
+          if git diff --quiet -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py; then
+            echo "Models are already up to date with the published specification."
+            echo "has-changes=false" >> "$GITHUB_OUTPUT"
+          else
+            git diff --stat -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py
+            echo "has-changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A previous run may have already opened a pull request with exactly these models. Leave it alone rather than
+      # replacing it with an identical one, so an open pull request doesn't churn while the specification is stable.
+      # Only the generated files are compared: the branch is also behind on everything else master merged since,
+      # which says nothing about whether the models up for review are still the right ones.
+      - name: Check whether the models are already up for review
+        id: review
+        if: steps.changes.outputs.has-changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+        run: |
+          if ! git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+            echo "No auto-update branch exists yet."
+            echo "is-new=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # The branch only counts as "already up for review" while a pull request is actually open on it. A
+          # leftover branch - an earlier run that failed before opening one, or a review that closed the pull
+          # request without deleting the branch - must be rebuilt, otherwise its contents would look proposed
+          # and silently suppress every future regeneration.
+          if [[ -z "$(gh pr list --head "$BRANCH_NAME" --base master --state open --json number --jq '.[0].number // empty')" ]]; then
+            echo "Branch $BRANCH_NAME has no open pull request - rebuilding it."
+            echo "is-new=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git fetch origin "$BRANCH_NAME"
+          if git diff --quiet FETCH_HEAD -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py; then
+            echo "The open pull request already carries these models - nothing to do."
+            echo "is-new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is-new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Retire the previous branch before recreating it. Deleting it first also avoids the window where the branch
+      # tip would equal master, which GitHub reads as an empty pull request and auto-closes.
+      - name: Retire the superseded pull request
+        if: steps.changes.outputs.has-changes == 'true' && steps.review.outputs.is-new == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base master --state open --json number --jq '.[0].number // empty')
+
+          if [[ -n "$PR_NUMBER" ]]; then
+            gh pr close "$PR_NUMBER" --delete-branch \
+              --comment "Superseded by a newer regeneration run: ${RUN_URL}."
+            echo "Closed superseded PR #${PR_NUMBER}."
+          elif git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+            git push origin --delete "$BRANCH_NAME"
+            echo "Deleted leftover branch $BRANCH_NAME (no open pull request)."
+          fi
+
+      # Creates the branch at the current master commit and lands the regenerated files on it as a single signed
+      # ("Verified") commit via GitHub's createCommitOnBranch GraphQL mutation.
+      - name: Commit the regenerated models
+        id: commit
+        if: steps.changes.outputs.has-changes == 'true' && steps.review.outputs.is-new == 'true'
+        uses: apify/actions/signed-commit@v1.4.0
+        with:
+          message: ${{ env.PR_TITLE }}
+          add: >-
+            spec/openapi.json
+            src/apify_client/_models.py
+            src/apify_client/_typeddicts.py
+            src/apify_client/_literals.py
+          github-token: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH_NAME }}
+          create-branch: "true"
+
+      - name: Create the pull request
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/on_schedule_regenerate_models.yaml
+        run: |
+          SPEC_VERSION=$(jq -r '.info.version' spec/openapi.json)
+
+          BODY=$(printf '%s\n' \
+            "- Syncs \`spec/openapi.json\` with the [published OpenAPI specification](https://docs.apify.com/api/openapi.json) and regenerates the Pydantic models, TypedDicts, and literal aliases from it." \
+            "- Specification version: \`${SPEC_VERSION}\`." \
+            "" \
+            "> [!IMPORTANT]" \
+            "> Retitle this pull request to \`fix:\` or \`feat:\` when the diff is user-facing, so that it lands in the changelog and triggers a release - \`chore:\` does neither." \
+            "" \
+            "> Generated by the [Regenerate models](${WORKFLOW_URL}) workflow.")
+
+          gh pr create \
+            --title "$PR_TITLE" \
+            --body "$BODY" \
+            --base master \
+            --head "$BRANCH_NAME" \
+            --assignee "$ASSIGNEE" \
+            --label "$LABEL"
+
+  # Alert the team when a scheduled run fails. Without this a broken sync stops model regeneration silently:
+  # for a scheduled workflow GitHub only notifies whoever last touched the cron, and this workflow is not part
+  # of the checks that releases wait on. Skipped on manual dispatch so ad-hoc triggers don't spam the channel.
+  notify_on_failure:
+    name: Notify Slack on failure
+    needs: regenerate-models
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Build Slack payload
+        env:
+          REPO: ${{ github.repository }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          HEADING: ":red_circle: Nightly model regeneration failed"
+        run: |
+          jq -n \
+            --arg repo "${REPO}" \
+            --arg url "${WORKFLOW_URL}" \
+            --arg heading "${HEADING}" \
+            '{
+              text: "\($heading) in \($repo)",
+              blocks: [
+                {
+                  type: "header",
+                  text: { type: "plain_text", text: $heading, emoji: true }
+                },
+                {
+                  type: "section",
+                  fields: [
+                    { type: "mrkdwn", text: "*Repository:*\n\($repo)" },
+                    { type: "mrkdwn", text: "*Workflow run:*\n<\($url)|View on GitHub>" }
+                  ]
+                },
+                {
+                  type: "section",
+                  text: { type: "mrkdwn", text: "The generated API models are no longer being kept in sync with the published OpenAPI specification." }
+                }
+              ]
+            }' > slack-payload.json
+
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload-file-path: slack-payload.json

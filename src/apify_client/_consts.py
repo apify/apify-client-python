@@ -38,8 +38,6 @@ OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'Us
 MIN_COMPRESSION_SIZE = 1024
 """Smallest request body, in bytes, that is worth compressing.
 
-A body below this size already fits in a single network packet, so compressing it saves no round
-trips while still costing CPU time. At the very small end, the framing overhead of the compression
-format can even make the body larger than the original. The JavaScript client uses the same
-threshold.
+A smaller body already fits in a single network packet, so compressing it costs CPU time without
+saving a round trip.
 """

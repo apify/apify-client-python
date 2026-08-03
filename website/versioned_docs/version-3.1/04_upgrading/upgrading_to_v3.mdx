@@ -81,7 +81,9 @@ client.key_value_store('my-store').set_record('my-key', {'data': 1}, 'applicatio
 client.run('my-run').charge('my-event', 5, 'my-idempotency-key')
 
 # After
-client.key_value_store('my-store').set_record('my-key', {'data': 1}, content_type='application/json')
+client.key_value_store('my-store').set_record(
+    'my-key', {'data': 1}, content_type='application/json'
+)
 client.run('my-run').charge('my-event', count=5, idempotency_key='my-idempotency-key')
 ```
 
@@ -97,10 +99,10 @@ Generated enum-like types are now [`Literal`](https://docs.python.org/3/library/
 
 ```python
 # Before
-event_types=[WebhookEventType.ACTOR_RUN_SUCCEEDED]
+event_types = [WebhookEventType.ACTOR_RUN_SUCCEEDED]
 
 # After
-event_types=['ACTOR.RUN.SUCCEEDED']
+event_types = ['ACTOR.RUN.SUCCEEDED']
 ```
 
 Affected types: `ActorJobStatus`, `ActorPermissionLevel`, `ErrorType`, `GeneralAccess`, `HttpMethod`, `RunOrigin`, `SourceCodeFileFormat`, `StorageOwnership`, `VersionSourceType`, `WebhookDispatchStatus`, `WebhookEventType`. For more on the generated types and how they fit into the typed client surface, see [Typed models](/api/client/python/docs/concepts/typed-models).

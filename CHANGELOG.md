@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.1.1 - **not yet released**
+## [3.1.1](https://github.com/apify/apify-client-python/releases/tag/v3.1.1) (2026-08-03)
 
 ### 🐛 Bug Fixes
 
@@ -12,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Keep pagination iterators advancing past fully-filtered pages ([#964](https://github.com/apify/apify-client-python/pull/964)) ([2e7f75c](https://github.com/apify/apify-client-python/commit/2e7f75ca951f2b7b59c319badd6e024d47fe67f1)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.1.0](https://github.com/apify/apify-client-python/releases/tag/v3.1.0) (2026-07-20)
 
 ### 🚀 Features

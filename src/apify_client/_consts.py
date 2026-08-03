@@ -40,8 +40,13 @@ ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES = ('audio/', 'image/', 'video/')
 
 ALREADY_COMPRESSED_MEDIA_TYPES = frozenset(
     {
+        'application/epub+zip',
         'application/gzip',
         'application/java-archive',
+        'application/vnd.android.package-archive',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.rar',
         'application/x-7z-compressed',
         'application/x-bzip',
@@ -49,6 +54,7 @@ ALREADY_COMPRESSED_MEDIA_TYPES = frozenset(
         'application/x-gzip',
         'application/x-rar-compressed',
         'application/x-xz',
+        'application/x-zip-compressed',
         'application/zip',
         'application/zstd',
         'font/woff',
@@ -56,6 +62,26 @@ ALREADY_COMPRESSED_MEDIA_TYPES = frozenset(
     }
 )
 """Exact media types whose payloads carry their own compression."""
+
+COMPRESSIBLE_MEDIA_TYPES = frozenset(
+    {
+        'audio/aiff',
+        'audio/basic',
+        'audio/l16',
+        'audio/vnd.wave',
+        'audio/wav',
+        'audio/wave',
+        'audio/x-aiff',
+        'audio/x-wav',
+        'image/bmp',
+        'image/tiff',
+        'image/vnd.adobe.photoshop',
+        'image/vnd.microsoft.icon',
+        'image/x-icon',
+        'image/x-ms-bmp',
+    }
+)
+"""Uncompressed media types that sit under an already-compressed prefix, so compressing them still pays off."""
 
 COMPRESSIBLE_MEDIA_TYPE_SUFFIXES = ('+json', '+xml')
 """Structured syntax suffixes marking a media type as text even under an already-compressed prefix (`image/svg+xml`)."""

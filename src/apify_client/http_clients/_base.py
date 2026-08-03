@@ -16,6 +16,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_MAX,
     DEFAULT_TIMEOUT_MEDIUM,
     DEFAULT_TIMEOUT_SHORT,
+    MIN_COMPRESSION_SIZE,
 )
 from apify_client._docs import docs_group
 from apify_client._statistics import ClientStatistics
@@ -235,7 +236,8 @@ class HttpClientBase:
         Merges the client's default headers (including authorization) with per-request headers,
         serializes JSON and compresses the body. Header names are treated case-insensitively and
         per-request values win over the client defaults. For JSON bodies, a `Content-Type` header
-        is set unless the caller supplied one.
+        is set unless the caller supplied one. Bodies smaller than `MIN_COMPRESSION_SIZE` are sent
+        as-is, without a `Content-Encoding` header.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
@@ -253,8 +255,13 @@ class HttpClientBase:
                 data = data.encode('utf-8')
             elif isinstance(data, bytearray):
                 data = bytes(data)
-            data = self._http_compressor.compress(data)
-            headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+            if len(data) >= MIN_COMPRESSION_SIZE:
+                data = self._http_compressor.compress(data)
+                headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+            else:
+                # `Content-Encoding` must always describe what was actually applied, so a value the
+                # caller supplied is dropped rather than left to mislabel an uncompressed body.
+                headers = {key: value for key, value in headers.items() if key.lower() != 'content-encoding'}
 
         return (headers, self._parse_params(params), data)
 

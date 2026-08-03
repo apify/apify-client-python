@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import gzip
+import json as jsonlib
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -12,6 +13,7 @@ import brotli
 import impit
 import pytest
 
+from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
 from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
@@ -23,6 +25,8 @@ from apify_client.http_compressors._gzip import GzipHttpCompressor
 if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
+
+    from apify_client.types import JsonSerializable
 
 
 class _ConcreteHttpClient(HttpClient):
@@ -340,125 +344,136 @@ def test_prepare_request_call_basic() -> None:
     assert data is None
 
 
-def test_prepare_request_call_with_json(compressor_case: tuple) -> None:
+def test_prepare_request_call_with_json() -> None:
     """Test _prepare_request_call with JSON data."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = _ConcreteHttpClient()
 
     json_data = {'key': 'value', 'number': 42}
     headers, _params, data = client._prepare_request_call(json=json_data)
 
     assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == content_encoding
-    assert data is not None
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'{"key": "value", "number": 42}'
+    assert data == b'{"key": "value", "number": 42}'
 
 
-def test_prepare_request_call_with_empty_dict_json(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with empty dict JSON (falsy but valid)."""
+@pytest.mark.parametrize(
+    ('json', 'expected'),
+    [
+        pytest.param({}, b'{}', id='empty dict'),
+        pytest.param([], b'[]', id='empty list'),
+        pytest.param(0, b'0', id='zero'),
+        pytest.param(False, b'false', id='false'),
+        pytest.param('', b'""', id='empty string'),
+    ],
+)
+def test_prepare_request_call_with_falsy_json(json: JsonSerializable, expected: bytes) -> None:
+    """A falsy but valid JSON body is still serialized and sent, rather than treated as no body at all."""
+    client = _ConcreteHttpClient()
+
+    headers, _params, data = client._prepare_request_call(json=json)
+
+    assert headers['Content-Type'] == 'application/json'
+    assert data == expected
+
+
+@pytest.mark.parametrize(
+    'data',
+    [
+        pytest.param('test string', id='str'),
+        pytest.param(b'test bytes', id='bytes'),
+        pytest.param(bytearray(b'test bytearray'), id='bytearray'),
+    ],
+)
+def test_prepare_request_call_with_data(data: str | bytes | bytearray) -> None:
+    """A raw body of any accepted type is normalized to bytes."""
+    client = _ConcreteHttpClient()
+
+    _headers, _params, prepared = client._prepare_request_call(data=data)
+
+    expected = data.encode('utf-8') if isinstance(data, str) else bytes(data)
+    assert prepared == expected
+
+
+@pytest.mark.parametrize(
+    'body_size',
+    [
+        pytest.param(MIN_COMPRESSION_SIZE, id='at threshold'),
+        pytest.param(MIN_COMPRESSION_SIZE + 1, id='above threshold'),
+        pytest.param(MIN_COMPRESSION_SIZE * 16, id='well above threshold'),
+    ],
+)
+def test_prepare_request_call_compresses_body_at_or_above_threshold(
+    compressor_case: tuple,
+    body_size: int,
+) -> None:
+    """A raw body of at least `MIN_COMPRESSION_SIZE` bytes is compressed and labeled with its encoding."""
     compressor, content_encoding, decompress = compressor_case
     client = _ConcreteHttpClient(http_compressor=compressor)
+    body = b'x' * body_size
 
-    headers, _params, data = client._prepare_request_call(json={})
+    headers, _params, data = client._prepare_request_call(data=body)
+
+    assert headers['Content-Encoding'] == content_encoding
+    assert decompress(data) == body
+
+
+@pytest.mark.parametrize(
+    'body_size',
+    [
+        pytest.param(0, id='empty'),
+        pytest.param(1, id='single byte'),
+        pytest.param(MIN_COMPRESSION_SIZE - 1, id='just below threshold'),
+    ],
+)
+def test_prepare_request_call_skips_compression_below_threshold(compressor_case: tuple, body_size: int) -> None:
+    """A raw body smaller than `MIN_COMPRESSION_SIZE` is sent verbatim, with no `Content-Encoding` header."""
+    compressor, _content_encoding, _decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
+    body = b'x' * body_size
+
+    headers, _params, data = client._prepare_request_call(data=body)
+
+    assert data == body
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_compresses_bytearray_data(compressor_case: tuple) -> None:
+    """A `bytearray` body above the threshold is compressed without error (regression: needs bytes conversion)."""
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
+    body = bytearray(b'test bytearray' * 128)
+
+    headers, _params, data = client._prepare_request_call(data=body)
+
+    assert headers['Content-Encoding'] == content_encoding
+    assert decompress(data) == bytes(body)
+
+
+def test_prepare_request_call_compresses_json_above_threshold(compressor_case: tuple) -> None:
+    """A JSON body that serializes to at least `MIN_COMPRESSION_SIZE` bytes is compressed."""
+    compressor, content_encoding, decompress = compressor_case
+    client = _ConcreteHttpClient(http_compressor=compressor)
+    json_data = {'key': 'value' * MIN_COMPRESSION_SIZE}
+
+    headers, _params, data = client._prepare_request_call(json=json_data)
 
     assert headers['Content-Type'] == 'application/json'
     assert headers['Content-Encoding'] == content_encoding
-    assert data is not None
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'{}'
+    assert jsonlib.loads(decompress(data)) == json_data
 
 
-def test_prepare_request_call_with_empty_list_json(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with empty list JSON (falsy but valid)."""
+def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compressor_case: tuple) -> None:
+    """A `str` body under the threshold in characters but over it in UTF-8 bytes is still compressed."""
     compressor, content_encoding, decompress = compressor_case
     client = _ConcreteHttpClient(http_compressor=compressor)
+    # U+00E9 (e with an acute accent) encodes to 2 bytes, so this body is half the threshold
+    # in characters but just above it in bytes.
+    body = '\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1)
+    assert len(body) < MIN_COMPRESSION_SIZE <= len(body.encode('utf-8'))
 
-    headers, _params, data = client._prepare_request_call(json=[])
-
-    assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == content_encoding
-    assert data is not None
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'[]'
-
-
-def test_prepare_request_call_with_zero_json(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with zero JSON (falsy but valid)."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
-
-    headers, _params, data = client._prepare_request_call(json=0)
-
-    assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == content_encoding
-    assert data is not None
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'0'
-
-
-def test_prepare_request_call_with_false_json(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with False JSON (falsy but valid)."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
-
-    headers, _params, data = client._prepare_request_call(json=False)
-
-    assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == content_encoding
-    assert data is not None
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'false'
-
-
-def test_prepare_request_call_with_empty_string_json(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with empty string JSON (falsy but valid)."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
-
-    headers, _params, data = client._prepare_request_call(json='')
-
-    assert headers['Content-Type'] == 'application/json'
-    assert headers['Content-Encoding'] == content_encoding
-    assert data is not None
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'""'
-
-
-def test_prepare_request_call_with_string_data(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with string data."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
-
-    headers, _params, data = client._prepare_request_call(data='test string')
+    headers, _params, data = client._prepare_request_call(data=body)
 
     assert headers['Content-Encoding'] == content_encoding
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'test string'
-
-
-def test_prepare_request_call_with_bytes_data(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with bytes data."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
-
-    headers, _params, data = client._prepare_request_call(data=b'test bytes')
-
-    assert headers['Content-Encoding'] == content_encoding
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'test bytes'
-
-
-def test_prepare_request_call_with_bytearray_data(compressor_case: tuple) -> None:
-    """Test _prepare_request_call with bytearray data (regression: must compress without error)."""
-    compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
-
-    headers, _params, data = client._prepare_request_call(data=bytearray(b'test bytearray'))
-
-    assert headers['Content-Encoding'] == content_encoding
-    assert isinstance(data, bytes)
-    assert decompress(data) == b'test bytearray'
+    assert decompress(data) == body.encode('utf-8')
 
 
 def test_prepare_request_call_json_and_data_error() -> None:
@@ -523,10 +538,23 @@ def test_prepare_request_call_replaces_caller_content_encoding() -> None:
     """The Content-Encoding header always reflects the compressor actually applied, replacing any caller value."""
     client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
 
-    headers, _params, _data = client._prepare_request_call(headers={'content-encoding': 'br'}, data='payload')
+    headers, _params, _data = client._prepare_request_call(
+        headers={'content-encoding': 'br'},
+        data='payload' * MIN_COMPRESSION_SIZE,
+    )
 
     encoding_headers = {key: value for key, value in headers.items() if key.lower() == 'content-encoding'}
     assert encoding_headers == {'Content-Encoding': 'gzip'}
+
+
+def test_prepare_request_call_drops_caller_content_encoding_when_skipping_compression() -> None:
+    """A caller-supplied Content-Encoding is dropped for an uncompressed body, so it cannot mislabel it."""
+    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+
+    headers, _params, data = client._prepare_request_call(headers={'content-encoding': 'br'}, data='payload')
+
+    assert data == b'payload'
+    assert not any(key.lower() == 'content-encoding' for key in headers)
 
 
 def test_build_url_with_params_none() -> None:
@@ -589,27 +617,53 @@ async def test_async_call_compresses_request_body_off_the_event_loop() -> None:
     client = ImpitHttpClientAsync(token='test_token', http_compressor=compressor)
     client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
 
-    await client.call(method='POST', url='https://api.test.com/endpoint', json={'key': 'value'})
+    await client.call(
+        method='POST',
+        url='https://api.test.com/endpoint',
+        json={'key': 'value' * MIN_COMPRESSION_SIZE},
+    )
 
     assert compressor.compress_thread_id is not None
     assert compressor.compress_thread_id != threading.get_ident()
+
+
+def _to_thread_spy(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Patch `asyncio.to_thread` with a `Mock` that still performs the hop, to record whether it was used."""
+    spy = Mock(side_effect=asyncio.to_thread)
+    monkeypatch.setattr(asyncio, 'to_thread', spy)
+    return spy
 
 
 async def test_async_call_skips_thread_offload_without_a_body(monkeypatch: pytest.MonkeyPatch) -> None:
     """A bodyless request has nothing to compress, so it must not pay the worker-thread hop."""
     client = ImpitHttpClientAsync(token='test_token')
     client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
-
-    offloaded = False
-    real_to_thread = asyncio.to_thread
-
-    async def spy_to_thread(func: Any, /, *args: Any, **kwargs: Any) -> Any:
-        nonlocal offloaded
-        offloaded = True
-        return await real_to_thread(func, *args, **kwargs)
-
-    monkeypatch.setattr(asyncio, 'to_thread', spy_to_thread)
+    spy = _to_thread_spy(monkeypatch)
 
     await client.call(method='GET', url='https://api.test.com/endpoint')
 
-    assert offloaded is False
+    spy.assert_not_called()
+
+
+async def test_async_call_skips_thread_offload_for_a_body_below_the_threshold(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A raw body too small to be compressed must not pay the worker-thread hop either."""
+    client = ImpitHttpClientAsync(token='test_token')
+    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    spy = _to_thread_spy(monkeypatch)
+
+    await client.call(method='PUT', url='https://api.test.com/endpoint', data=b'x' * (MIN_COMPRESSION_SIZE - 1))
+
+    spy.assert_not_called()
+
+
+async def test_async_call_offloads_a_body_at_the_threshold(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A raw body large enough to be compressed is prepared in a worker thread."""
+    client = ImpitHttpClientAsync(token='test_token')
+    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    spy = _to_thread_spy(monkeypatch)
+
+    await client.call(method='PUT', url='https://api.test.com/endpoint', data=b'x' * MIN_COMPRESSION_SIZE)
+
+    spy.assert_called_once()

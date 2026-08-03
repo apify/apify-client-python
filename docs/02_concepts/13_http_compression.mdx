@@ -1,14 +1,18 @@
 ---
 id: http-compression
 title: HTTP compression
-description: The client compresses every request body automatically using gzip by default, with optional brotli via an explicit opt-in.
+description: The client compresses request bodies automatically using gzip by default, with optional brotli via an explicit opt-in.
 ---
 
-The Apify client compresses every request body before sending it to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+The Apify client compresses request bodies before sending them to the API. Compression reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
 
 The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
+
+## Minimum body size
+
+Bodies smaller than 1024 bytes are sent as they are, with no `Content-Encoding` header. Such a body already fits in a single network packet, so compressing it saves no round trips, while the framing overhead of the compression format often makes it larger than the original. The JavaScript client uses the same threshold.
 
 ## Configuration
 
@@ -51,7 +55,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=BrotliHttpCompressor(qu
 client = ApifyClient(token='MY-APIFY-TOKEN', compression=GzipHttpCompressor(quality=9))
 ```
 
-You can also implement a fully custom compressor by subclassing `HttpCompressor`:
+You can also implement a fully custom compressor by subclassing `HttpCompressor`. The client calls it only for bodies that reach the minimum size:
 
 ```python
 from apify_client import ApifyClient

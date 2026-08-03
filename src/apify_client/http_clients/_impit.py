@@ -17,6 +17,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_MAX,
     DEFAULT_TIMEOUT_MEDIUM,
     DEFAULT_TIMEOUT_SHORT,
+    MIN_COMPRESSION_SIZE,
 )
 from apify_client._docs import docs_group
 from apify_client._logging import log_context, logger_name
@@ -396,8 +397,10 @@ class ImpitHttpClientAsync(HttpClientAsync):
 
         # Serializing and compressing a request body is CPU-bound and would block the event loop, so
         # offload request preparation to a worker thread whenever there is a body to compress. Bodyless
-        # requests skip the thread hop, as they have no expensive work to move off the loop.
-        if json is not None or data is not None:
+        # requests skip the thread hop, as they have no expensive work to move off the loop. So do raw
+        # bodies small enough that the hop would cost more than preparing them inline. The size of
+        # a `json` body is only known once serialized, so it always hops.
+        if json is not None or (data is not None and len(data) >= MIN_COMPRESSION_SIZE):
             prepared_headers, prepared_params, content = await asyncio.to_thread(
                 self._prepare_request_call,
                 headers=headers,

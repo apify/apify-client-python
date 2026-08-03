@@ -34,3 +34,11 @@ DEFAULT_WAIT_WHEN_JOB_NOT_EXIST = timedelta(seconds=3)
 
 OVERRIDABLE_DEFAULT_HEADERS = {'Accept', 'Authorization', 'Accept-Encoding', 'User-Agent'}
 """Headers that can be overridden by users, but will trigger a warning if they do so, as it may lead to API errors."""
+
+MIN_COMPRESSION_SIZE = 1024
+"""Smallest request body, in bytes, that is worth compressing.
+
+A body below this size already fits in a single network packet, so compressing it saves no round
+trips while still costing CPU time. Worse, the framing overhead of the compression format often
+makes such a body larger than the original. The JavaScript client uses the same threshold.
+"""

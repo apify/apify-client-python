@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from unittest import mock
 from unittest.mock import Mock
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -126,6 +127,40 @@ async def test_dataset_public_url_async(api_url: str, api_public_url: str | None
             f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/datasets/'
             f'someID/items?signature={public_url.split("signature=")[1]}'
         )
+
+
+def test_dataset_public_url_normalizes_params_sync() -> None:
+    """Bool and list query params must be API-normalized (bool→true/false, list→comma-joined), not Python reprs."""
+    client = ApifyClient(token='dummy-token', api_url='https://api.apify.com')
+    dataset = client.dataset('someID')
+
+    mock_response = Mock()
+    mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
+
+    with mock.patch.object(client._http_client, 'call', return_value=mock_response):
+        public_url = dataset.create_items_public_url(clean=True, desc=False, fields=['title', 'url'])
+
+    query = parse_qs(urlparse(public_url).query)
+    assert query['clean'] == ['true']
+    assert query['desc'] == ['false']
+    assert query['fields'] == ['title,url']
+
+
+async def test_dataset_public_url_normalizes_params_async() -> None:
+    """Bool and list query params must be API-normalized (bool→true/false, list→comma-joined), not Python reprs."""
+    client = ApifyClientAsync(token='dummy-token', api_url='https://api.apify.com')
+    dataset = client.dataset('someID')
+
+    mock_response = Mock()
+    mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
+
+    with mock.patch.object(client._http_client, 'call', return_value=mock_response):
+        public_url = await dataset.create_items_public_url(clean=True, desc=False, fields=['title', 'url'])
+
+    query = parse_qs(urlparse(public_url).query)
+    assert query['clean'] == ['true']
+    assert query['desc'] == ['false']
+    assert query['fields'] == ['title,url']
 
 
 # ============================================================================

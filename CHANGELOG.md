@@ -2,15 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.1.1 - **not yet released**
+## [3.1.1](https://github.com/apify/apify-client-python/releases/tag/v3.1.1) (2026-08-03)
 
 ### 🐛 Bug Fixes
 
 - Add missing cannot-monetize-without-payout-billing-info error code ([#960](https://github.com/apify/apify-client-python/pull/960)) ([c1bffc6](https://github.com/apify/apify-client-python/commit/c1bffc6e9f67a8358769591006f46bb2831594d8)) by [@apify-service-account](https://github.com/apify-service-account)
+- Normalize query params in dataset create_items_public_url ([#963](https://github.com/apify/apify-client-python/pull/963)) ([c3ecaa9](https://github.com/apify/apify-client-python/commit/c3ecaa96a43415d70d71c27e7dd177e9992c84e4)) by [@vdusek](https://github.com/vdusek)
+- Keep pagination iterators advancing past fully-filtered pages ([#964](https://github.com/apify/apify-client-python/pull/964)) ([2e7f75c](https://github.com/apify/apify-client-python/commit/2e7f75ca951f2b7b59c319badd6e024d47fe67f1)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.1.0](https://github.com/apify/apify-client-python/releases/tag/v3.1.0) (2026-07-20)
 
 ### 🚀 Features

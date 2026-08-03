@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.1.2 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Read file-like KVS values before upload and reject unencodable ones ([#965](https://github.com/apify/apify-client-python/pull/965)) ([064b5cc](https://github.com/apify/apify-client-python/commit/064b5cccbce8b585f58271b089e4987c6559a7d8)) by [@vdusek](https://github.com/vdusek)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.1.1](https://github.com/apify/apify-client-python/releases/tag/v3.1.1) (2026-08-03)
 
 ### 🐛 Bug Fixes

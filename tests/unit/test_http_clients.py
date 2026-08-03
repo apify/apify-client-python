@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import gzip
-import json as jsonlib
+import json
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -345,7 +345,7 @@ def test_prepare_request_call_basic() -> None:
 
 
 def test_prepare_request_call_with_json() -> None:
-    """Test _prepare_request_call with JSON data."""
+    """A small JSON body is serialized and typed, but sent uncompressed and without a `Content-Encoding`."""
     client = _ConcreteHttpClient()
 
     json_data = {'key': 'value', 'number': 42}
@@ -353,10 +353,11 @@ def test_prepare_request_call_with_json() -> None:
 
     assert headers['Content-Type'] == 'application/json'
     assert data == b'{"key": "value", "number": 42}'
+    assert not any(key.lower() == 'content-encoding' for key in headers)
 
 
 @pytest.mark.parametrize(
-    ('json', 'expected'),
+    ('json_body', 'expected'),
     [
         pytest.param({}, b'{}', id='empty dict'),
         pytest.param([], b'[]', id='empty list'),
@@ -365,11 +366,11 @@ def test_prepare_request_call_with_json() -> None:
         pytest.param('', b'""', id='empty string'),
     ],
 )
-def test_prepare_request_call_with_falsy_json(json: JsonSerializable, expected: bytes) -> None:
+def test_prepare_request_call_with_falsy_json(json_body: JsonSerializable, expected: bytes) -> None:
     """A falsy but valid JSON body is still serialized and sent, rather than treated as no body at all."""
     client = _ConcreteHttpClient()
 
-    headers, _params, data = client._prepare_request_call(json=json)
+    headers, _params, data = client._prepare_request_call(json=json_body)
 
     assert headers['Content-Type'] == 'application/json'
     assert data == expected
@@ -425,7 +426,7 @@ def test_prepare_request_call_compresses_body_at_or_above_threshold(
     ],
 )
 def test_prepare_request_call_skips_compression_below_threshold(compressor_case: tuple, body_size: int) -> None:
-    """A raw body smaller than `MIN_COMPRESSION_SIZE` is sent verbatim, with no `Content-Encoding` header."""
+    """A raw body under `MIN_COMPRESSION_SIZE` is sent verbatim with no `Content-Encoding`, whichever compressor."""
     compressor, _content_encoding, _decompress = compressor_case
     client = _ConcreteHttpClient(http_compressor=compressor)
     body = b'x' * body_size
@@ -452,13 +453,13 @@ def test_prepare_request_call_compresses_json_above_threshold(compressor_case: t
     """A JSON body that serializes to at least `MIN_COMPRESSION_SIZE` bytes is compressed."""
     compressor, content_encoding, decompress = compressor_case
     client = _ConcreteHttpClient(http_compressor=compressor)
-    json_data = {'key': 'value' * MIN_COMPRESSION_SIZE}
+    json_data = {'key': 'x' * MIN_COMPRESSION_SIZE}
 
     headers, _params, data = client._prepare_request_call(json=json_data)
 
     assert headers['Content-Type'] == 'application/json'
     assert headers['Content-Encoding'] == content_encoding
-    assert jsonlib.loads(decompress(data)) == json_data
+    assert json.loads(decompress(data)) == json_data
 
 
 def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compressor_case: tuple) -> None:
@@ -468,7 +469,6 @@ def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compres
     # U+00E9 (e with an acute accent) encodes to 2 bytes, so this body is half the threshold
     # in characters but just above it in bytes.
     body = '\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1)
-    assert len(body) < MIN_COMPRESSION_SIZE <= len(body.encode('utf-8'))
 
     headers, _params, data = client._prepare_request_call(data=body)
 
@@ -540,7 +540,7 @@ def test_prepare_request_call_replaces_caller_content_encoding() -> None:
 
     headers, _params, _data = client._prepare_request_call(
         headers={'content-encoding': 'br'},
-        data='payload' * MIN_COMPRESSION_SIZE,
+        data='x' * MIN_COMPRESSION_SIZE,
     )
 
     encoding_headers = {key: value for key, value in headers.items() if key.lower() == 'content-encoding'}
@@ -620,7 +620,7 @@ async def test_async_call_compresses_request_body_off_the_event_loop() -> None:
     await client.call(
         method='POST',
         url='https://api.test.com/endpoint',
-        json={'key': 'value' * MIN_COMPRESSION_SIZE},
+        json={'key': 'x' * MIN_COMPRESSION_SIZE},
     )
 
     assert compressor.compress_thread_id is not None

@@ -96,11 +96,11 @@ class Actor(BaseModel):
     actor_permission_level: ActorPermissionLevel | None = None
     created_at: Annotated[AwareDatetime, Field(examples=['2019-07-08T11:27:57.401Z'])]
     """
-    The date and time the Actor was created.
+    The date and time the Actor was created. Follows the ISO 8601 format.
     """
     modified_at: Annotated[AwareDatetime, Field(examples=['2019-07-08T14:01:05.546Z'])]
     """
-    The date and time the Actor was last modified.
+    The date and time the Actor was last modified. Follows the ISO 8601 format.
     """
     stats: ActorStats
     versions: list[Version]

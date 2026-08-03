@@ -56,22 +56,30 @@ jobs:
       - name: Install dependencies
         run: uv run poe install-dev
 
+      # Read before regenerating overwrites it, so the pull request can say whether the specification moved at all.
+      - name: Read the recorded specification version
+        id: previous-spec
+        run: echo "version=$(uv run python -m scripts.openapi_spec recorded-version)" >> "$GITHUB_OUTPUT"
+
       # Downloads the published specification, generates from it, and records its version in `pyproject.toml`.
       - name: Regenerate models
         run: uv run poe generate-models
 
-      # Gate on the generated models rather than on the specification version: that version carries a build
-      # timestamp that apify-docs bumps on every specification change, so a version bump on its own says nothing
-      # about whether the client is affected. Because nothing is committed unless the models moved, the recorded
-      # version follows the models and stays behind the published specification while the models are unaffected.
+      # Gate on the generated models rather than on the specification version: that version is a build timestamp
+      # that moves on rebuilds regardless of client impact, and doesn't reliably move at all when the
+      # specification content does (see the pull request body step below). Because nothing is committed unless the
+      # models moved, the recorded version follows the models rather than the published specification.
+      #
+      # Compared against HEAD rather than the index, so the result doesn't depend on nothing having been staged
+      # earlier in the job.
       - name: Check for model changes
         id: changes
         run: |
-          if git diff --quiet -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py; then
+          if git diff --quiet HEAD -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py; then
             echo "Models are already up to date with the published specification."
             echo "has-changes=false" >> "$GITHUB_OUTPUT"
           else
-            git diff --stat -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py
+            git diff --stat HEAD -- src/apify_client/_models.py src/apify_client/_typeddicts.py src/apify_client/_literals.py
             echo "has-changes=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -85,17 +93,31 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
-          if ! git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+          # `--exit-code` reports 2 for "no such branch", so anything else is a real failure and must not be read
+          # as an absent branch - that would retire a current pull request over a transient network error.
+          git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1 && status=0 || status=$?
+          if [[ "$status" == "2" ]]; then
             echo "No auto-update branch exists yet."
             echo "is-new=true" >> "$GITHUB_OUTPUT"
             exit 0
+          elif [[ "$status" != "0" ]]; then
+            echo "Failed to look up branch $BRANCH_NAME on the remote (git ls-remote exited $status)." >&2
+            exit 1
           fi
 
           # The branch only counts as "already up for review" while a pull request is actually open on it. A
           # leftover branch - an earlier run that failed before opening one, or a review that closed the pull
           # request without deleting the branch - must be rebuilt, otherwise its contents would look proposed
           # and silently suppress every future regeneration.
-          if [[ -z "$(gh pr list --head "$BRANCH_NAME" --base master --state open --json number --jq '.[0].number // empty')" ]]; then
+          #
+          # An empty result only counts once the query itself succeeded: `gh` exits non-zero on an API error, and
+          # treating that as "no open pull request" would replace a pull request someone may be reviewing.
+          if ! PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base master --state open --json number --jq '.[0].number // empty'); then
+            echo "Failed to list open pull requests for $BRANCH_NAME." >&2
+            exit 1
+          fi
+
+          if [[ -z "$PR_NUMBER" ]]; then
             echo "Branch $BRANCH_NAME has no open pull request - rebuilding it."
             echo "is-new=true" >> "$GITHUB_OUTPUT"
             exit 0
@@ -150,12 +172,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/on_schedule_regenerate_models.yaml
+          PREVIOUS_SPEC_VERSION: ${{ steps.previous-spec.outputs.version }}
         run: |
-          SPEC_VERSION=$(uv run python -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["tool"]["apify"]["openapi-spec"]["version"])')
+          SPEC_VERSION=$(uv run python -m scripts.openapi_spec recorded-version)
+
+          # A moved version stamp proves the specification changed. An unchanged one proves nothing: apify-docs
+          # bumps `components/version.yaml` in a follow-up commit marked `[skip ci]`, so a deploy publishes new
+          # specification content still carrying the previous stamp. Say which case this is rather than let the
+          # reviewer assume the stamp is a content identity.
+          if [[ "$SPEC_VERSION" == "$PREVIOUS_SPEC_VERSION" ]]; then
+            SPEC_LINE="- Specification version: \`${SPEC_VERSION}\` - **unchanged**. The published stamp lags its content by a deploy, so this diff is either an unstamped specification change or a codegen/formatter change - the diff itself is the only way to tell."
+          else
+            SPEC_LINE="- Specification version: \`${PREVIOUS_SPEC_VERSION}\` -> \`${SPEC_VERSION}\`."
+          fi
 
           BODY=$(printf '%s\n' \
             "- Regenerates the Pydantic models, TypedDicts, and literal aliases from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json), and records the version they were generated from in \`pyproject.toml\`." \
-            "- Specification version: \`${SPEC_VERSION}\`." \
+            "${SPEC_LINE}" \
             "" \
             "> [!IMPORTANT]" \
             "> Retitle this pull request to \`fix:\` or \`feat:\` when the diff is user-facing, so that it lands in the changelog and triggers a release - \`chore:\` does neither." \

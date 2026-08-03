@@ -247,11 +247,17 @@ disable_timestamp = true
 keep_model_order = true
 
 # Which published OpenAPI specification the committed `_models.py`, `_typeddicts.py`, and `_literals.py` were
-# generated from. `poe generate-models` records it; `apify/apify-docs` bumps it on every specification change
-# (`apify-api/openapi/openapi.yaml` reads it from `components/version.yaml`). This is provenance only - the
-# specification is served latest-only, so the version cannot fetch that exact document back. It therefore moves
-# together with the generated files and stays behind the published specification whenever a specification change
-# leaves the models unchanged.
+# generated from. This is a coarse marker, not a content identity: the specification is served latest-only, so the
+# version cannot fetch that exact document back, and `apify/apify-docs` bumps
+# `apify-api/openapi/components/version.yaml` in a follow-up commit marked `[skip ci]` - a deploy therefore
+# publishes new specification content that still carries the previous stamp. A moved value proves the
+# specification changed; an unchanged one proves nothing.
+#
+# `poe generate-models` records whatever it downloaded, unconditionally. What keeps the recorded version honest is
+# the nightly workflow committing nothing unless the models changed: the value therefore lands together with the
+# generated files, and stays behind the published specification while specification changes leave the models
+# unchanged. A local regeneration that only moves this line is that same case - drop the change rather than
+# committing it on its own.
 [tool.apify.openapi-spec]
 version = "v2-2026-07-28T083939Z"
 
@@ -321,8 +327,9 @@ uv run python -m scripts.openapi_spec fetch \
     && uv run python -m scripts.openapi_spec record-version
 """
 
-# A candidate specification that isn't published yet. The recorded version is deliberately left alone - it names
-# the published specification the committed models follow from.
+# A candidate specification that isn't published yet, so the recorded version is deliberately left alone - it
+# names the published specification. Committing models generated this way would make it name a document they did
+# not come from, hence the warning.
 [tool.poe.tasks.generate-models-from-file]
 shell = """
 uv run datamodel-codegen --input $input_file \
@@ -331,6 +338,7 @@ uv run datamodel-codegen --input $input_file \
         --output src/apify_client/_typeddicts.py \
         --output-model-type typing.TypedDict \
         --no-use-closed-typed-dict \
-    && python scripts/postprocess_generated_models.py
+    && python scripts/postprocess_generated_models.py \
+    && echo "Generated from $input_file - the version in [tool.apify.openapi-spec] still names the published specification, so do not commit these models."
 """
 args = [{ name = "input-file", positional = true, required = true }]

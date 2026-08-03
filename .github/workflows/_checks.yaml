@@ -73,32 +73,6 @@ jobs:
       - name: Async docstrings check
         run: uv run poe check-docstrings
 
-  # Regenerates the models from the committed `spec/openapi.json` and fails when the result differs from what is
-  # committed. Keeps the generated files a pure function of the snapshot plus the pinned codegen tooling, so a
-  # codegen or formatter upgrade can't silently drift them, and nobody can hand-edit them.
-  models_check:
-    name: Models check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Set up uv package manager
-        uses: astral-sh/setup-uv@v8.3.2
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install dependencies
-        run: uv run poe install-dev
-
-      - name: Generated models check
-        run: uv run poe check-models
-
   markdown_lint_check:
     name: Markdown lint check
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 # This workflow keeps the generated API models in sync with the published OpenAPI specification. Every night it
-# refreshes the committed `spec/openapi.json` snapshot, regenerates the models from it, and opens a pull request
-# when the result differs from master.
+# regenerates the models from the published specification and opens a pull request when the result differs from
+# master.
 #
 # Two invariants make it safe to run unattended:
 #   1. Generation always happens on master, so the output is a function of the current spec and the current codegen
@@ -56,16 +56,14 @@ jobs:
       - name: Install dependencies
         run: uv run poe install-dev
 
-      - name: Sync the OpenAPI specification snapshot
-        run: uv run poe update-spec
-
+      # Downloads the published specification, generates from it, and records its version in `pyproject.toml`.
       - name: Regenerate models
         run: uv run poe generate-models
 
-      # Gate on the generated models rather than on the specification: `info.version` in the published spec carries
-      # a build timestamp that apify-docs bumps on every specification change, so a spec diff on its own says
-      # nothing about whether the client is affected. As a result the committed snapshot only moves together with
-      # the models it produces, which is exactly what `check-models` verifies.
+      # Gate on the generated models rather than on the specification version: that version carries a build
+      # timestamp that apify-docs bumps on every specification change, so a version bump on its own says nothing
+      # about whether the client is affected. Because nothing is committed unless the models moved, the recorded
+      # version follows the models and stays behind the published specification while the models are unaffected.
       - name: Check for model changes
         id: changes
         run: |
@@ -139,7 +137,7 @@ jobs:
         with:
           message: ${{ env.PR_TITLE }}
           add: >-
-            spec/openapi.json
+            pyproject.toml
             src/apify_client/_models.py
             src/apify_client/_typeddicts.py
             src/apify_client/_literals.py
@@ -153,10 +151,10 @@ jobs:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/on_schedule_regenerate_models.yaml
         run: |
-          SPEC_VERSION=$(jq -r '.info.version' spec/openapi.json)
+          SPEC_VERSION=$(uv run python -c 'import pathlib, tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["tool"]["apify"]["openapi-spec"]["version"])')
 
           BODY=$(printf '%s\n' \
-            "- Syncs \`spec/openapi.json\` with the [published OpenAPI specification](https://docs.apify.com/api/openapi.json) and regenerates the Pydantic models, TypedDicts, and literal aliases from it." \
+            "- Regenerates the Pydantic models, TypedDicts, and literal aliases from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json), and records the version they were generated from in \`pyproject.toml\`." \
             "- Specification version: \`${SPEC_VERSION}\`." \
             "" \
             "> [!IMPORTANT]" \

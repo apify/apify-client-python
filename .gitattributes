@@ -1,4 +1,0 @@
-# Vendored snapshot of the published API specification. Marked as generated so it collapses by default in diffs
-# (the generated models are what reviewers read - the snapshot is there for provenance and reproducibility, and
-# stays one click away) and so it doesn't skew the repository language statistics.
-spec/openapi.json linguist-generated=true

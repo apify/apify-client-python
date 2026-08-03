@@ -55,7 +55,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=BrotliHttpCompressor(qu
 client = ApifyClient(token='MY-APIFY-TOKEN', compression=GzipHttpCompressor(quality=9))
 ```
 
-You can also implement a fully custom compressor by subclassing `HttpCompressor`. The client calls it only for bodies that reach the minimum size:
+You can also implement a fully custom compressor by subclassing `HttpCompressor`. The client calls it only for bodies that reach the [minimum body size](#minimum-body-size):
 
 ```python
 from apify_client import ApifyClient

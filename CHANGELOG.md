@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### ⚡ Performance
 
 - Skip request-body compression for already-compressed content types ([#987](https://github.com/apify/apify-client-python/pull/987)) ([808bdde](https://github.com/apify/apify-client-python/commit/808bdde06ed1befe9d30bede0f947320240747a6)) by [@vdusek](https://github.com/vdusek)
+- Skip request-body compression for small payloads ([#988](https://github.com/apify/apify-client-python/pull/988)) ([6bd31b2](https://github.com/apify/apify-client-python/commit/6bd31b2abb840ea9af1efc98bf984c85b8510ce3)) by [@vdusek](https://github.com/vdusek), closes [#934](https://github.com/apify/apify-client-python/issues/934)
 
 
 <!-- git-cliff-unreleased-end -->

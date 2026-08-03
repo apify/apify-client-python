@@ -68,6 +68,8 @@ COMPRESSIBLE_MEDIA_TYPES = frozenset(
         'audio/aiff',
         'audio/basic',
         'audio/l16',
+        'audio/l24',
+        'audio/midi',
         'audio/vnd.wave',
         'audio/wav',
         'audio/wave',

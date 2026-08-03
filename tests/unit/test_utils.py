@@ -322,6 +322,8 @@ def test_encode_key_value_store_record_value_non_encodable_with_explicit_content
         pytest.param('image/bmp', True, id='raw bitmap under a compressed prefix'),
         pytest.param('image/tiff', True, id='tiff under a compressed prefix'),
         pytest.param('audio/wav', True, id='raw audio under a compressed prefix'),
+        pytest.param('audio/L24', True, id='raw pcm audio in its registered casing'),
+        pytest.param('audio/midi', True, id='midi event data under a compressed prefix'),
         pytest.param('image/png', False, id='image prefix'),
         pytest.param('video/mp4', False, id='video prefix'),
         pytest.param('audio/mpeg', False, id='audio prefix'),

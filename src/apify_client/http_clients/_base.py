@@ -223,6 +223,22 @@ class HttpClientBase:
         new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
         return to_seconds(new_timeout)
 
+    @staticmethod
+    def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
+        """Whether `_prepare_request_call` would compress this body, decided without encoding a large `str`.
+
+        Mirrors the rule applied in `_prepare_request_call`, which measures the threshold on the encoded
+        bytes. A `str` therefore cannot be judged by its character count alone. That count is a lower
+        bound on the UTF-8 length, so a `str` reaching the threshold in characters reaches it in bytes
+        too. Below that, the encoded length decides, and such a body is under 4 KiB, so encoding it here
+        is cheap. Any other type is passed through uncompressed.
+        """
+        if isinstance(data, str):
+            return len(data) >= MIN_COMPRESSION_SIZE or len(data.encode('utf-8')) >= MIN_COMPRESSION_SIZE
+        if isinstance(data, (bytes, bytearray)):
+            return len(data) >= MIN_COMPRESSION_SIZE
+        return False
+
     def _prepare_request_call(
         self,
         *,

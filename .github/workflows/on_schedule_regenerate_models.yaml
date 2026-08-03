@@ -1,20 +1,17 @@
-# This workflow keeps the generated API models in sync with the published OpenAPI specification. Every night it
-# regenerates the models from the published specification and opens a pull request when the result differs from
-# master.
+# Keeps the generated API models in sync with the published OpenAPI specification: every night it regenerates them
+# and opens a pull request when the result differs from master.
 #
 # Two invariants make it safe to run unattended:
-#   1. Generation always happens on master, so the output is a function of the current spec and the current codegen
-#      tooling - never of whatever an older auto-update branch happens to carry.
-#   2. The auto-update branch is rebuilt from master instead of appended to, so the pull request diff is always
-#      "current spec vs current master" and can never resurrect a stale generated file.
+#   1. Generation always happens on master, so the output follows the current spec and the current codegen tooling,
+#      never whatever an older auto-update branch carries.
+#   2. The auto-update branch is rebuilt from master instead of appended to, so the diff is always "current spec vs
+#      current master" and can't resurrect a stale generated file.
 
 name: Regenerate models
 
 on:
-  # Runs when manually triggered from the GitHub UI.
   workflow_dispatch:
 
-  # Runs every day at 02:00 UTC.
   schedule:
     - cron: "0 2 * * *"
 
@@ -29,8 +26,8 @@ permissions:
 env:
   PYTHON_VERSION: 3.14
   BRANCH_NAME: ci/regenerate-models
-  # A valid Conventional Commits title, so the pull request is mergeable without anyone having to rename it.
-  # Reviewers retitle it to `fix:`/`feat:` when the diff is user-facing - see the pull request body.
+  # Valid Conventional Commits, so the pull request is mergeable as-is; reviewers retitle it to `fix:`/`feat:` when
+  # the diff is user-facing.
   PR_TITLE: "chore: Regenerate models from the published OpenAPI spec"
   ASSIGNEE: vdusek
   LABEL: t-tooling
@@ -56,22 +53,18 @@ jobs:
       - name: Install dependencies
         run: uv run poe install-dev
 
-      # Read before regenerating overwrites it, so the pull request can say whether the specification moved at all.
+      # Read before regeneration overwrites it, so the pull request can say whether the specification moved.
       - name: Read the recorded specification version
         id: previous-spec
         run: echo "version=$(uv run python -m scripts.openapi_spec recorded-version)" >> "$GITHUB_OUTPUT"
 
-      # Downloads the published specification, generates from it, and records its version in `pyproject.toml`.
+      # Downloads the specification, generates from it, and records its version in `pyproject.toml`.
       - name: Regenerate models
         run: uv run poe generate-models
 
-      # Gate on the generated models rather than on the specification version: that version is a build timestamp
-      # that moves on rebuilds regardless of client impact, and doesn't reliably move at all when the
-      # specification content does (see the pull request body step below). Because nothing is committed unless the
-      # models moved, the recorded version follows the models rather than the published specification.
-      #
-      # Compared against HEAD rather than the index, so the result doesn't depend on nothing having been staged
-      # earlier in the job.
+      # Gate on the generated models, not on the specification version: that stamp moves on rebuilds regardless of
+      # client impact, and doesn't reliably move when the content does (see the pull request body step below).
+      # Compared against HEAD rather than the index, so nothing staged earlier in the job can hide a change.
       - name: Check for model changes
         id: changes
         run: |
@@ -83,18 +76,17 @@ jobs:
             echo "has-changes=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # A previous run may have already opened a pull request with exactly these models. Leave it alone rather than
-      # replacing it with an identical one, so an open pull request doesn't churn while the specification is stable.
-      # Only the generated files are compared: the branch is also behind on everything else master merged since,
-      # which says nothing about whether the models up for review are still the right ones.
+      # A previous run may already have these exact models up for review; leave it alone instead of churning an open
+      # pull request. Only the generated files are compared - the branch being behind master says nothing about
+      # whether the models on it are still the right ones.
       - name: Check whether the models are already up for review
         id: review
         if: steps.changes.outputs.has-changes == 'true'
         env:
           GH_TOKEN: ${{ secrets.APIFY_SERVICE_ACCOUNT_GITHUB_TOKEN }}
         run: |
-          # `--exit-code` reports 2 for "no such branch", so anything else is a real failure and must not be read
-          # as an absent branch - that would retire a current pull request over a transient network error.
+          # `--exit-code` reports 2 for "no such branch"; any other failure must not read as an absent branch, or a
+          # transient network error would retire a current pull request.
           git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1 && status=0 || status=$?
           if [[ "$status" == "2" ]]; then
             echo "No auto-update branch exists yet."
@@ -105,13 +97,10 @@ jobs:
             exit 1
           fi
 
-          # The branch only counts as "already up for review" while a pull request is actually open on it. A
-          # leftover branch - an earlier run that failed before opening one, or a review that closed the pull
-          # request without deleting the branch - must be rebuilt, otherwise its contents would look proposed
-          # and silently suppress every future regeneration.
-          #
-          # An empty result only counts once the query itself succeeded: `gh` exits non-zero on an API error, and
-          # treating that as "no open pull request" would replace a pull request someone may be reviewing.
+          # The branch only counts as proposed while a pull request is open on it: a leftover branch - a run that
+          # failed before opening one, or a review that closed it without deleting the branch - must be rebuilt, or
+          # its contents would look proposed and silently suppress every future regeneration. An empty result counts
+          # only once the query itself succeeded, otherwise an API error would replace a live pull request.
           if ! PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --base master --state open --json number --jq '.[0].number // empty'); then
             echo "Failed to list open pull requests for $BRANCH_NAME." >&2
             exit 1
@@ -150,8 +139,8 @@ jobs:
             echo "Deleted leftover branch $BRANCH_NAME (no open pull request)."
           fi
 
-      # Creates the branch at the current master commit and lands the regenerated files on it as a single signed
-      # ("Verified") commit via GitHub's createCommitOnBranch GraphQL mutation.
+      # Creates the branch at the current master commit and lands the regenerated files as one signed ("Verified")
+      # commit, via GitHub's createCommitOnBranch mutation.
       - name: Commit the regenerated models
         id: commit
         if: steps.changes.outputs.has-changes == 'true' && steps.review.outputs.is-new == 'true'
@@ -176,18 +165,17 @@ jobs:
         run: |
           SPEC_VERSION=$(uv run python -m scripts.openapi_spec recorded-version)
 
-          # A moved version stamp proves the specification changed. An unchanged one proves nothing: apify-docs
-          # bumps `components/version.yaml` in a follow-up commit marked `[skip ci]`, so a deploy publishes new
-          # specification content still carrying the previous stamp. Say which case this is rather than let the
-          # reviewer assume the stamp is a content identity.
+          # A moved stamp proves the specification changed; an unchanged one proves nothing, because apify-docs bumps
+          # `components/version.yaml` in a follow-up `[skip ci]` commit and a deploy can publish new content under
+          # the old stamp. Say which case this is instead of letting the reviewer read it as a content identity.
           if [[ "$SPEC_VERSION" == "$PREVIOUS_SPEC_VERSION" ]]; then
-            SPEC_LINE="- Specification version: \`${SPEC_VERSION}\` - **unchanged**. The published stamp lags its content by a deploy, so this diff is either an unstamped specification change or a codegen/formatter change - the diff itself is the only way to tell."
+            SPEC_LINE="- Specification version: \`${SPEC_VERSION}\` - **unchanged**, which doesn't rule out a specification change: the published stamp can lag its content by a deploy. Only the diff tells."
           else
             SPEC_LINE="- Specification version: \`${PREVIOUS_SPEC_VERSION}\` -> \`${SPEC_VERSION}\`."
           fi
 
           BODY=$(printf '%s\n' \
-            "- Regenerates the Pydantic models, TypedDicts, and literal aliases from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json), and records the version they were generated from in \`pyproject.toml\`." \
+            "- Regenerates the Pydantic models, TypedDicts, and literal aliases from the [published OpenAPI specification](https://docs.apify.com/api/openapi.json), and records its version in \`pyproject.toml\`." \
             "${SPEC_LINE}" \
             "" \
             "> [!IMPORTANT]" \
@@ -203,9 +191,8 @@ jobs:
             --assignee "$ASSIGNEE" \
             --label "$LABEL"
 
-  # Alert the team when a scheduled run fails. Without this a broken sync stops model regeneration silently:
-  # for a scheduled workflow GitHub only notifies whoever last touched the cron, and this workflow is not part
-  # of the checks that releases wait on. Skipped on manual dispatch so ad-hoc triggers don't spam the channel.
+  # Without this a broken sync stops regeneration silently: GitHub only notifies whoever last touched the cron, and
+  # no release waits on this workflow. Skipped on manual dispatch so ad-hoc triggers don't spam the channel.
   notify_on_failure:
     name: Notify Slack on failure
     needs: regenerate-models

@@ -1,18 +1,16 @@
 """Fetch the published OpenAPI specification and record the version the models were generated from.
 
-`poe generate-models` runs `fetch` first and both codegen passes read the downloaded file, so a specification
-redeployed mid-run cannot produce models built from two different inputs. The download lands in `tmp/`, which is
-not committed - the repository stores only the specification *version*, in `[tool.apify.openapi-spec]` in
-`pyproject.toml`.
+`fetch` downloads the specification into git-ignored `tmp/`, and both codegen passes read that one copy, so a
+specification redeployed mid-run can't yield models built from two different inputs. Only the *version* is
+committed, in `[tool.apify.openapi-spec]` in `pyproject.toml`.
 
-`record-version` writes that version and runs last, after generation succeeded, so the recorded version always
-names the specification the committed `_models.py`, `_typeddicts.py`, and `_literals.py` actually follow from. It
-is provenance, not a codegen input: the published specification is served latest-only, so the version cannot be
-used to fetch that exact document back.
+`record-version` writes it last, once generation succeeded, so it names the specification the committed
+`_models.py`, `_typeddicts.py`, and `_literals.py` follow from. `recorded-version` prints it; the nightly workflow
+reads it before regenerating to report whether the stamp moved.
 
-`recorded-version` prints the currently recorded version without touching anything. The nightly regeneration
-workflow reads it before regenerating, so its pull request can say whether the specification moved at all - a
-model diff with an unchanged version comes from the codegen tooling, not from the API.
+The stamp is a coarse marker, not a content identity: the specification is served latest-only, so it can't be
+fetched back, and apify-docs bumps it in a follow-up `[skip ci]` commit, so a deploy can publish new content under
+the old stamp.
 """
 
 from __future__ import annotations
@@ -30,7 +28,7 @@ import impit
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# The published, bundled specification. It is built and deployed from the `apify/apify-docs` repository.
+# The published, bundled specification, built and deployed from the `apify/apify-docs` repository.
 SPEC_URL = 'https://docs.apify.com/api/openapi.json'
 
 # Codegen input, deliberately outside version control - `tmp/` is git-ignored.
@@ -38,24 +36,20 @@ SPEC_PATH = REPO_ROOT / 'tmp' / 'openapi.json'
 
 PYPROJECT_PATH = REPO_ROOT / 'pyproject.toml'
 
-# The table holding the recorded specification version, and the key within it.
 VERSION_TABLE_PATH = ('tool', 'apify', 'openapi-spec')
 VERSION_TABLE = f'[{".".join(VERSION_TABLE_PATH)}]'
 VERSION_KEY = 'version'
 
-# Reading goes through `tomllib`, but writing has to preserve the surrounding comments, so the value is replaced
-# in place. Both patterns tolerate the whitespace and trailing comments TOML allows, so reformatting
-# `pyproject.toml` cannot quietly break the nightly regeneration.
+# Writing replaces the value in place to keep the surrounding comments. The patterns tolerate the whitespace and
+# trailing comments TOML allows, so reformatting `pyproject.toml` can't quietly break the nightly regeneration.
 TABLE_HEADER_PATTERN = re.compile(rf'^\s*\[\s*{re.escape(".".join(VERSION_TABLE_PATH))}\s*\]\s*(?:#.*)?$')
 ANY_TABLE_HEADER_PATTERN = re.compile(r'^\s*\[')
 VERSION_ENTRY_PATTERN = re.compile(rf'^(?P<prefix>\s*{VERSION_KEY}\s*=\s*)"(?P<value>[^"]*)"(?P<suffix>.*)$')
 
-# A truncated response or an error page must never be generated from. The real specification is roughly 1 MB, so
-# a response anywhere near this floor is broken rather than merely small.
+# An error page or a truncated response must never be generated from; the real specification is roughly 1 MB.
 MIN_SPEC_SIZE_BYTES = 100_000
 
-# Top-level members every specification we can generate models from has to contain. `info` is included because
-# the recorded version is read from it.
+# Members every specification we can generate models from has to contain; `info` carries the recorded version.
 REQUIRED_SPEC_KEYS = ('openapi', 'info', 'paths', 'components')
 
 REQUEST_TIMEOUT_SECS = 60

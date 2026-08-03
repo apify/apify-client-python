@@ -247,17 +247,13 @@ disable_timestamp = true
 keep_model_order = true
 
 # Which published OpenAPI specification the committed `_models.py`, `_typeddicts.py`, and `_literals.py` were
-# generated from. This is a coarse marker, not a content identity: the specification is served latest-only, so the
-# version cannot fetch that exact document back, and `apify/apify-docs` bumps
-# `apify-api/openapi/components/version.yaml` in a follow-up commit marked `[skip ci]` - a deploy therefore
-# publishes new specification content that still carries the previous stamp. A moved value proves the
-# specification changed; an unchanged one proves nothing.
+# generated from. A coarse marker, not a content identity: the specification is served latest-only, so the version
+# can't fetch that document back, and apify-docs bumps `components/version.yaml` in a follow-up `[skip ci]` commit,
+# so a deploy can publish new content under the old stamp.
 #
-# `poe generate-models` records whatever it downloaded, unconditionally. What keeps the recorded version honest is
-# the nightly workflow committing nothing unless the models changed: the value therefore lands together with the
-# generated files, and stays behind the published specification while specification changes leave the models
-# unchanged. A local regeneration that only moves this line is that same case - drop the change rather than
-# committing it on its own.
+# `poe generate-models` records whatever it downloaded, unconditionally; what keeps the value honest is the nightly
+# workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
+# same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
 version = "v2-2026-07-28T083939Z"
 
@@ -308,9 +304,8 @@ cwd = "website"
 shell = "./build_api_reference.sh && pnpm install && uv run pnpm start"
 cwd = "website"
 
-# Both codegen passes read one downloaded copy of the specification, so a specification redeployed mid-run cannot
-# leave the generated files describing two different inputs. The version is recorded last, once generation
-# succeeded, so it always names the specification the generated files follow from.
+# Both passes read one downloaded copy, so a specification redeployed mid-run can't leave the generated files
+# describing two different inputs. The version is recorded last, once generation succeeded.
 #
 # The `--alias-generator to_camel` flag lives on the `_models.py` command (not in `[tool.datamodel-codegen]`)
 # because datamodel-codegen only allows it for `pydantic_v2.BaseModel` output and would reject the TypedDict run.
@@ -327,9 +322,8 @@ uv run python -m scripts.openapi_spec fetch \
     && uv run python -m scripts.openapi_spec record-version
 """
 
-# A candidate specification that isn't published yet, so the recorded version is deliberately left alone - it
-# names the published specification. Committing models generated this way would make it name a document they did
-# not come from, hence the warning.
+# For a candidate specification that isn't published yet. The recorded version deliberately stays put - it names
+# the published specification - so models generated this way must not be committed, hence the warning.
 [tool.poe.tasks.generate-models-from-file]
 shell = """
 uv run datamodel-codegen --input $input_file \

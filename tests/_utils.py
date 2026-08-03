@@ -17,13 +17,15 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from apify_client import ApifyClient, ApifyClientAsync
-    from apify_client._models import Actor, EnvVar, Schedule, Task, Version
+    from apify_client._literals import VersionSourceType
+    from apify_client._models import Actor, EnvVar, Schedule, Task, TaskInput, Version
     from apify_client._resource_clients import (
         ActorClient,
         ActorClientAsync,
         ActorVersionClient,
         ActorVersionClientAsync,
     )
+    from apify_client._typeddicts import TaskInputDict
 
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
@@ -282,13 +284,19 @@ async def _create_with_conflict_recovery(
         return recovered
 
 
-async def create_actor(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Actor:
+async def create_actor(
+    client: ApifyClient | ApifyClientAsync,
+    *,
+    name: str,
+    title: str | None = None,
+    description: str | None = None,
+    versions: list[dict[str, Any]] | None = None,
+) -> Actor:
     """Create an Actor, recovering it if a retried create already took its name.
 
-    Takes the same keyword arguments as `ActorCollectionClient.create` and requires `name` among them. See
-    `_create_with_conflict_recovery` for why the recovery is needed.
+    Arguments mirror `ActorCollectionClient.create`, narrowed to the ones the tests use - add more here when a test
+    needs them. See `_create_with_conflict_recovery` for why the recovery is needed.
     """
-    name = kwargs['name']
 
     async def recover() -> Actor | None:
         user = await maybe_await(client.user().get())
@@ -296,20 +304,25 @@ async def create_actor(client: ApifyClient | ApifyClientAsync, **kwargs: Any) ->
         return await maybe_await(client.actor(f'{user.username}/{name}').get())
 
     return await _create_with_conflict_recovery(
-        lambda: client.actors().create(**kwargs),
+        lambda: client.actors().create(name=name, title=title, description=description, versions=versions),
         recover,
         error_type='actor-name-not-unique',
         description=f'Actor {name!r}',
     )
 
 
-async def create_task(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Task:
+async def create_task(
+    client: ApifyClient | ApifyClientAsync,
+    *,
+    actor_id: str,
+    name: str,
+    task_input: TaskInputDict | TaskInput | None = None,
+) -> Task:
     """Create an Actor task, recovering it if a retried create already took its name.
 
-    Takes the same keyword arguments as `TaskCollectionClient.create` and requires `name` among them. See
-    `_create_with_conflict_recovery` for why the recovery is needed.
+    Arguments mirror `TaskCollectionClient.create`, narrowed to the ones the tests use - add more here when a test
+    needs them. See `_create_with_conflict_recovery` for why the recovery is needed.
     """
-    name = kwargs['name']
 
     async def recover() -> Task | None:
         user = await maybe_await(client.user().get())
@@ -317,20 +330,28 @@ async def create_task(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> 
         return await maybe_await(client.task(f'{user.username}/{name}').get())
 
     return await _create_with_conflict_recovery(
-        lambda: client.tasks().create(**kwargs),
+        lambda: client.tasks().create(actor_id=actor_id, name=name, task_input=task_input),
         recover,
         error_type='actor-task-name-not-unique',
         description=f'task {name!r}',
     )
 
 
-async def create_schedule(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Schedule:
+async def create_schedule(
+    client: ApifyClient | ApifyClientAsync,
+    *,
+    cron_expression: str,
+    is_enabled: bool,
+    is_exclusive: bool,
+    name: str,
+    actions: list[dict[str, Any]] | None = None,
+) -> Schedule:
     """Create a schedule, recovering it if a retried create already took its name.
 
-    Takes the same keyword arguments as `ScheduleCollectionClient.create` and requires `name` among them. See
+    Arguments mirror `ScheduleCollectionClient.create`, narrowed to the ones the tests use - add more here when a test
+    needs them. `name` is optional upstream but required here, since the recovery looks the schedule up by it. See
     `_create_with_conflict_recovery` for why the recovery is needed.
     """
-    name = kwargs['name']
 
     async def recover() -> Schedule | None:
         # Unlike Actors and tasks, schedules can only be addressed by ID, so the committed one has to be located
@@ -342,39 +363,59 @@ async def create_schedule(client: ApifyClient | ApifyClientAsync, **kwargs: Any)
         return await maybe_await(client.schedule(existing.id).get())
 
     return await _create_with_conflict_recovery(
-        lambda: client.schedules().create(**kwargs),
+        lambda: client.schedules().create(
+            cron_expression=cron_expression,
+            is_enabled=is_enabled,
+            is_exclusive=is_exclusive,
+            name=name,
+            actions=actions,
+        ),
         recover,
         error_type='schedule-name-not-unique',
         description=f'schedule {name!r}',
     )
 
 
-async def create_actor_version(actor_client: ActorClient | ActorClientAsync, **kwargs: Any) -> Version:
+async def create_actor_version(
+    actor_client: ActorClient | ActorClientAsync,
+    *,
+    version_number: str,
+    source_type: VersionSourceType,
+    build_tag: str | None = None,
+    source_files: list[dict[str, Any]] | None = None,
+) -> Version:
     """Create an Actor version, recovering it if a retried create already took its version number.
 
-    Takes the same keyword arguments as `ActorVersionCollectionClient.create` and requires `version_number` among
-    them. See `_create_with_conflict_recovery` for why the recovery is needed.
+    Arguments mirror `ActorVersionCollectionClient.create`, narrowed to the ones the tests use - add more here when a
+    test needs them. See `_create_with_conflict_recovery` for why the recovery is needed.
     """
-    version_number = kwargs['version_number']
-
     return await _create_with_conflict_recovery(
-        lambda: actor_client.versions().create(**kwargs),
+        lambda: actor_client.versions().create(
+            version_number=version_number,
+            source_type=source_type,
+            build_tag=build_tag,
+            source_files=source_files,
+        ),
         lambda: actor_client.version(version_number).get(),
         error_type='version-already-exists',
         description=f'Actor version {version_number!r}',
     )
 
 
-async def create_env_var(version_client: ActorVersionClient | ActorVersionClientAsync, **kwargs: Any) -> EnvVar:
+async def create_env_var(
+    version_client: ActorVersionClient | ActorVersionClientAsync,
+    *,
+    name: str,
+    value: str,
+    is_secret: bool | None = None,
+) -> EnvVar:
     """Create an Actor environment variable, recovering it if a retried create already took its name.
 
-    Takes the same keyword arguments as `ActorEnvVarCollectionClient.create` and requires `name` among them. See
-    `_create_with_conflict_recovery` for why the recovery is needed.
+    Arguments mirror `ActorEnvVarCollectionClient.create`, narrowed to the ones the tests use - add more here when a
+    test needs them. See `_create_with_conflict_recovery` for why the recovery is needed.
     """
-    name = kwargs['name']
-
     return await _create_with_conflict_recovery(
-        lambda: version_client.env_vars().create(**kwargs),
+        lambda: version_client.env_vars().create(name=name, value=value, is_secret=is_secret),
         lambda: version_client.env_var(name).get(),
         error_type='env-var-already-exists',
         description=f'env var {name!r}',

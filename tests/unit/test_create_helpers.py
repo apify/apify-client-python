@@ -135,7 +135,7 @@ async def test_create_task_recovers_committed_task(httpserver: HTTPServer) -> No
         {'data': TASK}
     )
 
-    task = await create_task(make_client(httpserver, is_async=True), actor_id=ACTOR['id'], name=TASK_NAME)
+    task = await create_task(make_client(httpserver, is_async=True), actor_id=str(ACTOR['id']), name=TASK_NAME)
 
     assert isinstance(task, Task)
     assert task.name == TASK_NAME

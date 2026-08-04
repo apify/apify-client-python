@@ -68,7 +68,7 @@ A payload can reach the client already encoded, for example a gzipped file read 
 
 The header is forwarded verbatim, so it also covers encodings the client ships no compressor for, such as `deflate`. The API accepts `gzip`, `br`, `deflate`, and `identity`. Passing `identity` turns compression off for a single request without changing how the client is configured.
 
-The client can't verify that the body matches the header, so set `Content-Encoding` only when the payload really is encoded that way. Key-value store records are stored exactly as you upload them, which makes the header part of the stored record rather than a transport detail.
+A value that can't be compressed at all - a string, an object serialized to JSON, or a file-like value opened in text mode - is rejected with a `TypeError` when `content_encoding` names a compression. Beyond that the client can't verify that the bytes match the header, so set `Content-Encoding` only when the payload really is encoded that way. Key-value store records are stored exactly as you upload them, which makes the header part of the stored record rather than a transport detail.
 
 ## Configuration
 

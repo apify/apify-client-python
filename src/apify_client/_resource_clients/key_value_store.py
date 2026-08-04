@@ -374,10 +374,16 @@ class KeyValueStoreClient(ResourceClient):
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
                 compressing them itself. The API accepts `gzip`, `br`, `deflate`, and `identity`, and stores the
-                record exactly as uploaded, so this also becomes the encoding the record is served with.
+                record exactly as uploaded, so this also becomes the encoding the record is served with. Only a
+                bytes-like `value`, or a file-like one that reads into bytes, can carry a compression - anything
+                else raises `TypeError` instead of being stored under a header that misdescribes it.
             timeout: Timeout for the API HTTP request.
         """
-        value, content_type = encode_key_value_store_record_value(value, content_type=content_type)
+        value, content_type = encode_key_value_store_record_value(
+            value,
+            content_type=content_type,
+            content_encoding=content_encoding,
+        )
 
         headers = {'content-type': content_type}
         if content_encoding is not None:
@@ -797,10 +803,16 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
                 compressing them itself. The API accepts `gzip`, `br`, `deflate`, and `identity`, and stores the
-                record exactly as uploaded, so this also becomes the encoding the record is served with.
+                record exactly as uploaded, so this also becomes the encoding the record is served with. Only a
+                bytes-like `value`, or a file-like one that reads into bytes, can carry a compression - anything
+                else raises `TypeError` instead of being stored under a header that misdescribes it.
             timeout: Timeout for the API HTTP request.
         """
-        value, content_type = encode_key_value_store_record_value(value, content_type=content_type)
+        value, content_type = encode_key_value_store_record_value(
+            value,
+            content_type=content_type,
+            content_encoding=content_encoding,
+        )
 
         headers = {'content-type': content_type}
         if content_encoding is not None:

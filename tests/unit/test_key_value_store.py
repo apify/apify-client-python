@@ -51,6 +51,14 @@ _PRE_ENCODED_VALUE_CASES = [
     pytest.param('identity', _BYTES_VALUE, id='identity opt-out'),
 ]
 
+# Values that cannot be carrying the `gzip` encoding the caller declares for them. Built by a factory for the
+# same reason as `_FILE_LIKE_VALUE_CASES`, as the sync and async test each consume their own value.
+_UNCOMPRESSIBLE_VALUE_CASES = [
+    pytest.param(lambda: _TEXT_VALUE, id='string'),
+    pytest.param(lambda: {'key': 'value'}, id='json-serializable object'),
+    pytest.param(lambda: io.StringIO(_TEXT_VALUE), id='text-mode file-like'),
+]
+
 
 @pytest.fixture(
     params=[
@@ -185,3 +193,35 @@ async def test_set_record_uploads_pre_encoded_value_async(
     assert len(captured_records) == 1
     assert captured_records[0].headers['content-encoding'] == content_encoding
     assert captured_records[0].get_data() == value
+
+
+@pytest.mark.parametrize('make_value', _UNCOMPRESSIBLE_VALUE_CASES)
+def test_set_record_rejects_declared_compression_of_non_bytes_value_sync(
+    *,
+    api_url: str,
+    captured_records: list[Request],
+    make_value: Callable[[], Any],
+) -> None:
+    """A value that cannot be compressed is rejected before the request, not uploaded under a misleading header."""
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    with pytest.raises(TypeError, match='declares the value is already compressed'):
+        client.key_value_store(_MOCKED_KVS_ID).set_record('f', make_value(), content_encoding='gzip')
+
+    assert captured_records == []
+
+
+@pytest.mark.parametrize('make_value', _UNCOMPRESSIBLE_VALUE_CASES)
+async def test_set_record_rejects_declared_compression_of_non_bytes_value_async(
+    *,
+    api_url: str,
+    captured_records: list[Request],
+    make_value: Callable[[], Any],
+) -> None:
+    """A value that cannot be compressed is rejected before the request, not uploaded under a misleading header."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    with pytest.raises(TypeError, match='declares the value is already compressed'):
+        await client.key_value_store(_MOCKED_KVS_ID).set_record('f', make_value(), content_encoding='gzip')
+
+    assert captured_records == []

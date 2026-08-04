@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import gzip
 import io
 import json
 from base64 import b64decode
 from datetime import timedelta
 from http import HTTPStatus
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import impit
@@ -27,6 +28,8 @@ from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 if TYPE_CHECKING:
     from apify_client._typeddicts import WebhookRepresentationDict
     from apify_client.types import WebhooksList
+
+_GZIPPED_DATA = gzip.compress(b'buffer data')
 
 
 def test_to_safe_id() -> None:
@@ -300,6 +303,40 @@ def test_encode_key_value_store_record_value_non_bytes_read_raises() -> None:
 
     with pytest.raises(TypeError, match='returned NoneType, expected bytes or str'):
         encode_key_value_store_record_value(EmptyNonBlockingReader())
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected_type_name'),
+    [
+        pytest.param('already gzipped, honest', 'str', id='string'),
+        pytest.param({'a': 1}, 'dict', id='json-serializable object'),
+        pytest.param(io.StringIO('buffer data'), 'str', id='text-mode file-like'),
+    ],
+)
+def test_encode_key_value_store_record_value_declared_compression_of_non_bytes_raises(
+    value: Any, expected_type_name: str
+) -> None:
+    """A value that cannot be compressed is rejected when the content encoding declares a compression."""
+    with pytest.raises(TypeError, match=f'Cannot upload a {expected_type_name} value'):
+        encode_key_value_store_record_value(value, content_encoding='gzip')
+
+
+@pytest.mark.parametrize(
+    ('value', 'content_encoding', 'expected_value'),
+    [
+        pytest.param(_GZIPPED_DATA, 'gzip', _GZIPPED_DATA, id='bytes'),
+        pytest.param(bytearray(_GZIPPED_DATA), 'gzip', bytearray(_GZIPPED_DATA), id='bytearray'),
+        pytest.param(io.BytesIO(_GZIPPED_DATA), 'GZip', _GZIPPED_DATA, id='binary file-like, mixed-case encoding'),
+        pytest.param('buffer data', 'identity', 'buffer data', id='string under identity'),
+        pytest.param({'a': 1}, ' Identity ', b'{"a": 1}', id='json-serializable object under padded identity'),
+    ],
+)
+def test_encode_key_value_store_record_value_accepts_declared_encoding(
+    value: Any, content_encoding: str, expected_value: bytes | bytearray | str
+) -> None:
+    """A bytes-like value passes the compression guard, and `identity` declares no compression at all."""
+    encoded, _content_type = encode_key_value_store_record_value(value, content_encoding=content_encoding)
+    assert encoded == expected_value
 
 
 def test_encode_key_value_store_record_value_non_encodable_with_explicit_content_type_raises() -> None:

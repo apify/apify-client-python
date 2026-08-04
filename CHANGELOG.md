@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Read file-like KVS values before upload and reject unencodable ones ([#965](https://github.com/apify/apify-client-python/pull/965)) ([064b5cc](https://github.com/apify/apify-client-python/commit/064b5cccbce8b585f58271b089e4987c6559a7d8)) by [@vdusek](https://github.com/vdusek)
+- Respect caller-supplied Content-Encoding for pre-compressed request bodies ([#997](https://github.com/apify/apify-client-python/pull/997)) ([b5541c9](https://github.com/apify/apify-client-python/commit/b5541c919923f69d537b4062e21c1f3c46396c7a)) by [@vdusek](https://github.com/vdusek), closes [#996](https://github.com/apify/apify-client-python/issues/996)
 
 ### ⚡ Performance
 

@@ -53,7 +53,7 @@ _PRE_ENCODED_VALUE_CASES = [
 
 # Values that cannot be carrying the `gzip` encoding the caller declares for them. Built by a factory for the
 # same reason as `_FILE_LIKE_VALUE_CASES`, as the sync and async test each consume their own value.
-_UNCOMPRESSIBLE_VALUE_CASES = [
+_INCOMPRESSIBLE_VALUE_CASES = [
     pytest.param(lambda: _TEXT_VALUE, id='string'),
     pytest.param(lambda: {'key': 'value'}, id='json-serializable object'),
     pytest.param(lambda: io.StringIO(_TEXT_VALUE), id='text-mode file-like'),
@@ -195,7 +195,7 @@ async def test_set_record_uploads_pre_encoded_value_async(
     assert captured_records[0].get_data() == value
 
 
-@pytest.mark.parametrize('make_value', _UNCOMPRESSIBLE_VALUE_CASES)
+@pytest.mark.parametrize('make_value', _INCOMPRESSIBLE_VALUE_CASES)
 def test_set_record_rejects_declared_compression_of_non_bytes_value_sync(
     *,
     api_url: str,
@@ -211,7 +211,7 @@ def test_set_record_rejects_declared_compression_of_non_bytes_value_sync(
     assert captured_records == []
 
 
-@pytest.mark.parametrize('make_value', _UNCOMPRESSIBLE_VALUE_CASES)
+@pytest.mark.parametrize('make_value', _INCOMPRESSIBLE_VALUE_CASES)
 async def test_set_record_rejects_declared_compression_of_non_bytes_value_async(
     *,
     api_url: str,

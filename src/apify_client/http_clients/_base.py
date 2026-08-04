@@ -153,7 +153,7 @@ class HttpClientBase:
         Args:
             token: The Apify API token to set as the `Bearer` authorization.
         """
-        if not any(key.lower() == 'authorization' for key in self._headers):
+        if self._get_header(self._headers, 'authorization') is None:
             self._headers['Authorization'] = f'Bearer {token}'
 
     @staticmethod
@@ -169,6 +169,11 @@ class HttpClientBase:
                 del merged[existing_key]
             merged[key] = value
         return merged
+
+    @staticmethod
+    def _get_header(headers: dict[str, str], name: str) -> str | None:
+        """Look up a header value by name, treated case-insensitively. Returns `None` if the header is not set."""
+        return next((value for key, value in headers.items() if key.lower() == name.lower()), None)
 
     @staticmethod
     def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -228,9 +233,9 @@ class HttpClientBase:
     def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
         """Whether this body clears the size threshold `_prepare_request_call` compresses at, cheaply.
 
-        Below the threshold nothing is ever compressed. At or above it the content type still decides, but
-        checking that here would buy nothing - a body that turns out to be already compressed only wastes the
-        thread hop this answer guards.
+        Below the threshold nothing is ever compressed. At or above it the content type and a caller-supplied
+        `Content-Encoding` still decide, but checking those here would buy nothing - a body that turns out to be
+        already encoded only wastes the thread hop this answer guards.
 
         The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It is a
         lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the encoded
@@ -252,12 +257,15 @@ class HttpClientBase:
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
         """Prepare headers, params, and body for an HTTP request.
 
-        Merges the client's default headers (including authorization) with per-request headers, serializes JSON
-        and compresses the body unless it is smaller than `MIN_COMPRESSION_SIZE` or its content type says the
-        payload is already compressed. Header names are treated case-insensitively and per-request values win
-        over the client defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one.
-        `Content-Encoding` always describes what was actually applied to the body, so a caller-supplied value is
-        dropped whenever nothing was compressed.
+        Merges the client's default headers (including authorization) with per-request headers and serializes a
+        JSON body. Header names are treated case-insensitively and per-request values win over the client
+        defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one.
+
+        The body is compressed unless a `Content-Encoding` header is already set, the body is smaller than
+        `MIN_COMPRESSION_SIZE`, or its content type says the payload is already compressed. A caller-supplied
+        `Content-Encoding` is forwarded verbatim, which is how a pre-encoded body is uploaded - including one in
+        an encoding the client ships no compressor for. `Content-Encoding: identity` therefore opts a single
+        request out of compression.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
@@ -267,10 +275,8 @@ class HttpClientBase:
         # Dump JSON data to a string so it can be sent as a request body.
         if json is not None:
             data = jsonlib.dumps(json, ensure_ascii=False, allow_nan=False, default=str).encode('utf-8')
-            if not any(key.lower() == 'content-type' for key in headers):
+            if self._get_header(headers, 'content-type') is None:
                 headers['Content-Type'] = 'application/json'
-
-        compressed = False
 
         if isinstance(data, (str, bytes, bytearray)):
             if isinstance(data, str):
@@ -278,16 +284,15 @@ class HttpClientBase:
             elif isinstance(data, bytearray):
                 data = bytes(data)
 
-            content_type = next((value for key, value in headers.items() if key.lower() == 'content-type'), None)
-            if len(data) >= MIN_COMPRESSION_SIZE and is_compressible_content_type(content_type):
+            # A caller-supplied encoding says the body arrives already encoded, so compressing it here would
+            # both mislabel it and waste the work.
+            if (
+                self._get_header(headers, 'content-encoding') is None
+                and len(data) >= MIN_COMPRESSION_SIZE
+                and is_compressible_content_type(self._get_header(headers, 'content-type'))
+            ):
                 data = self._http_compressor.compress(data)
                 headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
-                compressed = True
-
-        # Anything left uncompressed goes out as-is - a file-like body included - so a caller-supplied encoding
-        # would misdescribe it.
-        if data is not None and not compressed:
-            headers = {key: value for key, value in headers.items() if key.lower() != 'content-encoding'}
 
         return (headers, self._parse_params(params), data)
 

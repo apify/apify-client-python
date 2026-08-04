@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gzip
 import io
+import zlib
 from typing import TYPE_CHECKING, Any
 
 import brotli
@@ -40,6 +41,22 @@ _FILE_LIKE_VALUE_CASES = [
     pytest.param(lambda: io.BytesIO(_BYTES_VALUE), _BYTES_VALUE, 'application/octet-stream', id='bytes io'),
     pytest.param(lambda: io.StringIO(_TEXT_VALUE), _BYTES_VALUE, 'text/plain; charset=utf-8', id='string io'),
     pytest.param(DuckTypedReader, _BYTES_VALUE, 'application/octet-stream', id='duck-typed reader'),
+]
+
+# Each case is (content encoding passed to `set_record`, the body the caller hands over already encoded that way).
+_PRE_ENCODED_VALUE_CASES = [
+    pytest.param('gzip', gzip.compress(_BYTES_VALUE), id='gzip'),
+    pytest.param('br', brotli.compress(_BYTES_VALUE), id='brotli'),
+    pytest.param('deflate', zlib.compress(_BYTES_VALUE), id='encoding the client has no compressor for'),
+    pytest.param('identity', _BYTES_VALUE, id='identity opt-out'),
+]
+
+# Values that cannot be carrying the `gzip` encoding the caller declares for them. Built by a factory for the
+# same reason as `_FILE_LIKE_VALUE_CASES`, as the sync and async test each consume their own value.
+_INCOMPRESSIBLE_VALUE_CASES = [
+    pytest.param(lambda: _TEXT_VALUE, id='string'),
+    pytest.param(lambda: {'key': 'value'}, id='json-serializable object'),
+    pytest.param(lambda: io.StringIO(_TEXT_VALUE), id='text-mode file-like'),
 ]
 
 
@@ -126,3 +143,85 @@ async def test_set_record_reads_file_like_value_async(
     assert captured_records[0].headers['content-encoding'] == content_encoding
     assert decode_body(captured_records[0]) == expected_body
     assert captured_records[0].headers['content-type'] == expected_content_type
+
+
+@pytest.mark.parametrize(('content_encoding', 'value'), _PRE_ENCODED_VALUE_CASES)
+def test_set_record_uploads_pre_encoded_value_sync(
+    *,
+    api_url: str,
+    captured_records: list[Request],
+    compression_case: tuple[HttpCompressionAlgorithm, str],
+    content_encoding: str,
+    value: bytes,
+) -> None:
+    """An explicit `content_encoding` uploads the value as it is, whichever compressor the client uses."""
+    algorithm, _client_encoding = compression_case
+    client = ApifyClient(token='test_token', api_url=api_url, compression=algorithm)
+
+    client.key_value_store(_MOCKED_KVS_ID).set_record(
+        'f',
+        value,
+        content_type='application/octet-stream',
+        content_encoding=content_encoding,
+    )
+
+    assert len(captured_records) == 1
+    assert captured_records[0].headers['content-encoding'] == content_encoding
+    assert captured_records[0].get_data() == value
+
+
+@pytest.mark.parametrize(('content_encoding', 'value'), _PRE_ENCODED_VALUE_CASES)
+async def test_set_record_uploads_pre_encoded_value_async(
+    *,
+    api_url: str,
+    captured_records: list[Request],
+    compression_case: tuple[HttpCompressionAlgorithm, str],
+    content_encoding: str,
+    value: bytes,
+) -> None:
+    """An explicit `content_encoding` uploads the value as it is, whichever compressor the client uses."""
+    algorithm, _client_encoding = compression_case
+    client = ApifyClientAsync(token='test_token', api_url=api_url, compression=algorithm)
+
+    await client.key_value_store(_MOCKED_KVS_ID).set_record(
+        'f',
+        value,
+        content_type='application/octet-stream',
+        content_encoding=content_encoding,
+    )
+
+    assert len(captured_records) == 1
+    assert captured_records[0].headers['content-encoding'] == content_encoding
+    assert captured_records[0].get_data() == value
+
+
+@pytest.mark.parametrize('make_value', _INCOMPRESSIBLE_VALUE_CASES)
+def test_set_record_rejects_declared_compression_of_non_bytes_value_sync(
+    *,
+    api_url: str,
+    captured_records: list[Request],
+    make_value: Callable[[], Any],
+) -> None:
+    """A value that cannot be compressed is rejected before the request, not uploaded under a misleading header."""
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    with pytest.raises(TypeError, match='declares the value is already compressed'):
+        client.key_value_store(_MOCKED_KVS_ID).set_record('f', make_value(), content_encoding='gzip')
+
+    assert captured_records == []
+
+
+@pytest.mark.parametrize('make_value', _INCOMPRESSIBLE_VALUE_CASES)
+async def test_set_record_rejects_declared_compression_of_non_bytes_value_async(
+    *,
+    api_url: str,
+    captured_records: list[Request],
+    make_value: Callable[[], Any],
+) -> None:
+    """A value that cannot be compressed is rejected before the request, not uploaded under a misleading header."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    with pytest.raises(TypeError, match='declares the value is already compressed'):
+        await client.key_value_store(_MOCKED_KVS_ID).set_record('f', make_value(), content_encoding='gzip')
+
+    assert captured_records == []

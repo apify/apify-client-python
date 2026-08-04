@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def encode_key_value_store_record_value(
-    value: Any, *, content_type: str | None = None
+    value: Any, *, content_type: str | None = None, content_encoding: str | None = None
 ) -> tuple[bytes | bytearray | str, str]:
     """Encode a value for storage in a key-value store record.
 
@@ -23,12 +23,17 @@ def encode_key_value_store_record_value(
             memory whole - the object is neither rewound nor closed, and async file-like objects are rejected.
             Any other value is JSON-serialized unless it is already bytes or a string.
         content_type: The content type; if None, it's inferred from the value type.
+        content_encoding: The encoding the caller declares the value already carries, if any. Anything other than
+            `identity` means the value is compressed, which only a bytes-like payload can be, so any other value
+            is rejected. The check belongs here because a file-like value has to be read before its payload type
+            is known, and reading it a second time in the caller is not possible.
 
     Returns:
         A tuple of (encoded_value, content_type).
 
     Raises:
-        TypeError: If the value cannot be encoded into a body the transport accepts.
+        TypeError: If the value cannot be encoded into a body the transport accepts, or if it cannot be carrying
+            the declared `content_encoding`.
     """
     # Read file-like values into memory; the transport only accepts bytes-like bodies. Detect them by a
     # callable `read` (not `io.IOBase`) so duck-typed file-likes are read, not JSON-serialized. Impit exposes
@@ -47,6 +52,17 @@ def encode_key_value_store_record_value(
 
         if not isinstance(value, (bytes, bytearray, str)):
             raise TypeError(f'Reading the file-like value returned {type(value).__name__}, expected bytes or str.')
+
+    # A declared compression describes bytes the caller compressed. A string, a JSON-serializable object, or a
+    # text-mode file cannot be carrying one, and would otherwise be stored under a header that misdescribes it -
+    # the client forwards the header untouched and never inspects the body.
+    declared_encoding = (content_encoding or '').strip().lower()
+    if declared_encoding not in ('', 'identity') and not isinstance(value, (bytes, bytearray)):
+        raise TypeError(
+            f'Cannot upload a {type(value).__name__} value with `Content-Encoding: {content_encoding}`. An encoding '
+            'other than `identity` declares the value is already compressed, so pass the compressed bytes, or a '
+            'file-like object that reads them.'
+        )
 
     if not content_type:
         if isinstance(value, (bytes, bytearray)):

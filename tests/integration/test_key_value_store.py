@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
@@ -597,6 +598,42 @@ async def test_key_value_store_set_and_get_binary_record(client: ApifyClient | A
         assert record['key'] == 'image.png'
         assert record['value'] == binary_value
         assert 'image/png' in record['content_type']
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_set_and_get_pre_compressed_record(client: ApifyClient | ApifyClientAsync) -> None:
+    """A record uploaded with an explicit `content_encoding` is stored as sent and served back under that encoding."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        # Past the size threshold and of a compressible content type, so without the explicit encoding the client
+        # would compress the body itself - a second time, on top of the gzip the caller already applied.
+        payload = b'compressible payload ' * 500
+        await maybe_await(
+            store_client.set_record(
+                'pre-compressed',
+                gzip.compress(payload),
+                content_type='text/plain',
+                content_encoding='gzip',
+            )
+        )
+
+        # Poll until the record is visible (eventual consistency)
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record_as_bytes('pre-compressed'))
+
+        record = await poll_until_condition(get_record, lambda record: record is not None)
+        assert isinstance(record, dict)
+
+        # The record is served with the `Content-Encoding` it was stored under, so the transport decodes it back
+        # to the original payload. A body compressed twice would arrive here as the gzip bytes instead, and one
+        # stored without the encoding would not be decoded at all.
+        assert record['value'] == payload
+        assert 'text/plain' in record['content_type']
     finally:
         await maybe_await(store_client.delete())
 

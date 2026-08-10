@@ -120,10 +120,15 @@ def _make_large_requests() -> list[RequestDraftDict]:
 
 
 def _payload_capturing_handler(payloads: list[bytes]) -> Callable[[Request], Response]:
-    """Return a handler that records each POST body (gzip-decompressed) and responds with an empty batch result."""
+    """Return a handler that records each POST body and responds with an empty batch result.
+
+    Bodies below the client's compression threshold arrive uncompressed, so the recorded payload is
+    decompressed only when the request says it was encoded.
+    """
 
     def handler(request: Request) -> Response:
-        payloads.append(gzip.decompress(request.get_data()))
+        body = request.get_data()
+        payloads.append(gzip.decompress(body) if request.headers.get('Content-Encoding') == 'gzip' else body)
         return Response(_EMPTY_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json')
 
     return handler

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import gzip
 import io
 import json
 from base64 import b64decode
 from datetime import timedelta
 from http import HTTPStatus
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import impit
@@ -16,12 +17,19 @@ from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature, encode_base62
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.errors import catch_not_found_or_throw, is_retryable_error
-from apify_client._utils.http import response_to_dict, response_to_list, to_safe_id
+from apify_client._utils.http import (
+    is_compressible_content_type,
+    response_to_dict,
+    response_to_list,
+    to_safe_id,
+)
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from apify_client._typeddicts import WebhookRepresentationDict
     from apify_client.types import WebhooksList
+
+_GZIPPED_DATA = gzip.compress(b'buffer data')
 
 
 def test_to_safe_id() -> None:
@@ -223,8 +231,7 @@ def test__clean_json_payload(input_dict: dict, expected: dict) -> None:
 def test_encode_key_value_store_record_value_dict() -> None:
     """Test that dictionaries are encoded as JSON."""
     value, content_type = encode_key_value_store_record_value({'key': 'value'})
-    assert b'"key"' in value
-    assert b'"value"' in value
+    assert value == b'{"key": "value"}'
     assert content_type == 'application/json; charset=utf-8'
 
 
@@ -249,11 +256,130 @@ def test_encode_key_value_store_record_value(
 
 
 def test_encode_key_value_store_record_value_bytesio() -> None:
-    """Test that BytesIO is encoded as octet-stream."""
+    """Test that BytesIO is read into bytes and encoded as octet-stream."""
     buffer = io.BytesIO(b'buffer data')
     value, content_type = encode_key_value_store_record_value(buffer)
-    assert value == buffer
+    assert value == b'buffer data'
     assert content_type == 'application/octet-stream'
+
+
+def test_encode_key_value_store_record_value_stringio() -> None:
+    """Test that StringIO is read into text and encoded as text/plain."""
+    buffer = io.StringIO('buffer data')
+    value, content_type = encode_key_value_store_record_value(buffer)
+    assert value == 'buffer data'
+    assert content_type == 'text/plain; charset=utf-8'
+
+
+def test_encode_key_value_store_record_value_duck_typed_file_like() -> None:
+    """Test that a duck-typed file-like value (a callable `read`, not an `io.IOBase`) is read into bytes."""
+
+    class Reader:
+        def read(self) -> bytes:
+            return b'buffer data'
+
+    value, content_type = encode_key_value_store_record_value(Reader())
+    assert value == b'buffer data'
+    assert content_type == 'application/octet-stream'
+
+
+def test_encode_key_value_store_record_value_async_file_like_raises() -> None:
+    """Test that an async file-like value is rejected instead of storing the repr of an un-awaited coroutine."""
+
+    class AsyncReader:
+        async def read(self) -> bytes:
+            return b'buffer data'
+
+    with pytest.raises(TypeError, match='Async file-like objects are not supported'):
+        encode_key_value_store_record_value(AsyncReader())
+
+
+def test_encode_key_value_store_record_value_non_bytes_read_raises() -> None:
+    """Test that a `read` returning neither bytes nor str is rejected instead of being JSON-serialized."""
+
+    class EmptyNonBlockingReader:
+        def read(self) -> None:
+            """Mimic a non-blocking raw stream with no data available."""
+
+    with pytest.raises(TypeError, match='returned NoneType, expected bytes or str'):
+        encode_key_value_store_record_value(EmptyNonBlockingReader())
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected_type_name'),
+    [
+        pytest.param('already gzipped, honest', 'str', id='string'),
+        pytest.param({'a': 1}, 'dict', id='json-serializable object'),
+        pytest.param(io.StringIO('buffer data'), 'str', id='text-mode file-like'),
+    ],
+)
+def test_encode_key_value_store_record_value_declared_compression_of_non_bytes_raises(
+    value: Any, expected_type_name: str
+) -> None:
+    """A value that cannot be compressed is rejected when the content encoding declares a compression."""
+    with pytest.raises(TypeError, match=f'Cannot upload a {expected_type_name} value'):
+        encode_key_value_store_record_value(value, content_encoding='gzip')
+
+
+@pytest.mark.parametrize(
+    ('value', 'content_encoding', 'expected_value'),
+    [
+        pytest.param(_GZIPPED_DATA, 'gzip', _GZIPPED_DATA, id='bytes'),
+        pytest.param(bytearray(_GZIPPED_DATA), 'gzip', bytearray(_GZIPPED_DATA), id='bytearray'),
+        pytest.param(io.BytesIO(_GZIPPED_DATA), 'GZip', _GZIPPED_DATA, id='binary file-like, mixed-case encoding'),
+        pytest.param('buffer data', 'identity', 'buffer data', id='string under identity'),
+        pytest.param({'a': 1}, ' Identity ', b'{"a": 1}', id='json-serializable object under padded identity'),
+    ],
+)
+def test_encode_key_value_store_record_value_accepts_declared_encoding(
+    value: Any, content_encoding: str, expected_value: bytes | bytearray | str
+) -> None:
+    """A bytes-like value passes the compression guard, and `identity` declares no compression at all."""
+    encoded, _content_type = encode_key_value_store_record_value(value, content_encoding=content_encoding)
+    assert encoded == expected_value
+
+
+def test_encode_key_value_store_record_value_non_encodable_with_explicit_content_type_raises() -> None:
+    """Test that a non-bytes-like value with a non-JSON content type is rejected before it reaches the transport."""
+    with pytest.raises(TypeError, match="Cannot encode a dict value as 'image/png'"):
+        encode_key_value_store_record_value({'a': 1}, content_type='image/png')
+
+
+@pytest.mark.parametrize(
+    ('content_type', 'expected'),
+    [
+        pytest.param(None, True, id='missing'),
+        pytest.param('', True, id='empty'),
+        pytest.param('application/json', True, id='json'),
+        pytest.param('text/plain; charset=utf-8', True, id='text with parameters'),
+        pytest.param('application/octet-stream', True, id='unknown binary'),
+        pytest.param('application/vnd.api+json', True, id='structured json suffix'),
+        pytest.param('image/svg+xml', True, id='svg under a compressed prefix'),
+        pytest.param('IMAGE/SVG+XML; charset=utf-8', True, id='svg uppercase with parameters'),
+        pytest.param('image/bmp', True, id='raw bitmap under a compressed prefix'),
+        pytest.param('image/tiff', True, id='tiff under a compressed prefix'),
+        pytest.param('audio/wav', True, id='raw audio under a compressed prefix'),
+        pytest.param('audio/L24', True, id='raw pcm audio in its registered casing'),
+        pytest.param('audio/midi', True, id='midi event data under a compressed prefix'),
+        pytest.param('image/png', False, id='image prefix'),
+        pytest.param('video/mp4', False, id='video prefix'),
+        pytest.param('audio/mpeg', False, id='audio prefix'),
+        pytest.param('application/zip', False, id='archive'),
+        pytest.param('application/x-gzip', False, id='gzip archive'),
+        pytest.param('application/x-zip-compressed', False, id='windows zip archive'),
+        pytest.param('application/epub+zip', False, id='zip container with a suffix'),
+        pytest.param(
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            False,
+            id='office open xml document',
+        ),
+        pytest.param('font/woff2', False, id='web font'),
+        pytest.param('  Image/PNG  ', False, id='surrounding whitespace and mixed case'),
+    ],
+)
+def test_is_compressible_content_type(content_type: str | None, *, expected: bool) -> None:
+    """Already-compressed media types are reported as not worth compressing, everything else as compressible."""
+    assert is_compressible_content_type(content_type) is expected
 
 
 def test_response_to_dict() -> None:

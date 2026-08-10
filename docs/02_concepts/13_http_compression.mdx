@@ -1,14 +1,74 @@
 ---
 id: http-compression
 title: HTTP compression
-description: The client compresses every request body automatically using gzip by default, with optional brotli via an explicit opt-in.
+description: The client compresses request bodies automatically using gzip by default, with optional brotli via an explicit opt-in.
 ---
 
-The Apify client compresses every request body before sending it to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+import SkipCompressionAsyncExample from '!!raw-loader!./code/13_skip_compression_async.py';
+import SkipCompressionSyncExample from '!!raw-loader!./code/13_skip_compression_sync.py';
+import PrecompressedAsyncExample from '!!raw-loader!./code/13_precompressed_async.py';
+import PrecompressedSyncExample from '!!raw-loader!./code/13_precompressed_sync.py';
+
+The Apify client compresses request bodies before sending them to the API. It reduces the amount of data transferred over the network, resulting in faster requests and lower bandwidth usage, especially for large payloads such as Actor inputs, dataset uploads, or key-value store records.
 
 ## How it works
 
-The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently.
+The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently. A body is compressed only when it's large enough to benefit, its content type isn't already compressed, and the request carries no `Content-Encoding` of its own. For details, see [Minimum body size](#minimum-body-size), [Already-compressed payloads](#already-compressed-payloads), and [Pre-compressed bodies](#pre-compressed-bodies).
+
+## Minimum body size
+
+The client sends bodies smaller than 1024 bytes without compression and without the `Content-Encoding` header. A body of this size fits in one network packet, so compression doesn't remove a network round trip and only costs CPU time. For very small bodies, the compression format adds bytes and can make the body larger.
+
+## Already-compressed payloads
+
+Some payloads carry their own compression, so compressing them again costs CPU and memory while making the request slightly larger. The client skips compression when the request's `Content-Type` is one of these:
+
+- any `image/*`, `audio/*`, or `video/*` type
+- archives such as `application/zip`, `application/gzip`, or `application/x-7z-compressed`
+- office documents and packages built on ZIP, such as `.docx`, `.xlsx`, `.epub`, or `.apk`
+- web fonts (`font/woff`, `font/woff2`)
+
+Two kinds of media type are compressed anyway: raw formats such as `image/bmp`, `image/tiff`, and `audio/wav`, and subtypes with a structured syntax suffix such as `image/svg+xml`. Set an accurate `content_type` when uploading media to a key-value store:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {SkipCompressionAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {SkipCompressionSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. File-like values are read into memory before they're sent, so they follow the same rules as any other body.
+
+## Pre-compressed bodies
+
+A payload can reach the client already encoded, for example a gzipped file read from disk. Set the `Content-Encoding` header to name the encoding the payload carries. The client then sends the body as it is and forwards the header, so nothing gets compressed twice. `set_record` exposes the header as its `content_encoding` argument:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {PrecompressedAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {PrecompressedSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+The header is forwarded verbatim, so it also covers encodings the client ships no compressor for, such as `deflate`. The API accepts `gzip`, `br`, `deflate`, and `identity`. Passing `identity` turns compression off for a single request without changing how the client is configured.
+
+A value that can't be compressed at all - a string, an object serialized to JSON, or a file-like value opened in text mode - is rejected with a `TypeError` when `content_encoding` names a compression. Beyond that the client can't verify that the bytes match the header, so set `Content-Encoding` only when the payload really is encoded that way. Key-value store records are stored exactly as you upload them, which makes the header part of the stored record rather than a transport detail.
 
 ## Configuration
 
@@ -51,7 +111,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=BrotliHttpCompressor(qu
 client = ApifyClient(token='MY-APIFY-TOKEN', compression=GzipHttpCompressor(quality=9))
 ```
 
-You can also implement a fully custom compressor by subclassing `HttpCompressor`:
+You can also implement a fully custom compressor by subclassing `HttpCompressor`. The client calls it only for bodies that reach the [minimum body size](#minimum-body-size) and aren't [already compressed](#already-compressed-payloads) or [pre-compressed by the caller](#pre-compressed-bodies):
 
 ```python
 from apify_client import ApifyClient

@@ -2,18 +2,26 @@ from __future__ import annotations
 
 import gzip
 import importlib
+import json
 import sys
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import brotli
 import pytest
+from werkzeug import Request, Response
 
+from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompressor
 from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
+
+    from pytest_httpserver import HTTPServer
+
+    from apify_client.types import HttpCompressionAlgorithm
 
 
 @contextmanager
@@ -147,3 +155,69 @@ def test_resolve_compressor_brotli_raises_clear_error_when_extra_missing() -> No
     """Resolving `compression='brotli'` without the extra raises `ImportError` at resolution time."""
     with _brotli_unavailable(), pytest.raises(ImportError):
         resolve_compressor('brotli')
+
+
+_ITEMS_PATH = '/v2/datasets/test_dataset_id/items'
+_LARGE_BODY = [{'index': index, 'url': f'https://example.com/item/{index}'} for index in range(MIN_COMPRESSION_SIZE)]
+
+
+def _capture_body(captured: list[Request]) -> Callable[[Request], Response]:
+    def handler(request: Request) -> Response:
+        captured.append(request)
+        return Response(status=201, mimetype='application/json')
+
+    return handler
+
+
+@pytest.mark.parametrize(
+    ('compression', 'content_encoding', 'decompress'),
+    [
+        pytest.param('gzip', 'gzip', gzip.decompress, id='gzip'),
+        pytest.param('brotli', 'br', brotli.decompress, id='brotli'),
+    ],
+)
+def test_configured_compression_reaches_the_wire_sync(
+    httpserver: HTTPServer,
+    compression: HttpCompressionAlgorithm,
+    content_encoding: str,
+    decompress: Callable[[bytes], bytes],
+) -> None:
+    """A body above the threshold arrives at the server compressed with the algorithm the client was given."""
+    captured: list[Request] = []
+    httpserver.expect_request(_ITEMS_PATH, method='POST').respond_with_handler(_capture_body(captured))
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='test_token', api_url=api_url, compression=compression)
+
+    client.dataset('test_dataset_id').push_items(_LARGE_BODY)
+
+    assert len(captured) == 1
+    assert captured[0].headers['Content-Encoding'] == content_encoding
+    assert json.loads(decompress(captured[0].get_data())) == _LARGE_BODY
+
+
+@pytest.mark.parametrize(
+    ('compression', 'content_encoding', 'decompress'),
+    [
+        pytest.param('gzip', 'gzip', gzip.decompress, id='gzip'),
+        pytest.param('brotli', 'br', brotli.decompress, id='brotli'),
+    ],
+)
+async def test_configured_compression_reaches_the_wire_async(
+    httpserver: HTTPServer,
+    compression: HttpCompressionAlgorithm,
+    content_encoding: str,
+    decompress: Callable[[bytes], bytes],
+) -> None:
+    """Async variant of `test_configured_compression_reaches_the_wire_sync`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_ITEMS_PATH, method='POST').respond_with_handler(_capture_body(captured))
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='test_token', api_url=api_url, compression=compression)
+
+    await client.dataset('test_dataset_id').push_items(_LARGE_BODY)
+
+    assert len(captured) == 1
+    assert captured[0].headers['Content-Encoding'] == content_encoding
+    assert json.loads(decompress(captured[0].get_data())) == _LARGE_BODY

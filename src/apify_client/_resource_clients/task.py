@@ -10,6 +10,7 @@ from apify_client._models import (
     Task,
     TaskInput,
     TaskOptions,
+    TaskPublicConfig,
     TaskResponse,
     UpdateTaskRequest,
 )
@@ -83,6 +84,13 @@ class TaskClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        is_public: bool | None = None,
+        public_config_seo_title: str | None = None,
+        public_config_seo_description: str | None = None,
+        public_config_categorization: str | None = None,
+        public_config_input_schema_fields: list[str] | None = None,
+        public_config_dataset_name: str | None = None,
+        public_config_dataset_view: str | None = None,
         timeout: Timeout = 'short',
     ) -> Task:
         """Update the task with specified fields.
@@ -111,6 +119,16 @@ class TaskClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            is_public: Set to `True` to publish the task on its public landing page, or `False` to unpublish it.
+                Passing the value the task already has does nothing. Publishing requires the public display
+                configuration to be filled in, and write access to the task's Actor.
+            public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
+            public_config_seo_description: SEO description of the public task page. Defaults to the task description
+                when not set.
+            public_config_categorization: Use-case category of the public task.
+            public_config_input_schema_fields: Names of the task input fields displayed on the public task page.
+            public_config_dataset_name: Name of the dataset whose schema provides the views.
+            public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -123,6 +141,15 @@ class TaskClient(ResourceClient):
             name=name,
             title=title,
             input=task_input,
+            is_public=is_public,
+            public_config=TaskPublicConfig(
+                seo_title=public_config_seo_title,
+                seo_description=public_config_seo_description,
+                categorization=public_config_categorization,
+                input_schema_fields=public_config_input_schema_fields,
+                dataset_name=public_config_dataset_name,
+                dataset_view=public_config_dataset_view,
+            ),
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -140,6 +167,40 @@ class TaskClient(ResourceClient):
         )
         result = self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
+
+    def publish(self, *, timeout: Timeout = 'short') -> Task:
+        """Publish the task on its public landing page.
+
+        Convenience wrapper over `update` with `is_public` set to `True`. The task's Actor must be public and
+        the task must have its public display configuration set up. Requires write access to the task and to its
+        Actor. Publishing an already published task does nothing.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Returns:
+            The published task.
+        """
+        return self.update(is_public=True, timeout=timeout)
+
+    def unpublish(self, *, timeout: Timeout = 'short') -> Task:
+        """Unpublish the task from its public landing page.
+
+        Convenience wrapper over `update` with `is_public` set to `False`. The public display configuration is
+        preserved, so the task can be published again without re-entering it. Requires write access to the task
+        and to its Actor. Unpublishing a task that is not published does nothing.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Returns:
+            The unpublished task.
+        """
+        return self.update(is_public=False, timeout=timeout)
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the task.
@@ -406,6 +467,13 @@ class TaskClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        is_public: bool | None = None,
+        public_config_seo_title: str | None = None,
+        public_config_seo_description: str | None = None,
+        public_config_categorization: str | None = None,
+        public_config_input_schema_fields: list[str] | None = None,
+        public_config_dataset_name: str | None = None,
+        public_config_dataset_view: str | None = None,
         timeout: Timeout = 'short',
     ) -> Task:
         """Update the task with specified fields.
@@ -434,6 +502,16 @@ class TaskClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            is_public: Set to `True` to publish the task on its public landing page, or `False` to unpublish it.
+                Passing the value the task already has does nothing. Publishing requires the public display
+                configuration to be filled in, and write access to the task's Actor.
+            public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
+            public_config_seo_description: SEO description of the public task page. Defaults to the task description
+                when not set.
+            public_config_categorization: Use-case category of the public task.
+            public_config_input_schema_fields: Names of the task input fields displayed on the public task page.
+            public_config_dataset_name: Name of the dataset whose schema provides the views.
+            public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -446,6 +524,15 @@ class TaskClientAsync(ResourceClientAsync):
             name=name,
             title=title,
             input=task_input,
+            is_public=is_public,
+            public_config=TaskPublicConfig(
+                seo_title=public_config_seo_title,
+                seo_description=public_config_seo_description,
+                categorization=public_config_categorization,
+                input_schema_fields=public_config_input_schema_fields,
+                dataset_name=public_config_dataset_name,
+                dataset_view=public_config_dataset_view,
+            ),
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
@@ -463,6 +550,40 @@ class TaskClientAsync(ResourceClientAsync):
         )
         result = await self._update(timeout=timeout, **task_fields.model_dump(by_alias=True, exclude_none=True))
         return TaskResponse.model_validate(result).data
+
+    async def publish(self, *, timeout: Timeout = 'short') -> Task:
+        """Publish the task on its public landing page.
+
+        Convenience wrapper over `update` with `is_public` set to `True`. The task's Actor must be public and
+        the task must have its public display configuration set up. Requires write access to the task and to its
+        Actor. Publishing an already published task does nothing.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Returns:
+            The published task.
+        """
+        return await self.update(is_public=True, timeout=timeout)
+
+    async def unpublish(self, *, timeout: Timeout = 'short') -> Task:
+        """Unpublish the task from its public landing page.
+
+        Convenience wrapper over `update` with `is_public` set to `False`. The public display configuration is
+        preserved, so the task can be published again without re-entering it. Requires write access to the task
+        and to its Actor. Unpublishing a task that is not published does nothing.
+
+        https://docs.apify.com/api/v2#/reference/actor-tasks/task-object/update-task
+
+        Args:
+            timeout: Timeout for the API HTTP request.
+
+        Returns:
+            The unpublished task.
+        """
+        return await self.update(is_public=False, timeout=timeout)
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:
         """Delete the task.

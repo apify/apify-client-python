@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.1.2 - **not yet released**
+## [3.1.2](https://github.com/apify/apify-client-python/releases/tag/v3.1.2) (2026-08-10)
 
 ### 🐛 Bug Fixes
 
@@ -16,7 +15,6 @@ All notable changes to this project will be documented in this file.
 - Skip request-body compression for small payloads ([#988](https://github.com/apify/apify-client-python/pull/988)) ([6bd31b2](https://github.com/apify/apify-client-python/commit/6bd31b2abb840ea9af1efc98bf984c85b8510ce3)) by [@vdusek](https://github.com/vdusek), closes [#934](https://github.com/apify/apify-client-python/issues/934)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.1.1](https://github.com/apify/apify-client-python/releases/tag/v3.1.1) (2026-08-03)
 
 ### 🐛 Bug Fixes

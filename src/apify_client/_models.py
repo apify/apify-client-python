@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Any, Literal
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, RootModel
+from pydantic import AwareDatetime, BaseModel, ConfigDict, EmailStr, Field, RootModel
 from pydantic.alias_generators import to_camel
 
 from apify_client._docs import docs_group
@@ -989,9 +989,9 @@ class Dataset(BaseModel):
     """
     Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/storage/dataset-schema)
     """
-    console_url: Annotated[AnyUrl, Field(examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])]
+    console_url: Annotated[str, Field(examples=['https://console.apify.com/storage/datasets/27TmTznX9YPeAYhkC'])]
     items_public_url: Annotated[
-        AnyUrl | None, Field(examples=['https://api.apify.com/v2/datasets/WkzbQMuFYuamGv3YF/items?signature=abc123'])
+        str | None, Field(examples=['https://api.apify.com/v2/datasets/WkzbQMuFYuamGv3YF/items?signature=abc123'])
     ] = None
     """
     A public link to access the dataset items directly.
@@ -1522,17 +1522,17 @@ class KeyValueStore(BaseModel):
     act_id: Annotated[str | None, Field(examples=[None])] = None
     act_run_id: Annotated[str | None, Field(examples=[None])] = None
     console_url: Annotated[
-        AnyUrl | None, Field(examples=['https://console.apify.com/storage/key-value-stores/27TmTznX9YPeAYhkC'])
+        str | None, Field(examples=['https://console.apify.com/storage/key-value-stores/27TmTznX9YPeAYhkC'])
     ] = None
     keys_public_url: Annotated[
-        AnyUrl | None,
+        str | None,
         Field(examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/keys?signature=abc123']),
     ] = None
     """
     A public link to access keys of the key-value store directly.
     """
     records_public_url: Annotated[
-        AnyUrl | None, Field(examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/records'])
+        str | None, Field(examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/records'])
     ] = None
     """
     A public link to access records of the key-value store directly.
@@ -1559,7 +1559,7 @@ class KeyValueStoreKey(BaseModel):
     key: Annotated[str, Field(examples=['second-key'])]
     size: Annotated[int, Field(examples=[36])]
     record_public_url: Annotated[
-        AnyUrl,
+        str,
         Field(
             examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/records/some-key?signature=abc123']
         ),
@@ -2276,9 +2276,9 @@ class Profile(BaseModel):
     )
     bio: Annotated[str | None, Field(examples=['I started web scraping in 1985 using Altair BASIC.'])] = None
     name: Annotated[str | None, Field(examples=['Jane Doe'])] = None
-    picture_url: Annotated[AnyUrl | None, Field(examples=['https://apify.com/img/anonymous_user_picture.png'])] = None
+    picture_url: Annotated[str | None, Field(examples=['https://apify.com/img/anonymous_user_picture.png'])] = None
     github_username: Annotated[str | None, Field(examples=['torvalds.'])] = None
-    website_url: Annotated[AnyUrl | None, Field(examples=['http://www.example.com'])] = None
+    website_url: Annotated[str | None, Field(examples=['http://www.example.com'])] = None
     twitter_username: Annotated[str | None, Field(examples=['@BillGates'])] = None
 
 
@@ -2617,7 +2617,7 @@ class RequestQueue(BaseModel):
     """
     Whether the request queue has been accessed by multiple different clients.
     """
-    console_url: Annotated[AnyUrl, Field(examples=['https://api.apify.com/v2/request-queues/27TmTznX9YPeAYhkC'])]
+    console_url: Annotated[str, Field(examples=['https://api.apify.com/v2/request-queues/27TmTznX9YPeAYhkC'])]
     """
     The URL to view the request queue in the Apify console.
     """
@@ -2936,7 +2936,7 @@ class Run(BaseModel):
     """
     Build number of the Actor build used for this run.
     """
-    container_url: Annotated[AnyUrl | None, Field(examples=['https://g8kd8kbc5ge8.runs.apify.net'])] = None
+    container_url: Annotated[str | None, Field(examples=['https://g8kd8kbc5ge8.runs.apify.net'])] = None
     """
     URL of the container running the Actor.
     """
@@ -3423,9 +3423,9 @@ class StoreListActor(BaseModel):
     description: Annotated[str | None, Field(examples=['My public actor!'])] = None
     categories: Annotated[list[str] | None, Field(examples=[['MARKETING', 'LEAD_GENERATION']])] = None
     notice: ActorNotice | None = None
-    picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
-    user_picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
-    url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
+    picture_url: Annotated[str | None, Field(examples=['https://...'])] = None
+    user_picture_url: Annotated[str | None, Field(examples=['https://...'])] = None
+    url: Annotated[str | None, Field(examples=['https://...'])] = None
     stats: ActorStats
     current_pricing_info: CurrentPricingInfo | None = None
     is_white_listed_for_agentic_payments: bool | None = None
@@ -3491,7 +3491,7 @@ class Task(BaseModel):
     input: TaskInput | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
-    standby_url: AnyUrl | None = None
+    standby_url: str | None = None
 
 
 @docs_group('Models')
@@ -3955,7 +3955,7 @@ class Webhook(BaseModel):
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
     do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    request_url: Annotated[str | None, Field(examples=['http://example.com/'])] = None
     """
     URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
     """
@@ -4032,7 +4032,7 @@ class WebhookDispatchWebhookSummary(BaseModel):
     )
     action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
     condition: WebhookCondition | None = None
-    request_url: Annotated[AnyUrl | None, Field(examples=['https://example.com/webhook'])] = None
+    request_url: Annotated[str | None, Field(examples=['https://example.com/webhook'])] = None
     """
     URL of the HTTP request sent by the webhook. It is `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
     """
@@ -4115,7 +4115,7 @@ class WebhookShort(BaseModel):
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
     do_not_retry: Annotated[bool, Field(examples=[False])]
-    request_url: Annotated[AnyUrl, Field(examples=['http://example.com/'])]
+    request_url: Annotated[str, Field(examples=['http://example.com/'])]
     last_dispatch: ExampleWebhookDispatch | None = None
     stats: WebhookStats | None = None
 
@@ -4142,7 +4142,7 @@ class WebhookUpdate(BaseModel):
     condition: WebhookCondition | None = None
     ignore_ssl_errors: Annotated[bool | None, Field(examples=[False])] = None
     do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    request_url: Annotated[str | None, Field(examples=['http://example.com/'])] = None
     payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
     headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
     description: Annotated[str | None, Field(examples=['this is webhook description'])] = None

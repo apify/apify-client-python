@@ -883,6 +883,13 @@ class CreateTaskRequest(BaseModel):
     input: TaskInput | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
+    public_config: TaskPublicConfig | None = None
+    """
+    Public-facing display configuration of the task's public landing page. The task is not
+    published by setting it — set `isPublic` via the [Update task](https://docs.apify.com/api/v2/actor-task-put)
+    endpoint for that. Setting `publicConfig` requires write permission to the task's Actor.
+
+    """
 
 
 @docs_group('Models')
@@ -1330,6 +1337,10 @@ class EnvVarRequest(EnvVar):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    value: Annotated[str, Field(examples=['my-value'])]
+    """
+    The value of the environment variable. If `isSecret` is `true`, this value isn't returned by the API.
+    """
 
 
 @docs_group('Models')
@@ -3492,6 +3503,13 @@ class Task(BaseModel):
     title: str | None = None
     actor_standby: ActorStandby | None = None
     standby_url: AnyUrl | None = None
+    is_public: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the task is published on its public landing page. Derived from
+    `publicConfig.publishedAt`. Set it via the [Update task](https://docs.apify.com/api/v2/actor-task-put)
+    endpoint to publish or unpublish the task.
+
+    """
     public_config: TaskPublicConfig | None = None
 
 
@@ -3540,9 +3558,8 @@ class TaskPublicConfig(BaseModel):
     published_at: Annotated[AwareDatetime | None, Field(examples=['2025-06-16T09:20:45.777Z'])] = None
     """
     Time when the task was published, or `null` if the task is not published.
-    This field is server-controlled - to publish or unpublish a task, use the
-    [Publish task](https://docs.apify.com/api/v2/actor-task-publish-post) and
-    [Unpublish task](https://docs.apify.com/api/v2/actor-task-unpublish-post) endpoints.
+    This field is server-controlled - to publish or unpublish a task, set `isPublic`
+    via the [Update task](https://docs.apify.com/api/v2/actor-task-put) endpoint.
 
     """
     seo_title: Annotated[str | None, Field(examples=['Scrape data from a website'])] = None
@@ -3849,11 +3866,17 @@ class UpdateTaskRequest(BaseModel):
     public_config: TaskPublicConfig | None = None
     """
     Public-facing display configuration of the task's public landing page. The provided
-    fields are merged into the stored configuration and validated.
-    [Publish task](https://docs.apify.com/api/v2/actor-task-publish-post) and
-    [Unpublish task](https://docs.apify.com/api/v2/actor-task-unpublish-post) endpoints to change the
-    publication state. Updating `publicConfig` requires write permission to the task's
-    Actor.
+    fields are merged into the stored configuration and validated. The stored configuration
+    cannot be cleared this way. Set `isPublic` to change the publication state.
+    Updating `publicConfig` requires write permission to the task's Actor.
+
+    """
+    is_public: Annotated[bool | None, Field(examples=[True])] = None
+    """
+    Set to `true` to publish the task on its public landing page, or `false` to unpublish it.
+    Sending the value the task already has does nothing. Publishing requires the task's
+    `publicConfig` to be filled in and write permission to the task's Actor; it fails if the
+    task is not ready to be published, leaving the rest of the update unapplied.
 
     """
 

@@ -308,8 +308,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         """Create a new task.
 
         The `public_config_*` arguments set the public display configuration of the task's landing page, which
-        requires write access to the task's Actor. Setting them does not publish the task - use
-        `TaskClientAsync.publish` for that.
+        requires write access to the task's Actor and the Task itself. Use `TaskClientAsync.publish` for publishing.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 

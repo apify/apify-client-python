@@ -83,7 +83,7 @@ class ImpitHttpClient(HttpClient):
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Caps exponential timeout growth across retries. A larger base timeout is honored, not clamped.
+            timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             max_retries: Maximum number of retry attempts for failed requests.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -130,8 +130,8 @@ class ImpitHttpClient(HttpClient):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -332,7 +332,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Caps exponential timeout growth across retries. A larger base timeout is honored, not clamped.
+            timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             max_retries: Maximum number of retry attempts for failed requests.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -379,8 +379,8 @@ class ImpitHttpClientAsync(HttpClientAsync):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.

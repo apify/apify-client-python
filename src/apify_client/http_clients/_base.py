@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as jsonlib
+import logging
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -18,6 +19,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_SHORT,
 )
 from apify_client._docs import docs_group
+from apify_client._logging import logger_name
 from apify_client._statistics import ClientStatistics
 from apify_client._utils.time import to_seconds
 from apify_client.http_compressors._gzip import GzipHttpCompressor
@@ -27,6 +29,8 @@ if TYPE_CHECKING:
 
     from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import JsonSerializable, Timeout
+
+logger = logging.getLogger(logger_name)
 
 
 @docs_group('HTTP clients')
@@ -110,7 +114,7 @@ class HttpClientBase:
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Caps exponential timeout growth across retries. A larger base timeout is honored, not clamped.
+            timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             max_retries: Maximum number of retries for failed requests.
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -198,8 +202,8 @@ class HttpClientBase:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
         For `no_timeout`, returns `None` to indicate no timeout. For tier literals and explicit `timedelta` values,
-        doubles the timeout with each attempt, capping exponential growth at `timeout_max` but never below the
-        resolved base timeout (so an explicit `timedelta` larger than `timeout_max` is honored).
+        doubles the timeout with each attempt but caps at `timeout_max`. A base timeout above `timeout_max` is
+        capped too, which logs a warning since the requested value does not take effect in full.
 
         Args:
             timeout: The timeout specification to resolve (tier literal or explicit `timedelta`).
@@ -220,9 +224,15 @@ class HttpClientBase:
         else:
             resolved = timeout
 
-        # `timeout_max` caps exponential growth across retries, but must never shrink the resolved base
-        # timeout itself - an explicit `timedelta` larger than `timeout_max` overrides it for the call.
-        new_timeout = min(resolved * (2 ** (attempt - 1)), max(self._timeout_max, resolved))
+        # Warn once per call, not once per attempt.
+        if attempt == 1 and resolved > self._timeout_max:
+            logger.warning(
+                f'The requested timeout of {to_seconds(resolved)}s exceeds `timeout_max` '
+                f'({to_seconds(self._timeout_max)}s) and is capped at it. Raise `timeout_max` on the client '
+                'to allow longer request timeouts.'
+            )
+
+        new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
         return to_seconds(new_timeout)
 
     def _prepare_request_call(
@@ -315,8 +325,8 @@ class HttpClient(HttpClientBase, ABC):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -359,8 +369,8 @@ class HttpClientAsync(HttpClientBase, ABC):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.

@@ -19,7 +19,7 @@ from apify_client._consts import (
     DEFAULT_TIMEOUT_SHORT,
 )
 from apify_client._docs import docs_group
-from apify_client._logging import logger_name
+from apify_client._logging import LoggerOnce, logger_name
 from apify_client._statistics import ClientStatistics
 from apify_client._utils.time import to_seconds
 from apify_client.http_compressors._gzip import GzipHttpCompressor
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from apify_client.types import JsonSerializable, Timeout
 
 logger = logging.getLogger(logger_name)
+logger_once = LoggerOnce(logger)
 
 
 @docs_group('HTTP clients')
@@ -203,7 +204,7 @@ class HttpClientBase:
 
         For `no_timeout`, returns `None` to indicate no timeout. For tier literals and explicit `timedelta` values,
         doubles the timeout with each attempt but caps at `timeout_max`. A base timeout above `timeout_max` is
-        capped too, which logs a warning since the requested value does not take effect in full.
+        capped too, which warns once per timeout kind since the requested value does not take effect in full.
 
         Args:
             timeout: The timeout specification to resolve (tier literal or explicit `timedelta`).
@@ -224,12 +225,14 @@ class HttpClientBase:
         else:
             resolved = timeout
 
-        # Warn once per call, not once per attempt.
-        if attempt == 1 and resolved > self._timeout_max:
-            logger.warning(
+        if resolved > self._timeout_max:
+            # Keyed per timeout kind, so retries and repeated calls do not spam the log with the same warning.
+            logger_once.log(
                 f'The requested timeout of {to_seconds(resolved)}s exceeds `timeout_max` '
                 f'({to_seconds(self._timeout_max)}s) and is capped at it. Raise `timeout_max` on the client '
-                'to allow longer request timeouts.'
+                'to allow longer request timeouts.',
+                key=f'timeout-capped-{timeout if isinstance(timeout, str) else "explicit"}',
+                level=logging.WARNING,
             )
 
         new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)

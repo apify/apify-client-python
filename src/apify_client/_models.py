@@ -1330,6 +1330,10 @@ class EnvVarRequest(EnvVar):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    value: Annotated[str, Field(examples=['my-value'])]
+    """
+    The value of the environment variable. If `isSecret` is `true`, this value isn't returned by the API.
+    """
 
 
 @docs_group('Models')

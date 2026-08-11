@@ -39,7 +39,7 @@ class RequestBaseDict(TypedDict):
     """
     Indicates whether the request should not be retried if processing fails.
     """
-    error_messages: NotRequired[list[str]]
+    error_messages: NotRequired[list[str] | None]
     """
     Error messages recorded from failed processing attempts.
     """
@@ -81,7 +81,7 @@ class RequestBaseCamelDict(TypedDict):
     """
     Indicates whether the request should not be retried if processing fails.
     """
-    errorMessages: NotRequired[list[str]]
+    errorMessages: NotRequired[list[str] | None]
     """
     Error messages recorded from failed processing attempts.
     """

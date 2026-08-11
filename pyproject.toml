@@ -255,7 +255,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-07-28T083939Z"
+version = "v2-2026-08-05T133145Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
@@ -7,10 +8,14 @@ from unittest.mock import Mock
 import pytest
 from impit import HTTPError, Response, TimeoutException
 
+from apify_client._logging import LoggerOnce, logger_name
 from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients import _base as http_client_base
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+    from _pytest.logging import LogCaptureFixture
 
 
 class EndOfTestError(Exception):
@@ -32,6 +37,12 @@ def patch_request(monkeypatch: pytest.MonkeyPatch) -> Iterator[list]:
     monkeypatch.setattr('impit.AsyncClient.request', mock_request_async)
     yield timeouts
     monkeypatch.undo()
+
+
+@pytest.fixture
+def fresh_logger_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace the module-level `LoggerOnce`, whose dedup state would otherwise leak between tests."""
+    monkeypatch.setattr(http_client_base, 'logger_once', LoggerOnce(http_client_base.logger))
 
 
 def test_no_timeout_passes_large_value_to_impit_sync(patch_request: list) -> None:
@@ -147,6 +158,47 @@ def test_compute_timeout_no_timeout_returns_none() -> None:
     """Test _compute_timeout with 'no_timeout' returns None."""
     client = ImpitHttpClient()
     assert client._compute_timeout('no_timeout', attempt=1) is None
+
+
+@pytest.mark.usefixtures('fresh_logger_once')
+def test_compute_timeout_explicit_timedelta_above_max_warns(caplog: LogCaptureFixture) -> None:
+    """Test an explicit timedelta larger than timeout_max is capped, and the cut-off is logged once."""
+    client = ImpitHttpClient(timeout_max=timedelta(seconds=360))
+
+    with caplog.at_level(logging.WARNING, logger=logger_name):
+        assert client._compute_timeout(timedelta(minutes=30), attempt=1) == 360.0
+        # Retries and later calls recompute the timeout, which must not repeat the warning.
+        assert client._compute_timeout(timedelta(minutes=30), attempt=2) == 360.0
+        assert client._compute_timeout(timedelta(minutes=45), attempt=1) == 360.0
+
+    assert len(caplog.records) == 1
+    assert '1800.0s exceeds `timeout_max` (360.0s)' in caplog.records[0].message
+
+
+@pytest.mark.usefixtures('fresh_logger_once')
+def test_compute_timeout_tier_above_max_warns(caplog: LogCaptureFixture) -> None:
+    """Test a tier configured larger than timeout_max is capped, and the cut-off is logged too."""
+    client = ImpitHttpClient(timeout_long=timedelta(seconds=600), timeout_max=timedelta(seconds=360))
+
+    with caplog.at_level(logging.WARNING, logger=logger_name):
+        assert client._compute_timeout('long', attempt=1) == 360.0
+
+    assert len(caplog.records) == 1
+    assert '600.0s exceeds `timeout_max` (360.0s)' in caplog.records[0].message
+
+
+@pytest.mark.usefixtures('fresh_logger_once')
+def test_compute_timeout_within_max_does_not_warn(caplog: LogCaptureFixture) -> None:
+    """Test a base timeout within timeout_max is used as-is, without a warning."""
+    client = ImpitHttpClient(timeout_long=timedelta(seconds=300), timeout_max=timedelta(seconds=360))
+
+    with caplog.at_level(logging.WARNING, logger=logger_name):
+        assert client._compute_timeout(timedelta(seconds=120), attempt=1) == 120.0
+        assert client._compute_timeout('long', attempt=1) == 300.0
+        # Growth capped at `timeout_max` on a retry is expected, so it is not warned about.
+        assert client._compute_timeout('long', attempt=2) == 360.0
+
+    assert caplog.records == []
 
 
 async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> None:

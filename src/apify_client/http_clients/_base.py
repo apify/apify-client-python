@@ -98,6 +98,7 @@ class HttpResponse(Protocol):
         """Iterate over the response body in bytes chunks asynchronously."""
 
 
+@docs_group('HTTP clients')
 class HttpClientBase:
     """Shared configuration and utilities for HTTP clients.
 

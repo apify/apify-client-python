@@ -43,7 +43,6 @@ class ImpitHttpClient(HttpClient):
     with exponential backoff for rate-limited (HTTP 429) and server error (HTTP 5xx) responses.
     """
 
-    @override
     def __init__(
         self,
         *,
@@ -95,9 +94,9 @@ class ImpitHttpClient(HttpClient):
     def close(self) -> None:
         """Release resources owned by this client.
 
-        Impit doesn't expose a way to close its connection pool, and its `__exit__` keeps the client usable,
-        so there is nothing to release yet. The method exists so the lifecycle interface is the same for every
-        transport, and it will do real work once Impit supports it.
+        Delegates to Impit's own teardown, which releases nothing and leaves the client usable, because Impit
+        doesn't expose a way to close its connection pool. Routing through it keeps this client correct once
+        Impit does.
         """
         self._impit_client.__exit__(None, None, None)
 
@@ -143,7 +142,6 @@ class ImpitHttpClientAsync(HttpClientAsync):
     with exponential backoff for rate-limited (HTTP 429) and server error (HTTP 5xx) responses.
     """
 
-    @override
     def __init__(
         self,
         *,
@@ -195,7 +193,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
     async def aclose(self) -> None:
         """Release resources owned by this client.
 
-        See `ImpitHttpClient.close` for why there is nothing to release yet.
+        See `ImpitHttpClient.close` for what Impit's teardown does.
         """
         await self._impit_async_client.__aexit__(None, None, None)
 

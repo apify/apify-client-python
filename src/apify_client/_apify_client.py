@@ -595,7 +595,7 @@ class ApifyClientAsync:
 
         client = ApifyClientAsync.with_custom_http_client(
             token='MY-APIFY-TOKEN',
-            http_client=MyHttpClient(),
+            http_client=MyHttpClientAsync(),
         )
         ```
 

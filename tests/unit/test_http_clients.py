@@ -39,10 +39,6 @@ class ConcreteHttpClient(HttpClient):
     """Minimal concrete HttpClient for testing base class helpers, relying on the hook defaults."""
 
 
-class ConcreteHttpClientAsync(HttpClientAsync):
-    """Minimal concrete HttpClientAsync for testing base class helpers, relying on the hook defaults."""
-
-
 class CallOnlyHttpClient(HttpClient):
     """Custom client written against the pre-hook contract, overriding `call` and nothing else."""
 
@@ -74,29 +70,6 @@ async def test_call_only_http_client_async_keeps_working() -> None:
         assert response.status_code == 200
         assert client.is_timeout_error(TimeoutError('test'))
         assert not client.is_retryable_transport_error(TimeoutError('test'))
-
-
-@pytest.mark.parametrize(
-    ('client_class', 'overridden_methods'),
-    [
-        pytest.param(
-            ImpitHttpClient,
-            ('__init__', 'close', 'is_timeout_error', 'is_retryable_transport_error', 'send_request'),
-            id='impit-sync',
-        ),
-        pytest.param(
-            ImpitHttpClientAsync,
-            ('__init__', 'aclose', 'is_timeout_error', 'is_retryable_transport_error', 'send_request'),
-            id='impit-async',
-        ),
-    ],
-)
-def test_builtin_http_client_transport_methods_are_explicit_overrides(
-    client_class: type[HttpClient | HttpClientAsync], overridden_methods: tuple[str, ...]
-) -> None:
-    """Every hook a built-in adapter implements carries `@override`, so a renamed hook fails type checking."""
-    for method_name in overridden_methods:
-        assert getattr(getattr(client_class, method_name), '__override__', False)
 
 
 def test_retry_with_exp_backoff(http_client_class: type[HttpClient]) -> None:

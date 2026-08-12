@@ -18,7 +18,7 @@ def successful_response() -> Mock:
 
 
 def test_generic_http_error_is_retried(monkeypatch: MonkeyPatch) -> None:
-    """A bare Impit HTTPError from a truncated body remains retryable (regression coverage)."""
+    """A bare Impit HTTPError from a truncated body remains retryable."""
     client = ImpitHttpClient(min_delay_between_retries=timedelta(0))
     send_request = Mock(
         side_effect=[impit.HTTPError('unexpected EOF'), impit.HTTPError('unexpected EOF'), successful_response()]
@@ -32,7 +32,7 @@ def test_generic_http_error_is_retried(monkeypatch: MonkeyPatch) -> None:
 
 
 async def test_generic_http_error_is_retried_async(monkeypatch: MonkeyPatch) -> None:
-    """The async Impit adapter retains the same generic HTTPError retry regression coverage."""
+    """The async Impit adapter treats a bare HTTPError from a truncated body the same way."""
     client = ImpitHttpClientAsync(min_delay_between_retries=timedelta(0))
     send_request = AsyncMock(
         side_effect=[impit.HTTPError('unexpected EOF'), impit.HTTPError('unexpected EOF'), successful_response()]
@@ -60,7 +60,9 @@ def test_permanent_transport_error_is_not_retried(monkeypatch: MonkeyPatch) -> N
 def test_error_response_read_failure_uses_transport_retry_policy(monkeypatch: MonkeyPatch) -> None:
     """Failures while reading a streamed 5xx error body are classified and retried like send failures."""
     client = ImpitHttpClient(max_retries=1, min_delay_between_retries=timedelta(0))
-    responses = [Mock(status_code=500, read=Mock(side_effect=impit.ReadError('truncated'))) for _ in range(2)]
+    responses = [
+        Mock(status_code=500, read=Mock(side_effect=impit.ReadError('truncated')), close=Mock()) for _ in range(2)
+    ]
     send_request = Mock(side_effect=responses)
     monkeypatch.setattr(client, 'send_request', send_request)
 
@@ -68,12 +70,17 @@ def test_error_response_read_failure_uses_transport_retry_policy(monkeypatch: Mo
         client.call(method='GET', url='https://example.com', stream=True)
 
     assert send_request.call_count == 2
+    for response in responses:
+        response.close.assert_called_once()
 
 
 async def test_error_response_read_failure_uses_transport_retry_policy_async(monkeypatch: MonkeyPatch) -> None:
     """The async base also classifies failures while buffering streamed error responses."""
     client = ImpitHttpClientAsync(max_retries=1, min_delay_between_retries=timedelta(0))
-    responses = [Mock(status_code=500, aread=AsyncMock(side_effect=impit.ReadError('truncated'))) for _ in range(2)]
+    responses = [
+        Mock(status_code=500, aread=AsyncMock(side_effect=impit.ReadError('truncated')), aclose=AsyncMock())
+        for _ in range(2)
+    ]
     send_request = AsyncMock(side_effect=responses)
     monkeypatch.setattr(client, 'send_request', send_request)
 
@@ -81,3 +88,5 @@ async def test_error_response_read_failure_uses_transport_retry_policy_async(mon
         await client.call(method='GET', url='https://example.com', stream=True)
 
     assert send_request.call_count == 2
+    for response in responses:
+        response.aclose.assert_awaited_once()

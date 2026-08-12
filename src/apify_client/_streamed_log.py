@@ -161,7 +161,7 @@ class StreamedLog(StreamedLogBase):
                     self._log_buffer_content(include_last_part=True)
         except Exception as exc:
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
-                # The stream cannot continue, so warn and let the thread end instead of leaking a traceback (#1040).
+                # The stream cannot continue, so warn and let the thread end instead of leaking a traceback.
                 self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
             else:
                 # Any other failure in log redirection must not escape the background thread; log it instead.

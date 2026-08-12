@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from urllib.parse import urlencode
 
 # `Protocol` comes from `typing_extensions`, not `typing`, because its runtime `isinstance` check looks attributes
-# up statically. The `typing` implementation on Python 3.11 calls `hasattr`, which evaluates properties: on an
-# unread streaming response that either raises or silently buffers the whole body.
+# up statically. The `typing` implementation on Python 3.11 calls `hasattr`, which evaluates properties. On an
+# unread streaming response, that either raises or silently buffers the whole body.
 from typing_extensions import Protocol, runtime_checkable
 
 from apify_client._consts import (
@@ -182,6 +182,15 @@ class HttpClientBase:
         library defines.
         """
         return isinstance(exc, TimeoutError)
+
+    def is_retryable_transport_error(self, exc: Exception) -> bool:
+        """Return whether an underlying HTTP-library exception is retryable.
+
+        The default classifies nothing as retryable, so a transport that doesn't override it gives up on the first
+        connection failure. Every transport adapter should map its own transient error types here.
+        """
+        _ = exc
+        return False
 
     @staticmethod
     def _merge_headers(base: dict[str, str] | None, override: dict[str, str] | None) -> dict[str, str]:
@@ -357,15 +366,6 @@ class HttpClientBase:
             logger.debug('Exception is not retryable', exc_info=exc)
             stop_retrying()
 
-    def is_retryable_transport_error(self, exc: Exception) -> bool:
-        """Return whether an underlying HTTP-library exception is retryable.
-
-        The default classifies nothing as retryable, so a transport that doesn't override it gives up on the first
-        connection failure. Every transport adapter should map its own transient error types here.
-        """
-        _ = exc
-        return False
-
     @staticmethod
     def _is_transient_transport_error(
         exc: Exception,
@@ -392,10 +392,23 @@ class HttpClient(HttpClientBase):
     defaults. Replacing `call` itself also remains supported, and then none of the hooks are used. Helper methods
     from `HttpClientBase` remain available for request preparation, URL building, and parameter parsing.
 
-    Implementations must send the client's default headers from `self._headers` with every request,
-    otherwise the `Authorization` header never reaches the API. The `_prepare_request_call` helper
-    merges them into the per-request headers automatically.
+    The client's default headers from `self._headers` have to go out with every request, otherwise the
+    `Authorization` header never reaches the API. The inherited `call` merges them into the per-request headers
+    through `_prepare_request_call`, so only a client that replaces `call` has to do it itself.
     """
+
+    def __enter__(self) -> Self:
+        """Return this client and close it when the context exits."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Close resources owned by the HTTP client."""
+        self.close()
 
     def call(
         self,
@@ -464,18 +477,22 @@ class HttpClient(HttpClientBase):
         Transports that own a connection pool or a session override it. The default does nothing.
         """
 
-    def __enter__(self) -> Self:
-        """Return this client and close it when the context exits."""
-        return self
-
-    def __exit__(
+    def send_request(
         self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Close resources owned by the HTTP client."""
-        self.close()
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        content: bytes | None,
+        timeout: float | None,
+        stream: bool,
+    ) -> HttpResponse:
+        """Send one request through the underlying HTTP library.
+
+        Required by the inherited `call`, so a transport adapter must implement it. Overriding `call` itself
+        bypasses it entirely.
+        """
+        raise NotImplementedError
 
     @staticmethod
     def _retry_with_exp_backoff(
@@ -569,23 +586,6 @@ class HttpClient(HttpClientBase):
 
         raise ApifyApiError(response, attempt, method=method)
 
-    def send_request(
-        self,
-        *,
-        method: str,
-        url: str,
-        headers: dict[str, str],
-        content: bytes | None,
-        timeout: float | None,
-        stream: bool,
-    ) -> HttpResponse:
-        """Send one request through the underlying HTTP library.
-
-        Required by the inherited `call`, so a transport adapter must implement it. Overriding `call` itself
-        bypasses it entirely.
-        """
-        raise NotImplementedError
-
 
 @docs_group('HTTP clients')
 class HttpClientAsync(HttpClientBase):
@@ -594,6 +594,19 @@ class HttpClientAsync(HttpClientBase):
     Extend this class to create a custom asynchronous HTTP client. See `HttpClient`
     for details on the expected behavior.
     """
+
+    async def __aenter__(self) -> Self:
+        """Return this client and close it when the async context exits."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Close resources owned by the asynchronous HTTP client."""
+        await self.aclose()
 
     async def call(
         self,
@@ -675,18 +688,22 @@ class HttpClientAsync(HttpClientBase):
         Transports that own a connection pool or a session override it. The default does nothing.
         """
 
-    async def __aenter__(self) -> Self:
-        """Return this client and close it when the async context exits."""
-        return self
-
-    async def __aexit__(
+    async def send_request(
         self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Close resources owned by the asynchronous HTTP client."""
-        await self.aclose()
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        content: bytes | None,
+        timeout: float | None,
+        stream: bool,
+    ) -> HttpResponse:
+        """Send one request through the underlying HTTP library.
+
+        Required by the inherited `call`, so a transport adapter must implement it. Overriding `call` itself
+        bypasses it entirely.
+        """
+        raise NotImplementedError
 
     @staticmethod
     async def _retry_with_exp_backoff(
@@ -779,20 +796,3 @@ class HttpClientAsync(HttpClientBase):
             raise
 
         raise ApifyApiError(response, attempt, method=method)
-
-    async def send_request(
-        self,
-        *,
-        method: str,
-        url: str,
-        headers: dict[str, str],
-        content: bytes | None,
-        timeout: float | None,
-        stream: bool,
-    ) -> HttpResponse:
-        """Send one request through the underlying HTTP library.
-
-        Required by the inherited `call`, so a transport adapter must implement it. Overriding `call` itself
-        bypasses it entirely.
-        """
-        raise NotImplementedError

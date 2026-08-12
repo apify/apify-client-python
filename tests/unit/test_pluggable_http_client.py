@@ -77,8 +77,8 @@ def _make_fake_response() -> FakeResponse:
 class FakeHttpClient(HttpClient):
     """A custom sync HTTP client for testing."""
 
-    def __init__(self, *, token: str | None = None) -> None:
-        super().__init__(token=token)
+    def __init__(self) -> None:
+        super().__init__()
         self.calls: list[dict[str, Any]] = []
 
     def call(
@@ -111,8 +111,8 @@ class FakeHttpClient(HttpClient):
 class FakeHttpClientAsync(HttpClientAsync):
     """A custom async HTTP client for testing."""
 
-    def __init__(self, *, token: str | None = None) -> None:
-        super().__init__(token=token)
+    def __init__(self) -> None:
+        super().__init__()
         self.calls: list[dict[str, Any]] = []
 
     async def call(
@@ -335,7 +335,7 @@ async def test_apify_client_async_http_client_property_returns_correct_type() ->
 # -- Error handling with custom http_client --
 
 
-class ErrorRaisingHttpClient(FakeHttpClient):
+class ErrorRaisingHttpClient(HttpClient):
     """A custom HTTP client that raises ApifyApiError."""
 
     def call(self, *, method: str, **_kwargs: Any) -> FakeResponse:
@@ -357,7 +357,7 @@ def test_custom_http_client_error_handling() -> None:
     assert result is None
 
 
-class ErrorRaisingHttpClientAsync(FakeHttpClientAsync):
+class ErrorRaisingHttpClientAsync(HttpClientAsync):
     """A custom async HTTP client that raises ApifyApiError."""
 
     async def call(self, *, method: str, **_kwargs: Any) -> FakeResponse:
@@ -391,7 +391,7 @@ def test_custom_http_client_with_real_server(httpserver: HTTPServer, http_client
     # Create a wrapping client that adds custom headers
     inner_client = http_client_class(token='test_token')
 
-    class WrappingHttpClient(FakeHttpClient):
+    class WrappingHttpClient(HttpClient):
         def call(self, *, method: str, url: str, **kwargs: Any) -> HttpResponse:
             if kwargs.get('headers') is None:
                 kwargs['headers'] = {}
@@ -419,7 +419,7 @@ async def test_custom_http_client_async_with_real_server(
     # Create a wrapping client that adds custom headers
     inner_client = http_client_async_class(token='test_token')
 
-    class WrappingHttpClientAsync(FakeHttpClientAsync):
+    class WrappingHttpClientAsync(HttpClientAsync):
         async def call(self, *, method: str, url: str, **kwargs: Any) -> HttpResponse:
             if kwargs.get('headers') is None:
                 kwargs['headers'] = {}
@@ -438,7 +438,7 @@ async def test_custom_http_client_async_with_real_server(
     assert result['data']['id'] == 'test-dataset'
 
 
-class PreparingHttpClient(FakeHttpClient):
+class PreparingHttpClient(HttpClient):
     """A custom sync HTTP client that sends requests prepared by the base-class helpers."""
 
     def __init__(self, token: str | None = None) -> None:
@@ -461,7 +461,7 @@ class PreparingHttpClient(FakeHttpClient):
         return self._impit_client.request(method=method, url=url, headers=headers, content=content)
 
 
-class PreparingHttpClientAsync(FakeHttpClientAsync):
+class PreparingHttpClientAsync(HttpClientAsync):
     """A custom async HTTP client that sends requests prepared by the base-class helpers."""
 
     def __init__(self, token: str | None = None) -> None:

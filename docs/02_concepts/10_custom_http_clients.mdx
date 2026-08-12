@@ -86,7 +86,8 @@ The public `call` method provides the shared request pipeline. A concrete transp
 - `is_retryable_transport_error(exc)` classifies transport failures for the shared retry loop. The default classifies
   nothing as retryable, so a transport that skips it gives up on the first connection failure.
 - `is_timeout_error(exc)` identifies transport-specific timeout exceptions for higher-level client features. The
-  default recognizes Python's `TimeoutError`.
+  default recognizes Python's `TimeoutError`. Timeout classification is independent of retryability, so a timeout
+  the retry loop should retry has to be listed in `is_retryable_transport_error` too.
 - `close()` or `aclose()` closes resources owned by the transport. The default does nothing, which is correct for a
   transport that owns no pool or session.
 

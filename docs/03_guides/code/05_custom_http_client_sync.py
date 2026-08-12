@@ -75,7 +75,6 @@ class RequestsResponse:
 class RequestsHttpClient(HttpClient):
     """Minimal custom synchronous HTTP client backed by requests."""
 
-    @override
     def __init__(self) -> None:
         super().__init__()
         self._session = requests.Session()

@@ -80,7 +80,6 @@ class AiohttpResponse:
 class AiohttpHttpClient(HttpClientAsync):
     """Minimal custom asynchronous HTTP client backed by aiohttp."""
 
-    @override
     def __init__(self) -> None:
         super().__init__()
         self._session = aiohttp.ClientSession()

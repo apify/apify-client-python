@@ -87,7 +87,6 @@ class TaskClient(ResourceClient):
         is_public: bool | None = None,
         public_config_seo_title: str | None = None,
         public_config_seo_description: str | None = None,
-        public_config_categorization: str | None = None,
         public_config_input_schema_fields: list[str] | None = None,
         public_config_dataset_name: str | None = None,
         public_config_dataset_view: str | None = None,
@@ -125,9 +124,9 @@ class TaskClient(ResourceClient):
             public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
             public_config_seo_description: SEO description of the public task page. Defaults to the task description
                 when not set.
-            public_config_categorization: Use-case category of the public task.
             public_config_input_schema_fields: Names of the task input fields displayed on the public task page.
-            public_config_dataset_name: Name of the dataset whose schema provides the views.
+            public_config_dataset_name: Name of the dataset from the Actor's dataset schema whose results are
+                displayed on the public task page.
             public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
 
@@ -145,7 +144,6 @@ class TaskClient(ResourceClient):
             public_config=TaskPublicConfig(
                 seo_title=public_config_seo_title,
                 seo_description=public_config_seo_description,
-                categorization=public_config_categorization,
                 input_schema_fields=public_config_input_schema_fields,
                 dataset_name=public_config_dataset_name,
                 dataset_view=public_config_dataset_view,
@@ -470,7 +468,6 @@ class TaskClientAsync(ResourceClientAsync):
         is_public: bool | None = None,
         public_config_seo_title: str | None = None,
         public_config_seo_description: str | None = None,
-        public_config_categorization: str | None = None,
         public_config_input_schema_fields: list[str] | None = None,
         public_config_dataset_name: str | None = None,
         public_config_dataset_view: str | None = None,
@@ -508,9 +505,9 @@ class TaskClientAsync(ResourceClientAsync):
             public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
             public_config_seo_description: SEO description of the public task page. Defaults to the task description
                 when not set.
-            public_config_categorization: Use-case category of the public task.
             public_config_input_schema_fields: Names of the task input fields displayed on the public task page.
-            public_config_dataset_name: Name of the dataset whose schema provides the views.
+            public_config_dataset_name: Name of the dataset from the Actor's dataset schema whose results are
+                displayed on the public task page.
             public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
 
@@ -528,7 +525,6 @@ class TaskClientAsync(ResourceClientAsync):
             public_config=TaskPublicConfig(
                 seo_title=public_config_seo_title,
                 seo_description=public_config_seo_description,
-                categorization=public_config_categorization,
                 input_schema_fields=public_config_input_schema_fields,
                 dataset_name=public_config_dataset_name,
                 dataset_view=public_config_dataset_view,

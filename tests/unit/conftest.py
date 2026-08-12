@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_httpserver import HTTPServer
 
+from apify_client import ApifyClient, ApifyClientAsync
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -28,3 +30,13 @@ def httpserver(make_httpserver: HTTPServer) -> Iterable[HTTPServer]:
     server = make_httpserver
     yield server
     server.clear()
+
+
+@pytest.fixture
+def sync_client(httpserver: HTTPServer) -> ApifyClient:
+    return ApifyClient(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+
+@pytest.fixture
+def async_client(httpserver: HTTPServer) -> ApifyClientAsync:
+    return ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))

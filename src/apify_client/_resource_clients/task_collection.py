@@ -27,11 +27,6 @@ if TYPE_CHECKING:
     from apify_client.types import Timeout
 
 
-# Aliased at module scope so that `list` resolves to the builtin - inside the client classes below,
-# a bare `list[str]` annotation would resolve to their own `list` method instead.
-InputSchemaFields = list[str]
-
-
 @docs_group('Resource clients')
 class TaskCollectionClient(ResourceClient):
     """Sub-client for the task collection.
@@ -124,8 +119,7 @@ class TaskCollectionClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         public_config_seo_title: str | None = None,
         public_config_seo_description: str | None = None,
-        public_config_categorization: str | None = None,
-        public_config_input_schema_fields: InputSchemaFields | None = None,
+        public_config_input_schema_fields: list[str] | None = None,  # ty: ignore[invalid-type-form]
         public_config_dataset_name: str | None = None,
         public_config_dataset_view: str | None = None,
         timeout: Timeout = 'medium',
@@ -133,7 +127,7 @@ class TaskCollectionClient(ResourceClient):
         """Create a new task.
 
         The `public_config_*` arguments set the public display configuration of the task's landing page, which
-        requires write access to the task's Actor and the Task itself. Use `TaskClient.publish` for publishing.
+        requires write access to the task's Actor and the task itself. Use `TaskClient.publish` for publishing.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
@@ -163,9 +157,9 @@ class TaskCollectionClient(ResourceClient):
             public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
             public_config_seo_description: SEO description of the public task page. Defaults to the task description
                 when not set.
-            public_config_categorization: Use-case category of the public task.
             public_config_input_schema_fields: Names of the task input fields displayed on the public task page.
-            public_config_dataset_name: Name of the dataset whose schema provides the views.
+            public_config_dataset_name: Name of the dataset from the Actor's dataset schema whose results are
+                displayed on the public task page.
             public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
 
@@ -183,7 +177,6 @@ class TaskCollectionClient(ResourceClient):
             public_config=TaskPublicConfig(
                 seo_title=public_config_seo_title,
                 seo_description=public_config_seo_description,
-                categorization=public_config_categorization,
                 input_schema_fields=public_config_input_schema_fields,
                 dataset_name=public_config_dataset_name,
                 dataset_view=public_config_dataset_view,
@@ -299,8 +292,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         public_config_seo_title: str | None = None,
         public_config_seo_description: str | None = None,
-        public_config_categorization: str | None = None,
-        public_config_input_schema_fields: InputSchemaFields | None = None,
+        public_config_input_schema_fields: list[str] | None = None,  # ty: ignore[invalid-type-form]
         public_config_dataset_name: str | None = None,
         public_config_dataset_view: str | None = None,
         timeout: Timeout = 'medium',
@@ -308,7 +300,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         """Create a new task.
 
         The `public_config_*` arguments set the public display configuration of the task's landing page, which
-        requires write access to the task's Actor and the Task itself. Use `TaskClientAsync.publish` for publishing.
+        requires write access to the task's Actor and the task itself. Use `TaskClientAsync.publish` for publishing.
 
         https://docs.apify.com/api/v2#/reference/actor-tasks/task-collection/create-task
 
@@ -338,9 +330,9 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             public_config_seo_title: SEO title of the public task page. Defaults to the task title when not set.
             public_config_seo_description: SEO description of the public task page. Defaults to the task description
                 when not set.
-            public_config_categorization: Use-case category of the public task.
             public_config_input_schema_fields: Names of the task input fields displayed on the public task page.
-            public_config_dataset_name: Name of the dataset whose schema provides the views.
+            public_config_dataset_name: Name of the dataset from the Actor's dataset schema whose results are
+                displayed on the public task page.
             public_config_dataset_view: View key from the Actor's dataset schema shown on the public task page.
             timeout: Timeout for the API HTTP request.
 
@@ -358,7 +350,6 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             public_config=TaskPublicConfig(
                 seo_title=public_config_seo_title,
                 seo_description=public_config_seo_description,
-                categorization=public_config_categorization,
                 input_schema_fields=public_config_input_schema_fields,
                 dataset_name=public_config_dataset_name,
                 dataset_view=public_config_dataset_view,

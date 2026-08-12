@@ -30,6 +30,27 @@ Two endpoints still return plain types because their payloads are user-defined: 
 
 On the input side, methods now also accept Pydantic models in addition to dicts. Plain dicts continue to work — keys may use either snake_case or camelCase, and each input shape has a matching [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) so editors and type checkers can validate the keys. See [Typed models](/api/client/python/docs/concepts/typed-models) for details.
 
+## URL fields are normalized
+
+URL fields on the returned models are typed as [`AnyUrl`](https://docs.pydantic.dev/latest/api/networks/#pydantic.networks.AnyUrl), which normalizes the value during validation. In v2 the client handed back the raw string from the API. In v3 the string can differ, most visibly by an added trailing slash. Normalization also lowercases the host, drops default ports, punycodes internationalized hosts, and percent-encodes unsafe characters.
+
+Code that compares a stored URL with a URL field has to compare normalized values.
+
+```python
+from pydantic import AnyUrl
+
+run = client.run('my-run-id').get()
+stored_url = 'https://abc123.runs.apify.net'
+
+# Before, the raw string matched the API response.
+stored_url == str(run.container_url)  # False in v3
+
+# After, normalize both sides before comparing.
+AnyUrl(stored_url) == run.container_url  # True
+```
+
+The affected fields are `container_url`, `console_url`, `standby_url`, `request_url`, `url`, `picture_url`, `user_picture_url`, `website_url`, and the `*_public_url` fields on storage models. To build longer URLs out of them, use [`urljoin`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin) instead of string concatenation. For details, see [Typed models](/api/client/python/docs/concepts/typed-models#url-fields).
+
 ## Tiered timeouts
 
 The single global timeout has been replaced by four tiers — `short` (5 s), `medium` (30 s), `long` (360 s), and `no_timeout`. Each method picks an appropriate default. Override per call, or change tier defaults on the constructor:

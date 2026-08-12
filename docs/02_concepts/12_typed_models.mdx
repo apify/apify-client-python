@@ -36,6 +36,50 @@ Every method that returns a structured payload returns a Pydantic model. Fields 
 
 Date strings are automatically parsed into timezone-aware `datetime.datetime` objects, enums into `Literal` aliases, and nested objects into their own typed models, so you can compose attribute access without manual conversion.
 
+## URL fields
+
+Fields holding a URL, such as `Run.container_url` or `Dataset.console_url`, are typed as [`AnyUrl`](https://docs.pydantic.dev/latest/api/networks/#pydantic.networks.AnyUrl). Their values are validated and normalized, so the string you read back can differ from the one the API sent. Both forms denote the same URL under [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.3), they're just different strings.
+
+```python
+from pydantic import AnyUrl
+
+# An empty path becomes '/'.
+str(AnyUrl('https://abc123.runs.apify.net'))  # 'https://abc123.runs.apify.net/'
+
+# The host is lowercased.
+str(AnyUrl('https://EXAMPLE.com/Path'))  # 'https://example.com/Path'
+
+# A default port is dropped.
+str(AnyUrl('https://example.com:443/path'))  # 'https://example.com/path'
+
+# An internationalized host is punycoded.
+str(AnyUrl('https://www.žluty.cz'))  # 'https://www.xn--luty-kbb.cz/'
+
+# Unsafe characters are percent-encoded.
+str(AnyUrl('https://example.com/a b'))  # 'https://example.com/a%20b'
+```
+
+Because of the normalization, compare URLs in their normalized form instead of as raw strings. `AnyUrl` compares the parsed URL, not the input text.
+
+```python
+run = client.run('my-run-id').get()
+stored_url = 'https://abc123.runs.apify.net'
+
+# Wrong, compares a raw string with a normalized one.
+stored_url == str(run.container_url)  # False
+
+# Right, both sides are normalized before the comparison.
+AnyUrl(stored_url) == run.container_url  # True
+```
+
+To build a longer URL out of a URL field, use [`urljoin`](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin) rather than string concatenation. It gives the same result whether or not the base ends with a slash.
+
+```python
+from urllib.parse import urljoin
+
+urljoin(str(run.container_url), 'status')  # 'https://abc123.runs.apify.net/status'
+```
+
 ## Providing structured input
 
 A Pydantic model returned from one client call can be passed directly into any other method that accepts the same shape — useful for round-trip flows where you read a resource, tweak it, and write it back.

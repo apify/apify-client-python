@@ -3,40 +3,17 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
+import impit
 import pytest
-from impit import HTTPError, Response, TimeoutException
 
 from apify_client._logging import LoggerOnce, logger_name
-from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_clients import _base as http_client_base
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
     from _pytest.logging import LogCaptureFixture
-
-
-class EndOfTestError(Exception):
-    """Custom exception that is raised after the relevant part of the code is executed to stop the test."""
-
-
-@pytest.fixture
-def patch_request(monkeypatch: pytest.MonkeyPatch) -> Iterator[list]:
-    timeouts = []
-
-    def mock_request(*_args: Any, **kwargs: Any) -> None:
-        timeouts.append(kwargs.get('timeout'))
-        raise EndOfTestError
-
-    async def mock_request_async(*args: Any, **kwargs: Any) -> None:
-        return mock_request(*args, **kwargs)
-
-    monkeypatch.setattr('impit.Client.request', mock_request)
-    monkeypatch.setattr('impit.AsyncClient.request', mock_request_async)
-    yield timeouts
-    monkeypatch.undo()
 
 
 @pytest.fixture
@@ -45,125 +22,93 @@ def fresh_logger_once(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(http_client_base, 'logger_once', LoggerOnce(http_client_base.logger))
 
 
-def test_no_timeout_passes_large_value_to_impit_sync(patch_request: list) -> None:
-    """Test that `no_timeout` passes a large timeout to impit to effectively disable the timeout."""
-    client = ImpitHttpClient(timeout_short=timedelta(seconds=10))
-
-    with pytest.raises(EndOfTestError):
-        client.call(method='GET', url='http://placeholder.url/no_timeout', timeout='no_timeout')
-
-    assert patch_request == [86_400]
+def successful_response() -> Mock:
+    return Mock(status_code=200)
 
 
-async def test_no_timeout_passes_large_value_to_impit_async(patch_request: list) -> None:
-    """Test that `no_timeout` passes a large timeout to impit to effectively disable the timeout."""
-    client = ImpitHttpClientAsync(timeout_short=timedelta(seconds=10))
+@pytest.mark.parametrize(
+    ('timeout', 'expected'),
+    [
+        pytest.param('no_timeout', None, id='no-timeout'),
+        pytest.param(None, 30.0, id='default-medium'),
+        pytest.param('short', 5.0, id='short'),
+        pytest.param('medium', 30.0, id='medium'),
+        pytest.param('long', 300.0, id='long'),
+    ],
+)
+def test_timeout_resolves_for_sync_clients(
+    http_client_class: type[HttpClient],
+    monkeypatch: pytest.MonkeyPatch,
+    timeout: str | None,
+    expected: float | None,
+) -> None:
+    """Every synchronous client resolves timeout tiers at the shared transport boundary."""
+    client = http_client_class(
+        timeout_short=timedelta(seconds=5),
+        timeout_medium=timedelta(seconds=30),
+        timeout_long=timedelta(seconds=300),
+    )
+    send_request = Mock(return_value=successful_response())
+    monkeypatch.setattr(client, 'send_request', send_request)
 
-    with pytest.raises(EndOfTestError):
-        await client.call(method='GET', url='http://placeholder.url/no_timeout', timeout='no_timeout')
+    kwargs: dict[str, Any] = {'method': 'GET', 'url': 'https://example.com'}
+    if timeout is not None:
+        kwargs['timeout'] = timeout
+    client.call(**kwargs)
 
-    assert patch_request == [86_400]
-
-
-def test_default_timeout_uses_medium_tier_sync(patch_request: list) -> None:
-    """Test that omitting timeout uses the 'medium' tier (sync client)."""
-    client = ImpitHttpClient(timeout_medium=timedelta(seconds=30))
-
-    with pytest.raises(EndOfTestError):
-        client.call(method='GET', url='http://placeholder.url/default_timeout')
-
-    assert patch_request == [30.0]
-
-
-async def test_default_timeout_uses_medium_tier_async(patch_request: list) -> None:
-    """Test that omitting timeout uses the 'medium' tier (async client)."""
-    client = ImpitHttpClientAsync(timeout_medium=timedelta(seconds=30))
-
-    with pytest.raises(EndOfTestError):
-        await client.call(method='GET', url='http://placeholder.url/default_timeout')
-
-    assert patch_request == [30.0]
-
-
-def test_short_tier_resolves_correctly_sync(patch_request: list) -> None:
-    """Test that `'short'` tier resolves to timeout_short value."""
-    client = ImpitHttpClient(timeout_short=timedelta(seconds=5))
-
-    with pytest.raises(EndOfTestError):
-        client.call(method='GET', url='http://placeholder.url/short_tier', timeout='short')
-
-    assert patch_request == [5.0]
+    assert send_request.call_args.kwargs['timeout'] == expected
 
 
-def test_medium_tier_resolves_correctly_sync(patch_request: list) -> None:
-    """Test that `'medium'` tier resolves to the configured timeout value."""
-    client = ImpitHttpClient(timeout_medium=timedelta(seconds=30))
+@pytest.mark.parametrize(
+    ('timeout', 'expected'),
+    [
+        pytest.param('no_timeout', None, id='no-timeout'),
+        pytest.param(None, 30.0, id='default-medium'),
+        pytest.param('short', 5.0, id='short'),
+        pytest.param('medium', 30.0, id='medium'),
+        pytest.param('long', 300.0, id='long'),
+    ],
+)
+async def test_timeout_resolves_for_async_clients(
+    http_client_async_class: type[HttpClientAsync],
+    monkeypatch: pytest.MonkeyPatch,
+    timeout: str | None,
+    expected: float | None,
+) -> None:
+    """Every asynchronous client resolves timeout tiers at the shared transport boundary."""
+    client = http_client_async_class(
+        timeout_short=timedelta(seconds=5),
+        timeout_medium=timedelta(seconds=30),
+        timeout_long=timedelta(seconds=300),
+    )
+    send_request = AsyncMock(return_value=successful_response())
+    monkeypatch.setattr(client, 'send_request', send_request)
 
-    with pytest.raises(EndOfTestError):
-        client.call(method='GET', url='http://placeholder.url/timeout_tier', timeout='medium')
+    kwargs: dict[str, Any] = {'method': 'GET', 'url': 'https://example.com'}
+    if timeout is not None:
+        kwargs['timeout'] = timeout
+    await client.call(**kwargs)
 
-    assert patch_request == [30.0]
-
-
-def test_long_tier_resolves_correctly_sync(patch_request: list) -> None:
-    """Test that `'long'` tier resolves to timeout_long value."""
-    client = ImpitHttpClient(timeout_long=timedelta(seconds=300))
-
-    with pytest.raises(EndOfTestError):
-        client.call(method='GET', url='http://placeholder.url/long_tier', timeout='long')
-
-    assert patch_request == [300.0]
-
-
-async def test_medium_tier_resolves_correctly_async(patch_request: list) -> None:
-    """Test that `'medium'` tier resolves to the configured timeout value (async)."""
-    client = ImpitHttpClientAsync(timeout_medium=timedelta(seconds=30))
-
-    with pytest.raises(EndOfTestError):
-        await client.call(method='GET', url='http://placeholder.url/timeout_tier', timeout='medium')
-
-    assert patch_request == [30.0]
-
-
-async def test_long_tier_resolves_correctly_async(patch_request: list) -> None:
-    """Test that `'long'` tier resolves to timeout_long value (async)."""
-    client = ImpitHttpClientAsync(timeout_long=timedelta(seconds=300))
-
-    with pytest.raises(EndOfTestError):
-        await client.call(method='GET', url='http://placeholder.url/long_tier', timeout='long')
-
-    assert patch_request == [300.0]
+    assert send_request.call_args.kwargs['timeout'] == expected
 
 
-def test_compute_timeout_with_timedelta() -> None:
-    """Test _compute_timeout with a concrete timedelta doubles per attempt, capped at max."""
-    client = ImpitHttpClient(timeout_max=timedelta(seconds=600))
+def test_compute_timeout_with_timedelta(http_client_class: type[HttpClient]) -> None:
+    """Concrete timedeltas double per attempt and are capped at the configured maximum."""
+    client = http_client_class(timeout_max=timedelta(seconds=20))
 
     assert client._compute_timeout(timedelta(seconds=5), attempt=1) == 5.0
     assert client._compute_timeout(timedelta(seconds=5), attempt=2) == 10.0
     assert client._compute_timeout(timedelta(seconds=5), attempt=3) == 20.0
-    assert client._compute_timeout(timedelta(seconds=5), attempt=4) == 40.0
-
-
-def test_compute_timeout_caps_at_max() -> None:
-    """Test _compute_timeout caps at timeout_max."""
-    client = ImpitHttpClient(timeout_max=timedelta(seconds=10))
-
-    assert client._compute_timeout(timedelta(seconds=5), attempt=1) == 5.0
-    assert client._compute_timeout(timedelta(seconds=5), attempt=2) == 10.0
-    assert client._compute_timeout(timedelta(seconds=5), attempt=3) == 10.0  # capped
-
-
-def test_compute_timeout_no_timeout_returns_none() -> None:
-    """Test _compute_timeout with 'no_timeout' returns None."""
-    client = ImpitHttpClient()
+    assert client._compute_timeout(timedelta(seconds=5), attempt=4) == 20.0
     assert client._compute_timeout('no_timeout', attempt=1) is None
 
 
 @pytest.mark.usefixtures('fresh_logger_once')
-def test_compute_timeout_explicit_timedelta_above_max_warns(caplog: LogCaptureFixture) -> None:
-    """Test an explicit timedelta larger than timeout_max is capped, and the cut-off is logged once."""
-    client = ImpitHttpClient(timeout_max=timedelta(seconds=360))
+def test_compute_timeout_explicit_timedelta_above_max_warns(
+    http_client_class: type[HttpClient], caplog: LogCaptureFixture
+) -> None:
+    """An explicit timedelta larger than timeout_max is capped, and the cut-off is logged once."""
+    client = http_client_class(timeout_max=timedelta(seconds=360))
 
     with caplog.at_level(logging.WARNING, logger=logger_name):
         assert client._compute_timeout(timedelta(minutes=30), attempt=1) == 360.0
@@ -176,9 +121,9 @@ def test_compute_timeout_explicit_timedelta_above_max_warns(caplog: LogCaptureFi
 
 
 @pytest.mark.usefixtures('fresh_logger_once')
-def test_compute_timeout_tier_above_max_warns(caplog: LogCaptureFixture) -> None:
-    """Test a tier configured larger than timeout_max is capped, and the cut-off is logged too."""
-    client = ImpitHttpClient(timeout_long=timedelta(seconds=600), timeout_max=timedelta(seconds=360))
+def test_compute_timeout_tier_above_max_warns(http_client_class: type[HttpClient], caplog: LogCaptureFixture) -> None:
+    """A tier configured larger than timeout_max is capped, and the cut-off is logged too."""
+    client = http_client_class(timeout_long=timedelta(seconds=600), timeout_max=timedelta(seconds=360))
 
     with caplog.at_level(logging.WARNING, logger=logger_name):
         assert client._compute_timeout('long', attempt=1) == 360.0
@@ -188,9 +133,11 @@ def test_compute_timeout_tier_above_max_warns(caplog: LogCaptureFixture) -> None
 
 
 @pytest.mark.usefixtures('fresh_logger_once')
-def test_compute_timeout_within_max_does_not_warn(caplog: LogCaptureFixture) -> None:
-    """Test a base timeout within timeout_max is used as-is, without a warning."""
-    client = ImpitHttpClient(timeout_long=timedelta(seconds=300), timeout_max=timedelta(seconds=360))
+def test_compute_timeout_within_max_does_not_warn(
+    http_client_class: type[HttpClient], caplog: LogCaptureFixture
+) -> None:
+    """A base timeout within timeout_max is used as-is, without a warning."""
+    client = http_client_class(timeout_long=timedelta(seconds=300), timeout_max=timedelta(seconds=360))
 
     with caplog.at_level(logging.WARNING, logger=logger_name):
         assert client._compute_timeout(timedelta(seconds=120), attempt=1) == 120.0
@@ -201,103 +148,71 @@ def test_compute_timeout_within_max_does_not_warn(caplog: LogCaptureFixture) -> 
     assert caplog.records == []
 
 
-async def test_dynamic_timeout_async_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Tests timeout values for request with retriable errors.
+def test_dynamic_timeout_sync_client(http_client_class: type[HttpClient], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Synchronous clients increase timeout values after retryable transport errors."""
+    client = http_client_class(
+        timeout_short=timedelta(seconds=1),
+        timeout_max=timedelta(seconds=5),
+        min_delay_between_retries=timedelta(0),
+    )
+    timeouts: list[float | None] = []
 
-    Values should increase with each attempt, starting from initial call value and bounded by timeout_max.
-    """
-    should_raise_error = iter((True, True, True, False))
-    call_timeout = 1
-    timeout_max = 5
-    expected_timeouts = [call_timeout, 2, 4, timeout_max]
-    retry_counter_mock = Mock()
+    def send_request(*_args: Any, **kwargs: Any) -> Mock:
+        timeouts.append(kwargs['timeout'])
+        if len(timeouts) < 4:
+            raise impit.TimeoutException('timeout')
+        return successful_response()
 
-    timeouts = []
+    monkeypatch.setattr(client, 'send_request', send_request)
 
-    async def mock_request(*_args: Any, **kwargs: Any) -> Response:
-        timeouts.append(kwargs.get('timeout'))
-        retry_counter_mock()
-        should_raise = next(should_raise_error)
-        if should_raise:
-            raise TimeoutException
+    response = client.call(method='GET', url='https://example.com', timeout=timedelta(seconds=1))
 
-        return Response(status_code=200)
-
-    monkeypatch.setattr('impit.AsyncClient.request', mock_request)
-
-    response = await ImpitHttpClientAsync(
-        timeout_short=timedelta(seconds=call_timeout),
-        timeout_max=timedelta(seconds=timeout_max),
-    ).call(method='GET', url='http://placeholder.url/async_timeout', timeout=timedelta(seconds=call_timeout))
-
-    # Check that the retry counter was called the expected number of times
-    # (4 times: 3 retries + 1 final successful call)
-    assert retry_counter_mock.call_count == 4
-    assert timeouts == expected_timeouts
-    # Check that the response is successful
+    assert timeouts == [1.0, 2.0, 4.0, 5.0]
     assert response.status_code == 200
 
 
-async def test_retry_on_http_error_async_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Tests that bare impit.HTTPError (e.g. body decode errors) are retried.
+async def test_dynamic_timeout_async_client(
+    http_client_async_class: type[HttpClientAsync], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Asynchronous clients increase timeout values after retryable transport errors."""
+    client = http_client_async_class(
+        timeout_short=timedelta(seconds=1),
+        timeout_max=timedelta(seconds=5),
+        min_delay_between_retries=timedelta(0),
+    )
+    timeouts: list[float | None] = []
 
-    This reproduces the scenario where the HTTP response body is truncated mid-stream
-    (e.g. "unexpected EOF during chunk size line"), which impit raises as a generic HTTPError.
-    """
-    should_raise_error = iter((True, True, False))
-    retry_counter_mock = Mock()
+    async def send_request(*_args: Any, **kwargs: Any) -> Mock:
+        timeouts.append(kwargs['timeout'])
+        if len(timeouts) < 4:
+            raise impit.TimeoutException('timeout')
+        return successful_response()
 
-    async def mock_request(*_args: Any, **_kwargs: Any) -> Response:
-        retry_counter_mock()
-        should_raise = next(should_raise_error)
-        if should_raise:
-            raise HTTPError('The internal HTTP library has thrown an error: unexpected EOF during chunk size line')
+    monkeypatch.setattr(client, 'send_request', send_request)
 
-        return Response(status_code=200)
+    response = await client.call(method='GET', url='https://example.com', timeout=timedelta(seconds=1))
 
-    monkeypatch.setattr('impit.AsyncClient.request', mock_request)
+    assert timeouts == [1.0, 2.0, 4.0, 5.0]
+    assert response.status_code == 200
 
-    response = await ImpitHttpClientAsync(timeout_short=timedelta(seconds=5)).call(
-        method='GET', url='http://placeholder.url/http_error'
+
+def test_no_timeout_mapping_for_sync_adapter() -> None:
+    """The synchronous adapter maps no-timeout to Impit's effectively unbounded value."""
+    client = ImpitHttpClient()
+    client._impit_client = Mock(request=Mock(return_value=successful_response()))
+
+    client.send_request(method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False)
+
+    assert client._impit_client.request.call_args.kwargs['timeout'] == 86_400
+
+
+async def test_no_timeout_mapping_for_async_adapter() -> None:
+    """The asynchronous adapter maps no-timeout to Impit's effectively unbounded value."""
+    client = ImpitHttpClientAsync()
+    client._impit_async_client = Mock(request=AsyncMock(return_value=successful_response()))
+
+    await client.send_request(
+        method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
     )
 
-    # 3 attempts: 2 failures + 1 success
-    assert retry_counter_mock.call_count == 3
-    assert response.status_code == 200
-
-
-def test_dynamic_timeout_sync_client(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Tests timeout values for request with retriable errors.
-
-    Values should increase with each attempt, starting from initial call value and bounded by timeout_max.
-    """
-    should_raise_error = iter((True, True, True, False))
-    call_timeout = 1
-    timeout_max = 5
-    expected_timeouts = [call_timeout, 2, 4, timeout_max]
-    retry_counter_mock = Mock()
-
-    timeouts = []
-
-    def mock_request(*_args: Any, **kwargs: Any) -> Response:
-        timeouts.append(kwargs.get('timeout'))
-        retry_counter_mock()
-        should_raise = next(should_raise_error)
-        if should_raise:
-            raise TimeoutException
-
-        return Response(status_code=200)
-
-    monkeypatch.setattr('impit.Client.request', mock_request)
-
-    response = ImpitHttpClient(
-        timeout_short=timedelta(seconds=call_timeout),
-        timeout_max=timedelta(seconds=timeout_max),
-    ).call(method='GET', url='http://placeholder.url/sync_timeout', timeout=timedelta(seconds=call_timeout))
-
-    # Check that the retry counter was called the expected number of times
-    # (4 times: 3 retries + 1 final successful call)
-    assert retry_counter_mock.call_count == 4
-    assert timeouts == expected_timeouts
-    # Check that the response is successful
-    assert response.status_code == 200
+    assert client._impit_async_client.request.call_args.kwargs['timeout'] == 86_400

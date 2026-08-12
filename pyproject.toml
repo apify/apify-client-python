@@ -28,6 +28,8 @@ dependencies = [
     "impit~=0.13.0",
     "more_itertools>=10.0.0",
     "pydantic[email]>=2.11.0",
+    # 4.6.0 is the first release whose runtime protocol checks look attributes up statically.
+    "typing-extensions>=4.6.0",
 ]
 
 [project.optional-dependencies]
@@ -206,12 +208,7 @@ include = ["docs/**/*.py", "website/**/*.py"]
 unresolved-import = "ignore"
 
 [[tool.ty.overrides]]
-include = ["docs/**/10_plugging_in_async.py", "docs/**/10_plugging_in_sync.py"]
-[tool.ty.overrides.rules]
-empty-body = "ignore"
-
-[[tool.ty.overrides]]
-include = ["docs/**/05_custom_http_client_async.py", "docs/**/05_custom_http_client_sync.py"]
+include = ["docs/**/05_custom_http_client_async.py"]
 [tool.ty.overrides.rules]
 invalid-argument-type = "ignore"
 

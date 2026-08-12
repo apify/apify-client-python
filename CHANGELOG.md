@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.1.3 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Require value in EnvVarRequest and allow null error messages in request dicts ([#1001](https://github.com/apify/apify-client-python/pull/1001)) ([4540199](https://github.com/apify/apify-client-python/commit/45401992edd31f2f4273eed5549fd9615226f17b)) by [@apify-service-account](https://github.com/apify-service-account)
+- Warn when a requested timeout is capped at timeout_max ([#962](https://github.com/apify/apify-client-python/pull/962)) ([4281530](https://github.com/apify/apify-client-python/commit/4281530f0637215d00c2cb186c7917a5742e0bb8)) by [@vdusek](https://github.com/vdusek)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.1.2](https://github.com/apify/apify-client-python/releases/tag/v3.1.2) (2026-08-10)
 
 ### 🐛 Bug Fixes

@@ -883,6 +883,12 @@ class CreateTaskRequest(BaseModel):
     input: TaskInput | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
+    public_config: TaskPublicConfig | None = None
+    """
+    Configuration that controls how the published task appears on its public landing page.
+    Editing this object requires write permission to the Actor that the task belongs to.
+
+    """
 
 
 @docs_group('Models')
@@ -3496,6 +3502,12 @@ class Task(BaseModel):
     title: str | None = None
     actor_standby: ActorStandby | None = None
     standby_url: AnyUrl | None = None
+    is_public: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the task is published. Based on the `publicConfig.publishedAt` field.
+
+    """
+    public_config: TaskPublicConfig | None = None
 
 
 @docs_group('Models')
@@ -3525,6 +3537,57 @@ class TaskOptions(BaseModel):
     max_items: Annotated[int | None, Field(examples=[1000])] = None
     max_total_charge_usd: Annotated[float | None, Field(examples=[5])] = None
     restart_on_error: Annotated[bool | None, Field(examples=[False])] = None
+
+
+@docs_group('Models')
+class TaskPublicConfig(BaseModel):
+    """Public-facing configuration of a published task, used by the task's public landing page.
+    The task's publication state is determined by `publishedAt` - a task is published when
+    `publishedAt` is set and unpublished when it is `null`.
+
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    published_at: Annotated[AwareDatetime | None, Field(examples=['2025-06-16T09:20:45.777Z'])] = None
+    """
+    Time when the task was published, or `null` if the task isn't published.
+    This field is server-controlled. To publish or unpublish a task, use the
+    [Update task](https://docs.apify.com/api/v2/actor-task-put) endpoint and set `isPublic`.
+
+    """
+    seo_title: Annotated[str | None, Field(examples=['Scrape data from a website'], max_length=60)] = None
+    """
+    Name of the Actor task to display by search engines such as Google. Defaults to the task
+    title. At most 60 characters.
+
+    """
+    seo_description: Annotated[str | None, Field(max_length=160)] = None
+    """
+    Description of the Actor task to display by search engines such as Google. Defaults to the
+    task description. At most 160 characters.
+
+    """
+    input_schema_fields: list[str] | None = None
+    """
+    Names of the task input fields displayed on the public task page.
+    """
+    dataset_name: str | None = None
+    """
+    Name of the dataset from the Actor's dataset schema whose results are displayed. When
+    `null`, the Actor's default dataset is used. That is, the only dataset the Actor declares,
+    or the one named `default` when it declares several.
+
+    """
+    dataset_view: str | None = None
+    """
+    Key of the dataset view from the Actor's dataset schema used to display results. Must be
+    one of the views declared on the resolved dataset. You can't publish a task without it.
+
+    """
 
 
 @docs_group('Models')
@@ -3802,6 +3865,22 @@ class UpdateTaskRequest(BaseModel):
     input: TaskInput | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
+    public_config: TaskPublicConfig | None = None
+    """
+    Configuration that controls how the published task appears on its public landing page.
+    Editing this object requires write permission to the Actor that the task belongs to.
+
+    The fields you send are merged into the stored configuration, so you only need to include
+    the ones you're changing. To clear a field, set it to `null`. Sending `publicConfig: null`
+    is rejected, so the object as a whole can't be cleared.
+
+    """
+    is_public: Annotated[bool | None, Field(examples=[True])] = None
+    """
+    Set to `true` to publish the task on its public landing page, or `false` to unpublish it.
+    Sending the value the task already has does nothing.
+
+    """
 
 
 @docs_group('Models')

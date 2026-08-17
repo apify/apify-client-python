@@ -21,6 +21,7 @@ from .._utils import (
 )
 from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 from apify_client.errors import ApifyApiError
+from apify_client.http_clients import HttpResponse
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -198,14 +199,14 @@ async def test_stream_record_signature(
             signature=test_kvs_of_another_user.keys_signature[key],
         ) as stream:  # ty: ignore[invalid-context-manager]
             assert isinstance(stream, dict)
-            value = json.loads(stream['value'].content.decode('utf-8'))
+            value = json.loads((await stream['value'].aread()).decode('utf-8'))
     else:
         with kvs.stream_record(
             key,
             signature=test_kvs_of_another_user.keys_signature[key],
         ) as stream:  # ty: ignore[invalid-context-manager]
             assert isinstance(stream, dict)
-            value = json.loads(stream['value'].content.decode('utf-8'))
+            value = json.loads(stream['value'].read().decode('utf-8'))
 
     assert test_kvs_of_another_user.expected_content[key] == value
 
@@ -726,11 +727,15 @@ async def test_key_value_store_stream_record_own(client: ApifyClient | ApifyClie
         if is_async:
             async with store_client.stream_record('stream-key') as stream:  # ty: ignore[invalid-context-manager]
                 assert isinstance(stream, dict)
-                value = json.loads(stream['value'].content.decode('utf-8'))
+                response = stream['value']
+                assert isinstance(response, HttpResponse)
+                value = json.loads((await response.aread()).decode('utf-8'))
         else:
             with store_client.stream_record('stream-key') as stream:  # ty: ignore[invalid-context-manager]
                 assert isinstance(stream, dict)
-                value = json.loads(stream['value'].content.decode('utf-8'))
+                response = stream['value']
+                assert isinstance(response, HttpResponse)
+                value = json.loads(response.read().decode('utf-8'))
 
         assert value == {'data': 'streamed'}
     finally:

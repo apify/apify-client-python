@@ -7,8 +7,13 @@ import sys
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime, timedelta
 from importlib import metadata
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
+
+# `Protocol` comes from `typing_extensions`, not `typing`, because its runtime `isinstance` check looks attributes
+# up statically. The `typing` implementation on Python 3.11 calls `hasattr`, which evaluates properties. On an
+# unread streaming response, that either raises or silently buffers the whole body.
+from typing_extensions import Protocol, runtime_checkable
 
 from apify_client._consts import (
     DEFAULT_MAX_RETRIES,

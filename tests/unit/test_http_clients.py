@@ -337,21 +337,38 @@ def test_parse_params_mixed() -> None:
     }
 
 
-TRANSPORT_ERRORS = (
+RETRYABLE_TRANSPORT_ERRORS = (
+    # Impit raises a bare `HTTPError` for a body that ends mid-chunk, so even the generic base class is transient.
     impit.HTTPError,
     impit.TimeoutException,
     impit.NetworkError,
     impit.RemoteProtocolError,
     impit.DecodingError,
+    # A proxy rejecting the tunnel is often transient, e.g. one that is overloaded or rate-limiting.
+    impit.ProxyError,
 )
-"""Transport errors from Impit's own hierarchy, all classified as retryable."""
+"""Transport errors that must stay retryable."""
+
+NON_RETRYABLE_TRANSPORT_ERRORS = (
+    impit.UnsupportedProtocol,
+    impit.LocalProtocolError,
+    impit.TooManyRedirects,
+)
+"""Transport errors that a retry cannot fix, so they must fail on the first attempt.
+
+`impit.HTTPStatusError` belongs here too, but no built-in adapter ever raises it, because `_make_request` decides on
+status codes from the response itself.
+"""
 
 
 def test_builtin_http_client_retry_policy() -> None:
-    """Every transport-level Impit failure is classified as retryable, everything else is not."""
+    """Transient transport failures are retried, and the ones a retry cannot fix stop the loop immediately."""
     with ImpitHttpClient() as client:
-        for error_class in TRANSPORT_ERRORS:
+        for error_class in RETRYABLE_TRANSPORT_ERRORS:
             assert client.is_retryable_transport_error(error_class('test')), error_class.__name__
+
+        for error_class in NON_RETRYABLE_TRANSPORT_ERRORS:
+            assert not client.is_retryable_transport_error(error_class('test')), error_class.__name__
 
         # `InvalidResponseBodyError` is retried by `_handle_request_exception`, not as a transport failure.
         assert not client.is_retryable_transport_error(InvalidResponseBodyError(Mock()))

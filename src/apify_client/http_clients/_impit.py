@@ -22,6 +22,17 @@ if TYPE_CHECKING:
     from apify_client._statistics import ClientStatistics
     from apify_client.http_compressors._base import HttpCompressor
 
+_PERMANENT_ERRORS = (
+    # A bad URL scheme or a request Impit itself rejects cannot succeed on a retry.
+    impit.UnsupportedProtocol,
+    impit.LocalProtocolError,
+    # An over-long redirect chain is a routing loop, which repeating the request cannot break.
+    impit.TooManyRedirects,
+    # Status codes are retried by `_make_request` based on the status itself, never as a transport error.
+    impit.HTTPStatusError,
+)
+"""Impit errors that a retry cannot fix. Everything else in the `impit.HTTPError` tree is treated as transient."""
+
 
 @docs_group('HTTP clients')
 class ImpitHttpClient(HttpClient):
@@ -115,9 +126,11 @@ class ImpitHttpClient(HttpClient):
 
     @override
     def is_retryable_transport_error(self, exc: Exception) -> bool:
-        # All errors from Impit's own hierarchy count as transient - they represent transport-level failures
-        # (network issues, timeouts, protocol errors, body decoding errors) that are typically transient.
-        return isinstance(exc, impit.HTTPError)
+        return self._is_transient_transport_error(
+            exc,
+            transport_errors=impit.HTTPError,
+            permanent_errors=_PERMANENT_ERRORS,
+        )
 
 
 @docs_group('HTTP clients')
@@ -208,6 +221,8 @@ class ImpitHttpClientAsync(HttpClientAsync):
 
     @override
     def is_retryable_transport_error(self, exc: Exception) -> bool:
-        # All errors from Impit's own hierarchy count as transient - they represent transport-level failures
-        # (network issues, timeouts, protocol errors, body decoding errors) that are typically transient.
-        return isinstance(exc, impit.HTTPError)
+        return self._is_transient_transport_error(
+            exc,
+            transport_errors=impit.HTTPError,
+            permanent_errors=_PERMANENT_ERRORS,
+        )

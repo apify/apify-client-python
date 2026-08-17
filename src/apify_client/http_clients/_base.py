@@ -7,6 +7,7 @@ import os
 import random
 import sys
 import time
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from importlib import metadata
@@ -365,6 +366,22 @@ class HttpClientBase:
             logger.debug('Exception is not retryable', exc_info=exc)
             stop_retrying()
 
+    @staticmethod
+    def _is_transient_transport_error(
+        exc: Exception,
+        *,
+        transport_errors: type[Exception] | tuple[type[Exception], ...],
+        permanent_errors: tuple[type[Exception], ...],
+    ) -> bool:
+        """Apply the shared retry policy to an exception raised by an HTTP library.
+
+        Every error from the library's own hierarchy counts as transient except the permanently-failing types the
+        adapter lists. Retrying is the default because transports also report genuinely transient failures through
+        their generic base class, e.g. Impit raises a bare `impit.HTTPError` for a body that ends mid-chunk. Sharing
+        one policy across adapters keeps a change of transport from changing which failures are retried.
+        """
+        return isinstance(exc, transport_errors) and not isinstance(exc, permanent_errors)
+
 
 @docs_group('HTTP clients')
 class HttpClient(HttpClientBase):
@@ -559,8 +576,14 @@ class HttpClient(HttpClientBase):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so the error can be raised properly.
-        response.read()
+        try:
+            response.read()
+        except Exception as exc:
+            with suppress(Exception):
+                response.close()
+            self._handle_request_exception(exc, stop_retrying=stop_retrying)
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
 
@@ -764,6 +787,12 @@ class HttpClientAsync(HttpClientBase):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so the error can be raised properly.
-        await response.aread()
+        try:
+            await response.aread()
+        except Exception as exc:
+            with suppress(Exception):
+                await response.aclose()
+            self._handle_request_exception(exc, stop_retrying=stop_retrying)
+            raise
+
         raise ApifyApiError(response, attempt, method=method)

@@ -92,7 +92,7 @@ class FakeHttpClient(HttpClient):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> FakeResponse:
+    ) -> HttpResponse:
         self.calls.append(
             {
                 'method': method,
@@ -126,7 +126,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> FakeResponse:
+    ) -> HttpResponse:
         self.calls.append(
             {
                 'method': method,
@@ -142,7 +142,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         return _make_fake_response()
 
 
-# -- Protocol / ABC conformance tests --
+# -- Protocol conformance tests --
 
 
 def test_fake_response_satisfies_http_response_protocol() -> None:
@@ -163,15 +163,15 @@ def test_fake_http_client_async_is_http_client_async() -> None:
     assert isinstance(client, HttpClientAsync)
 
 
-def test_apify_http_client_is_http_client() -> None:
-    """Test that ImpitHttpClient is an instance of HttpClient."""
-    client = ImpitHttpClient()
+def test_apify_http_client_is_http_client(http_client_class: type[HttpClient]) -> None:
+    """Test that each built-in synchronous client is an HttpClient."""
+    client = http_client_class()
     assert isinstance(client, HttpClient)
 
 
-def test_apify_http_client_async_is_http_client_async() -> None:
-    """Test that ImpitHttpClientAsync is an instance of HttpClientAsync."""
-    client = ImpitHttpClientAsync()
+def test_apify_http_client_async_is_http_client_async(http_client_async_class: type[HttpClientAsync]) -> None:
+    """Test that each built-in asynchronous client is an HttpClientAsync."""
+    client = http_client_async_class()
     assert isinstance(client, HttpClientAsync)
 
 
@@ -184,16 +184,16 @@ async def test_fake_response_async_methods() -> None:
     assert chunks == [b'hello']
 
 
-def test_http_client_abc_not_instantiable() -> None:
-    """Test that HttpClient cannot be instantiated directly (it's abstract)."""
-    with pytest.raises(TypeError, match='abstract method'):
-        HttpClient()
+def test_http_client_without_transport_fails_loudly() -> None:
+    """The sync base carries hook defaults, but its inherited `call` still needs a transport implementation."""
+    with pytest.raises(NotImplementedError):
+        HttpClient().call(method='GET', url='https://example.com')
 
 
-def test_http_client_async_abc_not_instantiable() -> None:
-    """Test that HttpClientAsync cannot be instantiated directly (it's abstract)."""
-    with pytest.raises(TypeError, match='abstract method'):
-        HttpClientAsync()
+async def test_http_client_async_without_transport_fails_loudly() -> None:
+    """The async base carries hook defaults, but its inherited `call` still needs a transport implementation."""
+    with pytest.raises(NotImplementedError):
+        await HttpClientAsync().call(method='GET', url='https://example.com')
 
 
 # -- ApifyClient with custom http_client via classmethod --
@@ -292,9 +292,17 @@ async def test_apify_client_async_with_custom_http_client_accepts_url_params() -
 
 def test_public_exports() -> None:
     """HTTP client types are exposed from `apify_client.http_clients`, not the root namespace."""
-    for name in ('HttpClient', 'HttpClientAsync', 'HttpResponse', 'ImpitHttpClient', 'ImpitHttpClientAsync'):
+    for name in (
+        'HttpClient',
+        'HttpClientAsync',
+        'HttpResponse',
+        'ImpitHttpClient',
+        'ImpitHttpClientAsync',
+    ):
         assert hasattr(http_clients_module, name)
         assert not hasattr(apify_client_module, name)
+
+    assert not hasattr(http_clients_module, 'HttpClientBase')
 
 
 # -- http_client property --
@@ -374,14 +382,14 @@ async def test_custom_http_client_async_error_handling() -> None:
 # -- Integration with real HTTP server --
 
 
-def test_custom_http_client_with_real_server(httpserver: HTTPServer) -> None:
-    """Test that a custom HTTP client wrapping ImpitHttpClient works with a real server."""
+def test_custom_http_client_with_real_server(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> None:
+    """Test that a custom HTTP client wrapping a built-in client works with a real server."""
     httpserver.expect_request('/v2/datasets/test-dataset').respond_with_json(
         {'data': {'id': 'test-dataset', 'name': 'My Dataset'}},
     )
 
     # Create a wrapping client that adds custom headers
-    inner_client = ImpitHttpClient(token='test_token')
+    inner_client = http_client_class(token='test_token')
 
     class WrappingHttpClient(HttpClient):
         def call(self, *, method: str, url: str, **kwargs: Any) -> HttpResponse:
@@ -400,14 +408,16 @@ def test_custom_http_client_with_real_server(httpserver: HTTPServer) -> None:
     assert result['data']['id'] == 'test-dataset'
 
 
-async def test_custom_http_client_async_with_real_server(httpserver: HTTPServer) -> None:
-    """Test that a custom async HTTP client wrapping ImpitHttpClientAsync works with a real server."""
+async def test_custom_http_client_async_with_real_server(
+    httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]
+) -> None:
+    """Test that a custom async HTTP client wrapping a built-in client works with a real server."""
     httpserver.expect_request('/v2/datasets/test-dataset').respond_with_json(
         {'data': {'id': 'test-dataset', 'name': 'My Dataset'}},
     )
 
     # Create a wrapping client that adds custom headers
-    inner_client = ImpitHttpClientAsync(token='test_token')
+    inner_client = http_client_async_class(token='test_token')
 
     class WrappingHttpClientAsync(HttpClientAsync):
         async def call(self, *, method: str, url: str, **kwargs: Any) -> HttpResponse:
@@ -517,12 +527,14 @@ async def test_custom_http_client_async_sends_token_from_classmethod(httpserver:
     assert result['received_headers']['Authorization'] == 'Bearer test_token'
 
 
-def test_custom_http_client_impit_instance_sends_token(httpserver: HTTPServer) -> None:
-    """Token from with_custom_http_client reaches the wire even for a pre-built tokenless ImpitHttpClient."""
+def test_custom_builtin_http_client_instance_sends_token(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
+    """Token from with_custom_http_client reaches the wire for each pre-built tokenless client."""
     httpserver.expect_request('/v2/datasets/test-dataset').respond_with_handler(_echo_headers)
 
     api_url = httpserver.url_for('/').removesuffix('/')
-    client = ApifyClient.with_custom_http_client(token='test_token', api_url=api_url, http_client=ImpitHttpClient())
+    client = ApifyClient.with_custom_http_client(token='test_token', api_url=api_url, http_client=http_client_class())
 
     result = client.dataset('test-dataset')._get(timeout='short')
 

@@ -9,8 +9,6 @@ from datetime import UTC, datetime
 from threading import Thread
 from typing import TYPE_CHECKING, ClassVar, Self, cast
 
-import impit
-
 from apify_client._docs import docs_group
 
 if TYPE_CHECKING:
@@ -29,9 +27,8 @@ class StreamedLogBase:
     _stream_timeout: ClassVar[Timeout] = 'no_timeout'
     """Timeout for the log-stream long-poll request, which stays open for the whole Actor run.
 
-    impit applies its `timeout` to the whole request including the streamed body, so any bounded value truncates a
-    longer run mid-stream and raises `impit.TimeoutException` (#1040). `no_timeout` maps to impit's ~24h cap, which
-    is effectively unbounded for real runs and mirrors the JS client.
+    A bounded transport timeout can truncate a longer run mid-stream. `no_timeout` keeps the connection open for the
+    duration of the run (Impit currently maps it to an effective 24-hour cap) and mirrors the JS client.
     """
 
     def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
@@ -162,13 +159,13 @@ class StreamedLog(StreamedLogBase):
                 finally:
                     # Flush the last buffered part even if the read timed out or was stopped.
                     self._log_buffer_content(include_last_part=True)
-        except impit.TimeoutException:
-            # With `no_timeout` this fires only if the run outlives impit's ~24h cap or the connection stalls.
-            # The stream cannot continue, so warn and let the thread end instead of leaking a traceback (#1040).
-            self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
-        except Exception:
-            # Any other failure in log redirection must not escape the background thread; log it instead.
-            self._to_logger.exception('Log redirection stopped due to unexpected error:')
+        except Exception as exc:
+            if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
+                # The stream cannot continue, so warn and let the thread end instead of leaking a traceback.
+                self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
+            else:
+                # Any other failure in log redirection must not escape the background thread; log it instead.
+                self._to_logger.exception('Log redirection stopped due to unexpected error:')
 
 
 @docs_group('Other')
@@ -241,10 +238,10 @@ class StreamedLogAsync(StreamedLogBase):
                 finally:
                     # Flush the last buffered part even if the task is cancelled by `stop()`.
                     self._log_buffer_content(include_last_part=True)
-        except impit.TimeoutException:
-            # As in `StreamedLog._stream_log`, impit's whole-request timeout on the long-lived stream is an
-            # expected terminal condition, not an error, so log a warning and end the task instead of a traceback.
-            self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
-        except Exception:
-            # Exception in log redirection should not propagate further.
-            self._to_logger.exception('Log redirection stopped due to unexpected error:')
+        except Exception as exc:
+            if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
+                # A timeout on the long-lived stream is an expected terminal condition, not an error.
+                self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
+            else:
+                # Exception in log redirection should not propagate further.
+                self._to_logger.exception('Log redirection stopped due to unexpected error:')

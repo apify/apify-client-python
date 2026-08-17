@@ -3,9 +3,11 @@ from __future__ import annotations
 import gzip
 import io
 import json
+import sys
 from base64 import b64decode
 from datetime import timedelta
 from http import HTTPStatus
+from types import ModuleType
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
@@ -23,6 +25,7 @@ from apify_client._utils.http import (
     response_to_list,
     to_safe_id,
 )
+from apify_client._utils.try_import import FailedImport, try_import
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -30,6 +33,34 @@ if TYPE_CHECKING:
     from apify_client.types import WebhooksList
 
 _GZIPPED_DATA = gzip.compress(b'buffer data')
+
+
+def test_try_import_only_handles_the_named_missing_dependency() -> None:
+    """Optional-import handling must not hide a broken transitive dependency or module bug."""
+    module_name = 'test_optional_import_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with (
+            pytest.raises(ModuleNotFoundError, match='broken-transitive'),
+            try_import(module_name, 'OptionalSymbol', dependency_name='optional-package'),
+        ):
+            raise ModuleNotFoundError('broken-transitive', name='broken-transitive')
+        assert not hasattr(sys.modules[module_name], 'OptionalSymbol')
+    finally:
+        del sys.modules[module_name]
+
+
+def test_try_import_records_the_named_missing_dependency() -> None:
+    """A genuinely missing optional dependency is converted to a failed-import placeholder."""
+    module_name = 'test_missing_optional_import_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with try_import(module_name, 'OptionalSymbol', dependency_name='optional-package') as state:
+            raise ModuleNotFoundError("No module named 'optional-package'", name='optional-package')
+        assert state.available is False
+        assert isinstance(sys.modules[module_name].OptionalSymbol, FailedImport)
+    finally:
+        del sys.modules[module_name]
 
 
 def test_to_safe_id() -> None:

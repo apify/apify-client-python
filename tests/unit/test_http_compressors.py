@@ -35,7 +35,7 @@ def _brotli_unavailable() -> Iterator[None]:
     class _Blocker:
         def find_spec(self, name: str, *_args: object) -> None:
             if name == 'brotli' or name.startswith('brotli.'):
-                raise ModuleNotFoundError(f"No module named '{name}'")
+                raise ModuleNotFoundError(f"No module named '{name}'", name='brotli')
 
     def _affected(name: str) -> bool:
         return name == 'brotli' or name.startswith(('brotli.', 'apify_client.http_compressors'))

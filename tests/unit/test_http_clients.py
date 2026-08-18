@@ -353,7 +353,7 @@ async def test_error_response_read_failure_is_retried_and_closed_async() -> None
     with pytest.raises(impit.ReadError):
         await client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
 
-    assert request.call_count == 2
+    assert request.await_count == 2
     for response in responses:
         response.aclose.assert_awaited_once()
 
@@ -366,6 +366,34 @@ def test_non_retryable_error_response_read_failure_stops_retrying() -> None:
     client._impit_client = Mock(request=request)
 
     with pytest.raises(ValueError, match='broken response'):
+        client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    request.assert_called_once()
+    response.close.assert_called_once()
+
+
+async def test_non_retryable_error_response_read_failure_stops_retrying_async() -> None:
+    """The async client also stops retrying when a read failure is not a transport error."""
+    client = ImpitHttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0))
+    response = Mock(status_code=500, aread=AsyncMock(side_effect=ValueError('broken response')), aclose=AsyncMock())
+    request = AsyncMock(return_value=response)
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(ValueError, match='broken response'):
+        await client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    request.assert_awaited_once()
+    response.aclose.assert_awaited_once()
+
+
+def test_error_response_read_failure_on_non_retryable_status_is_not_retried() -> None:
+    """A transient read failure on a status that is not retryable surfaces immediately instead of being retried."""
+    client = ImpitHttpClient(token='test_token', min_delay_between_retries=timedelta(0))
+    response = Mock(status_code=404, read=Mock(side_effect=impit.ReadError('truncated')), close=Mock())
+    request = Mock(return_value=response)
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.ReadError):
         client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
 
     request.assert_called_once()

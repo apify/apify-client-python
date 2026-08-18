@@ -252,8 +252,8 @@ class ImpitHttpClient(HttpClient):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly. A read that fails is a
-        # transport failure like any other, so it goes through the same classification as a failed send.
+        # Read the response in case it is a stream, so we can raise the error properly. A failed read goes through
+        # the same classification as a failed send.
         try:
             response.read()
         except Exception as exc:
@@ -521,8 +521,8 @@ class ImpitHttpClientAsync(HttpClientAsync):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly. A read that fails is a
-        # transport failure like any other, so it goes through the same classification as a failed send.
+        # Read the response in case it is a stream, so we can raise the error properly. A failed read goes through
+        # the same classification as a failed send.
         try:
             await response.aread()
         except Exception as exc:

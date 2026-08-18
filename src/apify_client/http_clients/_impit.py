@@ -4,6 +4,7 @@ import asyncio
 import logging
 import random
 import time
+from contextlib import suppress
 from datetime import timedelta
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -257,8 +258,19 @@ class ImpitHttpClient(HttpClient):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly.
-        response.read()
+        # Read the response in case it is a stream, so we can raise the error properly. A failed read goes through
+        # the same classification as a failed send.
+        try:
+            response.read()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                response.close()
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod
@@ -519,8 +531,19 @@ class ImpitHttpClientAsync(HttpClientAsync):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly.
-        await response.aread()
+        # Read the response in case it is a stream, so we can raise the error properly. A failed read goes through
+        # the same classification as a failed send.
+        try:
+            await response.aread()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                await response.aclose()
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod

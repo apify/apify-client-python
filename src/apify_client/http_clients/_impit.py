@@ -21,7 +21,7 @@ from apify_client._consts import (
 from apify_client._docs import docs_group
 from apify_client._logging import log_context, logger_name
 from apify_client._utils.time import to_seconds
-from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+from apify_client.errors import ApifyApiError
 from apify_client.http_clients._base import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
@@ -37,20 +37,31 @@ T = TypeVar('T')
 logger = logging.getLogger(logger_name)
 
 
-def _is_retryable_error(exc: Exception) -> bool:
-    """Check if an exception represents a transient error that should be retried.
+_PERMANENT_ERRORS = (
+    # A request Impit rejects before sending it, e.g. one carrying an invalid header value.
+    impit.LocalProtocolError,
+    # The class Impit declares for a scheme it refuses to speak, but does not raise today - it reports an unsupported
+    # scheme as `impit.InvalidURL`, which sits outside the `impit.HTTPError` tree and is non-retryable anyway. Listed
+    # so the classifier stays right if Impit switches over.
+    impit.UnsupportedProtocol,
+    # An over-long redirect chain is a routing loop, which repeating the request cannot break.
+    impit.TooManyRedirects,
+    # Only `Response.raise_for_status()` raises this, and the client never calls it - `_make_request` decides on
+    # status codes from the response itself.
+    impit.HTTPStatusError,
+)
 
-    All `impit.HTTPError` subclasses are considered retryable because they represent transport-level failures
-    (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
-    code errors are handled separately in `_make_request` based on the response status code, not here.
+
+def _is_retryable_error(exc: Exception) -> bool:
+    """Check if an exception represents a transient transport failure that should be retried.
+
+    Every error from Impit's own hierarchy counts as transient except the permanently-failing types listed in
+    `_PERMANENT_ERRORS`. Retrying is the default because Impit also reports genuinely transient failures through
+    its generic base class, e.g. a bare `impit.HTTPError` wrapping a failure its internal HTTP library did not
+    classify. HTTP status code errors are handled separately in `_make_request` based on the response status code,
+    not here.
     """
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            impit.HTTPError,
-        ),
-    )
+    return isinstance(exc, impit.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
 
 @docs_group('HTTP clients')

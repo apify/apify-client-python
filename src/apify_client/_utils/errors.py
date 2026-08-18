@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import impit
-
-from apify_client.errors import InvalidResponseBodyError, NotFoundError
+from apify_client.errors import NotFoundError
 
 if TYPE_CHECKING:
     from apify_client.errors import ApifyApiError
@@ -33,19 +31,3 @@ def catch_not_found_for_resource_or_throw(exc: ApifyApiError, resource_id: str |
     if resource_id is None:
         raise exc
     catch_not_found_or_throw(exc)
-
-
-def is_retryable_error(exc: Exception) -> bool:
-    """Check if the given error is retryable.
-
-    All `impit.HTTPError` subclasses are considered retryable because they represent transport-level failures
-    (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
-    code errors are handled separately in `_make_request` based on the response status code, not here.
-    """
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            impit.HTTPError,
-        ),
-    )

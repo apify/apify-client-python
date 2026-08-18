@@ -4,6 +4,7 @@ import asyncio
 import logging
 import random
 import time
+from contextlib import suppress
 from datetime import timedelta
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -51,6 +52,13 @@ def _is_retryable_error(exc: Exception) -> bool:
             impit.HTTPError,
         ),
     )
+
+
+def _stop_retrying_if_permanent(exc: Exception, *, stop_retrying: Callable[[], None]) -> None:
+    """Stop the retry loop when an exception is not a transient transport failure."""
+    if not _is_retryable_error(exc):
+        logger.debug('Exception is not retryable', exc_info=exc)
+        stop_retrying()
 
 
 @docs_group('HTTP clients')
@@ -232,9 +240,7 @@ class ImpitHttpClient(HttpClient):
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            if not _is_retryable_error(exc):
-                logger.debug('Exception is not retryable', exc_info=exc)
-                stop_retrying()
+            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
             raise
 
         # Retry only server errors (5xx) and rate limits (429).
@@ -246,8 +252,17 @@ class ImpitHttpClient(HttpClient):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly.
-        response.read()
+        # Read the response in case it is a stream, so we can raise the error properly. A read that fails is a
+        # transport failure like any other, so it goes through the same classification as a failed send.
+        try:
+            response.read()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                response.close()
+            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod
@@ -494,9 +509,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            if not _is_retryable_error(exc):
-                logger.debug('Exception is not retryable', exc_info=exc)
-                stop_retrying()
+            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
             raise
 
         # Retry only server errors (5xx) and rate limits (429).
@@ -508,8 +521,17 @@ class ImpitHttpClientAsync(HttpClientAsync):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly.
-        await response.aread()
+        # Read the response in case it is a stream, so we can raise the error properly. A read that fails is a
+        # transport failure like any other, so it goes through the same classification as a failed send.
+        try:
+            await response.aread()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                await response.aclose()
+            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod

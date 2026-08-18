@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.1.3 - **not yet released**
+## [3.1.3](https://github.com/apify/apify-client-python/releases/tag/v3.1.3) (2026-08-18)
 
 ### 🐛 Bug Fixes
 
@@ -15,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - Classify and retry failures while reading a streamed error body ([#1020](https://github.com/apify/apify-client-python/pull/1020)) ([2760aa6](https://github.com/apify/apify-client-python/commit/2760aa67c7b2acc61cc69996f412120fabccc3d4)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.1.2](https://github.com/apify/apify-client-python/releases/tag/v3.1.2) (2026-08-10)
 
 ### 🐛 Bug Fixes

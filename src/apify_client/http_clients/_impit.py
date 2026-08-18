@@ -54,13 +54,6 @@ def _is_retryable_error(exc: Exception) -> bool:
     )
 
 
-def _stop_retrying_if_permanent(exc: Exception, *, stop_retrying: Callable[[], None]) -> None:
-    """Stop the retry loop when an exception is not a transient transport failure."""
-    if not _is_retryable_error(exc):
-        logger.debug('Exception is not retryable', exc_info=exc)
-        stop_retrying()
-
-
 @docs_group('HTTP clients')
 class ImpitHttpClient(HttpClient):
     """Synchronous HTTP client for the Apify API built on top of [Impit](https://github.com/apify/impit).
@@ -240,7 +233,9 @@ class ImpitHttpClient(HttpClient):
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
             raise
 
         # Retry only server errors (5xx) and rate limits (429).
@@ -260,7 +255,9 @@ class ImpitHttpClient(HttpClient):
             logger.debug('Reading the error response failed', exc_info=exc)
             with suppress(Exception):
                 response.close()
-            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
             raise
 
         raise ApifyApiError(response, attempt, method=method)
@@ -509,7 +506,9 @@ class ImpitHttpClientAsync(HttpClientAsync):
 
         except Exception as exc:
             logger.debug('Request threw exception', exc_info=exc)
-            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
             raise
 
         # Retry only server errors (5xx) and rate limits (429).
@@ -529,7 +528,9 @@ class ImpitHttpClientAsync(HttpClientAsync):
             logger.debug('Reading the error response failed', exc_info=exc)
             with suppress(Exception):
                 await response.aclose()
-            _stop_retrying_if_permanent(exc, stop_retrying=stop_retrying)
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
             raise
 
         raise ApifyApiError(response, attempt, method=method)

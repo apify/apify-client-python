@@ -21,7 +21,7 @@ from apify_client._consts import (
 from apify_client._docs import docs_group
 from apify_client._logging import log_context, logger_name
 from apify_client._utils.time import to_seconds
-from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+from apify_client.errors import ApifyApiError
 from apify_client.http_clients._base import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
@@ -37,20 +37,27 @@ T = TypeVar('T')
 logger = logging.getLogger(logger_name)
 
 
-def _is_retryable_error(exc: Exception) -> bool:
-    """Check if an exception represents a transient error that should be retried.
+_PERMANENT_ERRORS = (
+    # A bad URL scheme or a request Impit itself rejects cannot succeed on a retry.
+    impit.UnsupportedProtocol,
+    impit.LocalProtocolError,
+    # An over-long redirect chain is a routing loop, which repeating the request cannot break.
+    impit.TooManyRedirects,
+    # Status codes are decided by `_make_request` from the response itself, never as a transport error.
+    impit.HTTPStatusError,
+)
+"""Impit errors that a retry cannot fix. Everything else in the `impit.HTTPError` tree is treated as transient."""
 
-    All `impit.HTTPError` subclasses are considered retryable because they represent transport-level failures
-    (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
-    code errors are handled separately in `_make_request` based on the response status code, not here.
+
+def _is_retryable_error(exc: Exception) -> bool:
+    """Check if an exception represents a transient transport failure that should be retried.
+
+    Every error from Impit's own hierarchy counts as transient except the permanently-failing types listed in
+    `_PERMANENT_ERRORS`. Retrying is the default because Impit also reports genuinely transient failures through its
+    generic base class, e.g. a bare `impit.HTTPError` for a body that ends mid-chunk. HTTP status code errors are
+    handled separately in `_make_request` based on the response status code, not here.
     """
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            impit.HTTPError,
-        ),
-    )
+    return isinstance(exc, impit.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
 
 @docs_group('HTTP clients')

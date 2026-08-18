@@ -309,18 +309,65 @@ def test_parse_params_mixed() -> None:
     }
 
 
-def test_is_retryable_error() -> None:
-    """Test _is_retryable_error correctly identifies retryable errors."""
-    mock_response = Mock()
-    assert _is_retryable_error(InvalidResponseBodyError(mock_response))
-    assert _is_retryable_error(impit.NetworkError('test'))
-    assert _is_retryable_error(impit.TimeoutException('test'))
-    assert _is_retryable_error(impit.RemoteProtocolError('test'))
+RETRYABLE_TRANSPORT_ERRORS = (
+    # Impit raises a bare `HTTPError` for a body that ends mid-chunk, so even the generic base class is transient.
+    impit.HTTPError,
+    impit.TimeoutException,
+    impit.NetworkError,
+    impit.RemoteProtocolError,
+    impit.DecodingError,
+    # A proxy rejecting the tunnel is often transient, e.g. one that is overloaded or rate-limiting.
+    impit.ProxyError,
+)
+"""Transport errors that must stay retryable."""
 
-    # Non-retryable errors
+NON_RETRYABLE_TRANSPORT_ERRORS = (
+    impit.UnsupportedProtocol,
+    impit.LocalProtocolError,
+    impit.TooManyRedirects,
+    # No built-in client ever raises this one, because `_make_request` decides on status codes from the response.
+    impit.HTTPStatusError,
+)
+"""Transport errors that a retry cannot fix, so they must fail on the first attempt."""
+
+
+def test_is_retryable_error() -> None:
+    """Transient transport failures are retried, and the ones a retry cannot fix are not."""
+    for error_class in RETRYABLE_TRANSPORT_ERRORS:
+        assert _is_retryable_error(error_class('test')), error_class.__name__
+
+    for error_class in NON_RETRYABLE_TRANSPORT_ERRORS:
+        assert not _is_retryable_error(error_class('test')), error_class.__name__
+
+    # `InvalidResponseBodyError` is raised by a resource client once `call` has returned, never inside the retry loop.
+    assert not _is_retryable_error(InvalidResponseBodyError(Mock()))
     assert not _is_retryable_error(ValueError('test'))
     assert not _is_retryable_error(RuntimeError('test'))
     assert not _is_retryable_error(Exception('test'))
+
+
+def test_permanent_transport_error_is_not_retried() -> None:
+    """A transport error a retry cannot fix fails on the first attempt instead of burning the whole backoff."""
+    client = ImpitHttpClient(token='test_token', min_delay_between_retries=timedelta(0))
+    request = Mock(side_effect=impit.UnsupportedProtocol('unsupported scheme'))
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.UnsupportedProtocol):
+        client.call(method='GET', url='ftp://api.test.com/endpoint')
+
+    request.assert_called_once()
+
+
+async def test_permanent_transport_error_is_not_retried_async() -> None:
+    """The async client applies the same policy, failing on the first attempt."""
+    client = ImpitHttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0))
+    request = AsyncMock(side_effect=impit.UnsupportedProtocol('unsupported scheme'))
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(impit.UnsupportedProtocol):
+        await client.call(method='GET', url='ftp://api.test.com/endpoint')
+
+    request.assert_awaited_once()
 
 
 @pytest.fixture(

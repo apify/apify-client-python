@@ -370,7 +370,7 @@ def test_builtin_http_client_retry_policy() -> None:
         for error_class in NON_RETRYABLE_TRANSPORT_ERRORS:
             assert not client.is_retryable_transport_error(error_class('test')), error_class.__name__
 
-        # `InvalidResponseBodyError` is retried by `_handle_request_exception`, not as a transport failure.
+        # `InvalidResponseBodyError` is the client's own error, raised outside the pipeline - never a transport failure.
         assert not client.is_retryable_transport_error(InvalidResponseBodyError(Mock()))
         assert not client.is_retryable_transport_error(ValueError('test'))
 

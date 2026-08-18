@@ -33,7 +33,7 @@ from apify_client._logging import LoggerOnce, log_context, logger_name
 from apify_client._statistics import ClientStatistics
 from apify_client._utils.http import is_compressible_content_type
 from apify_client._utils.time import to_seconds
-from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+from apify_client.errors import ApifyApiError
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:
@@ -360,9 +360,9 @@ class HttpClientBase:
         return f'{url}?{query_string}'
 
     def _handle_request_exception(self, exc: Exception, *, stop_retrying: Callable[[], None]) -> None:
-        """Stop retrying when an exception is not a transient response or transport failure."""
+        """Stop retrying when an exception is not a retryable transport failure."""
         logger.debug('Request threw exception', exc_info=exc)
-        if not isinstance(exc, InvalidResponseBodyError) and not self.is_retryable_transport_error(exc):
+        if not self.is_retryable_transport_error(exc):
             logger.debug('Exception is not retryable', exc_info=exc)
             stop_retrying()
 

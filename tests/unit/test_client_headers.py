@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 
 from werkzeug import Request, Response
 
-from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
-
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
+
+    from apify_client.http_clients import HttpClient, HttpClientAsync
 
 
 def _parse_accept_encoding(header: str) -> set[str]:
@@ -34,9 +34,9 @@ def _get_user_agent() -> str:
     return f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
 
 
-async def test_default_headers_async(httpserver: HTTPServer) -> None:
+async def test_default_headers_async(httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]) -> None:
     """Test that default headers are sent with each request."""
-    client = ImpitHttpClientAsync(token='placeholder_token')
+    client = http_client_async_class(token='placeholder_token')
     httpserver.expect_request('/').respond_with_handler(_header_handler)
     api_url = httpserver.url_for('/').removesuffix('/')
 
@@ -54,9 +54,9 @@ async def test_default_headers_async(httpserver: HTTPServer) -> None:
     assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
-def test_default_headers_sync(httpserver: HTTPServer) -> None:
+def test_default_headers_sync(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> None:
     """Test that default headers are sent with each request."""
-    client = ImpitHttpClient(token='placeholder_token')
+    client = http_client_class(token='placeholder_token')
     httpserver.expect_request('/').respond_with_handler(_header_handler)
     api_url = httpserver.url_for('/').removesuffix('/')
 
@@ -74,9 +74,9 @@ def test_default_headers_sync(httpserver: HTTPServer) -> None:
     assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
-async def test_headers_async(httpserver: HTTPServer) -> None:
+async def test_headers_async(httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]) -> None:
     """Test that custom headers are sent with each request."""
-    client = ImpitHttpClientAsync(
+    client = http_client_async_class(
         token='placeholder_token',
         headers={'Test-Header': 'blah', 'User-Agent': 'CustomUserAgent/1.0', 'Authorization': 'strange_value'},
     )
@@ -98,9 +98,9 @@ async def test_headers_async(httpserver: HTTPServer) -> None:
     assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
-def test_headers_sync(httpserver: HTTPServer) -> None:
+def test_headers_sync(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> None:
     """Test that custom headers are sent with each request."""
-    client = ImpitHttpClient(
+    client = http_client_class(
         token='placeholder_token',
         headers={
             'Test-Header': 'blah',
@@ -126,9 +126,11 @@ def test_headers_sync(httpserver: HTTPServer) -> None:
     assert _parse_accept_encoding(request_headers['Accept-Encoding']) == {'gzip', 'br', 'zstd', 'deflate'}
 
 
-async def test_per_request_headers_override_defaults_async(httpserver: HTTPServer) -> None:
+async def test_per_request_headers_override_defaults_async(
+    httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]
+) -> None:
     """Test that a per-request header overrides a same-named default header on the wire, without duplication."""
-    client = ImpitHttpClientAsync(token='placeholder_token')
+    client = http_client_async_class(token='placeholder_token')
     httpserver.expect_request('/').respond_with_handler(_header_handler)
     api_url = httpserver.url_for('/').removesuffix('/')
 
@@ -141,9 +143,11 @@ async def test_per_request_headers_override_defaults_async(httpserver: HTTPServe
     assert request_headers['Authorization'] == 'Bearer per-request'
 
 
-def test_per_request_headers_override_defaults_sync(httpserver: HTTPServer) -> None:
+def test_per_request_headers_override_defaults_sync(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
     """Test that a per-request header overrides a same-named default header on the wire, without duplication."""
-    client = ImpitHttpClient(token='placeholder_token')
+    client = http_client_class(token='placeholder_token')
     httpserver.expect_request('/').respond_with_handler(_header_handler)
     api_url = httpserver.url_for('/').removesuffix('/')
 

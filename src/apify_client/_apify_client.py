@@ -226,8 +226,8 @@ class ApifyClient:
         """Create an `ApifyClient` instance with a custom HTTP client.
 
         Use this alternative constructor when you want to provide your own HTTP client implementation
-        instead of the default one. The custom client is responsible for its own configuration
-        (retries, timeouts, etc.); only the token is applied to it, as described below.
+        instead of the default one. The custom client controls its transport configuration; the shared
+        `HttpClient` pipeline handles request preparation, retries, timeouts, and API errors unless overridden.
 
         ### Usage
 
@@ -235,9 +235,11 @@ class ApifyClient:
         from apify_client import ApifyClient
         from apify_client.http_clients import HttpClient, HttpResponse
 
+
         class MyHttpClient(HttpClient):
-            def call(self, *, method, url, **kwargs) -> HttpResponse:
+            def send_request(self, *, method, url, headers, content, timeout, stream) -> HttpResponse:
                 ...
+
 
         client = ApifyClient.with_custom_http_client(
             token='MY-APIFY-TOKEN',
@@ -588,8 +590,8 @@ class ApifyClientAsync:
         """Create an `ApifyClientAsync` instance with a custom HTTP client.
 
         Use this alternative constructor when you want to provide your own HTTP client implementation
-        instead of the default one. The custom client is responsible for its own configuration
-        (retries, timeouts, etc.); only the token is applied to it, as described below.
+        instead of the default one. The custom client controls its transport configuration; the shared
+        `HttpClientAsync` pipeline handles request preparation, retries, timeouts, and API errors unless overridden.
 
         ### Usage
 
@@ -597,13 +599,15 @@ class ApifyClientAsync:
         from apify_client import ApifyClientAsync
         from apify_client.http_clients import HttpClientAsync, HttpResponse
 
-        class MyHttpClient(HttpClientAsync):
-            async def call(self, *, method, url, **kwargs) -> HttpResponse:
+
+        class MyHttpClientAsync(HttpClientAsync):
+            async def send_request(self, *, method, url, headers, content, timeout, stream) -> HttpResponse:
                 ...
+
 
         client = ApifyClientAsync.with_custom_http_client(
             token='MY-APIFY-TOKEN',
-            http_client=MyHttpClient(),
+            http_client=MyHttpClientAsync(),
         )
         ```
 

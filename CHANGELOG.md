@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Do not mask unrelated import errors when guarding optional dependencies ([#1009](https://github.com/apify/apify-client-python/pull/1009)) ([f57e9e7](https://github.com/apify/apify-client-python/commit/f57e9e7338503d700f0b675ae7097a369e65734f)) by [@vdusek](https://github.com/vdusek)
 - Keep HttpResponse isinstance checks from consuming streamed responses ([#1010](https://github.com/apify/apify-client-python/pull/1010)) ([8a2bb7b](https://github.com/apify/apify-client-python/commit/8a2bb7bfb9e0078e1d1633e567760bb431ef60b4)) by [@vdusek](https://github.com/vdusek)
 - Fail fast on transport errors a retry cannot fix ([#1019](https://github.com/apify/apify-client-python/pull/1019)) ([ab63eff](https://github.com/apify/apify-client-python/commit/ab63effe9da2ee0ef60729c10ee3b132d85cb60b)) by [@vdusek](https://github.com/vdusek)
+- Classify and retry failures while reading a streamed error body ([#1020](https://github.com/apify/apify-client-python/pull/1020)) ([2760aa6](https://github.com/apify/apify-client-python/commit/2760aa67c7b2acc61cc69996f412120fabccc3d4)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

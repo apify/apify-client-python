@@ -38,24 +38,28 @@ logger = logging.getLogger(logger_name)
 
 
 _PERMANENT_ERRORS = (
-    # A bad URL scheme or a request Impit itself rejects cannot succeed on a retry.
-    impit.UnsupportedProtocol,
+    # A request Impit rejects before sending it, e.g. one carrying an invalid header value.
     impit.LocalProtocolError,
+    # The class Impit declares for a scheme it refuses to speak, but does not raise today - it reports an unsupported
+    # scheme as `impit.InvalidURL`, which sits outside the `impit.HTTPError` tree and is non-retryable anyway. Listed
+    # so the classifier stays right if Impit switches over.
+    impit.UnsupportedProtocol,
     # An over-long redirect chain is a routing loop, which repeating the request cannot break.
     impit.TooManyRedirects,
-    # Status codes are decided by `_make_request` from the response itself, never as a transport error.
+    # Only `Response.raise_for_status()` raises this, and the client never calls it - `_make_request` decides on
+    # status codes from the response itself.
     impit.HTTPStatusError,
 )
-"""Impit errors that a retry cannot fix. Everything else in the `impit.HTTPError` tree is treated as transient."""
 
 
 def _is_retryable_error(exc: Exception) -> bool:
     """Check if an exception represents a transient transport failure that should be retried.
 
     Every error from Impit's own hierarchy counts as transient except the permanently-failing types listed in
-    `_PERMANENT_ERRORS`. Retrying is the default because Impit also reports genuinely transient failures through its
-    generic base class, e.g. a bare `impit.HTTPError` for a body that ends mid-chunk. HTTP status code errors are
-    handled separately in `_make_request` based on the response status code, not here.
+    `_PERMANENT_ERRORS`. Retrying is the default because Impit also reports genuinely transient failures through
+    its generic base class, e.g. a bare `impit.HTTPError` wrapping a failure its internal HTTP library did not
+    classify. HTTP status code errors are handled separately in `_make_request` based on the response status code,
+    not here.
     """
     return isinstance(exc, impit.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 

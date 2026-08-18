@@ -137,9 +137,9 @@ class ServerError(ApifyApiError):
 class InvalidResponseBodyError(ApifyClientError):
     """Error raised when a response body cannot be parsed.
 
-    This typically occurs when the API returns a partial or malformed JSON response, for example due to a network
-    interruption. The client retries such requests automatically, so this error is only raised after all retry
-    attempts have been exhausted.
+    This occurs when the API returns a body that does not match its content type, for example a malformed JSON
+    document. It is raised on a response the client already accepted, so it is not retried - a transfer that breaks
+    mid-body surfaces as a transport error inside the retry loop instead.
     """
 
     def __init__(self, response: HttpResponse) -> None:

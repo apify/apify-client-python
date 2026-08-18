@@ -309,51 +309,55 @@ def test_parse_params_mixed() -> None:
     }
 
 
-RETRYABLE_TRANSPORT_ERRORS = (
-    # Impit raises a bare `HTTPError` for a body that ends mid-chunk, so even the generic base class is transient.
-    impit.HTTPError,
-    impit.TimeoutException,
-    impit.NetworkError,
-    impit.RemoteProtocolError,
-    impit.DecodingError,
-    # A proxy rejecting the tunnel is often transient, e.g. one that is overloaded or rate-limiting.
-    impit.ProxyError,
+@pytest.mark.parametrize(
+    'exc',
+    [
+        # Impit wraps a failure its internal HTTP library did not classify in a bare `HTTPError`, so even the
+        # generic base class is transient.
+        pytest.param(impit.HTTPError('unclassified failure'), id='bare HTTPError'),
+        pytest.param(impit.TimeoutException('timeout'), id='TimeoutException'),
+        pytest.param(impit.NetworkError('network error'), id='NetworkError'),
+        pytest.param(impit.RemoteProtocolError('remote protocol error'), id='RemoteProtocolError'),
+        pytest.param(impit.DecodingError('decoding error'), id='DecodingError'),
+        # One `ProxyError` covers both a proxy rejecting the CONNECT tunnel and a 407, so a transient case cannot
+        # be told from a permanent one - retrying is the safer default.
+        pytest.param(impit.ProxyError('proxy error'), id='ProxyError'),
+    ],
 )
-"""Transport errors that must stay retryable."""
+def test_is_retryable_error(exc: Exception) -> None:
+    """A transient transport failure is retried."""
+    assert _is_retryable_error(exc)
 
-NON_RETRYABLE_TRANSPORT_ERRORS = (
-    impit.UnsupportedProtocol,
-    impit.LocalProtocolError,
-    impit.TooManyRedirects,
-    # No built-in client ever raises this one, because `_make_request` decides on status codes from the response.
-    impit.HTTPStatusError,
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        pytest.param(impit.LocalProtocolError('invalid header value'), id='LocalProtocolError'),
+        pytest.param(impit.UnsupportedProtocol('unsupported scheme'), id='UnsupportedProtocol'),
+        pytest.param(impit.TooManyRedirects('too many redirects'), id='TooManyRedirects'),
+        pytest.param(impit.HTTPStatusError('status error'), id='HTTPStatusError'),
+        # Impit reports a bad URL outside the `impit.HTTPError` tree entirely.
+        pytest.param(impit.InvalidURL('unsupported scheme'), id='InvalidURL'),
+        # `InvalidResponseBodyError` is raised by a resource client once `call` has returned, never in the retry loop.
+        pytest.param(InvalidResponseBodyError(Mock()), id='InvalidResponseBodyError'),
+        pytest.param(ValueError('value error'), id='ValueError'),
+        pytest.param(RuntimeError('runtime error'), id='RuntimeError'),
+        pytest.param(Exception('generic exception'), id='Exception'),
+    ],
 )
-"""Transport errors that a retry cannot fix, so they must fail on the first attempt."""
-
-
-def test_is_retryable_error() -> None:
-    """Transient transport failures are retried, and the ones a retry cannot fix are not."""
-    for error_class in RETRYABLE_TRANSPORT_ERRORS:
-        assert _is_retryable_error(error_class('test')), error_class.__name__
-
-    for error_class in NON_RETRYABLE_TRANSPORT_ERRORS:
-        assert not _is_retryable_error(error_class('test')), error_class.__name__
-
-    # `InvalidResponseBodyError` is raised by a resource client once `call` has returned, never inside the retry loop.
-    assert not _is_retryable_error(InvalidResponseBodyError(Mock()))
-    assert not _is_retryable_error(ValueError('test'))
-    assert not _is_retryable_error(RuntimeError('test'))
-    assert not _is_retryable_error(Exception('test'))
+def test_is_not_retryable_error(exc: Exception) -> None:
+    """A transport failure a retry cannot fix, and anything outside Impit's hierarchy, is not retried."""
+    assert not _is_retryable_error(exc)
 
 
 def test_permanent_transport_error_is_not_retried() -> None:
     """A transport error a retry cannot fix fails on the first attempt instead of burning the whole backoff."""
     client = ImpitHttpClient(token='test_token', min_delay_between_retries=timedelta(0))
-    request = Mock(side_effect=impit.UnsupportedProtocol('unsupported scheme'))
+    request = Mock(side_effect=impit.LocalProtocolError('invalid header value'))
     client._impit_client = Mock(request=request)
 
-    with pytest.raises(impit.UnsupportedProtocol):
-        client.call(method='GET', url='ftp://api.test.com/endpoint')
+    with pytest.raises(impit.LocalProtocolError):
+        client.call(method='GET', url='https://api.test.com/endpoint')
 
     request.assert_called_once()
 
@@ -361,13 +365,26 @@ def test_permanent_transport_error_is_not_retried() -> None:
 async def test_permanent_transport_error_is_not_retried_async() -> None:
     """The async client applies the same policy, failing on the first attempt."""
     client = ImpitHttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0))
-    request = AsyncMock(side_effect=impit.UnsupportedProtocol('unsupported scheme'))
+    request = AsyncMock(side_effect=impit.LocalProtocolError('invalid header value'))
     client._impit_async_client = Mock(request=request)
 
-    with pytest.raises(impit.UnsupportedProtocol):
-        await client.call(method='GET', url='ftp://api.test.com/endpoint')
+    with pytest.raises(impit.LocalProtocolError):
+        await client.call(method='GET', url='https://api.test.com/endpoint')
 
     request.assert_awaited_once()
+
+
+def test_transient_transport_error_is_retried() -> None:
+    """A transient transport failure keeps being retried until the attempts run out."""
+    client = ImpitHttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0))
+    request = Mock(side_effect=impit.TimeoutException('timeout'))
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.TimeoutException):
+        client.call(method='GET', url='https://api.test.com/endpoint')
+
+    # `max_retries` attempts inside the backoff loop, plus the final one it makes after the last delay.
+    assert request.call_count == 3
 
 
 @pytest.fixture(

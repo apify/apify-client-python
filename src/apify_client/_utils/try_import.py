@@ -11,17 +11,29 @@ if TYPE_CHECKING:
     from typing import Any
 
 
+@dataclass
+class ImportState:
+    """Describe whether an optional import succeeded."""
+
+    available: bool = True
+
+
 @contextmanager
-def try_import(module_name: str, *symbol_names: str) -> Iterator[None]:
+def try_import(module_name: str, *symbol_names: str, dependency_name: str) -> Iterator[ImportState]:
     """Context manager to attempt importing symbols into a module.
 
-    If an `ImportError` is raised during the import, the symbol will be replaced with a `FailedImport` object.
+    If the named optional dependency is missing, the symbols are replaced with `FailedImport` objects. Import errors
+    caused by the importing module itself or by another dependency are propagated instead of being masked.
     """
+    state = ImportState()
     try:
-        yield
-    except ImportError as e:
+        yield state
+    except ModuleNotFoundError as exc:
+        if exc.name != dependency_name:
+            raise
+        state.available = False
         for symbol_name in symbol_names:
-            setattr(sys.modules[module_name], symbol_name, FailedImport(e.args[0]))
+            setattr(sys.modules[module_name], symbol_name, FailedImport(exc.args[0]))
 
 
 def install_import_hook(module_name: str) -> None:

@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "apify_client"
-version = "3.1.3"
+version = "3.1.4"
 description = "Apify API client for Python"
 authors = [{ name = "Apify Technologies s.r.o.", email = "support@apify.com" }]
 license = "Apache-2.0"
@@ -28,6 +28,8 @@ dependencies = [
     "impit~=0.13.0",
     "more_itertools>=10.0.0",
     "pydantic[email]>=2.11.0",
+    # 4.6.0 is the first release whose runtime protocol checks look attributes up statically.
+    "typing-extensions>=4.6.0",
 ]
 
 [project.optional-dependencies]
@@ -255,7 +257,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-08-05T133145Z"
+version = "v2-2026-08-14T072928Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

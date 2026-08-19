@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up uv package manager
-        uses: astral-sh/setup-uv@v9.0.0
+        uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -144,7 +144,7 @@ jobs:
       - name: Commit the regenerated models
         id: commit
         if: steps.changes.outputs.has-changes == 'true' && steps.review.outputs.is-new == 'true'
-        uses: apify/actions/signed-commit@v1.4.0
+        uses: apify/actions/signed-commit@v1.4.1
         with:
           message: ${{ env.PR_TITLE }}
           add: >-

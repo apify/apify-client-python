@@ -1,14 +1,23 @@
 from __future__ import annotations
 
+import asyncio
 import json as jsonlib
 import logging
 import os
+import random
 import sys
-from abc import ABC, abstractmethod
+import time
+from contextlib import suppress
 from datetime import UTC, datetime, timedelta
+from http import HTTPStatus
 from importlib import metadata
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, TypeVar
 from urllib.parse import urlencode
+
+# `Protocol` comes from `typing_extensions`, not `typing`, because its runtime `isinstance` check looks attributes
+# up statically. The `typing` implementation on Python 3.11 calls `hasattr`, which evaluates properties. On an
+# unread streaming response, that either raises or silently buffers the whole body.
+from typing_extensions import Protocol, runtime_checkable
 
 from apify_client._consts import (
     DEFAULT_MAX_RETRIES,
@@ -20,20 +29,25 @@ from apify_client._consts import (
     MIN_COMPRESSION_SIZE,
 )
 from apify_client._docs import docs_group
-from apify_client._logging import LoggerOnce, logger_name
+from apify_client._logging import LoggerOnce, log_context, logger_name
 from apify_client._statistics import ClientStatistics
 from apify_client._utils.http import is_compressible_content_type
 from apify_client._utils.time import to_seconds
+from apify_client.errors import ApifyApiError
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator, Mapping
+    from collections.abc import AsyncIterator, Awaitable, Callable, Iterator, Mapping
+    from types import TracebackType
+    from typing import Self
 
     from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import JsonSerializable, Timeout
 
 logger = logging.getLogger(logger_name)
 logger_once = LoggerOnce(logger)
+
+T = TypeVar('T')
 
 
 @docs_group('HTTP clients')
@@ -88,12 +102,11 @@ class HttpResponse(Protocol):
 class HttpClientBase:
     """Shared configuration and utilities for HTTP clients.
 
-    Provides common functionality for both sync and async HTTP clients including:
-    header construction, parameter parsing, request body preparation, URL building,
-    and timeout calculation.
+    Provides common functionality for both sync and async HTTP clients including: header construction, parameter
+    parsing, request body preparation, URL building, timeout calculation, and error classification.
 
-    Subclasses should call `super().__init__()` to initialize shared configuration.
-    The helper methods are then available for use in the `call()` implementation.
+    Subclasses should call `super().__init__()` to initialize shared configuration. The helpers are then used by the
+    inherited `call`, and stay available to a client that replaces it.
     """
 
     def __init__(
@@ -161,6 +174,23 @@ class HttpClientBase:
         if self._get_header(self._headers, 'authorization') is None:
             self._headers['Authorization'] = f'Bearer {token}'
 
+    def is_timeout_error(self, exc: Exception) -> bool:
+        """Return whether an exception represents a transport timeout.
+
+        Recognizes Python's own `TimeoutError`. Transport adapters extend it with the timeout types their HTTP
+        library defines.
+        """
+        return isinstance(exc, TimeoutError)
+
+    def is_retryable_transport_error(self, exc: Exception) -> bool:
+        """Return whether an underlying HTTP-library exception is retryable.
+
+        The default classifies nothing as retryable, so a transport that doesn't override it gives up on the first
+        connection failure. Every transport adapter should map its own transient error types here.
+        """
+        _ = exc
+        return False
+
     @staticmethod
     def _merge_headers(base: dict[str, str] | None, override: dict[str, str] | None) -> dict[str, str]:
         """Merge two header dicts, treating header names case-insensitively.
@@ -206,6 +236,20 @@ class HttpClientBase:
 
         return parsed_params
 
+    @staticmethod
+    def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
+        """Whether the body is large enough that `_prepare_request_call` may compress it.
+
+        This gate only picks where the preparation runs (worker thread or inline), so it approximates rather
+        than replicates the compression conditions: the content type and `Content-Encoding` checks are skipped,
+        and a `str` is measured in characters instead of encoded bytes. A misjudged body costs either one
+        needless thread hop or an inline preparation of a body under `MIN_COMPRESSION_SIZE` characters - both
+        cheap.
+        """
+        if isinstance(data, (str, bytes, bytearray)):
+            return len(data) >= MIN_COMPRESSION_SIZE
+        return False
+
     def _compute_timeout(self, timeout: Timeout, *, attempt: int) -> int | float | None:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
@@ -244,24 +288,6 @@ class HttpClientBase:
 
         new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
         return to_seconds(new_timeout)
-
-    @staticmethod
-    def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
-        """Whether this body clears the size threshold `_prepare_request_call` compresses at, cheaply.
-
-        Below the threshold nothing is ever compressed. At or above it the content type and a caller-supplied
-        `Content-Encoding` still decide, but checking those here would buy nothing - a body that turns out to be
-        already encoded only wastes the thread hop this answer guards.
-
-        The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It is a
-        lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the encoded
-        length decides, and the body is then under 4 KiB, so encoding it here is cheap.
-        """
-        if isinstance(data, str):
-            return len(data) >= MIN_COMPRESSION_SIZE or len(data.encode('utf-8')) >= MIN_COMPRESSION_SIZE
-        if isinstance(data, (bytes, bytearray)):
-            return len(data) >= MIN_COMPRESSION_SIZE
-        return False
 
     def _prepare_request_call(
         self,
@@ -328,21 +354,70 @@ class HttpClientBase:
 
         return f'{url}?{query_string}'
 
+    def _handle_request_exception(self, exc: Exception, *, stop_retrying: Callable[[], None]) -> None:
+        """Stop retrying when an exception is not a retryable transport failure."""
+        logger.debug('Request threw exception', exc_info=exc)
+        if not self.is_retryable_transport_error(exc):
+            logger.debug('Exception is not retryable', exc_info=exc)
+            stop_retrying()
+
+    def _handle_response_status(
+        self,
+        response: HttpResponse,
+        *,
+        attempt: int,
+        stop_retrying: Callable[[], None],
+    ) -> bool:
+        """Record the response status and stop retrying unless it is a server error or a rate limit.
+
+        Returns whether the response is a success, so the caller can hand it back instead of raising.
+        """
+        if response.status_code < HTTPStatus.MULTIPLE_CHOICES:
+            logger.debug('Request successful', extra={'status_code': response.status_code})
+            return True
+
+        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
+            self._statistics.add_rate_limit_error(attempt)
+
+        logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
+        if (
+            response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            and response.status_code != HTTPStatus.TOO_MANY_REQUESTS
+        ):
+            logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
+            stop_retrying()
+
+        return False
+
 
 @docs_group('HTTP clients')
-class HttpClient(HttpClientBase, ABC):
-    """Abstract base class for synchronous HTTP clients used by `ApifyClient`.
+class HttpClient(HttpClientBase):
+    """Base class for synchronous HTTP clients used by `ApifyClient`.
 
-    Extend this class to create a custom synchronous HTTP client. Override the `call` method
-    with your implementation. Helper methods from the base class are available for request
-    preparation, URL building, and parameter parsing.
+    Concrete clients inherit its request preparation, retry, and error handling, and implement the transport,
+    error-classification, and lifecycle hooks. Only `send_request` has to be implemented, the other hooks have
+    defaults. Replacing `call` itself also remains supported, and then the transport and retry-classification hooks
+    are bypassed. Helper methods from `HttpClientBase` remain available for request preparation, URL building, and
+    parameter parsing.
 
-    Implementations must send the client's default headers from `self._headers` with every request,
-    otherwise the `Authorization` header never reaches the API. The `_prepare_request_call` helper
-    merges them into the per-request headers automatically.
+    The client's default headers from `self._headers` have to go out with every request, otherwise the
+    `Authorization` header never reaches the API. The inherited `call` merges them into the per-request headers
+    through `_prepare_request_call`, so only a client that replaces `call` has to do it itself.
     """
 
-    @abstractmethod
+    def __enter__(self) -> Self:
+        """Return this client and close it when the context exits."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Close resources owned by the HTTP client."""
+        self.close()
+
     def call(
         self,
         *,
@@ -351,16 +426,16 @@ class HttpClient(HttpClientBase, ABC):
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         data: str | bytes | bytearray | None = None,
-        json: Any = None,
+        json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> HttpResponse:
-        """Make an HTTP request.
+        """Make an HTTP request with automatic retry and exponential backoff.
 
         Args:
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full URL to make the request to.
-            headers: Additional headers to include in this request.
+            headers: Additional headers to include.
             params: Query parameters to append to the URL.
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
@@ -376,17 +451,176 @@ class HttpClient(HttpClientBase, ABC):
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
         """
+        log_context.method.set(method)
+        log_context.url.set(url)
+
+        self._statistics.calls += 1
+
+        prepared_headers, prepared_params, content = self._prepare_request_call(
+            headers=headers,
+            params=params,
+            data=data,
+            json=json,
+        )
+
+        return self._retry_with_exp_backoff(
+            lambda stop_retrying, attempt: self._make_request(
+                stop_retrying=stop_retrying,
+                attempt=attempt,
+                method=method,
+                url=url,
+                headers=prepared_headers,
+                params=prepared_params,
+                content=content,
+                stream=stream,
+                timeout=timeout,
+            ),
+            max_retries=self._max_retries,
+            backoff_base=self._min_delay_between_retries,
+        )
+
+    def close(self) -> None:
+        """Close resources owned by the HTTP client.
+
+        Transports that own a connection pool or a session override it. The default does nothing.
+        """
+
+    def send_request(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        content: bytes | None,
+        timeout: float | None,
+        stream: bool,
+    ) -> HttpResponse:
+        """Send one request through the underlying HTTP library.
+
+        Required by the inherited `call`, so a transport adapter must implement it. Overriding `call` itself
+        bypasses it entirely. Let the HTTP library's exceptions propagate unwrapped: `call` classifies them
+        through `is_retryable_transport_error` and `is_timeout_error`.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            url: Full request URL, with the query parameters already encoded into it.
+            headers: Final request headers, with the client's default headers already merged in.
+            content: Request body, already serialized and compressed, or None for a request without a body.
+            timeout: Timeout for this attempt in seconds, or None for no timeout at all.
+            stream: Whether to return the response with the body unread, so the caller can stream it.
+
+        Returns:
+            The HTTP response object.
+        """
+        raise NotImplementedError('Implement `send_request` to provide a transport, or override `call` entirely.')
+
+    @staticmethod
+    def _retry_with_exp_backoff(
+        func: Callable[[Callable[[], None], int], T],
+        *,
+        max_retries: int = 8,
+        backoff_base: timedelta = timedelta(milliseconds=500),
+        backoff_factor: float = 2,
+        random_factor: float = 1,
+    ) -> T:
+        """Retry a function with exponential backoff and jitter."""
+        if max_retries < 1:
+            raise ValueError(f'max_retries must be at least 1, got {max_retries}')
+
+        random_factor = min(max(0, random_factor), 1)
+        backoff_factor = min(max(1, backoff_factor), 10)
+        swallow = True
+
+        def stop_retrying() -> None:
+            nonlocal swallow
+            swallow = False
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                return func(stop_retrying, attempt)
+            except Exception:
+                if not swallow:
+                    raise
+
+            random_sleep_factor = random.uniform(1, 1 + random_factor)
+            backoff_base_secs = to_seconds(backoff_base)
+            backoff_exp_factor = backoff_factor ** (attempt - 1)
+            time.sleep(random_sleep_factor * backoff_base_secs * backoff_exp_factor)
+
+        return func(stop_retrying, max_retries + 1)
+
+    def _make_request(
+        self,
+        *,
+        stop_retrying: Callable[[], None],
+        attempt: int,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        params: dict[str, Any] | None,
+        content: bytes | None,
+        stream: bool | None,
+        timeout: Timeout,
+    ) -> HttpResponse:
+        """Execute one request attempt through the transport adapter."""
+        log_context.attempt.set(attempt)
+        logger.debug('Sending request')
+
+        self._statistics.requests += 1
+
+        try:
+            response = self.send_request(
+                method=method,
+                url=self._build_url_with_params(url, params=params),
+                headers=headers,
+                content=content,
+                timeout=self._compute_timeout(timeout, attempt=attempt),
+                stream=stream or False,
+            )
+        except Exception as exc:
+            self._handle_request_exception(exc, stop_retrying=stop_retrying)
+            raise
+
+        if self._handle_response_status(response, attempt=attempt, stop_retrying=stop_retrying):
+            return response
+
+        # Read the response in case it is a stream, so the error can be raised properly. A failed read goes through
+        # the same classification as a failed send.
+        try:
+            response.read()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                response.close()
+            if not self.is_retryable_transport_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
+        raise ApifyApiError(response, attempt, method=method)
 
 
 @docs_group('HTTP clients')
-class HttpClientAsync(HttpClientBase, ABC):
-    """Abstract base class for asynchronous HTTP clients used by `ApifyClientAsync`.
+class HttpClientAsync(HttpClientBase):
+    """Base class for asynchronous HTTP clients used by `ApifyClientAsync`.
 
     Extend this class to create a custom asynchronous HTTP client. See `HttpClient`
     for details on the expected behavior.
     """
 
-    @abstractmethod
+    async def __aenter__(self) -> Self:
+        """Return this client and close it when the async context exits."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Close resources owned by the asynchronous HTTP client."""
+        await self.aclose()
+
     async def call(
         self,
         *,
@@ -395,16 +629,16 @@ class HttpClientAsync(HttpClientBase, ABC):
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
         data: str | bytes | bytearray | None = None,
-        json: Any = None,
+        json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> HttpResponse:
-        """Make an HTTP request.
+        """Make an HTTP request with automatic retry and exponential backoff.
 
         Args:
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full URL to make the request to.
-            headers: Additional headers to include in this request.
+            headers: Additional headers to include.
             params: Query parameters to append to the URL.
             data: Raw request body data. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
@@ -420,3 +654,163 @@ class HttpClientAsync(HttpClientBase, ABC):
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
         """
+        log_context.method.set(method)
+        log_context.url.set(url)
+
+        self._statistics.calls += 1
+
+        # Serializing and compressing a request body is CPU-bound and would block the event loop, so
+        # offload preparation to a worker thread whenever there is something to compress. A body the
+        # client sends as it is costs less to prepare inline than the hop itself. A `json` body always
+        # hops, as its size is only known once serialized.
+        if json is not None or self._is_body_worth_compressing(data):
+            prepared_headers, prepared_params, content = await asyncio.to_thread(
+                self._prepare_request_call,
+                headers=headers,
+                params=params,
+                data=data,
+                json=json,
+            )
+        else:
+            prepared_headers, prepared_params, content = self._prepare_request_call(
+                headers=headers,
+                params=params,
+                data=data,
+                json=json,
+            )
+
+        return await self._retry_with_exp_backoff(
+            lambda stop_retrying, attempt: self._make_request(
+                stop_retrying=stop_retrying,
+                attempt=attempt,
+                method=method,
+                url=url,
+                headers=prepared_headers,
+                params=prepared_params,
+                content=content,
+                stream=stream,
+                timeout=timeout,
+            ),
+            max_retries=self._max_retries,
+            backoff_base=self._min_delay_between_retries,
+        )
+
+    async def aclose(self) -> None:
+        """Close resources owned by the asynchronous HTTP client.
+
+        Transports that own a connection pool or a session override it. The default does nothing.
+        """
+
+    async def send_request(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        content: bytes | None,
+        timeout: float | None,
+        stream: bool,
+    ) -> HttpResponse:
+        """Send one request through the underlying HTTP library.
+
+        Required by the inherited `call`, so a transport adapter must implement it. Overriding `call` itself
+        bypasses it entirely. Let the HTTP library's exceptions propagate unwrapped: `call` classifies them
+        through `is_retryable_transport_error` and `is_timeout_error`.
+
+        Args:
+            method: HTTP method (GET, POST, PUT, DELETE, etc.).
+            url: Full request URL, with the query parameters already encoded into it.
+            headers: Final request headers, with the client's default headers already merged in.
+            content: Request body, already serialized and compressed, or None for a request without a body.
+            timeout: Timeout for this attempt in seconds, or None for no timeout at all.
+            stream: Whether to return the response with the body unread, so the caller can stream it.
+
+        Returns:
+            The HTTP response object.
+        """
+        raise NotImplementedError('Implement `send_request` to provide a transport, or override `call` entirely.')
+
+    @staticmethod
+    async def _retry_with_exp_backoff(
+        func: Callable[[Callable[[], None], int], Awaitable[T]],
+        *,
+        max_retries: int = 8,
+        backoff_base: timedelta = timedelta(milliseconds=500),
+        backoff_factor: float = 2,
+        random_factor: float = 1,
+    ) -> T:
+        """Retry an async function with exponential backoff and jitter."""
+        if max_retries < 1:
+            raise ValueError(f'max_retries must be at least 1, got {max_retries}')
+
+        random_factor = min(max(0, random_factor), 1)
+        backoff_factor = min(max(1, backoff_factor), 10)
+        swallow = True
+
+        def stop_retrying() -> None:
+            nonlocal swallow
+            swallow = False
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                return await func(stop_retrying, attempt)
+            except Exception:
+                if not swallow:
+                    raise
+
+            random_sleep_factor = random.uniform(1, 1 + random_factor)
+            backoff_base_secs = to_seconds(backoff_base)
+            backoff_exp_factor = backoff_factor ** (attempt - 1)
+            await asyncio.sleep(random_sleep_factor * backoff_base_secs * backoff_exp_factor)
+
+        return await func(stop_retrying, max_retries + 1)
+
+    async def _make_request(
+        self,
+        *,
+        stop_retrying: Callable[[], None],
+        attempt: int,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        params: dict[str, Any] | None,
+        content: bytes | None,
+        stream: bool | None,
+        timeout: Timeout,
+    ) -> HttpResponse:
+        """Execute one request attempt through the transport adapter."""
+        log_context.attempt.set(attempt)
+        logger.debug('Sending request')
+
+        self._statistics.requests += 1
+
+        try:
+            response = await self.send_request(
+                method=method,
+                url=self._build_url_with_params(url, params=params),
+                headers=headers,
+                content=content,
+                timeout=self._compute_timeout(timeout, attempt=attempt),
+                stream=stream or False,
+            )
+        except Exception as exc:
+            self._handle_request_exception(exc, stop_retrying=stop_retrying)
+            raise
+
+        if self._handle_response_status(response, attempt=attempt, stop_retrying=stop_retrying):
+            return response
+
+        # Read the response in case it is a stream, so the error can be raised properly. A failed read goes through
+        # the same classification as a failed send.
+        try:
+            await response.aread()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                await response.aclose()
+            if not self.is_retryable_transport_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
+        raise ApifyApiError(response, attempt, method=method)

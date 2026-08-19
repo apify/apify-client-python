@@ -885,9 +885,8 @@ class CreateTaskRequest(BaseModel):
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
     """
-    Public-facing display configuration of the task's public landing page. The task is not
-    published by setting it — set `isPublic` via the [Update task](https://docs.apify.com/api/v2/actor-task-put)
-    endpoint for that. Setting `publicConfig` requires write permission to the task's Actor.
+    Configuration that controls how the published task appears on its public landing page.
+    Editing this object requires write permission to the Actor that the task belongs to.
 
     """
 
@@ -3505,9 +3504,7 @@ class Task(BaseModel):
     standby_url: AnyUrl | None = None
     is_public: Annotated[bool | None, Field(examples=[False])] = None
     """
-    Whether the task is published on its public landing page. Derived from
-    `publicConfig.publishedAt`. Set it via the [Update task](https://docs.apify.com/api/v2/actor-task-put)
-    endpoint to publish or unpublish the task.
+    Whether the task is published. Based on the `publicConfig.publishedAt` field.
 
     """
     public_config: TaskPublicConfig | None = None
@@ -3557,22 +3554,22 @@ class TaskPublicConfig(BaseModel):
     )
     published_at: Annotated[AwareDatetime | None, Field(examples=['2025-06-16T09:20:45.777Z'])] = None
     """
-    Time when the task was published, or `null` if the task is not published.
-    This field is server-controlled - to publish or unpublish a task, set `isPublic`
-    via the [Update task](https://docs.apify.com/api/v2/actor-task-put) endpoint.
+    Time when the task was published, or `null` if the task isn't published.
+    This field is server-controlled. To publish or unpublish a task, use the
+    [Update task](https://docs.apify.com/api/v2/actor-task-put) endpoint and set `isPublic`.
 
     """
-    seo_title: Annotated[str | None, Field(examples=['Scrape data from a website'])] = None
+    seo_title: Annotated[str | None, Field(examples=['Scrape data from a website'], max_length=60)] = None
     """
-    SEO title of the public task page. Defaults to the task title when not set.
+    Name of the Actor task to display by search engines such as Google. Defaults to the task
+    title. At most 60 characters.
+
     """
-    seo_description: str | None = None
+    seo_description: Annotated[str | None, Field(max_length=160)] = None
     """
-    SEO description of the public task page. Defaults to the task description when not set.
-    """
-    categorization: str | None = None
-    """
-    Use-case category of the public task.
+    Description of the Actor task to display by search engines such as Google. Defaults to the
+    task description. At most 160 characters.
+
     """
     input_schema_fields: list[str] | None = None
     """
@@ -3580,11 +3577,16 @@ class TaskPublicConfig(BaseModel):
     """
     dataset_name: str | None = None
     """
-    Name of the dataset from the Actor's dataset schema whose results are displayed.
+    Name of the dataset from the Actor's dataset schema whose results are displayed. When
+    `null`, the Actor's default dataset is used. That is, the only dataset the Actor declares,
+    or the one named `default` when it declares several.
+
     """
     dataset_view: str | None = None
     """
-    Key of the dataset view from the Actor's dataset schema used to display results.
+    Key of the dataset view from the Actor's dataset schema used to display results. Must be
+    one of the views declared on the resolved dataset. You can't publish a task without it.
+
     """
 
 
@@ -3865,18 +3867,18 @@ class UpdateTaskRequest(BaseModel):
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
     """
-    Public-facing display configuration of the task's public landing page. The provided
-    fields are merged into the stored configuration and validated. The stored configuration
-    cannot be cleared this way. Set `isPublic` to change the publication state.
-    Updating `publicConfig` requires write permission to the task's Actor.
+    Configuration that controls how the published task appears on its public landing page.
+    Editing this object requires write permission to the Actor that the task belongs to.
+
+    The fields you send are merged into the stored configuration, so you only need to include
+    the ones you're changing. To clear a field, set it to `null`. Sending `publicConfig: null`
+    is rejected, so the object as a whole can't be cleared.
 
     """
     is_public: Annotated[bool | None, Field(examples=[True])] = None
     """
     Set to `true` to publish the task on its public landing page, or `false` to unpublish it.
-    Sending the value the task already has does nothing. Publishing requires the task's
-    `publicConfig` to be filled in and write permission to the task's Actor; it fails if the
-    task is not ready to be published, leaving the rest of the update unapplied.
+    Sending the value the task already has does nothing.
 
     """
 

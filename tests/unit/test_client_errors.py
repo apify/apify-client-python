@@ -7,7 +7,6 @@ from unittest.mock import Mock
 import pytest
 from werkzeug import Response
 
-from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.errors import (
     ApifyApiError,
     ConflictError,
@@ -25,6 +24,8 @@ if TYPE_CHECKING:
 
     from pytest_httpserver import HTTPServer
     from werkzeug import Request
+
+    from apify_client import ApifyClient, ApifyClientAsync
 
 _TEST_PATH = '/errors'
 _EXPECTED_MESSAGE = 'some_message'
@@ -81,16 +82,6 @@ def streaming_handler(_request: Request) -> Response:
         mimetype='application/octet-stream',
         headers={'Content-Length': str(len(RAW_ERROR))},
     )
-
-
-@pytest.fixture
-def sync_client(httpserver: HTTPServer) -> ApifyClient:
-    return ApifyClient(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
-
-
-@pytest.fixture
-def async_client(httpserver: HTTPServer) -> ApifyClientAsync:
-    return ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
 
 
 @pytest.fixture

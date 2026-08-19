@@ -877,7 +877,7 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     http_client_class: type[HttpClient],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The streaming thread ends quietly when the transport times out while reading the log stream."""
+    """The streaming thread ends quietly when either transport times out while reading the log stream."""
     monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
 
     release_server = threading.Event()
@@ -970,7 +970,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     http_client_async_class: type[HttpClientAsync],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The async streaming task treats a transport stream timeout as an expected terminal condition."""
+    """The async streaming task treats either transport's stream timeout as an expected terminal condition."""
     monkeypatch.setattr(StreamedLogAsync, '_stream_timeout', timedelta(seconds=1))
 
     release_server = threading.Event()

@@ -5,7 +5,10 @@ from __future__ import annotations
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import TYPE_CHECKING
 
+import pytest
+
 from .._utils import maybe_await
+from .conftest import ALL_HTTP_CLIENT_CLASSES
 from apify_client._models import ListOfBuilds, Run
 from apify_client.http_clients import HttpResponse
 
@@ -72,6 +75,7 @@ async def test_log_get_as_bytes(client: ApifyClient | ApifyClientAsync) -> None:
     await maybe_await(run_client.delete())
 
 
+@pytest.mark.parametrize('http_client_classes', ALL_HTTP_CLIENT_CLASSES, indirect=True)
 async def test_log_stream_from_run(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test streaming a run's log via the stream() context manager."""
     actor = client.actor(HELLO_WORLD_ACTOR)

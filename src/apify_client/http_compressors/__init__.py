@@ -9,7 +9,10 @@ _install_import_hook(__name__)
 
 # `brotli` is an optional extra, so it's wrapped in try_import. Accessing `BrotliHttpCompressor`
 # without the extra installed raises a clear ImportError instead of failing at package import time.
-with _try_import(__name__, 'BrotliHttpCompressor'):
+with _try_import(__name__, 'BrotliHttpCompressor', dependency_name='brotli') as _brotli_import:
     from apify_client.http_compressors._brotli import BrotliHttpCompressor
 
-__all__ = ['BrotliHttpCompressor', 'GzipHttpCompressor', 'HttpCompressor']
+if _brotli_import.available:
+    __all__ = ['BrotliHttpCompressor', 'GzipHttpCompressor', 'HttpCompressor']
+else:
+    __all__ = ['GzipHttpCompressor', 'HttpCompressor']

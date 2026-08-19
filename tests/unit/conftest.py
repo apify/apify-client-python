@@ -7,6 +7,7 @@ import pytest
 from pytest_httpserver import HTTPServer
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -40,3 +41,15 @@ def sync_client(httpserver: HTTPServer) -> ApifyClient:
 @pytest.fixture
 def async_client(httpserver: HTTPServer) -> ApifyClientAsync:
     return ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+
+@pytest.fixture(params=[pytest.param(ImpitHttpClient, id='impit')])
+def http_client_class(request: pytest.FixtureRequest) -> type[HttpClient]:
+    """Return each built-in synchronous HTTP client class."""
+    return request.param
+
+
+@pytest.fixture(params=[pytest.param(ImpitHttpClientAsync, id='impit')])
+def http_client_async_class(request: pytest.FixtureRequest) -> type[HttpClientAsync]:
+    """Return each built-in asynchronous HTTP client class."""
+    return request.param

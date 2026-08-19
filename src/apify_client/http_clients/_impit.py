@@ -4,6 +4,7 @@ import asyncio
 import logging
 import random
 import time
+from contextlib import suppress
 from datetime import timedelta
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -21,7 +22,7 @@ from apify_client._consts import (
 from apify_client._docs import docs_group
 from apify_client._logging import log_context, logger_name
 from apify_client._utils.time import to_seconds
-from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+from apify_client.errors import ApifyApiError
 from apify_client.http_clients._base import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
@@ -37,20 +38,31 @@ T = TypeVar('T')
 logger = logging.getLogger(logger_name)
 
 
-def _is_retryable_error(exc: Exception) -> bool:
-    """Check if an exception represents a transient error that should be retried.
+_PERMANENT_ERRORS = (
+    # A request Impit rejects before sending it, e.g. one carrying an invalid header value.
+    impit.LocalProtocolError,
+    # The class Impit declares for a scheme it refuses to speak, but does not raise today - it reports an unsupported
+    # scheme as `impit.InvalidURL`, which sits outside the `impit.HTTPError` tree and is non-retryable anyway. Listed
+    # so the classifier stays right if Impit switches over.
+    impit.UnsupportedProtocol,
+    # An over-long redirect chain is a routing loop, which repeating the request cannot break.
+    impit.TooManyRedirects,
+    # Only `Response.raise_for_status()` raises this, and the client never calls it - `_make_request` decides on
+    # status codes from the response itself.
+    impit.HTTPStatusError,
+)
 
-    All `impit.HTTPError` subclasses are considered retryable because they represent transport-level failures
-    (network issues, timeouts, protocol errors, body decoding errors) that are typically transient. HTTP status
-    code errors are handled separately in `_make_request` based on the response status code, not here.
+
+def _is_retryable_error(exc: Exception) -> bool:
+    """Check if an exception represents a transient transport failure that should be retried.
+
+    Every error from Impit's own hierarchy counts as transient except the permanently-failing types listed in
+    `_PERMANENT_ERRORS`. Retrying is the default because Impit also reports genuinely transient failures through
+    its generic base class, e.g. a bare `impit.HTTPError` wrapping a failure its internal HTTP library did not
+    classify. HTTP status code errors are handled separately in `_make_request` based on the response status code,
+    not here.
     """
-    return isinstance(
-        exc,
-        (
-            InvalidResponseBodyError,
-            impit.HTTPError,
-        ),
-    )
+    return isinstance(exc, impit.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
 
 @docs_group('HTTP clients')
@@ -83,7 +95,7 @@ class ImpitHttpClient(HttpClient):
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
+            timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             max_retries: Maximum number of retry attempts for failed requests.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -130,8 +142,8 @@ class ImpitHttpClient(HttpClient):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -246,8 +258,19 @@ class ImpitHttpClient(HttpClient):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly.
-        response.read()
+        # Read the response in case it is a stream, so we can raise the error properly. A failed read goes through
+        # the same classification as a failed send.
+        try:
+            response.read()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                response.close()
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod
@@ -332,7 +355,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
+            timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             max_retries: Maximum number of retry attempts for failed requests.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -379,8 +402,8 @@ class ImpitHttpClientAsync(HttpClientAsync):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -508,8 +531,19 @@ class ImpitHttpClientAsync(HttpClientAsync):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
-        # Read the response in case it is a stream, so we can raise the error properly.
-        await response.aread()
+        # Read the response in case it is a stream, so we can raise the error properly. A failed read goes through
+        # the same classification as a failed send.
+        try:
+            await response.aread()
+        except Exception as exc:
+            logger.debug('Reading the error response failed', exc_info=exc)
+            with suppress(Exception):
+                await response.aclose()
+            if not _is_retryable_error(exc):
+                logger.debug('Exception is not retryable', exc_info=exc)
+                stop_retrying()
+            raise
+
         raise ApifyApiError(response, attempt, method=method)
 
     @staticmethod

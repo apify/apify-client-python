@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import json as jsonlib
+import logging
 import os
 import sys
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime, timedelta
 from importlib import metadata
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
+
+# `Protocol` comes from `typing_extensions`, not `typing`, because its runtime `isinstance` check looks attributes
+# up statically. The `typing` implementation on Python 3.11 calls `hasattr`, which evaluates properties. On an
+# unread streaming response, that either raises or silently buffers the whole body.
+from typing_extensions import Protocol, runtime_checkable
 
 from apify_client._consts import (
     DEFAULT_MAX_RETRIES,
@@ -19,6 +25,7 @@ from apify_client._consts import (
     MIN_COMPRESSION_SIZE,
 )
 from apify_client._docs import docs_group
+from apify_client._logging import LoggerOnce, logger_name
 from apify_client._statistics import ClientStatistics
 from apify_client._utils.http import is_compressible_content_type
 from apify_client._utils.time import to_seconds
@@ -29,6 +36,9 @@ if TYPE_CHECKING:
 
     from apify_client.http_compressors._base import HttpCompressor
     from apify_client.types import JsonSerializable, Timeout
+
+logger = logging.getLogger(logger_name)
+logger_once = LoggerOnce(logger)
 
 
 @docs_group('HTTP clients')
@@ -112,7 +122,7 @@ class HttpClientBase:
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
-            timeout_max: Maximum timeout cap for exponential timeout growth across retries.
+            timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             max_retries: Maximum number of retries for failed requests.
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
@@ -205,7 +215,8 @@ class HttpClientBase:
         """Resolve a timeout tier and compute the timeout for a request attempt with exponential increase.
 
         For `no_timeout`, returns `None` to indicate no timeout. For tier literals and explicit `timedelta` values,
-        doubles the timeout with each attempt but caps at `timeout_max`.
+        doubles the timeout with each attempt but caps at `timeout_max`. A base timeout above `timeout_max` is
+        capped too, which warns once per timeout kind since the requested value does not take effect in full.
 
         Args:
             timeout: The timeout specification to resolve (tier literal or explicit `timedelta`).
@@ -225,6 +236,16 @@ class HttpClientBase:
             resolved = self._timeout_long
         else:
             resolved = timeout
+
+        if resolved > self._timeout_max:
+            # Keyed per timeout kind, so retries and repeated calls do not spam the log with the same warning.
+            logger_once.log(
+                f'The requested timeout of {to_seconds(resolved)}s exceeds `timeout_max` '
+                f'({to_seconds(self._timeout_max)}s) and is capped at it. Raise `timeout_max` on the client '
+                'to allow longer request timeouts.',
+                key=f'timeout-capped-{timeout if isinstance(timeout, str) else "explicit"}',
+                level=logging.WARNING,
+            )
 
         new_timeout = min(resolved * (2 ** (attempt - 1)), self._timeout_max)
         return to_seconds(new_timeout)
@@ -350,8 +371,8 @@ class HttpClient(HttpClientBase, ABC):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.
@@ -394,8 +415,8 @@ class HttpClientAsync(HttpClientBase, ABC):
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
-                preconfigured timeouts. A `timedelta` overrides it for this call, and `no_timeout` disables
-                the timeout entirely.
+                preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
+                `no_timeout` disables the timeout entirely.
 
         Returns:
             The HTTP response object.

@@ -25,7 +25,7 @@ Every client method has a pre-assigned tier that matches the expected duration o
 
 ## Configuring default timeouts
 
-You can override the default values for each tier in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor. The `timeout_max` parameter sets an upper cap on the timeout for any individual API request, limiting exponential growth during retries.
+You can override the default values for each tier in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor. The `timeout_max` parameter sets an upper cap on the timeout for any individual API request, limiting exponential growth during retries. It caps tier and per-call timeouts as well, so raise it whenever you need a timeout longer than the default 360 seconds. A tier configured above the cap is capped too, and the client logs a warning to make the cut-off visible.
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -56,6 +56,8 @@ client.dataset('id').list_items(timeout='long')
 # Effectively disable the timeout (capped at 24 hours by the default client).
 client.dataset('id').list_items(timeout='no_timeout')
 ```
+
+A `timedelta` longer than `timeout_max` is capped at `timeout_max`, and the client logs a warning. To let such a call use its full timeout, raise `timeout_max` in the client constructor.
 
 ## Interaction with retries
 

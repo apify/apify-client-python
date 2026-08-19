@@ -309,18 +309,159 @@ def test_parse_params_mixed() -> None:
     }
 
 
-def test_is_retryable_error() -> None:
-    """Test _is_retryable_error correctly identifies retryable errors."""
-    mock_response = Mock()
-    assert _is_retryable_error(InvalidResponseBodyError(mock_response))
-    assert _is_retryable_error(impit.NetworkError('test'))
-    assert _is_retryable_error(impit.TimeoutException('test'))
-    assert _is_retryable_error(impit.RemoteProtocolError('test'))
+@pytest.mark.parametrize(
+    'exc',
+    [
+        # Impit wraps a failure its internal HTTP library did not classify in a bare `HTTPError`, so even the
+        # generic base class is transient.
+        pytest.param(impit.HTTPError('unclassified failure'), id='bare HTTPError'),
+        pytest.param(impit.TimeoutException('timeout'), id='TimeoutException'),
+        pytest.param(impit.NetworkError('network error'), id='NetworkError'),
+        pytest.param(impit.RemoteProtocolError('remote protocol error'), id='RemoteProtocolError'),
+        pytest.param(impit.DecodingError('decoding error'), id='DecodingError'),
+        # One `ProxyError` covers both a proxy rejecting the CONNECT tunnel and a 407, so a transient case cannot
+        # be told from a permanent one - retrying is the safer default.
+        pytest.param(impit.ProxyError('proxy error'), id='ProxyError'),
+    ],
+)
+def test_is_retryable_error(exc: Exception) -> None:
+    """A transient transport failure is retried."""
+    assert _is_retryable_error(exc)
 
-    # Non-retryable errors
-    assert not _is_retryable_error(ValueError('test'))
-    assert not _is_retryable_error(RuntimeError('test'))
-    assert not _is_retryable_error(Exception('test'))
+
+@pytest.mark.parametrize(
+    'exc',
+    [
+        pytest.param(impit.LocalProtocolError('invalid header value'), id='LocalProtocolError'),
+        pytest.param(impit.UnsupportedProtocol('unsupported scheme'), id='UnsupportedProtocol'),
+        pytest.param(impit.TooManyRedirects('too many redirects'), id='TooManyRedirects'),
+        pytest.param(impit.HTTPStatusError('status error'), id='HTTPStatusError'),
+        # Impit reports a bad URL outside the `impit.HTTPError` tree entirely.
+        pytest.param(impit.InvalidURL('unsupported scheme'), id='InvalidURL'),
+        # `InvalidResponseBodyError` is raised by a resource client once `call` has returned, never in the retry loop.
+        pytest.param(InvalidResponseBodyError(Mock()), id='InvalidResponseBodyError'),
+        pytest.param(ValueError('value error'), id='ValueError'),
+        pytest.param(RuntimeError('runtime error'), id='RuntimeError'),
+        pytest.param(Exception('generic exception'), id='Exception'),
+    ],
+)
+def test_is_not_retryable_error(exc: Exception) -> None:
+    """A transport failure a retry cannot fix, and anything outside Impit's hierarchy, is not retried."""
+    assert not _is_retryable_error(exc)
+
+
+def test_permanent_transport_error_is_not_retried() -> None:
+    """A transport error a retry cannot fix fails on the first attempt instead of burning the whole backoff."""
+    client = ImpitHttpClient(token='test_token', min_delay_between_retries=timedelta(0))
+    request = Mock(side_effect=impit.LocalProtocolError('invalid header value'))
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.LocalProtocolError):
+        client.call(method='GET', url='https://api.test.com/endpoint')
+
+    request.assert_called_once()
+
+
+async def test_permanent_transport_error_is_not_retried_async() -> None:
+    """The async client applies the same policy, failing on the first attempt."""
+    client = ImpitHttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0))
+    request = AsyncMock(side_effect=impit.LocalProtocolError('invalid header value'))
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(impit.LocalProtocolError):
+        await client.call(method='GET', url='https://api.test.com/endpoint')
+
+    request.assert_awaited_once()
+
+
+def test_transient_transport_error_is_retried() -> None:
+    """A transient transport failure keeps being retried until the attempts run out."""
+    client = ImpitHttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0))
+    request = Mock(side_effect=impit.TimeoutException('timeout'))
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.TimeoutException):
+        client.call(method='GET', url='https://api.test.com/endpoint')
+
+    # `max_retries` attempts inside the backoff loop, plus the final one it makes after the last delay.
+    assert request.call_count == 3
+
+
+def test_error_response_read_failure_is_retried_and_closed() -> None:
+    """A failure while buffering a streamed error body is retried like a failed send, and the response is closed."""
+    client = ImpitHttpClient(token='test_token', max_retries=1, min_delay_between_retries=timedelta(0))
+    responses = [
+        Mock(status_code=500, read=Mock(side_effect=impit.ReadError('truncated')), close=Mock()) for _ in range(2)
+    ]
+    request = Mock(side_effect=responses)
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.ReadError):
+        client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    assert request.call_count == 2
+    for response in responses:
+        response.close.assert_called_once()
+
+
+async def test_error_response_read_failure_is_retried_and_closed_async() -> None:
+    """The async client also retries a failed buffering of a streamed error body and closes the response."""
+    client = ImpitHttpClientAsync(token='test_token', max_retries=1, min_delay_between_retries=timedelta(0))
+    responses = [
+        Mock(status_code=500, aread=AsyncMock(side_effect=impit.ReadError('truncated')), aclose=AsyncMock())
+        for _ in range(2)
+    ]
+    request = AsyncMock(side_effect=responses)
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(impit.ReadError):
+        await client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    assert request.await_count == 2
+    for response in responses:
+        response.aclose.assert_awaited_once()
+
+
+def test_non_retryable_error_response_read_failure_stops_retrying() -> None:
+    """A read failure that is not a transport error stops the retry loop instead of being retried."""
+    client = ImpitHttpClient(token='test_token', min_delay_between_retries=timedelta(0))
+    response = Mock(status_code=500, read=Mock(side_effect=ValueError('broken response')), close=Mock())
+    request = Mock(return_value=response)
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(ValueError, match='broken response'):
+        client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    request.assert_called_once()
+    response.close.assert_called_once()
+
+
+async def test_non_retryable_error_response_read_failure_stops_retrying_async() -> None:
+    """The async client also stops retrying when a read failure is not a transport error."""
+    client = ImpitHttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0))
+    response = Mock(status_code=500, aread=AsyncMock(side_effect=ValueError('broken response')), aclose=AsyncMock())
+    request = AsyncMock(return_value=response)
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(ValueError, match='broken response'):
+        await client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    request.assert_awaited_once()
+    response.aclose.assert_awaited_once()
+
+
+def test_error_response_read_failure_on_non_retryable_status_is_not_retried() -> None:
+    """A transient read failure on a status that is not retryable surfaces immediately instead of being retried."""
+    client = ImpitHttpClient(token='test_token', min_delay_between_retries=timedelta(0))
+    response = Mock(status_code=404, read=Mock(side_effect=impit.ReadError('truncated')), close=Mock())
+    request = Mock(return_value=response)
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.ReadError):
+        client.call(method='GET', url='https://api.test.com/endpoint', stream=True)
+
+    request.assert_called_once()
+    response.close.assert_called_once()
 
 
 @pytest.fixture(

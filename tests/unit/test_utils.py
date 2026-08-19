@@ -3,33 +3,63 @@ from __future__ import annotations
 import gzip
 import io
 import json
+import sys
 from base64 import b64decode
 from datetime import timedelta
 from http import HTTPStatus
+from types import ModuleType
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
-import impit
 import pytest
 
 from apify_client._models import WebhookCondition, WebhookCreate
 from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature, encode_base62
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
-from apify_client._utils.errors import catch_not_found_or_throw, is_retryable_error
+from apify_client._utils.errors import catch_not_found_or_throw
 from apify_client._utils.http import (
     is_compressible_content_type,
     response_to_dict,
     response_to_list,
     to_safe_id,
 )
-from apify_client.errors import ApifyApiError, InvalidResponseBodyError
+from apify_client._utils.try_import import FailedImport, try_import
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client._typeddicts import WebhookRepresentationDict
     from apify_client.types import WebhooksList
 
 _GZIPPED_DATA = gzip.compress(b'buffer data')
+
+
+def test_try_import_only_handles_the_named_missing_dependency() -> None:
+    """Optional-import handling must not hide a broken transitive dependency or module bug."""
+    module_name = 'test_optional_import_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with (
+            pytest.raises(ModuleNotFoundError, match='broken-transitive'),
+            try_import(module_name, 'OptionalSymbol', dependency_name='optional-package'),
+        ):
+            raise ModuleNotFoundError('broken-transitive', name='broken-transitive')
+        assert not hasattr(sys.modules[module_name], 'OptionalSymbol')
+    finally:
+        del sys.modules[module_name]
+
+
+def test_try_import_records_the_named_missing_dependency() -> None:
+    """A genuinely missing optional dependency is converted to a failed-import placeholder."""
+    module_name = 'test_missing_optional_import_module'
+    sys.modules[module_name] = ModuleType(module_name)
+    try:
+        with try_import(module_name, 'OptionalSymbol', dependency_name='optional-package') as state:
+            raise ModuleNotFoundError("No module named 'optional-package'", name='optional-package')
+        assert state.available is False
+        assert isinstance(sys.modules[module_name].OptionalSymbol, FailedImport)
+    finally:
+        del sys.modules[module_name]
 
 
 def test_to_safe_id() -> None:
@@ -154,36 +184,6 @@ def test_encode_webhooks_to_base64_from_dicts() -> None:
     )
 
     assert result == result_from_models
-
-
-@pytest.mark.parametrize(
-    'exc',
-    [
-        InvalidResponseBodyError(impit.Response(status_code=200)),
-        impit.HTTPError('generic http error'),
-        impit.NetworkError('network error'),
-        impit.TimeoutException('timeout'),
-        impit.RemoteProtocolError('remote protocol error'),
-        impit.ReadError('read error'),
-        impit.ConnectError('connect error'),
-        impit.WriteError('write error'),
-        impit.DecodingError('decoding error'),
-    ],
-)
-def test__is_retryable_error(exc: Exception) -> None:
-    assert is_retryable_error(exc) is True
-
-
-@pytest.mark.parametrize(
-    'exc',
-    [
-        Exception('generic exception'),
-        ValueError('value error'),
-        RuntimeError('runtime error'),
-    ],
-)
-def test__is_not_retryable_error(exc: Exception) -> None:
-    assert is_retryable_error(exc) is False
 
 
 @pytest.mark.parametrize(

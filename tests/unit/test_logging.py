@@ -13,7 +13,7 @@ import pytest
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._logging import RedirectLogFormatter
+from apify_client._logging import LoggerOnce, RedirectLogFormatter
 from apify_client._status_message_watcher import StatusMessageWatcherBase
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
 
@@ -1004,3 +1004,65 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     assert not error_records, f'async task logged an error on stream timeout: {[r.message for r in error_records]}'
     # The line received before the timeout must still have been redirected.
     assert any('ACTOR: still running' in record.message for record in caplog.records)
+
+
+def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:
+    """Test the first call with a given key is logged."""
+    logger = logging.getLogger('apify_client.tests.log_once_first')
+    logger_once = LoggerOnce(logger)
+
+    with caplog.at_level(logging.INFO, logger=logger.name):
+        logger_once.log('first', key='k1')
+
+    assert [record.getMessage() for record in caplog.records] == ['first']
+
+
+def test_logger_once_suppresses_a_repeated_key(caplog: LogCaptureFixture) -> None:
+    """Test a second call with an already seen key is a no-op."""
+    logger = logging.getLogger('apify_client.tests.log_once_repeated')
+    logger_once = LoggerOnce(logger)
+
+    with caplog.at_level(logging.INFO, logger=logger.name):
+        logger_once.log('first', key='k1')
+        logger_once.log('second', key='k1')
+
+    assert [record.getMessage() for record in caplog.records] == ['first']
+
+
+def test_logger_once_logs_distinct_keys(caplog: LogCaptureFixture) -> None:
+    """Test each distinct key is logged once on its own."""
+    logger = logging.getLogger('apify_client.tests.log_once_distinct')
+    logger_once = LoggerOnce(logger)
+
+    with caplog.at_level(logging.INFO, logger=logger.name):
+        logger_once.log('msg-a', key='k1')
+        logger_once.log('msg-b', key='k2')
+
+    assert [record.getMessage() for record in caplog.records] == ['msg-a', 'msg-b']
+
+
+def test_logger_once_instances_keep_independent_state(caplog: LogCaptureFixture) -> None:
+    """Test dedup state is per instance, so two instances sharing a logger both emit the same key."""
+    logger = logging.getLogger('apify_client.tests.log_once_independent')
+    logger_once_a = LoggerOnce(logger)
+    logger_once_b = LoggerOnce(logger)
+
+    with caplog.at_level(logging.INFO, logger=logger.name):
+        logger_once_a.log('from-a', key='k1')
+        logger_once_b.log('from-b', key='k1')
+
+    assert [record.getMessage() for record in caplog.records] == ['from-a', 'from-b']
+
+
+def test_logger_once_logs_at_the_requested_level(caplog: LogCaptureFixture) -> None:
+    """Test the level defaults to info and is honored when passed explicitly."""
+    logger = logging.getLogger('apify_client.tests.log_once_levels')
+    logger_once = LoggerOnce(logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        logger_once.log('default-msg', key='k_default')
+        logger_once.log('warn-msg', key='k_warn', level=logging.WARNING)
+
+    levels = {record.getMessage(): record.levelno for record in caplog.records}
+    assert levels['default-msg'] == logging.INFO
+    assert levels['warn-msg'] == logging.WARNING

@@ -21,6 +21,7 @@ from .._utils import (
 from apify_client._models import Dataset, DatasetListItem, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
+from apify_client.http_clients import HttpResponse
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -727,7 +728,7 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
         if is_async:
             assert isinstance(stream_ctx, AbstractAsyncContextManager)
             async with stream_ctx as response:
-                assert isinstance(response, impit.Response)
+                assert isinstance(response, HttpResponse)
                 assert response.status_code == 200
                 content = await response.aread()
                 items = json.loads(content)
@@ -736,7 +737,7 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
         else:
             assert isinstance(stream_ctx, AbstractContextManager)
             with stream_ctx as response:
-                assert isinstance(response, impit.Response)
+                assert isinstance(response, HttpResponse)
                 assert response.status_code == 200
                 content = response.read()
                 items = json.loads(content)

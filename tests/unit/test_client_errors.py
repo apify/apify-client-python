@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import pytest
 from werkzeug import Response
 
+from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.errors import (
     ApifyApiError,
     ConflictError,
@@ -17,7 +18,6 @@ from apify_client.errors import (
     ServerError,
     UnauthorizedError,
 )
-from apify_client.http_clients import ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug import Request
 
-    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client.http_clients import HttpClient, HttpClientAsync
 
 _TEST_PATH = '/errors'
 _EXPECTED_MESSAGE = 'some_message'
@@ -85,6 +85,24 @@ def streaming_handler(_request: Request) -> Response:
 
 
 @pytest.fixture
+def sync_client(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> ApifyClient:
+    return ApifyClient.with_custom_http_client(
+        token='test',
+        api_url=httpserver.url_for('/').removesuffix('/'),
+        http_client=http_client_class(),
+    )
+
+
+@pytest.fixture
+def async_client(httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]) -> ApifyClientAsync:
+    return ApifyClientAsync.with_custom_http_client(
+        token='test',
+        api_url=httpserver.url_for('/').removesuffix('/'),
+        http_client=http_client_async_class(),
+    )
+
+
+@pytest.fixture
 def test_endpoint(httpserver: HTTPServer) -> str:
     httpserver.expect_request(_TEST_PATH).respond_with_json(
         {'error': {'message': _EXPECTED_MESSAGE, 'type': _EXPECTED_TYPE, 'data': _EXPECTED_DATA}}, status=400
@@ -92,9 +110,9 @@ def test_endpoint(httpserver: HTTPServer) -> str:
     return str(httpserver.url_for(_TEST_PATH))
 
 
-def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
+def test_client_apify_api_error_with_data(test_endpoint: str, http_client_class: type[HttpClient]) -> None:
     """Test that client correctly throws ApifyApiError with error data from response."""
-    client = ImpitHttpClient()
+    client = http_client_class()
 
     with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=test_endpoint)
@@ -104,9 +122,11 @@ def test_client_apify_api_error_with_data(test_endpoint: str) -> None:
     assert exc.value.data == _EXPECTED_DATA
 
 
-async def test_async_client_apify_api_error_with_data(test_endpoint: str) -> None:
+async def test_async_client_apify_api_error_with_data(
+    test_endpoint: str, http_client_async_class: type[HttpClientAsync]
+) -> None:
     """Test that async client correctly throws ApifyApiError with error data from response."""
-    client = ImpitHttpClientAsync()
+    client = http_client_async_class()
 
     with pytest.raises(ApifyApiError) as exc:
         await client.call(method='GET', url=test_endpoint)
@@ -116,12 +136,12 @@ async def test_async_client_apify_api_error_with_data(test_endpoint: str) -> Non
     assert exc.value.data == _EXPECTED_DATA
 
 
-def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
+def test_client_apify_api_error_streamed(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> None:
     """Test that client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = ImpitHttpClient()
+    client = http_client_class()
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
@@ -132,12 +152,14 @@ def test_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
     assert exc.value.type == error['error']['type']
 
 
-async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> None:
+async def test_async_client_apify_api_error_streamed(
+    httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]
+) -> None:
     """Test that async client correctly throws ApifyApiError when the response has stream."""
 
     error = json.loads(RAW_ERROR.decode())
 
-    client = ImpitHttpClientAsync()
+    client = http_client_async_class()
 
     httpserver.expect_request('/stream_error').respond_with_handler(streaming_handler)
 
@@ -148,12 +170,14 @@ async def test_async_client_apify_api_error_streamed(httpserver: HTTPServer) -> 
     assert exc.value.type == error['error']['type']
 
 
-def test_apify_api_error_dispatches_to_subclass_for_known_status(httpserver: HTTPServer) -> None:
+def test_apify_api_error_dispatches_to_subclass_for_known_status(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
     """Mapped HTTP status codes dispatch to their matching subclass."""
     httpserver.expect_request('/dispatch').respond_with_json(
         {'error': {'type': 'record-not-found', 'message': 'nope'}}, status=404
     )
-    client = ImpitHttpClient()
+    client = http_client_class()
 
     with pytest.raises(NotFoundError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/dispatch')))
@@ -164,10 +188,12 @@ def test_apify_api_error_dispatches_to_subclass_for_known_status(httpserver: HTT
     assert exc.value.type == 'record-not-found'
 
 
-def test_apify_api_error_dispatches_streamed_response(httpserver: HTTPServer) -> None:
+def test_apify_api_error_dispatches_streamed_response(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
     """Dispatch works even when the response body comes in as a stream (403 → ForbiddenError)."""
     httpserver.expect_request('/stream_dispatch').respond_with_handler(streaming_handler)
-    client = ImpitHttpClient()
+    client = http_client_class()
 
     with pytest.raises(ForbiddenError) as exc:
         client.call(method='GET', url=httpserver.url_for('/stream_dispatch'), stream=True)
@@ -177,12 +203,14 @@ def test_apify_api_error_dispatches_streamed_response(httpserver: HTTPServer) ->
     assert exc.value.type == 'insufficient-permissions'
 
 
-def test_apify_api_error_dispatches_5xx_to_server_error(httpserver: HTTPServer) -> None:
+def test_apify_api_error_dispatches_5xx_to_server_error(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
     """Any 5xx status falls under the ServerError subclass."""
     httpserver.expect_request('/server_error').respond_with_json(
         {'error': {'type': 'internal-error', 'message': 'boom'}}, status=503
     )
-    client = ImpitHttpClient(max_retries=1)
+    client = http_client_class(max_retries=1)
 
     with pytest.raises(ServerError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/server_error')))
@@ -191,12 +219,14 @@ def test_apify_api_error_dispatches_5xx_to_server_error(httpserver: HTTPServer) 
     assert exc.value.status_code == 503
 
 
-def test_apify_api_error_falls_back_for_unmapped_status(httpserver: HTTPServer) -> None:
+def test_apify_api_error_falls_back_for_unmapped_status(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
     """Statuses without a dedicated subclass fall back to the base ApifyApiError."""
     httpserver.expect_request('/unmapped').respond_with_json(
         {'error': {'type': 'whatever', 'message': 'nope'}}, status=418
     )
-    client = ImpitHttpClient()
+    client = http_client_class()
 
     with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/unmapped')))
@@ -218,14 +248,17 @@ def test_apify_api_error_falls_back_for_unmapped_status(httpserver: HTTPServer) 
     ],
 )
 def test_apify_api_error_dispatches_all_mapped_statuses(
-    httpserver: HTTPServer, status_code: int, expected_cls: type[ApifyApiError]
+    httpserver: HTTPServer,
+    http_client_class: type[HttpClient],
+    status_code: int,
+    expected_cls: type[ApifyApiError],
 ) -> None:
     """Every status in `_STATUS_TO_CLASS` dispatches to its matching subclass."""
     httpserver.expect_request('/dispatch_all').respond_with_json(
         {'error': {'type': 'some-type', 'message': 'msg'}}, status=status_code
     )
     # Use max_retries=1 so retryable statuses (429) don't loop during the test.
-    client = ImpitHttpClient(max_retries=1)
+    client = http_client_class(max_retries=1)
 
     with pytest.raises(expected_cls) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/dispatch_all')))
@@ -249,10 +282,12 @@ def test_apify_api_error_subclass_constructed_directly_keeps_its_class() -> None
     assert error.type == 'record-not-found'
 
 
-def test_apify_api_error_falls_back_for_unparsable_body(httpserver: HTTPServer) -> None:
+def test_apify_api_error_falls_back_for_unparsable_body(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
     """When the body can't be parsed, status-based dispatch still applies and `.type` is None."""
     httpserver.expect_request('/unparsable').respond_with_data('<not json>', status=418, content_type='text/html')
-    client = ImpitHttpClient(max_retries=1)
+    client = http_client_class(max_retries=1)
 
     with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/unparsable')))

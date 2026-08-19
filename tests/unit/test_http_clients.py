@@ -17,8 +17,13 @@ import pytest
 from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client._statistics import ClientStatistics
 from apify_client.errors import InvalidResponseBodyError
-from apify_client.http_clients import HttpClient, HttpClientAsync, HttpResponse, ImpitHttpClient, ImpitHttpClientAsync
-from apify_client.http_clients._impit import _is_retryable_error
+from apify_client.http_clients import (
+    HttpClient,
+    HttpClientAsync,
+    HttpResponse,
+    ImpitHttpClient,
+    ImpitHttpClientAsync,
+)
 from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
 from apify_client.http_compressors._gzip import GzipHttpCompressor
@@ -30,18 +35,41 @@ if TYPE_CHECKING:
     from apify_client.types import JsonSerializable
 
 
-class _ConcreteHttpClient(HttpClient):
-    """Minimal concrete HttpClient for testing base class helpers."""
-
-    def call(self, *, method: str, url: str, **kwargs: Any) -> HttpResponse:
-        raise NotImplementedError
+class ConcreteHttpClient(HttpClient):
+    """Minimal concrete HttpClient for testing base class helpers, relying on the hook defaults."""
 
 
-class _ConcreteHttpClientAsync(HttpClientAsync):
-    """Minimal concrete HttpClientAsync for testing base class helpers."""
+class CallOnlyHttpClient(HttpClient):
+    """Custom client written against the pre-hook contract, overriding `call` and nothing else."""
 
-    async def call(self, *, method: str, url: str, **kwargs: Any) -> HttpResponse:
-        raise NotImplementedError
+    def call(self, **kwargs: Any) -> HttpResponse:
+        _ = kwargs
+        return Mock(status_code=200)
+
+
+class CallOnlyHttpClientAsync(HttpClientAsync):
+    """Asynchronous counterpart of `CallOnlyHttpClient`."""
+
+    async def call(self, **kwargs: Any) -> HttpResponse:
+        _ = kwargs
+        return Mock(status_code=200)
+
+
+def test_call_only_http_client_keeps_working() -> None:
+    """A client that only overrides `call` still instantiates and inherits the hook defaults."""
+    with CallOnlyHttpClient() as client:
+        assert client.call(method='GET', url='https://example.com').status_code == 200
+        assert client.is_timeout_error(TimeoutError('test'))
+        assert not client.is_retryable_transport_error(TimeoutError('test'))
+
+
+async def test_call_only_http_client_async_keeps_working() -> None:
+    """The asynchronous base is equally tolerant of a client that only overrides `call`."""
+    async with CallOnlyHttpClientAsync() as client:
+        response = await client.call(method='GET', url='https://example.com')
+        assert response.status_code == 200
+        assert client.is_timeout_error(TimeoutError('test'))
+        assert not client.is_retryable_transport_error(TimeoutError('test'))
 
 
 def test_retry_with_exp_backoff() -> None:
@@ -73,7 +101,7 @@ def test_retry_with_exp_backoff() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = ImpitHttpClient._retry_with_exp_backoff(
+    result = HttpClient._retry_with_exp_backoff(
         returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
@@ -85,7 +113,7 @@ def test_retry_with_exp_backoff() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        ImpitHttpClient._retry_with_exp_backoff(
+        HttpClient._retry_with_exp_backoff(
             returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
         )
     assert attempt_counter == 4
@@ -93,7 +121,7 @@ def test_retry_with_exp_backoff() -> None:
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        ImpitHttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
+        HttpClient._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -126,7 +154,7 @@ async def test_retry_with_exp_backoff_async() -> None:
 
     # Returns the correct result after the correct time (should take 100 + 200 + 400 + 800 = 1500 ms)
     start = time.time()
-    result = await ImpitHttpClientAsync._retry_with_exp_backoff(
+    result = await HttpClientAsync._retry_with_exp_backoff(
         returns_on_fifth_attempt, backoff_base=timedelta(milliseconds=100), backoff_factor=2, random_factor=0
     )
     elapsed_time_seconds = time.time() - start
@@ -138,7 +166,7 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Stops retrying when failed for max_retries times
     attempt_counter = 0
     with pytest.raises(RetryableError):
-        await ImpitHttpClientAsync._retry_with_exp_backoff(
+        await HttpClientAsync._retry_with_exp_backoff(
             returns_on_fifth_attempt, max_retries=3, backoff_base=timedelta(milliseconds=1)
         )
     assert attempt_counter == 4
@@ -146,9 +174,7 @@ async def test_retry_with_exp_backoff_async() -> None:
     # Bails when the bail function is called
     attempt_counter = 0
     with pytest.raises(NonRetryableError):
-        await ImpitHttpClientAsync._retry_with_exp_backoff(
-            bails_on_third_attempt, backoff_base=timedelta(milliseconds=1)
-        )
+        await HttpClientAsync._retry_with_exp_backoff(bails_on_third_attempt, backoff_base=timedelta(milliseconds=1))
     assert attempt_counter == 3
 
 
@@ -156,7 +182,7 @@ def test_base_http_client_initialization() -> None:
     """Test HttpClient initialization with various configurations."""
     statistics = ClientStatistics()
 
-    client = _ConcreteHttpClient(
+    client = ConcreteHttpClient(
         token='test_token',
         timeout_short=timedelta(seconds=30),
         max_retries=5,
@@ -171,13 +197,13 @@ def test_base_http_client_initialization() -> None:
     assert client._headers['Authorization'] == 'Bearer test_token'
 
     # Test without statistics (should create default)
-    client2 = _ConcreteHttpClient(token='test_token')
+    client2 = ConcreteHttpClient(token='test_token')
     assert isinstance(client2._statistics, ClientStatistics)
 
 
 def test_http_client_init_headers_override_defaults_case_insensitively() -> None:
     """Constructor headers replace same-named default headers even when their casings differ."""
-    client = _ConcreteHttpClient(token='default_token', headers={'authorization': 'Bearer custom'})
+    client = ConcreteHttpClient(token='default_token', headers={'authorization': 'Bearer custom'})
 
     auth_headers = {key: value for key, value in client._headers.items() if key.lower() == 'authorization'}
     assert auth_headers == {'authorization': 'Bearer custom'}
@@ -187,14 +213,14 @@ def test_http_client_init_workflow_key_header(monkeypatch: pytest.MonkeyPatch) -
     """The X-Apify-Workflow-Key default header is set from the APIFY_WORKFLOW_KEY env var."""
     monkeypatch.setenv('APIFY_WORKFLOW_KEY', 'workflow_key_123')
 
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     assert client._headers['X-Apify-Workflow-Key'] == 'workflow_key_123'
 
 
 def test_set_default_authorization_sets_token_when_missing() -> None:
     """set_default_authorization sets the Bearer token when no authorization header is configured."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     client.set_default_authorization('test_token')
 
@@ -223,21 +249,19 @@ def test_merge_headers(
 
 
 def test_http_client_creates_sync_impit_client() -> None:
-    """Test that ImpitHttpClient creates sync impit client correctly."""
+    """The synchronous adapter creates the underlying Impit client and closes it through the close hook."""
     client = ImpitHttpClient(token='test_token_123')
 
-    # Check that sync impit client is created
-    assert client._impit_client is not None
     assert isinstance(client._impit_client, impit.Client)
+    client.close()
 
 
-def test_http_client_async_creates_async_impit_client() -> None:
-    """Test that ImpitHttpClientAsync creates async impit client correctly."""
+async def test_http_client_async_creates_async_impit_client() -> None:
+    """The asynchronous adapter creates the underlying Impit client and closes it through the close hook."""
     client = ImpitHttpClientAsync(token='test_token_123')
 
-    # Check that async impit client is created
-    assert client._impit_async_client is not None
     assert isinstance(client._impit_async_client, impit.AsyncClient)
+    await client.aclose()
 
 
 def test_parse_params_none() -> None:
@@ -324,9 +348,10 @@ def test_parse_params_mixed() -> None:
         pytest.param(impit.ProxyError('proxy error'), id='ProxyError'),
     ],
 )
-def test_is_retryable_error(exc: Exception) -> None:
-    """A transient transport failure is retried."""
-    assert _is_retryable_error(exc)
+def test_is_retryable_transport_error(exc: Exception) -> None:
+    """A transient transport failure is classified as retryable."""
+    with ImpitHttpClient() as client:
+        assert client.is_retryable_transport_error(exc)
 
 
 @pytest.mark.parametrize(
@@ -345,9 +370,26 @@ def test_is_retryable_error(exc: Exception) -> None:
         pytest.param(Exception('generic exception'), id='Exception'),
     ],
 )
-def test_is_not_retryable_error(exc: Exception) -> None:
+def test_is_not_retryable_transport_error(exc: Exception) -> None:
     """A transport failure a retry cannot fix, and anything outside Impit's hierarchy, is not retried."""
-    assert not _is_retryable_error(exc)
+    with ImpitHttpClient() as client:
+        assert not client.is_retryable_transport_error(exc)
+
+
+def test_sync_http_client_classifies_timeout_errors() -> None:
+    """The built-in synchronous client exposes transport-neutral timeout classification."""
+    with ImpitHttpClient() as client:
+        assert client.is_timeout_error(TimeoutError('test'))
+        assert client.is_timeout_error(impit.TimeoutException('test'))
+        assert not client.is_timeout_error(ValueError('test'))
+
+
+async def test_async_http_client_classifies_timeout_errors() -> None:
+    """The built-in asynchronous client exposes transport-neutral timeout classification."""
+    async with ImpitHttpClientAsync() as client:
+        assert client.is_timeout_error(TimeoutError('test'))
+        assert client.is_timeout_error(impit.TimeoutException('test'))
+        assert not client.is_timeout_error(ValueError('test'))
 
 
 def test_permanent_transport_error_is_not_retried() -> None:
@@ -476,7 +518,7 @@ def compressor_case(request: pytest.FixtureRequest) -> tuple:
 
 def test_prepare_request_call_basic() -> None:
     """Test _prepare_request_call returns the client default headers when no per-request values are given."""
-    client = _ConcreteHttpClient(token='test_token')
+    client = ConcreteHttpClient(token='test_token')
 
     headers, params, data = client._prepare_request_call()
     assert headers == client._headers
@@ -488,7 +530,7 @@ def test_prepare_request_call_basic() -> None:
 
 def test_prepare_request_call_with_json() -> None:
     """A small JSON body is serialized and typed, but sent uncompressed and without a `Content-Encoding`."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     json_data = {'key': 'value', 'number': 42}
     headers, _params, data = client._prepare_request_call(json=json_data)
@@ -510,7 +552,7 @@ def test_prepare_request_call_with_json() -> None:
 )
 def test_prepare_request_call_with_falsy_json(json_body: JsonSerializable, expected: bytes) -> None:
     """A falsy but valid JSON body is still serialized and sent, rather than treated as no body at all."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     headers, _params, data = client._prepare_request_call(json=json_body)
 
@@ -528,7 +570,7 @@ def test_prepare_request_call_with_falsy_json(json_body: JsonSerializable, expec
 )
 def test_prepare_request_call_with_data(data: str | bytes | bytearray) -> None:
     """A raw body of any accepted type is normalized to bytes."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     _headers, _params, prepared = client._prepare_request_call(data=data)
 
@@ -550,7 +592,7 @@ def test_prepare_request_call_compresses_body_at_or_above_threshold(
 ) -> None:
     """A raw body of at least `MIN_COMPRESSION_SIZE` bytes is compressed and labeled with its encoding."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = ConcreteHttpClient(http_compressor=compressor)
     body = b'x' * body_size
 
     headers, _params, data = client._prepare_request_call(data=body)
@@ -570,7 +612,7 @@ def test_prepare_request_call_compresses_body_at_or_above_threshold(
 def test_prepare_request_call_skips_compression_below_threshold(compressor_case: tuple, body_size: int) -> None:
     """A raw body under `MIN_COMPRESSION_SIZE` is sent verbatim with no `Content-Encoding`, whichever compressor."""
     compressor, _content_encoding, _decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = ConcreteHttpClient(http_compressor=compressor)
     body = b'x' * body_size
 
     headers, _params, data = client._prepare_request_call(data=body)
@@ -582,7 +624,7 @@ def test_prepare_request_call_skips_compression_below_threshold(compressor_case:
 def test_prepare_request_call_compresses_bytearray_data(compressor_case: tuple) -> None:
     """A `bytearray` body above the threshold is compressed without error (regression: needs bytes conversion)."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = ConcreteHttpClient(http_compressor=compressor)
     body = bytearray(b'test bytearray' * 128)
 
     headers, _params, data = client._prepare_request_call(data=body)
@@ -594,7 +636,7 @@ def test_prepare_request_call_compresses_bytearray_data(compressor_case: tuple) 
 def test_prepare_request_call_compresses_json_above_threshold(compressor_case: tuple) -> None:
     """A JSON body that serializes to at least `MIN_COMPRESSION_SIZE` bytes is compressed."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = ConcreteHttpClient(http_compressor=compressor)
     json_data = {'key': 'x' * MIN_COMPRESSION_SIZE}
 
     headers, _params, data = client._prepare_request_call(json=json_data)
@@ -607,7 +649,7 @@ def test_prepare_request_call_compresses_json_above_threshold(compressor_case: t
 def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compressor_case: tuple) -> None:
     """A `str` body under the threshold in characters but over it in UTF-8 bytes is still compressed."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = ConcreteHttpClient(http_compressor=compressor)
     # U+00E9 encodes to 2 bytes, so this body is under the threshold in characters but over it in bytes.
     body = '\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1)
 
@@ -623,12 +665,11 @@ def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compres
         pytest.param(b'x' * MIN_COMPRESSION_SIZE, id='bytes at threshold'),
         pytest.param(bytearray(b'x' * MIN_COMPRESSION_SIZE), id='bytearray at threshold'),
         pytest.param('x' * MIN_COMPRESSION_SIZE, id='ascii str at threshold'),
-        pytest.param('\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1), id='multibyte str above byte threshold'),
     ],
 )
 def test_is_body_worth_compressing(data: Any) -> None:
-    """The gate reports a body `_prepare_request_call` would compress, judging a `str` by its encoded bytes."""
-    assert _ConcreteHttpClient._is_body_worth_compressing(data)
+    """The gate reports a body `_prepare_request_call` may compress, judging a `str` by its character count."""
+    assert ConcreteHttpClient._is_body_worth_compressing(data)
 
 
 @pytest.mark.parametrize(
@@ -637,13 +678,14 @@ def test_is_body_worth_compressing(data: Any) -> None:
         pytest.param(None, id='no body'),
         pytest.param(b'x' * (MIN_COMPRESSION_SIZE - 1), id='bytes below threshold'),
         pytest.param('x' * (MIN_COMPRESSION_SIZE - 1), id='ascii str below threshold'),
+        pytest.param('\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1), id='multibyte str below char threshold'),
         pytest.param(BytesIO(b'x' * MIN_COMPRESSION_SIZE), id='file-like'),
         pytest.param({'key': 'x' * MIN_COMPRESSION_SIZE}, id='mapping'),
     ],
 )
 def test_is_body_not_worth_compressing(data: Any) -> None:
-    """A body below the threshold, or of a type the client sends as it is, needs no worker-thread hop."""
-    assert not _ConcreteHttpClient._is_body_worth_compressing(data)
+    """A body below the threshold in characters, or of a type the client sends as it is, stays inline."""
+    assert not ConcreteHttpClient._is_body_worth_compressing(data)
 
 
 @pytest.mark.parametrize(
@@ -656,7 +698,7 @@ def test_is_body_not_worth_compressing(data: Any) -> None:
 )
 def test_prepare_request_call_skips_compression_for_already_compressed_content(content_type: str) -> None:
     """An already-compressed body is sent verbatim, carries no `Content-Encoding`, and keeps every other header."""
-    client = _ConcreteHttpClient(token='test_token', http_compressor=GzipHttpCompressor())
+    client = ConcreteHttpClient(token='test_token', http_compressor=GzipHttpCompressor())
     # Above the size threshold, so the content type is what skips compression here.
     payload = b'\x89PNG' + b'\xff' * MIN_COMPRESSION_SIZE
 
@@ -674,7 +716,7 @@ def test_prepare_request_call_skips_compression_for_already_compressed_content(c
 
 def test_prepare_request_call_keeps_caller_content_encoding_for_a_file_like_body() -> None:
     """A file-like body skips compression entirely, and its `Content-Encoding` reaches the transport untouched."""
-    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+    client = ConcreteHttpClient(http_compressor=GzipHttpCompressor())
     stream = BytesIO(gzip.compress(b'raw payload'))
 
     headers, _params, data = client._prepare_request_call(
@@ -700,7 +742,7 @@ def test_prepare_request_call_compresses_exceptions_to_compressed_prefixes(
 ) -> None:
     """Types that are text or raw are compressed even when they sit under an already-compressed prefix."""
     compressor, content_encoding, decompress = compressor_case
-    client = _ConcreteHttpClient(http_compressor=compressor)
+    client = ConcreteHttpClient(http_compressor=compressor)
     payload = b'x' * MIN_COMPRESSION_SIZE
 
     headers, _params, data = client._prepare_request_call(
@@ -715,7 +757,7 @@ def test_prepare_request_call_compresses_exceptions_to_compressed_prefixes(
 
 def test_prepare_request_call_json_and_data_error() -> None:
     """Test _prepare_request_call raises error when both json and data are provided."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     with pytest.raises(ValueError, match='Cannot pass both "json" and "data" parameters'):
         client._prepare_request_call(json={'key': 'value'}, data='string')
@@ -723,7 +765,7 @@ def test_prepare_request_call_json_and_data_error() -> None:
 
 def test_prepare_request_call_with_params() -> None:
     """Test _prepare_request_call parses params correctly."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     _headers, params, _data = client._prepare_request_call(params={'limit': 10, 'flag': True})
 
@@ -736,7 +778,7 @@ def test_prepare_request_call_does_not_mutate_caller_headers() -> None:
     A caller that reuses a shared headers dict across calls must not see stale
     `Content-Type`/`Content-Encoding` headers leak in from a prior JSON/body call.
     """
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     caller_headers = {'x-trace-id': 'abc-123'}
     original = dict(caller_headers)
@@ -750,7 +792,7 @@ def test_prepare_request_call_does_not_mutate_caller_headers() -> None:
 
 def test_prepare_request_call_per_request_headers_override_defaults_case_insensitively() -> None:
     """A per-request header replaces a same-named default header even when their casings differ."""
-    client = _ConcreteHttpClient(token='default_token')
+    client = ConcreteHttpClient(token='default_token')
 
     headers, _params, _data = client._prepare_request_call(headers={'authorization': 'Bearer per-request'})
 
@@ -760,7 +802,7 @@ def test_prepare_request_call_per_request_headers_override_defaults_case_insensi
 
 def test_prepare_request_call_json_keeps_caller_content_type() -> None:
     """A caller-supplied content type is not overwritten by the JSON default, regardless of casing."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     headers, _params, _data = client._prepare_request_call(
         headers={'content-type': 'application/json; charset=utf-8'},
@@ -791,7 +833,7 @@ def test_prepare_request_call_json_keeps_caller_content_type() -> None:
 )
 def test_prepare_request_call_keeps_caller_content_encoding(caller_headers: dict[str, str], body: bytes) -> None:
     """A caller-supplied `Content-Encoding` marks the body as pre-encoded, so it goes out untouched and labeled."""
-    client = _ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+    client = ConcreteHttpClient(http_compressor=GzipHttpCompressor())
 
     headers, _params, data = client._prepare_request_call(headers=caller_headers, data=body)
 
@@ -802,7 +844,7 @@ def test_prepare_request_call_keeps_caller_content_encoding(caller_headers: dict
 
 def test_prepare_request_call_keeps_client_wide_content_encoding() -> None:
     """A `Content-Encoding` configured on the client counts as caller-supplied on every request it sends."""
-    client = _ConcreteHttpClient(headers={'Content-Encoding': 'identity'}, http_compressor=GzipHttpCompressor())
+    client = ConcreteHttpClient(headers={'Content-Encoding': 'identity'}, http_compressor=GzipHttpCompressor())
     body = b'x' * MIN_COMPRESSION_SIZE
 
     headers, _params, data = client._prepare_request_call(data=body)
@@ -813,7 +855,7 @@ def test_prepare_request_call_keeps_client_wide_content_encoding() -> None:
 
 def test_build_url_with_params_none() -> None:
     """Test _build_url_with_params with None params."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     url = client._build_url_with_params('https://api.test.com/endpoint')
     assert url == 'https://api.test.com/endpoint'
@@ -821,7 +863,7 @@ def test_build_url_with_params_none() -> None:
 
 def test_build_url_with_params_simple() -> None:
     """Test _build_url_with_params with simple params."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     url = client._build_url_with_params('https://api.test.com/endpoint', params={'key': 'value', 'limit': 10})
     assert 'key=value' in url
@@ -831,7 +873,7 @@ def test_build_url_with_params_simple() -> None:
 
 def test_build_url_with_params_list() -> None:
     """Test _build_url_with_params with list values."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     url = client._build_url_with_params('https://api.test.com/endpoint', params={'tags': ['tag1', 'tag2', 'tag3']})
     assert 'tags=tag1' in url
@@ -841,7 +883,7 @@ def test_build_url_with_params_list() -> None:
 
 def test_build_url_with_params_mixed() -> None:
     """Test _build_url_with_params with mixed param types."""
-    client = _ConcreteHttpClient()
+    client = ConcreteHttpClient()
 
     url = client._build_url_with_params(
         'https://api.test.com/endpoint', params={'limit': 10, 'tags': ['a', 'b'], 'name': 'test'}
@@ -865,11 +907,13 @@ class _ThreadRecordingCompressor(HttpCompressor):
         return gzip.compress(data)
 
 
-async def test_async_call_compresses_request_body_off_the_event_loop() -> None:
+async def test_async_call_compresses_request_body_off_the_event_loop(
+    http_client_async_class: type[HttpClientAsync], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Body serialization and compression must run in a worker thread, not block the event loop."""
     compressor = _ThreadRecordingCompressor()
-    client = ImpitHttpClientAsync(token='test_token', http_compressor=compressor)
-    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    client = http_client_async_class(token='test_token', http_compressor=compressor)
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
 
     await client.call(
         method='POST',
@@ -881,11 +925,13 @@ async def test_async_call_compresses_request_body_off_the_event_loop() -> None:
     assert compressor.compress_thread_id != threading.get_ident()
 
 
-async def test_async_call_compresses_a_multibyte_str_body_off_the_event_loop() -> None:
-    """A `str` body over the threshold only once encoded is still compressed, so it must be offloaded."""
+async def test_async_call_compresses_a_multibyte_str_body_inline(
+    http_client_async_class: type[HttpClientAsync], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A `str` body over the threshold only once encoded is still compressed - inline, as the gate judges characters."""
     compressor = _ThreadRecordingCompressor()
-    client = ImpitHttpClientAsync(token='test_token', http_compressor=compressor)
-    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    client = http_client_async_class(token='test_token', http_compressor=compressor)
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
 
     await client.call(
         method='PUT',
@@ -893,8 +939,7 @@ async def test_async_call_compresses_a_multibyte_str_body_off_the_event_loop() -
         data='\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1),
     )
 
-    assert compressor.compress_thread_id is not None
-    assert compressor.compress_thread_id != threading.get_ident()
+    assert compressor.compress_thread_id == threading.get_ident()
 
 
 def _to_thread_spy(monkeypatch: pytest.MonkeyPatch) -> Mock:
@@ -904,10 +949,12 @@ def _to_thread_spy(monkeypatch: pytest.MonkeyPatch) -> Mock:
     return spy
 
 
-async def test_async_call_skips_thread_offload_without_a_body(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_async_call_skips_thread_offload_without_a_body(
+    http_client_async_class: type[HttpClientAsync], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A bodyless request has nothing to compress, so it must not pay the worker-thread hop."""
-    client = ImpitHttpClientAsync(token='test_token')
-    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    client = http_client_async_class(token='test_token')
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
     spy = _to_thread_spy(monkeypatch)
 
     await client.call(method='GET', url='https://api.test.com/endpoint')
@@ -916,11 +963,12 @@ async def test_async_call_skips_thread_offload_without_a_body(monkeypatch: pytes
 
 
 async def test_async_call_skips_thread_offload_for_a_body_below_the_threshold(
+    http_client_async_class: type[HttpClientAsync],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A raw body too small to be compressed must not pay the worker-thread hop either."""
-    client = ImpitHttpClientAsync(token='test_token')
-    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    client = http_client_async_class(token='test_token')
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
     spy = _to_thread_spy(monkeypatch)
 
     await client.call(method='PUT', url='https://api.test.com/endpoint', data=b'x' * (MIN_COMPRESSION_SIZE - 1))
@@ -928,10 +976,12 @@ async def test_async_call_skips_thread_offload_for_a_body_below_the_threshold(
     spy.assert_not_called()
 
 
-async def test_async_call_offloads_a_body_at_the_threshold(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_async_call_offloads_a_body_at_the_threshold(
+    http_client_async_class: type[HttpClientAsync], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A raw body large enough to be compressed is prepared in a worker thread."""
-    client = ImpitHttpClientAsync(token='test_token')
-    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    client = http_client_async_class(token='test_token')
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
     spy = _to_thread_spy(monkeypatch)
 
     await client.call(method='PUT', url='https://api.test.com/endpoint', data=b'x' * MIN_COMPRESSION_SIZE)
@@ -940,11 +990,12 @@ async def test_async_call_offloads_a_body_at_the_threshold(monkeypatch: pytest.M
 
 
 async def test_async_call_skips_thread_offload_for_a_body_it_cannot_compress(
+    http_client_async_class: type[HttpClientAsync],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A body of a type the client passes through needs no hop, and deciding that must not need its length."""
-    client = ImpitHttpClientAsync(token='test_token')
-    client._impit_async_client = Mock(request=AsyncMock(return_value=Mock(status_code=200)))
+    client = http_client_async_class(token='test_token')
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
     spy = _to_thread_spy(monkeypatch)
 
     # `encode_key_value_store_record_value` passes file-like bodies through, so the gate cannot assume a length.

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.1.4 - **not yet released**
+
+### 🚀 Features
+
+- Add Actor task publication endpoints ([#985](https://github.com/apify/apify-client-python/pull/985)) ([139a426](https://github.com/apify/apify-client-python/commit/139a42691c6d8aae4ccff02911b554da6ccc8a4a)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.1.3](https://github.com/apify/apify-client-python/releases/tag/v3.1.3) (2026-08-18)
 
 ### 🐛 Bug Fixes

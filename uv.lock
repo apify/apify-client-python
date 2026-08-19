@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "apify-client"
-version = "3.1.3"
+version = "3.1.4"
 source = { editable = "." }
 dependencies = [
     { name = "colorama" },

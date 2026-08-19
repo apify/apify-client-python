@@ -209,12 +209,7 @@ include = ["docs/**/*.py", "website/**/*.py"]
 unresolved-import = "ignore"
 
 [[tool.ty.overrides]]
-include = ["docs/**/10_plugging_in_async.py", "docs/**/10_plugging_in_sync.py"]
-[tool.ty.overrides.rules]
-empty-body = "ignore"
-
-[[tool.ty.overrides]]
-include = ["docs/**/05_custom_http_client_async.py", "docs/**/05_custom_http_client_sync.py"]
+include = ["docs/**/05_custom_http_client_async.py"]
 [tool.ty.overrides.rules]
 invalid-argument-type = "ignore"
 

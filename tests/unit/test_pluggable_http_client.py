@@ -33,9 +33,6 @@ if TYPE_CHECKING:
     from apify_client.types import Timeout
 
 
-# -- Test response and client implementations --
-
-
 @dataclass
 class FakeResponse:
     """A minimal response object that satisfies the HttpResponse protocol."""
@@ -214,9 +211,6 @@ class StdlibHttpClientAsync(HttpClientAsync):
         )
 
 
-# -- Protocol conformance tests --
-
-
 def test_fake_response_satisfies_http_response_protocol() -> None:
     """Test that FakeResponse satisfies the HttpResponse protocol."""
     response = FakeResponse()
@@ -268,9 +262,6 @@ async def test_http_client_async_without_transport_fails_loudly() -> None:
         await HttpClientAsync().call(method='GET', url='https://example.com')
 
 
-# -- ApifyClient with custom http_client via classmethod --
-
-
 def test_apify_client_with_custom_http_client() -> None:
     """Test that ApifyClient.with_custom_http_client accepts a custom http_client."""
     fake_client = FakeHttpClient()
@@ -312,9 +303,6 @@ def test_apify_client_with_custom_http_client_accepts_url_params() -> None:
         http_client=fake_client,
     )
     assert client.http_client is fake_client
-
-
-# -- ApifyClientAsync with custom http_client via classmethod --
 
 
 async def test_apify_client_async_with_custom_http_client() -> None:
@@ -359,9 +347,6 @@ async def test_apify_client_async_with_custom_http_client_accepts_url_params() -
     assert client.http_client is fake_client
 
 
-# -- Public exports --
-
-
 def test_public_exports() -> None:
     """HTTP client types are exposed from `apify_client.http_clients`, not the root namespace."""
     for name in (
@@ -375,9 +360,6 @@ def test_public_exports() -> None:
         assert not hasattr(apify_client_module, name)
 
     assert not hasattr(http_clients_module, 'HttpClientBase')
-
-
-# -- http_client property --
 
 
 def test_apify_client_http_client_property_returns_correct_type() -> None:
@@ -402,9 +384,6 @@ async def test_apify_client_async_http_client_property_returns_correct_type() ->
     fake = FakeHttpClientAsync()
     client2 = ApifyClientAsync.with_custom_http_client(token='test', http_client=fake)
     assert client2.http_client is fake
-
-
-# -- Error handling with custom http_client --
 
 
 class ErrorRaisingHttpClient(HttpClient):
@@ -449,9 +428,6 @@ async def test_custom_http_client_async_error_handling() -> None:
     # _get() should catch 404 record-not-found and return None
     result = await client.actor('nonexistent').get()
     assert result is None
-
-
-# -- Integration with real HTTP server --
 
 
 def test_custom_http_client_with_real_server(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> None:

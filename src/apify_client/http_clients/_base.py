@@ -238,19 +238,15 @@ class HttpClientBase:
 
     @staticmethod
     def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
-        """Whether this body clears the size threshold `_prepare_request_call` compresses at, cheaply.
+        """Whether the body is large enough that `_prepare_request_call` may compress it.
 
-        Below the threshold nothing is ever compressed. At or above it the content type and a caller-supplied
-        `Content-Encoding` still decide, but checking those here would buy nothing - a body that turns out to be
-        already encoded only wastes the thread hop this answer guards.
-
-        The threshold is measured on encoded bytes, so a character count alone cannot decide a `str`. It is a
-        lower bound, so a `str` long enough in characters is long enough in bytes too. Below that the encoded
-        length decides, and the body is then under 4 KiB, so encoding it here is cheap.
+        This gate only picks where the preparation runs (worker thread or inline), so it approximates rather
+        than replicates the compression conditions: the content type and `Content-Encoding` checks are skipped,
+        and a `str` is measured in characters instead of encoded bytes. A misjudged body costs either one
+        needless thread hop or an inline preparation of a body under `MIN_COMPRESSION_SIZE` characters - both
+        cheap.
         """
-        if isinstance(data, str):
-            return len(data) >= MIN_COMPRESSION_SIZE or len(data.encode('utf-8')) >= MIN_COMPRESSION_SIZE
-        if isinstance(data, (bytes, bytearray)):
+        if isinstance(data, (str, bytes, bytearray)):
             return len(data) >= MIN_COMPRESSION_SIZE
         return False
 

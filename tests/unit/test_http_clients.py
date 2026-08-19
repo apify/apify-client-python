@@ -665,11 +665,10 @@ def test_prepare_request_call_measures_threshold_in_bytes_not_characters(compres
         pytest.param(b'x' * MIN_COMPRESSION_SIZE, id='bytes at threshold'),
         pytest.param(bytearray(b'x' * MIN_COMPRESSION_SIZE), id='bytearray at threshold'),
         pytest.param('x' * MIN_COMPRESSION_SIZE, id='ascii str at threshold'),
-        pytest.param('\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1), id='multibyte str above byte threshold'),
     ],
 )
 def test_is_body_worth_compressing(data: Any) -> None:
-    """The gate reports a body `_prepare_request_call` would compress, judging a `str` by its encoded bytes."""
+    """The gate reports a body `_prepare_request_call` may compress, judging a `str` by its character count."""
     assert ConcreteHttpClient._is_body_worth_compressing(data)
 
 
@@ -679,12 +678,13 @@ def test_is_body_worth_compressing(data: Any) -> None:
         pytest.param(None, id='no body'),
         pytest.param(b'x' * (MIN_COMPRESSION_SIZE - 1), id='bytes below threshold'),
         pytest.param('x' * (MIN_COMPRESSION_SIZE - 1), id='ascii str below threshold'),
+        pytest.param('\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1), id='multibyte str below char threshold'),
         pytest.param(BytesIO(b'x' * MIN_COMPRESSION_SIZE), id='file-like'),
         pytest.param({'key': 'x' * MIN_COMPRESSION_SIZE}, id='mapping'),
     ],
 )
 def test_is_body_not_worth_compressing(data: Any) -> None:
-    """A body below the threshold, or of a type the client sends as it is, needs no worker-thread hop."""
+    """A body below the threshold in characters, or of a type the client sends as it is, stays inline."""
     assert not ConcreteHttpClient._is_body_worth_compressing(data)
 
 
@@ -925,10 +925,10 @@ async def test_async_call_compresses_request_body_off_the_event_loop(
     assert compressor.compress_thread_id != threading.get_ident()
 
 
-async def test_async_call_compresses_a_multibyte_str_body_off_the_event_loop(
+async def test_async_call_compresses_a_multibyte_str_body_inline(
     http_client_async_class: type[HttpClientAsync], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A `str` body over the threshold only once encoded is still compressed, so it must be offloaded."""
+    """A `str` body over the threshold only once encoded is still compressed - inline, as the gate judges characters."""
     compressor = _ThreadRecordingCompressor()
     client = http_client_async_class(token='test_token', http_compressor=compressor)
     monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
@@ -939,8 +939,7 @@ async def test_async_call_compresses_a_multibyte_str_body_off_the_event_loop(
         data='\u00e9' * (MIN_COMPRESSION_SIZE // 2 + 1),
     )
 
-    assert compressor.compress_thread_id is not None
-    assert compressor.compress_thread_id != threading.get_ident()
+    assert compressor.compress_thread_id == threading.get_ident()
 
 
 def _to_thread_spy(monkeypatch: pytest.MonkeyPatch) -> Mock:

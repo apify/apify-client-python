@@ -105,7 +105,7 @@ def test_protocol_check_leaves_stream_unread_sync(
 
     with client.dataset(DATASET_ID).stream_items(item_format='json') as response:
         assert isinstance(response, HttpResponse)
-        # `is_stream_consumed` is transport state, not part of the protocol, but the built-in client exposes it.
+        # `is_stream_consumed` is transport state, not part of the protocol, but both built-in clients expose it.
         raw: Any = response
         assert raw.is_stream_consumed is False
 
@@ -124,6 +124,6 @@ async def test_protocol_check_leaves_stream_unread_async(
 
     async with client.dataset(DATASET_ID).stream_items(item_format='json') as response:
         assert isinstance(response, HttpResponse)
-        # `is_stream_consumed` is transport state, not part of the protocol, but the built-in client exposes it.
+        # `is_stream_consumed` is transport state, not part of the protocol, but both built-in clients expose it.
         raw: Any = response
         assert raw.is_stream_consumed is False

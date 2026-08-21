@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import json as jsonlib
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from datetime import timedelta
 from http.client import HTTPConnection
+from textwrap import dedent
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock
 from urllib.parse import urlsplit
@@ -353,6 +356,8 @@ def test_public_exports() -> None:
         'HttpClient',
         'HttpClientAsync',
         'HttpResponse',
+        'HttpxHttpClient',
+        'HttpxHttpClientAsync',
         'ImpitHttpClient',
         'ImpitHttpClientAsync',
     ):
@@ -360,6 +365,47 @@ def test_public_exports() -> None:
         assert not hasattr(apify_client_module, name)
 
     assert not hasattr(http_clients_module, 'HttpClientBase')
+
+
+def test_httpx_clients_raise_clear_error_when_extra_missing() -> None:
+    """Missing HTTPX keeps normal and star imports usable while explicit HTTPX access raises a clear error."""
+    script = dedent(
+        """
+        import sys
+
+        class BlockHttpx:
+            def find_spec(self, name, *_args):
+                if name == 'httpx2' or name.startswith('httpx2.'):
+                    raise ModuleNotFoundError(f"No module named '{name}'", name='httpx2')
+                return None
+
+        sys.meta_path.insert(0, BlockHttpx())
+
+        import apify_client.http_clients as module
+        assert module.HttpClient is not None
+        assert module.ImpitHttpClient is not None
+
+        namespace = {}
+        exec('from apify_client.http_clients import *', namespace)
+        assert namespace['HttpClient'] is module.HttpClient
+        assert 'HttpxHttpClient' not in namespace
+
+        for name in ('HttpxHttpClient', 'HttpxHttpClientAsync'):
+            try:
+                getattr(module, name)
+            except ImportError as exc:
+                assert "No module named 'httpx2'" in str(exc)
+            else:
+                raise AssertionError(f'{name} did not raise ImportError')
+        """
+    )
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, '-c', script],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_apify_client_http_client_property_returns_correct_type() -> None:

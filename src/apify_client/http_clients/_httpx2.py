@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import httpx
+import httpx2
 from typing_extensions import override
 
 from apify_client._consts import (
@@ -24,31 +24,31 @@ if TYPE_CHECKING:
 
 
 _PERMANENT_ERRORS = (
-    # A request HTTPX rejects before sending it, e.g. one carrying an invalid header value.
-    httpx.LocalProtocolError,
-    # A URL scheme HTTPX refuses to speak, which repeating the request cannot change.
-    httpx.UnsupportedProtocol,
+    # A request HTTPX2 rejects before sending it, e.g. one carrying an invalid header value.
+    httpx2.LocalProtocolError,
+    # A URL scheme HTTPX2 refuses to speak, which repeating the request cannot change.
+    httpx2.UnsupportedProtocol,
     # An over-long redirect chain is a routing loop, which repeating the request cannot break.
-    httpx.TooManyRedirects,
+    httpx2.TooManyRedirects,
     # Only `Response.raise_for_status()` raises this, and the client never calls it - the shared pipeline decides on
     # status codes from the response itself.
-    httpx.HTTPStatusError,
+    httpx2.HTTPStatusError,
 )
-"""HTTPX errors that a retry cannot fix. Everything else in the `httpx.HTTPError` tree counts as transient."""
+"""HTTPX2 errors that a retry cannot fix. Everything else in the `httpx2.HTTPError` tree counts as transient."""
 
 
 @docs_group('HTTP clients')
-class HttpxHttpClient(HttpClient):
-    """Synchronous HTTP client for the Apify API built on top of [HTTPX](https://www.python-httpx.org/).
+class Httpx2HttpClient(HttpClient):
+    """Synchronous HTTP client for the Apify API built on top of [HTTPX2](https://github.com/pydantic/httpx2).
 
-    This client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited
+    This client wraps `httpx2.Client` and adds automatic retries with exponential backoff for rate-limited
     (HTTP 429) and server error (HTTP 5xx) responses.
 
-    HTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response
+    HTTPX2 applies a request timeout to each socket operation rather than to the request as a whole, so a response
     whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
     default Impit client enforces the same value as a deadline for the whole request, body included.
 
-    Requires the `httpx` extra: `pip install "apify-client[httpx]"`.
+    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`.
     """
 
     def __init__(
@@ -65,7 +65,7 @@ class HttpxHttpClient(HttpClient):
         headers: dict[str, str] | None = None,
         http_compressor: HttpCompressor | None = None,
     ) -> None:
-        """Initialize the HTTPX-based synchronous HTTP client.
+        """Initialize the HTTPX2-based synchronous HTTP client.
 
         Args:
             token: Apify API token for authentication.
@@ -92,27 +92,27 @@ class HttpxHttpClient(HttpClient):
             http_compressor=http_compressor,
         )
 
-        self._httpx_client = httpx.Client(
+        self._httpx2_client = httpx2.Client(
             follow_redirects=True,
             event_hooks={'response': [self._clear_response_cookies]},
         )
 
     @override
     def is_timeout_error(self, exc: Exception) -> bool:
-        return super().is_timeout_error(exc) or isinstance(exc, httpx.TimeoutException)
+        return super().is_timeout_error(exc) or isinstance(exc, httpx2.TimeoutException)
 
     @override
     def is_retryable_transport_error(self, exc: Exception) -> bool:
-        # Every error from HTTPX's own hierarchy counts as transient except the permanently-failing types listed in
-        # `_PERMANENT_ERRORS`. Retrying is the default so a subclass HTTPX adds later is retried rather than
+        # Every error from HTTPX2's own hierarchy counts as transient except the permanently-failing types listed in
+        # `_PERMANENT_ERRORS`. Retrying is the default so a subclass HTTPX2 adds later is retried rather than
         # silently treated as fatal. HTTP status code errors are handled by the shared pipeline based on the
         # response status code, not here.
-        return isinstance(exc, httpx.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
+        return isinstance(exc, httpx2.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
     @override
     def close(self) -> None:
-        """Close the underlying HTTPX connection pool."""
-        self._httpx_client.close()
+        """Close the underlying HTTPX2 connection pool."""
+        self._httpx2_client.close()
 
     @override
     def send_request(
@@ -124,8 +124,8 @@ class HttpxHttpClient(HttpClient):
         content: bytes | None,
         timeout: float | None,
         stream: bool,
-    ) -> httpx.Response:
-        request = self._httpx_client.build_request(
+    ) -> httpx2.Response:
+        request = self._httpx2_client.build_request(
             method=method,
             url=url,
             headers=headers,
@@ -133,25 +133,25 @@ class HttpxHttpClient(HttpClient):
             timeout=timeout,
         )
         _restore_explicit_cookie_header(request, headers)
-        return self._httpx_client.send(request, stream=stream)
+        return self._httpx2_client.send(request, stream=stream)
 
-    def _clear_response_cookies(self, _response: httpx.Response) -> None:
-        """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
-        self._httpx_client.cookies.clear()
+    def _clear_response_cookies(self, _response: httpx2.Response) -> None:
+        """Prevent HTTPX2's shared cookie jar from leaking server cookies into later API requests."""
+        self._httpx2_client.cookies.clear()
 
 
 @docs_group('HTTP clients')
-class HttpxHttpClientAsync(HttpClientAsync):
-    """Asynchronous HTTP client for the Apify API built on top of [HTTPX](https://www.python-httpx.org/).
+class Httpx2HttpClientAsync(HttpClientAsync):
+    """Asynchronous HTTP client for the Apify API built on top of [HTTPX2](https://github.com/pydantic/httpx2).
 
-    This client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited
+    This client wraps `httpx2.AsyncClient` and adds automatic retries with exponential backoff for rate-limited
     (HTTP 429) and server error (HTTP 5xx) responses.
 
-    HTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response
+    HTTPX2 applies a request timeout to each socket operation rather than to the request as a whole, so a response
     whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
     default Impit client enforces the same value as a deadline for the whole request, body included.
 
-    Requires the `httpx` extra: `pip install "apify-client[httpx]"`.
+    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`.
     """
 
     def __init__(
@@ -168,7 +168,7 @@ class HttpxHttpClientAsync(HttpClientAsync):
         headers: dict[str, str] | None = None,
         http_compressor: HttpCompressor | None = None,
     ) -> None:
-        """Initialize the HTTPX-based asynchronous HTTP client.
+        """Initialize the HTTPX2-based asynchronous HTTP client.
 
         Args:
             token: Apify API token for authentication.
@@ -195,27 +195,27 @@ class HttpxHttpClientAsync(HttpClientAsync):
             http_compressor=http_compressor,
         )
 
-        self._httpx_async_client = httpx.AsyncClient(
+        self._httpx2_async_client = httpx2.AsyncClient(
             follow_redirects=True,
             event_hooks={'response': [self._clear_response_cookies]},
         )
 
     @override
     def is_timeout_error(self, exc: Exception) -> bool:
-        return super().is_timeout_error(exc) or isinstance(exc, httpx.TimeoutException)
+        return super().is_timeout_error(exc) or isinstance(exc, httpx2.TimeoutException)
 
     @override
     def is_retryable_transport_error(self, exc: Exception) -> bool:
-        # Every error from HTTPX's own hierarchy counts as transient except the permanently-failing types listed in
-        # `_PERMANENT_ERRORS`. Retrying is the default so a subclass HTTPX adds later is retried rather than
+        # Every error from HTTPX2's own hierarchy counts as transient except the permanently-failing types listed in
+        # `_PERMANENT_ERRORS`. Retrying is the default so a subclass HTTPX2 adds later is retried rather than
         # silently treated as fatal. HTTP status code errors are handled by the shared pipeline based on the
         # response status code, not here.
-        return isinstance(exc, httpx.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
+        return isinstance(exc, httpx2.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
     @override
     async def aclose(self) -> None:
-        """Close the underlying asynchronous HTTPX connection pool."""
-        await self._httpx_async_client.aclose()
+        """Close the underlying asynchronous HTTPX2 connection pool."""
+        await self._httpx2_async_client.aclose()
 
     @override
     async def send_request(
@@ -227,8 +227,8 @@ class HttpxHttpClientAsync(HttpClientAsync):
         content: bytes | None,
         timeout: float | None,
         stream: bool,
-    ) -> httpx.Response:
-        request = self._httpx_async_client.build_request(
+    ) -> httpx2.Response:
+        request = self._httpx2_async_client.build_request(
             method=method,
             url=url,
             headers=headers,
@@ -236,17 +236,17 @@ class HttpxHttpClientAsync(HttpClientAsync):
             timeout=timeout,
         )
         _restore_explicit_cookie_header(request, headers)
-        return await self._httpx_async_client.send(request, stream=stream)
+        return await self._httpx2_async_client.send(request, stream=stream)
 
-    async def _clear_response_cookies(self, _response: httpx.Response) -> None:
-        """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
-        self._httpx_async_client.cookies.clear()
+    async def _clear_response_cookies(self, _response: httpx2.Response) -> None:
+        """Prevent HTTPX2's shared cookie jar from leaking server cookies into later API requests."""
+        self._httpx2_async_client.cookies.clear()
 
 
-def _restore_explicit_cookie_header(request: httpx.Request, headers: dict[str, str]) -> None:
-    """Keep only cookies explicitly supplied for this request, never cookies from HTTPX's shared jar.
+def _restore_explicit_cookie_header(request: httpx2.Request, headers: dict[str, str]) -> None:
+    """Keep only cookies explicitly supplied for this request, never cookies from HTTPX2's shared jar.
 
-    HTTPX drops the `Cookie` header when it builds a redirect request and rebuilds it from the jar, so an explicit
+    HTTPX2 drops the `Cookie` header when it builds a redirect request and rebuilds it from the jar, so an explicit
     cookie only reaches the first hop of a redirected request.
     """
     explicit_cookie = next((value for key, value in headers.items() if key.lower() == 'cookie'), None)

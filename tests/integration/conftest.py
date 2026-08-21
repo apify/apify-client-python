@@ -21,8 +21,8 @@ from apify_client._utils.crypto import create_hmac_signature, create_storage_con
 from apify_client.http_clients import (
     HttpClient,
     HttpClientAsync,
-    HttpxHttpClient,
-    HttpxHttpClientAsync,
+    Httpx2HttpClient,
+    Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
@@ -44,7 +44,7 @@ DEFAULT_HTTP_CLIENT_CLASSES = HttpClientClasses(sync=ImpitHttpClient, async_=Imp
 
 ALL_HTTP_CLIENT_CLASSES = [
     pytest.param(DEFAULT_HTTP_CLIENT_CLASSES, id='impit'),
-    pytest.param(HttpClientClasses(sync=HttpxHttpClient, async_=HttpxHttpClientAsync), id='httpx'),
+    pytest.param(HttpClientClasses(sync=Httpx2HttpClient, async_=Httpx2HttpClientAsync), id='httpx2'),
 ]
 """Every built-in HTTP client, for tests that exercise transport behavior rather than an API resource."""
 

@@ -10,8 +10,8 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.http_clients import (
     HttpClient,
     HttpClientAsync,
-    HttpxHttpClient,
-    HttpxHttpClientAsync,
+    Httpx2HttpClient,
+    Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
@@ -53,7 +53,7 @@ def async_client(httpserver: HTTPServer) -> ApifyClientAsync:
 @pytest.fixture(
     params=[
         pytest.param(ImpitHttpClient, id='impit'),
-        pytest.param(HttpxHttpClient, id='httpx'),
+        pytest.param(Httpx2HttpClient, id='httpx2'),
     ]
 )
 def http_client_class(request: pytest.FixtureRequest) -> type[HttpClient]:
@@ -64,7 +64,7 @@ def http_client_class(request: pytest.FixtureRequest) -> type[HttpClient]:
 @pytest.fixture(
     params=[
         pytest.param(ImpitHttpClientAsync, id='impit'),
-        pytest.param(HttpxHttpClientAsync, id='httpx'),
+        pytest.param(Httpx2HttpClientAsync, id='httpx2'),
     ]
 )
 def http_client_async_class(request: pytest.FixtureRequest) -> type[HttpClientAsync]:

@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock
 
-import httpx
+import httpx2
 import impit
 import pytest
 
@@ -13,8 +13,8 @@ from apify_client._logging import LoggerOnce, logger_name
 from apify_client.http_clients import (
     HttpClient,
     HttpClientAsync,
-    HttpxHttpClient,
-    HttpxHttpClientAsync,
+    Httpx2HttpClient,
+    Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
@@ -23,8 +23,8 @@ from apify_client.http_clients import _base as http_client_base
 if TYPE_CHECKING:
     from _pytest.logging import LogCaptureFixture
 
-UNSET_HTTPX_TIMEOUT = {'connect': None, 'read': None, 'write': None, 'pool': None}
-"""What HTTPX stores on a request built with `timeout=None`: every sub-timeout unset, not the client default."""
+UNSET_HTTPX2_TIMEOUT = {'connect': None, 'read': None, 'write': None, 'pool': None}
+"""What HTTPX2 stores on a request built with `timeout=None`: every sub-timeout unset, not the client default."""
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def successful_response() -> Mock:
 def retryable_error(client: HttpClient | HttpClientAsync) -> Exception:
     if isinstance(client, (ImpitHttpClient, ImpitHttpClientAsync)):
         return impit.TimeoutException('timeout')
-    return httpx.ReadTimeout('timeout', request=httpx.Request('GET', 'https://example.com'))
+    return httpx2.ReadTimeout('timeout', request=httpx2.Request('GET', 'https://example.com'))
 
 
 @pytest.mark.parametrize(
@@ -235,29 +235,29 @@ async def test_no_timeout_mapping_for_async_impit_adapter() -> None:
     assert client._impit_async_client.request.call_args.kwargs['timeout'] == 86_400
 
 
-def test_no_timeout_mapping_for_sync_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The synchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
-    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
-    with HttpxHttpClient() as client:
+def test_no_timeout_mapping_for_sync_httpx2_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The synchronous HTTPX2 adapter maps no-timeout to every HTTPX2 sub-timeout being unset."""
+    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX2.
+    with Httpx2HttpClient() as client:
         send = Mock(return_value=successful_response())
-        monkeypatch.setattr(client._httpx_client, 'send', send)
+        monkeypatch.setattr(client._httpx2_client, 'send', send)
 
         client.send_request(
             method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
         )
 
-        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX_TIMEOUT
+        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX2_TIMEOUT
 
 
-async def test_no_timeout_mapping_for_async_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The asynchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
-    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
-    async with HttpxHttpClientAsync() as client:
+async def test_no_timeout_mapping_for_async_httpx2_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The asynchronous HTTPX2 adapter maps no-timeout to every HTTPX2 sub-timeout being unset."""
+    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX2.
+    async with Httpx2HttpClientAsync() as client:
         send = AsyncMock(return_value=successful_response())
-        monkeypatch.setattr(client._httpx_async_client, 'send', send)
+        monkeypatch.setattr(client._httpx2_async_client, 'send', send)
 
         await client.send_request(
             method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
         )
 
-        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX_TIMEOUT
+        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX2_TIMEOUT

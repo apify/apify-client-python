@@ -356,8 +356,8 @@ def test_public_exports() -> None:
         'HttpClient',
         'HttpClientAsync',
         'HttpResponse',
-        'HttpxHttpClient',
-        'HttpxHttpClientAsync',
+        'Httpx2HttpClient',
+        'Httpx2HttpClientAsync',
         'ImpitHttpClient',
         'ImpitHttpClientAsync',
     ):
@@ -367,19 +367,19 @@ def test_public_exports() -> None:
     assert not hasattr(http_clients_module, 'HttpClientBase')
 
 
-def test_httpx_clients_raise_clear_error_when_extra_missing() -> None:
-    """Missing HTTPX keeps normal and star imports usable while explicit HTTPX access raises a clear error."""
+def test_httpx2_clients_raise_clear_error_when_extra_missing() -> None:
+    """Missing HTTPX2 keeps normal and star imports usable while explicit HTTPX2 access raises a clear error."""
     script = dedent(
         """
         import sys
 
-        class BlockHttpx:
+        class BlockHttpx2:
             def find_spec(self, name, *_args):
-                if name == 'httpx' or name.startswith('httpx.'):
-                    raise ModuleNotFoundError(f"No module named '{name}'", name='httpx')
+                if name == 'httpx2' or name.startswith('httpx2.'):
+                    raise ModuleNotFoundError(f"No module named '{name}'", name='httpx2')
                 return None
 
-        sys.meta_path.insert(0, BlockHttpx())
+        sys.meta_path.insert(0, BlockHttpx2())
 
         import apify_client.http_clients as module
         assert module.HttpClient is not None
@@ -388,13 +388,13 @@ def test_httpx_clients_raise_clear_error_when_extra_missing() -> None:
         namespace = {}
         exec('from apify_client.http_clients import *', namespace)
         assert namespace['HttpClient'] is module.HttpClient
-        assert 'HttpxHttpClient' not in namespace
+        assert 'Httpx2HttpClient' not in namespace
 
-        for name in ('HttpxHttpClient', 'HttpxHttpClientAsync'):
+        for name in ('Httpx2HttpClient', 'Httpx2HttpClientAsync'):
             try:
                 getattr(module, name)
             except ImportError as exc:
-                assert "No module named 'httpx'" in str(exc)
+                assert "No module named 'httpx2'" in str(exc)
             else:
                 raise AssertionError(f'{name} did not raise ImportError')
         """

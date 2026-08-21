@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
@@ -486,3 +487,29 @@ def test_batch_delete_requests_stringifies_unserializable_extra_sync(httpserver:
 
     (sent_request,) = json.loads(payloads[0])
     assert sent_request == {'id': 'YiKoxjkaS9gjGTqhF', 'weird': 'unserializable'}
+
+
+async def test_add_request_requires_unique_key_and_url_async(httpserver: HTTPServer) -> None:
+    """`RequestDraftDict` marks no key required, so Pydantic is the only guard left on `unique_key` and `url`."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    with pytest.raises(ValidationError) as exc_info:
+        await rq_client.add_request({'method': 'GET'})
+
+    assert {error['loc'][0] for error in exc_info.value.errors()} == {'uniqueKey', 'url'}
+    assert httpserver.log == []
+
+
+def test_add_request_requires_unique_key_and_url_sync(httpserver: HTTPServer) -> None:
+    """`RequestDraftDict` marks no key required, so Pydantic is the only guard left on `unique_key` and `url`."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    with pytest.raises(ValidationError) as exc_info:
+        rq_client.add_request({'method': 'GET'})
+
+    assert {error['loc'][0] for error in exc_info.value.errors()} == {'uniqueKey', 'url'}
+    assert httpserver.log == []

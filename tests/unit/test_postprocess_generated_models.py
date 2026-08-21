@@ -14,6 +14,12 @@ from scripts.postprocess_generated_models import (
 )
 
 from apify_client._models import Request, RequestBase, RequestDraft
+from apify_client._typeddicts import (
+    RequestBaseCamelDict,
+    RequestBaseDict,
+    RequestDraftCamelDict,
+    RequestDraftDict,
+)
 
 # -- fix_discriminators -------------------------------------------------------
 
@@ -705,6 +711,7 @@ def test_reparent_classes_leaves_name_prefixed_classes() -> None:
     """A class whose name merely starts with a mapped name keeps its own base."""
     content = 'class RequestDraft(TypedDict):\n    url: str\n\n\nclass RequestDraftDelete(TypedDict):\n    id: str\n'
     result = reparent_classes(content)
+    assert 'class RequestDraft(RequestBase):' in result
     assert 'class RequestDraftDelete(TypedDict):' in result
 
 
@@ -738,6 +745,14 @@ def test_drop_inherited_typeddict_fields_leaves_unreparented_source() -> None:
     """Source whose mapped class has no base to inherit from passes through unchanged."""
     content = 'class RequestDraft(TypedDict):\n    unique_key: str\n'
     assert drop_inherited_typeddict_fields(content) == content
+
+
+def test_reparented_draft_typeddicts_declare_full_shape() -> None:
+    """The reparented request TypedDicts expose every `RequestBase` key, snake_case and camelCase alike."""
+    assert set(RequestBaseDict.__annotations__) < set(RequestDraftDict.__annotations__)
+    assert set(RequestBaseCamelDict.__annotations__) < set(RequestDraftCamelDict.__annotations__)
+    assert 'user_data' in RequestDraftDict.__annotations__
+    assert 'userData' in RequestDraftCamelDict.__annotations__
 
 
 def test_reparented_draft_serializes_camel_case() -> None:

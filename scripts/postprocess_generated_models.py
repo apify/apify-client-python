@@ -53,11 +53,12 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 }
 
 # Map of `{class name: base class it should inherit from}`, applied to both generated files.
-# Some request-body schemas in the spec spell out only a few properties instead of extending the base schema that
-# carries the rest of the wire shape. A model generated from such a schema declares those few fields and lets
-# `extra='allow'` absorb everything else - but the `to_camel` alias generator only covers declared fields, so extras
-# reach the API under their snake_case names, which it silently ignores. Reparenting to the base schema's class
-# declares the full shape, restoring alias coverage and the TypedDict keys the type checker validates against.
+# Some schemas in the spec spell out only a few properties instead of extending the base schema that carries the rest
+# of the wire shape. When a resource client sends such a model as a request body, the generated class declares those
+# few fields and lets `extra='allow'` absorb everything else - but the `to_camel` alias generator only covers declared
+# fields, so extras reach the API under their snake_case names, which it silently ignores. Reparenting to the base
+# schema's class declares the full shape, restoring alias coverage and the TypedDict keys the type checker validates
+# against.
 BASE_CLASS_FIXES: dict[str, str] = {
     'RequestDraft': 'RequestBase',
 }
@@ -120,9 +121,11 @@ def _base_names(node: ast.ClassDef) -> set[str]:
 def reparent_classes(content: str) -> str:
     """Replace the base class of every `BASE_CLASS_FIXES` entry with the mapped one.
 
-    The whole base list is rewritten, so re-running on already-reparented source is a no-op. Entries absent from
-    `content` are simply skipped - the map is shared by both generated files, and a schema does not always yield a
-    class in each (a root model becomes a `TypeAlias` in `_typeddicts.py`).
+    The whole base list is rewritten, so re-running on already-reparented source is a no-op. A mapped class absent
+    from `content` is skipped - the map is shared by both generated files, and a schema does not always yield a class
+    in each (a root model becomes a `TypeAlias` in `_typeddicts.py`). The mapped base is not looked up: an entry
+    naming a base that the file no longer defines yields source that fails to import, which is preferable to
+    silently leaving the class unreparented.
     """
     for name, base in BASE_CLASS_FIXES.items():
         content = re.sub(

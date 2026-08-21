@@ -81,7 +81,7 @@ def _serialize_requests(
     return [
         json.dumps(
             (request if isinstance(request, RequestDraft) else RequestDraft.model_validate(request)).model_dump(
-                by_alias=True, exclude_none=True
+                mode='json', by_alias=True, exclude_none=True, fallback=str
             ),
             ensure_ascii=False,
             allow_nan=False,
@@ -238,7 +238,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue.
+            request: The request to add to the queue. Must carry a `unique_key` and a `url`.
             forefront: Whether to add the request to the head or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
@@ -253,7 +253,7 @@ class RequestQueueClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -315,7 +315,7 @@ class RequestQueueClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url(f'requests/{request.id}'),
             method='PUT',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -417,7 +417,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue.
+            requests: List of requests to be added to the queue. Each must carry a `unique_key` and a `url`.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -504,7 +504,7 @@ class RequestQueueClient(ResourceClient):
                 else RequestDraftDelete.model_validate(
                     request,
                 )
-            ).model_dump(by_alias=True, exclude_none=True)
+            ).root.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str)
             for request in requests
         ]
 
@@ -765,7 +765,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue.
+            request: The request to add to the queue. Must carry a `unique_key` and a `url`.
             forefront: Whether to add the request to the head or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
@@ -780,7 +780,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -840,7 +840,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url(f'requests/{request.id}'),
             method='PUT',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -990,7 +990,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue.
+            requests: List of requests to be added to the queue. Each must carry a `unique_key` and a `url`.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -1082,7 +1082,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 else RequestDraftDelete.model_validate(
                     request,
                 )
-            ).model_dump(by_alias=True, exclude_none=True)
+            ).root.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str)
             for request in requests
         ]
 

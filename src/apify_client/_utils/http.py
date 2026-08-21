@@ -38,15 +38,14 @@ def to_path_segment(value: str) -> str:
         value: The value to place in a single path segment, for example a key-value store record key.
 
     Returns:
-        The value with every character that has a meaning in a URL percent-encoded.
+        The percent-encoded value, which a URL parser can only read as one path segment.
 
     Raises:
         ValueError: If the value is empty, `.` or `..`, none of which can be carried in a path segment at all.
     """
     # Encoding cannot save these three: an empty value leaves nothing but the separator, and a URL parser
-    # resolves a dot segment against the segment before it - after decoding, so `%2E%2E` is resolved just like
-    # `..`. Either way the request lands on the parent endpoint - for a record key that is the store itself,
-    # where the same call reads, rewrites or deletes the whole store instead of one record.
+    # resolves a dot segment after percent-decoding, so `%2E%2E` collapses just like `..`. Either way the
+    # request lands on a parent endpoint, where `..` makes the same verb act on the whole resource.
     if value in {'', '.', '..'}:
         raise ValueError(f'"{value}" cannot be used as a URL path segment.')
 

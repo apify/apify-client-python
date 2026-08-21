@@ -300,12 +300,15 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request.
+            request: The updated request. It must carry the ID of the request to update.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated request.
+
+        Raises:
+            ValueError: If the request carries no ID.
         """
         if not isinstance(request, Request):
             request = Request.model_validate(request)
@@ -828,12 +831,15 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request.
+            request: The updated request. It must carry the ID of the request to update.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated request.
+
+        Raises:
+            ValueError: If the request carries no ID.
         """
         if not isinstance(request, Request):
             request = Request.model_validate(request)

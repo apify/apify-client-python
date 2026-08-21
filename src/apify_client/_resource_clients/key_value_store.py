@@ -18,7 +18,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 from apify_client._utils.encoding import encode_key_value_store_record_value
 from apify_client._utils.errors import catch_not_found_or_throw
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, to_path_segment
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
@@ -239,7 +239,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 timeout=timeout,
@@ -270,7 +270,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='HEAD',
                 params=self._build_params(),
                 timeout=timeout,
@@ -298,7 +298,7 @@ class KeyValueStoreClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 timeout=timeout,
@@ -334,7 +334,7 @@ class KeyValueStoreClient(ResourceClient):
         response = None
         try:
             response = self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
@@ -390,7 +390,7 @@ class KeyValueStoreClient(ResourceClient):
             headers['content-encoding'] = content_encoding
 
         self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(f'records/{to_path_segment(key)}'),
             method='PUT',
             params=self._build_params(),
             data=value,
@@ -408,7 +408,7 @@ class KeyValueStoreClient(ResourceClient):
             timeout: Timeout for the API HTTP request.
         """
         self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(f'records/{to_path_segment(key)}'),
             method='DELETE',
             params=self._build_params(),
             timeout=timeout,
@@ -437,7 +437,7 @@ class KeyValueStoreClient(ResourceClient):
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        return self._build_public_url(f'records/{key}', request_params)
+        return self._build_public_url(f'records/{to_path_segment(key)}', request_params)
 
     def create_keys_public_url(
         self,
@@ -666,7 +666,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 timeout=timeout,
@@ -697,7 +697,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='HEAD',
                 params=self._build_params(),
                 timeout=timeout,
@@ -727,7 +727,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 timeout=timeout,
@@ -763,7 +763,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         response = None
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'records/{key}'),
+                url=self._build_url(f'records/{to_path_segment(key)}'),
                 method='GET',
                 params=self._build_params(signature=signature, attachment=True),
                 stream=True,
@@ -819,7 +819,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             headers['content-encoding'] = content_encoding
 
         await self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(f'records/{to_path_segment(key)}'),
             method='PUT',
             params=self._build_params(),
             data=value,
@@ -837,7 +837,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             timeout: Timeout for the API HTTP request.
         """
         await self._http_client.call(
-            url=self._build_url(f'records/{key}'),
+            url=self._build_url(f'records/{to_path_segment(key)}'),
             method='DELETE',
             params=self._build_params(),
             timeout=timeout,
@@ -866,7 +866,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        return self._build_public_url(f'records/{key}', request_params)
+        return self._build_public_url(f'records/{to_path_segment(key)}', request_params)
 
     async def create_keys_public_url(
         self,

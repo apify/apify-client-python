@@ -112,41 +112,23 @@ class RequestCamelDict(RequestBaseCamelDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDict(TypedDict):
+class RequestDraftDict(RequestBaseDict):
     """A request that failed to be processed during a request queue operation and can be retried."""
 
     id: NotRequired[str]
     """
     A unique identifier assigned to the request.
     """
-    unique_key: str
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: str
-    """
-    The URL of the request.
-    """
-    method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
 
 
 @docs_group('Typed dicts')
-class RequestDraftCamelDict(TypedDict):
+class RequestDraftCamelDict(RequestBaseCamelDict):
     """A request that failed to be processed during a request queue operation and can be retried."""
 
     id: NotRequired[str]
     """
     A unique identifier assigned to the request.
     """
-    uniqueKey: str
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: str
-    """
-    The URL of the request.
-    """
-    method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
 
 
 @docs_group('Typed dicts')

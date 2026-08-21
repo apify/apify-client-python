@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug.wrappers import Request
 
-    from apify_client._typeddicts import RequestDraftDict
+    from apify_client._typeddicts import RequestDict, RequestDraftDict
 
 # The Apify API limit on the payload size of a batch-add request, which the client's batching must respect.
 _API_MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024
@@ -119,8 +119,11 @@ def _make_large_requests() -> list[RequestDraftDict]:
     ]
 
 
-def _payload_capturing_handler(payloads: list[bytes]) -> Callable[[Request], Response]:
-    """Return a handler that records each POST body and responds with an empty batch result.
+def _payload_capturing_handler(
+    payloads: list[bytes],
+    response_content: str = _EMPTY_BATCH_RESPONSE_CONTENT,
+) -> Callable[[Request], Response]:
+    """Return a handler that records each request body and responds with `response_content`.
 
     Bodies below the client's compression threshold arrive uncompressed, so the recorded payload is
     decompressed only when the request says it was encoded.
@@ -129,7 +132,7 @@ def _payload_capturing_handler(payloads: list[bytes]) -> Callable[[Request], Res
     def handler(request: Request) -> Response:
         body = request.get_data()
         payloads.append(gzip.decompress(body) if request.headers.get('Content-Encoding') == 'gzip' else body)
-        return Response(_EMPTY_BATCH_RESPONSE_CONTENT, status=200, content_type='application/json')
+        return Response(response_content, status=200, content_type='application/json')
 
     return handler
 
@@ -253,3 +256,99 @@ def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
     assert requests[0]['unique_key'] in {request.unique_key for request in batch_response.processed_requests}
     assert len(batch_response.unprocessed_requests) == 1
     assert batch_response.unprocessed_requests[0].unique_key == requests[1]['unique_key']
+
+
+_REQUEST_REGISTRATION_RESPONSE_CONTENT = (
+    '{"data": {"requestId": "YiKoxjkaS9gjGTqhF", "wasAlreadyPresent": false, "wasAlreadyHandled": false}}'
+)
+
+_FULL_REQUEST_DICT: RequestDict = {
+    'id': 'YiKoxjkaS9gjGTqhF',
+    'unique_key': 'http://example.com/1',
+    'url': 'http://example.com/1',
+    'method': 'GET',
+    'user_data': {'label': 'DETAIL'},
+    'no_retry': True,
+    'retry_count': 2,
+    'loaded_url': 'http://example.com/1/final',
+    'headers': {'X-Test': 'value'},
+    'payload': 'body',
+    'error_messages': ['boom'],
+    'handled_at': '2019-06-16T10:23:31.607Z',
+}
+
+
+async def test_add_request_matches_update_request_casing_async(httpserver: HTTPServer) -> None:
+    """The same snake_case request dict reaches the API camelCased on add_request just as on update_request."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*')).respond_with_handler(
+        _payload_capturing_handler(payloads, _REQUEST_REGISTRATION_RESPONSE_CONTENT)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    await rq_client.add_request(_FULL_REQUEST_DICT)
+    await rq_client.update_request(_FULL_REQUEST_DICT)
+
+    added, updated = (json.loads(payload) for payload in payloads)
+    assert added == updated
+    assert added['userData'] == {'label': 'DETAIL'}
+    assert [key for key in added if '_' in key] == []
+
+
+def test_add_request_matches_update_request_casing_sync(httpserver: HTTPServer) -> None:
+    """The same snake_case request dict reaches the API camelCased on add_request just as on update_request."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*')).respond_with_handler(
+        _payload_capturing_handler(payloads, _REQUEST_REGISTRATION_RESPONSE_CONTENT)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    rq_client.add_request(_FULL_REQUEST_DICT)
+    rq_client.update_request(_FULL_REQUEST_DICT)
+
+    added, updated = (json.loads(payload) for payload in payloads)
+    assert added == updated
+    assert added['userData'] == {'label': 'DETAIL'}
+    assert [key for key in added if '_' in key] == []
+
+
+async def test_batch_add_requests_camel_cases_every_field_async(httpserver: HTTPServer) -> None:
+    """Every field of a snake_case request dict is camelCased in the batch-add payload."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(
+        _payload_capturing_handler(payloads)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    await rq_client.batch_add_requests(requests=[_FULL_REQUEST_DICT])
+
+    (sent_request,) = json.loads(payloads[0])
+    assert sent_request['userData'] == {'label': 'DETAIL'}
+    assert [key for key in sent_request if '_' in key] == []
+
+
+def test_batch_add_requests_camel_cases_every_field_sync(httpserver: HTTPServer) -> None:
+    """Every field of a snake_case request dict is camelCased in the batch-add payload."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(
+        _payload_capturing_handler(payloads)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    rq_client.batch_add_requests(requests=[_FULL_REQUEST_DICT])
+
+    (sent_request,) = json.loads(payloads[0])
+    assert sent_request['userData'] == {'label': 'DETAIL'}
+    assert [key for key in sent_request if '_' in key] == []

@@ -1,5 +1,9 @@
 """Post-process datamodel-codegen output to fix known issues and prune the TypedDict file.
 
+Applied to both `_models.py` and `_typeddicts.py`:
+- Reparent classes whose spec schema declares the wire shape standalone instead of extending the base schema it
+  duplicates, so the generated class declares the full set of fields.
+
 Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with discriminators on schemas
   referenced from array items).
@@ -12,6 +16,7 @@ Applied to `_models.py`:
 - Add `@docs_group('Models')` to every model class (plus the required import).
 
 Applied to `_typeddicts.py`:
+- Drop the fields a reparented TypedDict inherits from its new base, which PEP 589 forbids it from redeclaring.
 - Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive dependencies).
   The file is generated in full by datamodel-codegen; the trimming happens here.
 - Rename every kept class to add a `Dict` suffix so it doesn't clash with the Pydantic model name
@@ -45,6 +50,16 @@ TYPEDDICTS_PATH = PACKAGE_DIR / '_typeddicts.py'
 # Add new entries here as needed when the OpenAPI spec introduces new discriminators.
 DISCRIMINATOR_FIXES: dict[str, str] = {
     'pricingModel': 'pricing_model',
+}
+
+# Map of `{class name: base class it should inherit from}`, applied to both generated files.
+# Some request-body schemas in the spec spell out only a few properties instead of extending the base schema that
+# carries the rest of the wire shape. A model generated from such a schema declares those few fields and lets
+# `extra='allow'` absorb everything else - but the `to_camel` alias generator only covers declared fields, so extras
+# reach the API under their snake_case names, which it silently ignores. Reparenting to the base schema's class
+# declares the full shape, restoring alias coverage and the TypedDict keys the type checker validates against.
+BASE_CLASS_FIXES: dict[str, str] = {
+    'RequestDraft': 'RequestBase',
 }
 
 # TypedDicts accepted as inputs by resource-client methods. These are the roots of the reachability
@@ -100,6 +115,68 @@ def _ensure_typing_import(content: str, name: str) -> str:
 def _base_names(node: ast.ClassDef) -> set[str]:
     """Return the set of unsubscripted base-class names of `node`."""
     return {b.id for b in node.bases if isinstance(b, ast.Name)}
+
+
+def reparent_classes(content: str) -> str:
+    """Replace the base class of every `BASE_CLASS_FIXES` entry with the mapped one.
+
+    The whole base list is rewritten, so re-running on already-reparented source is a no-op. Entries absent from
+    `content` are simply skipped - the map is shared by both generated files, and a schema does not always yield a
+    class in each (a root model becomes a `TypeAlias` in `_typeddicts.py`).
+    """
+    for name, base in BASE_CLASS_FIXES.items():
+        content = re.sub(
+            rf'^class {re.escape(name)}\([^)]*\):',
+            f'class {name}({base}):',
+            content,
+            flags=re.MULTILINE,
+        )
+    return content
+
+
+def _annotated_field_names(node: ast.ClassDef) -> set[str]:
+    """Return the names of every annotated field declared directly in `node`'s body."""
+    return {
+        stmt.target.id for stmt in node.body if isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)
+    }
+
+
+def drop_inherited_typeddict_fields(content: str) -> str:
+    """Delete the fields a reparented TypedDict now inherits, keeping only the ones its base doesn't declare.
+
+    PEP 589 forbids a TypedDict subclass from redeclaring a key of its base - even to turn a `NotRequired` key into
+    a required one - so the reparented class has to give up its own copies. The keys stay required at runtime: the
+    Pydantic model keeps its redeclarations, which Pydantic allows.
+
+    Each field's trailing description docstring is removed along with it.
+    """
+    tree = ast.parse(content)
+    classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
+    drop_line_indices: set[int] = set()
+
+    for name, base in BASE_CLASS_FIXES.items():
+        node, base_node = classes.get(name), classes.get(base)
+        if node is None or base_node is None:
+            continue
+        inherited = _annotated_field_names(base_node)
+        for index, stmt in enumerate(node.body):
+            if not isinstance(stmt, ast.AnnAssign) or not isinstance(stmt.target, ast.Name):
+                continue
+            if stmt.target.id not in inherited:
+                continue
+            end_line = stmt.end_lineno
+            following = node.body[index + 1] if index + 1 < len(node.body) else None
+            if following is not None and _is_string_expr(following):
+                end_line = following.end_lineno
+            assert end_line is not None  # noqa: S101
+            drop_line_indices.update(range(stmt.lineno - 1, end_line))
+
+    if not drop_line_indices:
+        return content
+
+    lines = content.split('\n')
+    kept = [line for i, line in enumerate(lines) if i not in drop_line_indices]
+    return _collapse_blank_lines('\n'.join(kept))
 
 
 def fix_discriminators(content: str) -> str:
@@ -645,7 +722,8 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
     Returns the list of paths that were (re)written.
     """
     original = models_path.read_text()
-    fixed = fix_discriminators(original)
+    fixed = reparent_classes(original)
+    fixed = fix_discriminators(fixed)
     fixed = absolutize_doc_links(fixed)
     fixed = convert_enums_to_literals(fixed)
     fixed = add_docs_group_decorators(fixed, 'Models')
@@ -666,7 +744,9 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
 def postprocess_typeddicts(path: Path, alias_map: dict[str, dict[str, str]]) -> bool:
     """Apply `_typeddicts.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
-    pruned, kept = prune_typeddicts(original, RESOURCE_INPUT_TYPEDDICTS)
+    # Reparenting comes first so the new base class counts as a dependency of the input surface and survives pruning.
+    reparented = drop_inherited_typeddict_fields(reparent_classes(original))
+    pruned, kept = prune_typeddicts(reparented, RESOURCE_INPUT_TYPEDDICTS)
     renamed = rename_with_dict_suffix(pruned, kept)
     flattened = flatten_empty_typeddicts(renamed)
     camelized = add_camel_case_typeddicts(flattened, alias_map)

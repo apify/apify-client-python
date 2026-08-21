@@ -7,11 +7,13 @@ from scripts.postprocess_generated_models import (
     add_docs_group_decorators,
     build_alias_map,
     convert_enums_to_literals,
+    drop_inherited_typeddict_fields,
     fix_discriminators,
+    reparent_classes,
     split_literals_to_file,
 )
 
-from apify_client._models import Request
+from apify_client._models import Request, RequestBase, RequestDraft
 
 # -- fix_discriminators -------------------------------------------------------
 
@@ -678,3 +680,73 @@ def test_add_camel_case_typeddicts_camel_validates_with_pydantic() -> None:
         'user_data': {'tag': 'x'},
     }
     assert Request.model_validate(camel_payload) == Request.model_validate(snake_payload)
+
+
+def test_reparent_classes_swaps_base_class() -> None:
+    """A mapped class gets the configured base in place of the generated one."""
+    content = 'class RequestDraft(BaseModel):\n    url: str\n'
+    result = reparent_classes(content)
+    assert result == 'class RequestDraft(RequestBase):\n    url: str\n'
+
+
+def test_reparent_classes_is_idempotent() -> None:
+    """Re-running on already-reparented source leaves it unchanged."""
+    content = 'class RequestDraft(RequestBase):\n    url: str\n'
+    assert reparent_classes(content) == content
+
+
+def test_reparent_classes_skips_absent_class() -> None:
+    """Source without any mapped class passes through unchanged."""
+    content = 'class Foo(BaseModel):\n    name: str\n'
+    assert reparent_classes(content) == content
+
+
+def test_reparent_classes_leaves_name_prefixed_classes() -> None:
+    """A class whose name merely starts with a mapped name keeps its own base."""
+    content = 'class RequestDraft(TypedDict):\n    url: str\n\n\nclass RequestDraftDelete(TypedDict):\n    id: str\n'
+    result = reparent_classes(content)
+    assert 'class RequestDraftDelete(TypedDict):' in result
+
+
+def test_drop_inherited_typeddict_fields_removes_shadowed_keys() -> None:
+    """A reparented TypedDict keeps only the keys its new base does not declare, docstrings included."""
+    content = textwrap.dedent("""\
+        class RequestBase(TypedDict):
+            unique_key: NotRequired[str]
+            url: NotRequired[str]
+
+        class RequestDraft(RequestBase):
+            id: NotRequired[str]
+            \"""
+            A unique identifier.
+            \"""
+            unique_key: str
+            \"""
+            A unique key.
+            \"""
+            url: str
+    """)
+    result = drop_inherited_typeddict_fields(content)
+    assert '    id: NotRequired[str]' in result
+    assert 'A unique identifier.' in result
+    assert '    unique_key: str' not in result
+    assert 'A unique key.' not in result
+    assert '    url: str' not in result
+
+
+def test_drop_inherited_typeddict_fields_leaves_unreparented_source() -> None:
+    """Source whose mapped class has no base to inherit from passes through unchanged."""
+    content = 'class RequestDraft(TypedDict):\n    unique_key: str\n'
+    assert drop_inherited_typeddict_fields(content) == content
+
+
+def test_reparented_draft_serializes_camel_case() -> None:
+    """`RequestDraft` inherits the full wire shape, so every field it accepts is aliased on serialization."""
+    payload = {'unique_key': 'GET|abc', 'url': 'https://example.com', 'user_data': {'tag': 'x'}, 'no_retry': True}
+    assert issubclass(RequestDraft, RequestBase)
+    assert RequestDraft.model_validate(payload).model_dump(by_alias=True, exclude_none=True) == {
+        'uniqueKey': 'GET|abc',
+        'url': 'https://example.com',
+        'userData': {'tag': 'x'},
+        'noRetry': True,
+    }

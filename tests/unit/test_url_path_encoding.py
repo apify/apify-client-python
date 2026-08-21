@@ -8,6 +8,7 @@ from werkzeug import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._models import Request
+from apify_client._utils.crypto import create_hmac_signature
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -17,20 +18,21 @@ _KVS_ID = 'test_kvs_id'
 _QUEUE_ID = 'test_queue_id'
 _PUBLIC_URL = 'https://public.example.com'
 
-# Caller-supplied segments that must not be able to steer the request off its endpoint. Each case is
-# (raw value, the percent-encoded form the value has to arrive as).
-_HOSTILE_SEGMENTS = [
+# Caller-supplied segments that must not be able to steer the request off its endpoint, plus an ordinary
+# value that has to survive untouched. Each case is (raw value, the percent-encoded form it has to arrive as).
+_SEGMENT_CASES = [
     pytest.param('../../actor-runs/VICTIM/abort', '..%2F..%2Factor-runs%2FVICTIM%2Fabort', id='traversal'),
     pytest.param('foo?injected=1', 'foo%3Finjected%3D1', id='query injection'),
     pytest.param('foo#frag', 'foo%23frag', id='fragment'),
     pytest.param('a/b', 'a%2Fb', id='slash'),
     pytest.param('a b', 'a%20b', id='space'),
-    pytest.param('INPUT.json', 'INPUT.json', id='plain key with a dot'),
+    pytest.param('INPUT.json', 'INPUT.json', id='ordinary value'),
 ]
 
 # The same for resource IDs, which `to_safe_id` first turns into their single-segment form: a `username/name`
 # reference becomes `username~name`, and the tilde must survive the encoding untouched.
-_HOSTILE_RESOURCE_IDS = [
+_RESOURCE_ID_CASES = [
+    pytest.param('../../actor-runs/VICTIM/abort', '..~..~actor-runs~VICTIM~abort', id='traversal'),
     pytest.param('foo?injected=1', 'foo%3Finjected%3D1', id='query injection'),
     pytest.param('foo#frag', 'foo%23frag', id='fragment'),
     pytest.param('a b', 'a%20b', id='space'),
@@ -51,6 +53,28 @@ def api_url(httpserver: HTTPServer) -> str:
 
 
 @pytest.fixture
+def kvs_signing_key(httpserver: HTTPServer) -> str:
+    """Answer the store metadata call with a URL signing key, and return that key."""
+    signing_key = 'test_signing_key'
+    httpserver.expect_request(f'/v2/key-value-stores/{_KVS_ID}', method='GET').respond_with_json(
+        {
+            'data': {
+                'id': _KVS_ID,
+                'name': 'name',
+                'userId': 'user_id',
+                'createdAt': '2025-09-11T08:48:51.806Z',
+                'modifiedAt': '2025-09-11T08:48:51.806Z',
+                'accessedAt': '2025-09-11T08:48:51.806Z',
+                'stats': {'readCount': 0, 'writeCount': 0, 'deleteCount': 0, 'listCount': 0, 'storageBytes': 0},
+                'generalAccess': 'FOLLOW_USER_SETTING',
+                'urlSigningSecretKey': signing_key,
+            }
+        }
+    )
+    return signing_key
+
+
+@pytest.fixture
 def captured_targets(httpserver: HTTPServer) -> list[str]:
     """Answer any GET with a 404 and collect the raw request targets the client sent.
 
@@ -67,7 +91,20 @@ def captured_targets(httpserver: HTTPServer) -> list[str]:
     return targets
 
 
-@pytest.mark.parametrize(('key', 'encoded_key'), _HOSTILE_SEGMENTS)
+@pytest.fixture
+def captured_delete_targets(httpserver: HTTPServer) -> list[str]:
+    """Answer any DELETE with a 204 and collect the raw request targets the client sent."""
+    targets: list[str] = []
+
+    def capture_request(request: WerkzeugRequest) -> Response:
+        targets.append(request.environ['RAW_URI'])
+        return Response(status=204)
+
+    httpserver.expect_request(re.compile('.*'), method='DELETE').respond_with_handler(capture_request)
+    return targets
+
+
+@pytest.mark.parametrize(('key', 'encoded_key'), _SEGMENT_CASES)
 def test_get_record_encodes_key_into_a_single_path_segment_sync(
     *,
     api_url: str,
@@ -83,7 +120,7 @@ def test_get_record_encodes_key_into_a_single_path_segment_sync(
     assert captured_targets == [f'/v2/key-value-stores/{_KVS_ID}/records/{encoded_key}?attachment=true']
 
 
-@pytest.mark.parametrize(('key', 'encoded_key'), _HOSTILE_SEGMENTS)
+@pytest.mark.parametrize(('key', 'encoded_key'), _SEGMENT_CASES)
 async def test_get_record_encodes_key_into_a_single_path_segment_async(
     *,
     api_url: str,
@@ -99,7 +136,39 @@ async def test_get_record_encodes_key_into_a_single_path_segment_async(
     assert captured_targets == [f'/v2/key-value-stores/{_KVS_ID}/records/{encoded_key}?attachment=true']
 
 
-@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _HOSTILE_SEGMENTS)
+@pytest.mark.parametrize(('key', 'encoded_key'), _SEGMENT_CASES)
+def test_delete_record_encodes_key_into_a_single_path_segment_sync(
+    *,
+    api_url: str,
+    captured_delete_targets: list[str],
+    key: str,
+    encoded_key: str,
+) -> None:
+    """A key cannot steer a record delete at another endpoint, where the same verb removes the whole store."""
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    client.key_value_store(_KVS_ID).delete_record(key)
+
+    assert captured_delete_targets == [f'/v2/key-value-stores/{_KVS_ID}/records/{encoded_key}']
+
+
+@pytest.mark.parametrize(('key', 'encoded_key'), _SEGMENT_CASES)
+async def test_delete_record_encodes_key_into_a_single_path_segment_async(
+    *,
+    api_url: str,
+    captured_delete_targets: list[str],
+    key: str,
+    encoded_key: str,
+) -> None:
+    """A key cannot steer a record delete at another endpoint, where the same verb removes the whole store."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    await client.key_value_store(_KVS_ID).delete_record(key)
+
+    assert captured_delete_targets == [f'/v2/key-value-stores/{_KVS_ID}/records/{encoded_key}']
+
+
+@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _SEGMENT_CASES)
 def test_get_request_encodes_request_id_into_a_single_path_segment_sync(
     *,
     api_url: str,
@@ -115,7 +184,7 @@ def test_get_request_encodes_request_id_into_a_single_path_segment_sync(
     assert captured_targets == [f'/v2/request-queues/{_QUEUE_ID}/requests/{encoded_request_id}']
 
 
-@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _HOSTILE_SEGMENTS)
+@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _SEGMENT_CASES)
 async def test_get_request_encodes_request_id_into_a_single_path_segment_async(
     *,
     api_url: str,
@@ -131,27 +200,36 @@ async def test_get_request_encodes_request_id_into_a_single_path_segment_async(
     assert captured_targets == [f'/v2/request-queues/{_QUEUE_ID}/requests/{encoded_request_id}']
 
 
-@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _HOSTILE_SEGMENTS)
-def test_delete_request_lock_encodes_request_id_into_a_single_path_segment(
+@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _SEGMENT_CASES)
+def test_delete_request_lock_encodes_request_id_into_a_single_path_segment_sync(
     *,
     api_url: str,
-    httpserver: HTTPServer,
+    captured_delete_targets: list[str],
     request_id: str,
     encoded_request_id: str,
 ) -> None:
     """The encoding also covers a path that continues past the caller-supplied segment."""
-    targets: list[str] = []
-
-    def capture_request(request: WerkzeugRequest) -> Response:
-        targets.append(request.environ['RAW_URI'])
-        return Response(status=204)
-
-    httpserver.expect_request(re.compile('.*'), method='DELETE').respond_with_handler(capture_request)
     client = ApifyClient(token='test_token', api_url=api_url)
 
     client.request_queue(_QUEUE_ID).delete_request_lock(request_id)
 
-    assert targets == [f'/v2/request-queues/{_QUEUE_ID}/requests/{encoded_request_id}/lock']
+    assert captured_delete_targets == [f'/v2/request-queues/{_QUEUE_ID}/requests/{encoded_request_id}/lock']
+
+
+@pytest.mark.parametrize(('request_id', 'encoded_request_id'), _SEGMENT_CASES)
+async def test_delete_request_lock_encodes_request_id_into_a_single_path_segment_async(
+    *,
+    api_url: str,
+    captured_delete_targets: list[str],
+    request_id: str,
+    encoded_request_id: str,
+) -> None:
+    """The encoding also covers a path that continues past the caller-supplied segment."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    await client.request_queue(_QUEUE_ID).delete_request_lock(request_id)
+
+    assert captured_delete_targets == [f'/v2/request-queues/{_QUEUE_ID}/requests/{encoded_request_id}/lock']
 
 
 @pytest.mark.parametrize('key', _DEGENERATE_SEGMENTS)
@@ -186,7 +264,39 @@ async def test_degenerate_key_is_rejected_before_the_request_async(
     assert captured_targets == []
 
 
-@pytest.mark.parametrize(('key', 'encoded_key'), _HOSTILE_SEGMENTS)
+@pytest.mark.parametrize('key', _DEGENERATE_SEGMENTS)
+def test_degenerate_key_is_rejected_before_deleting_a_record_sync(
+    *,
+    api_url: str,
+    captured_delete_targets: list[str],
+    key: str,
+) -> None:
+    """A dot key would turn a record delete into a delete of the whole store, so it never reaches the wire."""
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    with pytest.raises(ValueError, match='cannot be used as a URL path segment'):
+        client.key_value_store(_KVS_ID).delete_record(key)
+
+    assert captured_delete_targets == []
+
+
+@pytest.mark.parametrize('key', _DEGENERATE_SEGMENTS)
+async def test_degenerate_key_is_rejected_before_deleting_a_record_async(
+    *,
+    api_url: str,
+    captured_delete_targets: list[str],
+    key: str,
+) -> None:
+    """A dot key would turn a record delete into a delete of the whole store, so it never reaches the wire."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    with pytest.raises(ValueError, match='cannot be used as a URL path segment'):
+        await client.key_value_store(_KVS_ID).delete_record(key)
+
+    assert captured_delete_targets == []
+
+
+@pytest.mark.parametrize(('key', 'encoded_key'), _SEGMENT_CASES)
 def test_record_public_url_encodes_key_into_a_single_path_segment_sync(
     *,
     api_url: str,
@@ -203,7 +313,7 @@ def test_record_public_url_encodes_key_into_a_single_path_segment_sync(
     assert public_url == f'{_PUBLIC_URL}/v2/key-value-stores/{_KVS_ID}/records/{encoded_key}'
 
 
-@pytest.mark.parametrize(('key', 'encoded_key'), _HOSTILE_SEGMENTS)
+@pytest.mark.parametrize(('key', 'encoded_key'), _SEGMENT_CASES)
 async def test_record_public_url_encodes_key_into_a_single_path_segment_async(
     *,
     api_url: str,
@@ -220,7 +330,59 @@ async def test_record_public_url_encodes_key_into_a_single_path_segment_async(
     assert public_url == f'{_PUBLIC_URL}/v2/key-value-stores/{_KVS_ID}/records/{encoded_key}'
 
 
-@pytest.mark.parametrize(('resource_id', 'encoded_resource_id'), _HOSTILE_RESOURCE_IDS)
+def test_record_public_url_signs_the_raw_key_sync(*, api_url: str, kvs_signing_key: str) -> None:
+    """The signature covers the raw key the API decodes the path back into, not the encoded form in the path."""
+    client = ApifyClient(token='test_token', api_url=api_url, api_public_url=_PUBLIC_URL)
+
+    public_url = client.key_value_store(_KVS_ID).get_record_public_url('a/b')
+
+    signature = create_hmac_signature(kvs_signing_key, 'a/b')
+    assert public_url == f'{_PUBLIC_URL}/v2/key-value-stores/{_KVS_ID}/records/a%2Fb?signature={signature}'
+
+
+async def test_record_public_url_signs_the_raw_key_async(*, api_url: str, kvs_signing_key: str) -> None:
+    """The signature covers the raw key the API decodes the path back into, not the encoded form in the path."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url, api_public_url=_PUBLIC_URL)
+
+    public_url = await client.key_value_store(_KVS_ID).get_record_public_url('a/b')
+
+    signature = create_hmac_signature(kvs_signing_key, 'a/b')
+    assert public_url == f'{_PUBLIC_URL}/v2/key-value-stores/{_KVS_ID}/records/a%2Fb?signature={signature}'
+
+
+@pytest.mark.parametrize('key', _DEGENERATE_SEGMENTS)
+def test_degenerate_key_is_rejected_before_the_public_url_metadata_call_sync(
+    *,
+    api_url: str,
+    captured_targets: list[str],
+    key: str,
+) -> None:
+    """A key that cannot be carried in a path segment is refused without spending an authenticated request."""
+    client = ApifyClient(token='test_token', api_url=api_url, api_public_url=_PUBLIC_URL)
+
+    with pytest.raises(ValueError, match='cannot be used as a URL path segment'):
+        client.key_value_store(_KVS_ID).get_record_public_url(key)
+
+    assert captured_targets == []
+
+
+@pytest.mark.parametrize('key', _DEGENERATE_SEGMENTS)
+async def test_degenerate_key_is_rejected_before_the_public_url_metadata_call_async(
+    *,
+    api_url: str,
+    captured_targets: list[str],
+    key: str,
+) -> None:
+    """A key that cannot be carried in a path segment is refused without spending an authenticated request."""
+    client = ApifyClientAsync(token='test_token', api_url=api_url, api_public_url=_PUBLIC_URL)
+
+    with pytest.raises(ValueError, match='cannot be used as a URL path segment'):
+        await client.key_value_store(_KVS_ID).get_record_public_url(key)
+
+    assert captured_targets == []
+
+
+@pytest.mark.parametrize(('resource_id', 'encoded_resource_id'), _RESOURCE_ID_CASES)
 def test_resource_id_is_encoded_into_a_single_path_segment(
     *,
     api_url: str,

@@ -238,7 +238,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue.
+            request: The request to add to the queue. Must carry a `unique_key` and a `url`.
             forefront: Whether to add the request to the head or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
@@ -417,7 +417,7 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue.
+            requests: List of requests to be added to the queue. Each must carry a `unique_key` and a `url`.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution
@@ -765,7 +765,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request-collection/add-request
 
         Args:
-            request: The request to add to the queue.
+            request: The request to add to the queue. Must carry a `unique_key` and a `url`.
             forefront: Whether to add the request to the head or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
@@ -990,7 +990,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/batch-request-operations/add-requests
 
         Args:
-            requests: List of requests to be added to the queue.
+            requests: List of requests to be added to the queue. Each must carry a `unique_key` and a `url`.
             forefront: Whether to add requests to the front of the queue.
             max_parallel: Specifies the maximum number of parallel tasks for API calls. This is only applicable
                 to the async client. For the sync client, this value must be set to 1, as parallel execution

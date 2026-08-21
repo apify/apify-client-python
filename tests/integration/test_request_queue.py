@@ -757,7 +757,7 @@ async def test_request_queue_add_request_accepts_camel_cased_fields(client: Apif
 
 
 async def test_request_queue_add_request_rejects_undeclared_fields(client: ApifyClient | ApifyClientAsync) -> None:
-    """The API refuses a body key its schema does not declare, so a mis-cased field takes the whole write down."""
+    """The API refuses a body key its schema does not declare, so a snake_cased field takes the whole write down."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
     assert isinstance(rq, RequestQueue)
     rq_client = client.request_queue(rq.id)

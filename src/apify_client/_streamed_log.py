@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from types import TracebackType
 
     from apify_client._resource_clients import LogClient, LogClientAsync
+    from apify_client.http_clients import HttpResponse
     from apify_client.types import Timeout
 
 
@@ -98,6 +99,13 @@ class StreamedLog(StreamedLogBase):
     call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
     """
 
+    _stop_timeout_s: ClassVar[float] = 5
+    """Upper bound on how long `stop` waits for the streaming thread to finish.
+
+    Closing the response ends the read on a transport that honours it, but Impit's blocking read is not
+    interruptible, so without a bound `stop` would wait for the next chunk, which on a quiet run may be hours away.
+    """
+
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         """Initialize `StreamedLog`.
 
@@ -111,6 +119,7 @@ class StreamedLog(StreamedLogBase):
         super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_thread: Thread | None = None
+        self._log_stream: HttpResponse | None = None
         self._stop_logging = False
 
     def start(self) -> Thread:
@@ -127,13 +136,21 @@ class StreamedLog(StreamedLogBase):
         return self._streaming_thread
 
     def stop(self) -> None:
-        """Signal the streaming thread to stop logging and wait for it to finish."""
+        """Signal the streaming thread to stop logging and wait, for up to `_stop_timeout_s`, for it to finish.
+
+        A thread that outlives the wait keeps `_stop_logging` set, so it exits after at most one more chunk, and is
+        a daemon, so it cannot hold up interpreter shutdown. Its handle is retained until it ends, which keeps `start`
+        from reviving it alongside a second thread reading into the same buffer.
+        """
         if not self._streaming_thread:
             raise RuntimeError('Streaming thread is not active')
         self._stop_logging = True
-        self._streaming_thread.join()
-        self._streaming_thread = None
-        self._stop_logging = False
+        if self._log_stream is not None:
+            # On a transport that honours it, this releases the connection and ends a read blocked on a silent stream.
+            self._log_stream.close()
+        self._streaming_thread.join(timeout=self._stop_timeout_s)
+        if not self._streaming_thread.is_alive():
+            self._streaming_thread = None
 
     def __enter__(self) -> Self:
         """Start the streaming thread within the context. Exiting the context will finish the streaming thread."""
@@ -151,15 +168,24 @@ class StreamedLog(StreamedLogBase):
             with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
                 if not log_stream:
                     return
+                # Published so `stop` can close the response and end a read blocked on a silent stream.
+                self._log_stream = log_stream
                 try:
+                    # `stop` may have already run, back when there was no response for it to close.
+                    if self._stop_logging:
+                        return
                     for data in log_stream.iter_bytes():
                         self._process_new_data(data)
                         if self._stop_logging:
                             break
                 finally:
+                    self._log_stream = None
                     # Flush the last buffered part even if the read timed out or was stopped.
                     self._log_buffer_content(include_last_part=True)
         except Exception as exc:
+            if self._stop_logging:
+                # `stop` closed the response to end a blocked read, so any resulting error is expected.
+                return
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # The stream cannot continue, so warn and let the thread end instead of leaking a traceback.
                 self._to_logger.warning('Log streaming stopped: the log stream request timed out.')

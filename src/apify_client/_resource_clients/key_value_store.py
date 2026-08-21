@@ -430,14 +430,18 @@ class KeyValueStoreClient(ResourceClient):
         if self._resource_id is None:
             raise ValueError('resource_id cannot be None when generating a public URL')
 
+        # Encode the key first, so a key that cannot address a record is refused before spending a request.
+        record_path = f'records/{to_path_segment(key)}'
+
         metadata = self.get(timeout=timeout)
 
         request_params = self._build_params()
 
+        # The signature covers the raw key, which is what the API sees once it decodes the path segment.
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        return self._build_public_url(f'records/{to_path_segment(key)}', request_params)
+        return self._build_public_url(record_path, request_params)
 
     def create_keys_public_url(
         self,
@@ -859,14 +863,18 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         if self._resource_id is None:
             raise ValueError('resource_id cannot be None when generating a public URL')
 
+        # Encode the key first, so a key that cannot address a record is refused before spending a request.
+        record_path = f'records/{to_path_segment(key)}'
+
         metadata = await self.get(timeout=timeout)
 
         request_params = self._build_params()
 
+        # The signature covers the raw key, which is what the API sees once it decodes the path segment.
         if metadata and metadata.url_signing_secret_key:
             request_params['signature'] = create_hmac_signature(metadata.url_signing_secret_key, key)
 
-        return self._build_public_url(f'records/{to_path_segment(key)}', request_params)
+        return self._build_public_url(record_path, request_params)
 
     async def create_keys_public_url(
         self,

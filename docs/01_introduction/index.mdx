@@ -63,6 +63,25 @@ For better request-body compression, opt in to `brotli`, which compresses better
 
 For details, see [HTTP compression](../02_concepts/13_http_compression.mdx).
 
+The client uses [Impit](https://github.com/apify/impit) as its default HTTP transport. To use the built-in
+[HTTPX](https://www.python-httpx.org/) transport, install its optional dependency:
+
+<Tabs>
+    <TabItem value="PyPI" label="PyPI" default>
+        ```bash
+        pip install "apify-client[httpx]"
+        ```
+    </TabItem>
+    <TabItem value="conda-forge" label="conda-forge">
+        ```bash
+        conda install conda-forge::apify-client conda-forge::httpx
+        ```
+    </TabItem>
+</Tabs>
+
+See [HTTP clients](../02_concepts/10_custom_http_clients.mdx) for synchronous and asynchronous examples and details
+about the shared architecture.
+
 ## Quick example
 
 The following example shows how to run an Actor and retrieve its results:

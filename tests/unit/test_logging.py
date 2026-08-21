@@ -835,6 +835,9 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
     """A finite `_stream_timeout` bounds how long `stop()` waits on a silent stream, since the blocking read cannot
     otherwise be interrupted (the production default is `no_timeout`, so the test configures a short finite one)."""
     monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
+    # Well above the stream timeout, so `stop`'s own join bound cannot end the wait first. Left at its default it
+    # equals the `join` budget below, and the assertion can no longer tell a working stream timeout from a broken one.
+    monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 30)
 
     release_server = threading.Event()
 

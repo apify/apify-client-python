@@ -22,6 +22,7 @@ from apify_client._utils.http import (
     is_compressible_content_type,
     response_to_dict,
     response_to_list,
+    to_path_segment,
     to_safe_id,
 )
 from apify_client._utils.try_import import FailedImport, try_import
@@ -67,6 +68,27 @@ def test_to_safe_id() -> None:
     assert to_safe_id('abc/def') == 'abc~def'
     assert to_safe_id('abc~def') == 'abc~def'
     assert to_safe_id('user/resource/extra') == 'user~resource~extra'
+
+
+def test_to_path_segment() -> None:
+    """Every character with a meaning in a URL is percent-encoded, and an ordinary value is left alone."""
+    assert to_path_segment('abc') == 'abc'
+    assert to_path_segment('INPUT.json') == 'INPUT.json'
+    assert to_path_segment('a/b') == 'a%2Fb'
+    assert to_path_segment('a?b=c') == 'a%3Fb%3Dc'
+    assert to_path_segment('a#b') == 'a%23b'
+    assert to_path_segment('a b') == 'a%20b'
+    # `~` is unreserved, so a `username/name` ID mapped by `to_safe_id` survives unchanged.
+    assert to_path_segment('user~resource') == 'user~resource'
+
+
+@pytest.mark.parametrize(
+    'value', [pytest.param('', id='empty'), pytest.param('.', id='current'), pytest.param('..', id='parent')]
+)
+def test_to_path_segment_rejects_degenerate_values(value: str) -> None:
+    """An empty or dot value cannot address anything inside a path segment, so it is refused outright."""
+    with pytest.raises(ValueError, match='cannot be used as a URL path segment'):
+        to_path_segment(value)
 
 
 def test_encode_webhooks_to_base64() -> None:

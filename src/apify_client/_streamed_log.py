@@ -145,9 +145,11 @@ class StreamedLog(StreamedLogBase):
         if not self._streaming_thread:
             raise RuntimeError('Streaming thread is not active')
         self._stop_logging = True
-        if self._log_stream is not None:
+        # Read once, because the streaming thread clears the attribute as soon as the stream ends.
+        log_stream = self._log_stream
+        if log_stream is not None:
             # On a transport that honours it, this releases the connection and ends a read blocked on a silent stream.
-            self._log_stream.close()
+            log_stream.close()
         self._streaming_thread.join(timeout=self._stop_timeout_s)
         if not self._streaming_thread.is_alive():
             self._streaming_thread = None

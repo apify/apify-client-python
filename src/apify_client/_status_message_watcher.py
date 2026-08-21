@@ -120,11 +120,19 @@ class StatusMessageWatcherAsync(StatusMessageWatcherBase):
         await self.stop()
 
     async def _log_changed_status_message(self) -> None:
-        while True:
-            run_data = await self._run_client.get()
-            if not self._log_run_data(run_data):
-                break
-            await asyncio.sleep(self._check_period)
+        try:
+            while True:
+                run_data = await self._run_client.get()
+                if not self._log_run_data(run_data):
+                    break
+                await asyncio.sleep(self._check_period)
+        except Exception as exc:
+            if self._run_client._http_client.is_timeout_error(exc):  # noqa: SLF001
+                # An expected timeout, so warn rather than leak a traceback.
+                self._to_logger.warning('Status message redirection stopped: the status request timed out.')
+            else:
+                # A failed poll must not escape into `stop` and surface as a failure of the run.
+                self._to_logger.exception('Status message redirection stopped due to unexpected error:')
 
 
 @docs_group('Other')
@@ -162,7 +170,8 @@ class StatusMessageWatcher(StatusMessageWatcherBase):
         if self._logging_thread:
             raise RuntimeError('Logging thread already active')
         self._stop_logging = False
-        self._logging_thread = threading.Thread(target=self._log_changed_status_message)
+        # A daemon thread, so a watcher still polling cannot hold up interpreter shutdown.
+        self._logging_thread = threading.Thread(target=self._log_changed_status_message, daemon=True)
         self._logging_thread.start()
         return self._logging_thread
 
@@ -189,9 +198,17 @@ class StatusMessageWatcher(StatusMessageWatcherBase):
         self.stop()
 
     def _log_changed_status_message(self) -> None:
-        while True:
-            if not self._log_run_data(self._run_client.get()):
-                break
-            if self._stop_logging:
-                break
-            time.sleep(self._check_period)
+        try:
+            while True:
+                if not self._log_run_data(self._run_client.get()):
+                    break
+                if self._stop_logging:
+                    break
+                time.sleep(self._check_period)
+        except Exception as exc:
+            if self._run_client._http_client.is_timeout_error(exc):  # noqa: SLF001
+                # An expected timeout, so warn rather than leak a traceback.
+                self._to_logger.warning('Status message redirection stopped: the status request timed out.')
+            else:
+                # A failed poll must not escape the background thread.
+                self._to_logger.exception('Status message redirection stopped due to unexpected error:')

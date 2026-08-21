@@ -1124,7 +1124,7 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
     httpserver: HTTPServer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """`stop` returns within its bound on a stream that stays silent under the production `no_timeout`."""
+    """`stop` returns within its bound on a silent stream, and the log can be started again once the thread ends."""
     monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 1)
 
     release_server = threading.Event()
@@ -1161,6 +1161,12 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
         release_server.set()
         # `stop` leaves the thread running, so reap it here instead of leaking it into the rest of the session.
         streaming_thread.join(timeout=5)
+
+    assert not streaming_thread.is_alive()
+    restarted_thread = streamed_log.start()
+    assert restarted_thread is not streaming_thread
+    streamed_log.stop()
+    restarted_thread.join(timeout=5)
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

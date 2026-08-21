@@ -127,7 +127,7 @@ class StreamedLog(StreamedLogBase):
 
         The caller is responsible for cleanup by calling the `stop` method when done.
         """
-        if self._streaming_thread:
+        if self._streaming_thread and self._streaming_thread.is_alive():
             raise RuntimeError('Streaming thread already active')
         self._stop_logging = False
         # A daemon thread so a stream still blocked on a read can never hold up interpreter shutdown.
@@ -139,7 +139,7 @@ class StreamedLog(StreamedLogBase):
         """Signal the streaming thread to stop logging and wait, for up to `_stop_timeout_s`, for it to finish.
 
         A thread that outlives the wait keeps `_stop_logging` set, so it exits after at most one more chunk, and is
-        a daemon, so it cannot hold up interpreter shutdown. Its handle is retained until it ends, which keeps `start`
+        a daemon, so it cannot hold up interpreter shutdown. Its handle is kept while it is alive, which keeps `start`
         from reviving it alongside a second thread reading into the same buffer.
         """
         if not self._streaming_thread:

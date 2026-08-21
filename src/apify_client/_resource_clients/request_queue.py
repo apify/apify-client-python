@@ -81,7 +81,7 @@ def _serialize_requests(
     return [
         json.dumps(
             (request if isinstance(request, RequestDraft) else RequestDraft.model_validate(request)).model_dump(
-                by_alias=True, exclude_none=True
+                mode='json', by_alias=True, exclude_none=True, fallback=str
             ),
             ensure_ascii=False,
             allow_nan=False,
@@ -253,7 +253,7 @@ class RequestQueueClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -315,7 +315,7 @@ class RequestQueueClient(ResourceClient):
         response = self._http_client.call(
             url=self._build_url(f'requests/{request.id}'),
             method='PUT',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -504,7 +504,7 @@ class RequestQueueClient(ResourceClient):
                 else RequestDraftDelete.model_validate(
                     request,
                 )
-            ).model_dump(by_alias=True, exclude_none=True)
+            ).root.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str)
             for request in requests
         ]
 
@@ -780,7 +780,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url('requests'),
             method='POST',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -840,7 +840,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         response = await self._http_client.call(
             url=self._build_url(f'requests/{request.id}'),
             method='PUT',
-            json=request.model_dump(by_alias=True, exclude_none=True),
+            json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
             timeout=timeout,
         )
@@ -1082,7 +1082,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
                 else RequestDraftDelete.model_validate(
                     request,
                 )
-            ).model_dump(by_alias=True, exclude_none=True)
+            ).root.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str)
             for request in requests
         ]
 

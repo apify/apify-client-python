@@ -9,6 +9,7 @@ import pytest
 from werkzeug.wrappers import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._models import RequestDraftDelete
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -278,6 +279,13 @@ _FULL_REQUEST_DICT: RequestDict = {
 }
 
 
+class Unserializable:
+    """A `user_data` value of a type no JSON serializer can encode without a stringification fallback."""
+
+    def __str__(self) -> str:
+        return 'unserializable'
+
+
 async def test_add_request_matches_update_request_casing_async(httpserver: HTTPServer) -> None:
     """The same snake_case request dict reaches the API camelCased on add_request just as on update_request."""
     server_url = httpserver.url_for('/').removesuffix('/')
@@ -296,6 +304,7 @@ async def test_add_request_matches_update_request_casing_async(httpserver: HTTPS
     assert added == updated
     assert added['userData'] == {'label': 'DETAIL'}
     assert [key for key in added if '_' in key] == []
+    assert added['handledAt'] == '2019-06-16T10:23:31.607000Z'
 
 
 def test_add_request_matches_update_request_casing_sync(httpserver: HTTPServer) -> None:
@@ -316,6 +325,7 @@ def test_add_request_matches_update_request_casing_sync(httpserver: HTTPServer) 
     assert added == updated
     assert added['userData'] == {'label': 'DETAIL'}
     assert [key for key in added if '_' in key] == []
+    assert added['handledAt'] == '2019-06-16T10:23:31.607000Z'
 
 
 async def test_batch_add_requests_camel_cases_every_field_async(httpserver: HTTPServer) -> None:
@@ -334,6 +344,7 @@ async def test_batch_add_requests_camel_cases_every_field_async(httpserver: HTTP
     (sent_request,) = json.loads(payloads[0])
     assert sent_request['userData'] == {'label': 'DETAIL'}
     assert [key for key in sent_request if '_' in key] == []
+    assert sent_request['handledAt'] == '2019-06-16T10:23:31.607000Z'
 
 
 def test_batch_add_requests_camel_cases_every_field_sync(httpserver: HTTPServer) -> None:
@@ -352,3 +363,126 @@ def test_batch_add_requests_camel_cases_every_field_sync(httpserver: HTTPServer)
     (sent_request,) = json.loads(payloads[0])
     assert sent_request['userData'] == {'label': 'DETAIL'}
     assert [key for key in sent_request if '_' in key] == []
+    assert sent_request['handledAt'] == '2019-06-16T10:23:31.607000Z'
+
+
+async def test_add_request_stringifies_unserializable_user_data_async(httpserver: HTTPServer) -> None:
+    """A `user_data` value JSON cannot represent is stringified instead of aborting the call."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*')).respond_with_handler(
+        _payload_capturing_handler(payloads, _REQUEST_REGISTRATION_RESPONSE_CONTENT)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    await rq_client.add_request(
+        {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'user_data': {'tag': Unserializable()}}
+    )
+
+    assert json.loads(payloads[0])['userData'] == {'tag': 'unserializable'}
+
+
+def test_add_request_stringifies_unserializable_user_data_sync(httpserver: HTTPServer) -> None:
+    """A `user_data` value JSON cannot represent is stringified instead of aborting the call."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*')).respond_with_handler(
+        _payload_capturing_handler(payloads, _REQUEST_REGISTRATION_RESPONSE_CONTENT)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    rq_client.add_request(
+        {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'user_data': {'tag': Unserializable()}}
+    )
+
+    assert json.loads(payloads[0])['userData'] == {'tag': 'unserializable'}
+
+
+async def test_batch_add_requests_stringifies_unserializable_user_data_async(httpserver: HTTPServer) -> None:
+    """A `user_data` value JSON cannot represent is stringified instead of aborting the call."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(
+        _payload_capturing_handler(payloads)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    await rq_client.batch_add_requests(
+        requests=[
+            {
+                'unique_key': 'http://example.com/1',
+                'url': 'http://example.com/1',
+                'user_data': {'tag': Unserializable()},
+            }
+        ]
+    )
+
+    (sent_request,) = json.loads(payloads[0])
+    assert sent_request['userData'] == {'tag': 'unserializable'}
+
+
+def test_batch_add_requests_stringifies_unserializable_user_data_sync(httpserver: HTTPServer) -> None:
+    """A `user_data` value JSON cannot represent is stringified instead of aborting the call."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*'), method='POST').respond_with_handler(
+        _payload_capturing_handler(payloads)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    rq_client.batch_add_requests(
+        requests=[
+            {
+                'unique_key': 'http://example.com/1',
+                'url': 'http://example.com/1',
+                'user_data': {'tag': Unserializable()},
+            }
+        ]
+    )
+
+    (sent_request,) = json.loads(payloads[0])
+    assert sent_request['userData'] == {'tag': 'unserializable'}
+
+
+async def test_batch_delete_requests_stringifies_unserializable_extra_async(httpserver: HTTPServer) -> None:
+    """An extra field JSON cannot represent is stringified instead of aborting the call."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*'), method='DELETE').respond_with_handler(
+        _payload_capturing_handler(payloads)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    request = RequestDraftDelete.model_validate({'id': 'YiKoxjkaS9gjGTqhF', 'weird': Unserializable()})
+    await rq_client.batch_delete_requests(requests=[request])
+
+    (sent_request,) = json.loads(payloads[0])
+    assert sent_request == {'id': 'YiKoxjkaS9gjGTqhF', 'weird': 'unserializable'}
+
+
+def test_batch_delete_requests_stringifies_unserializable_extra_sync(httpserver: HTTPServer) -> None:
+    """An extra field JSON cannot represent is stringified instead of aborting the call."""
+    server_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
+
+    payloads = list[bytes]()
+    httpserver.expect_request(re.compile(r'.*'), method='DELETE').respond_with_handler(
+        _payload_capturing_handler(payloads)
+    )
+    rq_client = client.request_queue(request_queue_id='whatever')
+
+    request = RequestDraftDelete.model_validate({'id': 'YiKoxjkaS9gjGTqhF', 'weird': Unserializable()})
+    rq_client.batch_delete_requests(requests=[request])
+
+    (sent_request,) = json.loads(payloads[0])
+    assert sent_request == {'id': 'YiKoxjkaS9gjGTqhF', 'weird': 'unserializable'}

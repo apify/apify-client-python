@@ -110,7 +110,7 @@ async def test_timeout_resolves_for_async_clients(
 
 
 def test_compute_timeout_with_timedelta(http_client_class: type[HttpClient]) -> None:
-    """Concrete timedeltas double per attempt and are capped at the configured maximum."""
+    """Concrete timedeltas double per attempt, are capped at the maximum, and `no_timeout` stays unbounded."""
     client = http_client_class(timeout_max=timedelta(seconds=20))
 
     assert client._compute_timeout(timedelta(seconds=5), attempt=1) == 5.0
@@ -213,39 +213,51 @@ async def test_dynamic_timeout_async_client(
     assert response.status_code == 200
 
 
-def test_no_timeout_mapping_for_sync_adapters(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Each synchronous adapter maps no-timeout to its underlying library semantics."""
-    impit_client = ImpitHttpClient()
-    impit_client._impit_client = Mock(request=Mock(return_value=successful_response()))
-    impit_client.send_request(
+def test_no_timeout_mapping_for_sync_impit_adapter() -> None:
+    """The synchronous Impit adapter maps no-timeout to Impit's effectively unbounded value."""
+    client = ImpitHttpClient()
+    client._impit_client = Mock(request=Mock(return_value=successful_response()))
+
+    client.send_request(method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False)
+
+    assert client._impit_client.request.call_args.kwargs['timeout'] == 86_400
+
+
+async def test_no_timeout_mapping_for_async_impit_adapter() -> None:
+    """The asynchronous Impit adapter maps no-timeout to Impit's effectively unbounded value."""
+    client = ImpitHttpClientAsync()
+    client._impit_async_client = Mock(request=AsyncMock(return_value=successful_response()))
+
+    await client.send_request(
         method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
     )
-    assert impit_client._impit_client.request.call_args.kwargs['timeout'] == 86_400
 
+    assert client._impit_async_client.request.call_args.kwargs['timeout'] == 86_400
+
+
+def test_no_timeout_mapping_for_sync_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The synchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
     # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
-    with HttpxHttpClient() as httpx_client:
+    with HttpxHttpClient() as client:
         send = Mock(return_value=successful_response())
-        monkeypatch.setattr(httpx_client._httpx_client, 'send', send)
-        httpx_client.send_request(
+        monkeypatch.setattr(client._httpx_client, 'send', send)
+
+        client.send_request(
             method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
         )
+
         assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX_TIMEOUT
 
 
-async def test_no_timeout_mapping_for_async_adapters(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Each asynchronous adapter maps no-timeout to its underlying library semantics."""
-    impit_client = ImpitHttpClientAsync()
-    impit_client._impit_async_client = Mock(request=AsyncMock(return_value=successful_response()))
-    await impit_client.send_request(
-        method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
-    )
-    assert impit_client._impit_async_client.request.call_args.kwargs['timeout'] == 86_400
-
+async def test_no_timeout_mapping_for_async_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The asynchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
     # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
-    async with HttpxHttpClientAsync() as httpx_client:
+    async with HttpxHttpClientAsync() as client:
         send = AsyncMock(return_value=successful_response())
-        monkeypatch.setattr(httpx_client._httpx_async_client, 'send', send)
-        await httpx_client.send_request(
+        monkeypatch.setattr(client._httpx_async_client, 'send', send)
+
+        await client.send_request(
             method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
         )
+
         assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX_TIMEOUT

@@ -58,7 +58,8 @@
     ```
 
     [Impit](https://github.com/apify/impit) is the default HTTP client and is installed automatically. To use the
-    built-in [HTTPX](https://www.python-httpx.org/) client instead, install its optional extra:
+    built-in [HTTPX](https://www.python-httpx.org/) client instead, install its optional extra and pass
+    `http_client=HttpxHttpClient()` to `ApifyClient.with_custom_http_client()`:
 
     ```bash
     pip install "apify-client[httpx]"

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
-from datetime import timedelta
-from typing import TYPE_CHECKING
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING, Any
+
+import pytest
 
 from .._utils import (
     collect_iterate_until_present,
@@ -28,15 +30,73 @@ from apify_client._models import (
     RequestRegistration,
     UnlockRequestsResult,
 )
+from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
     from apify_client._typeddicts import (
         RequestDict,
+        RequestDraftCamelDict,
         RequestDraftDeleteDict,
         RequestDraftDict,
     )
+
+
+# The wire format the API declares for `handled_at`, and the instant it denotes. The client validates the string
+# into a datetime, so it only sends ISO 8601 back out while it serializes in JSON mode.
+HANDLED_AT_ISO = '2019-06-16T10:23:31.607Z'
+HANDLED_AT = datetime(2019, 6, 16, 10, 23, 31, 607000, tzinfo=UTC)
+
+# Every request field beyond `id`/`unique_key`/`url`, snake_cased. The API declares its write bodies with
+# `additionalProperties: false`, so each of these has to reach it camelCased to be stored at all.
+ALL_REQUEST_FIELDS: RequestDict = {
+    'method': 'POST',
+    'user_data': {'label': 'DETAIL', 'depth': 2},
+    'no_retry': True,
+    'retry_count': 3,
+    'headers': {'X-Test': 'yes'},
+    'payload': '{"a": 1}',
+    'loaded_url': 'https://example.com/loaded',
+    'error_messages': ['boom'],
+    'handled_at': HANDLED_AT_ISO,
+}
+
+
+async def fetch_stored_request(
+    rq_client: RequestQueueClient | RequestQueueClientAsync,
+    request_id: str,
+) -> Request:
+    """Poll until `request_id` is readable back from the queue, then return it."""
+
+    async def get_request() -> Request | None:
+        return await maybe_await(rq_client.get_request(request_id))
+
+    stored = await poll_until_condition(get_request, lambda request: request is not None)
+    assert isinstance(stored, Request)
+    return stored
+
+
+def non_identity_fields(request: Request) -> dict[str, Any]:
+    """Return a stored request's fields without the ones identifying it, so two write paths can be compared."""
+    dumped = request.model_dump(by_alias=True)
+    for key in ('id', 'uniqueKey', 'url'):
+        dumped.pop(key, None)
+    return dumped
+
+
+def assert_all_fields_stored(request: Request) -> None:
+    """Assert the stored request carries every value of `ALL_REQUEST_FIELDS`."""
+    assert request.method == 'POST'
+    assert request.user_data is not None
+    assert request.user_data.model_dump() == {'label': 'DETAIL', 'depth': 2}
+    assert request.no_retry is True
+    assert request.retry_count == 3
+    assert request.headers == {'X-Test': 'yes'}
+    assert request.payload == '{"a": 1}'
+    assert str(request.loaded_url) == 'https://example.com/loaded'
+    assert request.error_messages == ['boom']
+    assert request.handled_at == HANDLED_AT
 
 
 async def ensure_queue_is_populated(
@@ -574,6 +634,144 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
         update_result = await maybe_await(rq_client.update_request(updated_request_data))
         assert isinstance(update_result, RequestRegistration)
         assert update_result.request_id == add_result.request_id
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_add_request_round_trips_all_fields(client: ApifyClient | ApifyClientAsync) -> None:
+    """Every field of a snake_cased request survives `add_request` and comes back from `get_request`."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        request_data: RequestDraftDict = {
+            'unique_key': 'round-trip',
+            'url': 'https://example.com/round-trip',
+            **ALL_REQUEST_FIELDS,
+        }
+        add_result = await maybe_await(rq_client.add_request(request_data))
+        assert isinstance(add_result, RequestRegistration)
+
+        stored = await fetch_stored_request(rq_client, add_result.request_id)
+        assert_all_fields_stored(stored)
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_batch_add_requests_round_trips_all_fields(
+    client: ApifyClient | ApifyClientAsync,
+) -> None:
+    """Every field of a snake_cased request survives `batch_add_requests` and comes back from `get_request`."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        requests_to_add: list[RequestDraftDict] = [
+            {
+                'unique_key': 'batch-round-trip',
+                'url': 'https://example.com/batch-round-trip',
+                **ALL_REQUEST_FIELDS,
+            }
+        ]
+        batch_result = await maybe_await(rq_client.batch_add_requests(requests_to_add))
+        assert isinstance(batch_result, BatchAddResult)
+        assert len(batch_result.unprocessed_requests) == 0
+        assert len(batch_result.processed_requests) == 1
+
+        stored = await fetch_stored_request(rq_client, batch_result.processed_requests[0].request_id)
+        assert_all_fields_stored(stored)
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_add_and_update_request_store_identical_fields(
+    client: ApifyClient | ApifyClientAsync,
+) -> None:
+    """The same field dict stored through `add_request` and through `update_request` lands identically."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        added = await maybe_await(
+            rq_client.add_request(
+                {'unique_key': 'parity-add', 'url': 'https://example.com/parity-add', **ALL_REQUEST_FIELDS}
+            )
+        )
+        assert isinstance(added, RequestRegistration)
+
+        seeded = await maybe_await(
+            rq_client.add_request({'unique_key': 'parity-update', 'url': 'https://example.com/parity-update'})
+        )
+        assert isinstance(seeded, RequestRegistration)
+        updated = await maybe_await(
+            rq_client.update_request(
+                {
+                    'id': seeded.request_id,
+                    'unique_key': 'parity-update',
+                    'url': 'https://example.com/parity-update',
+                    **ALL_REQUEST_FIELDS,
+                }
+            )
+        )
+        assert isinstance(updated, RequestRegistration)
+
+        from_add = await fetch_stored_request(rq_client, added.request_id)
+        from_update = await fetch_stored_request(rq_client, seeded.request_id)
+        assert non_identity_fields(from_add) == non_identity_fields(from_update)
+        assert_all_fields_stored(from_add)
+        assert_all_fields_stored(from_update)
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_add_request_accepts_camel_cased_fields(client: ApifyClient | ApifyClientAsync) -> None:
+    """A camelCased request dict stores the same fields as its snake_cased equivalent."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        camel_request: RequestDraftCamelDict = {
+            'uniqueKey': 'camel',
+            'url': 'https://example.com/camel',
+            'method': 'POST',
+            'userData': {'label': 'DETAIL', 'depth': 2},
+            'noRetry': True,
+            'retryCount': 3,
+            'headers': {'X-Test': 'yes'},
+            'payload': '{"a": 1}',
+            'loadedUrl': 'https://example.com/loaded',
+            'errorMessages': ['boom'],
+            'handledAt': HANDLED_AT_ISO,
+        }
+        add_result = await maybe_await(rq_client.add_request(camel_request))
+        assert isinstance(add_result, RequestRegistration)
+
+        stored = await fetch_stored_request(rq_client, add_result.request_id)
+        assert_all_fields_stored(stored)
+    finally:
+        await maybe_await(rq_client.delete())
+
+
+async def test_request_queue_add_request_rejects_undeclared_fields(client: ApifyClient | ApifyClientAsync) -> None:
+    """The API refuses a body key its schema does not declare, so a mis-cased field takes the whole write down."""
+    rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
+    assert isinstance(rq, RequestQueue)
+    rq_client = client.request_queue(rq.id)
+
+    try:
+        # `model_validate` keeps the undeclared key as a model extra, which is serialized verbatim.
+        draft = RequestDraft.model_validate(
+            {'unique_key': 'undeclared', 'url': 'https://example.com/undeclared', 'undeclared_field': 'value'}
+        )
+        with pytest.raises(ApifyApiError, match='not allowed by the schema'):
+            await maybe_await(rq_client.add_request(draft))
+
+        with pytest.raises(ApifyApiError, match='not allowed by the schema'):
+            await maybe_await(rq_client.batch_add_requests([draft]))
     finally:
         await maybe_await(rq_client.delete())
 

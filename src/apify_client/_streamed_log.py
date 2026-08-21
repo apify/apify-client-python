@@ -148,10 +148,16 @@ class StreamedLog(StreamedLogBase):
         # Read once, because the streaming thread clears the attribute as soon as the stream ends.
         log_stream = self._log_stream
         if log_stream is not None:
-            # On a transport that honours it, this releases the connection and ends a read blocked on a silent stream.
-            log_stream.close()
+            try:
+                log_stream.close()
+            except Exception:
+                # A custom transport whose `close` fails must not turn a finished run into a failed call.
+                self._to_logger.exception('Closing the log stream failed:')
         self._streaming_thread.join(timeout=self._stop_timeout_s)
-        if not self._streaming_thread.is_alive():
+        if self._streaming_thread.is_alive():
+            # Without this, log messages arriving after `stop` returned have no visible explanation.
+            self._to_logger.debug('Log streaming thread outlived the stop timeout; it ends after the next chunk.')
+        else:
             self._streaming_thread = None
 
     def __enter__(self) -> Self:
@@ -170,10 +176,10 @@ class StreamedLog(StreamedLogBase):
             with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
                 if not log_stream:
                     return
-                # Published so `stop` can close the response and end a read blocked on a silent stream.
+                # Published so `stop` can close the response.
                 self._log_stream = log_stream
                 try:
-                    # `stop` may have already run, back when there was no response for it to close.
+                    # `stop` may have run before the response existed for it to close.
                     if self._stop_logging:
                         return
                     for data in log_stream.iter_bytes():
@@ -186,7 +192,9 @@ class StreamedLog(StreamedLogBase):
                     self._log_buffer_content(include_last_part=True)
         except Exception as exc:
             if self._stop_logging:
-                # `stop` closed the response to end a blocked read, so any resulting error is expected.
+                # A stop is in progress, so the failure is expected. Report it quietly rather than not at all, since
+                # this also catches a flush of the buffered tail that failed for a reason of its own.
+                self._to_logger.debug('Log streaming stopped while `stop` was in progress: %r', exc)
                 return
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # The stream cannot continue, so warn and let the thread end instead of leaking a traceback.

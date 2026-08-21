@@ -8,7 +8,7 @@ import threading
 import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from werkzeug import Request, Response
@@ -1167,6 +1167,35 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
     assert restarted_thread is not streaming_thread
     streamed_log.stop()
     restarted_thread.join(timeout=5)
+
+
+def test_streamed_log_sync_stop_reports_failing_stream_close(
+    caplog: LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A custom transport whose `close` raises is reported by `stop` instead of failing the caller."""
+    monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 0.1)
+    release_thread = threading.Event()
+    # Stand in for the streaming thread, so the response `stop` closes is the test's and not one it has to race for.
+    monkeypatch.setattr(StreamedLog, '_stream_log', lambda _self: release_thread.wait(timeout=30))
+
+    logger = logging.getLogger('apify_client.tests.failing_stream_close')
+    streamed_log = StreamedLog(log_client=Mock(), to_logger=logger)
+    failing_stream = Mock()
+    failing_stream.close.side_effect = RuntimeError('close failed')
+
+    streaming_thread = streamed_log.start()
+    try:
+        streamed_log._log_stream = failing_stream
+
+        with caplog.at_level(logging.DEBUG, logger=logger.name):
+            streamed_log.stop()
+
+        failing_stream.close.assert_called_once()
+        assert any('Closing the log stream failed' in record.message for record in caplog.records)
+    finally:
+        release_thread.set()
+        streaming_thread.join(timeout=5)
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

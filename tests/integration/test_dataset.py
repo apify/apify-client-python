@@ -18,6 +18,7 @@ from .._utils import (
     maybe_await,
     poll_until_condition,
 )
+from .conftest import ALL_HTTP_CLIENT_CLASSES
 from apify_client._models import Dataset, DatasetListItem, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
@@ -698,6 +699,7 @@ async def test_dataset_get_items_as_bytes_csv(client: ApifyClient | ApifyClientA
         await maybe_await(dataset_client.delete())
 
 
+@pytest.mark.parametrize('http_client_classes', ALL_HTTP_CLIENT_CLASSES, indirect=True)
 async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test streaming dataset items."""
     dataset_name = get_random_resource_name('dataset')

@@ -7,7 +7,14 @@ import pytest
 from pytest_httpserver import HTTPServer
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients import (
+    HttpClient,
+    HttpClientAsync,
+    HttpxHttpClient,
+    HttpxHttpClientAsync,
+    ImpitHttpClient,
+    ImpitHttpClientAsync,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -43,13 +50,23 @@ def async_client(httpserver: HTTPServer) -> ApifyClientAsync:
     return ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
 
 
-@pytest.fixture(params=[pytest.param(ImpitHttpClient, id='impit')])
+@pytest.fixture(
+    params=[
+        pytest.param(ImpitHttpClient, id='impit'),
+        pytest.param(HttpxHttpClient, id='httpx'),
+    ]
+)
 def http_client_class(request: pytest.FixtureRequest) -> type[HttpClient]:
     """Return each built-in synchronous HTTP client class."""
     return request.param
 
 
-@pytest.fixture(params=[pytest.param(ImpitHttpClientAsync, id='impit')])
+@pytest.fixture(
+    params=[
+        pytest.param(ImpitHttpClientAsync, id='impit'),
+        pytest.param(HttpxHttpClientAsync, id='httpx'),
+    ]
+)
 def http_client_async_class(request: pytest.FixtureRequest) -> type[HttpClientAsync]:
     """Return each built-in asynchronous HTTP client class."""
     return request.param

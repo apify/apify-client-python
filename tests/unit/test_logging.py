@@ -877,7 +877,7 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     http_client_class: type[HttpClient],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The streaming thread ends quietly when the transport times out while reading the log stream."""
+    """The streaming thread ends quietly when either transport times out while reading the log stream."""
     monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
 
     release_server = threading.Event()
@@ -885,7 +885,7 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     def _slow_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
             # Emit one complete line, then keep the connection open (as a running Actor would) past the
-            # client-side total timeout without sending anything more.
+            # client-side stream timeout without sending anything more.
             yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
             release_server.wait(timeout=30)
 
@@ -910,7 +910,7 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     try:
         with caplog.at_level(logging.DEBUG, logger=logger_name):
             thread = streamed_log.start()
-            # Wait past the 1s total timeout so the streaming request fails inside the thread.
+            # Wait past the 1s stream timeout so the streaming request fails inside the thread.
             thread.join(timeout=5)
             assert not thread.is_alive(), 'streaming thread did not end after the stream timed out'
     finally:
@@ -970,14 +970,14 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     http_client_async_class: type[HttpClientAsync],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The async streaming task treats a transport stream timeout as an expected terminal condition."""
+    """The async streaming task treats either transport's stream timeout as an expected terminal condition."""
     monkeypatch.setattr(StreamedLogAsync, '_stream_timeout', timedelta(seconds=1))
 
     release_server = threading.Event()
 
     def _slow_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # Emit one complete line, then keep the connection open past the client-side total timeout.
+            # Emit one complete line, then keep the connection open past the client-side stream timeout.
             yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
             release_server.wait(timeout=30)
 
@@ -999,7 +999,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     try:
         with caplog.at_level(logging.DEBUG, logger=logger_name):
             task = streamed_log.start()
-            # The 1s total timeout fails the request inside the task; it must end on its own without our help.
+            # The 1s stream timeout fails the request inside the task; it must end on its own without our help.
             done, _pending = await asyncio.wait({task}, timeout=5)
             assert task in done, 'async streaming task did not end after the stream timed out'
     finally:

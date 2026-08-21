@@ -84,12 +84,23 @@ _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES = (
 
 
 class StatusResponseGenerator:
-    """Generator for actor run status responses to simulate changing status over time."""
+    """Generator for actor run status responses to simulate changing status over time.
+
+    A status watcher polls the plain endpoint once a second while `wait_for_finish` polls it several times a second
+    with `waitForFinish`. Driving one sequence from both would make the messages a watcher observes depend on which
+    poll got there first, so the two are answered separately: plain requests walk the sequence, and `waitForFinish`
+    reports the run finished only once they have walked all of it.
+    """
+
+    _requests_for_first_status = 3
+    """Plain requests answered with the first status before the sequence moves on.
+
+    `call` spends two of them on setup - one in `get_status_message_watcher`, one in `get_streamed_log` - so the
+    watcher's own first poll lands inside this window whichever order the three arrive in.
+    """
 
     def __init__(self) -> None:
-        self.current_status_index = 0
-        self.requests_for_current_status = 0
-        self.min_requests_per_status = 5
+        self.plain_requests = 0
 
         self.statuses: list[tuple[str, ActorJobStatus, bool]] = [
             ('Initial message', 'RUNNING', False),
@@ -129,21 +140,17 @@ class StatusResponseGenerator:
             'containerUrl': 'https://test.runs.apify.net',
         }
 
-    def get_response(self, _request: Request) -> Response:
-        if self.current_status_index < len(self.statuses):
-            message, status, is_terminal = self.statuses[self.current_status_index]
+    def get_response(self, request: Request) -> Response:
+        if 'waitForFinish' in request.args:
+            # Hold the run open until the plain sequence has run out, so a watcher polling alongside always sees
+            # every message. With nothing watching there are no plain requests, and the run reads as finished.
+            requests_to_walk_all = self._requests_for_first_status + len(self.statuses) - 1
+            still_walking = 0 < self.plain_requests < requests_to_walk_all
+            message, status, is_terminal = self.statuses[0] if still_walking else self.statuses[-1]
         else:
-            message, status, is_terminal = self.statuses[-1]
-
-        self.requests_for_current_status += 1
-
-        if (
-            self.requests_for_current_status >= self.min_requests_per_status
-            and self.current_status_index < len(self.statuses) - 1
-            and not is_terminal
-        ):
-            self.current_status_index += 1
-            self.requests_for_current_status = 0
+            self.plain_requests += 1
+            index = max(0, self.plain_requests - self._requests_for_first_status)
+            message, status, is_terminal = self.statuses[min(index, len(self.statuses) - 1)]
 
         status_data = {'data': self._create_minimal_run_data(message, status, is_terminal=is_terminal)}
 

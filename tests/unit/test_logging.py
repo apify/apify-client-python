@@ -843,9 +843,9 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
 
     def _silent_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # Yield an empty chunk so werkzeug flushes headers and the client sees a streaming
-            # response; then block without emitting any log data.
-            yield b''
+            # One complete line, so the test can wait for proof that the reader reached the read that then blocks
+            # (as a running Actor that stops logging would), rather than guessing at how long that takes.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: going quiet\n'
             release_server.wait(timeout=30)
 
         return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
@@ -861,8 +861,12 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
 
     streamed_log.start()
     try:
-        # Give the streaming thread time to start and block inside iter_bytes.
-        time.sleep(0.3)
+        # The buffered line proves the thread is inside the read loop. A fixed sleep instead would, if it ever ended
+        # too early, let the thread leave on the `_stop_logging` check without the stream timeout ever mattering.
+        deadline = time.monotonic() + 5
+        while not streamed_log._stream_buffer and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert streamed_log._stream_buffer, 'streaming thread never reached the blocking read'
 
         # Call stop() from a helper thread so the test cannot hang indefinitely if the fix regresses.
         stop_thread = threading.Thread(target=streamed_log.stop)
@@ -1133,9 +1137,9 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
 
     def _silent_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # Yield an empty chunk so werkzeug flushes headers and the client sees a streaming
-            # response; then block without emitting any log data.
-            yield b''
+            # One complete line, so the test can wait for proof that the reader reached the read that then blocks
+            # (as a running Actor that stops logging would), rather than guessing at how long that takes.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: going quiet\n'
             release_server.wait(timeout=30)
 
         return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
@@ -1151,8 +1155,12 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
 
     streaming_thread = streamed_log.start()
     try:
-        # Give the streaming thread time to start and block inside iter_bytes.
-        time.sleep(0.3)
+        # The buffered line proves the thread is inside the read loop. A fixed sleep instead would, if it ever ended
+        # too early, let the thread leave on the `_stop_logging` check and pass the test without exercising the bound.
+        deadline = time.monotonic() + 5
+        while not streamed_log._stream_buffer and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert streamed_log._stream_buffer, 'streaming thread never reached the blocking read'
 
         # Call stop() from a helper thread so the test cannot hang indefinitely if the bound regresses.
         stop_thread = threading.Thread(target=streamed_log.stop)

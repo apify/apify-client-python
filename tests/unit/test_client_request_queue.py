@@ -281,7 +281,7 @@ _FULL_REQUEST_DICT: RequestDict = {
 
 
 class Unserializable:
-    """A `user_data` value of a type no JSON serializer can encode without a stringification fallback."""
+    """A value no JSON serializer can encode without a stringification fallback."""
 
     def __str__(self) -> str:
         return 'unserializable'

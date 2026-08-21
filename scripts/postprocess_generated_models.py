@@ -1,8 +1,8 @@
 """Post-process datamodel-codegen output to fix known issues and prune the TypedDict file.
 
 Applied to both `_models.py` and `_typeddicts.py`:
-- Reparent classes whose spec schema declares the wire shape standalone instead of extending the base schema it
-  duplicates, so the generated class declares the full set of fields.
+- Reparent classes whose schema spells out the wire shape standalone instead of extending the base schema it
+  duplicates, so the generated class declares every field.
 
 Applied to `_models.py`:
 - Fix discriminator field names that use camelCase instead of snake_case (known issue with discriminators on schemas
@@ -52,13 +52,10 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
     'pricingModel': 'pricing_model',
 }
 
-# Map of `{class name: base class it should inherit from}`, applied to both generated files.
-# Some schemas in the spec spell out only a few properties instead of extending the base schema that carries the rest
-# of the wire shape. When a resource client sends such a model as a request body, the generated class declares those
-# few fields and lets `extra='allow'` absorb everything else - but the `to_camel` alias generator only covers declared
-# fields, so extras reach the API under their snake_case names, which it silently ignores. Reparenting to the base
-# schema's class declares the full shape, restoring alias coverage and the TypedDict keys the type checker validates
-# against.
+# Map of `{class name: base class it should inherit from}`, applied to both generated files. A schema that spells out
+# only a few properties instead of extending the base schema carrying the rest generates a class whose `extra='allow'`
+# absorbs the other fields - and `to_camel` doesn't alias extras, so sending it as a request body puts snake_case keys
+# on the wire. Reparenting declares the full shape.
 BASE_CLASS_FIXES: dict[str, str] = {
     'RequestDraft': 'RequestBase',
 }
@@ -121,11 +118,9 @@ def _base_names(node: ast.ClassDef) -> set[str]:
 def reparent_classes(content: str) -> str:
     """Replace the base class of every `BASE_CLASS_FIXES` entry with the mapped one.
 
-    The whole base list is rewritten, so re-running on already-reparented source is a no-op. A mapped class absent
-    from `content` is skipped - the map is shared by both generated files, and a schema does not always yield a class
-    in each (a root model becomes a `TypeAlias` in `_typeddicts.py`). The mapped base is not looked up: an entry
-    naming a base that the file no longer defines yields source that fails to import, which is preferable to
-    silently leaving the class unreparented.
+    Rewrites the whole base list, so re-running is a no-op. A mapped class absent from `content` is skipped, since a
+    schema doesn't always yield a class in both files. The base is not looked up: naming one the file doesn't define
+    yields source that fails to import, which beats silently skipping the fix.
     """
     for name, base in BASE_CLASS_FIXES.items():
         content = re.sub(
@@ -145,13 +140,10 @@ def _annotated_field_names(node: ast.ClassDef) -> set[str]:
 
 
 def drop_inherited_typeddict_fields(content: str) -> str:
-    """Delete the fields a reparented TypedDict now inherits, keeping only the ones its base doesn't declare.
+    """Delete the fields a reparented TypedDict now inherits, along with their description docstrings.
 
-    PEP 589 forbids a TypedDict subclass from redeclaring a key of its base - even to turn a `NotRequired` key into
-    a required one - so the reparented class has to give up its own copies. The keys stay required at runtime: the
-    Pydantic model keeps its redeclarations, which Pydantic allows.
-
-    Each field's trailing description docstring is removed along with it.
+    PEP 589 forbids redeclaring a base's key, even to turn a `NotRequired` one into a required one. The keys stay
+    required at runtime, where the Pydantic model keeps its own redeclarations.
     """
     tree = ast.parse(content)
     classes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
@@ -747,7 +739,7 @@ def postprocess_models(models_path: Path, literals_path: Path) -> list[Path]:
 def postprocess_typeddicts(path: Path, alias_map: dict[str, dict[str, str]]) -> bool:
     """Apply `_typeddicts.py`-specific fixes. Returns True if the file changed."""
     original = path.read_text()
-    # Reparenting comes first so the new base class counts as a dependency of the input surface and survives pruning.
+    # Reparenting comes first so the new base counts as a dependency of the input surface and survives pruning.
     reparented = drop_inherited_typeddict_fields(reparent_classes(original))
     pruned, kept = prune_typeddicts(reparented, RESOURCE_INPUT_TYPEDDICTS)
     renamed = rename_with_dict_suffix(pruned, kept)

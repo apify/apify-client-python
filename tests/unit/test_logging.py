@@ -835,16 +835,14 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
     """A finite `_stream_timeout` bounds how long `stop()` waits on a silent stream, since the blocking read cannot
     otherwise be interrupted (the production default is `no_timeout`, so the test configures a short finite one)."""
     monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
-    # Well above the stream timeout, so `stop`'s own join bound cannot end the wait first. Left at its default it
-    # equals the `join` budget below, and the assertion can no longer tell a working stream timeout from a broken one.
+    # Well above the stream timeout, so `stop`'s own join bound cannot end the wait first and mask a regression.
     monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 30)
 
     release_server = threading.Event()
 
     def _silent_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # One complete line, so the test can wait for proof that the reader reached the read that then blocks
-            # (as a running Actor that stops logging would), rather than guessing at how long that takes.
+            # One complete line, then silence, like a running Actor that stops logging.
             yield b'2025-05-13T07:24:12.588Z ACTOR: going quiet\n'
             release_server.wait(timeout=30)
 
@@ -861,8 +859,7 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
 
     streamed_log.start()
     try:
-        # The buffered line proves the thread is inside the read loop. A fixed sleep instead would, if it ever ended
-        # too early, let the thread leave on the `_stop_logging` check without the stream timeout ever mattering.
+        # The buffered line proves the thread is inside the read loop; a fixed sleep could end before it gets there.
         deadline = time.monotonic() + 5
         while not streamed_log._stream_buffer and time.monotonic() < deadline:
             time.sleep(0.01)
@@ -1023,7 +1020,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
 
 
 _POLL_FAILURE_FINAL_SLEEP_S = 4
-"""Long enough for the watcher, which polls once per second under `call`'s defaults, to reach the rejecting endpoint."""
+"""Long enough for the once-per-second watcher poll to reach the rejecting endpoint."""
 
 
 @pytest.fixture
@@ -1032,14 +1029,13 @@ def mock_api_failing_status_poll(httpserver: HTTPServer) -> None:
     status_generator = StatusResponseGenerator()
     running_run = status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False)
     finished_run = status_generator._create_minimal_run_data('Final message', 'SUCCEEDED', is_terminal=True)
-    # `call` asks for the log stream only once both of its own status requests have returned, so that request marks
-    # the point from which every plain status request is a watcher poll. A request count cannot tell the two apart,
-    # because the watcher thread starts polling before the second setup request is issued.
+    # `call` requests the log stream only after both of its setup status requests return, so every plain status
+    # request after that is a watcher poll. A count cannot tell them apart: the watcher polls before the second.
     setup_done = threading.Event()
 
     def _status_handler(request: Request) -> Response:
         if 'waitForFinish' in request.args:
-            # `wait_for_finish` keeps succeeding, so the run itself reads as a success.
+            # `wait_for_finish` keeps succeeding, so the run reads as a success.
             return Response(response=json.dumps({'data': finished_run}), status=200, mimetype='application/json')
         if setup_done.is_set():
             return Response(
@@ -1053,8 +1049,7 @@ def mock_api_failing_status_poll(httpserver: HTTPServer) -> None:
         setup_done.set()
         return _streaming_log_handler(request)
 
-    # Registered before `_register_run_and_actor_endpoints` so this handler wins for the run endpoint -
-    # pytest-httpserver matches permanent handlers in registration order.
+    # Registered before `_register_run_and_actor_endpoints`, which also covers the run endpoint - first match wins.
     httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}', method='GET').respond_with_handler(_status_handler)
     _register_run_and_actor_endpoints(httpserver)
     httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
@@ -1092,7 +1087,7 @@ def test_actor_call_returns_run_when_status_poll_fails_sync(
     httpserver: HTTPServer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A failing status poll is logged by the watcher thread instead of leaking an uncaught exception out of it."""
+    """A failing status poll is logged by the watcher thread instead of leaking out of it."""
     monkeypatch.setattr(StatusMessageWatcherBase, '_final_sleep_time_s', _POLL_FAILURE_FINAL_SLEEP_S)
 
     thread_exceptions: list[threading.ExceptHookArgs] = []
@@ -1114,7 +1109,7 @@ def test_actor_call_returns_run_when_status_poll_fails_sync(
 
 @pytest.mark.usefixtures('mock_api')
 def test_sync_watcher_thread_is_daemon(httpserver: HTTPServer) -> None:
-    """The polling thread is a daemon, so a watcher still polling can never hold up interpreter shutdown."""
+    """The polling thread is a daemon, so a watcher still polling cannot hold up interpreter shutdown."""
     api_url = httpserver.url_for('/').removesuffix('/')
     run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
     watcher = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
@@ -1137,8 +1132,7 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
 
     def _silent_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # One complete line, so the test can wait for proof that the reader reached the read that then blocks
-            # (as a running Actor that stops logging would), rather than guessing at how long that takes.
+            # One complete line, then silence, like a running Actor that stops logging.
             yield b'2025-05-13T07:24:12.588Z ACTOR: going quiet\n'
             release_server.wait(timeout=30)
 
@@ -1155,21 +1149,20 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
 
     streaming_thread = streamed_log.start()
     try:
-        # The buffered line proves the thread is inside the read loop. A fixed sleep instead would, if it ever ended
-        # too early, let the thread leave on the `_stop_logging` check and pass the test without exercising the bound.
+        # The buffered line proves the thread is inside the read loop; a fixed sleep could end before it gets there.
         deadline = time.monotonic() + 5
         while not streamed_log._stream_buffer and time.monotonic() < deadline:
             time.sleep(0.01)
         assert streamed_log._stream_buffer, 'streaming thread never reached the blocking read'
 
-        # Call stop() from a helper thread so the test cannot hang indefinitely if the bound regresses.
+        # Call stop() from a helper thread so the test cannot hang if the bound regresses.
         stop_thread = threading.Thread(target=streamed_log.stop)
         stop_thread.start()
         stop_thread.join(timeout=5)
         assert not stop_thread.is_alive(), 'stop() did not return within its bound on a silent stream'
     finally:
         release_server.set()
-        # `stop` leaves the thread running, so reap it here instead of leaking it into the rest of the session.
+        # `stop` leaves the thread running, so reap it instead of leaking it into the rest of the session.
         streaming_thread.join(timeout=5)
 
     assert not streaming_thread.is_alive()
@@ -1186,7 +1179,7 @@ def test_streamed_log_sync_stop_reports_failing_stream_close(
     """A custom transport whose `close` raises is reported by `stop` instead of failing the caller."""
     monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 0.1)
     release_thread = threading.Event()
-    # Stand in for the streaming thread, so the response `stop` closes is the test's and not one it has to race for.
+    # Stand in for the streaming thread, so `stop` closes the test's response rather than racing for a real one.
     monkeypatch.setattr(StreamedLog, '_stream_log', lambda _self: release_thread.wait(timeout=30))
 
     logger = logging.getLogger('apify_client.tests.failing_stream_close')

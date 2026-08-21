@@ -102,8 +102,8 @@ class StreamedLog(StreamedLogBase):
     _stop_timeout_s: ClassVar[float] = 5
     """Upper bound on how long `stop` waits for the streaming thread to finish.
 
-    Closing the response ends the read on a transport that honours it, but Impit's blocking read is not
-    interruptible, so without a bound `stop` would wait for the next chunk, which on a quiet run may be hours away.
+    Closing the response only ends the read on a transport that honours it - Impit does not - so without a bound
+    `stop` would wait for the next chunk, which on a quiet run may be hours away.
     """
 
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
@@ -136,26 +136,25 @@ class StreamedLog(StreamedLogBase):
         return self._streaming_thread
 
     def stop(self) -> None:
-        """Signal the streaming thread to stop logging and wait, for up to `_stop_timeout_s`, for it to finish.
+        """Signal the streaming thread to stop logging and wait up to `_stop_timeout_s` for it to finish.
 
-        A thread that outlives the wait keeps `_stop_logging` set, so it exits after at most one more chunk, and is
-        a daemon, so it cannot hold up interpreter shutdown. Its handle is kept while it is alive, which keeps `start`
-        from reviving it alongside a second thread reading into the same buffer.
+        A thread that outlives the wait is a daemon with `_stop_logging` set, so it exits after at most one more chunk.
+        Its handle is kept while it is alive, so `start` cannot revive it beside a second thread on the same buffer.
         """
         if not self._streaming_thread:
             raise RuntimeError('Streaming thread is not active')
         self._stop_logging = True
-        # Read once, because the streaming thread clears the attribute as soon as the stream ends.
+        # Read once; the streaming thread clears the attribute as soon as the stream ends.
         log_stream = self._log_stream
         if log_stream is not None:
             try:
                 log_stream.close()
             except Exception:
-                # A custom transport whose `close` fails must not turn a finished run into a failed call.
+                # A failing `close` in a custom transport must not fail the caller.
                 self._to_logger.exception('Closing the log stream failed:')
         self._streaming_thread.join(timeout=self._stop_timeout_s)
         if self._streaming_thread.is_alive():
-            # Without this, log messages arriving after `stop` returned have no visible explanation.
+            # Otherwise log messages arriving after `stop` returned have no explanation.
             self._to_logger.debug('Log streaming thread outlived the stop timeout; it ends after the next chunk.')
         else:
             self._streaming_thread = None
@@ -192,8 +191,7 @@ class StreamedLog(StreamedLogBase):
                     self._log_buffer_content(include_last_part=True)
         except Exception as exc:
             if self._stop_logging:
-                # A stop is in progress, so the failure is expected. Report it quietly rather than not at all, since
-                # this also catches a flush of the buffered tail that failed for a reason of its own.
+                # Expected during a stop, but this also catches a failed flush of the buffered tail, so report it.
                 self._to_logger.debug('Log streaming stopped while `stop` was in progress: %r', exc)
                 return
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001

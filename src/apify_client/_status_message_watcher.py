@@ -128,10 +128,10 @@ class StatusMessageWatcherAsync(StatusMessageWatcherBase):
                 await asyncio.sleep(self._check_period)
         except Exception as exc:
             if self._run_client._http_client.is_timeout_error(exc):  # noqa: SLF001
-                # The poll cannot continue, so warn and let the task end instead of leaking a traceback.
+                # An expected timeout, so warn rather than leak a traceback.
                 self._to_logger.warning('Status message redirection stopped: the status request timed out.')
             else:
-                # A failed poll must not escape into `stop`, where it would surface as a failure of the run itself.
+                # A failed poll must not escape into `stop` and surface as a failure of the run.
                 self._to_logger.exception('Status message redirection stopped due to unexpected error:')
 
 
@@ -170,7 +170,7 @@ class StatusMessageWatcher(StatusMessageWatcherBase):
         if self._logging_thread:
             raise RuntimeError('Logging thread already active')
         self._stop_logging = False
-        # A daemon thread so a watcher still polling can never hold up interpreter shutdown.
+        # A daemon thread, so a watcher still polling cannot hold up interpreter shutdown.
         self._logging_thread = threading.Thread(target=self._log_changed_status_message, daemon=True)
         self._logging_thread.start()
         return self._logging_thread
@@ -207,8 +207,8 @@ class StatusMessageWatcher(StatusMessageWatcherBase):
                 time.sleep(self._check_period)
         except Exception as exc:
             if self._run_client._http_client.is_timeout_error(exc):  # noqa: SLF001
-                # The poll cannot continue, so warn and let the thread end instead of leaking a traceback.
+                # An expected timeout, so warn rather than leak a traceback.
                 self._to_logger.warning('Status message redirection stopped: the status request timed out.')
             else:
-                # A failed poll must not escape the background thread; log it instead.
+                # A failed poll must not escape the background thread.
                 self._to_logger.exception('Status message redirection stopped due to unexpected error:')

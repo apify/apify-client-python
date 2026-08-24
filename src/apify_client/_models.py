@@ -735,10 +735,9 @@ class CommonActorPricingInfo(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    apify_margin_percentage: Annotated[float, Field(examples=[0.2])]
+    apify_margin_percentage: float
     """
-    Apify's share of the revenue generated under this pricing info record, as a fraction between 0 and 1. Set by the Apify platform.
-
+    In [0, 1], fraction of pricePerUnitUsd that goes to Apify
     """
     created_at: AwareDatetime
     """
@@ -793,6 +792,18 @@ class CreateActorRequest(BaseModel):
     """
     An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
     """
+    pricing_infos: (
+        list[
+            Annotated[
+                PayPerEventActorPricingInfo
+                | PricePerDatasetItemActorPricingInfo
+                | FlatPricePerMonthActorPricingInfo
+                | FreeActorPricingInfo,
+                Field(discriminator='pricing_model'),
+            ]
+        ]
+        | None
+    ) = None
     categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
     """
     A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
@@ -909,10 +920,6 @@ class CurrentPricingInfo(BaseModel):
     )
     pricing_model: Annotated[str, Field(examples=['FREE'])]
     apify_margin_percentage: Annotated[float | None, Field(examples=[0.2])] = None
-    """
-    Apify's share of the revenue generated under this pricing info record, as a fraction between 0 and 1. Set by the Apify platform.
-
-    """
     created_at: Annotated[AwareDatetime | None, Field(examples=['2023-01-01T00:00:00.000Z'])] = None
     started_at: Annotated[AwareDatetime | None, Field(examples=['2023-01-01T00:00:00.000Z'])] = None
     notified_about_change_at: Annotated[AwareDatetime | None, Field(examples=[None])] = None

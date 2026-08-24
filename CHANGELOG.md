@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 - Add Actor task publication endpoints ([#985](https://github.com/apify/apify-client-python/pull/985)) ([139a426](https://github.com/apify/apify-client-python/commit/139a42691c6d8aae4ccff02911b554da6ccc8a4a)) by [@apify-service-account](https://github.com/apify-service-account)
 - Unify the request pipeline across HTTP clients ([#1022](https://github.com/apify/apify-client-python/pull/1022)) ([00ce055](https://github.com/apify/apify-client-python/commit/00ce055ac6a6868a4e654f1e4bf14f5e77d7631d)) by [@vdusek](https://github.com/vdusek)
 
+### 🐛 Bug Fixes
+
+- Require unique_key and url in RequestBase, add RequestWithoutId ([#1030](https://github.com/apify/apify-client-python/pull/1030)) ([28efd13](https://github.com/apify/apify-client-python/commit/28efd1388d18ab20ae95da24af415cdad3aae152)) by [@apify-service-account](https://github.com/apify-service-account)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.1.3](https://github.com/apify/apify-client-python/releases/tag/v3.1.3) (2026-08-18)

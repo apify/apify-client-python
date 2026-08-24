@@ -735,9 +735,10 @@ class CommonActorPricingInfo(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    apify_margin_percentage: float
+    apify_margin_percentage: Annotated[float, Field(examples=[0.2])]
     """
-    In [0, 1], fraction of pricePerUnitUsd that goes to Apify
+    Apify's share of the revenue generated under this pricing info record, as a fraction between 0 and 1. Set by the Apify platform.
+
     """
     created_at: AwareDatetime
     """
@@ -792,18 +793,6 @@ class CreateActorRequest(BaseModel):
     """
     An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
     """
-    pricing_infos: (
-        list[
-            Annotated[
-                PayPerEventActorPricingInfo
-                | PricePerDatasetItemActorPricingInfo
-                | FlatPricePerMonthActorPricingInfo
-                | FreeActorPricingInfo,
-                Field(discriminator='pricing_model'),
-            ]
-        ]
-        | None
-    ) = None
     categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
     """
     A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.
@@ -920,6 +909,10 @@ class CurrentPricingInfo(BaseModel):
     )
     pricing_model: Annotated[str, Field(examples=['FREE'])]
     apify_margin_percentage: Annotated[float | None, Field(examples=[0.2])] = None
+    """
+    Apify's share of the revenue generated under this pricing info record, as a fraction between 0 and 1. Set by the Apify platform.
+
+    """
     created_at: Annotated[AwareDatetime | None, Field(examples=['2023-01-01T00:00:00.000Z'])] = None
     started_at: Annotated[AwareDatetime | None, Field(examples=['2023-01-01T00:00:00.000Z'])] = None
     notified_about_change_at: Annotated[AwareDatetime | None, Field(examples=[None])] = None
@@ -2430,11 +2423,11 @@ class RequestBase(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    unique_key: Annotated[str | None, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])] = None
+    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: Annotated[str | None, Field(examples=['https://apify.com'])] = None
+    url: Annotated[str, Field(examples=['https://apify.com'])]
     """
     The URL of the request.
     """
@@ -2830,6 +2823,17 @@ class RequestResponse(BaseModel):
 @docs_group('Models')
 class RequestUserData(BaseModel):
     """Custom user data attached to the request. Can contain arbitrary fields."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+
+
+@docs_group('Models')
+class RequestWithoutId(RequestBase):
+    """A request stored in the request queue, including its metadata and processing state, without the assigned ID."""
 
     model_config = ConfigDict(
         extra='allow',

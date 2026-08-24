@@ -22,12 +22,12 @@ from apify_client._models import (
     ListOfRequests,
     LockedRequestQueueHead,
     Request,
-    RequestDraft,
     RequestLockInfo,
     RequestQueue,
     RequestQueueHead,
     RequestQueueShort,
     RequestRegistration,
+    RequestWithoutId,
     UnlockRequestsResult,
 )
 from apify_client.errors import ApifyApiError
@@ -37,9 +37,9 @@ if TYPE_CHECKING:
     from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
     from apify_client._typeddicts import (
         RequestDict,
-        RequestDraftCamelDict,
         RequestDraftDeleteDict,
-        RequestDraftDict,
+        RequestWithoutIdCamelDict,
+        RequestWithoutIdDict,
     )
 
 
@@ -49,8 +49,9 @@ HANDLED_AT_ISO = '2019-06-16T10:23:31.607Z'
 HANDLED_AT = datetime(2019, 6, 16, 10, 23, 31, 607000, tzinfo=UTC)
 
 # Every request field beyond `id`/`unique_key`/`url`, snake_cased. The API declares its write bodies with
-# `additionalProperties: false`, so each of these has to reach it camelCased to be stored at all.
-ALL_REQUEST_FIELDS: RequestDict = {
+# `additionalProperties: false`, so each of these has to reach it camelCased to be stored at all. A fragment, not
+# a full `RequestDict`: every use spreads it alongside `unique_key`/`url` supplied separately.
+ALL_REQUEST_FIELDS: dict[str, Any] = {
     'method': 'POST',
     'user_data': {'label': 'DETAIL', 'depth': 2},
     'no_retry': True,
@@ -264,7 +265,7 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
 
     try:
         # Add a request
-        request_data: RequestDraftDict = {
+        request_data: RequestWithoutIdDict = {
             'url': 'https://example.com/test',
             'unique_key': 'test-key-1',
             'method': 'GET',
@@ -382,7 +383,7 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
 
     try:
         # Batch add requests
-        requests_to_add: list[RequestDraftDict] = [
+        requests_to_add: list[RequestWithoutIdDict] = [
             {'url': f'https://example.com/batch-{i}', 'unique_key': f'batch-{i}'} for i in range(10)
         ]
         batch_response = await maybe_await(rq_client.batch_add_requests(requests_to_add))
@@ -606,7 +607,7 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
 
     try:
         # Add a request
-        request_data: RequestDraftDict = {
+        request_data: RequestWithoutIdDict = {
             'url': 'https://example.com/original',
             'unique_key': 'update-test',
             'method': 'GET',
@@ -645,7 +646,7 @@ async def test_request_queue_add_request_round_trips_all_fields(client: ApifyCli
     rq_client = client.request_queue(rq.id)
 
     try:
-        request_data: RequestDraftDict = {
+        request_data: RequestWithoutIdDict = {
             'unique_key': 'round-trip',
             'url': 'https://example.com/round-trip',
             **ALL_REQUEST_FIELDS,
@@ -668,7 +669,7 @@ async def test_request_queue_batch_add_requests_round_trips_all_fields(
     rq_client = client.request_queue(rq.id)
 
     try:
-        requests_to_add: list[RequestDraftDict] = [
+        requests_to_add: list[RequestWithoutIdDict] = [
             {
                 'unique_key': 'batch-round-trip',
                 'url': 'https://example.com/batch-round-trip',
@@ -734,7 +735,7 @@ async def test_request_queue_add_request_accepts_camel_cased_fields(client: Apif
     rq_client = client.request_queue(rq.id)
 
     try:
-        camel_request: RequestDraftCamelDict = {
+        camel_request: RequestWithoutIdCamelDict = {
             'uniqueKey': 'camel',
             'url': 'https://example.com/camel',
             'method': 'POST',
@@ -764,7 +765,7 @@ async def test_request_queue_add_request_rejects_undeclared_fields(client: Apify
 
     try:
         # `model_validate` keeps the undeclared key as a model extra, which is serialized verbatim.
-        draft = RequestDraft.model_validate(
+        draft = RequestWithoutId.model_validate(
             {'unique_key': 'undeclared', 'url': 'https://example.com/undeclared', 'undeclared_field': 'value'}
         )
         with pytest.raises(ApifyApiError, match='not allowed by the schema'):
@@ -810,7 +811,7 @@ async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientA
         # Add several requests
         added_urls: list[str] = []
         for i in range(7):
-            request_draft = RequestDraft(url=f'https://example.com/page-{i}', unique_key=f'unique-{i}')
+            request_draft = RequestWithoutId(url=f'https://example.com/page-{i}', unique_key=f'unique-{i}')
             await maybe_await(rq_client.add_request(request_draft))
             added_urls.append(request_draft.url)
 
@@ -848,7 +849,7 @@ async def test_request_queue_list_requests_with_cursor(client: ApifyClient | Api
     try:
         for i in range(5):
             await maybe_await(
-                rq_client.add_request(RequestDraft(url=f'https://example.com/p-{i}', unique_key=f'u-{i}'))
+                rq_client.add_request(RequestWithoutId(url=f'https://example.com/p-{i}', unique_key=f'u-{i}'))
             )
 
         # Wait for all 5 requests to be indexed so pagination is exercised, not truncated
@@ -880,7 +881,7 @@ async def test_request_queue_list_requests_with_filter(client: ApifyClient | Api
     try:
         for i in range(3):
             await maybe_await(
-                rq_client.add_request(RequestDraft(url=f'https://example.com/f-{i}', unique_key=f'f-{i}'))
+                rq_client.add_request(RequestWithoutId(url=f'https://example.com/f-{i}', unique_key=f'f-{i}'))
             )
 
         # Wait for all 3 requests to be indexed before filtering

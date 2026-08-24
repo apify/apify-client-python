@@ -32,6 +32,7 @@ from apify_client._models import (
     RequestQueueResponse,
     RequestRegistration,
     RequestResponse,
+    RequestWithoutId,
     UnlockRequestsResponse,
     UnlockRequestsResult,
 )
@@ -50,10 +51,10 @@ if TYPE_CHECKING:
     from apify_client._typeddicts import (
         RequestCamelDict,
         RequestDict,
-        RequestDraftCamelDict,
         RequestDraftDeleteCamelDict,
         RequestDraftDeleteDict,
-        RequestDraftDict,
+        RequestWithoutIdCamelDict,
+        RequestWithoutIdDict,
     )
     from apify_client.types import Timeout
 
@@ -68,7 +69,7 @@ _SAFETY_BUFFER_PERCENT = 0.01 / 100
 
 
 def _serialize_requests(
-    requests: list[RequestDraft] | list[RequestDraftDict] | list[RequestDraftCamelDict],
+    requests: list[RequestWithoutId] | list[RequestWithoutIdDict] | list[RequestWithoutIdCamelDict],
 ) -> list[bytes]:
     """Validate requests and serialize each one into the JSON bytes it will occupy in the batch request body.
 
@@ -80,7 +81,7 @@ def _serialize_requests(
     """
     return [
         json.dumps(
-            (request if isinstance(request, RequestDraft) else RequestDraft.model_validate(request)).model_dump(
+            (request if isinstance(request, RequestWithoutId) else RequestWithoutId.model_validate(request)).model_dump(
                 mode='json', by_alias=True, exclude_none=True, fallback=str
             ),
             ensure_ascii=False,
@@ -228,7 +229,7 @@ class RequestQueueClient(ResourceClient):
 
     def add_request(
         self,
-        request: RequestDraftDict | RequestDraftCamelDict | RequestDraft,
+        request: RequestWithoutIdDict | RequestWithoutIdCamelDict | RequestWithoutId,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -245,8 +246,8 @@ class RequestQueueClient(ResourceClient):
         Returns:
             The added request.
         """
-        if not isinstance(request, RequestDraft):
-            request = RequestDraft.model_validate(request)
+        if not isinstance(request, RequestWithoutId):
+            request = RequestWithoutId.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
@@ -404,7 +405,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_add_requests(
         self,
-        requests: list[RequestDraft] | list[RequestDraftDict] | list[RequestDraftCamelDict],
+        requests: list[RequestWithoutId] | list[RequestWithoutIdDict] | list[RequestWithoutIdCamelDict],
         *,
         forefront: bool = False,
         max_parallel: int = 1,
@@ -755,7 +756,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def add_request(
         self,
-        request: RequestDraftDict | RequestDraftCamelDict | RequestDraft,
+        request: RequestWithoutIdDict | RequestWithoutIdCamelDict | RequestWithoutId,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'short',
@@ -772,8 +773,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Returns:
             The added request.
         """
-        if not isinstance(request, RequestDraft):
-            request = RequestDraft.model_validate(request)
+        if not isinstance(request, RequestWithoutId):
+            request = RequestWithoutId.model_validate(request)
 
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
@@ -977,7 +978,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_add_requests(
         self,
-        requests: list[RequestDraft] | list[RequestDraftDict] | list[RequestDraftCamelDict],
+        requests: list[RequestWithoutId] | list[RequestWithoutIdDict] | list[RequestWithoutIdCamelDict],
         *,
         forefront: bool = False,
         max_parallel: int = 5,

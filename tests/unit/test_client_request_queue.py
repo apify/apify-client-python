@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug.wrappers import Request
 
-    from apify_client._typeddicts import RequestDict, RequestDraftDict
+    from apify_client._typeddicts import RequestDict, RequestWithoutIdDict
 
 # The Apify API limit on the payload size of a batch-add request, which the client's batching must respect.
 _API_MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024
@@ -56,7 +56,7 @@ async def test_batch_not_processed_raises_exception_async(httpserver: HTTPServer
         api_public_url=server_url,
     )
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(status=401)
-    requests: list[RequestDraftDict] = [
+    requests: list[RequestWithoutIdDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -77,7 +77,7 @@ async def test_batch_processed_partially_async(httpserver: HTTPServer) -> None:
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
         status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
     )
-    requests: list[RequestDraftDict] = [
+    requests: list[RequestWithoutIdDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -99,7 +99,7 @@ def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> No
     )
 
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(status=401)
-    requests: list[RequestDraftDict] = [
+    requests: list[RequestWithoutIdDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -109,7 +109,7 @@ def test_batch_not_processed_raises_exception_sync(httpserver: HTTPServer) -> No
         rq_client.batch_add_requests(requests=requests)
 
 
-def _make_large_requests() -> list[RequestDraftDict]:
+def _make_large_requests() -> list[RequestWithoutIdDict]:
     """Return 3 requests of ~4 MB each, so that all of them together exceed the 9 MB payload limit."""
     return [
         {
@@ -183,7 +183,7 @@ def test_batch_add_requests_splits_batches_by_payload_size_sync(httpserver: HTTP
     assert sum(len(json.loads(payload)) for payload in payloads) == 3
 
 
-def _make_oversized_and_small_requests() -> list[RequestDraftDict]:
+def _make_oversized_and_small_requests() -> list[RequestWithoutIdDict]:
     """Return a small request plus one whose serialized size alone exceeds the 9 MB payload limit."""
     return [
         {'unique_key': 'small', 'url': 'http://example.com/small', 'method': 'GET'},
@@ -248,7 +248,7 @@ def test_batch_processed_partially_sync(httpserver: HTTPServer) -> None:
     httpserver.expect_oneshot_request(re.compile(r'.*'), method='POST').respond_with_data(
         status=200, response_data=_PARTIALLY_ADDED_BATCH_RESPONSE_CONTENT
     )
-    requests: list[RequestDraftDict] = [
+    requests: list[RequestWithoutIdDict] = [
         {'unique_key': 'http://example.com/1', 'url': 'http://example.com/1', 'method': 'GET'},
         {'unique_key': 'http://example.com/2', 'url': 'http://example.com/2', 'method': 'GET'},
     ]
@@ -490,26 +490,26 @@ def test_batch_delete_requests_stringifies_unserializable_extra_sync(httpserver:
 
 
 async def test_add_request_requires_unique_key_and_url_async(httpserver: HTTPServer) -> None:
-    """`RequestDraftDict` marks no key required, so Pydantic is the only guard left on `unique_key` and `url`."""
+    """Pydantic still rejects a dict missing `unique_key`/`url`, even past a type-check bypass."""
     server_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClientAsync(token='placeholder_token', api_url=server_url, api_public_url=server_url)
     rq_client = client.request_queue(request_queue_id='whatever')
 
     with pytest.raises(ValidationError) as exc_info:
-        await rq_client.add_request({'method': 'GET'})
+        await rq_client.add_request({'method': 'GET'})  # ty: ignore[invalid-argument-type]
 
     assert {error['loc'][0] for error in exc_info.value.errors()} == {'uniqueKey', 'url'}
     assert httpserver.log == []
 
 
 def test_add_request_requires_unique_key_and_url_sync(httpserver: HTTPServer) -> None:
-    """`RequestDraftDict` marks no key required, so Pydantic is the only guard left on `unique_key` and `url`."""
+    """Pydantic still rejects a dict missing `unique_key`/`url`, even past a type-check bypass."""
     server_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(token='placeholder_token', api_url=server_url, api_public_url=server_url)
     rq_client = client.request_queue(request_queue_id='whatever')
 
     with pytest.raises(ValidationError) as exc_info:
-        rq_client.add_request({'method': 'GET'})
+        rq_client.add_request({'method': 'GET'})  # ty: ignore[invalid-argument-type]
 
     assert {error['loc'][0] for error in exc_info.value.errors()} == {'uniqueKey', 'url'}
     assert httpserver.log == []

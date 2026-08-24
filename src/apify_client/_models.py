@@ -2479,7 +2479,7 @@ class Request(RequestBase):
 
 
 @docs_group('Models')
-class RequestDraft(RequestBase):
+class RequestDraft(BaseModel):
     """A request that failed to be processed during a request queue operation and can be retried."""
 
     model_config = ConfigDict(

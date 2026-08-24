@@ -112,26 +112,6 @@ class RequestCamelDict(RequestBaseCamelDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDict(RequestBaseDict):
-    """A request that failed to be processed during a request queue operation and can be retried."""
-
-    id: NotRequired[str]
-    """
-    A unique identifier assigned to the request.
-    """
-
-
-@docs_group('Typed dicts')
-class RequestDraftCamelDict(RequestBaseCamelDict):
-    """A request that failed to be processed during a request queue operation and can be retried."""
-
-    id: NotRequired[str]
-    """
-    A unique identifier assigned to the request.
-    """
-
-
-@docs_group('Typed dicts')
 class RequestDraftDeleteByIdDict(TypedDict):
     """A request that should be deleted, identified by its ID."""
 
@@ -201,6 +181,16 @@ A request that should be deleted.
 RequestUserDataDict: TypeAlias = dict[str, Any]
 
 RequestUserDataCamelDict: TypeAlias = dict[str, Any]
+
+
+@docs_group('Typed dicts')
+class RequestWithoutIdDict(RequestBaseDict):
+    """A request stored in the request queue, including its metadata and processing state, without the assigned ID."""
+
+
+@docs_group('Typed dicts')
+class RequestWithoutIdCamelDict(RequestBaseCamelDict):
+    """A request stored in the request queue, including its metadata and processing state, without the assigned ID."""
 
 
 TaskInputDict: TypeAlias = dict[str, Any]

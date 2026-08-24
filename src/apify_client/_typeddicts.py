@@ -9,11 +9,11 @@ from apify_client._docs import docs_group
 
 @docs_group('Typed dicts')
 class RequestBaseDict(TypedDict):
-    unique_key: NotRequired[str]
+    unique_key: str
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: NotRequired[str]
+    url: str
     """
     The URL of the request.
     """
@@ -51,11 +51,11 @@ class RequestBaseDict(TypedDict):
 
 @docs_group('Typed dicts')
 class RequestBaseCamelDict(TypedDict):
-    uniqueKey: NotRequired[str]
+    uniqueKey: str
     """
     A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    url: NotRequired[str]
+    url: str
     """
     The URL of the request.
     """

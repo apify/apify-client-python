@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 
 - Require unique_key and url in RequestBase, add RequestWithoutId ([#1030](https://github.com/apify/apify-client-python/pull/1030)) ([28efd13](https://github.com/apify/apify-client-python/commit/28efd1388d18ab20ae95da24af415cdad3aae152)) by [@apify-service-account](https://github.com/apify-service-account)
 - Drop pricing_infos from CreateActorRequest and clarify apify_margin_percentage docs ([#1031](https://github.com/apify/apify-client-python/pull/1031)) ([ebeda95](https://github.com/apify/apify-client-python/commit/ebeda95cdec93f0b7405d9ecf65f04d4d5636737)) by [@apify-service-account](https://github.com/apify-service-account)
+- Percent-encode caller-supplied URL path segments ([#1025](https://github.com/apify/apify-client-python/pull/1025)) ([3e333a0](https://github.com/apify/apify-client-python/commit/3e333a0ec27be660fb025c8daab92d6a3a1648d5)) by [@vdusek](https://github.com/vdusek)
+- Send request queue write fields under the names the API declares ([#1026](https://github.com/apify/apify-client-python/pull/1026)) ([3b6e96e](https://github.com/apify/apify-client-python/commit/3b6e96e7e2e88c98c959de77dd219fe8785ae0f0)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

@@ -112,44 +112,6 @@ class RequestCamelDict(RequestBaseCamelDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDict(TypedDict):
-    """A request that failed to be processed during a request queue operation and can be retried."""
-
-    id: NotRequired[str]
-    """
-    A unique identifier assigned to the request.
-    """
-    unique_key: str
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: str
-    """
-    The URL of the request.
-    """
-    method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
-
-
-@docs_group('Typed dicts')
-class RequestDraftCamelDict(TypedDict):
-    """A request that failed to be processed during a request queue operation and can be retried."""
-
-    id: NotRequired[str]
-    """
-    A unique identifier assigned to the request.
-    """
-    uniqueKey: str
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: str
-    """
-    The URL of the request.
-    """
-    method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
-
-
-@docs_group('Typed dicts')
 class RequestDraftDeleteByIdDict(TypedDict):
     """A request that should be deleted, identified by its ID."""
 
@@ -219,6 +181,16 @@ A request that should be deleted.
 RequestUserDataDict: TypeAlias = dict[str, Any]
 
 RequestUserDataCamelDict: TypeAlias = dict[str, Any]
+
+
+@docs_group('Typed dicts')
+class RequestWithoutIdDict(RequestBaseDict):
+    """A request stored in the request queue, including its metadata and processing state, without the assigned ID."""
+
+
+@docs_group('Typed dicts')
+class RequestWithoutIdCamelDict(RequestBaseCamelDict):
+    """A request stored in the request queue, including its metadata and processing state, without the assigned ID."""
 
 
 TaskInputDict: TypeAlias = dict[str, Any]

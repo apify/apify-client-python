@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Require unique_key and url in RequestBase, add RequestWithoutId ([#1030](https://github.com/apify/apify-client-python/pull/1030)) ([28efd13](https://github.com/apify/apify-client-python/commit/28efd1388d18ab20ae95da24af415cdad3aae152)) by [@apify-service-account](https://github.com/apify-service-account)
+- Drop pricing_infos from CreateActorRequest and clarify apify_margin_percentage docs ([#1031](https://github.com/apify/apify-client-python/pull/1031)) ([ebeda95](https://github.com/apify/apify-client-python/commit/ebeda95cdec93f0b7405d9ecf65f04d4d5636737)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
 <!-- git-cliff-unreleased-end -->

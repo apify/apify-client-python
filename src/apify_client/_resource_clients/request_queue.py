@@ -39,7 +39,7 @@ from apify_client._models import (
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.errors import catch_not_found_or_throw
-from apify_client._utils.http import response_to_dict
+from apify_client._utils.http import response_to_dict, to_path_segment
 from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
 
@@ -276,7 +276,7 @@ class RequestQueueClient(ResourceClient):
         """
         try:
             response = self._http_client.call(
-                url=self._build_url(f'requests/{request_id}'),
+                url=self._build_url(f'requests/{to_path_segment(request_id)}'),
                 method='GET',
                 params=self._build_params(),
                 timeout=timeout,
@@ -301,20 +301,26 @@ class RequestQueueClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request.
+            request: The updated request. It must carry the ID of the request to update.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated request.
+
+        Raises:
+            ValueError: If the request carries no ID.
         """
         if not isinstance(request, Request):
             request = Request.model_validate(request)
 
+        if request.id is None:
+            raise ValueError('The request to update must have an ID.')
+
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
         response = self._http_client.call(
-            url=self._build_url(f'requests/{request.id}'),
+            url=self._build_url(f'requests/{to_path_segment(request.id)}'),
             method='PUT',
             json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
@@ -338,7 +344,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         self._http_client.call(
-            url=self._build_url(f'requests/{request_id}'),
+            url=self._build_url(f'requests/{to_path_segment(request_id)}'),
             method='DELETE',
             params=request_params,
             timeout=timeout,
@@ -369,7 +375,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         response = self._http_client.call(
-            url=self._build_url(f'requests/{request_id}/lock'),
+            url=self._build_url(f'requests/{to_path_segment(request_id)}/lock'),
             method='PUT',
             params=request_params,
             timeout=timeout,
@@ -397,7 +403,7 @@ class RequestQueueClient(ResourceClient):
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
         self._http_client.call(
-            url=self._build_url(f'requests/{request_id}/lock'),
+            url=self._build_url(f'requests/{to_path_segment(request_id)}/lock'),
             method='DELETE',
             params=request_params,
             timeout=timeout,
@@ -803,7 +809,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         """
         try:
             response = await self._http_client.call(
-                url=self._build_url(f'requests/{request_id}'),
+                url=self._build_url(f'requests/{to_path_segment(request_id)}'),
                 method='GET',
                 params=self._build_params(),
                 timeout=timeout,
@@ -826,20 +832,26 @@ class RequestQueueClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/request-queues/request/update-request
 
         Args:
-            request: The updated request.
+            request: The updated request. It must carry the ID of the request to update.
             forefront: Whether to put the updated request in the beginning or the end of the queue.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated request.
+
+        Raises:
+            ValueError: If the request carries no ID.
         """
         if not isinstance(request, Request):
             request = Request.model_validate(request)
 
+        if request.id is None:
+            raise ValueError('The request to update must have an ID.')
+
         request_params = self._build_params(forefront=forefront, clientKey=self.client_key)
 
         response = await self._http_client.call(
-            url=self._build_url(f'requests/{request.id}'),
+            url=self._build_url(f'requests/{to_path_segment(request.id)}'),
             method='PUT',
             json=request.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str),
             params=request_params,
@@ -861,7 +873,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         request_params = self._build_params(clientKey=self.client_key)
 
         await self._http_client.call(
-            url=self._build_url(f'requests/{request_id}'),
+            url=self._build_url(f'requests/{to_path_segment(request_id)}'),
             method='DELETE',
             params=request_params,
             timeout=timeout,
@@ -892,7 +904,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         response = await self._http_client.call(
-            url=self._build_url(f'requests/{request_id}/lock'),
+            url=self._build_url(f'requests/{to_path_segment(request_id)}/lock'),
             method='PUT',
             params=request_params,
             timeout=timeout,
@@ -920,7 +932,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         request_params = self._build_params(clientKey=self.client_key, forefront=forefront)
 
         await self._http_client.call(
-            url=self._build_url(f'requests/{request_id}/lock'),
+            url=self._build_url(f'requests/{to_path_segment(request_id)}/lock'),
             method='DELETE',
             params=request_params,
             timeout=timeout,

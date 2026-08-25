@@ -49,11 +49,6 @@ ALL_HTTP_CLIENT_CLASSES = [
 """Every built-in HTTP client, for tests that exercise transport behavior rather than an API resource."""
 
 
-# ============================================================================
-# Session-scoped fixtures (created once per test session)
-# ============================================================================
-
-
 @pytest.fixture(scope='session')
 def api_token() -> str:
     """Primary test user API token."""
@@ -129,11 +124,6 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     )
 
     kvs_client.delete()
-
-
-# ============================================================================
-# Function-scoped fixtures (created for each test)
-# ============================================================================
 
 
 @pytest.fixture

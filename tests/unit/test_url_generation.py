@@ -11,10 +11,6 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 
-# ============================================================================
-# Test data and helpers
-# ============================================================================
-
 MOCKED_DATASET_RESPONSE = """{
   "data": {
     "id": "someID",
@@ -88,11 +84,6 @@ parametrized_api_urls = pytest.mark.parametrize(
 )
 
 
-# ============================================================================
-# Dataset URL generation tests
-# ============================================================================
-
-
 @parametrized_api_urls
 def test_dataset_public_url_sync(api_url: str, api_public_url: str | None) -> None:
     """Test public URL generation for datasets with sync client."""
@@ -161,11 +152,6 @@ async def test_dataset_public_url_normalizes_params_async() -> None:
     assert query['clean'] == ['true']
     assert query['desc'] == ['false']
     assert query['fields'] == ['title,url']
-
-
-# ============================================================================
-# Key-value store URL generation tests
-# ============================================================================
 
 
 @pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])

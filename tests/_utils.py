@@ -32,11 +32,6 @@ class _HasId(Protocol):
 _HasIdT = TypeVar('_HasIdT', bound=_HasId)
 
 
-# ============================================================================
-# Data classes for test fixtures
-# ============================================================================
-
-
 @dataclass
 class StorageFixture:
     """Base storage fixture with ID and signature."""
@@ -58,11 +53,6 @@ class KvsFixture(StorageFixture):
 
     expected_content: dict[str, Any]
     keys_signature: dict[str, str]
-
-
-# ============================================================================
-# Helper functions
-# ============================================================================
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:
@@ -217,10 +207,6 @@ async def collect_iterate_until_present(
         collected = await drain()
     return collected
 
-
-# ============================================================================
-# Pytest markers and parametrization
-# ============================================================================
 
 parametrized_api_urls = pytest.mark.parametrize(
     ('api_url', 'api_public_url'),

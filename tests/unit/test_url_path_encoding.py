@@ -419,7 +419,9 @@ def test_update_request_without_an_id_is_rejected_sync(*, api_url: str) -> None:
     client = ApifyClient(token='test_token', api_url=api_url)
 
     with pytest.raises(ValueError, match='must have an ID'):
-        client.request_queue(_QUEUE_ID).update_request(Request(url='https://example.com'))
+        client.request_queue(_QUEUE_ID).update_request(
+            Request(url='https://example.com', unique_key='https://example.com')
+        )
 
 
 async def test_update_request_without_an_id_is_rejected_async(*, api_url: str) -> None:
@@ -427,4 +429,6 @@ async def test_update_request_without_an_id_is_rejected_async(*, api_url: str) -
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
     with pytest.raises(ValueError, match='must have an ID'):
-        await client.request_queue(_QUEUE_ID).update_request(Request(url='https://example.com'))
+        await client.request_queue(_QUEUE_ID).update_request(
+            Request(url='https://example.com', unique_key='https://example.com')
+        )

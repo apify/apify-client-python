@@ -371,8 +371,9 @@ class ActorClient(ResourceClient):
         if logger == 'default':
             logger = None
 
-        # Each helper rebuilds the shared redirect logger, so both must exist before either starts polling; otherwise
-        # the streamed log reconfigures a logger the status watcher thread is already writing into.
+        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
+        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher thread is already
+        # writing into.
         status_redirector = run_client.get_status_message_watcher(to_logger=logger)
         streamed_log = run_client.get_streamed_log(to_logger=logger)
 
@@ -873,6 +874,9 @@ class ActorClientAsync(ResourceClientAsync):
         if logger == 'default':
             logger = None
 
+        # With the default logger, each helper rebuilds the same redirect logger from scratch, so both must exist before
+        # either starts polling; otherwise the streamed log reconfigures a logger the status watcher task is already
+        # writing into.
         status_redirector = await run_client.get_status_message_watcher(to_logger=logger)
         streamed_log = await run_client.get_streamed_log(to_logger=logger)
 

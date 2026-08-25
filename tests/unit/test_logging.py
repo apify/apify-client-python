@@ -404,7 +404,7 @@ def test_actor_call_sync_does_not_reconfigure_logger_used_by_running_watcher(
         if next(create_calls) >= 2:
             logger_rebuilt.set()
             if watcher_started.is_set():
-                watcher_logged.wait(timeout=5)
+                assert watcher_logged.wait(timeout=5)
         return to_logger
 
     original_log_run_data = StatusMessageWatcherBase._log_run_data

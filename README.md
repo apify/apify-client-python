@@ -63,9 +63,9 @@
     Pydantic's maintained continuation of HTTPX:
 
     ```bash
-    pip install "apify-client[httpx2]"
+    pip install "apify-client[httpx]"
     # or
-    uv add "apify-client[httpx2]"
+    uv add "apify-client[httpx]"
     ```
 
 - From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):

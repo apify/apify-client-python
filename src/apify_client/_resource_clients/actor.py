@@ -371,9 +371,8 @@ class ActorClient(ResourceClient):
         if logger == 'default':
             logger = None
 
-        # Both helpers redirect into the same named logger and each rebuilds it from scratch, so they have to be
-        # constructed before either one starts polling - otherwise the streamed log reconfigures the logger that the
-        # status watcher thread is already writing into, and a status message emitted right then is lost.
+        # Each helper rebuilds the shared redirect logger, so both must exist before either starts polling; otherwise
+        # the streamed log reconfigures a logger the status watcher thread is already writing into.
         status_redirector = run_client.get_status_message_watcher(to_logger=logger)
         streamed_log = run_client.get_streamed_log(to_logger=logger)
 

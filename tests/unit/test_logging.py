@@ -381,12 +381,10 @@ def test_actor_call_sync_does_not_reconfigure_logger_used_by_running_watcher(
     httpserver: HTTPServer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """No status message is lost when `call` builds the streamed log while the status watcher already runs.
-
-    Both helpers redirect into the same named logger, and building either one reconfigures that logger from scratch.
-    The events below pin the damaging interleaving so the outcome does not depend on thread scheduling: the watcher
-    holds its first message until the logger has just been rebuilt, and a rebuild that finds the watcher already
-    running keeps the half-configured logger in place until that message has been emitted into it."""
+    """No status message is lost when `call` builds the streamed log while the status watcher already runs."""
+    # The events pin the damaging interleaving instead of relying on thread scheduling: the watcher holds its first
+    # message until the logger has been rebuilt, and a rebuild that finds the watcher already running returns only
+    # after that message has been logged - i.e. before `StreamedLog.__init__` re-enables propagation.
     watcher_started = threading.Event()
     logger_rebuilt = threading.Event()
     watcher_logged = threading.Event()

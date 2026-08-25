@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 
 from apify_client._consts import (
     ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES,
@@ -25,6 +26,30 @@ def to_safe_id(id: str) -> str:
         The resource identifier with `/` characters replaced by `~`.
     """
     return id.replace('/', '~')
+
+
+def to_path_segment(value: str) -> str:
+    """Percent-encode a caller-supplied value so it stays a single URL path segment.
+
+    Without this, a value carrying `/`, `?` or `#` would restructure the URL it is interpolated into: it could
+    reach a different endpoint, append its own query parameters, or be silently truncated at a fragment.
+
+    Args:
+        value: The value to place in a single path segment, for example a key-value store record key.
+
+    Returns:
+        The percent-encoded value, which a URL parser can only read as one path segment.
+
+    Raises:
+        ValueError: If the value is empty, `.` or `..`, none of which can be carried in a path segment at all.
+    """
+    # Encoding cannot save these three: an empty value leaves nothing but the separator, and a URL parser
+    # resolves a dot segment after percent-decoding, so `%2E%2E` collapses just like `..`. Either way the
+    # request lands on a parent endpoint, where `..` makes the same verb act on the whole resource.
+    if value in {'', '.', '..'}:
+        raise ValueError(f'"{value}" cannot be used as a URL path segment.')
+
+    return quote(value, safe='')
 
 
 def is_compressible_content_type(content_type: str | None) -> bool:

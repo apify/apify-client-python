@@ -14,6 +14,8 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
+    from apify_client.http_clients import HttpClient, HttpClientAsync
+
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
 TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'
@@ -53,6 +55,14 @@ class KvsFixture(StorageFixture):
 
     expected_content: dict[str, Any]
     keys_signature: dict[str, str]
+
+
+@dataclass(frozen=True)
+class HttpClientClasses:
+    """Synchronous and asynchronous variants of a built-in HTTP client."""
+
+    sync: type[HttpClient]
+    async_: type[HttpClientAsync]
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:

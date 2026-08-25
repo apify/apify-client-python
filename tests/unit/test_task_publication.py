@@ -4,6 +4,7 @@ import json
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+import pytest
 from werkzeug import Request, Response
 
 if TYPE_CHECKING:
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
     from apify_client import ApifyClient, ApifyClientAsync
+
+pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 _MOCKED_TASK_ID = 'test_task_id'
 _TASK_PATH = f'/v2/actor-tasks/{_MOCKED_TASK_ID}'

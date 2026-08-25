@@ -11,6 +11,8 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 MOCKED_DATASET_RESPONSE = """{
   "data": {
     "id": "someID",

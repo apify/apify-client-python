@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from apify_client._literals import ActorJobStatus
     from apify_client.http_clients import HttpClient, HttpClientAsync
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'
 _MOCKED_ACTOR_ID = 'mocked_actor_id'

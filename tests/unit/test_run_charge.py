@@ -11,6 +11,8 @@ from apify_client import ApifyClient, ApifyClientAsync
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _MOCKED_RUN_ID = 'test_run_id'
 _CHARGE_PATH = f'/v2/actor-runs/{_MOCKED_RUN_ID}/charge'
 

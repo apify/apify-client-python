@@ -16,21 +16,16 @@ with _try_import(
 ) as _httpx_import:
     from apify_client.http_clients._httpx import HttpxHttpClient, HttpxHttpClientAsync
 
+__all__ = [
+    'HttpClient',
+    'HttpClientAsync',
+    'HttpResponse',
+    'ImpitHttpClient',
+    'ImpitHttpClientAsync',
+]
+
 if _httpx_import.available:
-    __all__ = [
-        'HttpClient',
-        'HttpClientAsync',
-        'HttpResponse',
+    __all__ += [
         'HttpxHttpClient',
         'HttpxHttpClientAsync',
-        'ImpitHttpClient',
-        'ImpitHttpClientAsync',
-    ]
-else:
-    __all__ = [
-        'HttpClient',
-        'HttpClientAsync',
-        'HttpResponse',
-        'ImpitHttpClient',
-        'ImpitHttpClientAsync',
     ]

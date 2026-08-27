@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import itertools
 import json
 import logging
 import threading
@@ -14,7 +15,8 @@ from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._logging import LoggerOnce, RedirectLogFormatter
-from apify_client._status_message_watcher import StatusMessageWatcherBase
+from apify_client._resource_clients import run as run_module
+from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherBase
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
 
 if TYPE_CHECKING:
@@ -24,7 +26,10 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
     from apify_client._literals import ActorJobStatus
+    from apify_client._models import Run
     from apify_client.http_clients import HttpClient, HttpClientAsync
+
+pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 _MOCKED_RUN_ID = 'mocked_run_id'
 _MOCKED_ACTOR_NAME = 'mocked_actor_name'
@@ -370,6 +375,63 @@ def test_actor_call_redirect_logs_to_default_logger_sync(
     assert {(record.message, record.levelno) for record in caplog.records} == set(
         _EXPECTED_MESSAGES_AND_LEVELS_WITH_STATUS_MESSAGES
     )
+
+
+@pytest.mark.usefixtures('mock_api', 'propagate_stream_logs', 'reduce_final_timeout_for_status_message_redirector')
+def test_actor_call_sync_does_not_reconfigure_logger_used_by_running_watcher(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No status message is lost when `call` builds the streamed log while the status watcher already runs."""
+    # The events pin the damaging interleaving instead of relying on thread scheduling: the watcher holds its first
+    # message until the logger has been rebuilt, and a rebuild that finds the watcher already running returns only
+    # after that message has been logged - i.e. before `StreamedLog.__init__` re-enables propagation.
+    watcher_started = threading.Event()
+    logger_rebuilt = threading.Event()
+    watcher_logged = threading.Event()
+
+    original_start = StatusMessageWatcher.start
+
+    def recording_start(self: StatusMessageWatcher) -> threading.Thread:
+        thread = original_start(self)
+        watcher_started.set()
+        return thread
+
+    original_create_redirect_logger = run_module.create_redirect_logger
+    create_calls = itertools.count(1)
+
+    def instrumented_create_redirect_logger(name: str) -> logging.Logger:
+        to_logger = original_create_redirect_logger(name)
+        if next(create_calls) >= 2:
+            logger_rebuilt.set()
+            if watcher_started.is_set():
+                assert watcher_logged.wait(timeout=5)
+        return to_logger
+
+    original_log_run_data = StatusMessageWatcherBase._log_run_data
+
+    def gated_log_run_data(self: StatusMessageWatcherBase, run_data: Run | None) -> bool:
+        logger_rebuilt.wait(timeout=5)
+        more_data_expected = original_log_run_data(self, run_data)
+        watcher_logged.set()
+        return more_data_expected
+
+    monkeypatch.setattr(StatusMessageWatcher, 'start', recording_start)
+    monkeypatch.setattr(run_module, 'create_redirect_logger', instrumented_create_redirect_logger)
+    monkeypatch.setattr(StatusMessageWatcherBase, '_log_run_data', gated_log_run_data)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+    actor_client = ApifyClient(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        actor_client.call()
+
+    assert ('Status: RUNNING, Message: Initial message', logging.INFO) in {
+        (record.message, record.levelno) for record in caplog.records
+    }
 
 
 @pytest.mark.usefixtures('mock_api', 'propagate_stream_logs')
@@ -885,7 +947,7 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     def _slow_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
             # Emit one complete line, then keep the connection open (as a running Actor would) past the
-            # client-side total timeout without sending anything more.
+            # client-side stream timeout without sending anything more.
             yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
             release_server.wait(timeout=30)
 
@@ -910,7 +972,7 @@ def test_streamed_log_sync_does_not_leak_exception_on_stream_timeout(
     try:
         with caplog.at_level(logging.DEBUG, logger=logger_name):
             thread = streamed_log.start()
-            # Wait past the 1s total timeout so the streaming request fails inside the thread.
+            # Wait past the 1s stream timeout so the streaming request fails inside the thread.
             thread.join(timeout=5)
             assert not thread.is_alive(), 'streaming thread did not end after the stream timed out'
     finally:
@@ -977,7 +1039,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
 
     def _slow_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # Emit one complete line, then keep the connection open past the client-side total timeout.
+            # Emit one complete line, then keep the connection open past the client-side stream timeout.
             yield b'2025-05-13T07:24:12.588Z ACTOR: still running\n'
             release_server.wait(timeout=30)
 
@@ -999,7 +1061,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     try:
         with caplog.at_level(logging.DEBUG, logger=logger_name):
             task = streamed_log.start()
-            # The 1s total timeout fails the request inside the task; it must end on its own without our help.
+            # The 1s stream timeout fails the request inside the task; it must end on its own without our help.
             done, _pending = await asyncio.wait({task}, timeout=5)
             assert task in done, 'async streaming task did not end after the stream timed out'
     finally:

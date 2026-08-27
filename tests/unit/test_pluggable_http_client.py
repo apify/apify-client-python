@@ -375,8 +375,8 @@ def test_httpx_clients_raise_clear_error_when_extra_missing() -> None:
 
         class BlockHttpx:
             def find_spec(self, name, *_args):
-                if name == 'httpx' or name.startswith('httpx.'):
-                    raise ModuleNotFoundError(f"No module named '{name}'", name='httpx')
+                if name == 'httpx2' or name.startswith('httpx2.'):
+                    raise ModuleNotFoundError(f"No module named '{name}'", name='httpx2')
                 return None
 
         sys.meta_path.insert(0, BlockHttpx())
@@ -394,7 +394,7 @@ def test_httpx_clients_raise_clear_error_when_extra_missing() -> None:
             try:
                 getattr(module, name)
             except ImportError as exc:
-                assert "No module named 'httpx'" in str(exc)
+                assert "No module named 'httpx2'" in str(exc)
             else:
                 raise AssertionError(f'{name} did not raise ImportError')
         """

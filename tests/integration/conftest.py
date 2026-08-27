@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import pytest
@@ -12,6 +11,7 @@ from .._utils import (
     TOKEN_ENV_VAR,
     TOKEN_ENV_VAR_2,
     DatasetFixture,
+    HttpClientClasses,
     KvsFixture,
     get_crypto_random_object_id,
 )
@@ -19,8 +19,6 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 from apify_client.http_clients import (
-    HttpClient,
-    HttpClientAsync,
     HttpxHttpClient,
     HttpxHttpClientAsync,
     ImpitHttpClient,
@@ -29,29 +27,6 @@ from apify_client.http_clients import (
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
-
-
-@dataclass(frozen=True)
-class HttpClientClasses:
-    """Synchronous and asynchronous variants of a built-in HTTP client."""
-
-    sync: type[HttpClient]
-    async_: type[HttpClientAsync]
-
-
-DEFAULT_HTTP_CLIENT_CLASSES = HttpClientClasses(sync=ImpitHttpClient, async_=ImpitHttpClientAsync)
-"""HTTP clients the live-API suite runs with unless a test asks for another transport."""
-
-ALL_HTTP_CLIENT_CLASSES = [
-    pytest.param(DEFAULT_HTTP_CLIENT_CLASSES, id='impit'),
-    pytest.param(HttpClientClasses(sync=HttpxHttpClient, async_=HttpxHttpClientAsync), id='httpx'),
-]
-"""Every built-in HTTP client, for tests that exercise transport behavior rather than an API resource."""
-
-
-# ============================================================================
-# Session-scoped fixtures (created once per test session)
-# ============================================================================
 
 
 @pytest.fixture(scope='session')
@@ -131,23 +106,17 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
     kvs_client.delete()
 
 
-# ============================================================================
-# Function-scoped fixtures (created for each test)
-# ============================================================================
-
-
-@pytest.fixture
+@pytest.fixture(
+    params=[
+        pytest.param(HttpClientClasses(sync=ImpitHttpClient, async_=ImpitHttpClientAsync), id='impit'),
+        pytest.param(HttpClientClasses(sync=HttpxHttpClient, async_=HttpxHttpClientAsync), id='httpx'),
+    ]
+)
 def http_client_classes(request: pytest.FixtureRequest) -> HttpClientClasses:
-    """Return the sync and async classes of the HTTP client the test runs with.
-
-    Defaults to Impit so the live-API suite isn't multiplied by every transport. A transport-level test opts into
-    the full matrix with `@pytest.mark.parametrize('http_client_classes', ALL_HTTP_CLIENT_CLASSES, indirect=True)`.
-    """
-    if not hasattr(request, 'param'):
-        return DEFAULT_HTTP_CLIENT_CLASSES
-
-    assert isinstance(request.param, HttpClientClasses)
-    return request.param
+    """Return the sync and async classes of the HTTP client the test runs with, once per built-in transport."""
+    classes = request.param
+    assert isinstance(classes, HttpClientClasses)
+    return classes
 
 
 @pytest.fixture(params=['sync', 'async'])

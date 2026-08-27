@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
 
-from .._utils import collect_iterate_until_present, maybe_await
+from .._utils import collect_iterate_until_present, maybe_await, poll_until_condition
 from apify_client._models import (
     ListOfRuns,
     ListOfWebhookDispatches,
@@ -164,9 +164,13 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
         # Test webhook to create a dispatch
         await maybe_await(webhook_client.test())
 
-        # List dispatches for this webhook
-        dispatches = await maybe_await(webhook_client.dispatches().list())
-        assert isinstance(dispatches, ListOfWebhookDispatches)
+        # Poll until the dispatch appears in the listing - it is recorded asynchronously (eventual consistency)
+        async def get_dispatches() -> ListOfWebhookDispatches:
+            page = await maybe_await(webhook_client.dispatches().list())
+            assert isinstance(page, ListOfWebhookDispatches)
+            return page
+
+        dispatches = await poll_until_condition(get_dispatches, lambda page: len(page.items) > 0)
         assert len(dispatches.items) > 0
 
     finally:

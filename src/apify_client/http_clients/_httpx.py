@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import httpx
+import httpx2 as httpx
 from typing_extensions import override
 
 from apify_client._consts import (
@@ -39,12 +39,17 @@ _PERMANENT_ERRORS = (
 
 @docs_group('HTTP clients')
 class HttpxHttpClient(HttpClient):
-    """Synchronous HTTP client for the Apify API built on top of [HTTPX](https://www.python-httpx.org/).
+    """Synchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).
 
     This client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited
     (HTTP 429) and server error (HTTP 5xx) responses.
 
-    Requires the `httpx` extra: `pip install "apify-client[httpx]"`.
+    HTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response
+    whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
+    default Impit client enforces the same value as a deadline for the whole request, body included.
+
+    Requires the `httpx` extra: `pip install "apify-client[httpx]"`. That extra installs `httpx2`, Pydantic's
+    maintained continuation of HTTPX, which this module imports under the `httpx` name.
     """
 
     def __init__(
@@ -100,8 +105,8 @@ class HttpxHttpClient(HttpClient):
     @override
     def is_retryable_transport_error(self, exc: Exception) -> bool:
         # Every error from HTTPX's own hierarchy counts as transient except the permanently-failing types listed in
-        # `_PERMANENT_ERRORS`. Retrying is the default because HTTPX also reports genuinely transient failures
-        # through its generic base class. HTTP status code errors are handled by the shared pipeline based on the
+        # `_PERMANENT_ERRORS`. Retrying is the default so a subclass HTTPX adds later is retried rather than
+        # silently treated as fatal. HTTP status code errors are handled by the shared pipeline based on the
         # response status code, not here.
         return isinstance(exc, httpx.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
@@ -109,10 +114,6 @@ class HttpxHttpClient(HttpClient):
     def close(self) -> None:
         """Close the underlying HTTPX connection pool."""
         self._httpx_client.close()
-
-    def _clear_response_cookies(self, _response: httpx.Response) -> None:
-        """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
-        self._httpx_client.cookies.clear()
 
     @override
     def send_request(
@@ -135,15 +136,24 @@ class HttpxHttpClient(HttpClient):
         _restore_explicit_cookie_header(request, headers)
         return self._httpx_client.send(request, stream=stream)
 
+    def _clear_response_cookies(self, _response: httpx.Response) -> None:
+        """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
+        self._httpx_client.cookies.clear()
+
 
 @docs_group('HTTP clients')
 class HttpxHttpClientAsync(HttpClientAsync):
-    """Asynchronous HTTP client for the Apify API built on top of [HTTPX](https://www.python-httpx.org/).
+    """Asynchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).
 
     This client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited
     (HTTP 429) and server error (HTTP 5xx) responses.
 
-    Requires the `httpx` extra: `pip install "apify-client[httpx]"`.
+    HTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response
+    whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
+    default Impit client enforces the same value as a deadline for the whole request, body included.
+
+    Requires the `httpx` extra: `pip install "apify-client[httpx]"`. That extra installs `httpx2`, Pydantic's
+    maintained continuation of HTTPX, which this module imports under the `httpx` name.
     """
 
     def __init__(
@@ -199,8 +209,8 @@ class HttpxHttpClientAsync(HttpClientAsync):
     @override
     def is_retryable_transport_error(self, exc: Exception) -> bool:
         # Every error from HTTPX's own hierarchy counts as transient except the permanently-failing types listed in
-        # `_PERMANENT_ERRORS`. Retrying is the default because HTTPX also reports genuinely transient failures
-        # through its generic base class. HTTP status code errors are handled by the shared pipeline based on the
+        # `_PERMANENT_ERRORS`. Retrying is the default so a subclass HTTPX adds later is retried rather than
+        # silently treated as fatal. HTTP status code errors are handled by the shared pipeline based on the
         # response status code, not here.
         return isinstance(exc, httpx.HTTPError) and not isinstance(exc, _PERMANENT_ERRORS)
 
@@ -208,10 +218,6 @@ class HttpxHttpClientAsync(HttpClientAsync):
     async def aclose(self) -> None:
         """Close the underlying asynchronous HTTPX connection pool."""
         await self._httpx_async_client.aclose()
-
-    async def _clear_response_cookies(self, _response: httpx.Response) -> None:
-        """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
-        self._httpx_async_client.cookies.clear()
 
     @override
     async def send_request(
@@ -234,9 +240,17 @@ class HttpxHttpClientAsync(HttpClientAsync):
         _restore_explicit_cookie_header(request, headers)
         return await self._httpx_async_client.send(request, stream=stream)
 
+    async def _clear_response_cookies(self, _response: httpx.Response) -> None:
+        """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
+        self._httpx_async_client.cookies.clear()
+
 
 def _restore_explicit_cookie_header(request: httpx.Request, headers: dict[str, str]) -> None:
-    """Keep only cookies explicitly supplied for this request, never cookies from HTTPX's shared jar."""
+    """Keep only cookies explicitly supplied for this request, never cookies from HTTPX's shared jar.
+
+    HTTPX drops the `Cookie` header when it builds a redirect request and rebuilds it from the jar, so an explicit
+    cookie only reaches the first hop of a redirected request.
+    """
     explicit_cookie = next((value for key, value in headers.items() if key.lower() == 'cookie'), None)
     if explicit_cookie is None:
         request.headers.pop('cookie', None)

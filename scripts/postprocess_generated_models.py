@@ -56,7 +56,7 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 RESOURCE_INPUT_TYPEDDICTS: frozenset[str] = frozenset(
     {
         'Request',  # RequestQueueClient.update_request
-        'RequestDraft',  # RequestQueueClient.add_request, batch_add_requests
+        'RequestWithoutId',  # RequestQueueClient.add_request, batch_add_requests
         'RequestDraftDelete',  # RequestQueueClient.batch_delete_requests
         'TaskInput',  # Actor/Task start/call/update default input
         'WebhookCreate',  # Actor/Task start/call webhook list element

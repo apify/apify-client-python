@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, Mock
 
 import brotli
-import httpx
+import httpx2 as httpx
 import impit
 import pytest
 
@@ -517,26 +517,53 @@ def test_transient_transport_error_is_retried() -> None:
 def test_httpx_permanent_transport_error_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """The HTTPX adapter feeds the same fail-fast classification into the shared pipeline."""
     with HttpxHttpClient(token='test_token', min_delay_between_retries=timedelta(0)) as client:
-        send_request = Mock(side_effect=httpx.UnsupportedProtocol('unsupported scheme'))
-        monkeypatch.setattr(client, 'send_request', send_request)
+        send = Mock(side_effect=httpx.UnsupportedProtocol('unsupported scheme'))
+        monkeypatch.setattr(client._httpx_client, 'send', send)
 
         with pytest.raises(httpx.UnsupportedProtocol):
             client.call(method='GET', url='https://api.test.com/endpoint')
 
-        send_request.assert_called_once()
+        send.assert_called_once()
+
+
+async def test_httpx_permanent_transport_error_is_not_retried_async(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The asynchronous HTTPX adapter applies the same policy, failing on the first attempt."""
+    async with HttpxHttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0)) as client:
+        send = AsyncMock(side_effect=httpx.UnsupportedProtocol('unsupported scheme'))
+        monkeypatch.setattr(client._httpx_async_client, 'send', send)
+
+        with pytest.raises(httpx.UnsupportedProtocol):
+            await client.call(method='GET', url='https://api.test.com/endpoint')
+
+        send.assert_awaited_once()
 
 
 def test_httpx_transient_transport_error_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """The HTTPX adapter keeps a transient transport failure inside the shared retry loop."""
     with HttpxHttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0)) as client:
-        send_request = Mock(side_effect=httpx.TimeoutException('timeout'))
-        monkeypatch.setattr(client, 'send_request', send_request)
+        send = Mock(side_effect=httpx.TimeoutException('timeout'))
+        monkeypatch.setattr(client._httpx_client, 'send', send)
 
         with pytest.raises(httpx.TimeoutException):
             client.call(method='GET', url='https://api.test.com/endpoint')
 
         # `max_retries` attempts inside the backoff loop, plus the final one it makes after the last delay.
-        assert send_request.call_count == 3
+        assert send.call_count == 3
+
+
+async def test_httpx_transient_transport_error_is_retried_async(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The asynchronous HTTPX adapter keeps a transient transport failure inside the shared retry loop too."""
+    async with HttpxHttpClientAsync(
+        token='test_token', max_retries=2, min_delay_between_retries=timedelta(0)
+    ) as client:
+        send = AsyncMock(side_effect=httpx.TimeoutException('timeout'))
+        monkeypatch.setattr(client._httpx_async_client, 'send', send)
+
+        with pytest.raises(httpx.TimeoutException):
+            await client.call(method='GET', url='https://api.test.com/endpoint')
+
+        # `max_retries` attempts inside the backoff loop, plus the final one it makes after the last delay.
+        assert send.await_count == 3
 
 
 def test_error_response_read_failure_is_retried_and_closed() -> None:

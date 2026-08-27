@@ -19,7 +19,6 @@ from .._utils import (
     maybe_sleep,
     poll_until_condition,
 )
-from .conftest import ALL_HTTP_CLIENT_CLASSES
 from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
@@ -707,7 +706,6 @@ async def test_key_value_store_create_keys_public_url(client: ApifyClient | Apif
         await maybe_await(store_client.delete())
 
 
-@pytest.mark.parametrize('http_client_classes', ALL_HTTP_CLIENT_CLASSES, indirect=True)
 async def test_key_value_store_stream_record_own(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test streaming a record from one's own key-value store (no signature)."""
     store_name = get_random_resource_name('kvs')

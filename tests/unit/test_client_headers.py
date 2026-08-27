@@ -6,7 +6,7 @@ import sys
 from importlib import metadata
 from typing import TYPE_CHECKING
 
-import httpx
+import httpx2 as httpx
 from werkzeug import Request, Response
 
 from apify_client.http_clients import HttpxHttpClient, HttpxHttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
@@ -188,12 +188,13 @@ def _echo_cookie_handler(request: Request) -> Response:
 
 
 def test_httpx_does_not_reuse_server_cookies(httpserver: HTTPServer) -> None:
-    """A Set-Cookie response must not silently leak into a later API request through HTTPX's shared cookie jar."""
+    """A Set-Cookie response must not enter HTTPX's shared cookie jar, nor leak into a later API request."""
     httpserver.expect_request('/set-cookie').respond_with_data('ok', headers={'Set-Cookie': 'session=secret'})
     httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
 
     with HttpxHttpClient() as client:
         client.call(method='GET', url=httpserver.url_for('/set-cookie'))
+        assert len(client._httpx_client.cookies) == 0
         response = client.call(method='GET', url=httpserver.url_for('/echo-cookie'))
 
     assert response.json() == {'cookie': None}
@@ -206,7 +207,60 @@ async def test_httpx_async_does_not_reuse_server_cookies(httpserver: HTTPServer)
 
     async with HttpxHttpClientAsync() as client:
         await client.call(method='GET', url=httpserver.url_for('/set-cookie'))
+        assert len(client._httpx_async_client.cookies) == 0
         response = await client.call(method='GET', url=httpserver.url_for('/echo-cookie'))
+
+    assert response.json() == {'cookie': None}
+
+
+def test_httpx_drops_cookies_left_in_the_shared_jar(httpserver: HTTPServer) -> None:
+    """A cookie another in-flight request left in the shared jar must not ride along on the next request."""
+    httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
+
+    with HttpxHttpClient() as client:
+        client._httpx_client.cookies.set('session', 'secret', domain=httpserver.host)
+        response = client.call(method='GET', url=httpserver.url_for('/echo-cookie'))
+
+    assert response.json() == {'cookie': None}
+
+
+async def test_httpx_async_drops_cookies_left_in_the_shared_jar(httpserver: HTTPServer) -> None:
+    """The asynchronous pool, where concurrent requests really do share one jar, drops leftover cookies too."""
+    httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
+
+    async with HttpxHttpClientAsync() as client:
+        client._httpx_async_client.cookies.set('session', 'secret', domain=httpserver.host)
+        response = await client.call(method='GET', url=httpserver.url_for('/echo-cookie'))
+
+    assert response.json() == {'cookie': None}
+
+
+def test_httpx_does_not_carry_server_cookies_across_a_redirect(httpserver: HTTPServer) -> None:
+    """A cookie set by a redirecting response must not ride along on the next hop, which HTTPX builds from its jar."""
+    httpserver.expect_request('/redirect').respond_with_data(
+        '',
+        status=302,
+        headers={'Set-Cookie': 'session=secret', 'Location': '/echo-cookie'},
+    )
+    httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
+
+    with HttpxHttpClient() as client:
+        response = client.call(method='GET', url=httpserver.url_for('/redirect'))
+
+    assert response.json() == {'cookie': None}
+
+
+async def test_httpx_async_does_not_carry_server_cookies_across_a_redirect(httpserver: HTTPServer) -> None:
+    """The asynchronous pool keeps a redirecting response's cookie off the next hop too."""
+    httpserver.expect_request('/redirect').respond_with_data(
+        '',
+        status=302,
+        headers={'Set-Cookie': 'session=secret', 'Location': '/echo-cookie'},
+    )
+    httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
+
+    async with HttpxHttpClientAsync() as client:
+        response = await client.call(method='GET', url=httpserver.url_for('/redirect'))
 
     assert response.json() == {'cookie': None}
 
@@ -217,6 +271,20 @@ def test_httpx_keeps_explicit_cookie_header(httpserver: HTTPServer) -> None:
 
     with HttpxHttpClient() as client:
         response = client.call(
+            method='GET',
+            url=httpserver.url_for('/echo-explicit-cookie'),
+            headers={'Cookie': 'explicit=value'},
+        )
+
+    assert response.json() == {'cookie': 'explicit=value'}
+
+
+async def test_httpx_async_keeps_explicit_cookie_header(httpserver: HTTPServer) -> None:
+    """The asynchronous pool forwards an explicitly supplied Cookie header as well."""
+    httpserver.expect_request('/echo-explicit-cookie').respond_with_handler(_echo_cookie_handler)
+
+    async with HttpxHttpClientAsync() as client:
+        response = await client.call(
             method='GET',
             url=httpserver.url_for('/echo-explicit-cookie'),
             headers={'Cookie': 'explicit=value'},

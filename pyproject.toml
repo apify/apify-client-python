@@ -34,7 +34,7 @@ dependencies = [
 
 [project.optional-dependencies]
 brotli = ["brotli>=1.0.9"]
-httpx = ["httpx>=0.27.0,<1.0.0"]
+httpx = ["httpx2>=2.0.0"]
 
 [project.urls]
 "Apify Homepage" = "https://apify.com"
@@ -253,7 +253,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-08-14T072928Z"
+version = "v2-2026-08-24T085852Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

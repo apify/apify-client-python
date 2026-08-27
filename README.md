@@ -57,6 +57,17 @@
     uv add "apify-client[brotli]"
     ```
 
+    [Impit](https://github.com/apify/impit) is the default HTTP client and is installed automatically. To use the
+    built-in [HTTPX](https://github.com/pydantic/httpx2) client instead, install its optional extra and pass
+    `http_client=HttpxHttpClient()` to `ApifyClient.with_custom_http_client()`. The extra installs `httpx2`,
+    Pydantic's maintained continuation of HTTPX:
+
+    ```bash
+    pip install "apify-client[httpx]"
+    # or
+    uv add "apify-client[httpx]"
+    ```
+
 - From [conda-forge](https://anaconda.org/conda-forge/apify-client), it can be installed with [conda](https://docs.conda.io/en/latest/):
 
     ```bash
@@ -124,7 +135,7 @@ For a guided walkthrough — authenticating, running an Actor, and reading its r
 - **Tiered timeouts** — short / medium / long tiers picked per endpoint, overridable per call ([Timeouts](https://docs.apify.com/api/client/python/docs/concepts/timeouts)).
 - **Pagination and streaming** — iterate datasets, key-value store keys, or live logs without manual paging or buffering ([Pagination](https://docs.apify.com/api/client/python/docs/concepts/pagination), [Streaming](https://docs.apify.com/api/client/python/docs/concepts/streaming-resources)).
 - **Convenience methods** — `call()`, `wait_for_finish()`, nested resource access, and other shortcuts that hide platform quirks ([Convenience methods](https://docs.apify.com/api/client/python/docs/concepts/convenience-methods)).
-- **Pluggable HTTP layer** — swap the default [Impit](https://github.com/apify/impit)-based HTTP client for `httpx`, `requests`, `aiohttp`, or any custom implementation ([Custom HTTP clients](https://docs.apify.com/api/client/python/docs/concepts/custom-http-clients)).
+- **Pluggable HTTP layer** — use the default [Impit](https://github.com/apify/impit)-based client, opt in to the built-in [HTTPX](https://github.com/pydantic/httpx2) client, or plug in any custom implementation ([Custom HTTP clients](https://docs.apify.com/api/client/python/docs/concepts/custom-http-clients)).
 - **Structured errors** — every API error surfaces as an [`ApifyApiError`](https://docs.apify.com/api/client/python/reference/class/ApifyApiError) with HTTP-specific subclasses for precise handling ([Error handling](https://docs.apify.com/api/client/python/docs/concepts/error-handling)).
 - **Debug logging** — opt-in structured logging on the `apify_client` logger captures request URLs, status codes, retry attempts, and more ([Logging](https://docs.apify.com/api/client/python/docs/concepts/logging)).
 

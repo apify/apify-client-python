@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 
     from apify_client.types import HttpCompressionAlgorithm
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _MOCKED_KVS_ID = 'test_kvs_id'
 _RECORD_PATH = f'/v2/key-value-stores/{_MOCKED_KVS_ID}/records/f'
 

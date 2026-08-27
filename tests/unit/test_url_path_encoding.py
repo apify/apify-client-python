@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug import Request as WerkzeugRequest
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _KVS_ID = 'test_kvs_id'
 _QUEUE_ID = 'test_queue_id'
 _PUBLIC_URL = 'https://public.example.com'

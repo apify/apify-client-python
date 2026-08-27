@@ -22,6 +22,8 @@ if TYPE_CHECKING:
     from apify_client._typeddicts import RequestDict, RequestWithoutIdDict
 
 # The Apify API limit on the payload size of a batch-add request, which the client's batching must respect.
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _API_MAX_PAYLOAD_SIZE_BYTES = 9 * 1024 * 1024
 
 _EMPTY_BATCH_RESPONSE_CONTENT = '{"data": {"processedRequests": [], "unprocessedRequests": []}}'

@@ -62,6 +62,8 @@ if TYPE_CHECKING:
     from werkzeug import Request
 
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 CollectionClient: TypeAlias = (
     ActorCollectionClient
     | BuildCollectionClient

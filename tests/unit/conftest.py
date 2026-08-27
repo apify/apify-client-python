@@ -6,8 +6,16 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_httpserver import HTTPServer
 
+from .._utils import HttpClientClasses
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
+from apify_client.http_clients import (
+    HttpClient,
+    HttpClientAsync,
+    HttpxHttpClient,
+    HttpxHttpClientAsync,
+    ImpitHttpClient,
+    ImpitHttpClientAsync,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -43,13 +51,33 @@ def async_client(httpserver: HTTPServer) -> ApifyClientAsync:
     return ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
 
 
-@pytest.fixture(params=[pytest.param(ImpitHttpClient, id='impit')])
-def http_client_class(request: pytest.FixtureRequest) -> type[HttpClient]:
+@pytest.fixture(
+    params=[
+        pytest.param(HttpClientClasses(sync=ImpitHttpClient, async_=ImpitHttpClientAsync), id='impit'),
+        pytest.param(HttpClientClasses(sync=HttpxHttpClient, async_=HttpxHttpClientAsync), id='httpx'),
+    ]
+)
+def http_client_classes(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> HttpClientClasses:
+    """Run the test once per built-in HTTP transport, making each the default the Apify clients construct.
+
+    A module opts every test it holds into the transport matrix with
+    `pytestmark = pytest.mark.usefixtures('http_client_classes')`. Tests constructing transports directly get the
+    same single parametrization axis through the derived `http_client_class` / `http_client_async_class` fixtures.
+    """
+    classes = request.param
+    assert isinstance(classes, HttpClientClasses)
+    monkeypatch.setattr('apify_client._apify_client.ImpitHttpClient', classes.sync)
+    monkeypatch.setattr('apify_client._apify_client.ImpitHttpClientAsync', classes.async_)
+    return classes
+
+
+@pytest.fixture
+def http_client_class(http_client_classes: HttpClientClasses) -> type[HttpClient]:
     """Return each built-in synchronous HTTP client class."""
-    return request.param
+    return http_client_classes.sync
 
 
-@pytest.fixture(params=[pytest.param(ImpitHttpClientAsync, id='impit')])
-def http_client_async_class(request: pytest.FixtureRequest) -> type[HttpClientAsync]:
+@pytest.fixture
+def http_client_async_class(http_client_classes: HttpClientClasses) -> type[HttpClientAsync]:
     """Return each built-in asynchronous HTTP client class."""
-    return request.param
+    return http_client_classes.async_

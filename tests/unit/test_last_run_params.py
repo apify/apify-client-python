@@ -10,6 +10,8 @@ from apify_client.errors import NotFoundError
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _NOT_FOUND_BODY = {'error': {'type': 'record-not-found', 'message': 'not found'}}
 
 

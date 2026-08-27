@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
     from pytest_httpserver import HTTPServer
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 DATASET_ID = 'test-dataset-id'
 ITEMS_PATH = f'/v2/datasets/{DATASET_ID}/items'
 

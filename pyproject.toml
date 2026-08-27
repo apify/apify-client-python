@@ -187,7 +187,10 @@ known-local-folder = ["apify_client"]
 max-branches = 18
 
 [tool.pytest.ini_options]
-addopts = "-r a --verbose"
+# `--dist worksteal` lets an idle xdist worker take over tests still queued on a busy one. The default `load`
+# scheduler hands every worker a fixed chunk of consecutive tests and never reassigns them, so a worker that
+# draws several slow tests becomes the critical path while the others sit idle.
+addopts = "-r a --verbose --dist worksteal"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
 pythonpath = ["."]

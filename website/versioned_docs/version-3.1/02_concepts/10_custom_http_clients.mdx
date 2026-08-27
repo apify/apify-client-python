@@ -92,7 +92,7 @@ It must return an object satisfying the <ApiLink to="class/HttpResponse">`HttpRe
 | `aiter_bytes() -> AsyncIterator[bytes]` | Iterate body in chunks (async) |
 
 :::note
-Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://www.python-httpx.org/) already satisfy this protocol out of the box.
+Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
 :::
 
 ### Plugging it in
@@ -122,7 +122,7 @@ When using a custom HTTP client, you are responsible for constructing the reques
 
 Custom HTTP clients might be useful when you need to:
 
-- **Use a different HTTP library** - Swap Impit for [httpx](https://www.python-httpx.org/), [requests](https://requests.readthedocs.io/), or [aiohttp](https://docs.aiohttp.org/).
+- **Use a different HTTP library** - Swap Impit for [httpx](https://github.com/pydantic/httpx2), [requests](https://requests.readthedocs.io/), or [aiohttp](https://docs.aiohttp.org/).
 - **Route through a proxy** - Add proxy support or request routing.
 - **Implement custom retry logic** - Use different backoff strategies or retry conditions.
 - **Log requests and responses** - Track API calls for debugging or auditing.

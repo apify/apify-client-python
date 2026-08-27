@@ -12,11 +12,11 @@ import CodeBlock from '@theme/CodeBlock';
 import CustomHttpClientAsyncExample from '!!raw-loader!./code/05_custom_http_client_async.py';
 import CustomHttpClientSyncExample from '!!raw-loader!./code/05_custom_http_client_sync.py';
 
-This guide shows how to replace the default <ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> and <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink> with one based on [HTTPX](https://www.python-httpx.org/). The same approach works for any HTTP library — see [Custom HTTP clients](/api/client/python/docs/concepts/custom-http-clients) for the underlying architecture.
+This guide shows how to replace the default <ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> and <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink> with one based on [HTTPX](https://github.com/pydantic/httpx2). The same approach works for any HTTP library — see [Custom HTTP clients](/api/client/python/docs/concepts/custom-http-clients) for the underlying architecture.
 
 ## Why HTTPX?
 
-You might want to use [HTTPX](https://www.python-httpx.org/) instead of the default [Impit](https://github.com/apify/impit)-based client for reasons like:
+You might want to use [HTTPX](https://github.com/pydantic/httpx2) instead of the default [Impit](https://github.com/apify/impit)-based client for reasons like:
 
 - You already use HTTPX in your project and want a single HTTP stack.
 - You need HTTPX-specific features.
@@ -56,7 +56,7 @@ When using a custom HTTP client, you are responsible for handling retries, timeo
 
 The example above is minimal on purpose. In a production setup, you might want to extend it with:
 
-- **Retry logic** - Use [HTTPX's event hooks](https://www.python-httpx.org/advanced/event-hooks/) or utilize library like [tenacity](https://tenacity.readthedocs.io/) to retry failed requests.
+- **Retry logic** - Use [HTTPX's event hooks](https://github.com/pydantic/httpx2) or utilize library like [tenacity](https://tenacity.readthedocs.io/) to retry failed requests.
 - **Custom headers** - You can add headers in the `call` method before delegating to HTTPX.
 - **Connection lifecycle** - Close the underlying `httpx.Client` when done by adding a `close()` method to your custom client.
 - **Proxy support** - You can pass `proxy=...` when creating the `httpx.Client`.

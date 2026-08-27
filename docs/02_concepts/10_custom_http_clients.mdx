@@ -20,7 +20,7 @@ import PluggingInAsyncExample from '!!raw-loader!./code/10_plugging_in_async.py'
 import PluggingInSyncExample from '!!raw-loader!./code/10_plugging_in_sync.py';
 
 The Apify API client uses a pluggable HTTP layer. It ships with an [Impit](https://github.com/apify/impit)-based default,
-offers [HTTPX](https://www.python-httpx.org/) as an optional built-in alternative, and accepts fully custom synchronous
+offers [HTTPX](https://github.com/pydantic/httpx2) as an optional built-in alternative, and accepts fully custom synchronous
 or asynchronous implementations.
 
 ## Default HTTP client
@@ -52,11 +52,12 @@ You can configure the default client through the <ApiLink to="class/ApifyClient"
 The package also provides <ApiLink to="class/HttpxHttpClient">`HttpxHttpClient`</ApiLink> and
 <ApiLink to="class/HttpxHttpClientAsync">`HttpxHttpClientAsync`</ApiLink>. They use the same request preparation,
 compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with
-[HTTPX](https://www.python-httpx.org/) as the transport.
+[HTTPX](https://github.com/pydantic/httpx2) as the transport.
 
 HTTPX is an optional dependency. Install `apify-client[httpx]`, then pass the appropriate client to
-<ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. Impit remains
-the default even when the HTTPX extra is installed.
+<ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. The extra
+installs `httpx2`, Pydantic's maintained continuation of HTTPX. Impit remains the default even when the HTTPX extra
+is installed.
 
 ```bash
 pip install "apify-client[httpx]"
@@ -156,7 +157,7 @@ checkers to catch misspelled or incompatible overrides.
 | `aiter_bytes() -> AsyncIterator[bytes]` | Iterate body in chunks (async) |
 
 :::note
-Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://www.python-httpx.org/) already satisfy this protocol out of the box.
+Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
 
 For a streamed response, consume the body inside its context manager with `iter_bytes()` / `aiter_bytes()`, or call
 `read()` / `aread()` before accessing `content`. Some transports, including HTTPX, intentionally reject `content` on

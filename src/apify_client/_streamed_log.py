@@ -102,8 +102,8 @@ class StreamedLog(StreamedLogBase):
     _stop_timeout_s: ClassVar[float] = 5
     """Upper bound on how long `stop` waits for the streaming thread to finish.
 
-    Closing the response only ends the read on a transport that honours it - Impit does not - so without a bound
-    `stop` would wait for the next chunk, which on a quiet run may be hours away.
+    Closing the response only ends the read on a transport that honours it, which neither Impit nor HTTPX does, so
+    without a bound `stop` would wait for the next chunk, which on a quiet run may be hours away.
     """
 
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
@@ -138,8 +138,9 @@ class StreamedLog(StreamedLogBase):
     def stop(self) -> None:
         """Signal the streaming thread to stop logging and wait up to `_stop_timeout_s` for it to finish.
 
-        A thread that outlives the wait is a daemon with `_stop_logging` set, so it exits after at most one more chunk.
-        Its handle is kept while it is alive, so `start` cannot revive it beside a second thread on the same buffer.
+        A thread that outlives the wait is a daemon with `_stop_logging` set, so it exits after at most one more chunk,
+        and only then does its buffered tail reach the logger. Its handle is kept while it is alive, so `start` cannot
+        revive it beside a second thread on the same buffer.
         """
         if not self._streaming_thread:
             raise RuntimeError('Streaming thread is not active')

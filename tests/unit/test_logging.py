@@ -1081,7 +1081,7 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     assert any('ACTOR: still running' in record.message for record in caplog.records)
 
 
-_POLL_FAILURE_FINAL_SLEEP_S = 4
+_POLL_FAILURE_FINAL_SLEEP_S = 2
 """Long enough for the watcher to complete the poll that the endpoint rejects."""
 
 _POLL_FAILURE_SETUP_STATUS_REQUESTS = 2
@@ -1147,7 +1147,11 @@ async def test_actor_call_returns_run_when_status_poll_fails_async(
 
     assert run is not None
     assert run.status == 'SUCCEEDED'
-    assert any('Status message redirection stopped' in record.message for record in caplog.records)
+    assert any(
+        record.levelno == logging.ERROR
+        and record.message == 'Status message redirection stopped due to unexpected error:'
+        for record in caplog.records
+    )
 
 
 @pytest.mark.usefixtures('mock_api_failing_status_poll', 'propagate_stream_logs')
@@ -1173,7 +1177,11 @@ def test_actor_call_returns_run_when_status_poll_fails_sync(
     assert run.status == 'SUCCEEDED'
     leaked = [args.exc_type.__name__ for args in thread_exceptions]
     assert not leaked, f'polling thread leaked an uncaught exception: {leaked}'
-    assert any('Status message redirection stopped' in record.message for record in caplog.records)
+    assert any(
+        record.levelno == logging.ERROR
+        and record.message == 'Status message redirection stopped due to unexpected error:'
+        for record in caplog.records
+    )
 
 
 @pytest.mark.usefixtures('mock_api')

@@ -145,11 +145,12 @@ async def test_actor_call_returns_run_when_status_poll_fails(
         run = await maybe_await(client.actor(HELLO_WORLD_ACTOR).call(logger=logger))
 
     assert isinstance(run, Run)
-    assert run.status == 'SUCCEEDED'
-    assert any(
-        record.levelno == logging.ERROR
-        and record.message == 'Status message redirection stopped due to unexpected error:'
-        for record in caplog.records
-    )
-
-    await maybe_await(client.run(run.id).delete())
+    try:
+        assert run.status == 'SUCCEEDED'
+        assert any(
+            record.levelno == logging.ERROR
+            and record.message == 'Status message redirection stopped due to unexpected error:'
+            for record in caplog.records
+        )
+    finally:
+        await maybe_await(client.run(run.id).delete())

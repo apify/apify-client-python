@@ -573,26 +573,23 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
 
         await ensure_queue_is_populated(rq_client, expected_count=5)
 
-        result = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
-        assert isinstance(result, LockedRequestQueueHead)
-        lock_response = result
+        lock_response = await maybe_await(rq_client.list_and_lock_head(limit=3, lock_duration=timedelta(seconds=60)))
+        assert isinstance(lock_response, LockedRequestQueueHead)
         assert len(lock_response.items) == 3
-        locked_ids = {item.id for item in lock_response.items}
 
-        # Locks are acknowledged before they are visible to subsequent reads, so unlocking immediately can
-        # see fewer locks than were just acquired. Since locked requests are excluded from the queue head,
-        # poll `list_head` until the locked IDs disappear from it (best-effort mitigation of the race).
-        async def all_locks_visible() -> bool:
-            head = await maybe_await(rq_client.list_head(limit=5))
-            assert isinstance(head, RequestQueueHead)
-            return locked_ids.isdisjoint(item.id for item in head.items)
+        # Locks are acknowledged before they are all visible to `unlock_requests`, so a single call can report
+        # fewer locks than were just acquired. Each call unlocks whatever is visible to it, so the counts are
+        # accumulated until every lock is accounted for.
+        unlocked_counts: list[int] = []
 
-        await poll_until_condition(all_locks_visible)
+        async def unlocked_so_far() -> int:
+            unlock_response = await maybe_await(rq_client.unlock_requests())
+            assert isinstance(unlock_response, UnlockRequestsResult)
+            unlocked_counts.append(unlock_response.unlocked_count)
+            return sum(unlocked_counts)
 
-        # Unlock all requests
-        unlock_response = await maybe_await(rq_client.unlock_requests())
-        assert isinstance(unlock_response, UnlockRequestsResult)
-        assert unlock_response.unlocked_count == 3
+        unlocked_total = await poll_until_condition(unlocked_so_far, lambda total: total == 3)
+        assert unlocked_total == 3
     finally:
         await maybe_await(rq_client.delete())
 

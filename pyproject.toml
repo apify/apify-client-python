@@ -187,7 +187,7 @@ known-local-folder = ["apify_client"]
 max-branches = 18
 
 [tool.pytest.ini_options]
-addopts = "-r a --verbose"
+addopts = "-r a --verbose --dist worksteal"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
 pythonpath = ["."]

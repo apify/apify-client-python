@@ -35,8 +35,7 @@ class AiohttpResponse:
     def content(self) -> bytes:
         if self._body is None:
             raise RuntimeError(
-                'The streamed response has not been read yet; '
-                'use aread() or aiter_bytes()'
+                'The streamed response has not been read yet; call aread() first'
             )
         return self._body
 
@@ -60,7 +59,6 @@ class AiohttpResponse:
         self._response.close()
 
     async def aclose(self) -> None:
-        self._response.release()
         await self._response.wait_for_close()
 
     def iter_bytes(self) -> Iterator[bytes]:
@@ -85,10 +83,8 @@ class AiohttpHttpClient(HttpClientAsync):
         self._session = aiohttp.ClientSession()
 
     @override
-    def is_timeout_error(self, exc: Exception) -> bool:
-        return super().is_timeout_error(exc) or isinstance(
-            exc, aiohttp.ServerTimeoutError
-        )
+    def is_retryable_transport_error(self, exc: Exception) -> bool:
+        return isinstance(exc, (TimeoutError, aiohttp.ClientError))
 
     @override
     async def aclose(self) -> None:
@@ -118,10 +114,6 @@ class AiohttpHttpClient(HttpClientAsync):
             await adapted_response.aread()
 
         return adapted_response
-
-    @override
-    def is_retryable_transport_error(self, exc: Exception) -> bool:
-        return isinstance(exc, (TimeoutError, aiohttp.ClientError))
 
 
 async def main() -> None:

@@ -34,7 +34,7 @@ class RequestsResponse:
     def content(self) -> bytes:
         if self._body is None:
             raise RuntimeError(
-                'The streamed response has not been read yet; use read() or iter_bytes()'
+                'The streamed response has not been read yet; call read() first'
             )
         return self._body
 
@@ -84,6 +84,17 @@ class RequestsHttpClient(HttpClient):
         return super().is_timeout_error(exc) or isinstance(exc, requests.Timeout)
 
     @override
+    def is_retryable_transport_error(self, exc: Exception) -> bool:
+        return isinstance(
+            exc,
+            (
+                requests.ConnectionError,
+                requests.Timeout,
+                requests.exceptions.ChunkedEncodingError,
+            ),
+        )
+
+    @override
     def close(self) -> None:
         self._session.close()
 
@@ -112,17 +123,6 @@ class RequestsHttpClient(HttpClient):
             adapted_response.read()
 
         return adapted_response
-
-    @override
-    def is_retryable_transport_error(self, exc: Exception) -> bool:
-        return isinstance(
-            exc,
-            (
-                requests.ConnectionError,
-                requests.Timeout,
-                requests.exceptions.ChunkedEncodingError,
-            ),
-        )
 
 
 def main() -> None:

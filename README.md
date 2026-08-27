@@ -202,7 +202,7 @@ The full documentation lives at **[docs.apify.com/api/client/python](https://doc
 | --- | --- |
 | [Introduction](https://docs.apify.com/api/client/python/docs) | Overview, prerequisites, and a tour of the client. |
 | [Quick start](https://docs.apify.com/api/client/python/docs/quick-start) | Authenticate, run an Actor, and fetch its results step by step. |
-| [Concepts](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support) | Asyncio, single vs. collection clients, nested clients, error handling, retries, logging, convenience methods, pagination, streaming, custom HTTP clients, timeouts. |
+| [Concepts](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support) | Asyncio, single vs. collection clients, nested clients, error handling, retries, logging, convenience methods, pagination, streaming, HTTP clients, timeouts. |
 | [Guides](https://docs.apify.com/api/client/python/docs/guides/passing-input-to-actor) | Pass input to an Actor, manage tasks for reusable input, retrieve Actor data, integrate with data libraries (e.g. Pandas), build a custom HTTP client. |
 | [Upgrading](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v3) | Migrating between major versions. |
 | [API reference](https://docs.apify.com/api/client/python/reference) | Generated reference for every class, method, and model. |

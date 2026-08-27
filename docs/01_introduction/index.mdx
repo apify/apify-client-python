@@ -63,9 +63,7 @@ For better request-body compression, opt in to `brotli`, which compresses better
 
 For details, see [HTTP compression](../02_concepts/13_http_compression.mdx).
 
-The client uses [Impit](https://github.com/apify/impit) as its default HTTP transport. To use the built-in
-[HTTPX](https://github.com/pydantic/httpx2) transport, install its optional dependency. It pulls in `httpx2`,
-Pydantic's maintained continuation of HTTPX:
+The client uses [Impit](https://github.com/apify/impit) as its default HTTP transport. To use the built-in [HTTPX](https://github.com/pydantic/httpx2) transport, install the optional `httpx` extra. The extra installs `httpx2`, Pydantic's maintained continuation of HTTPX:
 
 <Tabs>
     <TabItem value="PyPI" label="PyPI" default>
@@ -80,8 +78,7 @@ Pydantic's maintained continuation of HTTPX:
     </TabItem>
 </Tabs>
 
-See [HTTP clients](../02_concepts/10_custom_http_clients.mdx) for synchronous and asynchronous examples and details
-about the shared architecture.
+For synchronous and asynchronous examples and details about the shared architecture, see [HTTP clients](../02_concepts/10_custom_http_clients.mdx).
 
 ## Quick example
 

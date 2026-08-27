@@ -1082,7 +1082,10 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
 
 
 _POLL_FAILURE_FINAL_SLEEP_S = 4
-"""Long enough for the once-per-second watcher poll to reach the rejecting endpoint."""
+"""Long enough for the watcher to complete the poll that the endpoint rejects."""
+
+_POLL_FAILURE_SETUP_STATUS_REQUESTS = 2
+"""How many plain status requests `call` makes before it starts the watcher: one per redirector it builds."""
 
 
 @pytest.fixture
@@ -1091,25 +1094,29 @@ def mock_api_failing_status_poll(httpserver: HTTPServer) -> None:
     status_generator = StatusResponseGenerator()
     running_run = status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False)
     finished_run = status_generator._create_minimal_run_data('Final message', 'SUCCEEDED', is_terminal=True)
-    # `call` requests the log stream only after both of its setup status requests return, so every plain status
-    # request after that is a watcher poll. A count cannot tell them apart: the watcher polls before the second.
-    setup_done = threading.Event()
+    # `call` awaits both of the plain status requests that build its redirectors before it starts either of them,
+    # and `wait_for_finish` only ever sends `waitForFinish`, so every later plain status request is a watcher poll.
+    plain_status_requests = 0
+    request_lock = threading.Lock()
 
     def _status_handler(request: Request) -> Response:
+        nonlocal plain_status_requests
+
         if 'waitForFinish' in request.args:
             # `wait_for_finish` keeps succeeding, so the run reads as a success.
             return Response(response=json.dumps({'data': finished_run}), status=200, mimetype='application/json')
-        if setup_done.is_set():
+
+        with request_lock:
+            plain_status_requests += 1
+            is_watcher_poll = plain_status_requests > _POLL_FAILURE_SETUP_STATUS_REQUESTS
+
+        if is_watcher_poll:
             return Response(
                 response=json.dumps({'error': {'type': 'insufficient-permissions', 'message': 'Poll rejected'}}),
                 status=403,
                 mimetype='application/json',
             )
         return Response(response=json.dumps({'data': running_run}), status=200, mimetype='application/json')
-
-    def _log_handler(request: Request) -> Response:
-        setup_done.set()
-        return _streaming_log_handler(request)
 
     # Registered before `_register_run_and_actor_endpoints`, which also covers the run endpoint - first match wins.
     httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}', method='GET').respond_with_handler(_status_handler)
@@ -1119,7 +1126,7 @@ def mock_api_failing_status_poll(httpserver: HTTPServer) -> None:
     )
     httpserver.expect_request(
         f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
-    ).respond_with_handler(_log_handler)
+    ).respond_with_handler(_streaming_log_handler)
 
 
 @pytest.mark.usefixtures('mock_api_failing_status_poll', 'propagate_stream_logs')

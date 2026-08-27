@@ -24,6 +24,9 @@ if TYPE_CHECKING:
     from apify_client.types import HttpCompressionAlgorithm
 
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
+
 @contextmanager
 def _brotli_unavailable() -> Iterator[None]:
     """Reimport the `http_compressors` package with the `brotli` import forced to fail.

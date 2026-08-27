@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug.wrappers import Request
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _MOCK_LIST_RESPONSE = json.dumps(
     {
         'data': {

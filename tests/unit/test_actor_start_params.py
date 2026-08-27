@@ -12,6 +12,8 @@ from apify_client import ApifyClient, ApifyClientAsync
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 _MOCKED_ACTOR_ID = 'test_actor_id'
 _MOCKED_RUN_ID = 'test_run_id'
 

@@ -14,6 +14,8 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
+    from apify_client.http_clients import HttpClient, HttpClientAsync
+
 # Environment variable names for test configuration
 TOKEN_ENV_VAR = 'APIFY_TEST_USER_API_TOKEN'
 TOKEN_ENV_VAR_2 = 'APIFY_TEST_USER_2_API_TOKEN'
@@ -30,11 +32,6 @@ class _HasId(Protocol):
 
 
 _HasIdT = TypeVar('_HasIdT', bound=_HasId)
-
-
-# ============================================================================
-# Data classes for test fixtures
-# ============================================================================
 
 
 @dataclass
@@ -60,9 +57,12 @@ class KvsFixture(StorageFixture):
     keys_signature: dict[str, str]
 
 
-# ============================================================================
-# Helper functions
-# ============================================================================
+@dataclass(frozen=True)
+class HttpClientClasses:
+    """Synchronous and asynchronous variants of a built-in HTTP client."""
+
+    sync: type[HttpClient]
+    async_: type[HttpClientAsync]
 
 
 def get_crypto_random_object_id(length: int = 17) -> str:
@@ -217,10 +217,6 @@ async def collect_iterate_until_present(
         collected = await drain()
     return collected
 
-
-# ============================================================================
-# Pytest markers and parametrization
-# ============================================================================
 
 parametrized_api_urls = pytest.mark.parametrize(
     ('api_url', 'api_public_url'),

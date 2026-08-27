@@ -185,17 +185,18 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
     actor_client = client.actor(created_actor.id)
 
     try:
-        # Build both versions - we need 2 builds because we can't delete the default build
+        # Both versions are built because the default build cannot be deleted. `build` returns as soon as the
+        # build is queued, so starting both before awaiting either lets the platform run them concurrently.
         first_build = await maybe_await(actor_client.build(version_number='0.1'))
         assert isinstance(first_build, Build)
-        first_build_client = client.build(first_build.id)
-        await maybe_await(first_build_client.wait_for_finish())
-
         second_build = await maybe_await(actor_client.build(version_number='0.2'))
         assert isinstance(second_build, Build)
+
+        first_build_client = client.build(first_build.id)
         second_build_client = client.build(second_build.id)
 
-        # Wait for the second build to finish
+        await maybe_await(first_build_client.wait_for_finish())
+
         finished_build = await maybe_await(second_build_client.wait_for_finish())
         assert isinstance(finished_build, Build)
         assert finished_build.status in ('SUCCEEDED', 'FAILED')

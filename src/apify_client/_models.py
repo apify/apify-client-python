@@ -295,6 +295,7 @@ class ActorNotice(Enum):
     NONE = 'NONE'
     RESIDENTIAL_PROXY_REQUIRED = 'RESIDENTIAL_PROXY_REQUIRED'
     UNDER_MAINTENANCE = 'UNDER_MAINTENANCE'
+    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')
@@ -3437,7 +3438,7 @@ class StoreListActor(BaseModel):
     description: Annotated[str | None, Field(examples=['My public actor!'])] = None
     categories: Annotated[list[str] | None, Field(examples=[['MARKETING', 'LEAD_GENERATION']])] = None
     notice: ActorNotice | None = None
-    picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
+    picture_url: Annotated[str | None, Field(examples=['https://...'])] = None
     user_picture_url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     url: Annotated[AnyUrl | None, Field(examples=['https://...'])] = None
     stats: ActorStats

@@ -99,6 +99,7 @@ ErrorType = (
         'cannot-override-paid-actor-trial',
         'cannot-permanently-delete-subscription',
         'cannot-publish-actor',
+        'cannot-publish-actor-task',
         'cannot-reduce-last-full-token',
         'cannot-reimburse-more-than-original-charge',
         'cannot-reimburse-non-rental-charge',

@@ -870,7 +870,7 @@ class CreateTaskRequest(BaseModel):
     act_id: Annotated[str, Field(examples=['asADASadYvn4mBZmm'])]
     name: Annotated[str | None, Field(examples=['my-task'])] = None
     options: TaskOptions | None = None
-    input: TaskInput | None = None
+    input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
@@ -941,7 +941,7 @@ class DailyServiceUsages(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    date: Annotated[str, Field(examples=['2022-10-02T00:00:00.000Z'])]
+    date: Annotated[AwareDatetime, Field(examples=['2022-10-02T00:00:00.000Z'])]
     service_usage: dict[str, UsageItem]
     total_usage_credits_usd: Annotated[float, Field(examples=[0.0474385791970591])]
 
@@ -2925,7 +2925,7 @@ class Run(BaseModel):
     """
     Exit code of the Actor run process.
     """
-    general_access: GeneralAccess
+    general_access: GeneralAccess | None = None
     """
     General access level for the Actor run.
     """
@@ -3503,7 +3503,7 @@ class Task(BaseModel):
     removed_at: AwareDatetime | None = None
     stats: TaskStats | None = None
     options: TaskOptions | None = None
-    input: TaskInput | None = None
+    input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
     standby_url: AnyUrl | None = None
@@ -3867,7 +3867,7 @@ class UpdateTaskRequest(BaseModel):
     )
     name: Annotated[str | None, Field(examples=['my-task'])] = None
     options: TaskOptions | None = None
-    input: TaskInput | None = None
+    input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
@@ -3925,10 +3925,10 @@ class UserPrivateInfo(BaseModel):
     profile: Profile | None = None
     email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
     proxy: Proxy | None = None
-    plan: Plan
-    effective_platform_features: EffectivePlatformFeatures
+    plan: Plan | None = None
+    effective_platform_features: EffectivePlatformFeatures | None = None
     created_at: Annotated[AwareDatetime | None, Field(examples=['2022-11-29T14:48:29.381Z'])] = None
-    is_paying: Annotated[bool, Field(examples=[True])]
+    is_paying: Annotated[bool | None, Field(examples=[True])] = None
 
 
 @docs_group('Models')

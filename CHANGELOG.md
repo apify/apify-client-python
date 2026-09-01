@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Prevent losing a status message when redirecting Actor run logs ([#1036](https://github.com/apify/apify-client-python/pull/1036)) ([dba6aba](https://github.com/apify/apify-client-python/commit/dba6aba9088f69819c83190883c6e8ccd14b474d)) by [@vdusek](https://github.com/vdusek)
 - Loosen StoreListActor.picture_url to str and add new API error type ([#1038](https://github.com/apify/apify-client-python/pull/1038)) ([a098dd5](https://github.com/apify/apify-client-python/commit/a098dd523ffa2037127ba22a096201587e61146e)) by [@apify-service-account](https://github.com/apify-service-account)
 - Accept task input lists, omitted run and private user fields, and datetime usage dates ([#1041](https://github.com/apify/apify-client-python/pull/1041)) ([6a218f8](https://github.com/apify/apify-client-python/commit/6a218f803527e9b6104fc772247d09d847f075c9)) by [@apify-service-account](https://github.com/apify-service-account)
+- Update impit to ~=0.14.0 ([#1044](https://github.com/apify/apify-client-python/pull/1044)) ([779b17f](https://github.com/apify/apify-client-python/commit/779b17f3c7e79592a5533fe257c4aad9eb9c12b3)) by [@renovate[bot]](https://github.com/renovate[bot])
 
 
 <!-- git-cliff-unreleased-end -->

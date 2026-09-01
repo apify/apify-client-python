@@ -25,7 +25,7 @@ classifiers = [
 keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]
 dependencies = [
     "colorama>=0.4.0",
-    "impit~=0.13.0",
+    "impit~=0.14.0",
     "more_itertools>=10.0.0",
     "pydantic[email]>=2.11.0",
     # 4.6.0 is the first release whose runtime protocol checks look attributes up statically.

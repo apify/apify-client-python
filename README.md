@@ -58,9 +58,9 @@
     ```
 
     [Impit](https://github.com/apify/impit) is the default HTTP client and is installed automatically. To use the
-    built-in [HTTPX](https://github.com/pydantic/httpx2) client instead, install its optional extra and pass
-    `http_client=Httpx2HttpClient()` to `ApifyClient.with_custom_http_client()`. The extra installs `httpx2`,
-    Pydantic's maintained continuation of HTTPX:
+    built-in [HTTPX](https://github.com/pydantic/httpx2) client instead, install the optional `httpx2` extra, which
+    provides Pydantic's maintained continuation of HTTPX, and pass `http_client=Httpx2HttpClient()` to
+    `ApifyClient.with_custom_http_client()`:
 
     ```bash
     pip install "apify-client[httpx2]"

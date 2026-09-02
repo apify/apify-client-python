@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -259,24 +258,17 @@ async def test_webhook_dispatches_iterate(client: ApifyClient | ApifyClientAsync
     webhook_client = client.webhook(created_webhook.id)
 
     try:
-        # Generate at least one dispatch by hitting the test endpoint
-        await maybe_await(webhook_client.test())
+        # Generate a dispatch by hitting the test endpoint
+        dispatch = await maybe_await(webhook_client.test())
+        assert isinstance(dispatch, WebhookDispatch)
 
-        iterator = webhook_client.dispatches().iterate(limit=10)
-        collected: list[WebhookDispatch] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for d in iterator:
-                assert isinstance(d, WebhookDispatch)
-                collected.append(d)
-        else:
-            assert isinstance(iterator, Iterator)
-            for d in iterator:
-                assert isinstance(d, WebhookDispatch)
-                collected.append(d)
-
-        assert len(collected) >= 1
-        for dispatch in collected:
-            assert dispatch.id is not None
+        # Poll until the dispatch appears in the listing - it is recorded asynchronously (eventual consistency)
+        collected = await collect_iterate_until_present(
+            lambda: webhook_client.dispatches().iterate(limit=10),
+            {dispatch.id},
+            item_type=WebhookDispatch,
+            is_async=is_async,
+        )
+        assert dispatch.id in {d.id for d in collected}
     finally:
         await maybe_await(webhook_client.delete())

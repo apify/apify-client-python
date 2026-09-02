@@ -395,6 +395,7 @@ def test_httpx_clients_raise_clear_error_when_extra_missing() -> None:
                 getattr(module, name)
             except ImportError as exc:
                 assert "No module named 'httpx2'" in str(exc)
+                assert "pip install 'apify-client[httpx]'" in str(exc)
             else:
                 raise AssertionError(f'{name} did not raise ImportError')
         """

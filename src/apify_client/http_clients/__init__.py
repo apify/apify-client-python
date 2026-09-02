@@ -13,6 +13,7 @@ with _try_import(
     'HttpxHttpClient',
     'HttpxHttpClientAsync',
     dependency_name='httpx2',
+    extra_name='httpx',
 ) as _httpx_import:
     from apify_client.http_clients._httpx import HttpxHttpClient, HttpxHttpClientAsync
 

@@ -42,7 +42,7 @@ def test_try_import_only_handles_the_named_missing_dependency() -> None:
     try:
         with (
             pytest.raises(ModuleNotFoundError, match='broken-transitive'),
-            try_import(module_name, 'OptionalSymbol', dependency_name='optional-package'),
+            try_import(module_name, 'OptionalSymbol', dependency_name='optional-package', extra_name='optional-extra'),
         ):
             raise ModuleNotFoundError('broken-transitive', name='broken-transitive')
         assert not hasattr(sys.modules[module_name], 'OptionalSymbol')
@@ -51,14 +51,20 @@ def test_try_import_only_handles_the_named_missing_dependency() -> None:
 
 
 def test_try_import_records_the_named_missing_dependency() -> None:
-    """A genuinely missing optional dependency is converted to a failed-import placeholder."""
+    """A genuinely missing optional dependency becomes a failed-import placeholder that names the extra to install."""
     module_name = 'test_missing_optional_import_module'
     sys.modules[module_name] = ModuleType(module_name)
     try:
-        with try_import(module_name, 'OptionalSymbol', dependency_name='optional-package') as state:
+        with try_import(
+            module_name, 'OptionalSymbol', dependency_name='optional-package', extra_name='optional-extra'
+        ) as state:
             raise ModuleNotFoundError("No module named 'optional-package'", name='optional-package')
         assert state.available is False
         assert isinstance(sys.modules[module_name].OptionalSymbol, FailedImport)
+        assert sys.modules[module_name].OptionalSymbol.message == (
+            "No module named 'optional-package'. Install the optional 'optional-extra' extra to use it: "
+            "pip install 'apify-client[optional-extra]'"
+        )
     finally:
         del sys.modules[module_name]
 

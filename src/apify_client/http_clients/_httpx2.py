@@ -48,8 +48,8 @@ class Httpx2HttpClient(HttpClient):
     whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
     default Impit client enforces the same value as a deadline for the whole request, body included.
 
-    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`. That extra installs `httpx2`, Pydantic's
-    maintained continuation of HTTPX, which this module imports under the `httpx` name.
+    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`. The `httpx2` package is Pydantic's maintained
+    continuation of HTTPX, which this module imports under the `httpx` name.
     """
 
     def __init__(
@@ -152,8 +152,8 @@ class Httpx2HttpClientAsync(HttpClientAsync):
     whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
     default Impit client enforces the same value as a deadline for the whole request, body included.
 
-    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`. That extra installs `httpx2`, Pydantic's
-    maintained continuation of HTTPX, which this module imports under the `httpx` name.
+    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`. The `httpx2` package is Pydantic's maintained
+    continuation of HTTPX, which this module imports under the `httpx` name.
     """
 
     def __init__(

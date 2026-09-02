@@ -135,7 +135,7 @@ For a guided walkthrough — authenticating, running an Actor, and reading its r
 - **Tiered timeouts** — short / medium / long tiers picked per endpoint, overridable per call ([Timeouts](https://docs.apify.com/api/client/python/docs/concepts/timeouts)).
 - **Pagination and streaming** — iterate datasets, key-value store keys, or live logs without manual paging or buffering ([Pagination](https://docs.apify.com/api/client/python/docs/concepts/pagination), [Streaming](https://docs.apify.com/api/client/python/docs/concepts/streaming-resources)).
 - **Convenience methods** — `call()`, `wait_for_finish()`, nested resource access, and other shortcuts that hide platform quirks ([Convenience methods](https://docs.apify.com/api/client/python/docs/concepts/convenience-methods)).
-- **Pluggable HTTP layer** — use the default [Impit](https://github.com/apify/impit)-based client, opt in to the built-in [HTTPX](https://github.com/pydantic/httpx2) client, or plug in any custom implementation ([Custom HTTP clients](https://docs.apify.com/api/client/python/docs/concepts/custom-http-clients)).
+- **Pluggable HTTP layer** — use the default [Impit](https://github.com/apify/impit)-based client, opt in to the built-in [HTTPX](https://github.com/pydantic/httpx2) client, or plug in any custom implementation ([HTTP clients](https://docs.apify.com/api/client/python/docs/concepts/custom-http-clients)).
 - **Structured errors** — every API error surfaces as an [`ApifyApiError`](https://docs.apify.com/api/client/python/reference/class/ApifyApiError) with HTTP-specific subclasses for precise handling ([Error handling](https://docs.apify.com/api/client/python/docs/concepts/error-handling)).
 - **Debug logging** — opt-in structured logging on the `apify_client` logger captures request URLs, status codes, retry attempts, and more ([Logging](https://docs.apify.com/api/client/python/docs/concepts/logging)).
 
@@ -202,8 +202,8 @@ The full documentation lives at **[docs.apify.com/api/client/python](https://doc
 | --- | --- |
 | [Introduction](https://docs.apify.com/api/client/python/docs) | Overview, prerequisites, and a tour of the client. |
 | [Quick start](https://docs.apify.com/api/client/python/docs/quick-start) | Authenticate, run an Actor, and fetch its results step by step. |
-| [Concepts](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support) | Asyncio, single vs. collection clients, nested clients, error handling, retries, logging, convenience methods, pagination, streaming, custom HTTP clients, timeouts. |
-| [Guides](https://docs.apify.com/api/client/python/docs/guides/passing-input-to-actor) | Pass input to an Actor, manage tasks for reusable input, retrieve Actor data, integrate with data libraries (e.g. Pandas), use HTTPX as the HTTP client. |
+| [Concepts](https://docs.apify.com/api/client/python/docs/concepts/asyncio-support) | Asyncio, single vs. collection clients, nested clients, error handling, retries, logging, convenience methods, pagination, streaming, HTTP clients, timeouts. |
+| [Guides](https://docs.apify.com/api/client/python/docs/guides/passing-input-to-actor) | Pass input to an Actor, manage tasks for reusable input, retrieve Actor data, integrate with data libraries (e.g. Pandas), build a custom HTTP client. |
 | [Upgrading](https://docs.apify.com/api/client/python/docs/upgrading/upgrading-to-v3) | Migrating between major versions. |
 | [API reference](https://docs.apify.com/api/client/python/reference) | Generated reference for every class, method, and model. |
 | [Changelog](https://docs.apify.com/api/client/python/docs/changelog) | Release history and breaking changes. |

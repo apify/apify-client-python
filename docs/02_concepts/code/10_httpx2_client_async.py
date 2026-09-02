@@ -1,13 +1,13 @@
 import asyncio
 
 from apify_client import ApifyClientAsync
-from apify_client.http_clients import HttpxHttpClientAsync
+from apify_client.http_clients import Httpx2HttpClientAsync
 
 TOKEN = 'MY-APIFY-TOKEN'
 
 
 async def main() -> None:
-    async with HttpxHttpClientAsync() as http_client:
+    async with Httpx2HttpClientAsync() as http_client:
         client = ApifyClientAsync.with_custom_http_client(
             token=TOKEN,
             http_client=http_client,

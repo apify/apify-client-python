@@ -1,11 +1,11 @@
 from apify_client import ApifyClient
-from apify_client.http_clients import HttpxHttpClient
+from apify_client.http_clients import Httpx2HttpClient
 
 TOKEN = 'MY-APIFY-TOKEN'
 
 
 def main() -> None:
-    with HttpxHttpClient() as http_client:
+    with Httpx2HttpClient() as http_client:
         client = ApifyClient.with_custom_http_client(
             token=TOKEN,
             http_client=http_client,

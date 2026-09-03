@@ -56,7 +56,7 @@ dependencies = [
 brotli = [
     { name = "brotli" },
 ]
-httpx = [
+httpx2 = [
     { name = "httpx2" },
 ]
 
@@ -85,13 +85,13 @@ dev = [
 requires-dist = [
     { name = "brotli", marker = "extra == 'brotli'", specifier = ">=1.0.9" },
     { name = "colorama", specifier = ">=0.4.0" },
-    { name = "httpx2", marker = "extra == 'httpx'", specifier = ">=2.0.0" },
+    { name = "httpx2", marker = "extra == 'httpx2'", specifier = ">=2.0.0" },
     { name = "impit", specifier = "~=0.14.0" },
     { name = "more-itertools", specifier = ">=10.0.0" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.11.0" },
     { name = "typing-extensions", specifier = ">=4.6.0" },
 ]
-provides-extras = ["brotli", "httpx"]
+provides-extras = ["brotli", "httpx2"]
 
 [package.metadata.requires-dev]
 dev = [

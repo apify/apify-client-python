@@ -19,8 +19,8 @@ from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import DEFAULT_API_URL
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature
 from apify_client.http_clients import (
-    HttpxHttpClient,
-    HttpxHttpClientAsync,
+    Httpx2HttpClient,
+    Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
@@ -109,7 +109,7 @@ def test_kvs_of_another_user(api_token_2: str) -> Generator[KvsFixture]:
 @pytest.fixture(
     params=[
         pytest.param(HttpClientClasses(sync=ImpitHttpClient, async_=ImpitHttpClientAsync), id='impit'),
-        pytest.param(HttpClientClasses(sync=HttpxHttpClient, async_=HttpxHttpClientAsync), id='httpx'),
+        pytest.param(HttpClientClasses(sync=Httpx2HttpClient, async_=Httpx2HttpClientAsync), id='httpx2'),
     ]
 )
 def http_client_classes(request: pytest.FixtureRequest) -> HttpClientClasses:

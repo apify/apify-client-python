@@ -11,8 +11,8 @@ import ApiLink from '@theme/ApiLink';
 
 import DefaultHttpClientAsyncExample from '!!raw-loader!./code/10_default_http_client_async.py';
 import DefaultHttpClientSyncExample from '!!raw-loader!./code/10_default_http_client_sync.py';
-import HttpxHttpClientAsyncExample from '!!raw-loader!./code/10_httpx_client_async.py';
-import HttpxHttpClientSyncExample from '!!raw-loader!./code/10_httpx_client_sync.py';
+import Httpx2HttpClientAsyncExample from '!!raw-loader!./code/10_httpx2_client_async.py';
+import Httpx2HttpClientSyncExample from '!!raw-loader!./code/10_httpx2_client_sync.py';
 
 import ArchitectureImportsExample from '!!raw-loader!./code/10_architecture_imports.py';
 
@@ -47,30 +47,30 @@ You can configure the default client through the <ApiLink to="class/ApifyClient"
 
 ## Built-in HTTPX client
 
-The package also provides <ApiLink to="class/HttpxHttpClient">`HttpxHttpClient`</ApiLink> and <ApiLink to="class/HttpxHttpClientAsync">`HttpxHttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX](https://github.com/pydantic/httpx2) as the transport.
+The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX](https://github.com/pydantic/httpx2) as the transport.
 
-HTTPX is an optional dependency. Install `apify-client[httpx]`, then pass the appropriate client to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. The extra installs `httpx2`, Pydantic's maintained continuation of HTTPX. Impit remains the default even when the HTTPX extra is installed.
+HTTPX is an optional dependency provided by the `httpx2` package, Pydantic's maintained continuation of HTTPX. Install `apify-client[httpx2]`, then pass the appropriate client to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. Impit remains the default even when the extra is installed.
 
 ```bash
-pip install "apify-client[httpx]"
+pip install "apify-client[httpx2]"
 # or
-uv add "apify-client[httpx]"
+uv add "apify-client[httpx2]"
 ```
 
 <Tabs>
-    <TabItem value="HttpxAsyncExample" label="Async client" default>
+    <TabItem value="Httpx2AsyncExample" label="Async client" default>
         <CodeBlock className="language-python">
-            {HttpxHttpClientAsyncExample}
+            {Httpx2HttpClientAsyncExample}
         </CodeBlock>
     </TabItem>
-    <TabItem value="HttpxSyncExample" label="Sync client">
+    <TabItem value="Httpx2SyncExample" label="Sync client">
         <CodeBlock className="language-python">
-            {HttpxHttpClientSyncExample}
+            {Httpx2HttpClientSyncExample}
         </CodeBlock>
     </TabItem>
 </Tabs>
 
-Configure retries, timeout tiers, default headers, and compression on the HTTPX client instance. The token passed to `with_custom_http_client` is applied automatically unless the HTTP client already has an `Authorization` header. The examples use the clients as context managers so their connection pools are closed deterministically. If a context manager doesn't fit your application's lifecycle, call `close()` on `HttpxHttpClient` or `await aclose()` on `HttpxHttpClientAsync` during shutdown.
+Configure retries, timeout tiers, default headers, and compression on the HTTPX client instance. The token passed to `with_custom_http_client` is applied automatically unless the HTTP client already has an `Authorization` header. The examples use the clients as context managers so their connection pools are closed deterministically. If a context manager doesn't fit your application's lifecycle, call `close()` on `Httpx2HttpClient` or `await aclose()` on `Httpx2HttpClientAsync` during shutdown.
 
 Timeout values are passed to the selected transport. Impit enforces them as a deadline for the whole request, body included. HTTPX applies them to each socket operation instead, so a response whose body arrives slowly keeps resetting the timeout and can outlast both the requested timeout and `timeout_max`. The `no_timeout` option disables HTTPX's timeouts.
 

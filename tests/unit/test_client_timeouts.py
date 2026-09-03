@@ -13,8 +13,8 @@ from apify_client._logging import LoggerOnce, logger_name
 from apify_client.http_clients import (
     HttpClient,
     HttpClientAsync,
-    HttpxHttpClient,
-    HttpxHttpClientAsync,
+    Httpx2HttpClient,
+    Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
 )
@@ -238,7 +238,7 @@ async def test_no_timeout_mapping_for_async_impit_adapter() -> None:
 def test_no_timeout_mapping_for_sync_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     """The synchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
     # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
-    with HttpxHttpClient() as client:
+    with Httpx2HttpClient() as client:
         send = Mock(return_value=successful_response())
         monkeypatch.setattr(client._httpx_client, 'send', send)
 
@@ -252,7 +252,7 @@ def test_no_timeout_mapping_for_sync_httpx_adapter(monkeypatch: pytest.MonkeyPat
 async def test_no_timeout_mapping_for_async_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     """The asynchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
     # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
-    async with HttpxHttpClientAsync() as client:
+    async with Httpx2HttpClientAsync() as client:
         send = AsyncMock(return_value=successful_response())
         monkeypatch.setattr(client._httpx_async_client, 'send', send)
 

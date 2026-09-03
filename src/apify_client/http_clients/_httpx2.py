@@ -38,7 +38,7 @@ _PERMANENT_ERRORS = (
 
 
 @docs_group('HTTP clients')
-class HttpxHttpClient(HttpClient):
+class Httpx2HttpClient(HttpClient):
     """Synchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).
 
     This client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited
@@ -48,8 +48,8 @@ class HttpxHttpClient(HttpClient):
     whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
     default Impit client enforces the same value as a deadline for the whole request, body included.
 
-    Requires the `httpx` extra: `pip install "apify-client[httpx]"`. That extra installs `httpx2`, Pydantic's
-    maintained continuation of HTTPX, which this module imports under the `httpx` name.
+    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`. The `httpx2` package is Pydantic's maintained
+    continuation of HTTPX, which this module imports under the `httpx` name.
     """
 
     def __init__(
@@ -142,7 +142,7 @@ class HttpxHttpClient(HttpClient):
 
 
 @docs_group('HTTP clients')
-class HttpxHttpClientAsync(HttpClientAsync):
+class Httpx2HttpClientAsync(HttpClientAsync):
     """Asynchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).
 
     This client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited
@@ -152,8 +152,8 @@ class HttpxHttpClientAsync(HttpClientAsync):
     whose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The
     default Impit client enforces the same value as a deadline for the whole request, body included.
 
-    Requires the `httpx` extra: `pip install "apify-client[httpx]"`. That extra installs `httpx2`, Pydantic's
-    maintained continuation of HTTPX, which this module imports under the `httpx` name.
+    Requires the `httpx2` extra: `pip install "apify-client[httpx2]"`. The `httpx2` package is Pydantic's maintained
+    continuation of HTTPX, which this module imports under the `httpx` name.
     """
 
     def __init__(

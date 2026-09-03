@@ -222,6 +222,7 @@ use_field_description = true
 use_union_operator = true
 capitalise_enum_members = true
 collapse_root_models = true
+collapse_root_models_name_strategy = "child"
 set_default_enum_member = true
 use_annotated = true
 wrap_string_literal = true
@@ -245,7 +246,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-08-30T172245Z"
+version = "v2-2026-08-31T125154Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

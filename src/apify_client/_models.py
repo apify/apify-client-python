@@ -872,6 +872,7 @@ class CreateTaskRequest(BaseModel):
     options: TaskOptions | None = None
     input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
+    description: str | None = None
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
     """
@@ -3505,6 +3506,7 @@ class Task(BaseModel):
     options: TaskOptions | None = None
     input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
+    description: str | None = None
     actor_standby: ActorStandby | None = None
     standby_url: AnyUrl | None = None
     is_public: Annotated[bool | None, Field(examples=[False])] = None
@@ -3869,6 +3871,7 @@ class UpdateTaskRequest(BaseModel):
     options: TaskOptions | None = None
     input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
+    description: str | None = None
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
     """

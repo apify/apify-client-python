@@ -18,6 +18,9 @@ class RequestBaseDict(TypedDict):
     The URL of the request.
     """
     method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
+    """
+    The HTTP method of the request.
+    """
     retry_count: NotRequired[int]
     """
     The number of times this request has been retried.
@@ -60,6 +63,9 @@ class RequestBaseCamelDict(TypedDict):
     The URL of the request.
     """
     method: NotRequired[Literal['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH']]
+    """
+    The HTTP method of the request.
+    """
     retryCount: NotRequired[int]
     """
     The number of times this request has been retried.

@@ -872,6 +872,7 @@ class CreateTaskRequest(BaseModel):
     options: TaskOptions | None = None
     input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
+    description: str | None = None
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
     """
@@ -1473,7 +1474,7 @@ class HeadRequest(BaseModel):
     """
     The URL of the request.
     """
-    method: HttpMethod | None = None
+    method: RequestMethod | None = None
     retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
     The number of times this request has been retried.
@@ -1892,7 +1893,7 @@ class LockedHeadRequest(BaseModel):
     """
     The URL of the request.
     """
-    method: HttpMethod | None = None
+    method: RequestMethod | None = None
     retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
     The number of times this request has been retried.
@@ -2432,7 +2433,7 @@ class RequestBase(BaseModel):
     """
     The URL of the request.
     """
-    method: HttpMethod | None = None
+    method: RequestMethod | None = None
     retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
     The number of times this request has been retried.
@@ -2500,7 +2501,7 @@ class RequestDraft(BaseModel):
     """
     The URL of the request.
     """
-    method: HttpMethod | None = None
+    method: RequestMethod | None = None
 
 
 @docs_group('Models')
@@ -2561,6 +2562,14 @@ class RequestLockInfo(BaseModel):
     lock_expires_at: Annotated[AwareDatetime, Field(examples=['2022-06-14T23:00:00.000Z'])]
     """
     The timestamp when the lock on this request expires.
+    """
+
+
+@docs_group('Models')
+class RequestMethod(RootModel[HttpMethod]):
+    root: HttpMethod
+    """
+    The HTTP method of the request.
     """
 
 
@@ -3505,6 +3514,7 @@ class Task(BaseModel):
     options: TaskOptions | None = None
     input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
+    description: str | None = None
     actor_standby: ActorStandby | None = None
     standby_url: AnyUrl | None = None
     is_public: Annotated[bool | None, Field(examples=[False])] = None
@@ -3869,6 +3879,7 @@ class UpdateTaskRequest(BaseModel):
     options: TaskOptions | None = None
     input: TaskInput | list[TaskInput] | None = None
     title: str | None = None
+    description: str | None = None
     actor_standby: ActorStandby | None = None
     public_config: TaskPublicConfig | None = None
     """

@@ -222,6 +222,9 @@ use_field_description = true
 use_union_operator = true
 capitalise_enum_members = true
 collapse_root_models = true
+# Folds a schema that only aliases another one (a `$ref` plus a description) into the referenced model, so a
+# bundler hoisting such an alias into its own component can't turn an enum-typed field into a `RootModel` wrapper.
+collapse_root_models_name_strategy = "child"
 set_default_enum_member = true
 use_annotated = true
 wrap_string_literal = true

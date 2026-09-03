@@ -1474,7 +1474,7 @@ class HeadRequest(BaseModel):
     """
     The URL of the request.
     """
-    method: RequestMethod | None = None
+    method: HttpMethod | None = None
     retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
     The number of times this request has been retried.
@@ -1893,7 +1893,7 @@ class LockedHeadRequest(BaseModel):
     """
     The URL of the request.
     """
-    method: RequestMethod | None = None
+    method: HttpMethod | None = None
     retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
     The number of times this request has been retried.
@@ -2433,7 +2433,7 @@ class RequestBase(BaseModel):
     """
     The URL of the request.
     """
-    method: RequestMethod | None = None
+    method: HttpMethod | None = None
     retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
     The number of times this request has been retried.
@@ -2501,7 +2501,7 @@ class RequestDraft(BaseModel):
     """
     The URL of the request.
     """
-    method: RequestMethod | None = None
+    method: HttpMethod | None = None
 
 
 @docs_group('Models')
@@ -2562,14 +2562,6 @@ class RequestLockInfo(BaseModel):
     lock_expires_at: Annotated[AwareDatetime, Field(examples=['2022-06-14T23:00:00.000Z'])]
     """
     The timestamp when the lock on this request expires.
-    """
-
-
-@docs_group('Models')
-class RequestMethod(RootModel[HttpMethod]):
-    root: HttpMethod
-    """
-    The HTTP method of the request.
     """
 
 

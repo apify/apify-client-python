@@ -1,0 +1,51 @@
+---
+id: custom-http-client
+title: Build a custom HTTP client
+description: Implement the HTTP client contract with aiohttp and requests.
+---
+
+import ApiLink from '@theme/ApiLink';
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+import CustomHttpClientAsyncExample from '!!raw-loader!./code/05_custom_http_client_async.py';
+import CustomHttpClientSyncExample from '!!raw-loader!./code/05_custom_http_client_sync.py';
+
+This guide implements a custom <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> with [aiohttp](https://docs.aiohttp.org/) and a custom <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> with [requests](https://requests.readthedocs.io/). Neither library satisfies the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol, so both examples also show how to adapt a foreign response API.
+
+For an overview of the architecture and the built-in Impit and HTTPX implementations, see [HTTP clients](../02_concepts/10_custom_http_clients.mdx).
+
+## Installation
+
+Install the transport alongside the Apify client. Neither aiohttp nor requests is an `apify-client` extra:
+
+```bash
+pip install apify-client aiohttp   # for the asynchronous client
+pip install apify-client requests  # for the synchronous client
+```
+
+## Implementation
+
+Each example has three parts:
+
+1. The response adapter, `AiohttpResponse` or `RequestsResponse`, maps the library's own response onto the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol that resource clients expect.
+2. The client, `AiohttpHttpClient` or `RequestsHttpClient`, implements the transport, error-classification, and lifecycle hooks. It inherits request preparation, retry handling, timeout growth, and API error conversion from its base class. Only the requests client also overrides timeout classification. `requests.Timeout` doesn't derive from Python's `TimeoutError`, while aiohttp's timeout errors do, so the inherited default already recognizes them.
+3. `with_custom_http_client()` connects the implementation to the resource clients and applies the API token. The context manager closes the session at shutdown.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {CustomHttpClientAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {CustomHttpClientSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+:::warning
+These examples are compact integrations, not a replacement for all built-in client behavior. A production custom client should account for transport-specific details such as proxy configuration, TLS settings, redirects, and response resource cleanup. Timeout semantics differ per transport too: the aiohttp example passes the value as a budget for the whole request, while `requests` applies it to each socket read. Both example sessions also keep a shared cookie jar, which replays server cookies on later API requests. The built-in HTTPX client clears it instead.
+:::

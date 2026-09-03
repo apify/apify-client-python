@@ -1,0 +1,166 @@
+---
+id: custom-http-clients
+title: HTTP clients
+description: Understand the built-in HTTP clients and the custom client interface.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@theme/ApiLink';
+
+import DefaultHttpClientAsyncExample from '!!raw-loader!./code/10_default_http_client_async.py';
+import DefaultHttpClientSyncExample from '!!raw-loader!./code/10_default_http_client_sync.py';
+import Httpx2HttpClientAsyncExample from '!!raw-loader!./code/10_httpx2_client_async.py';
+import Httpx2HttpClientSyncExample from '!!raw-loader!./code/10_httpx2_client_sync.py';
+
+import ArchitectureImportsExample from '!!raw-loader!./code/10_architecture_imports.py';
+
+import PluggingInAsyncExample from '!!raw-loader!./code/10_plugging_in_async.py';
+import PluggingInSyncExample from '!!raw-loader!./code/10_plugging_in_sync.py';
+
+The Apify API client uses a pluggable HTTP layer. It ships with an [Impit](https://github.com/apify/impit)-based default, offers [HTTPX](https://github.com/pydantic/httpx2) as an optional built-in alternative, and accepts custom synchronous or asynchronous implementations.
+
+## Default HTTP client
+
+When you create an <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> instance, it automatically uses the built-in <ApiLink to="class/ImpitHttpClient">`ImpitHttpClient`</ApiLink> (or <ApiLink to="class/ImpitHttpClientAsync">`ImpitHttpClientAsync`</ApiLink>). This default client provides:
+
+- Automatic retries with exponential backoff for network errors, HTTP 429, and HTTP 5xx responses.
+- Configurable timeouts.
+- Request compression and preparation of API-compatible data, query parameters, and headers, including authentication.
+- API error handling, structured logging, and request statistics.
+
+You can configure the default client through the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> or <ApiLink to="class/ApifyClientAsync">`ApifyClientAsync`</ApiLink> constructor:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {DefaultHttpClientAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {DefaultHttpClientSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Built-in HTTPX client
+
+The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX](https://github.com/pydantic/httpx2) as the transport.
+
+HTTPX is an optional dependency provided by the `httpx2` package, Pydantic's maintained continuation of HTTPX. Install `apify-client[httpx2]`, then pass the appropriate client to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. Impit remains the default even when the extra is installed.
+
+```bash
+pip install "apify-client[httpx2]"
+# or
+uv add "apify-client[httpx2]"
+```
+
+<Tabs>
+    <TabItem value="Httpx2AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {Httpx2HttpClientAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="Httpx2SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {Httpx2HttpClientSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+Configure retries, timeout tiers, default headers, and compression on the HTTPX client instance. The token passed to `with_custom_http_client` is applied automatically unless the HTTP client already has an `Authorization` header. The examples use the clients as context managers so their connection pools are closed deterministically. If a context manager doesn't fit your application's lifecycle, call `close()` on `Httpx2HttpClient` or `await aclose()` on `Httpx2HttpClientAsync` during shutdown.
+
+Timeout values are passed to the selected transport. Impit enforces them as a deadline for the whole request, body included. HTTPX applies them to each socket operation instead, so a response whose body arrives slowly keeps resetting the timeout and can outlast both the requested timeout and `timeout_max`. The `no_timeout` option disables HTTPX's timeouts.
+
+## Architecture
+
+Internally, the HTTP client hierarchy has three layers:
+
+- A common internal base contains configuration and utilities shared by synchronous and asynchronous clients, including headers, request-body preparation, parameters, compression, and timeout tiers. It isn't a public extension point.
+- <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> add the synchronous or asynchronous request pipeline, retry loop, transport hooks, and lifecycle interface.
+- The built-in Impit and HTTPX classes inherit directly from the corresponding sync or async class and adapt the underlying transport.
+
+`HttpClient.is_timeout_error(exc)` and `HttpClientAsync.is_timeout_error(exc)` are the public, transport-neutral way to tell whether an exception is a timeout, so code built on the client, such as streamed logs, doesn't need to know which transport raised it.
+
+Responses have their own abstraction. <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> is a [runtime-checkable protocol](https://docs.python.org/3/library/typing.html#typing.runtime_checkable) that defines the expected response shape. Any object with the required attributes and methods satisfies the protocol, so no inheritance is needed.
+
+Custom transport adapters implement the request, error-classification, and lifecycle hooks. They inherit request preparation, retries, timeout growth, API error conversion, logging, and statistics from the base.
+
+The base classes and the response protocol are available from the `apify_client.http_clients` module:
+
+<CodeBlock className="language-python">
+    {ArchitectureImportsExample}
+</CodeBlock>
+
+### The transport contract
+
+The public `call` method provides the shared request pipeline. A concrete transport implements these hooks:
+
+- `send_request(...)` sends one prepared request and returns an `HttpResponse`, error statuses included. It receives the URL with the query parameters already encoded into it, the headers with the client's default headers already merged in, the body already serialized and compressed, and the timeout for this attempt in seconds. The inherited `call` needs it, so every transport adapter has to implement it. Let the HTTP library's exceptions propagate unwrapped, and leave status handling and <ApiLink to="class/ApifyApiError">`ApifyApiError`</ApiLink> to `call`.
+- `is_retryable_transport_error(exc)` classifies transport failures for the shared retry loop. The default classifies nothing as retryable, so a transport that doesn't override it gives up on the first connection failure.
+- `is_timeout_error(exc)` identifies transport-specific timeout exceptions for higher-level client features. The default recognizes Python's `TimeoutError`. Timeout classification is independent of retryability, so a timeout the retry loop should retry has to be listed in `is_retryable_transport_error` too.
+- `close()` or `aclose()` closes resources owned by the transport. The default does nothing, which is correct for a transport that owns no pool or session.
+
+Decorate your implementations with `@override`, as the built-in Impit and HTTPX adapters do, so a type checker catches a misspelled or incompatible override.
+
+### The HTTP response protocol
+
+<ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> is not a concrete class. Any object with the following attributes and methods will work:
+
+| Property / Method | Description |
+| --- | --- |
+| `status_code: int` | HTTP status code |
+| `text: str` | Response body as text |
+| `content: bytes` | Raw response body |
+| `headers: Mapping[str, str]` | Response headers |
+| `json() -> Any` | Parse body as JSON |
+| `read() -> bytes` | Read entire response body |
+| `aread() -> bytes` | Read entire response body (async) |
+| `close() -> None` | Close the response |
+| `aclose() -> None` | Close the response (async) |
+| `iter_bytes() -> Iterator[bytes]` | Iterate body in chunks |
+| `aiter_bytes() -> AsyncIterator[bytes]` | Iterate body in chunks (async) |
+
+:::note
+Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
+
+For a streamed response, consume the body inside the streaming context manager with `iter_bytes()` / `aiter_bytes()`, or call `read()` / `aread()` before accessing `content`. Some transports, including HTTPX, intentionally reject `content` on an unread streamed response.
+:::
+
+### Plugging it in
+
+Use the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink> (or <ApiLink to="class/ApifyClientAsync#with_custom_http_client">`ApifyClientAsync.with_custom_http_client`</ApiLink>) class method to create a client with your custom implementation:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {PluggingInAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {PluggingInSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+After that, all API calls made through the client will go through your custom HTTP client.
+
+:::warning
+If you override `call` itself, your implementation becomes responsible for request preparation, retries, timeouts, API error conversion, logging, and statistics. Implementing the transport hooks and inheriting `call` keeps the shared behavior.
+:::
+
+## Use cases
+
+Custom HTTP clients might be useful when the built-in Impit and HTTPX clients don't cover your requirements, for example when you need to:
+
+- **Use a different HTTP library** - Integrate [requests](https://requests.readthedocs.io/), [aiohttp](https://docs.aiohttp.org/), or another transport.
+- **Route through a proxy** - Add proxy support or request routing.
+- **Implement custom retry logic** - Use different backoff strategies or retry conditions.
+- **Log requests and responses** - Track API calls for debugging or auditing.
+- **Modify requests** - Add custom fields, modify the body, or change headers.
+- **Collect custom metrics** - Measure request latency, track error rates, or count API calls.
+
+For complete synchronous and asynchronous implementations over a transport with a different response API, see [Build a custom HTTP client](../03_guides/05_custom_http_client.mdx). The <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> API references document the full contract.

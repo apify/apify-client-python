@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.1.4 - **not yet released**
+## [3.2.0](https://github.com/apify/apify-client-python/releases/tag/v3.2.0) (2026-09-03)
 
 ### 🚀 Features
 
@@ -25,7 +24,6 @@ All notable changes to this project will be documented in this file.
 - Add the description field to Actor task models ([#1049](https://github.com/apify/apify-client-python/pull/1049)) ([89ac756](https://github.com/apify/apify-client-python/commit/89ac756dbe40a66fd2ecbe6e577c20e32f23f026)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.1.3](https://github.com/apify/apify-client-python/releases/tag/v3.1.3) (2026-08-18)
 
 ### 🐛 Bug Fixes

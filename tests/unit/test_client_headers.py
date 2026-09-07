@@ -28,7 +28,7 @@ def _transport_wire_headers(
     """Return the headers the transport adds on its own and the content encodings it advertises."""
     if issubclass(client_class, (ImpitHttpClient, ImpitHttpClientAsync)):
         return {}, {'zstd', 'gzip', 'deflate', 'br'}
-    # HTTPX advertises whichever decoders happen to be installed alongside it, so read the set off the client
+    # HTTPX2 advertises whichever decoders happen to be installed alongside it, so read the set off the client
     # itself rather than hard-coding it and breaking whenever the environment gains or loses a codec.
     with httpx2.Client() as probe:
         return {'Connection': 'keep-alive'}, _parse_accept_encoding(probe.headers['accept-encoding'])
@@ -188,7 +188,7 @@ def _echo_cookie_handler(request: Request) -> Response:
 
 
 def test_httpx2_does_not_reuse_server_cookies(httpserver: HTTPServer) -> None:
-    """A Set-Cookie response must not enter HTTPX's shared cookie jar, nor leak into a later API request."""
+    """A Set-Cookie response must not enter HTTPX2's shared cookie jar, nor leak into a later API request."""
     httpserver.expect_request('/set-cookie').respond_with_data('ok', headers={'Set-Cookie': 'session=secret'})
     httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
 
@@ -201,7 +201,7 @@ def test_httpx2_does_not_reuse_server_cookies(httpserver: HTTPServer) -> None:
 
 
 async def test_httpx2_async_does_not_reuse_server_cookies(httpserver: HTTPServer) -> None:
-    """The asynchronous HTTPX pool also remains stateless between API calls."""
+    """The asynchronous HTTPX2 pool also remains stateless between API calls."""
     httpserver.expect_request('/set-cookie').respond_with_data('ok', headers={'Set-Cookie': 'session=secret'})
     httpserver.expect_request('/echo-cookie').respond_with_handler(_echo_cookie_handler)
 
@@ -236,7 +236,7 @@ async def test_httpx2_async_drops_cookies_left_in_the_shared_jar(httpserver: HTT
 
 
 def test_httpx2_does_not_carry_server_cookies_across_a_redirect(httpserver: HTTPServer) -> None:
-    """A cookie set by a redirecting response must not ride along on the next hop, which HTTPX builds from its jar."""
+    """A cookie set by a redirecting response must not ride along on the next hop, which HTTPX2 builds from its jar."""
     httpserver.expect_request('/redirect').respond_with_data(
         '',
         status=302,

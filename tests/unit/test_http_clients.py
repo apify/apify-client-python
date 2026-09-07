@@ -268,7 +268,7 @@ async def test_http_client_async_creates_async_impit_client() -> None:
 
 
 def test_http_client_creates_sync_httpx2_client() -> None:
-    """The synchronous HTTPX adapter creates the underlying HTTPX client, and the close hook closes its pool."""
+    """The synchronous HTTPX2 adapter creates the underlying HTTPX2 client, and the close hook closes its pool."""
     client = Httpx2HttpClient(token='test_token_123')
 
     assert isinstance(client._httpx2_client, httpx2.Client)
@@ -277,7 +277,7 @@ def test_http_client_creates_sync_httpx2_client() -> None:
 
 
 async def test_http_client_async_creates_async_httpx2_client() -> None:
-    """The asynchronous HTTPX adapter creates the underlying HTTPX client, and the close hook closes its pool."""
+    """The asynchronous HTTPX2 adapter creates the underlying HTTPX2 client, and the close hook closes its pool."""
     client = Httpx2HttpClientAsync(token='test_token_123')
 
     assert isinstance(client._httpx2_async_client, httpx2.AsyncClient)
@@ -416,7 +416,7 @@ async def test_async_http_client_classifies_timeout_errors() -> None:
 @pytest.mark.parametrize(
     'exc',
     [
-        # Even the generic base class is transient: HTTPX subclasses it for every failure mode, so an
+        # Even the generic base class is transient: HTTPX2 subclasses it for every failure mode, so an
         # unclassified failure is safer to retry.
         pytest.param(httpx2.HTTPError('unclassified failure'), id='bare HTTPError'),
         pytest.param(httpx2.TimeoutException('timeout'), id='TimeoutException'),
@@ -429,7 +429,7 @@ async def test_async_http_client_classifies_timeout_errors() -> None:
     ],
 )
 def test_httpx2_is_retryable_transport_error(exc: Exception) -> None:
-    """A transient HTTPX transport failure is classified as retryable."""
+    """A transient HTTPX2 transport failure is classified as retryable."""
     with Httpx2HttpClient() as client:
         assert client.is_retryable_transport_error(exc)
 
@@ -448,7 +448,7 @@ def test_httpx2_is_retryable_transport_error(exc: Exception) -> None:
             ),
             id='HTTPStatusError',
         ),
-        # HTTPX reports a bad URL outside the `httpx2.HTTPError` tree entirely.
+        # HTTPX2 reports a bad URL outside the `httpx2.HTTPError` tree entirely.
         pytest.param(httpx2.InvalidURL('unsupported scheme'), id='InvalidURL'),
         pytest.param(ValueError('value error'), id='ValueError'),
         pytest.param(RuntimeError('runtime error'), id='RuntimeError'),
@@ -456,13 +456,13 @@ def test_httpx2_is_retryable_transport_error(exc: Exception) -> None:
     ],
 )
 def test_httpx2_is_not_retryable_transport_error(exc: Exception) -> None:
-    """A transport failure a retry cannot fix, and anything outside HTTPX's hierarchy, is not retried."""
+    """A transport failure a retry cannot fix, and anything outside HTTPX2's hierarchy, is not retried."""
     with Httpx2HttpClient() as client:
         assert not client.is_retryable_transport_error(exc)
 
 
 def test_sync_httpx2_client_classifies_timeout_errors() -> None:
-    """The built-in synchronous HTTPX client exposes transport-neutral timeout classification."""
+    """The built-in synchronous HTTPX2 client exposes transport-neutral timeout classification."""
     with Httpx2HttpClient() as client:
         assert client.is_timeout_error(TimeoutError('test'))
         assert client.is_timeout_error(httpx2.TimeoutException('test'))
@@ -470,7 +470,7 @@ def test_sync_httpx2_client_classifies_timeout_errors() -> None:
 
 
 async def test_async_httpx2_client_classifies_timeout_errors() -> None:
-    """The built-in asynchronous HTTPX client exposes transport-neutral timeout classification."""
+    """The built-in asynchronous HTTPX2 client exposes transport-neutral timeout classification."""
     async with Httpx2HttpClientAsync() as client:
         assert client.is_timeout_error(TimeoutError('test'))
         assert client.is_timeout_error(httpx2.TimeoutException('test'))
@@ -515,7 +515,7 @@ def test_transient_transport_error_is_retried() -> None:
 
 
 def test_httpx2_permanent_transport_error_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The HTTPX adapter feeds the same fail-fast classification into the shared pipeline."""
+    """The HTTPX2 adapter feeds the same fail-fast classification into the shared pipeline."""
     with Httpx2HttpClient(token='test_token', min_delay_between_retries=timedelta(0)) as client:
         send = Mock(side_effect=httpx2.UnsupportedProtocol('unsupported scheme'))
         monkeypatch.setattr(client._httpx2_client, 'send', send)
@@ -527,7 +527,7 @@ def test_httpx2_permanent_transport_error_is_not_retried(monkeypatch: pytest.Mon
 
 
 async def test_httpx2_permanent_transport_error_is_not_retried_async(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The asynchronous HTTPX adapter applies the same policy, failing on the first attempt."""
+    """The asynchronous HTTPX2 adapter applies the same policy, failing on the first attempt."""
     async with Httpx2HttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0)) as client:
         send = AsyncMock(side_effect=httpx2.UnsupportedProtocol('unsupported scheme'))
         monkeypatch.setattr(client._httpx2_async_client, 'send', send)
@@ -539,7 +539,7 @@ async def test_httpx2_permanent_transport_error_is_not_retried_async(monkeypatch
 
 
 def test_httpx2_transient_transport_error_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The HTTPX adapter keeps a transient transport failure inside the shared retry loop."""
+    """The HTTPX2 adapter keeps a transient transport failure inside the shared retry loop."""
     with Httpx2HttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0)) as client:
         send = Mock(side_effect=httpx2.TimeoutException('timeout'))
         monkeypatch.setattr(client._httpx2_client, 'send', send)
@@ -552,7 +552,7 @@ def test_httpx2_transient_transport_error_is_retried(monkeypatch: pytest.MonkeyP
 
 
 async def test_httpx2_transient_transport_error_is_retried_async(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The asynchronous HTTPX adapter keeps a transient transport failure inside the shared retry loop too."""
+    """The asynchronous HTTPX2 adapter keeps a transient transport failure inside the shared retry loop too."""
     async with Httpx2HttpClientAsync(
         token='test_token', max_retries=2, min_delay_between_retries=timedelta(0)
     ) as client:

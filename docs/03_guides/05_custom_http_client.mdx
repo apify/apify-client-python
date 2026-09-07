@@ -14,7 +14,7 @@ import CustomHttpClientSyncExample from '!!raw-loader!./code/05_custom_http_clie
 
 This guide implements a custom <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> with [aiohttp](https://docs.aiohttp.org/) and a custom <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> with [requests](https://requests.readthedocs.io/). Neither library satisfies the <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> protocol, so both examples also show how to adapt a foreign response API.
 
-For an overview of the architecture and the built-in Impit and HTTPX implementations, see [HTTP clients](../02_concepts/10_custom_http_clients.mdx).
+For an overview of the architecture and the built-in Impit and HTTPX2 implementations, see [HTTP clients](../02_concepts/10_custom_http_clients.mdx).
 
 ## Installation
 
@@ -47,5 +47,5 @@ Each example has three parts:
 </Tabs>
 
 :::warning
-These examples are compact integrations, not a replacement for all built-in client behavior. A production custom client should account for transport-specific details such as proxy configuration, TLS settings, redirects, and response resource cleanup. Timeout semantics differ per transport too: the aiohttp example passes the value as a budget for the whole request, while `requests` applies it to each socket read. Both example sessions also keep a shared cookie jar, which replays server cookies on later API requests. The built-in HTTPX client clears it instead.
+These examples are compact integrations, not a replacement for all built-in client behavior. A production custom client should account for transport-specific details such as proxy configuration, TLS settings, redirects, and response resource cleanup. Timeout semantics differ per transport too: the aiohttp example passes the value as a budget for the whole request, while `requests` applies it to each socket read. Both example sessions also keep a shared cookie jar, which replays server cookies on later API requests. The built-in HTTPX2 client clears it instead.
 :::

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from _pytest.logging import LogCaptureFixture
 
 UNSET_HTTPX2_TIMEOUT = {'connect': None, 'read': None, 'write': None, 'pool': None}
-"""What HTTPX stores on a request built with `timeout=None`: every sub-timeout unset, not the client default."""
+"""What HTTPX2 stores on a request built with `timeout=None`: every sub-timeout unset, not the client default."""
 
 
 @pytest.fixture
@@ -236,8 +236,8 @@ async def test_no_timeout_mapping_for_async_impit_adapter() -> None:
 
 
 def test_no_timeout_mapping_for_sync_httpx2_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The synchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
-    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
+    """The synchronous HTTPX2 adapter maps no-timeout to every HTTPX2 sub-timeout being unset."""
+    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX2.
     with Httpx2HttpClient() as client:
         send = Mock(return_value=successful_response())
         monkeypatch.setattr(client._httpx2_client, 'send', send)
@@ -250,8 +250,8 @@ def test_no_timeout_mapping_for_sync_httpx2_adapter(monkeypatch: pytest.MonkeyPa
 
 
 async def test_no_timeout_mapping_for_async_httpx2_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The asynchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
-    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
+    """The asynchronous HTTPX2 adapter maps no-timeout to every HTTPX2 sub-timeout being unset."""
+    # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX2.
     async with Httpx2HttpClientAsync() as client:
         send = AsyncMock(return_value=successful_response())
         monkeypatch.setattr(client._httpx2_async_client, 'send', send)

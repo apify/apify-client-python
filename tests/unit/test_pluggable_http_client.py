@@ -368,7 +368,7 @@ def test_public_exports() -> None:
 
 
 def test_httpx2_clients_raise_clear_error_when_extra_missing() -> None:
-    """Missing HTTPX keeps normal and star imports usable while explicit HTTPX access raises a clear error."""
+    """Missing HTTPX2 keeps normal and star imports usable while explicit HTTPX2 access raises a clear error."""
     script = dedent(
         """
         import sys

@@ -93,7 +93,7 @@ class Httpx2HttpClient(HttpClient):
             http_compressor=http_compressor,
         )
 
-        self._httpx_client = httpx2.Client(
+        self._httpx2_client = httpx2.Client(
             follow_redirects=True,
             event_hooks={'response': [self._clear_response_cookies]},
         )
@@ -113,7 +113,7 @@ class Httpx2HttpClient(HttpClient):
     @override
     def close(self) -> None:
         """Close the underlying HTTPX connection pool."""
-        self._httpx_client.close()
+        self._httpx2_client.close()
 
     @override
     def send_request(
@@ -126,7 +126,7 @@ class Httpx2HttpClient(HttpClient):
         timeout: float | None,
         stream: bool,
     ) -> httpx2.Response:
-        request = self._httpx_client.build_request(
+        request = self._httpx2_client.build_request(
             method=method,
             url=url,
             headers=headers,
@@ -134,11 +134,11 @@ class Httpx2HttpClient(HttpClient):
             timeout=timeout,
         )
         _restore_explicit_cookie_header(request, headers)
-        return self._httpx_client.send(request, stream=stream)
+        return self._httpx2_client.send(request, stream=stream)
 
     def _clear_response_cookies(self, _response: httpx2.Response) -> None:
         """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
-        self._httpx_client.cookies.clear()
+        self._httpx2_client.cookies.clear()
 
 
 @docs_group('HTTP clients')
@@ -197,7 +197,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
             http_compressor=http_compressor,
         )
 
-        self._httpx_async_client = httpx2.AsyncClient(
+        self._httpx2_async_client = httpx2.AsyncClient(
             follow_redirects=True,
             event_hooks={'response': [self._clear_response_cookies]},
         )
@@ -217,7 +217,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
     @override
     async def aclose(self) -> None:
         """Close the underlying asynchronous HTTPX connection pool."""
-        await self._httpx_async_client.aclose()
+        await self._httpx2_async_client.aclose()
 
     @override
     async def send_request(
@@ -230,7 +230,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
         timeout: float | None,
         stream: bool,
     ) -> httpx2.Response:
-        request = self._httpx_async_client.build_request(
+        request = self._httpx2_async_client.build_request(
             method=method,
             url=url,
             headers=headers,
@@ -238,11 +238,11 @@ class Httpx2HttpClientAsync(HttpClientAsync):
             timeout=timeout,
         )
         _restore_explicit_cookie_header(request, headers)
-        return await self._httpx_async_client.send(request, stream=stream)
+        return await self._httpx2_async_client.send(request, stream=stream)
 
     async def _clear_response_cookies(self, _response: httpx2.Response) -> None:
         """Prevent HTTPX's shared cookie jar from leaking server cookies into later API requests."""
-        self._httpx_async_client.cookies.clear()
+        self._httpx2_async_client.cookies.clear()
 
 
 def _restore_explicit_cookie_header(request: httpx2.Request, headers: dict[str, str]) -> None:

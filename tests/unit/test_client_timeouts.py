@@ -23,7 +23,7 @@ from apify_client.http_clients import _base as http_client_base
 if TYPE_CHECKING:
     from _pytest.logging import LogCaptureFixture
 
-UNSET_HTTPX_TIMEOUT = {'connect': None, 'read': None, 'write': None, 'pool': None}
+UNSET_HTTPX2_TIMEOUT = {'connect': None, 'read': None, 'write': None, 'pool': None}
 """What HTTPX stores on a request built with `timeout=None`: every sub-timeout unset, not the client default."""
 
 
@@ -235,29 +235,29 @@ async def test_no_timeout_mapping_for_async_impit_adapter() -> None:
     assert client._impit_async_client.request.call_args.kwargs['timeout'] == 86_400
 
 
-def test_no_timeout_mapping_for_sync_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_timeout_mapping_for_sync_httpx2_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     """The synchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
     # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
     with Httpx2HttpClient() as client:
         send = Mock(return_value=successful_response())
-        monkeypatch.setattr(client._httpx_client, 'send', send)
+        monkeypatch.setattr(client._httpx2_client, 'send', send)
 
         client.send_request(
             method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
         )
 
-        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX_TIMEOUT
+        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX2_TIMEOUT
 
 
-async def test_no_timeout_mapping_for_async_httpx_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_no_timeout_mapping_for_async_httpx2_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     """The asynchronous HTTPX adapter maps no-timeout to every HTTPX sub-timeout being unset."""
     # Only the transport call is stubbed, so the real `build_request` decides what `None` means to HTTPX.
     async with Httpx2HttpClientAsync() as client:
         send = AsyncMock(return_value=successful_response())
-        monkeypatch.setattr(client._httpx_async_client, 'send', send)
+        monkeypatch.setattr(client._httpx2_async_client, 'send', send)
 
         await client.send_request(
             method='GET', url='https://example.com', headers={}, content=None, timeout=None, stream=False
         )
 
-        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX_TIMEOUT
+        assert send.call_args.args[0].extensions['timeout'] == UNSET_HTTPX2_TIMEOUT

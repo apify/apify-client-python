@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock
 
-import httpx2 as httpx
+import httpx2
 import impit
 import pytest
 
@@ -40,7 +40,7 @@ def successful_response() -> Mock:
 def retryable_error(client: HttpClient | HttpClientAsync) -> Exception:
     if isinstance(client, (ImpitHttpClient, ImpitHttpClientAsync)):
         return impit.TimeoutException('timeout')
-    return httpx.ReadTimeout('timeout', request=httpx.Request('GET', 'https://example.com'))
+    return httpx2.ReadTimeout('timeout', request=httpx2.Request('GET', 'https://example.com'))
 
 
 @pytest.mark.parametrize(

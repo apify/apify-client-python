@@ -6,7 +6,7 @@ import sys
 from importlib import metadata
 from typing import TYPE_CHECKING
 
-import httpx2 as httpx
+import httpx2
 from werkzeug import Request, Response
 
 from apify_client.http_clients import Httpx2HttpClient, Httpx2HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
@@ -30,7 +30,7 @@ def _transport_wire_headers(
         return {}, {'zstd', 'gzip', 'deflate', 'br'}
     # HTTPX advertises whichever decoders happen to be installed alongside it, so read the set off the client
     # itself rather than hard-coding it and breaking whenever the environment gains or loses a codec.
-    with httpx.Client() as probe:
+    with httpx2.Client() as probe:
         return {'Connection': 'keep-alive'}, _parse_accept_encoding(probe.headers['accept-encoding'])
 
 

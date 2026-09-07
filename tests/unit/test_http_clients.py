@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 from unittest.mock import AsyncMock, Mock
 
 import brotli
-import httpx2 as httpx
+import httpx2
 import impit
 import pytest
 
@@ -271,7 +271,7 @@ def test_http_client_creates_sync_httpx_client() -> None:
     """The synchronous HTTPX adapter creates the underlying HTTPX client, and the close hook closes its pool."""
     client = Httpx2HttpClient(token='test_token_123')
 
-    assert isinstance(client._httpx_client, httpx.Client)
+    assert isinstance(client._httpx_client, httpx2.Client)
     client.close()
     assert client._httpx_client.is_closed
 
@@ -280,7 +280,7 @@ async def test_http_client_async_creates_async_httpx_client() -> None:
     """The asynchronous HTTPX adapter creates the underlying HTTPX client, and the close hook closes its pool."""
     client = Httpx2HttpClientAsync(token='test_token_123')
 
-    assert isinstance(client._httpx_async_client, httpx.AsyncClient)
+    assert isinstance(client._httpx_async_client, httpx2.AsyncClient)
     await client.aclose()
     assert client._httpx_async_client.is_closed
 
@@ -418,14 +418,14 @@ async def test_async_http_client_classifies_timeout_errors() -> None:
     [
         # Even the generic base class is transient: HTTPX subclasses it for every failure mode, so an
         # unclassified failure is safer to retry.
-        pytest.param(httpx.HTTPError('unclassified failure'), id='bare HTTPError'),
-        pytest.param(httpx.TimeoutException('timeout'), id='TimeoutException'),
-        pytest.param(httpx.NetworkError('network error'), id='NetworkError'),
-        pytest.param(httpx.RemoteProtocolError('remote protocol error'), id='RemoteProtocolError'),
-        pytest.param(httpx.DecodingError('decoding error'), id='DecodingError'),
+        pytest.param(httpx2.HTTPError('unclassified failure'), id='bare HTTPError'),
+        pytest.param(httpx2.TimeoutException('timeout'), id='TimeoutException'),
+        pytest.param(httpx2.NetworkError('network error'), id='NetworkError'),
+        pytest.param(httpx2.RemoteProtocolError('remote protocol error'), id='RemoteProtocolError'),
+        pytest.param(httpx2.DecodingError('decoding error'), id='DecodingError'),
         # One `ProxyError` covers both a proxy rejecting the CONNECT tunnel and a 407, so a transient case cannot
         # be told from a permanent one - retrying is the safer default.
-        pytest.param(httpx.ProxyError('proxy error'), id='ProxyError'),
+        pytest.param(httpx2.ProxyError('proxy error'), id='ProxyError'),
     ],
 )
 def test_httpx_is_retryable_transport_error(exc: Exception) -> None:
@@ -437,19 +437,19 @@ def test_httpx_is_retryable_transport_error(exc: Exception) -> None:
 @pytest.mark.parametrize(
     'exc',
     [
-        pytest.param(httpx.LocalProtocolError('invalid header value'), id='LocalProtocolError'),
-        pytest.param(httpx.UnsupportedProtocol('unsupported scheme'), id='UnsupportedProtocol'),
-        pytest.param(httpx.TooManyRedirects('too many redirects'), id='TooManyRedirects'),
+        pytest.param(httpx2.LocalProtocolError('invalid header value'), id='LocalProtocolError'),
+        pytest.param(httpx2.UnsupportedProtocol('unsupported scheme'), id='UnsupportedProtocol'),
+        pytest.param(httpx2.TooManyRedirects('too many redirects'), id='TooManyRedirects'),
         pytest.param(
-            httpx.HTTPStatusError(
+            httpx2.HTTPStatusError(
                 'status error',
-                request=httpx.Request('GET', 'https://example.com'),
-                response=httpx.Response(500),
+                request=httpx2.Request('GET', 'https://example.com'),
+                response=httpx2.Response(500),
             ),
             id='HTTPStatusError',
         ),
-        # HTTPX reports a bad URL outside the `httpx.HTTPError` tree entirely.
-        pytest.param(httpx.InvalidURL('unsupported scheme'), id='InvalidURL'),
+        # HTTPX reports a bad URL outside the `httpx2.HTTPError` tree entirely.
+        pytest.param(httpx2.InvalidURL('unsupported scheme'), id='InvalidURL'),
         pytest.param(ValueError('value error'), id='ValueError'),
         pytest.param(RuntimeError('runtime error'), id='RuntimeError'),
         pytest.param(Exception('generic exception'), id='Exception'),
@@ -465,7 +465,7 @@ def test_sync_httpx_client_classifies_timeout_errors() -> None:
     """The built-in synchronous HTTPX client exposes transport-neutral timeout classification."""
     with Httpx2HttpClient() as client:
         assert client.is_timeout_error(TimeoutError('test'))
-        assert client.is_timeout_error(httpx.TimeoutException('test'))
+        assert client.is_timeout_error(httpx2.TimeoutException('test'))
         assert not client.is_timeout_error(ValueError('test'))
 
 
@@ -473,7 +473,7 @@ async def test_async_httpx_client_classifies_timeout_errors() -> None:
     """The built-in asynchronous HTTPX client exposes transport-neutral timeout classification."""
     async with Httpx2HttpClientAsync() as client:
         assert client.is_timeout_error(TimeoutError('test'))
-        assert client.is_timeout_error(httpx.TimeoutException('test'))
+        assert client.is_timeout_error(httpx2.TimeoutException('test'))
         assert not client.is_timeout_error(ValueError('test'))
 
 
@@ -517,10 +517,10 @@ def test_transient_transport_error_is_retried() -> None:
 def test_httpx_permanent_transport_error_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """The HTTPX adapter feeds the same fail-fast classification into the shared pipeline."""
     with Httpx2HttpClient(token='test_token', min_delay_between_retries=timedelta(0)) as client:
-        send = Mock(side_effect=httpx.UnsupportedProtocol('unsupported scheme'))
+        send = Mock(side_effect=httpx2.UnsupportedProtocol('unsupported scheme'))
         monkeypatch.setattr(client._httpx_client, 'send', send)
 
-        with pytest.raises(httpx.UnsupportedProtocol):
+        with pytest.raises(httpx2.UnsupportedProtocol):
             client.call(method='GET', url='https://api.test.com/endpoint')
 
         send.assert_called_once()
@@ -529,10 +529,10 @@ def test_httpx_permanent_transport_error_is_not_retried(monkeypatch: pytest.Monk
 async def test_httpx_permanent_transport_error_is_not_retried_async(monkeypatch: pytest.MonkeyPatch) -> None:
     """The asynchronous HTTPX adapter applies the same policy, failing on the first attempt."""
     async with Httpx2HttpClientAsync(token='test_token', min_delay_between_retries=timedelta(0)) as client:
-        send = AsyncMock(side_effect=httpx.UnsupportedProtocol('unsupported scheme'))
+        send = AsyncMock(side_effect=httpx2.UnsupportedProtocol('unsupported scheme'))
         monkeypatch.setattr(client._httpx_async_client, 'send', send)
 
-        with pytest.raises(httpx.UnsupportedProtocol):
+        with pytest.raises(httpx2.UnsupportedProtocol):
             await client.call(method='GET', url='https://api.test.com/endpoint')
 
         send.assert_awaited_once()
@@ -541,10 +541,10 @@ async def test_httpx_permanent_transport_error_is_not_retried_async(monkeypatch:
 def test_httpx_transient_transport_error_is_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """The HTTPX adapter keeps a transient transport failure inside the shared retry loop."""
     with Httpx2HttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0)) as client:
-        send = Mock(side_effect=httpx.TimeoutException('timeout'))
+        send = Mock(side_effect=httpx2.TimeoutException('timeout'))
         monkeypatch.setattr(client._httpx_client, 'send', send)
 
-        with pytest.raises(httpx.TimeoutException):
+        with pytest.raises(httpx2.TimeoutException):
             client.call(method='GET', url='https://api.test.com/endpoint')
 
         # `max_retries` attempts inside the backoff loop, plus the final one it makes after the last delay.
@@ -556,10 +556,10 @@ async def test_httpx_transient_transport_error_is_retried_async(monkeypatch: pyt
     async with Httpx2HttpClientAsync(
         token='test_token', max_retries=2, min_delay_between_retries=timedelta(0)
     ) as client:
-        send = AsyncMock(side_effect=httpx.TimeoutException('timeout'))
+        send = AsyncMock(side_effect=httpx2.TimeoutException('timeout'))
         monkeypatch.setattr(client._httpx_async_client, 'send', send)
 
-        with pytest.raises(httpx.TimeoutException):
+        with pytest.raises(httpx2.TimeoutException):
             await client.call(method='GET', url='https://api.test.com/endpoint')
 
         # `max_retries` attempts inside the backoff loop, plus the final one it makes after the last delay.

@@ -19,7 +19,7 @@ import ArchitectureImportsExample from '!!raw-loader!./code/10_architecture_impo
 import PluggingInAsyncExample from '!!raw-loader!./code/10_plugging_in_async.py';
 import PluggingInSyncExample from '!!raw-loader!./code/10_plugging_in_sync.py';
 
-The Apify API client uses a pluggable HTTP layer. It ships with an [Impit](https://github.com/apify/impit)-based default, offers [HTTPX](https://github.com/pydantic/httpx2) as an optional built-in alternative, and accepts custom synchronous or asynchronous implementations.
+The Apify API client uses a pluggable HTTP layer. It ships with an [Impit](https://github.com/apify/impit)-based default, offers [HTTPX2](https://github.com/pydantic/httpx2) as an optional built-in alternative, and accepts custom synchronous or asynchronous implementations.
 
 ## Default HTTP client
 
@@ -47,7 +47,7 @@ You can configure the default client through the <ApiLink to="class/ApifyClient"
 
 ## Built-in HTTPX client
 
-The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX](https://github.com/pydantic/httpx2) as the transport.
+The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX2](https://github.com/pydantic/httpx2) as the transport.
 
 HTTPX is an optional dependency provided by the `httpx2` package, Pydantic's maintained continuation of HTTPX. Install `apify-client[httpx2]`, then pass the appropriate client to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. Impit remains the default even when the extra is installed.
 
@@ -124,7 +124,7 @@ Decorate your implementations with `@override`, as the built-in Impit and HTTPX 
 | `aiter_bytes() -> AsyncIterator[bytes]` | Iterate body in chunks (async) |
 
 :::note
-Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
+Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX2](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
 
 For a streamed response, consume the body inside the streaming context manager with `iter_bytes()` / `aiter_bytes()`, or call `read()` / `aread()` before accessing `content`. Some transports, including HTTPX, intentionally reject `content` on an unread streamed response.
 :::

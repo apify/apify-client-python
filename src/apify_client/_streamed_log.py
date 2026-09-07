@@ -7,7 +7,7 @@ import threading
 from asyncio import Task
 from datetime import UTC, datetime
 from threading import Thread
-from typing import TYPE_CHECKING, ClassVar, Self, cast
+from typing import TYPE_CHECKING, ClassVar, Self
 
 from apify_client._docs import docs_group
 
@@ -79,10 +79,10 @@ class StreamedLogBase:
         """Guess the log level from the message."""
         # Using only levels explicitly mentioned in the logging module
         known_levels = ('CRITICAL', 'FATAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG', 'NOTSET')
+        level_names_to_levels = logging.getLevelNamesMapping()
         for level in known_levels:
             if level in message:
-                # `getLevelName` returns an `int` when string is passed as input.
-                return cast('int', logging.getLevelName(level))
+                return level_names_to_levels[level]
         # Unknown log level. Fall back to the default.
         return logging.INFO
 

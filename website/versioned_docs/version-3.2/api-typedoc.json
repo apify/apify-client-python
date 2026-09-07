@@ -170414,7 +170414,7 @@
                         "summary": [
                             {
                                 "kind": "text",
-                                "text": "Initialize the HTTPX-based synchronous HTTP client.\n"
+                                "text": "Initialize the HTTPX2-based synchronous HTTP client.\n"
                             }
                         ]
                     },
@@ -170425,7 +170425,7 @@
                     "module": "http_clients._httpx2",
                     "name": "__init__",
                     "parsedDocstring": {
-                        "text": "Initialize the HTTPX-based synchronous HTTP client.\n",
+                        "text": "Initialize the HTTPX2-based synchronous HTTP client.\n",
                         "args": {
                             "token": "Apify API token for authentication.",
                             "timeout_short": "Default timeout for short-duration API operations (simple CRUD operations, ...).",
@@ -170457,7 +170457,7 @@
                                 "summary": [
                                     {
                                         "kind": "text",
-                                        "text": "Initialize the HTTPX-based synchronous HTTP client.\n"
+                                        "text": "Initialize the HTTPX2-based synchronous HTTP client.\n"
                                     }
                                 ]
                             },
@@ -170941,7 +170941,7 @@
                         "summary": [
                             {
                                 "kind": "text",
-                                "text": "Close the underlying HTTPX connection pool."
+                                "text": "Close the underlying HTTPX2 connection pool."
                             }
                         ]
                     },
@@ -170956,7 +170956,7 @@
                     "module": "http_clients._httpx2",
                     "name": "close",
                     "parsedDocstring": {
-                        "text": "Close the underlying HTTPX connection pool."
+                        "text": "Close the underlying HTTPX2 connection pool."
                     },
                     "sources": [
                         {
@@ -170976,7 +170976,7 @@
                                 "summary": [
                                     {
                                         "kind": "text",
-                                        "text": "Close the underlying HTTPX connection pool."
+                                        "text": "Close the underlying HTTPX2 connection pool."
                                     }
                                 ]
                             },
@@ -171805,7 +171805,7 @@
                 "summary": [
                     {
                         "kind": "text",
-                        "text": "Synchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
+                        "text": "Synchronous HTTP client for the Apify API built on top of [HTTPX2](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX2 applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
                     }
                 ]
             },
@@ -171836,7 +171836,7 @@
             "module": "http_clients._httpx2",
             "name": "Httpx2HttpClient",
             "parsedDocstring": {
-                "text": "Synchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
+                "text": "Synchronous HTTP client for the Apify API built on top of [HTTPX2](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.Client` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX2 applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
             },
             "sources": [
                 {
@@ -171870,7 +171870,7 @@
                         "summary": [
                             {
                                 "kind": "text",
-                                "text": "Initialize the HTTPX-based asynchronous HTTP client.\n"
+                                "text": "Initialize the HTTPX2-based asynchronous HTTP client.\n"
                             }
                         ]
                     },
@@ -171881,7 +171881,7 @@
                     "module": "http_clients._httpx2",
                     "name": "__init__",
                     "parsedDocstring": {
-                        "text": "Initialize the HTTPX-based asynchronous HTTP client.\n",
+                        "text": "Initialize the HTTPX2-based asynchronous HTTP client.\n",
                         "args": {
                             "token": "Apify API token for authentication.",
                             "timeout_short": "Default timeout for short-duration API operations (simple CRUD operations, ...).",
@@ -171913,7 +171913,7 @@
                                 "summary": [
                                     {
                                         "kind": "text",
-                                        "text": "Initialize the HTTPX-based asynchronous HTTP client.\n"
+                                        "text": "Initialize the HTTPX2-based asynchronous HTTP client.\n"
                                     }
                                 ]
                             },
@@ -172397,7 +172397,7 @@
                         "summary": [
                             {
                                 "kind": "text",
-                                "text": "Close the underlying asynchronous HTTPX connection pool."
+                                "text": "Close the underlying asynchronous HTTPX2 connection pool."
                             }
                         ]
                     },
@@ -172412,7 +172412,7 @@
                     "module": "http_clients._httpx2",
                     "name": "aclose",
                     "parsedDocstring": {
-                        "text": "Close the underlying asynchronous HTTPX connection pool."
+                        "text": "Close the underlying asynchronous HTTPX2 connection pool."
                     },
                     "sources": [
                         {
@@ -172432,7 +172432,7 @@
                                 "summary": [
                                     {
                                         "kind": "text",
-                                        "text": "Close the underlying asynchronous HTTPX connection pool."
+                                        "text": "Close the underlying asynchronous HTTPX2 connection pool."
                                     }
                                 ]
                             },
@@ -173271,7 +173271,7 @@
                 "summary": [
                     {
                         "kind": "text",
-                        "text": "Asynchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
+                        "text": "Asynchronous HTTP client for the Apify API built on top of [HTTPX2](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX2 applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
                     }
                 ]
             },
@@ -173302,7 +173302,7 @@
             "module": "http_clients._httpx2",
             "name": "Httpx2HttpClientAsync",
             "parsedDocstring": {
-                "text": "Asynchronous HTTP client for the Apify API built on top of [HTTPX](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
+                "text": "Asynchronous HTTP client for the Apify API built on top of [HTTPX2](https://github.com/pydantic/httpx2).\n\nThis client wraps `httpx.AsyncClient` and adds automatic retries with exponential backoff for rate-limited\n(HTTP 429) and server error (HTTP 5xx) responses.\n\nHTTPX2 applies a request timeout to each socket operation rather than to the request as a whole, so a response\nwhose body arrives slowly keeps resetting it and can outlast both the requested timeout and `timeout_max`. The\ndefault Impit client enforces the same value as a deadline for the whole request, body included.\n\nRequires the `httpx2` extra: `pip install \"apify-client[httpx2]\"`. The `httpx2` package is Pydantic's maintained\ncontinuation of HTTPX, which this module imports under the `httpx` name."
             },
             "sources": [
                 {

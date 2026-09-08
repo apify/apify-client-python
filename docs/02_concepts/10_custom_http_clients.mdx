@@ -19,7 +19,7 @@ import ArchitectureImportsExample from '!!raw-loader!./code/10_architecture_impo
 import PluggingInAsyncExample from '!!raw-loader!./code/10_plugging_in_async.py';
 import PluggingInSyncExample from '!!raw-loader!./code/10_plugging_in_sync.py';
 
-The Apify API client uses a pluggable HTTP layer. It ships with an [Impit](https://github.com/apify/impit)-based default, offers [HTTPX](https://github.com/pydantic/httpx2) as an optional built-in alternative, and accepts custom synchronous or asynchronous implementations.
+The Apify API client uses a pluggable HTTP layer. It ships with an [Impit](https://github.com/apify/impit)-based default, offers [HTTPX2](https://github.com/pydantic/httpx2) as an optional built-in alternative, and accepts custom synchronous or asynchronous implementations.
 
 ## Default HTTP client
 
@@ -45,11 +45,11 @@ You can configure the default client through the <ApiLink to="class/ApifyClient"
     </TabItem>
 </Tabs>
 
-## Built-in HTTPX client
+## Built-in HTTPX2 client
 
-The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX](https://github.com/pydantic/httpx2) as the transport.
+The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX2](https://github.com/pydantic/httpx2) as the transport.
 
-HTTPX is an optional dependency provided by the `httpx2` package, Pydantic's maintained continuation of HTTPX. Install `apify-client[httpx2]`, then pass the appropriate client to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. Impit remains the default even when the extra is installed.
+The `httpx2` package, Pydantic's maintained continuation of HTTPX, is an optional dependency. Install `apify-client[httpx2]`, then pass the appropriate client to <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.with_custom_http_client`</ApiLink>. Impit remains the default even when the extra is installed.
 
 ```bash
 pip install "apify-client[httpx2]"
@@ -70,9 +70,9 @@ uv add "apify-client[httpx2]"
     </TabItem>
 </Tabs>
 
-Configure retries, timeout tiers, default headers, and compression on the HTTPX client instance. The token passed to `with_custom_http_client` is applied automatically unless the HTTP client already has an `Authorization` header. The examples use the clients as context managers so their connection pools are closed deterministically. If a context manager doesn't fit your application's lifecycle, call `close()` on `Httpx2HttpClient` or `await aclose()` on `Httpx2HttpClientAsync` during shutdown.
+Configure retries, timeout tiers, default headers, and compression on the HTTPX2 client instance. The token passed to `with_custom_http_client` is applied automatically unless the HTTP client already has an `Authorization` header. The examples use the clients as context managers so their connection pools are closed deterministically. If a context manager doesn't fit your application's lifecycle, call `close()` on `Httpx2HttpClient` or `await aclose()` on `Httpx2HttpClientAsync` during shutdown.
 
-Timeout values are passed to the selected transport. Impit enforces them as a deadline for the whole request, body included. HTTPX applies them to each socket operation instead, so a response whose body arrives slowly keeps resetting the timeout and can outlast both the requested timeout and `timeout_max`. The `no_timeout` option disables HTTPX's timeouts.
+Timeout values are passed to the selected transport. Impit enforces them as a deadline for the whole request, body included. HTTPX2 applies them to each socket operation instead, so a response whose body arrives slowly keeps resetting the timeout and can outlast both the requested timeout and `timeout_max`. The `no_timeout` option disables HTTPX2's timeouts.
 
 ## Architecture
 
@@ -80,7 +80,7 @@ Internally, the HTTP client hierarchy has three layers:
 
 - A common internal base contains configuration and utilities shared by synchronous and asynchronous clients, including headers, request-body preparation, parameters, compression, and timeout tiers. It isn't a public extension point.
 - <ApiLink to="class/HttpClient">`HttpClient`</ApiLink> and <ApiLink to="class/HttpClientAsync">`HttpClientAsync`</ApiLink> add the synchronous or asynchronous request pipeline, retry loop, transport hooks, and lifecycle interface.
-- The built-in Impit and HTTPX classes inherit directly from the corresponding sync or async class and adapt the underlying transport.
+- The built-in Impit and HTTPX2 classes inherit directly from the corresponding sync or async class and adapt the underlying transport.
 
 `HttpClient.is_timeout_error(exc)` and `HttpClientAsync.is_timeout_error(exc)` are the public, transport-neutral way to tell whether an exception is a timeout, so code built on the client, such as streamed logs, doesn't need to know which transport raised it.
 
@@ -103,7 +103,7 @@ The public `call` method provides the shared request pipeline. A concrete transp
 - `is_timeout_error(exc)` identifies transport-specific timeout exceptions for higher-level client features. The default recognizes Python's `TimeoutError`. Timeout classification is independent of retryability, so a timeout the retry loop should retry has to be listed in `is_retryable_transport_error` too.
 - `close()` or `aclose()` closes resources owned by the transport. The default does nothing, which is correct for a transport that owns no pool or session.
 
-Decorate your implementations with `@override`, as the built-in Impit and HTTPX adapters do, so a type checker catches a misspelled or incompatible override.
+Decorate your implementations with `@override`, as the built-in Impit and HTTPX2 adapters do, so a type checker catches a misspelled or incompatible override.
 
 ### The HTTP response protocol
 
@@ -124,9 +124,9 @@ Decorate your implementations with `@override`, as the built-in Impit and HTTPX 
 | `aiter_bytes() -> AsyncIterator[bytes]` | Iterate body in chunks (async) |
 
 :::note
-Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
+Many HTTP libraries, including our default [Impit](https://github.com/apify/impit) or for example [HTTPX2](https://github.com/pydantic/httpx2) already satisfy this protocol out of the box.
 
-For a streamed response, consume the body inside the streaming context manager with `iter_bytes()` / `aiter_bytes()`, or call `read()` / `aread()` before accessing `content`. Some transports, including HTTPX, intentionally reject `content` on an unread streamed response.
+For a streamed response, consume the body inside the streaming context manager with `iter_bytes()` / `aiter_bytes()`, or call `read()` / `aread()` before accessing `content`. Some transports, including HTTPX2, intentionally reject `content` on an unread streamed response.
 :::
 
 ### Plugging it in
@@ -154,7 +154,7 @@ If you override `call` itself, your implementation becomes responsible for reque
 
 ## Use cases
 
-Custom HTTP clients might be useful when the built-in Impit and HTTPX clients don't cover your requirements, for example when you need to:
+Custom HTTP clients might be useful when the built-in Impit and HTTPX2 clients don't cover your requirements, for example when you need to:
 
 - **Use a different HTTP library** - Integrate [requests](https://requests.readthedocs.io/), [aiohttp](https://docs.aiohttp.org/), or another transport.
 - **Route through a proxy** - Add proxy support or request routing.

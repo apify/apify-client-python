@@ -5,7 +5,7 @@ from apify_client.http_clients._impit import ImpitHttpClient, ImpitHttpClientAsy
 
 _install_import_hook(__name__)
 
-# `httpx2` is an optional extra, so the import is wrapped in try_import. Accessing the HTTPX clients without the
+# `httpx2` is an optional extra, so the import is wrapped in try_import. Accessing the HTTPX2 clients without the
 # extra installed raises a clear ImportError instead of failing at package import time.
 with _try_import(
     __name__,

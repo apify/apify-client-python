@@ -40,7 +40,7 @@ class DatasetItemsPage:
     """The offset of the first item in this page."""
 
     count: int
-    """Number of items in this page."""
+    """Number of dataset rows the API scanned for this page, or the number of items returned when that is larger."""
 
     limit: int
     """The limit that was used for this request."""
@@ -237,7 +237,8 @@ class DatasetClient(ResourceClient):
 
         Args:
             offset: Number of items that should be skipped at the start. The default value is 0.
-            limit: Maximum number of items to return. By default there is no limit.
+            limit: Maximum number of dataset rows to scan. Filters leave fewer items than that, `unwind` more.
+                By default there is no limit.
             desc: By default, results are returned in the same order as they were stored. To reverse the order,
                 set this parameter to True.
             clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with
@@ -796,7 +797,8 @@ class DatasetClientAsync(ResourceClientAsync):
 
         Args:
             offset: Number of items that should be skipped at the start. The default value is 0.
-            limit: Maximum number of items to return. By default there is no limit.
+            limit: Maximum number of dataset rows to scan. Filters leave fewer items than that, `unwind` more.
+                By default there is no limit.
             desc: By default, results are returned in the same order as they were stored. To reverse the order,
                 set this parameter to True.
             clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with

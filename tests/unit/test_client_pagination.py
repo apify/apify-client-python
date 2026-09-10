@@ -180,9 +180,9 @@ def create_items(start: int, end: int, step: int | None = None) -> list[dict[str
     return [{'id': i} for i in range(start, end, step)]
 
 
-def create_unwound_items(start: int, end: int, step: int | None = None) -> list[dict[str, int]]:
+def create_unwound_items(start: int, end: int) -> list[dict[str, int]]:
     """Create the items the simulated `unwind` produces for the given index range."""
-    return [{**item, 'part': part} for item in create_items(start, end, step) for part in range(UNWIND_PARTS)]
+    return [{**item, 'part': part} for item in create_items(start, end) for part in range(UNWIND_PARTS)]
 
 
 def _is_true(value: str | None) -> bool:

@@ -475,7 +475,7 @@ TEST_CASES = (
         DATASET_CLIENTS,
     ),
     _PaginationCase(
-        'Unwind, chunk_size above the collection page cap',
+        'Unwind, chunk_size above 1000',
         {'unwind': ['parts'], 'chunk_size': 2000},
         create_unwound_items(0, 2500),
         DATASET_CLIENTS,

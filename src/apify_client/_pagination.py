@@ -48,10 +48,10 @@ def get_items_iterator(
 
     Args:
         callback: Function returning a single page of items.
-        limit: Maximum total number of scanned rows across all pages - `unwind` can turn those into more yielded items.
-            `None` or `0` means no limit.
+        limit: Maximum total number of items scanned across all pages, counted in rows on the dataset items endpoint
+            where `unwind` can turn one row into several yielded items. `None` or `0` means no limit.
         offset: Starting offset for the first page.
-        chunk_size: Maximum number of items requested per API call. `None` or `0` lets the API decide.
+        chunk_size: Per-page cap, sent to the API as its `limit`. `None` or `0` lets the API decide.
     """
     effective_chunk = chunk_size or 0
     initial_offset = offset or 0
@@ -227,11 +227,11 @@ def _page_scanned_rows(page: HasItems[T], requested_limit: int) -> int:
     Neither reported number is right on its own. `count` follows the rows the API scanned, but it is derived from a
     dataset's item count, which is incremented by a throttled write and so lags a fresh push. `len(items)` counts the
     items the API shaped out of those rows: filters (`clean`, `skip_empty`, `skip_hidden`) drop some, and `unwind`
-    splits one row into several. Taking the larger of the two covers a lagging `count`, and capping it at the rows the
-    call asked for keeps an unwound page from advancing past rows the next call would then never read. The cap is a
-    valid bound because the endpoint applies the `limit` it is sent verbatim: a page covering fewer rows than the call
-    asked for has reached the end of the dataset, where an overshoot costs nothing. A cap of `0` means the call sent no
-    limit, leaving the advance unbounded.
+    splits one row into several. The larger of the two absorbs a `count` that lags behind the items returned, and
+    capping it at the rows the call asked for keeps an unwound page from advancing past rows the next call would then
+    never read. The cap is a valid bound because the endpoint applies the `limit` it is sent verbatim; on a page
+    covering fewer rows than that, the advance can still overshoot into rows a concurrent push appends afterwards. A
+    `requested_limit` of `0` means the call sent no limit, leaving the advance unbounded.
     """
     scanned_rows = max(getattr(page, 'count', 0), len(page.items))
     return min(scanned_rows, requested_limit) if requested_limit else scanned_rows

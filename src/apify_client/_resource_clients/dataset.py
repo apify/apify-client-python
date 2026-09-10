@@ -261,7 +261,7 @@ class DatasetClient(ResourceClient):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of items requested per API call when iterating across pages.
+            chunk_size: Maximum number of dataset rows requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -821,7 +821,7 @@ class DatasetClientAsync(ResourceClientAsync):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             signature: Signature used to access the items.
-            chunk_size: Maximum number of items requested per API call when iterating across pages.
+            chunk_size: Maximum number of dataset rows requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:

@@ -48,8 +48,8 @@ def get_items_iterator(
 
     Args:
         callback: Function returning a single page of items.
-        limit: Maximum total number of items scanned across all pages, counted in rows on the dataset items endpoint
-            where `unwind` can turn one row into several yielded items. `None` or `0` means no limit.
+        limit: Maximum total number of rows scanned across all pages. On the dataset items endpoint `unwind` can
+            turn one row into several items, so more items than this can be yielded. `None` or `0` means no limit.
         offset: Starting offset for the first page.
         chunk_size: Per-page cap, sent to the API as its `limit`. `None` or `0` lets the API decide.
     """
@@ -132,9 +132,9 @@ def get_cursor_iterator(
 
     Cursor pagination is restricted to the two API responses that expose it: `ListOfKeys` (for key-value store keys) and
     `ListOfRequests` (for request queue requests). Iteration ends when the next cursor is `None` or the user-requested
-    `limit` is reached; an empty page on its own does not stop it. Both endpoints derive the cursor from the page they
-    return - the key-value store hands back the last key of the page, the request queue hands back a cursor only once a
-    page came back full - so termination can rest on the cursor alone.
+    `limit` is reached; an empty page on its own does not stop it. Neither endpoint can hand back a cursor that
+    outlives its page - the key-value store returns the last key of the page, and the request queue returns a cursor
+    only once a page came back full - so termination can rest on the cursor alone.
 
     Args:
         callback: Function returning a single page of items. Receives `cursor` and `limit` kwargs.

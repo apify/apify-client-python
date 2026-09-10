@@ -204,8 +204,8 @@ class DatasetClient(ResourceClient):
             items=items,
             total=int(response.headers['x-apify-pagination-total']),
             offset=int(response.headers['x-apify-pagination-offset']),
-            # x-apify-pagination-count returns count of processed items, not count of returned items
-            # This makes difference when items were filtered using hidden/empty
+            # The header counts the rows the API scanned, which `unwind` and a lagging dataset item count can
+            # both leave below the number of items returned.
             count=max(int(response.headers['x-apify-pagination-count']), len(items)),
             # API returns 999999999999 when no limit is used
             limit=int(response.headers['x-apify-pagination-limit']),
@@ -237,8 +237,8 @@ class DatasetClient(ResourceClient):
 
         Args:
             offset: Number of items that should be skipped at the start. The default value is 0.
-            limit: Maximum number of dataset rows to scan. Filters leave fewer items than that, `unwind` more.
-                By default there is no limit.
+            limit: Maximum number of dataset rows to scan. Fewer items are yielded when filters drop some, more
+                when `unwind` splits a row into several. By default there is no limit.
             desc: By default, results are returned in the same order as they were stored. To reverse the order,
                 set this parameter to True.
             clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with
@@ -764,8 +764,8 @@ class DatasetClientAsync(ResourceClientAsync):
             items=items,
             total=int(response.headers['x-apify-pagination-total']),
             offset=int(response.headers['x-apify-pagination-offset']),
-            # x-apify-pagination-count returns count of processed items, not count of returned items
-            # This makes difference when items were filtered using hidden/empty
+            # The header counts the rows the API scanned, which `unwind` and a lagging dataset item count can
+            # both leave below the number of items returned.
             count=max(int(response.headers['x-apify-pagination-count']), len(items)),
             # API returns 999999999999 when no limit is used
             limit=int(response.headers['x-apify-pagination-limit']),
@@ -797,8 +797,8 @@ class DatasetClientAsync(ResourceClientAsync):
 
         Args:
             offset: Number of items that should be skipped at the start. The default value is 0.
-            limit: Maximum number of dataset rows to scan. Filters leave fewer items than that, `unwind` more.
-                By default there is no limit.
+            limit: Maximum number of dataset rows to scan. Fewer items are yielded when filters drop some, more
+                when `unwind` splits a row into several. By default there is no limit.
             desc: By default, results are returned in the same order as they were stored. To reverse the order,
                 set this parameter to True.
             clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with

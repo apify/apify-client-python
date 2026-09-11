@@ -5,9 +5,10 @@ import gzip
 import json
 import threading
 import time
+from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
 import brotli
@@ -26,6 +27,7 @@ from apify_client.http_clients import (
     Httpx2HttpClientAsync,
     ImpitHttpClient,
     ImpitHttpClientAsync,
+    StreamedRequestBody,
 )
 from apify_client.http_compressors._base import HttpCompressor
 from apify_client.http_compressors._brotli import BrotliHttpCompressor
@@ -851,18 +853,40 @@ def test_prepare_request_call_skips_compression_for_already_compressed_content(c
     assert headers['User-Agent'] == client._headers['User-Agent']
 
 
-def test_prepare_request_call_keeps_caller_content_encoding_for_a_file_like_body() -> None:
-    """A file-like body skips compression entirely, and its `Content-Encoding` reaches the transport untouched."""
+def test_prepare_request_call_keeps_caller_content_encoding_for_a_streamed_body() -> None:
+    """A streamed body skips compression entirely, and its `Content-Encoding` reaches the transport untouched."""
     client = ConcreteHttpClient(http_compressor=GzipHttpCompressor())
-    stream = BytesIO(gzip.compress(b'raw payload'))
+    compressed = gzip.compress(b'raw payload')
 
     headers, _params, data = client._prepare_request_call(
         headers={'content-encoding': 'gzip'},
-        data=cast('bytes', stream),
+        data=BytesIO(compressed),
     )
 
-    assert data is stream
+    assert isinstance(data, StreamedRequestBody)
+    assert b''.join(data.iter_bytes()) == compressed
     assert headers['content-encoding'] == 'gzip'
+
+
+@pytest.mark.parametrize(
+    'make_data',
+    [
+        pytest.param(lambda: BytesIO(b'x' * MIN_COMPRESSION_SIZE * 4), id='file-like'),
+        pytest.param(lambda: iter([b'x' * MIN_COMPRESSION_SIZE * 4]), id='iterator'),
+    ],
+)
+def test_prepare_request_call_streams_body_without_compression(
+    compressor_case: tuple, make_data: Callable[[], Any]
+) -> None:
+    """A streamed body above the size threshold is wrapped for streaming and never compressed."""
+    compressor, _content_encoding, _decompress = compressor_case
+    client = ConcreteHttpClient(http_compressor=compressor)
+
+    headers, _params, data = client._prepare_request_call(data=make_data())
+
+    assert isinstance(data, StreamedRequestBody)
+    assert b''.join(data.iter_bytes()) == b'x' * MIN_COMPRESSION_SIZE * 4
+    assert not any(key.lower() == 'content-encoding' for key in headers)
 
 
 @pytest.mark.parametrize(
@@ -1141,3 +1165,187 @@ async def test_async_call_skips_thread_offload_for_a_body_it_cannot_compress(
     await client.call(method='PUT', url='https://api.test.com/endpoint', data=body)
 
     spy.assert_not_called()
+
+
+class StreamingTransport(HttpClient):
+    """A transport that drains every body it is handed and answers from a script of statuses and exceptions."""
+
+    def __init__(self, outcomes: list[int | Exception]) -> None:
+        super().__init__(min_delay_between_retries=timedelta(milliseconds=1))
+        self._outcomes = outcomes
+        self.bodies: list[bytes | None] = []
+        self.attempts_with_iterator: list[bool] = []
+
+    def is_retryable_transport_error(self, exc: Exception) -> bool:
+        return isinstance(exc, ConnectionError)
+
+    def send_request(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        content: bytes | Iterator[bytes] | None,
+        timeout: float | None,
+        stream: bool,
+    ) -> HttpResponse:
+        _ = method, url, headers, timeout, stream
+        self.attempts_with_iterator.append(not isinstance(content, (bytes, type(None))))
+        self.bodies.append(b''.join(content) if isinstance(content, Iterator) else content)
+        outcome = self._outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return Mock(status_code=outcome)
+
+
+class StreamingTransportAsync(HttpClientAsync):
+    """Asynchronous counterpart of `StreamingTransport`."""
+
+    def __init__(self, outcomes: list[int | Exception]) -> None:
+        super().__init__(min_delay_between_retries=timedelta(milliseconds=1))
+        self._outcomes = outcomes
+        self.bodies: list[bytes | None] = []
+        self.attempts_with_iterator: list[bool] = []
+
+    def is_retryable_transport_error(self, exc: Exception) -> bool:
+        return isinstance(exc, ConnectionError)
+
+    async def send_request(
+        self,
+        *,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        content: bytes | AsyncIterator[bytes] | None,
+        timeout: float | None,
+        stream: bool,
+    ) -> HttpResponse:
+        _ = method, url, headers, timeout, stream
+        self.attempts_with_iterator.append(not isinstance(content, (bytes, type(None))))
+        self.bodies.append(
+            b''.join([chunk async for chunk in content]) if isinstance(content, AsyncIterator) else content
+        )
+        outcome = self._outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return Mock(status_code=outcome)
+
+
+class WrappingTransport(StreamingTransport):
+    """A transport that, like Impit, reports a failure while pulling chunks as its own transient error."""
+
+    def send_request(self, **kwargs: Any) -> HttpResponse:
+        try:
+            return super().send_request(**kwargs)
+        except OSError as exc:
+            raise ConnectionError('the internal HTTP library has thrown an error') from exc
+
+
+class WrappingTransportAsync(StreamingTransportAsync):
+    """Asynchronous counterpart of `WrappingTransport`."""
+
+    async def send_request(self, **kwargs: Any) -> HttpResponse:
+        try:
+            return await super().send_request(**kwargs)
+        except OSError as exc:
+            raise ConnectionError('the internal HTTP library has thrown an error') from exc
+
+
+def failing_chunks() -> Iterator[bytes]:
+    yield b'first chunk'
+    raise OSError('disk on fire')
+
+
+def test_send_request_receives_a_streamed_body_as_an_iterator_of_chunks() -> None:
+    """The transport gets the chunks, not the source object, so any library that streams iterables can send them."""
+    transport = StreamingTransport([200])
+
+    transport.call(method='PUT', url='https://api.test.com/endpoint', data=BytesIO(b'streamed'))
+
+    assert transport.attempts_with_iterator == [True]
+    assert transport.bodies == [b'streamed']
+
+
+async def test_send_request_receives_a_streamed_body_as_an_async_iterator_of_chunks() -> None:
+    """The asynchronous transport gets an async iterator, which a synchronous source is adapted to."""
+    transport = StreamingTransportAsync([200])
+
+    await transport.call(method='PUT', url='https://api.test.com/endpoint', data=BytesIO(b'streamed'))
+
+    assert transport.attempts_with_iterator == [True]
+    assert transport.bodies == [b'streamed']
+
+
+def test_rewindable_streamed_body_is_rewound_between_attempts() -> None:
+    """A seekable source is sent again from its starting position after a retryable failure."""
+    transport = StreamingTransport([ConnectionError('reset'), 200])
+    buffer = BytesIO(b'skip-payload')
+    buffer.read(5)
+
+    transport.call(method='PUT', url='https://api.test.com/endpoint', data=buffer)
+
+    assert transport.bodies == [b'payload', b'payload']
+
+
+async def test_rewindable_streamed_body_is_rewound_between_attempts_async() -> None:
+    """A seekable source is sent again from its starting position after a retryable failure."""
+    transport = StreamingTransportAsync([ConnectionError('reset'), 200])
+    buffer = BytesIO(b'skip-payload')
+    buffer.read(5)
+
+    await transport.call(method='PUT', url='https://api.test.com/endpoint', data=buffer)
+
+    assert transport.bodies == [b'payload', b'payload']
+
+
+def test_non_rewindable_streamed_body_gets_a_single_attempt() -> None:
+    """An iterator is consumed by the attempt that sends it, so even a retryable failure is final."""
+    transport = StreamingTransport([ConnectionError('reset'), 200])
+
+    with pytest.raises(ConnectionError, match='reset'):
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=iter([b'payload']))
+
+    assert transport.bodies == [b'payload']
+
+
+async def test_non_rewindable_streamed_body_gets_a_single_attempt_async() -> None:
+    """An iterator is consumed by the attempt that sends it, so even a retryable failure is final."""
+    transport = StreamingTransportAsync([ConnectionError('reset'), 200])
+
+    with pytest.raises(ConnectionError, match='reset'):
+        await transport.call(method='PUT', url='https://api.test.com/endpoint', data=iter([b'payload']))
+
+    assert transport.bodies == [b'payload']
+
+
+def test_streamed_body_source_error_replaces_the_wrapped_transport_error() -> None:
+    """A source failure is raised as itself, with the transport's report as its cause, and is never retried."""
+    transport = WrappingTransport([200, 200])
+
+    with pytest.raises(OSError, match='disk on fire') as exc_info:
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=failing_chunks())
+
+    assert isinstance(exc_info.value.__cause__, ConnectionError)
+    assert len(transport.attempts_with_iterator) == 1
+
+
+async def test_streamed_body_source_error_replaces_the_wrapped_transport_error_async() -> None:
+    """A source failure is raised as itself, with the transport's report as its cause, and is never retried."""
+    transport = WrappingTransportAsync([200, 200])
+
+    with pytest.raises(OSError, match='disk on fire') as exc_info:
+        await transport.call(method='PUT', url='https://api.test.com/endpoint', data=failing_chunks())
+
+    assert isinstance(exc_info.value.__cause__, ConnectionError)
+    assert len(transport.attempts_with_iterator) == 1
+
+
+def test_streamed_body_source_error_stops_retrying_when_the_transport_propagates_it() -> None:
+    """A transport that lets the source error through, like HTTPX2, ends up with the same single attempt."""
+    transport = StreamingTransport([200, 200])
+
+    with pytest.raises(OSError, match='disk on fire') as exc_info:
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=failing_chunks())
+
+    assert exc_info.value.__cause__ is None
+    assert len(transport.attempts_with_iterator) == 1

@@ -29,6 +29,8 @@ from apify_client._utils.try_import import FailedImport, try_import
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Callable
+
     from apify_client._typeddicts import WebhookRepresentationDict
     from apify_client.types import WebhooksList
 
@@ -283,69 +285,82 @@ def test_encode_key_value_store_record_value(
     assert content_type == expected_content_type
 
 
-def test_encode_key_value_store_record_value_bytesio() -> None:
-    """Test that BytesIO is read into bytes and encoded as octet-stream."""
-    buffer = io.BytesIO(b'buffer data')
-    value, content_type = encode_key_value_store_record_value(buffer)
-    assert value == b'buffer data'
-    assert content_type == 'application/octet-stream'
+class Reader:
+    """A duck-typed file-like object: a callable `read`, no `io.IOBase` ancestry."""
+
+    def __init__(self, data: bytes) -> None:
+        self._buffer = io.BytesIO(data)
+
+    def read(self, size: int = -1) -> bytes:
+        return self._buffer.read(size)
 
 
-def test_encode_key_value_store_record_value_stringio() -> None:
-    """Test that StringIO is read into text and encoded as text/plain."""
-    buffer = io.StringIO('buffer data')
-    value, content_type = encode_key_value_store_record_value(buffer)
-    assert value == 'buffer data'
-    assert content_type == 'text/plain; charset=utf-8'
+class AsyncReader:
+    """A file-like object with a coroutine `read`, as `aiofiles` provides."""
+
+    def __init__(self, data: bytes) -> None:
+        self._buffer = io.BytesIO(data)
+
+    async def read(self, size: int = -1) -> bytes:
+        return self._buffer.read(size)
 
 
-def test_encode_key_value_store_record_value_duck_typed_file_like() -> None:
-    """Test that a duck-typed file-like value (a callable `read`, not an `io.IOBase`) is read into bytes."""
-
-    class Reader:
-        def read(self) -> bytes:
-            return b'buffer data'
-
-    value, content_type = encode_key_value_store_record_value(Reader())
-    assert value == b'buffer data'
-    assert content_type == 'application/octet-stream'
-
-
-def test_encode_key_value_store_record_value_async_file_like_raises() -> None:
-    """Test that an async file-like value is rejected instead of storing the repr of an un-awaited coroutine."""
-
-    class AsyncReader:
-        async def read(self) -> bytes:
-            return b'buffer data'
-
-    with pytest.raises(TypeError, match='Async file-like objects are not supported'):
-        encode_key_value_store_record_value(AsyncReader())
-
-
-def test_encode_key_value_store_record_value_non_bytes_read_raises() -> None:
-    """Test that a `read` returning neither bytes nor str is rejected instead of being JSON-serialized."""
-
-    class EmptyNonBlockingReader:
-        def read(self) -> None:
-            """Mimic a non-blocking raw stream with no data available."""
-
-    with pytest.raises(TypeError, match='returned NoneType, expected bytes or str'):
-        encode_key_value_store_record_value(EmptyNonBlockingReader())
+async def async_chunks() -> AsyncIterator[bytes]:
+    yield b'buffer data'
 
 
 @pytest.mark.parametrize(
-    ('value', 'expected_type_name'),
+    ('make_value', 'expected_content_type'),
     [
-        pytest.param('already gzipped, honest', 'str', id='string'),
-        pytest.param({'a': 1}, 'dict', id='json-serializable object'),
-        pytest.param(io.StringIO('buffer data'), 'str', id='text-mode file-like'),
+        pytest.param(lambda: io.BytesIO(b'buffer data'), 'application/octet-stream', id='binary file-like'),
+        pytest.param(lambda: io.StringIO('buffer data'), 'text/plain; charset=utf-8', id='text-mode file-like'),
+        pytest.param(lambda: Reader(b'buffer data'), 'application/octet-stream', id='duck-typed reader'),
+        pytest.param(lambda: AsyncReader(b'buffer data'), 'application/octet-stream', id='async reader'),
+        pytest.param(lambda: iter([b'buffer', b' data']), 'application/octet-stream', id='bytes iterator'),
+        pytest.param(async_chunks, 'application/octet-stream', id='async bytes iterator'),
     ],
 )
-def test_encode_key_value_store_record_value_declared_compression_of_non_bytes_raises(
-    value: Any, expected_type_name: str
+def test_encode_key_value_store_record_value_passes_streamed_value_through(
+    make_value: Callable[[], Any], expected_content_type: str
 ) -> None:
+    """A streamed value is returned unread for the transport to stream, with a content type fitting its kind."""
+    value = make_value()
+
+    encoded, content_type = encode_key_value_store_record_value(value)
+
+    assert encoded is value
+    assert content_type == expected_content_type
+
+
+def test_encode_key_value_store_record_value_keeps_explicit_content_type_of_streamed_value() -> None:
+    """An explicit content type is kept for a streamed value, whose bytes are never inspected."""
+    value = io.BytesIO(b'{"a": 1}')
+
+    encoded, content_type = encode_key_value_store_record_value(value, content_type='application/json')
+
+    assert encoded is value
+    assert content_type == 'application/json'
+
+
+def test_encode_key_value_store_record_value_serializes_list_as_json() -> None:
+    """A list is JSON data, not a stream of chunks, even though it can be iterated."""
+    value, content_type = encode_key_value_store_record_value([1, 2])
+
+    assert value == b'[1, 2]'
+    assert content_type == 'application/json; charset=utf-8'
+
+
+@pytest.mark.parametrize(
+    ('value', 'match'),
+    [
+        pytest.param('already gzipped, honest', 'Cannot upload a str value', id='string'),
+        pytest.param({'a': 1}, 'Cannot upload a dict value', id='json-serializable object'),
+        pytest.param(io.StringIO('buffer data'), 'opened in text mode', id='text-mode file-like'),
+    ],
+)
+def test_encode_key_value_store_record_value_declared_compression_of_non_bytes_raises(value: Any, match: str) -> None:
     """A value that cannot be compressed is rejected when the content encoding declares a compression."""
-    with pytest.raises(TypeError, match=f'Cannot upload a {expected_type_name} value'):
+    with pytest.raises(TypeError, match=match):
         encode_key_value_store_record_value(value, content_encoding='gzip')
 
 
@@ -354,7 +369,6 @@ def test_encode_key_value_store_record_value_declared_compression_of_non_bytes_r
     [
         pytest.param(_GZIPPED_DATA, 'gzip', _GZIPPED_DATA, id='bytes'),
         pytest.param(bytearray(_GZIPPED_DATA), 'gzip', bytearray(_GZIPPED_DATA), id='bytearray'),
-        pytest.param(io.BytesIO(_GZIPPED_DATA), 'GZip', _GZIPPED_DATA, id='binary file-like, mixed-case encoding'),
         pytest.param('buffer data', 'identity', 'buffer data', id='string under identity'),
         pytest.param({'a': 1}, ' Identity ', b'{"a": 1}', id='json-serializable object under padded identity'),
     ],
@@ -365,6 +379,23 @@ def test_encode_key_value_store_record_value_accepts_declared_encoding(
     """A bytes-like value passes the compression guard, and `identity` declares no compression at all."""
     encoded, _content_type = encode_key_value_store_record_value(value, content_encoding=content_encoding)
     assert encoded == expected_value
+
+
+@pytest.mark.parametrize(
+    'make_value',
+    [
+        pytest.param(lambda: io.BytesIO(_GZIPPED_DATA), id='binary file-like'),
+        pytest.param(lambda: Reader(_GZIPPED_DATA), id='duck-typed reader'),
+        pytest.param(lambda: iter([_GZIPPED_DATA]), id='bytes iterator'),
+    ],
+)
+def test_encode_key_value_store_record_value_streams_pre_encoded_value(make_value: Callable[[], Any]) -> None:
+    """A streamed value passes the compression guard unread, since only its bytes can carry the encoding."""
+    value = make_value()
+
+    encoded, _content_type = encode_key_value_store_record_value(value, content_encoding='GZip')
+
+    assert encoded is value
 
 
 def test_encode_key_value_store_record_value_non_encodable_with_explicit_content_type_raises() -> None:

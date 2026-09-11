@@ -105,7 +105,7 @@ class RequestsHttpClient(HttpClient):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:

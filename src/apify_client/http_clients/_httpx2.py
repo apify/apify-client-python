@@ -17,6 +17,7 @@ from apify_client._docs import docs_group
 from apify_client.http_clients._base import HttpClient, HttpClientAsync
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
     from apify_client._statistics import ClientStatistics
@@ -122,7 +123,7 @@ class Httpx2HttpClient(HttpClient):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> httpx2.Response:
@@ -226,7 +227,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> httpx2.Response:

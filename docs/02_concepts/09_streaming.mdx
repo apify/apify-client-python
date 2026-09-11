@@ -1,7 +1,7 @@
 ---
 id: streaming-resources
 title: Streaming resources
-description: Stream large datasets, key-value store records, and logs without loading them into memory.
+description: Stream large datasets, key-value store records, and logs in both directions without loading them into memory.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -12,16 +12,22 @@ import ApiLink from '@theme/ApiLink';
 
 import StreamingAsyncExample from '!!raw-loader!./code/09_streaming_async.py';
 import StreamingSyncExample from '!!raw-loader!./code/09_streaming_sync.py';
+import UploadFileAsyncExample from '!!raw-loader!./code/09_upload_file_async.py';
+import UploadFileSyncExample from '!!raw-loader!./code/09_upload_file_sync.py';
+import UploadGeneratorAsyncExample from '!!raw-loader!./code/09_upload_generator_async.py';
+import UploadGeneratorSyncExample from '!!raw-loader!./code/09_upload_generator_sync.py';
 
-Certain resources, such as dataset items, key-value store records, and logs, support streaming directly from the Apify API. This allows you to process large resources incrementally without downloading them entirely into memory, making it ideal for handling large or continuously updated data.
+Large resources don't have to pass through memory whole. The client streams downloads of dataset items, key-value store records, and logs as they arrive, and it streams uploads of key-value store records and Actor inputs from a file or another stream as they're read. Both directions work with the synchronous and the asynchronous client. A download can also feed an upload directly, which is how you [chain Actors into a pipeline](../03_guides/06_chain_actors.mdx).
 
-Supported streaming methods:
+## Streaming downloads
+
+Dataset items, key-value store records, and logs can be streamed directly from the Apify API, so you process them incrementally instead of downloading them whole. The supported methods are:
 
 - <ApiLink to="class/DatasetClient#stream_items">`DatasetClient.stream_items`</ApiLink> - Stream dataset items incrementally. Yields a raw streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink>.
 - <ApiLink to="class/KeyValueStoreClient#stream_record">`KeyValueStoreClient.stream_record`</ApiLink> - Stream a key-value store record as raw data. Yields a `dict` with the `key`, `value`, and `content_type` fields, where `value` holds the raw streaming response, or `None` when the record doesn't exist.
 - <ApiLink to="class/LogClient#stream">`LogClient.stream`</ApiLink> - Stream logs in real time. Yields a raw streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink>, or `None` when the log doesn't exist.
 
-All three methods are context managers. Consume the streamed data within a `with` block to ensure that the connection is closed automatically, preventing memory leaks or unclosed connections.
+All three methods are context managers. Consume the streamed data within a `with` block, so the connection is closed automatically.
 
 The following example shows how to stream the logs of an Actor run incrementally:
 
@@ -38,4 +44,70 @@ The following example shows how to stream the logs of an Actor run incrementally
     </TabItem>
 </Tabs>
 
-Streaming is ideal for processing large logs, datasets, or files incrementally without downloading them entirely into memory.
+## Streaming uploads
+
+<ApiLink to="class/KeyValueStoreClient#set_record">`KeyValueStoreClient.set_record`</ApiLink> and the `run_input` of <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink>, <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink>, and <ApiLink to="class/RunClient#metamorph">`RunClient.metamorph`</ApiLink> accept a value the client streams to the API in chunks:
+
+- A file-like object, meaning anything with a `read(size)` method: an open file, an `io.BytesIO`, a member of a ZIP archive, or a pipe. The client reads it in 64 KiB chunks from its current position and doesn't close it.
+- An iterator of `bytes` or `str` chunks, such as a generator. The iterator decides the chunk sizes.
+- A streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> from one of the download methods, whose body is forwarded chunk by chunk.
+
+The asynchronous client also accepts an async iterator and a file-like object with an `async def read`, such as a file opened with `aiofiles`. The synchronous client rejects those with a `TypeError`. A synchronous file or iterator works with both clients. The asynchronous client reads it in a worker thread, so the event loop stays free.
+
+Only the chunk being sent is held in memory, so the process uploading a file doesn't need memory for the whole file.
+
+The following example uploads a file from disk. The asynchronous variant opens it with [aiofiles](https://github.com/Tinche/aiofiles), which isn't an `apify-client` dependency, so install it alongside the client:
+
+```bash
+pip install apify-client aiofiles
+```
+
+<Tabs>
+    <TabItem value="UploadFileAsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {UploadFileAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="UploadFileSyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {UploadFileSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+With a generator, you produce the data while it uploads, for example from pages of a database query:
+
+<Tabs>
+    <TabItem value="UploadGeneratorAsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {UploadGeneratorAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="UploadGeneratorSyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {UploadGeneratorSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+### Content type
+
+A file opened in text mode is uploaded as `text/plain; charset=utf-8`, encoded to UTF-8 chunk by chunk. Any other streamed value is uploaded as `application/octet-stream` unless you pass `content_type`. An iterator or a response carries no type of its own, so set `content_type` explicitly, as the examples do.
+
+### Compression
+
+A streamed body is never compressed, because the client sees each chunk only as it's sent. To upload compressed data, compress it yourself and declare the encoding with `content_encoding`. The client then forwards the bytes and the header as they are. For details, see [Pre-compressed bodies](./13_http_compression.mdx#pre-compressed-bodies).
+
+### Retries
+
+The client retries a failed request only when it can send the body again:
+
+- A seekable file-like object, such as an open file or an `io.BytesIO`, is sought back to where it started before each retry, so the upload is retried like any other request.
+- An iterator, a streaming response, a pipe, or any asynchronous source is consumed by the attempt that sends it. The request gets a single attempt, and a failure raises immediately.
+- A failure inside the source itself, such as a disk error while reading the file, is raised as that error and isn't retried, whatever the source.
+
+If an upload from a source that can't be rewound needs retries, download the data to a temporary file first and upload the file.
+
+### Custom HTTP clients
+
+A custom transport receives a streamed body as an iterator of `bytes` chunks, or as an async iterator in the asynchronous client, so any HTTP library that sends iterable bodies can send it. The <ApiLink to="class/StreamedRequestBody">`StreamedRequestBody`</ApiLink> class documents the rest of the contract. For details, see [The transport contract](./10_custom_http_clients.mdx#the-transport-contract).

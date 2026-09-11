@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gzip
+import io
 import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
@@ -777,3 +778,75 @@ async def test_key_value_store_list_keys_with_exclusive_start_key(client: ApifyC
         assert first_keys.isdisjoint(second_keys)
     finally:
         await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_set_streamed_record(client: ApifyClient | ApifyClientAsync) -> None:
+    """A file-like value is streamed to the API in chunks and stored whole."""
+    store_name = get_random_resource_name('kvs')
+    created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
+    assert isinstance(created_store, KeyValueStore)
+    store_client = client.key_value_store(created_store.id)
+
+    try:
+        # Several chunks' worth of non-repeating bytes, so a dropped or reordered chunk would show in the comparison.
+        data = bytes(range(256)) * (3 * 1024 * 4)
+        await maybe_await(
+            store_client.set_record('stream.bin', io.BytesIO(data), content_type='application/octet-stream')
+        )
+
+        # Poll until the record is visible (eventual consistency)
+        async def get_record() -> dict | None:
+            return await maybe_await(store_client.get_record_as_bytes('stream.bin'))
+
+        record = await poll_until_condition(get_record, lambda record: record is not None)
+        assert isinstance(record, dict)
+        assert record['value'] == data
+        assert record['content_type'] == 'application/octet-stream'
+    finally:
+        await maybe_await(store_client.delete())
+
+
+async def test_key_value_store_pipe_record_between_stores(
+    client: ApifyClient | ApifyClientAsync,
+    *,
+    is_async: bool,
+) -> None:
+    """A record streamed from one store is uploaded to another as it downloads, keeping its content type."""
+    source_store = await maybe_await(client.key_value_stores().get_or_create(name=get_random_resource_name('kvs')))
+    target_store = await maybe_await(client.key_value_stores().get_or_create(name=get_random_resource_name('kvs')))
+    assert isinstance(source_store, KeyValueStore)
+    assert isinstance(target_store, KeyValueStore)
+    source_client = client.key_value_store(source_store.id)
+    target_client = client.key_value_store(target_store.id)
+
+    try:
+        data = ('id,value\n' + '\n'.join(f'{i},{i * i}' for i in range(50_000))).encode('utf-8')
+        await maybe_await(source_client.set_record('items.csv', data, content_type='text/csv'))
+
+        async def get_source_record() -> dict | None:
+            return await maybe_await(source_client.get_record_as_bytes('items.csv'))
+
+        assert await poll_until_condition(get_source_record, lambda record: record is not None) is not None
+
+        # `stream_record` is a context manager, so the sync and async clients cannot share one code path here.
+        if is_async:
+            async with source_client.stream_record('items.csv') as record:  # ty: ignore[invalid-context-manager]
+                assert record is not None
+                await maybe_await(
+                    target_client.set_record('items.csv', record['value'], content_type=record['content_type'])
+                )
+        else:
+            with source_client.stream_record('items.csv') as record:  # ty: ignore[invalid-context-manager]
+                assert record is not None
+                target_client.set_record('items.csv', record['value'], content_type=record['content_type'])
+
+        async def get_target_record() -> dict | None:
+            return await maybe_await(target_client.get_record_as_bytes('items.csv'))
+
+        copied = await poll_until_condition(get_target_record, lambda record: record is not None)
+        assert isinstance(copied, dict)
+        assert copied['value'] == data
+        assert copied['content_type'].startswith('text/csv')
+    finally:
+        await maybe_await(source_client.delete())
+        await maybe_await(target_client.delete())

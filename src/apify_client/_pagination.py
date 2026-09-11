@@ -132,9 +132,10 @@ def get_cursor_iterator(
 
     Cursor pagination is restricted to the two API responses that expose it: `ListOfKeys` (for key-value store keys) and
     `ListOfRequests` (for request queue requests). Iteration ends when the next cursor is `None` or the user-requested
-    `limit` is reached; an empty page on its own does not stop it. Neither endpoint can hand back a cursor that
-    outlives its page - the key-value store returns the last key of the page, and the request queue returns a cursor
-    only once a page came back full - so termination can rest on the cursor alone.
+    `limit` is reached. An empty page does not end it by itself, and it does not need to: both endpoints send a next
+    cursor only alongside a page that has items. The key-value store's cursor is the last key of the page it just
+    returned, and the request queue sends one only for a page that came back full, so an empty page always arrives with
+    a `None` cursor.
 
     Args:
         callback: Function returning a single page of items. Receives `cursor` and `limit` kwargs.

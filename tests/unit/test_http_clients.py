@@ -1285,6 +1285,28 @@ def failing_chunks() -> Iterator[bytes]:
     raise OSError('disk on fire')
 
 
+class FailingBuffer(BytesIO):
+    """A seekable source whose reads fail, so a body that could be rewound still hits a source error."""
+
+    def read(self, size: int | None = -1) -> bytes:
+        _ = size
+        raise OSError('disk on fire')
+
+
+class FailOnceBuffer(BytesIO):
+    """A seekable source whose first read fails, so a body carries a source error into the next request."""
+
+    def __init__(self) -> None:
+        super().__init__(b'payload')
+        self.fail = True
+
+    def read(self, size: int | None = -1) -> bytes:
+        if self.fail:
+            self.fail = False
+            raise OSError('disk on fire')
+        return super().read(size)
+
+
 def test_send_request_receives_a_streamed_body_as_an_iterator_of_chunks() -> None:
     """The transport gets the chunks, not the source object, so any library that streams iterables can send them."""
     transport = StreamingTransport([200])
@@ -1327,6 +1349,31 @@ async def test_rewindable_streamed_body_is_rewound_between_attempts_async() -> N
     assert transport.bodies == [b'payload', b'payload']
 
 
+def test_rewindable_streamed_body_is_rewound_before_every_request() -> None:
+    """A body handed to a second request is sent again in full, instead of the source arriving already drained."""
+    body = StreamedRequestBody(BytesIO(b'payload'))
+    first = StreamingTransport([200])
+    second = StreamingTransport([200])
+
+    first.call(method='PUT', url='https://api.test.com/endpoint', data=body)
+    second.call(method='PUT', url='https://api.test.com/endpoint', data=body)
+
+    assert first.bodies == [b'payload']
+    assert second.bodies == [b'payload']
+
+
+def test_rewindable_streamed_body_drops_a_source_error_of_an_earlier_request() -> None:
+    """A later request is classified by its own outcome, not by the source error an earlier one recorded."""
+    body = StreamedRequestBody(FailOnceBuffer())
+    with pytest.raises(OSError, match='disk on fire'):
+        WrappingTransport([200]).call(method='PUT', url='https://api.test.com/endpoint', data=body)
+
+    transport = WrappingTransport([ConnectionError('reset'), 200])
+    transport.call(method='PUT', url='https://api.test.com/endpoint', data=body)
+
+    assert transport.bodies == [b'payload', b'payload']
+
+
 def test_non_rewindable_streamed_body_gets_a_single_attempt() -> None:
     """An iterator is consumed by the attempt that sends it, so even a retryable failure is final."""
     transport = StreamingTransport([ConnectionError('reset'), 200])
@@ -1364,6 +1411,28 @@ async def test_streamed_body_source_error_replaces_the_wrapped_transport_error_a
 
     with pytest.raises(OSError, match='disk on fire') as exc_info:
         await transport.call(method='PUT', url='https://api.test.com/endpoint', data=failing_chunks())
+
+    assert isinstance(exc_info.value.__cause__, ConnectionError)
+    assert len(transport.attempts_with_iterator) == 1
+
+
+def test_rewindable_streamed_body_source_error_is_not_retried() -> None:
+    """A rewindable source that fails is raised as itself after one attempt, since rewinding cannot fix it."""
+    transport = WrappingTransport([200, 200])
+
+    with pytest.raises(OSError, match='disk on fire') as exc_info:
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=FailingBuffer(b'payload'))
+
+    assert isinstance(exc_info.value.__cause__, ConnectionError)
+    assert len(transport.attempts_with_iterator) == 1
+
+
+async def test_rewindable_streamed_body_source_error_is_not_retried_async() -> None:
+    """A rewindable source that fails is raised as itself after one attempt, since rewinding cannot fix it."""
+    transport = WrappingTransportAsync([200, 200])
+
+    with pytest.raises(OSError, match='disk on fire') as exc_info:
+        await transport.call(method='PUT', url='https://api.test.com/endpoint', data=FailingBuffer(b'payload'))
 
     assert isinstance(exc_info.value.__cause__, ConnectionError)
     assert len(transport.attempts_with_iterator) == 1

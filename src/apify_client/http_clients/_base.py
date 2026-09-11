@@ -403,21 +403,21 @@ class HttpClientBase:
     def _prepare_streamed_body(
         content: bytes | StreamedRequestBody | None,
         *,
-        attempt: int,
         stop_retrying: Callable[[], None],
     ) -> None:
         """Get a streamed body ready for a request attempt.
 
-        A rewindable body is sought back to its start before every attempt but the first. Any other streamed body is
-        consumed by the attempt that sends it, so retrying stops up front and a failure of the attempt is final.
+        A rewindable body is sought back to its start before every attempt, so each one sends the same bytes and
+        starts with no recorded source error. Any other streamed body is consumed by the attempt that sends it, so
+        retrying stops up front and a failure of the attempt is final.
         """
         if not isinstance(content, StreamedRequestBody):
             return
-        if not content.rewindable:
+        if content.rewindable:
+            content.rewind()
+        else:
             logger.debug('The streamed request body cannot be rewound, so a failed attempt is not retried')
             stop_retrying()
-        elif attempt > 1:
-            content.rewind()
 
     def _handle_response_status(
         self,
@@ -630,7 +630,7 @@ class HttpClient(HttpClientBase):
         self._statistics.requests += 1
 
         try:
-            self._prepare_streamed_body(content, attempt=attempt, stop_retrying=stop_retrying)
+            self._prepare_streamed_body(content, stop_retrying=stop_retrying)
             response = self.send_request(
                 method=method,
                 url=self._build_url_with_params(url, params=params),
@@ -850,7 +850,7 @@ class HttpClientAsync(HttpClientBase):
         self._statistics.requests += 1
 
         try:
-            self._prepare_streamed_body(content, attempt=attempt, stop_retrying=stop_retrying)
+            self._prepare_streamed_body(content, stop_retrying=stop_retrying)
             response = await self.send_request(
                 method=method,
                 url=self._build_url_with_params(url, params=params),

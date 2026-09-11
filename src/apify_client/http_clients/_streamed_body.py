@@ -68,11 +68,12 @@ class StreamedRequestBody:
         self._seek: Callable[[int], Any] | None = None
         self._start: int | None = None
 
-        read = getattr(source, 'read', None)
+        # A response is recognized first, so its `read` is never touched - on an unread streaming response that
+        # either raises or buffers the whole body.
         if _is_response(source):
             self._sync_chunks = source.iter_bytes
             self._async_chunks = getattr(source, 'aiter_bytes', None)
-        elif callable(read):
+        elif callable(read := getattr(source, 'read', None)):
             self._read = read
             self._is_async = inspect.iscoroutinefunction(read)
             # The `seekable` check guards the `tell` call, which a pipe or a socket rejects. An async file-like
@@ -182,6 +183,9 @@ class StreamedRequestBody:
         try:
             if self._read is not None:
                 while True:
+                    # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the
+                    # thread goes on moving a seekable source's position. Reaching a retry from there would need a
+                    # transport that swallows the cancellation and reports something retryable in its place.
                     chunk = (
                         await self._read(self._chunk_size)
                         if self._is_async
@@ -197,17 +201,12 @@ class StreamedRequestBody:
                         yield data
             elif self._sync_chunks is not None:
                 iterator = iter(self._sync_chunks())
-                while (chunk := await asyncio.to_thread(_next_or_done, iterator)) is not _DONE:
+                while (chunk := await asyncio.to_thread(next, iterator, _DONE)) is not _DONE:
                     if data := _to_bytes(chunk):
                         yield data
         except Exception as exc:
             self._error = exc
             raise
-
-
-def _next_or_done(iterator: Iterator[Any]) -> Any:
-    """Return the next item of a synchronous iterator, or `_DONE` once it is exhausted."""
-    return next(iterator, _DONE)
 
 
 def _is_response(value: object) -> TypeGuard[Any]:

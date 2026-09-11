@@ -92,7 +92,7 @@ With a generator, you produce the data while it uploads, for example from pages 
 
 ### Content type
 
-A file opened in text mode is uploaded as `text/plain; charset=utf-8`, encoded to UTF-8 chunk by chunk. Any other streamed value is uploaded as `application/octet-stream` unless you pass `content_type`. An iterator or a response carries no type of its own, so set `content_type` explicitly, as the examples do.
+A file the standard library opened in text mode is uploaded as `text/plain; charset=utf-8`, encoded to UTF-8 chunk by chunk. Any other streamed value is uploaded as `application/octet-stream` unless you pass `content_type`, an `aiofiles` text file included - the client can't tell it from a binary one. An iterator or a response carries no type of its own, so set `content_type` explicitly, as the examples do.
 
 ### Compression
 

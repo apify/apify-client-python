@@ -115,7 +115,7 @@ _PRE_ENCODED_VALUE_CASES = [
 ]
 
 # Values that cannot be carrying the `gzip` encoding the caller declares for them. Built by a factory for the
-# same reason as `_FILE_LIKE_VALUE_CASES`, as the sync and async test each consume their own value.
+# same reason as `_STREAMED_VALUE_CASES`, as the sync and async test each consume their own value.
 _INCOMPRESSIBLE_VALUE_CASES = [
     pytest.param(lambda: _TEXT_VALUE, id='string'),
     pytest.param(lambda: {'key': 'value'}, id='json-serializable object'),

@@ -23,8 +23,9 @@ def encode_key_value_store_record_value(
             or a streamed `HttpResponse` is returned as it is, to be streamed to the API in chunks from its current
             position - the object is neither rewound nor closed. Any other value is JSON-serialized unless it is
             already bytes or a string.
-        content_type: The content type; if None, it's inferred from the value type. A file opened in text mode is
-            `text/plain; charset=utf-8`, any other streamed value is `application/octet-stream`.
+        content_type: The content type; if None, it's inferred from the value type. An `io.TextIOBase`, which is what
+            the standard library returns for a file opened in text mode, is `text/plain; charset=utf-8`; any other
+            streamed value is `application/octet-stream`.
         content_encoding: The encoding the caller declares the value already carries, if any. Anything other than
             `identity` means the value is compressed, which only a bytes-like payload can be, so a string, a
             JSON-serialized object, or a text-mode file is rejected. Any other streamed value is taken at its word,

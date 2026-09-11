@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 3.2.1 - **not yet released**
 
+### 🐛 Bug Fixes
+
+- Stop dataset iterators from skipping items when unwind is used ([#1059](https://github.com/apify/apify-client-python/pull/1059)) ([8e30197](https://github.com/apify/apify-client-python/commit/8e301977ecb80b7c01251cacf071a3f6201469ba)) by [@vdusek](https://github.com/vdusek), closes [#1058](https://github.com/apify/apify-client-python/issues/1058)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.2.0](https://github.com/apify/apify-client-python/releases/tag/v3.2.0) (2026-09-03)

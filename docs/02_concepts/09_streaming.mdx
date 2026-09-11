@@ -17,7 +17,7 @@ import UploadFileSyncExample from '!!raw-loader!./code/09_upload_file_sync.py';
 import UploadGeneratorAsyncExample from '!!raw-loader!./code/09_upload_generator_async.py';
 import UploadGeneratorSyncExample from '!!raw-loader!./code/09_upload_generator_sync.py';
 
-Large resources don't have to pass through memory whole. The client streams downloads of dataset items, key-value store records, and logs as they arrive, and it streams uploads of key-value store records and Actor inputs from a file or another stream as they're read. Both directions work with the synchronous and the asynchronous client. A download can also feed an upload directly, which is how you [chain Actors into a pipeline](../03_guides/06_chain_actors.mdx).
+Large resources don't have to pass through memory whole. The client streams downloads of dataset items, key-value store records, and logs as they arrive, and it streams uploads of key-value store records and Actor inputs from a file or another stream as they're read. Both directions work with the synchronous and the asynchronous client. A download can also feed an upload directly, so one Actor's output becomes another Actor's input without passing through memory.
 
 ## Streaming downloads
 

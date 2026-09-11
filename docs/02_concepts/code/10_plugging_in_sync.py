@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 from typing_extensions import override
 
 from apify_client import ApifyClient
@@ -16,7 +18,7 @@ class MyHttpClient(HttpClient):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:

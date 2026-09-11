@@ -369,14 +369,17 @@ class KeyValueStoreClient(ResourceClient):
 
         Args:
             key: The key of the record to save the value to.
-            value: The value to save into the record.
+            value: The value to save into the record. A file-like object, an iterator of byte chunks, or a streamed
+                `HttpResponse` is uploaded in chunks as it is read, without being held in memory whole or compressed.
+                Only a seekable file-like value can be retried, any other streamed value gets a single attempt. See
+                `StreamedRequestBody` for details.
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
                 compressing them itself. The API accepts `gzip`, `br`, `deflate`, and `identity`, and stores the
-                record exactly as uploaded, so this also becomes the encoding the record is served with. Only a
-                bytes-like `value`, or a file-like one that reads into bytes, can carry a compression - anything
-                else raises `TypeError` instead of being stored under a header that misdescribes it.
+                record exactly as uploaded, so this also becomes the encoding the record is served with. A `str`, a
+                JSON-serializable object, or a text-mode file cannot be carrying a compression and raises
+                `TypeError`; a streamed value is taken at its word, since its bytes are only seen as they are sent.
             timeout: Timeout for the API HTTP request.
         """
         value, content_type = encode_key_value_store_record_value(
@@ -802,14 +805,17 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         Args:
             key: The key of the record to save the value to.
-            value: The value to save into the record.
+            value: The value to save into the record. A file-like object, an iterator of byte chunks, or a streamed
+                `HttpResponse` is uploaded in chunks as it is read, without being held in memory whole or compressed.
+                Only a seekable file-like value can be retried, any other streamed value gets a single attempt. See
+                `StreamedRequestBody` for details.
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
                 compressing them itself. The API accepts `gzip`, `br`, `deflate`, and `identity`, and stores the
-                record exactly as uploaded, so this also becomes the encoding the record is served with. Only a
-                bytes-like `value`, or a file-like one that reads into bytes, can carry a compression - anything
-                else raises `TypeError` instead of being stored under a header that misdescribes it.
+                record exactly as uploaded, so this also becomes the encoding the record is served with. A `str`, a
+                JSON-serializable object, or a text-mode file cannot be carrying a compression and raises
+                `TypeError`; a streamed value is taken at its word, since its bytes are only seen as they are sent.
             timeout: Timeout for the API HTTP request.
         """
         value, content_type = encode_key_value_store_record_value(

@@ -1,32 +1,35 @@
 from __future__ import annotations
 
+import io
 import json
 from base64 import b64encode
 from functools import cache
-from inspect import isawaitable, iscoroutine
 from typing import TYPE_CHECKING, Any
 
 from apify_client._models import WebhookCreate, WebhookRepresentation
+from apify_client.http_clients._streamed_body import StreamedRequestBody
 
 if TYPE_CHECKING:
-    from apify_client.types import WebhooksList
+    from apify_client.types import StreamedBodySource, WebhooksList
 
 
 def encode_key_value_store_record_value(
     value: Any, *, content_type: str | None = None, content_encoding: str | None = None
-) -> tuple[bytes | bytearray | str, str]:
+) -> tuple[bytes | bytearray | str | StreamedBodySource, str]:
     """Encode a value for storage in a key-value store record.
 
     Args:
-        value: The value to encode. Anything exposing a callable `read` is treated as a file-like object: `read`
-            is called with no arguments, so the value is consumed from its current position and buffered in
-            memory whole - the object is neither rewound nor closed, and async file-like objects are rejected.
-            Any other value is JSON-serialized unless it is already bytes or a string.
-        content_type: The content type; if None, it's inferred from the value type.
+        value: The value to encode. A file-like object (anything with a callable `read`), an iterator of byte chunks,
+            or a streamed `HttpResponse` is returned as it is, to be streamed to the API in chunks from its current
+            position - the object is neither rewound nor closed. Any other value is JSON-serialized unless it is
+            already bytes or a string.
+        content_type: The content type; if None, it's inferred from the value type. An `io.TextIOBase`, which is what
+            the standard library returns for a file opened in text mode, is `text/plain; charset=utf-8`; any other
+            streamed value is `application/octet-stream`.
         content_encoding: The encoding the caller declares the value already carries, if any. Anything other than
-            `identity` means the value is compressed, which only a bytes-like payload can be, so any other value
-            is rejected. The check belongs here because a file-like value has to be read before its payload type
-            is known, and reading it a second time in the caller is not possible.
+            `identity` means the value is compressed, which only a bytes-like payload can be, so a string, a
+            JSON-serialized object, or a text-mode file is rejected. Any other streamed value is taken at its word,
+            since its bytes are only seen as they are sent.
 
     Returns:
         A tuple of (encoded_value, content_type).
@@ -35,29 +38,23 @@ def encode_key_value_store_record_value(
         TypeError: If the value cannot be encoded into a body the transport accepts, or if it cannot be carrying
             the declared `content_encoding`.
     """
-    # Read file-like values into memory; the transport only accepts bytes-like bodies. Detect them by a
-    # callable `read` (not `io.IOBase`) so duck-typed file-likes are read, not JSON-serialized. Impit exposes
-    # no streaming `content=` API, so the value has to be buffered whole.
-    read = getattr(value, 'read', None)
-    if callable(read):
-        value = read()
-
-        if isawaitable(value):
-            if iscoroutine(value):
-                value.close()  # Prevent a "coroutine was never awaited" warning.
-            raise TypeError(
-                'Async file-like objects are not supported. Await the read yourself and pass the resulting '
-                'bytes or string.'
-            )
-
-        if not isinstance(value, (bytes, bytearray, str)):
-            raise TypeError(f'Reading the file-like value returned {type(value).__name__}, expected bytes or str.')
-
-    # A declared compression describes bytes the caller compressed. A string, a JSON-serializable object, or a
-    # text-mode file cannot be carrying one, and would otherwise be stored under a header that misdescribes it -
-    # the client forwards the header untouched and never inspects the body.
     declared_encoding = (content_encoding or '').strip().lower()
-    if declared_encoding not in ('', 'identity') and not isinstance(value, (bytes, bytearray)):
+    declares_compression = declared_encoding not in ('', 'identity')
+
+    if StreamedRequestBody.is_source(value):
+        is_text = isinstance(value, io.TextIOBase)
+        if declares_compression and is_text:
+            raise TypeError(
+                f'Cannot upload a file-like value opened in text mode with `Content-Encoding: {content_encoding}`. '
+                'An encoding other than `identity` declares the value is already compressed, so pass the compressed '
+                'bytes, or a binary file-like object that reads them.'
+            )
+        return (value, content_type or ('text/plain; charset=utf-8' if is_text else 'application/octet-stream'))
+
+    # A declared compression describes bytes the caller compressed. A string or a JSON-serializable object cannot
+    # be carrying one, and would otherwise be stored under a header that misdescribes it - the client forwards the
+    # header untouched and never inspects the body.
+    if declares_compression and not isinstance(value, (bytes, bytearray)):
         raise TypeError(
             f'Cannot upload a {type(value).__name__} value with `Content-Encoding: {content_encoding}`. An encoding '
             'other than `identity` declares the value is already compressed, so pass the compressed bytes, or a '

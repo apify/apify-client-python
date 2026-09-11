@@ -17,7 +17,7 @@ The Apify client compresses request bodies before sending them to the API. It re
 
 ## How it works
 
-The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently. A body is compressed only when it's large enough to benefit, its content type isn't already compressed, and the request carries no `Content-Encoding` of its own. For details, see [Minimum body size](#minimum-body-size), [Already-compressed payloads](#already-compressed-payloads), and [Pre-compressed bodies](#pre-compressed-bodies).
+The client compresses request bodies using the compressor configured via the `compression` parameter (default `'gzip'`). The server supports both gzip and brotli and decompresses the request body transparently. A body is compressed only when it's large enough to benefit, its content type isn't already compressed, the request carries no `Content-Encoding` of its own, and the body isn't streamed from a file or an iterator. For details, see [Minimum body size](#minimum-body-size), [Already-compressed payloads](#already-compressed-payloads), [Pre-compressed bodies](#pre-compressed-bodies), and [Streaming uploads](./09_streaming.mdx#streaming-uploads).
 
 ## Minimum body size
 
@@ -47,7 +47,7 @@ Two kinds of media type are compressed anyway: raw formats such as `image/bmp`, 
     </TabItem>
 </Tabs>
 
-Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. File-like values are read into memory before they're sent, so they follow the same rules as any other body.
+Without an explicit content type, a `bytes` value is sent as `application/octet-stream`, which the client can't tell apart from uncompressed binary data and therefore still compresses. A streamed value, such as an open file or an iterator of chunks, is never compressed. For details, see [Streaming uploads](./09_streaming.mdx#streaming-uploads).
 
 ## Pre-compressed bodies
 
@@ -66,7 +66,7 @@ A payload can reach the client already encoded, for example a gzipped file read 
     </TabItem>
 </Tabs>
 
-The header is forwarded verbatim, so it also covers encodings the client ships no compressor for, such as `deflate`. The API accepts `gzip`, `br`, `deflate`, and `identity`. Passing `identity` turns compression off for a single request without changing how the client is configured.
+The header is forwarded verbatim, so it also covers encodings the client ships no compressor for, such as `deflate`. It's forwarded for a streamed value too, so an open gzipped file can be passed in place of its bytes. The API accepts `gzip`, `br`, `deflate`, and `identity`. Passing `identity` turns compression off for a single request without changing how the client is configured.
 
 A value that can't be compressed at all - a string, an object serialized to JSON, or a file-like value opened in text mode - is rejected with a `TypeError` when `content_encoding` names a compression. Beyond that the client can't verify that the bytes match the header, so set `Content-Encoding` only when the payload really is encoded that way. Key-value store records are stored exactly as you upload them, which makes the header part of the stored record rather than a transport detail.
 

@@ -42,6 +42,14 @@ A smaller body already fits in a single network packet, so compressing it costs 
 saving a round trip.
 """
 
+STREAMED_BODY_CHUNK_SIZE = 64 * 1024
+"""Size, in bytes, of the chunks a streamed request body reads from a file-like source.
+
+A chunk is the most of a streamed body that is in memory at once, and in the asynchronous client every chunk costs
+one worker-thread hop, so the size balances memory against per-chunk overhead. It matches the buffer size the
+standard library and common HTTP libraries use to copy files.
+"""
+
 ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES = ('audio/', 'image/', 'video/')
 """Media type prefixes whose payloads carry their own compression, so compressing the request body is wasted work."""
 

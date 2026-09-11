@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 from datetime import timedelta
 from typing import TYPE_CHECKING
@@ -8,6 +9,7 @@ import pytest
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._consts import MIN_COMPRESSION_SIZE
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
@@ -231,3 +233,51 @@ async def test_actor_start_various_timeout_values_async(httpserver: HTTPServer, 
 
     assert len(captured_requests) == 1
     assert captured_requests[0].args['timeout'] == str(timeout_value)
+
+
+# Above the compression threshold, so an uncompressed upload proves the input was streamed rather than buffered.
+_STREAMED_RUN_INPUT = json.dumps({'text': 'x' * MIN_COMPRESSION_SIZE}).encode('utf-8')
+
+
+def test_actor_start_streams_file_like_input_sync(httpserver: HTTPServer) -> None:
+    """A file-like run input is uploaded in chunks as it is read, uncompressed, under the given content type."""
+    captured_requests: list[Request] = []
+
+    def capture_request(request: Request) -> Response:
+        captured_requests.append(request)
+        return Response(response=json.dumps(_create_minimal_run_response()), status=200, mimetype='application/json')
+
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_handler(
+        capture_request
+    )
+    client = ApifyClient(token='test_token', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    client.actor(_MOCKED_ACTOR_ID).start(run_input=io.BytesIO(_STREAMED_RUN_INPUT), content_type='application/json')
+
+    assert len(captured_requests) == 1
+    assert captured_requests[0].headers['content-type'] == 'application/json'
+    assert 'content-encoding' not in captured_requests[0].headers
+    assert captured_requests[0].get_data() == _STREAMED_RUN_INPUT
+
+
+async def test_actor_start_streams_file_like_input_async(httpserver: HTTPServer) -> None:
+    """A file-like run input is uploaded in chunks as it is read, uncompressed, under the given content type."""
+    captured_requests: list[Request] = []
+
+    def capture_request(request: Request) -> Response:
+        captured_requests.append(request)
+        return Response(response=json.dumps(_create_minimal_run_response()), status=200, mimetype='application/json')
+
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_handler(
+        capture_request
+    )
+    client = ApifyClientAsync(token='test_token', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    await client.actor(_MOCKED_ACTOR_ID).start(
+        run_input=io.BytesIO(_STREAMED_RUN_INPUT), content_type='application/json'
+    )
+
+    assert len(captured_requests) == 1
+    assert captured_requests[0].headers['content-type'] == 'application/json'
+    assert 'content-encoding' not in captured_requests[0].headers
+    assert captured_requests[0].get_data() == _STREAMED_RUN_INPUT

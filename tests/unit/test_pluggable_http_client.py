@@ -4,6 +4,7 @@ import asyncio
 import json as jsonlib
 import subprocess
 import sys
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import timedelta
 from http.client import HTTPConnection
@@ -26,14 +27,15 @@ from apify_client.http_clients import (
     HttpResponse,
     ImpitHttpClient,
     ImpitHttpClientAsync,
+    StreamedRequestBody,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import Iterator
 
     from pytest_httpserver import HTTPServer
 
-    from apify_client.types import Timeout
+    from apify_client.types import StreamedBodySource, Timeout
 
 
 @dataclass
@@ -93,7 +95,7 @@ class FakeHttpClient(HttpClient):
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
@@ -127,7 +129,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
@@ -152,7 +154,7 @@ def _stdlib_fetch(
     method: str,
     url: str,
     headers: dict[str, str],
-    content: bytes | None,
+    content: bytes | Iterator[bytes] | None,
     timeout: float | None,
 ) -> FakeResponse:
     """Send one request over `http.client` and adapt the result to the `HttpResponse` protocol."""
@@ -187,7 +189,7 @@ class StdlibHttpClient(HttpClient):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:
@@ -204,11 +206,13 @@ class StdlibHttpClientAsync(HttpClientAsync):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:
         _ = stream
+        if isinstance(content, AsyncIterator):
+            content = b''.join([chunk async for chunk in content])
         return await asyncio.to_thread(
             _stdlib_fetch, method=method, url=url, headers=headers, content=content, timeout=timeout
         )
@@ -547,12 +551,14 @@ class PreparingHttpClient(HttpClient):
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         **_kwargs: Any,
     ) -> HttpResponse:
         headers, params, content = self._prepare_request_call(headers=headers, params=params, data=data, json=json)
         url = self._build_url_with_params(url, params=params)
+        if isinstance(content, StreamedRequestBody):
+            content = content.iter_bytes()
         return self._impit_client.request(method=method, url=url, headers=headers, content=content)
 
 
@@ -570,12 +576,14 @@ class PreparingHttpClientAsync(HttpClientAsync):
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         **_kwargs: Any,
     ) -> HttpResponse:
         headers, params, content = self._prepare_request_call(headers=headers, params=params, data=data, json=json)
         url = self._build_url_with_params(url, params=params)
+        if isinstance(content, StreamedRequestBody):
+            content = content.aiter_bytes()
         return await self._impit_client.request(method=method, url=url, headers=headers, content=content)
 
 

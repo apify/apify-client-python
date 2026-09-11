@@ -34,6 +34,7 @@ from apify_client._statistics import ClientStatistics
 from apify_client._utils.http import is_compressible_content_type
 from apify_client._utils.time import to_seconds
 from apify_client.errors import ApifyApiError
+from apify_client.http_clients._streamed_body import StreamedRequestBody
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:
@@ -42,7 +43,7 @@ if TYPE_CHECKING:
     from typing import Self
 
     from apify_client.http_compressors._base import HttpCompressor
-    from apify_client.types import JsonSerializable, Timeout
+    from apify_client.types import JsonSerializable, StreamedBodySource, Timeout
 
 logger = logging.getLogger(logger_name)
 logger_once = LoggerOnce(logger)
@@ -237,7 +238,7 @@ class HttpClientBase:
         return parsed_params
 
     @staticmethod
-    def _is_body_worth_compressing(data: str | bytes | bytearray | None) -> bool:
+    def _is_body_worth_compressing(data: object) -> bool:
         """Whether the body is large enough that `_prepare_request_call` may compress it.
 
         This gate only picks where the preparation runs (worker thread or inline), so it approximates rather
@@ -294,9 +295,9 @@ class HttpClientBase:
         *,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
-    ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | None]:
+    ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | StreamedRequestBody | None]:
         """Prepare headers, params, and body for an HTTP request.
 
         Merges the client's default headers (including authorization) with per-request headers and serializes a
@@ -308,6 +309,10 @@ class HttpClientBase:
         `Content-Encoding` is forwarded verbatim, which is how a pre-encoded body is uploaded - including one in
         an encoding the client ships no compressor for. `Content-Encoding: identity` therefore opts a single
         request out of compression.
+
+        A body streamed from a file-like object, an iterator of byte chunks, or a streamed response is wrapped in
+        `StreamedRequestBody` and never compressed: its chunks go out as they are produced, so nothing is buffered.
+        A caller-supplied `Content-Encoding` is forwarded for it too, which is how pre-compressed data is streamed.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
@@ -320,23 +325,36 @@ class HttpClientBase:
             if self._get_header(headers, 'content-type') is None:
                 headers['Content-Type'] = 'application/json'
 
+        # A body the caller built itself carries its own chunk size and rewind position, and wrapping it again
+        # would read it as a response and drop both.
+        if isinstance(data, StreamedRequestBody):
+            return (headers, self._parse_params(params), data)
+
+        if StreamedRequestBody.is_source(data):
+            return (headers, self._parse_params(params), StreamedRequestBody(data))
+
+        content: bytes | None = None
         if isinstance(data, (str, bytes, bytearray)):
-            if isinstance(data, str):
-                data = data.encode('utf-8')
-            elif isinstance(data, bytearray):
-                data = bytes(data)
+            content = data.encode('utf-8') if isinstance(data, str) else bytes(data)
 
             # A caller-supplied encoding says the body arrives already encoded, so compressing it here would
             # both mislabel it and waste the work.
             if (
                 self._get_header(headers, 'content-encoding') is None
-                and len(data) >= MIN_COMPRESSION_SIZE
+                and len(content) >= MIN_COMPRESSION_SIZE
                 and is_compressible_content_type(self._get_header(headers, 'content-type'))
             ):
-                data = self._http_compressor.compress(data)
+                content = self._http_compressor.compress(content)
                 headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
 
-        return (headers, self._parse_params(params), data)
+        elif data is not None:
+            # Without this the request would go out with no body at all, losing the payload without a word.
+            raise TypeError(
+                f'Cannot send a {type(data).__name__} value as a request body. Pass bytes, a string, or a value '
+                'the client can stream, such as a file-like object or an iterator of byte chunks.'
+            )
+
+        return (headers, self._parse_params(params), content)
 
     def _build_url_with_params(self, url: str, *, params: dict[str, Any] | None = None) -> str:
         """Build a URL with query parameters appended. List values are expanded into multiple key=value pairs."""
@@ -354,11 +372,51 @@ class HttpClientBase:
 
         return f'{url}?{query_string}'
 
-    def _handle_request_exception(self, exc: Exception, *, stop_retrying: Callable[[], None]) -> None:
-        """Stop retrying when an exception is not a retryable transport failure."""
+    def _handle_request_exception(
+        self,
+        exc: Exception,
+        *,
+        content: bytes | StreamedRequestBody | None,
+        stop_retrying: Callable[[], None],
+    ) -> None:
+        """Stop retrying when an exception is not a retryable transport failure.
+
+        A failure of a streamed body's source stops retrying too, since sending the body again cannot fix it. The
+        transport reports such a failure as its own error, which may wrap the cause beyond recognition and pass as
+        transient, so the source's exception is raised in its place, with the transport error as its cause.
+        """
         logger.debug('Request threw exception', exc_info=exc)
+
+        source_error = content.error if isinstance(content, StreamedRequestBody) else None
+        if source_error is not None:
+            logger.debug('Producing the streamed request body failed', exc_info=source_error)
+            stop_retrying()
+            if source_error is not exc:
+                raise source_error from exc
+            return
+
         if not self.is_retryable_transport_error(exc):
             logger.debug('Exception is not retryable', exc_info=exc)
+            stop_retrying()
+
+    @staticmethod
+    def _prepare_streamed_body(
+        content: bytes | StreamedRequestBody | None,
+        *,
+        stop_retrying: Callable[[], None],
+    ) -> None:
+        """Get a streamed body ready for a request attempt.
+
+        A rewindable body is sought back to its start before every attempt, so each one sends the same bytes and
+        starts with no recorded source error. Any other streamed body is consumed by the attempt that sends it, so
+        retrying stops up front and a failure of the attempt is final.
+        """
+        if not isinstance(content, StreamedRequestBody):
+            return
+        if content.rewindable:
+            content.rewind()
+        else:
+            logger.debug('The streamed request body cannot be rewound, so a failed attempt is not retried')
             stop_retrying()
 
     def _handle_response_status(
@@ -425,7 +483,7 @@ class HttpClient(HttpClientBase):
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
@@ -437,7 +495,8 @@ class HttpClient(HttpClientBase):
             url: Full URL to make the request to.
             headers: Additional headers to include.
             params: Query parameters to append to the URL.
-            data: Raw request body data. Cannot be used together with json.
+            data: Raw request body. A file-like object, an iterator of byte chunks, or a streamed `HttpResponse`
+                is sent in chunks as it is read, see `StreamedRequestBody`. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
@@ -450,6 +509,7 @@ class HttpClient(HttpClientBase):
         Raises:
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
+            TypeError: If data is neither bytes-like nor a value the client can stream.
         """
         log_context.method.set(method)
         log_context.url.set(url)
@@ -491,7 +551,7 @@ class HttpClient(HttpClientBase):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:
@@ -505,7 +565,8 @@ class HttpClient(HttpClientBase):
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full request URL, with the query parameters already encoded into it.
             headers: Final request headers, with the client's default headers already merged in.
-            content: Request body, already serialized and compressed, or None for a request without a body.
+            content: Request body, already serialized and compressed, an iterator of chunks for a streamed body,
+                or None for a request without a body.
             timeout: Timeout for this attempt in seconds, or None for no timeout at all.
             stream: Whether to return the response with the body unread, so the caller can stream it.
 
@@ -558,7 +619,7 @@ class HttpClient(HttpClientBase):
         url: str,
         headers: dict[str, str],
         params: dict[str, Any] | None,
-        content: bytes | None,
+        content: bytes | StreamedRequestBody | None,
         stream: bool | None,
         timeout: Timeout,
     ) -> HttpResponse:
@@ -569,16 +630,17 @@ class HttpClient(HttpClientBase):
         self._statistics.requests += 1
 
         try:
+            self._prepare_streamed_body(content, stop_retrying=stop_retrying)
             response = self.send_request(
                 method=method,
                 url=self._build_url_with_params(url, params=params),
                 headers=headers,
-                content=content,
+                content=content.iter_bytes() if isinstance(content, StreamedRequestBody) else content,
                 timeout=self._compute_timeout(timeout, attempt=attempt),
                 stream=stream or False,
             )
         except Exception as exc:
-            self._handle_request_exception(exc, stop_retrying=stop_retrying)
+            self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
             raise
 
         if self._handle_response_status(response, attempt=attempt, stop_retrying=stop_retrying):
@@ -628,7 +690,7 @@ class HttpClientAsync(HttpClientBase):
         url: str,
         headers: dict[str, str] | None = None,
         params: dict[str, Any] | None = None,
-        data: str | bytes | bytearray | None = None,
+        data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
@@ -640,7 +702,8 @@ class HttpClientAsync(HttpClientBase):
             url: Full URL to make the request to.
             headers: Additional headers to include.
             params: Query parameters to append to the URL.
-            data: Raw request body data. Cannot be used together with json.
+            data: Raw request body. A file-like object, an iterator of byte chunks, or a streamed `HttpResponse`
+                is sent in chunks as it is read, see `StreamedRequestBody`. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
@@ -653,6 +716,7 @@ class HttpClientAsync(HttpClientBase):
         Raises:
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
+            TypeError: If data is neither bytes-like nor a value the client can stream.
         """
         log_context.method.set(method)
         log_context.url.set(url)
@@ -707,7 +771,7 @@ class HttpClientAsync(HttpClientBase):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:
@@ -721,7 +785,8 @@ class HttpClientAsync(HttpClientBase):
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full request URL, with the query parameters already encoded into it.
             headers: Final request headers, with the client's default headers already merged in.
-            content: Request body, already serialized and compressed, or None for a request without a body.
+            content: Request body, already serialized and compressed, an iterator of chunks for a streamed body,
+                or None for a request without a body.
             timeout: Timeout for this attempt in seconds, or None for no timeout at all.
             stream: Whether to return the response with the body unread, so the caller can stream it.
 
@@ -774,7 +839,7 @@ class HttpClientAsync(HttpClientBase):
         url: str,
         headers: dict[str, str],
         params: dict[str, Any] | None,
-        content: bytes | None,
+        content: bytes | StreamedRequestBody | None,
         stream: bool | None,
         timeout: Timeout,
     ) -> HttpResponse:
@@ -785,16 +850,17 @@ class HttpClientAsync(HttpClientBase):
         self._statistics.requests += 1
 
         try:
+            self._prepare_streamed_body(content, stop_retrying=stop_retrying)
             response = await self.send_request(
                 method=method,
                 url=self._build_url_with_params(url, params=params),
                 headers=headers,
-                content=content,
+                content=content.aiter_bytes() if isinstance(content, StreamedRequestBody) else content,
                 timeout=self._compute_timeout(timeout, attempt=attempt),
                 stream=stream or False,
             )
         except Exception as exc:
-            self._handle_request_exception(exc, stop_retrying=stop_retrying)
+            self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
             raise
 
         if self._handle_response_status(response, attempt=attempt, stop_retrying=stop_retrying):

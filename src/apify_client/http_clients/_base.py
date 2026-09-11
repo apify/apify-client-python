@@ -325,6 +325,11 @@ class HttpClientBase:
             if self._get_header(headers, 'content-type') is None:
                 headers['Content-Type'] = 'application/json'
 
+        # A body the caller built itself carries its own chunk size and rewind position, and wrapping it again
+        # would read it as a response and drop both.
+        if isinstance(data, StreamedRequestBody):
+            return (headers, self._parse_params(params), data)
+
         if StreamedRequestBody.is_source(data):
             return (headers, self._parse_params(params), StreamedRequestBody(data))
 
@@ -341,6 +346,13 @@ class HttpClientBase:
             ):
                 content = self._http_compressor.compress(content)
                 headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+
+        elif data is not None:
+            # Without this the request would go out with no body at all, losing the payload without a word.
+            raise TypeError(
+                f'Cannot send a {type(data).__name__} value as a request body. Pass bytes, a string, or a value '
+                'the client can stream, such as a file-like object or an iterator of byte chunks.'
+            )
 
         return (headers, self._parse_params(params), content)
 
@@ -497,6 +509,7 @@ class HttpClient(HttpClientBase):
         Raises:
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
+            TypeError: If data is neither bytes-like nor a value the client can stream.
         """
         log_context.method.set(method)
         log_context.url.set(url)
@@ -703,6 +716,7 @@ class HttpClientAsync(HttpClientBase):
         Raises:
             ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
             ValueError: If both json and data are provided.
+            TypeError: If data is neither bytes-like nor a value the client can stream.
         """
         log_context.method.set(method)
         log_context.url.set(url)

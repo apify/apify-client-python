@@ -11,7 +11,7 @@ from apify_client._typeddicts import (
     WebhookRepresentationCamelDict,
     WebhookRepresentationDict,
 )
-from apify_client.http_clients import HttpResponse
+from apify_client.http_clients import HttpResponse, StreamedRequestBody
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
@@ -51,17 +51,22 @@ class SupportsRead(Protocol):
     chunks, which are UTF-8 encoded. An `async def read`, as `aiofiles` provides, is accepted by `ApifyClientAsync`.
     """
 
-    def read(self, size: int = ..., /) -> bytes | str | Awaitable[bytes | str]:
+    def read(self, size: int, /) -> bytes | str | Awaitable[bytes | str]:
         """Read up to `size` bytes or characters, returning an empty value at the end."""
 
 
-StreamedBodySource = SupportsRead | Iterator[bytes | str] | AsyncIterator[bytes | str] | HttpResponse
+StreamedBodySource = (
+    SupportsRead | Iterator[bytes | str] | AsyncIterator[bytes | str] | HttpResponse | StreamedRequestBody
+)
 """Type for a request body the client streams to the API in chunks instead of holding it in memory whole.
 
 A file-like object is read in chunks, an iterator or async iterator yields the chunks itself, and a streamed
 `HttpResponse` forwards its body, which chains one API call's output into another's input. Accepted as the `data` of
 `HttpClient.call`, as the `value` of `KeyValueStoreClient.set_record`, and as the `run_input` of Actor runs. See
 `StreamedRequestBody` for the retry and compression rules that apply.
+
+Pass a `StreamedRequestBody` built by hand to choose the chunk size a file-like source is read in, which no resource
+client exposes on its own.
 """
 
 JsonSerializable = dict[str, 'JsonSerializable'] | list['JsonSerializable'] | str | int | float | bool | None

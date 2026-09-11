@@ -889,6 +889,35 @@ def test_prepare_request_call_streams_body_without_compression(
     assert not any(key.lower() == 'content-encoding' for key in headers)
 
 
+def test_prepare_request_call_keeps_a_body_the_caller_built() -> None:
+    """A hand-built body keeps its rewind position and chunk size, rather than being wrapped a second time."""
+    client = ConcreteHttpClient()
+    body = StreamedRequestBody(BytesIO(b'payload'), chunk_size=3)
+
+    _headers, _params, data = client._prepare_request_call(data=body)
+
+    assert data is body
+    assert body.rewindable
+    assert list(body.iter_bytes()) == [b'pay', b'loa', b'd']
+
+
+@pytest.mark.parametrize(
+    'data',
+    [
+        pytest.param({'key': 'value'}, id='dict'),
+        pytest.param([b'chunk'], id='list of chunks'),
+        pytest.param(memoryview(b'payload'), id='memoryview'),
+        pytest.param(42, id='int'),
+    ],
+)
+def test_prepare_request_call_rejects_a_body_it_can_neither_send_nor_stream(data: Any) -> None:
+    """A body that is neither bytes-like nor streamable is rejected, so no request goes out without its payload."""
+    client = ConcreteHttpClient()
+
+    with pytest.raises(TypeError, match='as a request body'):
+        client._prepare_request_call(data=data)
+
+
 @pytest.mark.parametrize(
     'content_type',
     [

@@ -24,7 +24,8 @@ class StreamedRequestBody:
 
     `HttpClient.call` and `HttpClientAsync.call` wrap a `data` argument that is a file-like object, an iterator of
     byte chunks, or a streamed `HttpResponse` in this class. The transport pulls the chunks from `iter_bytes` or
-    `aiter_bytes` and sends each one as it arrives, and the body is never compressed.
+    `aiter_bytes` and sends each one as it arrives, and the body is never compressed. Build one yourself and pass it
+    as the `data` to choose the `chunk_size`, and it is sent as it is.
 
     The shared retry loop can send a body again only when its source is a seekable file-like object, in which case
     `rewind` seeks back to where the source was when the body was created. Any other source is consumed by the attempt
@@ -40,12 +41,19 @@ class StreamedRequestBody:
 
         Args:
             source: The object the chunks come from. See `is_source` for the accepted kinds.
-            chunk_size: Size, in bytes, of the chunks a file-like source is read in. An iterator or a response
-                decides its own chunk sizes.
+            chunk_size: Size of the chunks a file-like source is read in - bytes from a binary source, characters
+                from a text-mode one. An iterator or a response decides its own chunk sizes.
 
         Raises:
-            TypeError: If `source` is not an object the body can be streamed from.
+            TypeError: If `source` is not an object the body can be streamed from, or is already a body itself, which
+                would be read as a response and lose its rewind position.
         """
+        if isinstance(source, StreamedRequestBody):
+            raise TypeError(
+                'The source is already a streamed request body. Pass it as the `data` of a request directly, since '
+                'wrapping it again reads it as a response and drops its rewind position.'
+            )
+
         self._chunk_size = chunk_size
         self._error: Exception | None = None
         self._is_async = False
@@ -93,6 +101,10 @@ class StreamedRequestBody:
         These are a streamed `HttpResponse` (anything with a callable `iter_bytes`), a file-like object (anything
         with a callable `read`), and an iterator or async iterator of byte chunks. A `str`, `bytes`, `bytearray`, or
         a container such as a `list` or `dict` is not a source, even though some of them can be iterated.
+
+        A `StreamedRequestBody` matches on its own `iter_bytes`, which is how a hand-built body reaches the request
+        pipeline untouched. The constructor refuses one, so a caller that builds a body from what this accepts has
+        to check for an existing body first.
         """
         return (
             _is_response(value)

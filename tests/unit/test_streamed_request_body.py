@@ -112,6 +112,14 @@ def test_rejects_non_source() -> None:
         StreamedRequestBody(cast('Any', [b'data']))
 
 
+def test_rejects_a_body_that_is_already_streamed() -> None:
+    """Wrapping a body again would read it as a response and drop its rewind position, so it is refused."""
+    body = StreamedRequestBody(io.BytesIO(b'data'))
+
+    with pytest.raises(TypeError, match='already a streamed request body'):
+        StreamedRequestBody(body)
+
+
 def test_file_like_is_read_in_chunks_of_chunk_size() -> None:
     """A file-like source is pulled through `read(chunk_size)` until it runs dry."""
     body = StreamedRequestBody(io.BytesIO(b'x' * 10), chunk_size=4)

@@ -14,6 +14,7 @@ from werkzeug import Request, Response
 from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE, STREAMED_BODY_CHUNK_SIZE
 from apify_client.errors import ApifyApiError
+from apify_client.http_clients import StreamedRequestBody
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable, Iterator
@@ -361,6 +362,28 @@ async def test_set_record_reads_file_like_value_in_chunks_async(
 
     assert reader.read_sizes == [STREAMED_BODY_CHUNK_SIZE] * 4
     assert captured_records[0].get_data() == data
+
+
+def test_set_record_uploads_a_hand_built_body_sync(*, api_url: str, captured_records: list[Request]) -> None:
+    """A body the caller built keeps the chunk size it was given, which no resource client exposes on its own."""
+    reader = RecordingReader(_BYTES_VALUE)
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    client.key_value_store(_MOCKED_KVS_ID).set_record('f', StreamedRequestBody(reader, chunk_size=64))
+
+    assert set(reader.read_sizes) == {64}
+    assert_streamed_upload(captured_records[0], 'application/octet-stream')
+
+
+async def test_set_record_uploads_a_hand_built_body_async(*, api_url: str, captured_records: list[Request]) -> None:
+    """A body the caller built keeps the chunk size it was given, which no resource client exposes on its own."""
+    reader = RecordingReader(_BYTES_VALUE)
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    await client.key_value_store(_MOCKED_KVS_ID).set_record('f', StreamedRequestBody(reader, chunk_size=64))
+
+    assert set(reader.read_sizes) == {64}
+    assert_streamed_upload(captured_records[0], 'application/octet-stream')
 
 
 _SOURCE_RECORD_PATH = '/v2/key-value-stores/source_kvs_id/records/f'

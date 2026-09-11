@@ -128,20 +128,30 @@ def get_cursor_iterator(
     limit: int | None = None,
     chunk_size: int | None = None,
 ) -> Iterator[KeyValueStoreKey] | Iterator[Request]:
-    """Yield individual items from cursor-paginated API responses.
+    """Yield individual items from a cursor-paginated API response.
 
-    Cursor pagination is restricted to the two API responses that expose it: `ListOfKeys` (for key-value store keys) and
-    `ListOfRequests` (for request queue requests). Iteration ends when the next cursor is `None` or the user-requested
-    `limit` is reached. An empty page does not end it by itself, and it does not need to: both endpoints send a next
-    cursor only alongside a page that has items. The key-value store's cursor is the last key of the page it just
-    returned, and the request queue sends one only for a page that came back full, so an empty page always arrives with
-    a `None` cursor.
+    This iterator supports the two API responses that use cursor pagination. `ListOfKeys` is used for key-value store
+    keys, while `ListOfRequests` is used for request queue requests.
+
+    Pagination continues until either:
+
+    - the API returns no next cursor, or
+    - the requested `limit` is reached.
+
+    An empty page does not explicitly stop the iteration. In practice, both supported endpoints return a next cursor
+    only when the current page contains items, so an empty page always has a `None` cursor and naturally ends the
+    iteration.
+
+    The endpoints determine the next cursor differently:
+
+    - For key-value store keys, the cursor is the last key returned on the current page.
+    - For request queue requests, a cursor is returned only when the current page is full.
 
     Args:
-        callback: Function returning a single page of items. Receives `cursor` and `limit` kwargs.
-        cursor: Value of the cursor for the first request, or `None` to start from the beginning.
+        callback: Function that returns one page of items and accepts `cursor` and `limit` keyword arguments.
+        cursor: Cursor to use for the first request. If `None`, iteration starts from the beginning.
         limit: Maximum total number of items to yield across all pages.
-        chunk_size: Maximum number of items requested per API call.
+        chunk_size: Maximum number of items to request in a single API call.
     """
     effective_chunk = chunk_size or 0
     initial_limit = limit or 0

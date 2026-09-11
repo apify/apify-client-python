@@ -596,6 +596,47 @@ async def test_dataset_iterate_items_chunked(client: ApifyClient | ApifyClientAs
         await maybe_await(dataset_client.delete())
 
 
+async def test_dataset_iterate_items_unwound(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """Test iterate_items with `unwind`, where a page carries more items than the rows it scanned."""
+    dataset_name = get_random_resource_name('dataset')
+    created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
+    assert isinstance(created_dataset, Dataset)
+    dataset_client = client.dataset(created_dataset.id)
+
+    try:
+        items_to_push = [{'idx': i, 'parts': [{'part': p} for p in range(3)]} for i in range(12)]
+        await maybe_await(dataset_client.push_items(items_to_push))
+
+        # Poll until all 12 rows are visible (eventual consistency) so the chunked iteration sees every page
+        async def get_items() -> DatasetItemsPage:
+            page = await maybe_await(dataset_client.list_items(limit=12))
+            assert isinstance(page, DatasetItemsPage)
+            return page
+
+        await poll_until_condition(get_items, lambda page: len(page.items) == 12)
+
+        # chunk_size=5 caps a page at 5 rows, which `unwind` expands into 15 items
+        iterator = dataset_client.iterate_items(unwind=['parts'], chunk_size=5)
+        collected: list[dict] = []
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for item in iterator:
+                assert isinstance(item, dict)
+                collected.append(item)
+        else:
+            assert isinstance(iterator, Iterator)
+            for item in iterator:
+                assert isinstance(item, dict)
+                collected.append(item)
+
+        # Every part of every row arrives exactly once: no page is skipped and none is read twice.
+        assert sorted((item['idx'], item['part']) for item in collected) == [
+            (idx, part) for idx in range(12) for part in range(3)
+        ]
+    finally:
+        await maybe_await(dataset_client.delete())
+
+
 async def test_dataset_iterate_items_with_fields(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test iterate_items with `fields` filter."""
     dataset_name = get_random_resource_name('dataset')

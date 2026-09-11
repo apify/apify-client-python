@@ -25,6 +25,8 @@ Most methods named `list` or `list_something` in the Apify client return a page 
 - `count` - The number of items in the current page.
 - `limit` - The maximum number of items per page.
 
+On <ApiLink to="class/DatasetItemsPage">`DatasetItemsPage`</ApiLink>, `count` reports how many dataset rows the API scanned for the page. Filters drop items from a page and `unwind` multiplies them, so a page can hold fewer or more items than `count`.
+
 Some methods paginate differently. For example, <ApiLink to="class/RequestQueueClient#list_requests">`RequestQueueClient.list_requests`</ApiLink> returns a cursor-based <ApiLink to="class/ListOfRequests">`ListOfRequests`</ApiLink> without the `total`, `offset`, and `count` fields. To fetch the next page, pass its `next_cursor` value back as the `cursor` parameter. Other examples include `list_keys` and `list_head`. Regardless, the primary results are always stored under the `items` field, and the `limit` field can be used to control the number of results returned.
 
 The following example shows how to fetch all items from a dataset using pagination:

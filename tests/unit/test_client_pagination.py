@@ -100,6 +100,7 @@ ID_PLACEHOLDER = 'some-id'
 NORMAL_ITEMS = 2500
 EXTRA_ITEMS_UNNAMED = 100
 MAX_ITEMS_PER_PAGE = 1000
+UNWIND_PARTS = 3
 
 # Inner list models whose `items: list[<specific schema>]` is relaxed to `list[dict]`. Point of these tests is
 # pagination mechanism, not internal object validation.
@@ -179,6 +180,11 @@ def create_items(start: int, end: int, step: int | None = None) -> list[dict[str
     return [{'id': i} for i in range(start, end, step)]
 
 
+def create_unwound_items(start: int, end: int) -> list[dict[str, int]]:
+    """Create the items the simulated `unwind` produces for the given index range."""
+    return [{**item, 'part': part} for item in create_items(start, end) for part in range(UNWIND_PARTS)]
+
+
 def _is_true(value: str | None) -> bool:
     """Match the `'true'` wire form produced by the client's bool->string serialization."""
     return value == 'true'
@@ -191,9 +197,14 @@ def _parse_int_param(value: str | None) -> int:
 def _handle_offset_pagination(request: Request) -> Response:
     """Serve an offset-paginated Apify API response.
 
-    The simulated platform holds 2500 items normally and an additional 100 when `unnamed=true` is requested. Pages are
-    capped at 1000 items regardless of the requested limit, mirroring the real API. The dataset items endpoint returns
-    items as a raw list; all other endpoints wrap them in `{'data': {...}}`.
+    The simulated platform holds 2500 items normally and an additional 100 when `unnamed=true` is requested. The
+    collection endpoints cap a page at 1000 items regardless of the requested limit, mirroring the real API, while the
+    dataset items endpoint applies the requested limit verbatim and returns its items as a raw list; all other
+    endpoints wrap them in `{'data': {...}}`.
+
+    The `x-apify-pagination-count` header reports the rows the API scanned, which `offset` and `limit` pick before the
+    result is shaped: the filters drop items from the page and `unwind` multiplies them, so `len(items)` lands below or
+    above the header.
     """
     params = request.args
 
@@ -206,14 +217,21 @@ def _handle_offset_pagination(request: Request) -> Response:
     desc = _is_true(params.get('desc'))
     items = create_items(total_items, 0) if desc else create_items(0, total_items)
 
+    is_dataset_items = request.path.endswith(f'/datasets/{ID_PLACEHOLDER}/items')
+    page_size = total_items if is_dataset_items else MAX_ITEMS_PER_PAGE
+
     lower_index = min(offset, total_items)
     upper_index = min(offset + (limit or total_items), total_items)
-    count = min(max(upper_index - lower_index, 0), MAX_ITEMS_PER_PAGE)
-    selected_items = items[lower_index : min(upper_index, lower_index + MAX_ITEMS_PER_PAGE)]
+    count = min(max(upper_index - lower_index, 0), page_size)
+    selected_items = items[lower_index : min(upper_index, lower_index + page_size)]
 
     # Every second item is filtered out when `skipEmpty=true`, `skipHidden=true`, or `clean=true`.
     if _is_true(params.get('skipEmpty')) or _is_true(params.get('skipHidden')) or _is_true(params.get('clean')):
         selected_items = selected_items[::2]
+
+    # `unwind` splits each item into `UNWIND_PARTS` records, so the page carries more items than the rows it scanned.
+    if params.get('unwind'):
+        selected_items = [{**item, 'part': part} for item in selected_items for part in range(UNWIND_PARTS)]
 
     headers = {
         'x-apify-pagination-count': str(count),
@@ -224,7 +242,7 @@ def _handle_offset_pagination(request: Request) -> Response:
         'content-type': 'application/json',
     }
 
-    if request.path.endswith(f'/datasets/{ID_PLACEHOLDER}/items'):
+    if is_dataset_items:
         body: Any = selected_items
     else:
         body = {
@@ -444,6 +462,25 @@ TEST_CASES = (
         DATASET_CLIENTS,
     ),
     _PaginationCase(
+        'Unwind',
+        {'unwind': ['parts']},
+        create_unwound_items(0, 2500),
+        DATASET_CLIENTS,
+    ),
+    _PaginationCase(
+        'Unwind, limit, chunk_size',
+        # `limit` counts the rows the API scans, matching a single `list_items` call, so `unwind` yields more items.
+        {'unwind': ['parts'], 'limit': 150, 'chunk_size': 100},
+        create_unwound_items(0, 150),
+        DATASET_CLIENTS,
+    ),
+    _PaginationCase(
+        'Unwind, chunk_size above 1000',
+        {'unwind': ['parts'], 'chunk_size': 2000},
+        create_unwound_items(0, 2500),
+        DATASET_CLIENTS,
+    ),
+    _PaginationCase(
         'Exclusive start key',
         {'exclusive_start_key': '1000'},
         create_items(1001, 2500),
@@ -629,7 +666,7 @@ async def test_rq_list_requests_iterable_async(
 
 
 class FakeOffsetPage:
-    """Offset-paginated page whose `count` (items scanned) may exceed `len(items)` when filters drop items."""
+    """Offset-paginated page whose `count` (rows scanned) and `len(items)` can differ in either direction."""
 
     def __init__(self, items: list[dict[str, int]], count: int) -> None:
         self.items = items
@@ -662,8 +699,62 @@ async def test_items_iterator_async_continues_past_fully_filtered_page() -> None
     assert [item async for item in get_items_iterator_async(callback, chunk_size=1000)] == [{'id': 1}, {'id': 2}]
 
 
-def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
-    """A fully-filtered page (`items=[]`) with a live cursor must not stop the cursor iterator."""
+def test_items_iterator_advances_by_items_when_count_lags() -> None:
+    """A `count` lagging behind the items returned (`count=0`) must still advance the offset iterator."""
+    pages = {
+        0: FakeOffsetPage(items=create_items(0, 1000), count=0),
+        1000: FakeOffsetPage(items=create_items(1000, 1500), count=0),
+    }
+
+    def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
+
+    assert list(get_items_iterator(callback, chunk_size=1000)) == create_items(0, 1500)
+
+
+async def test_items_iterator_async_advances_by_items_when_count_lags() -> None:
+    """A `count` lagging behind the items returned (`count=0`) must still advance the async offset iterator."""
+    pages = {
+        0: FakeOffsetPage(items=create_items(0, 1000), count=0),
+        1000: FakeOffsetPage(items=create_items(1000, 1500), count=0),
+    }
+
+    async def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
+
+    collected = [item async for item in get_items_iterator_async(callback, chunk_size=1000)]
+    assert collected == create_items(0, 1500)
+
+
+def test_items_iterator_advances_by_scanned_rows_when_unwind_inflates_items() -> None:
+    """An unwound page holding more items than the rows it scanned must advance the offset by the rows alone."""
+    pages = {
+        0: FakeOffsetPage(items=create_unwound_items(0, 1000), count=1000),
+        1000: FakeOffsetPage(items=create_unwound_items(1000, 1500), count=500),
+    }
+
+    def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
+
+    assert list(get_items_iterator(callback, chunk_size=1000)) == create_unwound_items(0, 1500)
+
+
+async def test_items_iterator_async_advances_by_scanned_rows_when_unwind_inflates_items() -> None:
+    """An unwound page holding more items than the rows it scanned must advance the async offset iterator by rows."""
+    pages = {
+        0: FakeOffsetPage(items=create_unwound_items(0, 1000), count=1000),
+        1000: FakeOffsetPage(items=create_unwound_items(1000, 1500), count=500),
+    }
+
+    async def callback(*, offset: int | None = None, **_kwargs: object) -> FakeOffsetPage:
+        return pages.get(offset or 0, FakeOffsetPage(items=[], count=0))
+
+    collected = [item async for item in get_items_iterator_async(callback, chunk_size=1000)]
+    assert collected == create_unwound_items(0, 1500)
+
+
+def test_cursor_iterator_continues_past_empty_page() -> None:
+    """An empty page with a live cursor must not stop the cursor iterator."""
     pages = {
         None: ListOfRequests(items=[], limit=1000, next_cursor='c1'),
         'c1': ListOfRequests(items=[{'id': 1}, {'id': 2}], limit=1000, next_cursor=None),
@@ -675,8 +766,8 @@ def test_cursor_iterator_continues_past_fully_filtered_page() -> None:
     assert list(get_cursor_iterator(callback, chunk_size=1000)) == [{'id': 1}, {'id': 2}]
 
 
-async def test_cursor_iterator_async_continues_past_fully_filtered_page() -> None:
-    """A fully-filtered page (`items=[]`) with a live cursor must not stop the async cursor iterator."""
+async def test_cursor_iterator_async_continues_past_empty_page() -> None:
+    """An empty page with a live cursor must not stop the async cursor iterator."""
     pages = {
         None: ListOfRequests(items=[], limit=1000, next_cursor='c1'),
         'c1': ListOfRequests(items=[{'id': 1}, {'id': 2}], limit=1000, next_cursor=None),

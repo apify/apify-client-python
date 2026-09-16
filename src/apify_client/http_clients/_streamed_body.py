@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
     from typing import TypeGuard
 
+    from apify_client.http_clients._base import HttpResponse
     from apify_client.types import StreamedBodySource
 
 _DONE = object()
@@ -209,7 +210,7 @@ class StreamedRequestBody:
             raise
 
 
-def _is_response(value: object) -> TypeGuard[Any]:
+def _is_response(value: object) -> TypeGuard[HttpResponse]:
     """Return whether a value is a streamed response, recognized by a callable `iter_bytes`."""
     return callable(getattr(value, 'iter_bytes', None))
 

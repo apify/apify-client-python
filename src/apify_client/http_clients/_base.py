@@ -238,14 +238,14 @@ class HttpClientBase:
         return parsed_params
 
     @staticmethod
-    def _is_body_worth_compressing(data: object) -> bool:
+    def _is_body_worth_compressing(data: str | bytes | bytearray | StreamedBodySource | None) -> bool:
         """Whether the body is large enough that `_prepare_request_call` may compress it.
 
         This gate only picks where the preparation runs (worker thread or inline), so it approximates rather
         than replicates the compression conditions: the content type and `Content-Encoding` checks are skipped,
-        and a `str` is measured in characters instead of encoded bytes. A misjudged body costs either one
-        needless thread hop or an inline preparation of a body under `MIN_COMPRESSION_SIZE` characters - both
-        cheap.
+        and a `str` is measured in characters instead of encoded bytes. A streamed body is never compressed,
+        so it never earns the hop. A misjudged body costs either one needless thread hop or an inline
+        preparation of a body under `MIN_COMPRESSION_SIZE` characters - both cheap.
         """
         if isinstance(data, (str, bytes, bytearray)):
             return len(data) >= MIN_COMPRESSION_SIZE

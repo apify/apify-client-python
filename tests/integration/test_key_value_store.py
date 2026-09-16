@@ -788,8 +788,9 @@ async def test_key_value_store_set_streamed_record(client: ApifyClient | ApifyCl
     store_client = client.key_value_store(created_store.id)
 
     try:
-        # Several chunks' worth of non-repeating bytes, so a dropped or reordered chunk would show in the comparison.
-        data = bytes(range(256)) * (3 * 1024 * 4)
+        # Several chunks' worth of data, distinct in every 256-byte block, so a dropped or reordered chunk shows
+        # up in the comparison.
+        data = b''.join(index.to_bytes(4, 'big') + bytes(range(252)) for index in range(12 * 1024))
         await maybe_await(
             store_client.set_record('stream.bin', io.BytesIO(data), content_type='application/octet-stream')
         )

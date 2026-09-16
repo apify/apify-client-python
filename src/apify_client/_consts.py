@@ -43,7 +43,8 @@ saving a round trip.
 """
 
 STREAMED_BODY_CHUNK_SIZE = 64 * 1024
-"""Size, in bytes, of the chunks a streamed request body reads from a file-like source.
+"""Size of the chunks a streamed request body reads from a file-like source, in bytes from a binary source and in
+characters from a text-mode one.
 
 A chunk is the most of a streamed body that is in memory at once, and in the asynchronous client every chunk costs
 one worker-thread hop, so the size balances memory against per-chunk overhead. It matches the buffer size the

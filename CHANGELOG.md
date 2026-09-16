@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Stop dataset iterators from skipping items when unwind is used ([#1059](https://github.com/apify/apify-client-python/pull/1059)) ([8e30197](https://github.com/apify/apify-client-python/commit/8e301977ecb80b7c01251cacf071a3f6201469ba)) by [@vdusek](https://github.com/vdusek), closes [#1058](https://github.com/apify/apify-client-python/issues/1058)
+- Keep a failing background watcher from breaking a successful actor call ([#1027](https://github.com/apify/apify-client-python/pull/1027)) ([efc009d](https://github.com/apify/apify-client-python/commit/efc009d78f08d3a03a10db386201e48e45d01c2d)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

@@ -34,7 +34,8 @@ class StreamedRequestBody:
 
     A file opened in text mode, or an iterator yielding strings, is UTF-8 encoded chunk by chunk. A file-like object
     whose `read` is a coroutine function, as `aiofiles` provides, and an async iterator can only be sent by the
-    asynchronous client.
+    asynchronous client. A `read` that takes no size is called once and its result sent as a single chunk, so such
+    a source is held in memory whole.
     """
 
     def __init__(self, source: StreamedBodySource, *, chunk_size: int = STREAMED_BODY_CHUNK_SIZE) -> None:
@@ -61,7 +62,8 @@ class StreamedRequestBody:
 
         # Exactly one of these produces the chunks: a file-like `read`, a factory of a synchronous iterable, or a
         # factory of an asynchronous one. A response provides both factories.
-        self._read: Callable[[int], Any] | None = None
+        self._read: Callable[..., Any] | None = None
+        self._read_takes_size = True
         self._sync_chunks: Callable[[], Iterable[Any]] | None = None
         self._async_chunks: Callable[[], AsyncIterator[Any]] | None = None
 
@@ -76,6 +78,7 @@ class StreamedRequestBody:
             self._async_chunks = getattr(source, 'aiter_bytes', None)
         elif callable(read := getattr(source, 'read', None)):
             self._read = read
+            self._read_takes_size = _accepts_chunk_size(read)
             self._is_async = inspect.iscoroutinefunction(read)
             # The `seekable` check guards the `tell` call, which a pipe or a socket rejects. An async file-like
             # object also seeks asynchronously, so it is treated as a source that cannot be rewound.
@@ -168,9 +171,14 @@ class StreamedRequestBody:
     def _iter_chunks(self) -> Iterator[bytes]:
         try:
             if self._read is not None:
-                # A file-like source signals its end with an empty read.
-                while data := _to_bytes(self._read(self._chunk_size)):
-                    yield data
+                if not self._read_takes_size:
+                    # A `read` that takes no size hands over the whole source in one call, so it is one chunk.
+                    if data := _to_bytes(self._read()):
+                        yield data
+                else:
+                    # A file-like source signals its end with an empty read.
+                    while data := _to_bytes(self._read(self._chunk_size)):
+                        yield data
             elif self._sync_chunks is not None:
                 for chunk in self._sync_chunks():
                     # In chunked transfer encoding an empty chunk terminates the body, so none is passed on.
@@ -183,6 +191,11 @@ class StreamedRequestBody:
     async def _aiter_chunks(self) -> AsyncIterator[bytes]:
         try:
             if self._read is not None:
+                if not self._read_takes_size:
+                    chunk = await self._read() if self._is_async else await asyncio.to_thread(self._read)
+                    if data := _to_bytes(chunk):
+                        yield data
+                    return
                 while True:
                     # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the
                     # thread goes on moving a seekable source's position. Reaching a retry from there would need a
@@ -208,6 +221,19 @@ class StreamedRequestBody:
         except Exception as exc:
             self._error = exc
             raise
+
+
+def _accepts_chunk_size(read: Callable[..., Any]) -> bool:
+    """Whether a file-like object's `read` takes the chunk size, which a duck-typed one may leave out."""
+    try:
+        inspect.signature(read).bind(STREAMED_BODY_CHUNK_SIZE)
+    except ValueError:
+        # A `read` implemented in C can hide its signature, and every file object in the standard library takes
+        # the size, so the chunked call is the safer guess.
+        return True
+    except TypeError:
+        return False
+    return True
 
 
 def _is_response(value: object) -> TypeGuard[HttpResponse]:

@@ -32,6 +32,34 @@ class AsyncReader:
         return self._buffer.read(size)
 
 
+class ZeroArgReader:
+    """A duck-typed file-like object whose `read` takes no size, so it hands over everything at once."""
+
+    def __init__(self, data: bytes) -> None:
+        self._data = data
+        self._read = False
+
+    def read(self) -> bytes:
+        if self._read:
+            return b''
+        self._read = True
+        return self._data
+
+
+class AsyncZeroArgReader:
+    """A file-like object with a coroutine `read` that takes no size."""
+
+    def __init__(self, data: bytes) -> None:
+        self._data = data
+        self._read = False
+
+    async def read(self) -> bytes:
+        if self._read:
+            return b''
+        self._read = True
+        return self._data
+
+
 class FakeStreamedResponse:
     """The streaming half of the `HttpResponse` protocol, with both a sync and an async chunk iterator."""
 
@@ -125,6 +153,29 @@ def test_file_like_is_read_in_chunks_of_chunk_size() -> None:
     body = StreamedRequestBody(io.BytesIO(b'x' * 10), chunk_size=4)
 
     assert list(body.iter_bytes()) == [b'xxxx', b'xxxx', b'xx']
+
+
+def test_file_like_without_a_size_argument_is_read_once() -> None:
+    """A `read` that takes no size is called without one and its result sent as a single chunk."""
+    body = StreamedRequestBody(ZeroArgReader(b'buffer data'), chunk_size=4)
+
+    assert list(body.iter_bytes()) == [b'buffer data']
+
+
+def test_file_like_without_a_size_argument_yields_nothing_when_empty() -> None:
+    """A `read` that takes no size and returns nothing sends no chunk, since an empty chunk ends a chunked body."""
+    body = StreamedRequestBody(ZeroArgReader(b''))
+
+    assert list(body.iter_bytes()) == []
+
+
+async def test_file_like_without_a_size_argument_is_read_once_async() -> None:
+    """The asynchronous client reads a size-less `read` once, whether it is a coroutine function or not."""
+    sync_body = StreamedRequestBody(ZeroArgReader(b'buffer data'), chunk_size=4)
+    async_body = StreamedRequestBody(AsyncZeroArgReader(b'buffer data'), chunk_size=4)
+
+    assert [chunk async for chunk in sync_body.aiter_bytes()] == [b'buffer data']
+    assert [chunk async for chunk in async_body.aiter_bytes()] == [b'buffer data']
 
 
 def test_default_chunk_size_is_the_constant() -> None:

@@ -48,7 +48,7 @@ The following example shows how to stream the logs of an Actor run incrementally
 
 <ApiLink to="class/KeyValueStoreClient#set_record">`KeyValueStoreClient.set_record`</ApiLink> and the `run_input` of <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink>, <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink>, and <ApiLink to="class/RunClient#metamorph">`RunClient.metamorph`</ApiLink> accept a value the client streams to the API in chunks:
 
-- A file-like object, meaning anything with a `read(size)` method: an open file, an `io.BytesIO`, a member of a ZIP archive, or a pipe. The client reads it in 64 KiB chunks from its current position and doesn't close it.
+- A file-like object, meaning anything with a `read` method: an open file, an `io.BytesIO`, a member of a ZIP archive, or a pipe. The client reads it in 64 KiB chunks from its current position and doesn't close it. A `read` that takes no size is called once instead, so that source is held in memory whole.
 - An iterator of `bytes` or `str` chunks, such as a generator. The iterator decides the chunk sizes, and it's consumed by the upload, so passing the same one to a second upload sends an empty body.
 - A streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> from one of the download methods, whose body is forwarded chunk by chunk.
 

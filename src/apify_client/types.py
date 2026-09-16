@@ -49,14 +49,32 @@ class SupportsRead(Protocol):
 
     `read` is called with the chunk size until it returns an empty value. A file opened in text mode returns `str`
     chunks, which are UTF-8 encoded. An `async def read`, as `aiofiles` provides, is accepted by `ApifyClientAsync`.
+
+    A `read` that takes no size is accepted as `SupportsReadAll`.
     """
 
     def read(self, size: int, /) -> bytes | str | Awaitable[bytes | str]:
         """Read up to `size` bytes or characters, returning an empty value at the end."""
 
 
+class SupportsReadAll(Protocol):
+    """A file-like object whose `read` takes no size, so one call hands over the whole source.
+
+    It is called once and its result sent as a single chunk, which holds the source in memory whole. `SupportsRead`
+    is the shape that streams.
+    """
+
+    def read(self) -> bytes | str | Awaitable[bytes | str]:
+        """Read the whole source, returning an empty value once it has been read."""
+
+
 StreamedBodySource = (
-    SupportsRead | Iterator[bytes | str] | AsyncIterator[bytes | str] | HttpResponse | StreamedRequestBody
+    SupportsRead
+    | SupportsReadAll
+    | Iterator[bytes | str]
+    | AsyncIterator[bytes | str]
+    | HttpResponse
+    | StreamedRequestBody
 )
 """Type for a request body the client streams to the API in chunks instead of holding it in memory whole.
 
@@ -80,6 +98,7 @@ __all__ = [
     'JsonSerializable',
     'StreamedBodySource',
     'SupportsRead',
+    'SupportsReadAll',
     'Timeout',
     'WebhooksList',
 ]

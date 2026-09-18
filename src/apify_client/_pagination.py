@@ -19,9 +19,10 @@ The value of 1000 keeps backwards compatibility with the previous fixed cache si
 class HasItems(Protocol[T]):
     """Structural contract for a single page of results from a paginated API endpoint.
 
-    Implementations must expose `items`. They may optionally expose `count` - the number of items scanned by the API for
-    this page, which can exceed `len(items)` when filters drop items from the response. The iterator helpers consult
-    `count` opportunistically via `getattr` for offset bookkeeping and fall back to `len(items)` when it is absent.
+    Implementations must expose `items`. They may optionally expose `count` - the number of rows the API scanned to
+    produce this page, which `len(items)` can land below (filters drop items) or above (`unwind` splits one row into
+    several items). The iterator helpers consult `count` opportunistically via `getattr` for offset bookkeeping and
+    fall back to `len(items)` when it is absent.
     """
 
     items: list[T]
@@ -38,20 +39,19 @@ def get_items_iterator(
 
     The `callback` is invoked lazily to fetch each page from the API. It must accept `limit` and `offset` keyword
     arguments and return an object whose `items` attribute is a list. If the object also exposes a `count` attribute, it
-    is used for offset bookkeeping (the Apify API's `count` reflects items scanned, which can exceed items returned when
-    filters are applied).
+    is used for offset bookkeeping - `_page_scanned_rows` describes how the next offset is derived.
 
-    Iteration stops when a page scans no items (`count` is `0`, or `items` is empty when `count` is absent) or when the
-    user-requested `limit` is reached. A page can scan items while returning none - filters like `clean` drop items from
-    `items` but still count toward `count` - so terminating on scanned rather than returned items keeps the iterator
-    advancing across fully-filtered pages. The `total` field is intentionally not consulted, because it can change
-    between calls.
+    Iteration stops when a page scans no rows or when the user-requested `limit` is reached. A page can scan rows while
+    returning no items - filters like `clean` drop items from `items` but still count toward `count` - so terminating on
+    scanned rather than returned rows keeps the iterator advancing across fully-filtered pages. The `total` field is
+    intentionally not consulted, because it can change between calls.
 
     Args:
         callback: Function returning a single page of items.
-        limit: Maximum total number of items to yield across all pages. `None` or `0` means no limit.
+        limit: Maximum total number of rows scanned across all pages. On the dataset items endpoint `unwind` can
+            turn one row into several items, so more items than this can be yielded. `None` or `0` means no limit.
         offset: Starting offset for the first page.
-        chunk_size: Maximum number of items requested per API call. `None` or `0` lets the API decide.
+        chunk_size: Per-page cap, sent to the API as its `limit`. `None` or `0` lets the API decide.
     """
     effective_chunk = chunk_size or 0
     initial_offset = offset or 0
@@ -59,13 +59,14 @@ def get_items_iterator(
     fetched_items = 0
 
     while True:
+        page_limit = _next_page_limit(initial_limit, fetched_items, effective_chunk)
         current_page = callback(
-            limit=_next_page_limit(initial_limit, fetched_items, effective_chunk),
+            limit=page_limit,
             offset=initial_offset + fetched_items,
         )
         yield from current_page.items
 
-        page_scanned = max(getattr(current_page, 'count', 0), len(current_page.items))
+        page_scanned = _page_scanned_rows(current_page, page_limit)
         fetched_items += page_scanned
 
         if not page_scanned or (initial_limit and fetched_items >= initial_limit):
@@ -89,14 +90,15 @@ async def get_items_iterator_async(
     fetched_items = 0
 
     while True:
+        page_limit = _next_page_limit(initial_limit, fetched_items, effective_chunk)
         current_page = await callback(
-            limit=_next_page_limit(initial_limit, fetched_items, effective_chunk),
+            limit=page_limit,
             offset=initial_offset + fetched_items,
         )
         for item in current_page.items:
             yield item
 
-        page_scanned = max(getattr(current_page, 'count', 0), len(current_page.items))
+        page_scanned = _page_scanned_rows(current_page, page_limit)
         fetched_items += page_scanned
 
         if not page_scanned or (initial_limit and fetched_items >= initial_limit):
@@ -126,20 +128,30 @@ def get_cursor_iterator(
     limit: int | None = None,
     chunk_size: int | None = None,
 ) -> Iterator[KeyValueStoreKey] | Iterator[Request]:
-    """Yield individual items from cursor-paginated API responses.
+    """Yield individual items from a cursor-paginated API response.
 
-    Cursor pagination is restricted to the two API responses that expose it: `ListOfKeys` (for key-value store keys) and
-    `ListOfRequests` (for request queue requests). Iteration ends when the next cursor is `None` or the user-requested
-    `limit` is reached. Emptiness alone does not stop iteration: server-side filters (such as the request-queue state
-    `filter`) can drop every item on a page while a live cursor still points at more data, so termination relies on the
-    cursor, not on whether a page returned items. Unlike offset responses, cursor responses expose no scanned-item
-    `count`, so `count` cannot be used to detect a fully-filtered page here.
+    This iterator supports the two API responses that use cursor pagination. `ListOfKeys` is used for key-value store
+    keys, while `ListOfRequests` is used for request queue requests.
+
+    Pagination continues until either:
+
+    - the API returns no next cursor, or
+    - the requested `limit` is reached.
+
+    An empty page does not explicitly stop the iteration. In practice, both supported endpoints return a next cursor
+    only when the current page contains items, so an empty page always has a `None` cursor and naturally ends the
+    iteration.
+
+    The endpoints determine the next cursor differently:
+
+    - For key-value store keys, the cursor is the last key returned on the current page.
+    - For request queue requests, a cursor is returned only when the current page is full.
 
     Args:
-        callback: Function returning a single page of items. Receives `cursor` and `limit` kwargs.
-        cursor: Value of the cursor for the first request, or `None` to start from the beginning.
+        callback: Function that returns one page of items and accepts `cursor` and `limit` keyword arguments.
+        cursor: Cursor to use for the first request. If `None`, iteration starts from the beginning.
         limit: Maximum total number of items to yield across all pages.
-        chunk_size: Maximum number of items requested per API call.
+        chunk_size: Maximum number of items to request in a single API call.
     """
     effective_chunk = chunk_size or 0
     initial_limit = limit or 0
@@ -218,3 +230,19 @@ def _next_page_limit(initial_limit: int, fetched_items: int, effective_chunk: in
     if not effective_chunk:
         return remaining
     return min(remaining, effective_chunk)
+
+
+def _page_scanned_rows(page: HasItems[T], requested_limit: int) -> int:
+    """Compute how far the offset advances past `page`, in dataset rows.
+
+    Neither reported number is right on its own. `count` follows the rows the API scanned, but it is derived from a
+    dataset's item count, which is incremented by a throttled write and so lags a fresh push. `len(items)` counts the
+    items the API shaped out of those rows: filters (`clean`, `skip_empty`, `skip_hidden`) drop some, and `unwind`
+    splits one row into several. The larger of the two absorbs a `count` that lags behind the items returned, and
+    capping it at the rows the call asked for keeps an unwound page from advancing past rows the next call would then
+    never read. The cap is a valid bound because the endpoint applies the `limit` it is sent verbatim; on a page
+    covering fewer rows than that, the advance can still overshoot into rows a concurrent push appends afterwards. A
+    `requested_limit` of `0` means the call sent no limit, leaving the advance unbounded.
+    """
+    scanned_rows = max(getattr(page, 'count', 0), len(page.items))
+    return min(scanned_rows, requested_limit) if requested_limit else scanned_rows

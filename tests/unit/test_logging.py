@@ -8,7 +8,7 @@ import threading
 import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from werkzeug import Request, Response
@@ -847,6 +847,18 @@ def _register_run_and_actor_endpoints(httpserver: HTTPServer) -> None:
     )
 
 
+def _wait_for_blocking_read(streamed_log: StreamedLogBase, *, timeout: float = 5) -> None:
+    """Wait until a chunk has been buffered, which proves the reader reached the blocking read.
+
+    A fixed sleep could end before the reader gets there. Async callers reach this through `asyncio.to_thread`, so
+    the streaming task keeps the event loop while the wait runs.
+    """
+    deadline = time.monotonic() + timeout
+    while not streamed_log._stream_buffer and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert streamed_log._stream_buffer, 'the log stream never reached its blocking read'
+
+
 @pytest.mark.usefixtures('propagate_stream_logs')
 async def test_streamed_log_async_stop_flushes_buffered_tail(
     caplog: LogCaptureFixture,
@@ -897,14 +909,15 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
     """A finite `_stream_timeout` bounds how long `stop()` waits on a silent stream, since the blocking read cannot
     otherwise be interrupted (the production default is `no_timeout`, so the test configures a short finite one)."""
     monkeypatch.setattr(StreamedLog, '_stream_timeout', timedelta(seconds=1))
+    # Well above the stream timeout, so `stop`'s own join bound cannot end the wait first and mask a regression.
+    monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 30)
 
     release_server = threading.Event()
 
     def _silent_handler(_request: Request) -> Response:
         def generate_logs() -> Iterator[bytes]:
-            # Yield an empty chunk so werkzeug flushes headers and the client sees a streaming
-            # response; then block without emitting any log data.
-            yield b''
+            # One complete line, then silence, like a running Actor that stops logging.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: going quiet\n'
             release_server.wait(timeout=30)
 
         return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
@@ -920,8 +933,7 @@ def test_streamed_log_sync_stop_unblocks_on_finite_stream_timeout(
 
     streamed_log.start()
     try:
-        # Give the streaming thread time to start and block inside iter_bytes.
-        time.sleep(0.3)
+        _wait_for_blocking_read(streamed_log)
 
         # Call stop() from a helper thread so the test cannot hang indefinitely if the fix regresses.
         stop_thread = threading.Thread(target=streamed_log.stop)
@@ -1075,6 +1087,310 @@ async def test_streamed_log_async_does_not_error_on_stream_timeout(
     assert not error_records, f'async task logged an error on stream timeout: {[r.message for r in error_records]}'
     # The line received before the timeout must still have been redirected.
     assert any('ACTOR: still running' in record.message for record in caplog.records)
+
+
+_POLL_FAILURE_FINAL_SLEEP_S = 2
+"""Long enough for the watcher to complete the poll that the endpoint rejects."""
+
+_POLL_FAILURE_SETUP_STATUS_REQUESTS = 2
+"""How many plain status requests `call` makes before it starts the watcher: one per redirector it builds."""
+
+
+@pytest.fixture
+def mock_api_failing_status_poll(httpserver: HTTPServer) -> None:
+    """Set up the endpoints `call` needs, with the status poll rejected once the watcher is its only caller."""
+    status_generator = StatusResponseGenerator()
+    running_run = status_generator._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False)
+    finished_run = status_generator._create_minimal_run_data('Final message', 'SUCCEEDED', is_terminal=True)
+    # `call` completes both of the plain status requests that build its redirectors before it starts either of them,
+    # and `wait_for_finish` only ever sends `waitForFinish`, so every later plain status request is a watcher poll.
+    plain_status_requests = 0
+    request_lock = threading.Lock()
+
+    def _status_handler(request: Request) -> Response:
+        nonlocal plain_status_requests
+
+        if 'waitForFinish' in request.args:
+            # `wait_for_finish` keeps succeeding, so the run reads as a success.
+            return Response(response=json.dumps({'data': finished_run}), status=200, mimetype='application/json')
+
+        with request_lock:
+            plain_status_requests += 1
+            is_watcher_poll = plain_status_requests > _POLL_FAILURE_SETUP_STATUS_REQUESTS
+
+        if is_watcher_poll:
+            return Response(
+                response=json.dumps({'error': {'type': 'insufficient-permissions', 'message': 'Poll rejected'}}),
+                status=403,
+                mimetype='application/json',
+            )
+        return Response(response=json.dumps({'data': running_run}), status=200, mimetype='application/json')
+
+    # Registered before `_register_run_and_actor_endpoints`, which also covers the run endpoint - first match wins.
+    httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}', method='GET').respond_with_handler(_status_handler)
+    _register_run_and_actor_endpoints(httpserver)
+    httpserver.expect_request(f'/v2/actors/{_MOCKED_ACTOR_ID}/runs', method='POST').respond_with_json(
+        {'data': running_run}
+    )
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_streaming_log_handler)
+
+
+@pytest.mark.usefixtures('mock_api_failing_status_poll', 'propagate_stream_logs')
+async def test_actor_call_returns_run_when_status_poll_fails_async(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failing status poll is logged by the watcher instead of surfacing as a failure of the finished run."""
+    monkeypatch.setattr(StatusMessageWatcherBase, '_final_sleep_time_s', _POLL_FAILURE_FINAL_SLEEP_S)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    actor_client = ApifyClientAsync(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        run = await actor_client.call()
+
+    assert run is not None
+    assert run.status == 'SUCCEEDED'
+    assert any(
+        record.levelno == logging.ERROR
+        and record.message == 'Status message redirection stopped due to unexpected error:'
+        for record in caplog.records
+    )
+
+
+@pytest.mark.usefixtures('mock_api_failing_status_poll', 'propagate_stream_logs')
+def test_actor_call_returns_run_when_status_poll_fails_sync(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failing status poll is logged by the watcher thread instead of leaking out of it."""
+    monkeypatch.setattr(StatusMessageWatcherBase, '_final_sleep_time_s', _POLL_FAILURE_FINAL_SLEEP_S)
+
+    thread_exceptions: list[threading.ExceptHookArgs] = []
+    monkeypatch.setattr(threading, 'excepthook', thread_exceptions.append)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    actor_client = ApifyClient(token='mocked_token', api_url=api_url).actor(actor_id=_MOCKED_ACTOR_ID)
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        run = actor_client.call()
+
+    assert run is not None
+    assert run.status == 'SUCCEEDED'
+    leaked = [args.exc_type.__name__ for args in thread_exceptions]
+    assert not leaked, f'polling thread leaked an uncaught exception: {leaked}'
+    assert any(
+        record.levelno == logging.ERROR
+        and record.message == 'Status message redirection stopped due to unexpected error:'
+        for record in caplog.records
+    )
+
+
+@pytest.mark.usefixtures('mock_api')
+def test_sync_watcher_thread_is_daemon(httpserver: HTTPServer) -> None:
+    """The polling thread is a daemon, so a watcher still polling cannot hold up interpreter shutdown."""
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    watcher = run_client.get_status_message_watcher(check_period=timedelta(seconds=0))
+
+    thread = watcher.start()
+    try:
+        assert thread.daemon
+    finally:
+        watcher.stop()
+
+
+def test_sync_watcher_start_recovers_from_a_failed_poll() -> None:
+    """`start` runs again after a failed poll ended the polling thread, with no `stop` in between."""
+    logger = logging.getLogger('apify_client.tests.watcher_restart')
+    run_client = Mock()
+    run_client.get.side_effect = RuntimeError('Simulated status poll failure')
+    run_client._http_client.is_timeout_error.return_value = False
+
+    watcher = StatusMessageWatcher(run_client=run_client, to_logger=logger, check_period=timedelta(seconds=0))
+    first_thread = watcher.start()
+    first_thread.join(timeout=5)
+    assert not first_thread.is_alive()
+
+    second_thread = watcher.start()
+    try:
+        assert second_thread is not first_thread
+    finally:
+        watcher.stop()
+
+
+def test_streamed_log_sync_stop_returns_on_silent_stream(
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`stop` returns within its bound on a silent stream, and the log can be started again once the thread ends."""
+    monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 1)
+
+    release_server = threading.Event()
+
+    def _silent_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            # One complete line, then silence, like a running Actor that stops logging.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: going quiet\n'
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_silent_handler)
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = run_client.get_streamed_log()
+
+    streaming_thread = streamed_log.start()
+    try:
+        _wait_for_blocking_read(streamed_log)
+
+        # Call stop() from a helper thread so the test cannot hang if the bound regresses.
+        stop_thread = threading.Thread(target=streamed_log.stop)
+        stop_thread.start()
+        stop_thread.join(timeout=5)
+        assert not stop_thread.is_alive(), 'stop() did not return within its bound on a silent stream'
+    finally:
+        release_server.set()
+        # `stop` leaves the thread running, so reap it instead of leaking it into the rest of the session.
+        streaming_thread.join(timeout=5)
+
+    assert not streaming_thread.is_alive()
+    restarted_thread = streamed_log.start()
+    assert restarted_thread is not streaming_thread
+    streamed_log.stop()
+    restarted_thread.join(timeout=5)
+
+
+@pytest.mark.usefixtures('propagate_stream_logs')
+def test_streamed_log_sync_stop_reports_failing_tail_flush(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A tail the stream cut mid-character keeps its traceback even though the flush runs during a `stop`."""
+    monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 0.5)
+
+    release_server = threading.Event()
+
+    def _truncated_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            # A complete marker whose message ends halfway through a multi-byte character, as a dropped connection
+            # mid-chunk leaves it.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: \xe2\x82'
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_truncated_handler)
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = run_client.get_streamed_log()
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+
+    streaming_thread = streamed_log.start()
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        try:
+            _wait_for_blocking_read(streamed_log)
+            streamed_log.stop()
+        finally:
+            # The flush only runs once the server lets the blocked read end, which is after `stop` returned.
+            release_server.set()
+            streaming_thread.join(timeout=5)
+
+    assert any(
+        record.levelno == logging.ERROR
+        and record.exc_info is not None
+        and record.message == 'Log redirection stopped due to unexpected error:'
+        for record in caplog.records
+    ), f'The truncated tail was not reported. Got: {[record.message for record in caplog.records]}'
+
+
+@pytest.mark.usefixtures('propagate_stream_logs')
+async def test_streamed_log_async_stop_reports_failing_tail_flush(
+    caplog: LogCaptureFixture,
+    httpserver: HTTPServer,
+) -> None:
+    """A tail the stream cut mid-character keeps its traceback, and the cancellation `stop` raised still lands."""
+    release_server = threading.Event()
+
+    def _truncated_handler(_request: Request) -> Response:
+        def generate_logs() -> Iterator[bytes]:
+            # A complete marker whose message ends halfway through a multi-byte character, as a dropped connection
+            # mid-chunk leaves it.
+            yield b'2025-05-13T07:24:12.588Z ACTOR: \xe2\x82'
+            release_server.wait(timeout=30)
+
+        return Response(response=generate_logs(), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
+    ).respond_with_handler(_truncated_handler)
+    _register_run_and_actor_endpoints(httpserver)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    run_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID)
+    streamed_log = await run_client.get_streamed_log()
+    logger_name = f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+
+    streaming_task = streamed_log.start()
+    try:
+        with caplog.at_level(logging.DEBUG, logger=logger_name):
+            await asyncio.to_thread(_wait_for_blocking_read, streamed_log)
+            await streamed_log.stop()
+    finally:
+        release_server.set()
+
+    assert streaming_task.cancelled(), 'the flush failure swallowed the cancellation `stop` raised'
+    assert any(
+        record.levelno == logging.ERROR
+        and record.exc_info is not None
+        and record.message == 'Log redirection stopped due to unexpected error:'
+        for record in caplog.records
+    ), f'The truncated tail was not reported. Got: {[record.message for record in caplog.records]}'
+
+
+def test_streamed_log_sync_stop_reports_failing_stream_close(
+    caplog: LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A custom transport whose `close` raises is reported by `stop` instead of failing the caller."""
+    monkeypatch.setattr(StreamedLog, '_stop_timeout_s', 0.1)
+    release_thread = threading.Event()
+    # Stand in for the streaming thread, so `stop` closes the test's response rather than racing for a real one.
+    monkeypatch.setattr(StreamedLog, '_stream_log', lambda _self: release_thread.wait(timeout=30))
+
+    logger = logging.getLogger('apify_client.tests.failing_stream_close')
+    streamed_log = StreamedLog(log_client=Mock(), to_logger=logger)
+    failing_stream = Mock()
+    failing_stream.close.side_effect = RuntimeError('close failed')
+
+    streaming_thread = streamed_log.start()
+    try:
+        streamed_log._log_stream = failing_stream
+
+        with caplog.at_level(logging.DEBUG, logger=logger.name):
+            streamed_log.stop()
+
+        failing_stream.close.assert_called_once()
+        assert any('Closing the log stream failed' in record.message for record in caplog.records)
+    finally:
+        release_thread.set()
+        streaming_thread.join(timeout=5)
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

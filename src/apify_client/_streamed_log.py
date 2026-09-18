@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from types import TracebackType
 
     from apify_client._resource_clients import LogClient, LogClientAsync
+    from apify_client.http_clients import HttpResponse
     from apify_client.types import Timeout
 
 
@@ -98,6 +99,13 @@ class StreamedLog(StreamedLogBase):
     call `start` and `stop` manually. Obtain an instance via `RunClient.get_streamed_log`.
     """
 
+    _stop_timeout_s: ClassVar[float] = 5
+    """Upper bound on how long `stop` waits for the streaming thread to finish.
+
+    Closing the response only ends the read on a transport that honours it, which neither Impit nor HTTPX does, so
+    without a bound `stop` would wait for the next chunk, which on a quiet run may be hours away.
+    """
+
     def __init__(self, log_client: LogClient, *, to_logger: logging.Logger, from_start: bool = True) -> None:
         """Initialize `StreamedLog`.
 
@@ -111,6 +119,7 @@ class StreamedLog(StreamedLogBase):
         super().__init__(to_logger=to_logger, from_start=from_start)
         self._log_client = log_client
         self._streaming_thread: Thread | None = None
+        self._log_stream: HttpResponse | None = None
         self._stop_logging = False
 
     def start(self) -> Thread:
@@ -118,7 +127,7 @@ class StreamedLog(StreamedLogBase):
 
         The caller is responsible for cleanup by calling the `stop` method when done.
         """
-        if self._streaming_thread:
+        if self._streaming_thread and self._streaming_thread.is_alive():
             raise RuntimeError('Streaming thread already active')
         self._stop_logging = False
         # A daemon thread so a stream still blocked on a read can never hold up interpreter shutdown.
@@ -127,13 +136,29 @@ class StreamedLog(StreamedLogBase):
         return self._streaming_thread
 
     def stop(self) -> None:
-        """Signal the streaming thread to stop logging and wait for it to finish."""
+        """Signal the streaming thread to stop logging and wait up to `_stop_timeout_s` for it to finish.
+
+        A thread that outlives the wait is a daemon with `_stop_logging` set, so it exits after at most one more chunk,
+        and only then does its buffered tail reach the logger. Its handle is kept while it is alive, so `start` cannot
+        revive it beside a second thread on the same buffer.
+        """
         if not self._streaming_thread:
             raise RuntimeError('Streaming thread is not active')
         self._stop_logging = True
-        self._streaming_thread.join()
-        self._streaming_thread = None
-        self._stop_logging = False
+        # Read once; the streaming thread clears the attribute as soon as the stream ends.
+        log_stream = self._log_stream
+        if log_stream is not None:
+            try:
+                log_stream.close()
+            except Exception:
+                # A failing `close` in a custom transport must not fail the caller.
+                self._to_logger.exception('Closing the log stream failed:')
+        self._streaming_thread.join(timeout=self._stop_timeout_s)
+        if self._streaming_thread.is_alive():
+            # Otherwise log messages arriving after `stop` returned have no explanation.
+            self._to_logger.debug('Log streaming thread outlived the stop timeout; it ends after the next chunk.')
+        else:
+            self._streaming_thread = None
 
     def __enter__(self) -> Self:
         """Start the streaming thread within the context. Exiting the context will finish the streaming thread."""
@@ -151,15 +176,30 @@ class StreamedLog(StreamedLogBase):
             with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
                 if not log_stream:
                     return
+                # Published so `stop` can close the response.
+                self._log_stream = log_stream
                 try:
+                    # `stop` may have run before the response existed for it to close.
+                    if self._stop_logging:
+                        return
                     for data in log_stream.iter_bytes():
                         self._process_new_data(data)
                         if self._stop_logging:
                             break
                 finally:
-                    # Flush the last buffered part even if the read timed out or was stopped.
-                    self._log_buffer_content(include_last_part=True)
+                    self._log_stream = None
+                    try:
+                        # Flush the last buffered part even if the read timed out or was stopped.
+                        self._log_buffer_content(include_last_part=True)
+                    except Exception:
+                        # A truncated stream leaves an undecodable tail, which is worth a traceback even while a stop
+                        # is in progress.
+                        self._to_logger.exception('Log redirection stopped due to unexpected error:')
         except Exception as exc:
+            if self._stop_logging:
+                # `stop` closed the stream out from under the read, so the failure is expected.
+                self._to_logger.debug('Log streaming stopped while `stop` was in progress: %r', exc)
+                return
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # The stream cannot continue, so warn and let the thread end instead of leaking a traceback.
                 self._to_logger.warning('Log streaming stopped: the log stream request timed out.')
@@ -236,8 +276,13 @@ class StreamedLogAsync(StreamedLogBase):
                     async for data in log_stream.aiter_bytes():
                         self._process_new_data(data)
                 finally:
-                    # Flush the last buffered part even if the task is cancelled by `stop()`.
-                    self._log_buffer_content(include_last_part=True)
+                    try:
+                        # Flush the last buffered part even if the task is cancelled by `stop()`.
+                        self._log_buffer_content(include_last_part=True)
+                    except Exception:
+                        # A truncated stream leaves an undecodable tail. Keeping the failure here also keeps the
+                        # cancellation `stop` raised propagating, so the task ends up cancelled as asyncio expects.
+                        self._to_logger.exception('Log redirection stopped due to unexpected error:')
         except Exception as exc:
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # A timeout on the long-lived stream is an expected terminal condition, not an error.

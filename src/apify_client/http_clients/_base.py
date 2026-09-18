@@ -310,7 +310,7 @@ class HttpClientBase:
         an encoding the client ships no compressor for. `Content-Encoding: identity` therefore opts a single
         request out of compression.
 
-        A body streamed from a file-like object, an iterator of byte chunks, or a streamed response is wrapped in
+        A body streamed from a file-like object, an iterable of byte chunks, or a streamed response is wrapped in
         `StreamedRequestBody` and never compressed: its chunks go out as they are produced, so nothing is buffered.
         A caller-supplied `Content-Encoding` is forwarded for it too, which is how pre-compressed data is streamed.
         """
@@ -351,7 +351,7 @@ class HttpClientBase:
             # Without this the request would go out with no body at all, losing the payload without a word.
             raise TypeError(
                 f'Cannot send a {type(data).__name__} value as a request body. Pass bytes, a string, or a value '
-                'the client can stream, such as a file-like object or an iterator of byte chunks.'
+                'the client can stream, such as a file-like object or an iterable of byte chunks.'
             )
 
         return (headers, self._parse_params(params), content)
@@ -495,7 +495,7 @@ class HttpClient(HttpClientBase):
             url: Full URL to make the request to.
             headers: Additional headers to include.
             params: Query parameters to append to the URL.
-            data: Raw request body. A file-like object, an iterator of byte chunks, or a streamed `HttpResponse`
+            data: Raw request body. A file-like object, an iterable of byte chunks, or a streamed `HttpResponse`
                 is sent in chunks as it is read, see `StreamedRequestBody`. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
@@ -702,7 +702,7 @@ class HttpClientAsync(HttpClientBase):
             url: Full URL to make the request to.
             headers: Additional headers to include.
             params: Query parameters to append to the URL.
-            data: Raw request body. A file-like object, an iterator of byte chunks, or a streamed `HttpResponse`
+            data: Raw request body. A file-like object, an iterable of byte chunks, or a streamed `HttpResponse`
                 is sent in chunks as it is read, see `StreamedRequestBody`. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.

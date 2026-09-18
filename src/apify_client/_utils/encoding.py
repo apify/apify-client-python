@@ -19,7 +19,7 @@ def encode_key_value_store_record_value(
     """Encode a value for storage in a key-value store record.
 
     Args:
-        value: The value to encode. A file-like object (anything with a callable `read`), an iterator of byte chunks,
+        value: The value to encode. A file-like object (anything with a callable `read`), an iterable of byte chunks,
             or a streamed `HttpResponse` is returned as it is, to be streamed to the API in chunks from its current
             position - the object is neither rewound nor closed. Any other value is JSON-serialized unless it is
             already bytes or a string.

@@ -369,7 +369,7 @@ class KeyValueStoreClient(ResourceClient):
 
         Args:
             key: The key of the record to save the value to.
-            value: The value to save into the record. A file-like object, an iterator of byte chunks, or a streamed
+            value: The value to save into the record. A file-like object, an iterable of byte chunks, or a streamed
                 `HttpResponse` is uploaded in chunks as it is read, without being held in memory whole or compressed.
                 Only a seekable file-like value can be retried, any other streamed value gets a single attempt. See
                 `StreamedRequestBody` for details.
@@ -805,7 +805,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
 
         Args:
             key: The key of the record to save the value to.
-            value: The value to save into the record. A file-like object, an iterator of byte chunks, or a streamed
+            value: The value to save into the record. A file-like object, an iterable of byte chunks, or a streamed
                 `HttpResponse` is uploaded in chunks as it is read, without being held in memory whole or compressed.
                 Only a seekable file-like value can be retried, any other streamed value gets a single attempt. See
                 `StreamedRequestBody` for details.

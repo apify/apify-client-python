@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterable, Iterable
 from datetime import timedelta
 from typing import TYPE_CHECKING, Literal, Protocol
 
@@ -71,15 +71,18 @@ class SupportsReadAll(Protocol):
 StreamedBodySource = (
     SupportsRead
     | SupportsReadAll
-    | Iterator[bytes | str]
-    | AsyncIterator[bytes | str]
+    | Iterable[bytes | str]
+    | AsyncIterable[bytes | str]
     | HttpResponse
     | StreamedRequestBody
 )
 """Type for a request body the client streams to the API in chunks instead of holding it in memory whole.
 
-A file-like object is read in chunks, an iterator or async iterator yields the chunks itself, and a streamed
-`HttpResponse` forwards its body, which chains one API call's output into another's input. Accepted as the `data` of
+A file-like object is read in chunks, an iterable or async iterable yields the chunks itself, and a streamed
+`HttpResponse` forwards its body, which chains one API call's output into another's input. The iterable is any
+iterator, such as a generator, or an object that only implements `__iter__` or `__aiter__`. A `Collection` - a `str`,
+`bytes`, `list`, `dict`, or any other sized container - and a pydantic model are excluded at runtime as the values the
+client uploads whole or serializes as JSON, which the static type cannot express. Accepted as the `data` of
 `HttpClient.call`, as the `value` of `KeyValueStoreClient.set_record`, and as the `run_input` of Actor runs. See
 `StreamedRequestBody` for the retry and compression rules that apply.
 

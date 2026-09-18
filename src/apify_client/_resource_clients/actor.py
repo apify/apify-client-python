@@ -237,7 +237,7 @@ class ActorClient(ResourceClient):
 
         Args:
             run_input: The input to pass to the Actor run. Accepts the same values as
-                `KeyValueStoreClient.set_record`, including a file-like object, an iterator of byte chunks, or a
+                `KeyValueStoreClient.set_record`, including a file-like object, an iterable of byte chunks, or a
                 streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
@@ -318,7 +318,7 @@ class ActorClient(ResourceClient):
 
         Args:
             run_input: The input to pass to the Actor run. Accepts the same values as
-                `KeyValueStoreClient.set_record`, including a file-like object, an iterator of byte chunks, or a
+                `KeyValueStoreClient.set_record`, including a file-like object, an iterable of byte chunks, or a
                 streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
@@ -545,7 +545,7 @@ class ActorClient(ResourceClient):
 
         Args:
             run_input: The input to validate. Accepts the same values as `KeyValueStoreClient.set_record`,
-                including a file-like object, an iterator of byte chunks, or a streamed `HttpResponse`, which
+                including a file-like object, an iterable of byte chunks, or a streamed `HttpResponse`, which
                 are uploaded in chunks without being held in memory.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
@@ -745,7 +745,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         Args:
             run_input: The input to pass to the Actor run. Accepts the same values as
-                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterator of byte chunks, or a
+                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterable of byte chunks, or a
                 streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
@@ -826,7 +826,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         Args:
             run_input: The input to pass to the Actor run. Accepts the same values as
-                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterator of byte chunks, or a
+                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterable of byte chunks, or a
                 streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
@@ -1054,7 +1054,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         Args:
             run_input: The input to validate. Accepts the same values as `KeyValueStoreClientAsync.set_record`,
-                including a file-like object, an iterator of byte chunks, or a streamed `HttpResponse`, which
+                including a file-like object, an iterable of byte chunks, or a streamed `HttpResponse`, which
                 are uploaded in chunks without being held in memory.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.

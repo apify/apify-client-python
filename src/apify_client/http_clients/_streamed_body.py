@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Collection, Iterable, Iterator
 from typing import TYPE_CHECKING, Any
+
+from pydantic import BaseModel
 
 from apify_client._consts import STREAMED_BODY_CHUNK_SIZE
 from apify_client._docs import docs_group
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable
     from typing import TypeGuard
 
     from apify_client.http_clients._base import HttpResponse
@@ -23,7 +25,7 @@ _DONE = object()
 class StreamedRequestBody:
     """A request body sent from its source in chunks, so the body is never held in memory whole.
 
-    `HttpClient.call` and `HttpClientAsync.call` wrap a `data` argument that is a file-like object, an iterator of
+    `HttpClient.call` and `HttpClientAsync.call` wrap a `data` argument that is a file-like object, an iterable of
     byte chunks, or a streamed `HttpResponse` in this class. The transport pulls the chunks from `iter_bytes` or
     `aiter_bytes` and sends each one as it arrives, and the body is never compressed. Build one yourself and pass it
     as the `data` to choose the `chunk_size`, and it is sent as it is.
@@ -65,7 +67,7 @@ class StreamedRequestBody:
         self._read: Callable[..., Any] | None = None
         self._read_takes_size = True
         self._sync_chunks: Callable[[], Iterable[Any]] | None = None
-        self._async_chunks: Callable[[], AsyncIterator[Any]] | None = None
+        self._async_chunks: Callable[[], AsyncIterable[Any]] | None = None
 
         # Set for a seekable file-like source, the only kind that can be sent more than once.
         self._seek: Callable[[int], Any] | None = None
@@ -88,14 +90,17 @@ class StreamedRequestBody:
             if not self._is_async and callable(seekable) and callable(tell) and callable(seek) and seekable():
                 self._start = tell()
                 self._seek = seek
-        elif isinstance(source, Iterator):
-            self._sync_chunks = lambda: source
-        elif isinstance(source, AsyncIterator):
-            self._async_chunks = lambda: source
-            self._is_async = True
+        elif _is_chunk_iterable(source):
+            # `for` and `async for` accept an iterable as well as an iterator, so an object with only `__iter__` or
+            # `__aiter__` needs no wrapping. A synchronous iterable wins when an object offers both.
+            if isinstance(source, Iterable):
+                self._sync_chunks = lambda: source
+            else:
+                self._async_chunks = lambda: source
+                self._is_async = True
         else:
             raise TypeError(
-                f'Cannot stream a request body from a {type(source).__name__}. Pass a file-like object, an iterator '
+                f'Cannot stream a request body from a {type(source).__name__}. Pass a file-like object, an iterable '
                 'of byte chunks, or a streamed response.'
             )
 
@@ -104,18 +109,17 @@ class StreamedRequestBody:
         """Return whether a value is an object a request body can be streamed from.
 
         These are a streamed `HttpResponse` (anything with a callable `iter_bytes`), a file-like object (anything
-        with a callable `read`), and an iterator or async iterator of byte chunks. A `str`, `bytes`, `bytearray`, or
-        a container such as a `list` or `dict` is not a source, even though some of them can be iterated.
+        with a callable `read`), and an iterable or async iterable of byte chunks: an iterator such as a generator,
+        or an object that only implements `__iter__` or `__aiter__`, which is what a class yielding chunks from a
+        generator method looks like. A `str`, `bytes`, `bytearray`, a container such as a `list`, `tuple`, `set`,
+        or `dict`, and a pydantic model are not sources, even though all of them can be iterated. They are the values
+        the client uploads whole or serializes as JSON.
 
         A `StreamedRequestBody` matches on its own `iter_bytes`, which is how a hand-built body reaches the request
         pipeline untouched. The constructor refuses one, so a caller that builds a body from what this accepts has
         to check for an existing body first.
         """
-        return (
-            _is_response(value)
-            or callable(getattr(value, 'read', None))
-            or isinstance(value, (Iterator, AsyncIterator))
-        )
+        return _is_response(value) or callable(getattr(value, 'read', None)) or _is_chunk_iterable(value)
 
     @property
     def is_async(self) -> bool:
@@ -234,6 +238,21 @@ def _accepts_chunk_size(read: Callable[..., Any]) -> bool:
     except TypeError:
         return False
     return True
+
+
+def _is_chunk_iterable(value: object) -> TypeGuard[Iterable[Any] | AsyncIterable[Any]]:
+    """Return whether a value is an iterable of chunks, as opposed to a container the client uploads or serializes.
+
+    An iterator or async iterator always is. So is an object that only implements `__iter__` or `__aiter__`, unless
+    it is a `Collection` - a `str`, `bytes`, `bytearray`, `memoryview`, `list`, `tuple`, `set`, `dict`, `range`, or
+    anything else that is sized and supports `in`, the shape of every container the client means as a value - or a
+    pydantic model, whose `__iter__` walks its fields. Both are JSON-serializable values, not chunk streams.
+    """
+    if isinstance(value, (Iterator, AsyncIterator)):
+        return True
+    if isinstance(value, (Collection, BaseModel)):
+        return False
+    return isinstance(value, (Iterable, AsyncIterable))
 
 
 def _is_response(value: object) -> TypeGuard[HttpResponse]:

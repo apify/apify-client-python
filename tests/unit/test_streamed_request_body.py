@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import collections
 import io
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from pydantic import BaseModel
 
 from apify_client._consts import STREAMED_BODY_CHUNK_SIZE
 from apify_client.http_clients import StreamedRequestBody
@@ -99,6 +101,37 @@ async def async_bytes_chunks() -> AsyncIterator[bytes]:
     yield b'def'
 
 
+class ChunkIterable:
+    """An object with only `__iter__`, the shape of a class that yields chunks from a generator method."""
+
+    def __init__(self, chunks: list[bytes]) -> None:
+        self.chunks = chunks
+
+    def __iter__(self) -> Iterator[bytes]:
+        yield from self.chunks
+
+
+class AsyncChunkIterable:
+    """An object with only `__aiter__`, which is what a class with an async generator method looks like."""
+
+    def __init__(self, chunks: list[bytes]) -> None:
+        self.chunks = chunks
+
+    async def __aiter__(self) -> AsyncIterator[bytes]:
+        for chunk in self.chunks:
+            yield chunk
+
+
+class BothChunkIterable(ChunkIterable, AsyncChunkIterable):
+    """An object offering both `__iter__` and `__aiter__`."""
+
+
+class Model(BaseModel):
+    """A pydantic model, whose `__iter__` walks its fields and so must not count as a chunk iterable."""
+
+    message: str = 'data'
+
+
 @pytest.mark.parametrize(
     'value',
     [
@@ -109,11 +142,13 @@ async def async_bytes_chunks() -> AsyncIterator[bytes]:
         pytest.param(iter([b'data']), id='iterator'),
         pytest.param(bytes_chunks(), id='generator'),
         pytest.param(async_bytes_chunks(), id='async generator'),
+        pytest.param(ChunkIterable([b'data']), id='__iter__-only iterable'),
+        pytest.param(AsyncChunkIterable([b'data']), id='__aiter__-only async iterable'),
         pytest.param(FakeStreamedResponse([b'data']), id='streamed response'),
     ],
 )
 def test_is_source(value: Any) -> None:
-    """A file-like object, an iterator, an async iterator, and a streamed response can all feed a body."""
+    """A file-like object, an iterable, an async iterable, and a streamed response can all feed a body."""
     assert StreamedRequestBody.is_source(value)
 
 
@@ -123,14 +158,25 @@ def test_is_source(value: Any) -> None:
         pytest.param(b'data', id='bytes'),
         pytest.param(bytearray(b'data'), id='bytearray'),
         pytest.param('data', id='str'),
+        pytest.param(memoryview(b'data'), id='memoryview'),
         pytest.param([b'data'], id='list of chunks'),
+        pytest.param((b'data',), id='tuple of chunks'),
+        pytest.param({b'data'}, id='set'),
+        pytest.param(frozenset({b'data'}), id='frozenset'),
+        pytest.param(collections.deque([b'data']), id='deque'),
+        pytest.param(range(3), id='range'),
         pytest.param({'key': 'value'}, id='dict'),
+        pytest.param({'key': 'value'}.keys(), id='dict keys view'),
+        pytest.param({'key': 'value'}.values(), id='dict values view'),
+        pytest.param({'key': 'value'}.items(), id='dict items view'),
+        pytest.param(Model(), id='pydantic model'),
+        pytest.param(bytes_chunks, id='generator function left uncalled'),
         pytest.param(None, id='none'),
         pytest.param(42, id='int'),
     ],
 )
 def test_is_not_source(value: Any) -> None:
-    """Buffered bodies and plain containers are not sources, even the iterable ones."""
+    """Buffered bodies, plain containers, and pydantic models are not sources, even though they can be iterated."""
     assert not StreamedRequestBody.is_source(value)
 
 
@@ -200,6 +246,14 @@ def test_chunks_are_normalized_to_bytes(source: Any, expected: bytes) -> None:
     assert b''.join(body.iter_bytes()) == expected
 
 
+def test_iterable_with_only_iter_is_forwarded() -> None:
+    """An object that only implements `__iter__` is iterated like any iterator, and a fresh pass restarts it."""
+    body = StreamedRequestBody(ChunkIterable([b'abc', b'', b'def']))
+
+    assert list(body.iter_bytes()) == [b'abc', b'def']
+    assert not body.is_async
+
+
 def test_empty_iterator_chunks_are_skipped() -> None:
     """An empty chunk would terminate a chunked transfer, so it never reaches the transport."""
     body = StreamedRequestBody(bytes_chunks())
@@ -258,6 +312,8 @@ class NonSeekableBytesIO(io.BytesIO):
         pytest.param(AsyncReader(b'data'), id='async reader'),
         pytest.param(iter([b'data']), id='iterator'),
         pytest.param(async_bytes_chunks(), id='async iterator'),
+        pytest.param(ChunkIterable([b'data']), id='__iter__-only iterable'),
+        pytest.param(AsyncChunkIterable([b'data']), id='__aiter__-only async iterable'),
         pytest.param(FakeStreamedResponse([b'data']), id='streamed response'),
     ],
 )
@@ -275,6 +331,7 @@ def test_is_not_rewindable(source: Any) -> None:
     [
         pytest.param(AsyncReader(b'data'), id='async reader'),
         pytest.param(async_bytes_chunks(), id='async iterator'),
+        pytest.param(AsyncChunkIterable([b'data']), id='__aiter__-only async iterable'),
     ],
 )
 def test_async_source_cannot_be_iterated_synchronously(source: Any) -> None:
@@ -292,11 +349,13 @@ def test_async_source_cannot_be_iterated_synchronously(source: Any) -> None:
         pytest.param(io.BytesIO(b'data'), id='binary file-like'),
         pytest.param(Reader(b'data'), id='duck-typed reader'),
         pytest.param(iter([b'data']), id='iterator'),
+        pytest.param(ChunkIterable([b'data']), id='__iter__-only iterable'),
+        pytest.param(BothChunkIterable([b'data']), id='iterable with both __iter__ and __aiter__'),
         pytest.param(FakeStreamedResponse([b'data']), id='streamed response'),
     ],
 )
 def test_sync_source_is_not_async(source: Any) -> None:
-    """A synchronous source works with both clients."""
+    """A synchronous source works with both clients, and one offering both protocols is iterated synchronously."""
     assert not StreamedRequestBody(source).is_async
 
 
@@ -309,6 +368,8 @@ def test_sync_source_is_not_async(source: Any) -> None:
         pytest.param(AsyncReader(b'x' * 10), [b'xxxx', b'xxxx', b'xx'], id='async reader'),
         pytest.param(bytes_chunks(), [b'abc', b'def'], id='generator'),
         pytest.param(async_bytes_chunks(), [b'abc', b'def'], id='async generator'),
+        pytest.param(ChunkIterable([b'abc', b'', b'def']), [b'abc', b'def'], id='__iter__-only iterable'),
+        pytest.param(AsyncChunkIterable([b'abc', b'', b'def']), [b'abc', b'def'], id='__aiter__-only async iterable'),
         pytest.param(FakeStreamedResponse([b'abc', b'def']), [b'abc', b'def'], id='streamed response'),
         pytest.param(SyncOnlyStreamedResponse([b'abc', b'def']), [b'abc', b'def'], id='sync-only response'),
     ],

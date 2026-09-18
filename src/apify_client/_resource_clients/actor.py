@@ -236,7 +236,9 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input: The input to pass to the Actor run.
+            run_input: The input to pass to the Actor run. Accepts the same values as
+                `KeyValueStoreClient.set_record`, including a file-like object, an iterator of byte chunks, or a
+                streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -315,7 +317,9 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input: The input to pass to the Actor run.
+            run_input: The input to pass to the Actor run. Accepts the same values as
+                `KeyValueStoreClient.set_record`, including a file-like object, an iterator of byte chunks, or a
+                streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -540,7 +544,9 @@ class ActorClient(ResourceClient):
         """Validate an input for the Actor that defines an input schema.
 
         Args:
-            run_input: The input to validate.
+            run_input: The input to validate. Accepts the same values as `KeyValueStoreClient.set_record`,
+                including a file-like object, an iterator of byte chunks, or a streamed `HttpResponse`, which
+                are uploaded in chunks without being held in memory.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
@@ -738,7 +744,9 @@ class ActorClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input: The input to pass to the Actor run.
+            run_input: The input to pass to the Actor run. Accepts the same values as
+                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterator of byte chunks, or a
+                streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -817,7 +825,9 @@ class ActorClientAsync(ResourceClientAsync):
         https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor
 
         Args:
-            run_input: The input to pass to the Actor run.
+            run_input: The input to pass to the Actor run. Accepts the same values as
+                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterator of byte chunks, or a
+                streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -1043,7 +1053,9 @@ class ActorClientAsync(ResourceClientAsync):
         """Validate an input for the Actor that defines an input schema.
 
         Args:
-            run_input: The input to validate.
+            run_input: The input to validate. Accepts the same values as `KeyValueStoreClientAsync.set_record`,
+                including a file-like object, an iterator of byte chunks, or a streamed `HttpResponse`, which
+                are uploaded in chunks without being held in memory.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.

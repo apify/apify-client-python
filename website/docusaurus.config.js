@@ -158,6 +158,7 @@ module.exports = {
                     includePages: true,
                     relativePaths: false,
                     excludeRoutes: [
+                        '/api/client/python/',
                         '/api/client/python/reference/[0-9]*/**',
                         '/api/client/python/reference/[0-9]*',
                         '/api/client/python/reference/next/**',

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import timedelta
 from typing import Literal
 
@@ -38,7 +39,7 @@ to ad-hoc webhooks (e.g. `condition`) are ignored at runtime. The `*CamelDict` v
 matching the Apify API spelling.
 """
 
-JsonSerializable = dict[str, 'JsonSerializable'] | list['JsonSerializable'] | str | int | float | bool | None
+JsonSerializable = Mapping[str, 'JsonSerializable'] | Sequence['JsonSerializable'] | str | int | float | bool | None
 """Recursive type for JSON-serializable values - primitives plus objects and arrays with JSON-serializable contents.
 
 Based on the definition discussed in https://github.com/python/typing/issues/182.

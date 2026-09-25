@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import AsyncIterable, Iterable
+from collections.abc import AsyncIterable, Iterable, Mapping, Sequence
 from datetime import timedelta
 from typing import IO, TYPE_CHECKING, Literal, Protocol
 
@@ -80,7 +80,7 @@ Pass a `StreamedRequestBody` built by hand to choose the chunk size an `io.IOBas
 resource client exposes on its own.
 """
 
-JsonSerializable = dict[str, 'JsonSerializable'] | list['JsonSerializable'] | str | int | float | bool | None
+JsonSerializable = Mapping[str, 'JsonSerializable'] | Sequence['JsonSerializable'] | str | int | float | bool | None
 """Recursive type for JSON-serializable values - primitives plus objects and arrays with JSON-serializable contents.
 
 Based on the definition discussed in https://github.com/python/typing/issues/182.

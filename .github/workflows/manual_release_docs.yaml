@@ -43,7 +43,7 @@ jobs:
       # skipped when called from another workflow.
       - name: Wait for checks
         if: github.event_name == 'workflow_dispatch'
-        uses: apify/actions/wait-for-checks@v1.5.0
+        uses: apify/actions/wait-for-checks@v1.6.1
         with:
           ref: ${{ github.sha }}
           check-regexp: '^Checks'
@@ -65,7 +65,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up uv package manager
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -73,7 +73,7 @@ jobs:
         run: uv run poe install-dev
 
       - name: Install pnpm and website dependencies
-        uses: apify/actions/pnpm-install@v1.5.0
+        uses: apify/actions/pnpm-install@v1.6.1
         with:
           working-directory: website
 
@@ -81,7 +81,7 @@ jobs:
         run: uv run poe update-docs-theme
 
       - name: Commit the updated package.json and lockfile
-        uses: apify/actions/signed-commit@v1.5.0
+        uses: apify/actions/signed-commit@v1.6.1
         with:
           message: "chore: Automatic docs theme update [skip ci]"
           add: 'website/package.json website/pnpm-lock.yaml'

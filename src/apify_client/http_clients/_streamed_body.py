@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import io
 from collections.abc import AsyncIterable, AsyncIterator, Collection, Iterable, Iterator
-from typing import TYPE_CHECKING, Any
+from typing import IO, TYPE_CHECKING, Any, cast
 
 from pydantic import BaseModel
 
@@ -30,23 +31,26 @@ class StreamedRequestBody:
     `aiter_bytes` and sends each one as it arrives, and the body is never compressed. Build one yourself and pass it
     as the `data` to choose the `chunk_size`, and it is sent as it is.
 
-    The shared retry loop can send a body again only when its source is a seekable file-like object, in which case
+    An `io.IOBase` stream, such as an open file or an `io.BytesIO`, is read in `chunk_size` pieces. Any other object
+    with a callable `read` is read whole with a single `read()` call and sent as one chunk, since nothing else about
+    its shape is known.
+
+    The shared retry loop can send a body again only when its source is a seekable `io.IOBase` stream, in which case
     `rewind` seeks back to where the source was when the body was created. Any other source is consumed by the attempt
     that sends it, so the request gets a single attempt.
 
-    A file opened in text mode, or an iterator yielding strings, is UTF-8 encoded chunk by chunk. A file-like object
-    whose `read` is a coroutine function, as `aiofiles` provides, and an async iterator can only be sent by the
-    asynchronous client. A `read` that takes no size is called once and its result sent as a single chunk, so such
-    a source is held in memory whole.
+    A file opened in text mode, or an iterable yielding strings, is UTF-8 encoded chunk by chunk. A file-like object
+    whose `read` is a coroutine function, as `aiofiles` provides, and an async iterable can only be sent by the
+    asynchronous client.
     """
 
     def __init__(self, source: StreamedBodySource, *, chunk_size: int = STREAMED_BODY_CHUNK_SIZE) -> None:
         """Initialize the streamed request body.
 
         Args:
-            source: The object the chunks come from. See `is_source` for the accepted kinds.
-            chunk_size: Size of the chunks a file-like source is read in - bytes from a binary source, characters
-                from a text-mode one. An iterator or a response decides its own chunk sizes.
+            source: The object the chunks come from. See `is_streamable` for the accepted kinds.
+            chunk_size: Size of the chunks an `io.IOBase` source is read in - bytes from a binary stream, characters
+                from a text-mode one. Any other source decides its own chunk sizes.
 
         Raises:
             TypeError: If `source` is not an object the body can be streamed from, or is already a body itself, which
@@ -65,11 +69,11 @@ class StreamedRequestBody:
         # Exactly one of these produces the chunks: a file-like `read`, a factory of a synchronous iterable, or a
         # factory of an asynchronous one. A response provides both factories.
         self._read: Callable[..., Any] | None = None
-        self._read_takes_size = True
+        self._read_whole = False
         self._sync_chunks: Callable[[], Iterable[Any]] | None = None
         self._async_chunks: Callable[[], AsyncIterable[Any]] | None = None
 
-        # Set for a seekable file-like source, the only kind that can be sent more than once.
+        # Set for a seekable `io.IOBase` source, the only kind that can be sent more than once.
         self._seek: Callable[[int], Any] | None = None
         self._start: int | None = None
 
@@ -78,18 +82,20 @@ class StreamedRequestBody:
         if _is_response(source):
             self._sync_chunks = source.iter_bytes
             self._async_chunks = getattr(source, 'aiter_bytes', None)
+        elif isinstance(source, io.IOBase):
+            # `io.IOBase` guarantees `read(size)` and the seeking methods, so the source is streamed and, when
+            # seekable, rewound through them. The `seekable` check guards the `tell` call, which a pipe rejects.
+            file = cast('IO[Any]', source)
+            self._read = file.read
+            if file.seekable():
+                self._start = file.tell()
+                self._seek = file.seek
         elif callable(read := getattr(source, 'read', None)):
+            # Any other file-like object only promises a `read`, so it is called once with no size and the source is
+            # held in memory whole. Its position is unknown, so it cannot be rewound.
             self._read = read
-            self._read_takes_size = _accepts_chunk_size(read)
+            self._read_whole = True
             self._is_async = inspect.iscoroutinefunction(read)
-            # The `seekable` check guards the `tell` call, which a pipe or a socket rejects. An async file-like
-            # object also seeks asynchronously, so it is treated as a source that cannot be rewound.
-            seekable = getattr(source, 'seekable', None)
-            tell = getattr(source, 'tell', None)
-            seek = getattr(source, 'seek', None)
-            if not self._is_async and callable(seekable) and callable(tell) and callable(seek) and seekable():
-                self._start = tell()
-                self._seek = seek
         elif _is_chunk_iterable(source):
             # `for` and `async for` accept an iterable as well as an iterator, so an object with only `__iter__` or
             # `__aiter__` needs no wrapping. A synchronous iterable wins when an object offers both.
@@ -105,21 +111,26 @@ class StreamedRequestBody:
             )
 
     @staticmethod
-    def is_source(value: object) -> TypeGuard[StreamedBodySource]:
-        """Return whether a value is an object a request body can be streamed from.
+    def is_streamable(value: object) -> TypeGuard[StreamedBodySource]:
+        """Return whether a request body can be streamed from a value.
 
-        These are a streamed `HttpResponse` (anything with a callable `iter_bytes`), a file-like object (anything
-        with a callable `read`), and an iterable or async iterable of byte chunks: an iterator such as a generator,
-        or an object that only implements `__iter__` or `__aiter__`, which is what a class yielding chunks from a
-        generator method looks like. A `str`, `bytes`, `bytearray`, a container such as a `list`, `tuple`, `set`,
-        or `dict`, and a pydantic model are not sources, even though all of them can be iterated. They are the values
-        the client uploads whole or serializes as JSON.
+        These are, checked in this order, a streamed `HttpResponse` (anything with a callable `iter_bytes`), an
+        `io.IOBase` stream, any other file-like object (anything with a callable `read`), and an iterable or async
+        iterable of byte chunks: an iterator such as a generator, or an object that only implements `__iter__` or
+        `__aiter__`, which is what a class yielding chunks from a generator method looks like. A `str`, `bytes`,
+        `bytearray`, a container such as a `list`, `tuple`, `set`, or `dict`, and a pydantic model are not sources,
+        even though all of them can be iterated. They are the values the client uploads whole or serializes as JSON.
 
         A `StreamedRequestBody` matches on its own `iter_bytes`, which is how a hand-built body reaches the request
         pipeline untouched. The constructor refuses one, so a caller that builds a body from what this accepts has
         to check for an existing body first.
         """
-        return _is_response(value) or callable(getattr(value, 'read', None)) or _is_chunk_iterable(value)
+        return (
+            _is_response(value)
+            or isinstance(value, io.IOBase)
+            or callable(getattr(value, 'read', None))
+            or _is_chunk_iterable(value)
+        )
 
     @property
     def is_async(self) -> bool:
@@ -128,7 +139,7 @@ class StreamedRequestBody:
 
     @property
     def rewindable(self) -> bool:
-        """Whether the body can be sent again after `rewind`, which only a seekable file-like source allows."""
+        """Whether the body can be sent again after `rewind`, which only a seekable `io.IOBase` source allows."""
         return self._seek is not None
 
     @property
@@ -152,7 +163,7 @@ class StreamedRequestBody:
         self._seek(self._start)
 
     def iter_bytes(self) -> Iterator[bytes]:
-        """Yield the body in chunks, reading a file-like source in `chunk_size` pieces.
+        """Yield the body in chunks, reading an `io.IOBase` source in `chunk_size` pieces.
 
         Raises:
             TypeError: If the source can only produce its chunks asynchronously, see `is_async`.
@@ -175,8 +186,7 @@ class StreamedRequestBody:
     def _iter_chunks(self) -> Iterator[bytes]:
         try:
             if self._read is not None:
-                if not self._read_takes_size:
-                    # A `read` that takes no size hands over the whole source in one call, so it is one chunk.
+                if self._read_whole:
                     if data := _to_bytes(self._read()):
                         yield data
                 else:
@@ -195,7 +205,7 @@ class StreamedRequestBody:
     async def _aiter_chunks(self) -> AsyncIterator[bytes]:
         try:
             if self._read is not None:
-                if not self._read_takes_size:
+                if self._read_whole:
                     chunk = await self._read() if self._is_async else await asyncio.to_thread(self._read)
                     if data := _to_bytes(chunk):
                         yield data
@@ -225,19 +235,6 @@ class StreamedRequestBody:
         except Exception as exc:
             self._error = exc
             raise
-
-
-def _accepts_chunk_size(read: Callable[..., Any]) -> bool:
-    """Whether a file-like object's `read` takes the chunk size, which a duck-typed one may leave out."""
-    try:
-        inspect.signature(read).bind(STREAMED_BODY_CHUNK_SIZE)
-    except ValueError:
-        # A `read` implemented in C can hide its signature, and every file object in the standard library takes
-        # the size, so the chunked call is the safer guess.
-        return True
-    except TypeError:
-        return False
-    return True
 
 
 def _is_chunk_iterable(value: object) -> TypeGuard[Iterable[Any] | AsyncIterable[Any]]:

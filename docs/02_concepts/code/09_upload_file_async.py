@@ -1,4 +1,5 @@
-import aiofiles
+import asyncio
+from pathlib import Path
 
 from apify_client import ApifyClientAsync
 
@@ -9,8 +10,10 @@ async def main() -> None:
     apify_client = ApifyClientAsync(TOKEN)
     kvs_client = apify_client.key_value_store('MY-KVS-ID')
 
-    # The file is read in chunks as it uploads, so its size doesn't matter.
-    async with aiofiles.open('backup.tar.gz', 'rb') as backup:
+    # The file is read in chunks in a worker thread as it uploads, so its size
+    # doesn't matter.
+    backup = await asyncio.to_thread(Path('backup.tar.gz').open, 'rb')
+    with backup:
         await kvs_client.set_record(
             'backup.tar.gz', backup, content_type='application/gzip'
         )

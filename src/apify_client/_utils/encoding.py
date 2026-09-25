@@ -20,9 +20,9 @@ def encode_key_value_store_record_value(
 
     Args:
         value: The value to encode. A file-like object (anything with a callable `read`), an iterable of byte chunks,
-            or a streamed `HttpResponse` is returned as it is, to be streamed to the API in chunks from its current
-            position - the object is neither rewound nor closed. Any other value is JSON-serialized unless it is
-            already bytes or a string.
+            or a streamed `HttpResponse` is returned as it is, to be streamed to the API from its current position -
+            the object is neither rewound nor closed. See `StreamedRequestBody.is_streamable` for the exact rules. Any
+            other value is JSON-serialized unless it is already bytes or a string.
         content_type: The content type; if None, it's inferred from the value type. An `io.TextIOBase`, which is what
             the standard library returns for a file opened in text mode, is `text/plain; charset=utf-8`; any other
             streamed value is `application/octet-stream`.
@@ -41,7 +41,7 @@ def encode_key_value_store_record_value(
     declared_encoding = (content_encoding or '').strip().lower()
     declares_compression = declared_encoding not in ('', 'identity')
 
-    if StreamedRequestBody.is_source(value):
+    if StreamedRequestBody.is_streamable(value):
         is_text = isinstance(value, io.TextIOBase)
         if declares_compression and is_text:
             raise TypeError(

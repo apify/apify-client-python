@@ -43,7 +43,7 @@ saving a round trip.
 """
 
 STREAMED_BODY_CHUNK_SIZE = 64 * 1024
-"""Size of the chunks a streamed request body reads from a file-like source, in bytes from a binary source and in
+"""Size of the chunks a streamed request body reads from an `io.IOBase` source, in bytes from a binary stream and in
 characters from a text-mode one.
 
 A chunk is the most of a streamed body that is in memory at once, and in the asynchronous client every chunk costs

@@ -330,7 +330,7 @@ class HttpClientBase:
         if isinstance(data, StreamedRequestBody):
             return (headers, self._parse_params(params), data)
 
-        if StreamedRequestBody.is_source(data):
+        if StreamedRequestBody.is_streamable(data):
             return (headers, self._parse_params(params), StreamedRequestBody(data))
 
         content: bytes | None = None

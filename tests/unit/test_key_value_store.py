@@ -54,23 +54,26 @@ class AsyncDuckTypedReader:
         return self._buffer.read(size)
 
 
-class RecordingReader:
-    """A file-like object that records the size of every read it serves."""
+class RecordingReader(io.BytesIO):
+    """A binary stream that records the size of every read it serves."""
 
     def __init__(self, data: bytes) -> None:
-        self._buffer = io.BytesIO(data)
-        self.read_sizes: list[int] = []
+        super().__init__(data)
+        self.read_sizes: list[int | None] = []
 
-    def read(self, size: int = -1) -> bytes:
+    def read(self, size: int | None = -1) -> bytes:
         self.read_sizes.append(size)
-        return self._buffer.read(size)
+        return super().read(size)
 
 
-class FailingReader:
-    """A file-like object whose second read fails, like a disk error halfway through a file."""
+class FailingReader(io.RawIOBase):
+    """A non-seekable stream whose second read fails, like a disk error halfway through a pipe."""
 
     def __init__(self) -> None:
         self._reads = 0
+
+    def readable(self) -> bool:
+        return True
 
     def read(self, size: int = -1) -> bytes:
         _ = size

@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections
 import io
 from typing import TYPE_CHECKING, Any, cast
+from unittest.mock import Mock
 
 import pytest
 from pydantic import BaseModel
@@ -147,9 +148,9 @@ class Model(BaseModel):
         pytest.param(FakeStreamedResponse([b'data']), id='streamed response'),
     ],
 )
-def test_is_source(value: Any) -> None:
+def test_is_streamable(value: Any) -> None:
     """A file-like object, an iterable, an async iterable, and a streamed response can all feed a body."""
-    assert StreamedRequestBody.is_source(value)
+    assert StreamedRequestBody.is_streamable(value)
 
 
 @pytest.mark.parametrize(
@@ -175,9 +176,9 @@ def test_is_source(value: Any) -> None:
         pytest.param(42, id='int'),
     ],
 )
-def test_is_not_source(value: Any) -> None:
+def test_is_not_streamable(value: Any) -> None:
     """Buffered bodies, plain containers, and pydantic models are not sources, even though they can be iterated."""
-    assert not StreamedRequestBody.is_source(value)
+    assert not StreamedRequestBody.is_streamable(value)
 
 
 def test_rejects_non_source() -> None:
@@ -194,29 +195,42 @@ def test_rejects_a_body_that_is_already_streamed() -> None:
         StreamedRequestBody(body)
 
 
-def test_file_like_is_read_in_chunks_of_chunk_size() -> None:
-    """A file-like source is pulled through `read(chunk_size)` until it runs dry."""
+def test_iobase_stream_is_read_in_chunks_of_chunk_size() -> None:
+    """An `io.IOBase` source is pulled through `read(chunk_size)` until it runs dry."""
     body = StreamedRequestBody(io.BytesIO(b'x' * 10), chunk_size=4)
 
     assert list(body.iter_bytes()) == [b'xxxx', b'xxxx', b'xx']
 
 
-def test_file_like_without_a_size_argument_is_read_once() -> None:
-    """A `read` that takes no size is called without one and its result sent as a single chunk."""
+def test_reader_outside_iobase_is_read_whole_once() -> None:
+    """A `read` outside `io.IOBase` is called once with no size, and its seek methods are left alone."""
+    reader = Mock(spec=['read', 'seek', 'tell', 'seekable'])
+    reader.read.return_value = b'buffer data'
+    body = StreamedRequestBody(reader, chunk_size=4)
+
+    assert list(body.iter_bytes()) == [b'buffer data']
+    reader.read.assert_called_once_with()
+    assert not body.rewindable
+    reader.seekable.assert_not_called()
+    reader.tell.assert_not_called()
+
+
+def test_reader_without_a_size_argument_is_read_once() -> None:
+    """A `read` that takes no size works, since a reader outside `io.IOBase` is never passed one."""
     body = StreamedRequestBody(ZeroArgReader(b'buffer data'), chunk_size=4)
 
     assert list(body.iter_bytes()) == [b'buffer data']
 
 
-def test_file_like_without_a_size_argument_yields_nothing_when_empty() -> None:
-    """A `read` that takes no size and returns nothing sends no chunk, since an empty chunk ends a chunked body."""
+def test_reader_outside_iobase_yields_nothing_when_empty() -> None:
+    """A reader that returns nothing sends no chunk, since an empty chunk ends a chunked body."""
     body = StreamedRequestBody(ZeroArgReader(b''))
 
     assert list(body.iter_bytes()) == []
 
 
-async def test_file_like_without_a_size_argument_is_read_once_async() -> None:
-    """The asynchronous client reads a size-less `read` once, whether it is a coroutine function or not."""
+async def test_reader_outside_iobase_is_read_once_async() -> None:
+    """The asynchronous client reads a reader outside `io.IOBase` once, whether its `read` is a coroutine or not."""
     sync_body = StreamedRequestBody(ZeroArgReader(b'buffer data'), chunk_size=4)
     async_body = StreamedRequestBody(AsyncZeroArgReader(b'buffer data'), chunk_size=4)
 
@@ -308,7 +322,7 @@ class NonSeekableBytesIO(io.BytesIO):
     'source',
     [
         pytest.param(NonSeekableBytesIO(b'data'), id='non-seekable file-like'),
-        pytest.param(Reader(b'data'), id='reader without seek support'),
+        pytest.param(Reader(b'data'), id='reader outside io.IOBase'),
         pytest.param(AsyncReader(b'data'), id='async reader'),
         pytest.param(iter([b'data']), id='iterator'),
         pytest.param(async_bytes_chunks(), id='async iterator'),
@@ -364,8 +378,8 @@ def test_sync_source_is_not_async(source: Any) -> None:
     [
         pytest.param(io.BytesIO(b'x' * 10), [b'xxxx', b'xxxx', b'xx'], id='binary file-like'),
         pytest.param(io.StringIO('héllo'), [b'h\xc3\xa9ll', b'o'], id='text-mode file-like'),
-        pytest.param(Reader(b'x' * 10), [b'xxxx', b'xxxx', b'xx'], id='duck-typed reader'),
-        pytest.param(AsyncReader(b'x' * 10), [b'xxxx', b'xxxx', b'xx'], id='async reader'),
+        pytest.param(Reader(b'x' * 10), [b'x' * 10], id='duck-typed reader'),
+        pytest.param(AsyncReader(b'x' * 10), [b'x' * 10], id='async reader'),
         pytest.param(bytes_chunks(), [b'abc', b'def'], id='generator'),
         pytest.param(async_bytes_chunks(), [b'abc', b'def'], id='async generator'),
         pytest.param(ChunkIterable([b'abc', b'', b'def']), [b'abc', b'def'], id='__iter__-only iterable'),
@@ -375,7 +389,7 @@ def test_sync_source_is_not_async(source: Any) -> None:
     ],
 )
 async def test_aiter_bytes_handles_every_source_kind(source: Any, expected: list[bytes]) -> None:
-    """The asynchronous iteration reads file-likes in chunks and forwards iterators, sync or async."""
+    """The asynchronous iteration reads streams in chunks, other readers whole, and forwards sync or async iterables."""
     body = StreamedRequestBody(source, chunk_size=4)
 
     assert [chunk async for chunk in body.aiter_bytes()] == expected
@@ -398,11 +412,14 @@ def test_bad_chunk_raises_and_is_recorded_as_the_error() -> None:
     assert body.error is exc_info.value
 
 
-class FailingReader:
-    """A file-like object whose second read fails, like a disk error halfway through a file."""
+class FailingReader(io.RawIOBase):
+    """A non-seekable stream whose second read fails, like a disk error halfway through a pipe."""
 
     def __init__(self) -> None:
         self._reads = 0
+
+    def readable(self) -> bool:
+        return True
 
     def read(self, size: int = -1) -> bytes:
         _ = size

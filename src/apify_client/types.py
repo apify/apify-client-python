@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable
 from datetime import timedelta
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import IO, TYPE_CHECKING, Literal, Protocol
 
 from apify_client._models import WebhookCreate, WebhookRepresentation
 from apify_client._typeddicts import (
@@ -45,49 +45,39 @@ matching the Apify API spelling.
 
 
 class SupportsRead(Protocol):
-    """A file-like object a request body can be streamed from, for example an open file or an `io.BytesIO`.
+    """A file-like object that is not an `io.IOBase` stream, read whole with a single `read()` call.
 
-    `read` is called with the chunk size until it returns an empty value. A file opened in text mode returns `str`
-    chunks, which are UTF-8 encoded. An `async def read`, as `aiofiles` provides, is accepted by `ApifyClientAsync`.
-
-    A `read` that takes no size is accepted as `SupportsReadAll`.
-    """
-
-    def read(self, size: int, /) -> bytes | str | Awaitable[bytes | str]:
-        """Read up to `size` bytes or characters, returning an empty value at the end."""
-
-
-class SupportsReadAll(Protocol):
-    """A file-like object whose `read` takes no size, so one call hands over the whole source.
-
-    It is called once and its result sent as a single chunk, which holds the source in memory whole. `SupportsRead`
-    is the shape that streams.
+    Its result is sent as one chunk, so the source is held in memory whole and gets a single attempt. An `io.IOBase`
+    stream, such as an open file or an `io.BytesIO`, is read in chunks instead. An `async def read`, as `aiofiles`
+    provides, is accepted by `ApifyClientAsync`.
     """
 
     def read(self) -> bytes | str | Awaitable[bytes | str]:
-        """Read the whole source, returning an empty value once it has been read."""
+        """Read the whole source."""
 
 
 StreamedBodySource = (
-    SupportsRead
-    | SupportsReadAll
+    IO[bytes]
+    | IO[str]
+    | SupportsRead
     | Iterable[bytes | str]
     | AsyncIterable[bytes | str]
     | HttpResponse
     | StreamedRequestBody
 )
-"""Type for a request body the client streams to the API in chunks instead of holding it in memory whole.
+"""Type for a request body the client streams to the API in chunks.
 
-A file-like object is read in chunks, an iterable or async iterable yields the chunks itself, and a streamed
-`HttpResponse` forwards its body, which chains one API call's output into another's input. The iterable is any
-iterator, such as a generator, or an object that only implements `__iter__` or `__aiter__`. A `Collection` - a `str`,
-`bytes`, `list`, `dict`, or any other sized container - and a pydantic model are excluded at runtime as the values the
-client uploads whole or serializes as JSON, which the static type cannot express. Accepted as the `data` of
-`HttpClient.call`, as the `value` of `KeyValueStoreClient.set_record`, and as the `run_input` of Actor runs. See
-`StreamedRequestBody` for the retry and compression rules that apply.
+An `io.IOBase` stream is read in chunks, any other file-like object is read whole with one `read()` call, an iterable
+or async iterable yields the chunks itself, and a streamed `HttpResponse` forwards its body, which chains one API
+call's output into another's input. The iterable is any iterator, such as a generator, or an object that only
+implements `__iter__` or `__aiter__`. A `Collection` - a `str`, `bytes`, `list`, `dict`, or any other sized container -
+and a pydantic model are excluded at runtime as the values the client uploads whole or serializes as JSON, which the
+static type cannot express. Accepted as the `data` of `HttpClient.call`, as the `value` of
+`KeyValueStoreClient.set_record`, and as the `run_input` of Actor runs. See `StreamedRequestBody` for the retry and
+compression rules that apply.
 
-Pass a `StreamedRequestBody` built by hand to choose the chunk size a file-like source is read in, which no resource
-client exposes on its own.
+Pass a `StreamedRequestBody` built by hand to choose the chunk size an `io.IOBase` source is read in, which no
+resource client exposes on its own.
 """
 
 JsonSerializable = dict[str, 'JsonSerializable'] | list['JsonSerializable'] | str | int | float | bool | None
@@ -101,7 +91,6 @@ __all__ = [
     'JsonSerializable',
     'StreamedBodySource',
     'SupportsRead',
-    'SupportsReadAll',
     'Timeout',
     'WebhooksList',
 ]

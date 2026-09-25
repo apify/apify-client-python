@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.2.1 - **not yet released**
+## [3.2.1](https://github.com/apify/apify-client-python/releases/tag/v3.2.1) (2026-09-25)
 
 ### 🐛 Bug Fixes
 
@@ -12,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Make `JsonSerializable` type alias read-only ([#1072](https://github.com/apify/apify-client-python/pull/1072)) ([bd82a26](https://github.com/apify/apify-client-python/commit/bd82a2645d3c64f0e4a30de3a016c16d92d48340)) by [@Pijukatel](https://github.com/Pijukatel)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.2.0](https://github.com/apify/apify-client-python/releases/tag/v3.2.0) (2026-09-03)
 
 ### 🚀 Features

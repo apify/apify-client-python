@@ -181,8 +181,9 @@ class RunClient(ResourceClient):
                 By default, the run uses the build specified in the default run configuration for the target Actor
                 (typically the latest build).
             run_input: The input to pass to the new run. Accepts the same values as
-                `KeyValueStoreClient.set_record`, including a file-like object, an iterable of byte chunks, or a
-                streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
+                `KeyValueStoreClient.set_record`, including an `io.IOBase` stream such as an open file, an iterable
+                of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
+                memory.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
 
@@ -611,8 +612,9 @@ class RunClientAsync(ResourceClientAsync):
                 By default, the run uses the build specified in the default run configuration for the target Actor
                 (typically the latest build).
             run_input: The input to pass to the new run. Accepts the same values as
-                `KeyValueStoreClientAsync.set_record`, including a file-like object, an iterable of byte chunks, or a
-                streamed `HttpResponse`, which are uploaded in chunks without being held in memory.
+                `KeyValueStoreClientAsync.set_record`, including an `io.IOBase` stream such as an open file, an iterable
+                of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
+                memory.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
 

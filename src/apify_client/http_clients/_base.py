@@ -311,8 +311,8 @@ class HttpClientBase:
         request out of compression.
 
         A body streamed from a file-like object, an iterable of byte chunks, or a streamed response is wrapped in
-        `StreamedRequestBody` and never compressed: its chunks go out as they are produced, so nothing is buffered.
-        A caller-supplied `Content-Encoding` is forwarded for it too, which is how pre-compressed data is streamed.
+        `StreamedRequestBody` and never compressed, since its chunks go out as they are produced. A caller-supplied
+        `Content-Encoding` is forwarded for it too, which is how pre-compressed data is streamed.
         """
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
@@ -325,8 +325,7 @@ class HttpClientBase:
             if self._get_header(headers, 'content-type') is None:
                 headers['Content-Type'] = 'application/json'
 
-        # A body the caller built itself carries its own chunk size and rewind position, and wrapping it again
-        # would read it as a response and drop both.
+        # A body the caller built itself is sent as it is, keeping its own chunk size and rewind position.
         if isinstance(data, StreamedRequestBody):
             return (headers, self._parse_params(params), data)
 
@@ -495,8 +494,9 @@ class HttpClient(HttpClientBase):
             url: Full URL to make the request to.
             headers: Additional headers to include.
             params: Query parameters to append to the URL.
-            data: Raw request body. A file-like object, an iterable of byte chunks, or a streamed `HttpResponse`
-                is sent in chunks as it is read, see `StreamedRequestBody`. Cannot be used together with json.
+            data: Raw request body. An `io.IOBase` stream such as an open file, an iterable of byte chunks, or a
+                streamed `HttpResponse` is sent in chunks as it is read, and any other object with a callable `read`
+                is read whole, see `StreamedRequestBody`. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
@@ -565,8 +565,8 @@ class HttpClient(HttpClientBase):
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full request URL, with the query parameters already encoded into it.
             headers: Final request headers, with the client's default headers already merged in.
-            content: Request body, already serialized and compressed, an iterator of chunks for a streamed body,
-                or None for a request without a body.
+            content: Request body, already serialized and compressed, an iterator of chunks for a streamed body
+                (an async iterator in the asynchronous client), or None for a request without a body.
             timeout: Timeout for this attempt in seconds, or None for no timeout at all.
             stream: Whether to return the response with the body unread, so the caller can stream it.
 
@@ -702,8 +702,9 @@ class HttpClientAsync(HttpClientBase):
             url: Full URL to make the request to.
             headers: Additional headers to include.
             params: Query parameters to append to the URL.
-            data: Raw request body. A file-like object, an iterable of byte chunks, or a streamed `HttpResponse`
-                is sent in chunks as it is read, see `StreamedRequestBody`. Cannot be used together with json.
+            data: Raw request body. An `io.IOBase` stream such as an open file, an iterable of byte chunks, or a
+                streamed `HttpResponse` is sent in chunks as it is read, and any other object with a callable `read`
+                is read whole, see `StreamedRequestBody`. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
@@ -785,8 +786,8 @@ class HttpClientAsync(HttpClientBase):
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full request URL, with the query parameters already encoded into it.
             headers: Final request headers, with the client's default headers already merged in.
-            content: Request body, already serialized and compressed, an iterator of chunks for a streamed body,
-                or None for a request without a body.
+            content: Request body, already serialized and compressed, an iterator of chunks for a streamed body
+                (an async iterator in the asynchronous client), or None for a request without a body.
             timeout: Timeout for this attempt in seconds, or None for no timeout at all.
             stream: Whether to return the response with the body unread, so the caller can stream it.
 

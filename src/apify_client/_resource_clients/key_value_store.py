@@ -372,7 +372,7 @@ class KeyValueStoreClient(ResourceClient):
             value: The value to save into the record. An `io.IOBase` stream such as an open file, an iterable of byte
                 chunks, or a streamed `HttpResponse` is uploaded in chunks as it is read, without being held in memory
                 whole or compressed. Any other object with a callable `read` is read whole and sent uncompressed. Only
-                a seekable `io.IOBase` value can be retried, any other streamed value gets a single attempt. See
+                a seekable `io.IOBase` value can be retried; any other streamed value gets a single attempt. See
                 `StreamedRequestBody` for details.
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
@@ -809,7 +809,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             value: The value to save into the record. An `io.IOBase` stream such as an open file, an iterable of byte
                 chunks, or a streamed `HttpResponse` is uploaded in chunks as it is read, without being held in memory
                 whole or compressed. Any other object with a callable `read` is read whole and sent uncompressed. Only
-                a seekable `io.IOBase` value can be retried, any other streamed value gets a single attempt. See
+                a seekable `io.IOBase` value can be retried; any other streamed value gets a single attempt. See
                 `StreamedRequestBody` for details.
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it

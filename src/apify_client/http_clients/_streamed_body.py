@@ -273,4 +273,6 @@ def _to_bytes(chunk: object) -> bytes:
         return bytes(chunk)
     if isinstance(chunk, str):
         return chunk.encode('utf-8')
+    if inspect.iscoroutine(chunk):
+        chunk.close()  # Prevent a "coroutine was never awaited" warning.
     raise TypeError(f'The streamed request body produced a {type(chunk).__name__} chunk, expected bytes or str.')

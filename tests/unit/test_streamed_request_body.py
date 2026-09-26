@@ -249,8 +249,8 @@ def test_default_chunk_size_is_the_constant() -> None:
 @pytest.mark.parametrize(
     ('source', 'expected'),
     [
-        pytest.param(io.StringIO('héllo'), b'h\xc3\xa9llo', id='text-mode file-like'),
-        pytest.param(iter(['hé', 'llo']), b'h\xc3\xa9llo', id='str iterator'),
+        pytest.param(io.StringIO('h\u00e9llo'), b'h\xc3\xa9llo', id='text-mode file-like'),
+        pytest.param(iter(['h\u00e9', 'llo']), b'h\xc3\xa9llo', id='str iterator'),
         pytest.param(iter([bytearray(b'he'), memoryview(b'llo')]), b'hello', id='bytes-like chunks'),
     ],
 )
@@ -391,7 +391,7 @@ def test_sync_source_is_not_async(source: Any) -> None:
     ('source', 'expected'),
     [
         pytest.param(io.BytesIO(b'x' * 10), [b'xxxx', b'xxxx', b'xx'], id='binary file-like'),
-        pytest.param(io.StringIO('héllo'), [b'h\xc3\xa9ll', b'o'], id='text-mode file-like'),
+        pytest.param(io.StringIO('h\u00e9llo'), [b'h\xc3\xa9ll', b'o'], id='text-mode file-like'),
         pytest.param(Reader(b'x' * 10), [b'x' * 10], id='duck-typed reader'),
         pytest.param(AsyncReader(b'x' * 10), [b'x' * 10], id='async reader'),
         pytest.param(bytes_chunks(), [b'abc', b'def'], id='generator'),

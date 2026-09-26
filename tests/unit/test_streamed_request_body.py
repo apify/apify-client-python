@@ -13,6 +13,7 @@ from apify_client.http_clients import StreamedRequestBody
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from pathlib import Path
 
 
 class Reader:
@@ -309,6 +310,19 @@ def test_text_mode_file_like_is_rewindable() -> None:
     body.rewind()
 
     assert b''.join(body.iter_bytes()) == b'rest'
+
+
+def test_text_file_iterated_with_next_is_streamed_once(tmp_path: Path) -> None:
+    """A text file whose `tell` is disabled by `next()` is sent from its position, without a rewind."""
+    path = tmp_path / 'data.csv'
+    path.write_text('header\nrow\n')
+
+    with path.open() as file:
+        next(file)
+        body = StreamedRequestBody(file)
+
+        assert not body.rewindable
+        assert b''.join(body.iter_bytes()) == b'row\n'
 
 
 class NonSeekableBytesIO(io.BytesIO):

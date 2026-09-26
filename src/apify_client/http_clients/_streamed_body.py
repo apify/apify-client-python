@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import inspect
 import io
 from collections.abc import AsyncIterable, AsyncIterator, Collection, Iterable, Iterator
@@ -84,12 +85,14 @@ class StreamedRequestBody:
             self._async_chunks = getattr(source, 'aiter_bytes', None)
         elif isinstance(source, io.IOBase):
             # `io.IOBase` guarantees `read(size)` and the seeking methods, so the source is streamed and, when
-            # seekable, rewound through them. The `seekable` check guards the `tell` call, which a pipe rejects.
+            # seekable, rewound through them. The `seekable` check guards the `tell` call, which a pipe rejects. A
+            # seekable text file still refuses `tell` after `next()` was called on it, so it is streamed once.
             file = cast('IO[Any]', source)
             self._read = file.read
             if file.seekable():
-                self._start = file.tell()
-                self._seek = file.seek
+                with contextlib.suppress(OSError):
+                    self._start = file.tell()
+                    self._seek = file.seek
         elif callable(read := getattr(source, 'read', None)):
             # Any other file-like object only promises a `read`, so it is called once with no size and the source is
             # held in memory whole. Its position is unknown, so it cannot be rewound.

@@ -33,6 +33,8 @@ Each example has three parts:
 2. The client, `AiohttpHttpClient` or `RequestsHttpClient`, implements the transport, error-classification, and lifecycle hooks. It inherits request preparation, retry handling, timeout growth, and API error conversion from its base class. Only the requests client also overrides timeout classification. `requests.Timeout` doesn't derive from Python's `TimeoutError`, while aiohttp's timeout errors do, so the inherited default already recognizes them.
 3. `with_custom_http_client()` connects the implementation to the resource clients and applies the API token. The context manager closes the session at shutdown.
 
+Both libraries accept an iterator of chunks as the request body, a synchronous one in `requests` and an asynchronous one in aiohttp, so [streamed uploads](../02_concepts/09_streaming.mdx#streaming-uploads) work through these clients as they are.
+
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
         <CodeBlock className="language-python">

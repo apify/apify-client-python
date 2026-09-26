@@ -67,8 +67,8 @@ class StreamedRequestBody:
         self._error: Exception | None = None
         self._is_async = False
 
-        # Exactly one of these produces the chunks: a file-like `read`, a factory of a synchronous iterable, or a
-        # factory of an asynchronous one. A response provides both factories.
+        # The chunks come from a file-like `read`, a factory of a synchronous iterable, or a factory of an asynchronous
+        # one. A response provides both factories, and the client picks the one that fits.
         self._read: Callable[..., Any] | None = None
         self._read_whole = False
         self._sync_chunks: Callable[[], Iterable[Any]] | None = None
@@ -213,18 +213,10 @@ class StreamedRequestBody:
                     if data := _to_bytes(chunk):
                         yield data
                     return
-                while True:
-                    # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the
-                    # thread goes on moving a seekable source's position. Reaching a retry from there would need a
-                    # transport that swallows the cancellation and reports something retryable in its place.
-                    chunk = (
-                        await self._read(self._chunk_size)
-                        if self._is_async
-                        else await asyncio.to_thread(self._read, self._chunk_size)
-                    )
-                    data = _to_bytes(chunk)
-                    if not data:
-                        return
+                # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the thread
+                # goes on moving a seekable source's position. Reaching a retry from there would need a transport
+                # that swallows the cancellation and reports something retryable in its place.
+                while data := _to_bytes(await asyncio.to_thread(self._read, self._chunk_size)):
                     yield data
             elif self._async_chunks is not None:
                 async for chunk in self._async_chunks():

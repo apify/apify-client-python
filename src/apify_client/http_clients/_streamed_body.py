@@ -216,7 +216,10 @@ class StreamedRequestBody:
                 # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the thread
                 # goes on moving a seekable source's position. Reaching a retry from there would need a transport
                 # that swallows the cancellation and reports something retryable in its place.
-                while data := _to_bytes(await asyncio.to_thread(self._read, self._chunk_size)):
+                while True:
+                    chunk = await asyncio.to_thread(self._read, self._chunk_size)
+                    if not (data := _to_bytes(chunk)):
+                        return
                     yield data
             elif self._async_chunks is not None:
                 async for chunk in self._async_chunks():

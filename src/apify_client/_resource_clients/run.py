@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import random
 import string
@@ -10,7 +11,8 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
 from apify_client._models import Run, RunResponse
-from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
+from apify_client._pagination import DEFAULT_CHUNK_SIZE, _page_scanned_rows
+from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES, ResourceClient, ResourceClientAsync
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
 from apify_client._utils.encoding import encode_key_value_store_record_value
@@ -19,6 +21,7 @@ from apify_client._utils.time import to_seconds
 
 if TYPE_CHECKING:
     import logging
+    from collections.abc import AsyncIterator, Iterator
     from decimal import Decimal
 
     from apify_client._literals import GeneralAccess
@@ -32,6 +35,7 @@ if TYPE_CHECKING:
         RequestQueueClient,
         RequestQueueClientAsync,
     )
+    from apify_client._resource_clients.dataset import DatasetItemsPage
     from apify_client.types import Timeout
 
 
@@ -466,6 +470,102 @@ class RunClient(ResourceClient):
 
         return StatusMessageWatcher(run_client=self, to_logger=to_logger, check_period=check_period)
 
+    def iterate_dataset_items(
+        self,
+        *,
+        offset: int | None = None,
+        limit: int | None = None,
+        clean: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: list[str] | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+        chunk_size: int | None = None,
+        poll_interval: timedelta = timedelta(seconds=5),
+        timeout: Timeout = 'long',
+    ) -> Iterator[dict]:
+        """Iterate over the items of the run's default dataset while the run is still producing them.
+
+        While the run has not finished, the dataset is polled every `poll_interval` and the rows below its
+        `item_count` are yielded. Each page is requested with a `limit` that ends at `item_count`, so it covers
+        exactly the rows it asks for, whatever the filters or `unwind` do to the items. `item_count` lags a few
+        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read until
+        a page comes back shorter than requested, and the iterator returns.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
+
+        Args:
+            offset: Number of items that should be skipped at the start. The default value is 0.
+            limit: Maximum number of dataset rows to scan. Fewer items are yielded when filters drop some, more
+                when `unwind` splits a row into several. By default there is no limit.
+            clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with
+                the # character). The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True
+                parameters.
+            fields: A list of fields which should be picked from the items, only these fields will remain in
+                the resulting record objects.
+            omit: A list of fields which should be omitted from the items.
+            unwind: A list of fields which should be unwound, in order which they should be processed. Each field
+                should be either an array or an object. If the field is an array then every element of the array
+                will become a separate record and merged with parent object. If the unwound field is an object then
+                it is merged with the parent object.
+            skip_empty: If True, then empty items are skipped from the output.
+            skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
+                the # character.
+            chunk_size: Maximum number of dataset rows requested per API call.
+            poll_interval: How long to wait between polls while the run has not finished.
+            timeout: Timeout for each API HTTP request.
+
+        Yields:
+            An item from the dataset.
+        """
+        dataset_client = self.dataset()
+        page_size = chunk_size or DEFAULT_CHUNK_SIZE
+        position = offset or 0
+        end = position + limit if limit else None
+
+        def list_page(page_offset: int, page_limit: int) -> DatasetItemsPage:
+            return dataset_client.list_items(
+                offset=page_offset,
+                limit=page_limit,
+                clean=clean,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+                timeout=timeout,
+            )
+
+        while True:
+            run = self.get(timeout=timeout)
+            is_finished = run is None or run.status in _TERMINAL_STATUSES
+            dataset = dataset_client.get(timeout=timeout)
+            item_count = dataset.item_count if dataset else 0
+            if end is not None:
+                item_count = min(item_count, end)
+
+            while position < item_count:
+                page_limit = min(page_size, item_count - position)
+                page = list_page(position, page_limit)
+                yield from page.items
+                position += page_limit
+
+            if end is not None and position >= end:
+                return
+            if is_finished:
+                break
+            time.sleep(to_seconds(poll_interval))
+
+        while True:
+            page_limit = min(page_size, end - position) if end is not None else page_size
+            page = list_page(position, page_limit)
+            yield from page.items
+            scanned_rows = _page_scanned_rows(page, page_limit)
+            position += scanned_rows
+            if scanned_rows < page_limit or (end is not None and position >= end):
+                return
+
 
 @docs_group('Resource clients')
 class RunClientAsync(ResourceClientAsync):
@@ -897,3 +997,101 @@ class RunClientAsync(ResourceClientAsync):
             to_logger = create_redirect_logger(f'apify.{name}')
 
         return StatusMessageWatcherAsync(run_client=self, to_logger=to_logger, check_period=check_period)
+
+    async def iterate_dataset_items(
+        self,
+        *,
+        offset: int | None = None,
+        limit: int | None = None,
+        clean: bool | None = None,
+        fields: list[str] | None = None,
+        omit: list[str] | None = None,
+        unwind: list[str] | None = None,
+        skip_empty: bool | None = None,
+        skip_hidden: bool | None = None,
+        chunk_size: int | None = None,
+        poll_interval: timedelta = timedelta(seconds=5),
+        timeout: Timeout = 'long',
+    ) -> AsyncIterator[dict]:
+        """Iterate over the items of the run's default dataset while the run is still producing them.
+
+        While the run has not finished, the dataset is polled every `poll_interval` and the rows below its
+        `item_count` are yielded. Each page is requested with a `limit` that ends at `item_count`, so it covers
+        exactly the rows it asks for, whatever the filters or `unwind` do to the items. `item_count` lags a few
+        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read until
+        a page comes back shorter than requested, and the iterator returns.
+
+        https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
+
+        Args:
+            offset: Number of items that should be skipped at the start. The default value is 0.
+            limit: Maximum number of dataset rows to scan. Fewer items are yielded when filters drop some, more
+                when `unwind` splits a row into several. By default there is no limit.
+            clean: If True, returns only non-empty items and skips hidden fields (i.e. fields starting with
+                the # character). The clean parameter is just a shortcut for skip_hidden=True and skip_empty=True
+                parameters.
+            fields: A list of fields which should be picked from the items, only these fields will remain in
+                the resulting record objects.
+            omit: A list of fields which should be omitted from the items.
+            unwind: A list of fields which should be unwound, in order which they should be processed. Each field
+                should be either an array or an object. If the field is an array then every element of the array
+                will become a separate record and merged with parent object. If the unwound field is an object then
+                it is merged with the parent object.
+            skip_empty: If True, then empty items are skipped from the output.
+            skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
+                the # character.
+            chunk_size: Maximum number of dataset rows requested per API call.
+            poll_interval: How long to wait between polls while the run has not finished.
+            timeout: Timeout for each API HTTP request.
+
+        Yields:
+            An item from the dataset.
+        """
+        dataset_client = self.dataset()
+        page_size = chunk_size or DEFAULT_CHUNK_SIZE
+        position = offset or 0
+        end = position + limit if limit else None
+
+        async def list_page(page_offset: int, page_limit: int) -> DatasetItemsPage:
+            return await dataset_client.list_items(
+                offset=page_offset,
+                limit=page_limit,
+                clean=clean,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+                timeout=timeout,
+            )
+
+        while True:
+            run = await self.get(timeout=timeout)
+            is_finished = run is None or run.status in _TERMINAL_STATUSES
+            dataset = await dataset_client.get(timeout=timeout)
+            item_count = dataset.item_count if dataset else 0
+            if end is not None:
+                item_count = min(item_count, end)
+
+            while position < item_count:
+                page_limit = min(page_size, item_count - position)
+                page = await list_page(position, page_limit)
+                for item in page.items:
+                    yield item
+                position += page_limit
+
+            if end is not None and position >= end:
+                return
+            if is_finished:
+                break
+            await asyncio.sleep(to_seconds(poll_interval))
+
+        while True:
+            page_limit = min(page_size, end - position) if end is not None else page_size
+            page = await list_page(position, page_limit)
+            for item in page.items:
+                yield item
+            scanned_rows = _page_scanned_rows(page, page_limit)
+            position += scanned_rows
+            if scanned_rows < page_limit or (end is not None and position >= end):
+                return

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
 from apify_client._models import Run, RunResponse
-from apify_client._pagination import DEFAULT_CHUNK_SIZE, _page_scanned_rows
+from apify_client._pagination import DEFAULT_CHUNK_SIZE
 from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES, ResourceClient, ResourceClientAsync
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
@@ -490,8 +490,8 @@ class RunClient(ResourceClient):
         While the run has not finished, the dataset is polled every `poll_interval` and the rows below its
         `item_count` are yielded. Each page is requested with a `limit` that ends at `item_count`, so it covers
         exactly the rows it asks for, whatever the filters or `unwind` do to the items. `item_count` lags a few
-        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read until
-        a page comes back shorter than requested, and the iterator returns.
+        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read a page
+        at a time until none are left, and the iterator returns.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -561,9 +561,15 @@ class RunClient(ResourceClient):
             page_limit = min(page_size, end - position) if end is not None else page_size
             page = list_page(position, page_limit)
             yield from page.items
-            scanned_rows = _page_scanned_rows(page, page_limit)
-            position += scanned_rows
-            if scanned_rows < page_limit or (end is not None and position >= end):
+            # Only an empty page marks the end, as filters can shorten a full one. A page that `clean`, `skip_empty` or
+            # `unwind` emptied past a lagging `item_count` reports no scanned rows either, so a plain read checks.
+            if not page.count and (
+                not (clean or skip_empty or unwind)
+                or not dataset_client.list_items(offset=position, limit=1, timeout=timeout).items
+            ):
+                return
+            position += page_limit
+            if end is not None and position >= end:
                 return
 
 
@@ -1018,8 +1024,8 @@ class RunClientAsync(ResourceClientAsync):
         While the run has not finished, the dataset is polled every `poll_interval` and the rows below its
         `item_count` are yielded. Each page is requested with a `limit` that ends at `item_count`, so it covers
         exactly the rows it asks for, whatever the filters or `unwind` do to the items. `item_count` lags a few
-        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read until
-        a page comes back shorter than requested, and the iterator returns.
+        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read a page
+        at a time until none are left, and the iterator returns.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -1091,7 +1097,13 @@ class RunClientAsync(ResourceClientAsync):
             page = await list_page(position, page_limit)
             for item in page.items:
                 yield item
-            scanned_rows = _page_scanned_rows(page, page_limit)
-            position += scanned_rows
-            if scanned_rows < page_limit or (end is not None and position >= end):
+            # Only an empty page marks the end, as filters can shorten a full one. A page that `clean`, `skip_empty` or
+            # `unwind` emptied past a lagging `item_count` reports no scanned rows either, so a plain read checks.
+            if not page.count and (
+                not (clean or skip_empty or unwind)
+                or not (await dataset_client.list_items(offset=position, limit=1, timeout=timeout)).items
+            ):
+                return
+            position += page_limit
+            if end is not None and position >= end:
                 return

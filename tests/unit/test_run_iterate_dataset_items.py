@@ -9,12 +9,11 @@ from unittest.mock import AsyncMock, Mock, call
 import pytest
 from werkzeug import Response
 
-from apify_client import ApifyClient, ApifyClientAsync
-
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug import Request
 
+    from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._literals import ActorJobStatus
 
 pytestmark = pytest.mark.usefixtures('http_client_classes')
@@ -103,10 +102,13 @@ class FakeRunApi:
 
 
 def shape_items(rows: range, *, clean: bool = False, unwind: bool = False) -> list[dict[str, Any]]:
-    """Turn dataset rows into items: `clean` drops every odd row, `unwind` splits a row into `UNWIND_PARTS` items."""
+    """Turn dataset rows into items: `clean` drops every odd row, `unwind` splits a row into `UNWIND_PARTS` items.
+
+    Under `unwind`, every third row holds an empty array and so unwinds into no items at all.
+    """
     kept_rows = [row for row in rows if not (clean and row % 2)]
     if unwind:
-        return [{'row': row, 'part': part} for row in kept_rows for part in range(UNWIND_PARTS)]
+        return [{'row': row, 'part': part} for row in kept_rows if row % 3 != 2 for part in range(UNWIND_PARTS)]
     return [{'row': row} for row in kept_rows]
 
 
@@ -118,81 +120,90 @@ LAGGING_RUN_STEPS = [
     Step(pushed_rows=75, item_count=52, status='SUCCEEDED'),
 ]
 
-# The same run with `itemCount` caught up by the time it finished.
-CAUGHT_UP_RUN_STEPS = [*LAGGING_RUN_STEPS[:-1], Step(pushed_rows=52, item_count=52, status='SUCCEEDED')]
 
-
-def test_iterate_dataset_items_yields_every_row_once_sync(httpserver: HTTPServer) -> None:
+def test_iterate_dataset_items_yields_every_row_once_sync(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """Rows pushed across polls and past a lagging item count after the run finished are all yielded, in order."""
     api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
-    items = list(client.run(RUN_ID).iterate_dataset_items(chunk_size=10, poll_interval=NO_WAIT))
+    items = list(sync_client.run(RUN_ID).iterate_dataset_items(chunk_size=10, poll_interval=NO_WAIT))
 
     assert items == shape_items(range(75))
 
 
-async def test_iterate_dataset_items_yields_every_row_once_async(httpserver: HTTPServer) -> None:
+async def test_iterate_dataset_items_yields_every_row_once_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
     """Rows pushed across polls and past a lagging item count after the run finished are all yielded, in order."""
     api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    client = ApifyClientAsync(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
-    items = [item async for item in client.run(RUN_ID).iterate_dataset_items(chunk_size=10, poll_interval=NO_WAIT)]
+    items = [
+        item async for item in async_client.run(RUN_ID).iterate_dataset_items(chunk_size=10, poll_interval=NO_WAIT)
+    ]
 
     assert items == shape_items(range(75))
 
 
+CHUNK_SIZES = [
+    pytest.param(10, id='partly filtered pages'),
+    pytest.param(1, id='fully filtered pages'),
+]
+
+
+@pytest.mark.parametrize('chunk_size', CHUNK_SIZES)
 @pytest.mark.parametrize(
     'shaping',
     [
         pytest.param({'clean': True}, id='clean drops items'),
-        pytest.param({'unwind': True}, id='unwind multiplies items'),
+        pytest.param({'unwind': True}, id='unwind multiplies or drops items'),
     ],
 )
-def test_iterate_dataset_items_with_shaped_items_sync(httpserver: HTTPServer, shaping: dict[str, bool]) -> None:
-    """Filters and `unwind` change the item count per page without duplicating or skipping rows while the run runs."""
-    api = FakeRunApi(CAUGHT_UP_RUN_STEPS)
+def test_iterate_dataset_items_with_shaped_items_sync(
+    httpserver: HTTPServer, sync_client: ApifyClient, shaping: dict[str, bool], chunk_size: int
+) -> None:
+    """Filters and `unwind` reshape or empty pages without duplicating or skipping rows, also past a lagging count."""
+    api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
     items = list(
-        client.run(RUN_ID).iterate_dataset_items(
+        sync_client.run(RUN_ID).iterate_dataset_items(
             clean=shaping.get('clean'),
             unwind=['parts'] if shaping.get('unwind') else None,
-            chunk_size=10,
+            chunk_size=chunk_size,
             poll_interval=NO_WAIT,
         )
     )
 
-    assert items == shape_items(range(52), **shaping)
+    assert items == shape_items(range(75), **shaping)
 
 
+@pytest.mark.parametrize('chunk_size', CHUNK_SIZES)
 @pytest.mark.parametrize(
     'shaping',
     [
         pytest.param({'clean': True}, id='clean drops items'),
-        pytest.param({'unwind': True}, id='unwind multiplies items'),
+        pytest.param({'unwind': True}, id='unwind multiplies or drops items'),
     ],
 )
-async def test_iterate_dataset_items_with_shaped_items_async(httpserver: HTTPServer, shaping: dict[str, bool]) -> None:
-    """Filters and `unwind` change the item count per page without duplicating or skipping rows while the run runs."""
-    api = FakeRunApi(CAUGHT_UP_RUN_STEPS)
+async def test_iterate_dataset_items_with_shaped_items_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync, shaping: dict[str, bool], chunk_size: int
+) -> None:
+    """Filters and `unwind` reshape or empty pages without duplicating or skipping rows, also past a lagging count."""
+    api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    client = ApifyClientAsync(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
     items = [
         item
-        async for item in client.run(RUN_ID).iterate_dataset_items(
+        async for item in async_client.run(RUN_ID).iterate_dataset_items(
             clean=shaping.get('clean'),
             unwind=['parts'] if shaping.get('unwind') else None,
-            chunk_size=10,
+            chunk_size=chunk_size,
             poll_interval=NO_WAIT,
         )
     ]
 
-    assert items == shape_items(range(52), **shaping)
+    assert items == shape_items(range(75), **shaping)
 
 
 @pytest.mark.parametrize(
@@ -203,7 +214,7 @@ async def test_iterate_dataset_items_with_shaped_items_async(httpserver: HTTPSer
     ],
 )
 def test_iterate_dataset_items_keeps_polling_until_terminal_sync(
-    httpserver: HTTPServer, status: ActorJobStatus
+    httpserver: HTTPServer, sync_client: ApifyClient, status: ActorJobStatus
 ) -> None:
     """A run that is aborting or timing out can still push items, so polling goes on until a terminal status."""
     api = FakeRunApi(
@@ -213,9 +224,8 @@ def test_iterate_dataset_items_keeps_polling_until_terminal_sync(
         ]
     )
     api.register(httpserver)
-    client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
-    items = list(client.run(RUN_ID).iterate_dataset_items(poll_interval=NO_WAIT))
+    items = list(sync_client.run(RUN_ID).iterate_dataset_items(poll_interval=NO_WAIT))
 
     assert items == shape_items(range(8))
 
@@ -228,7 +238,7 @@ def test_iterate_dataset_items_keeps_polling_until_terminal_sync(
     ],
 )
 async def test_iterate_dataset_items_keeps_polling_until_terminal_async(
-    httpserver: HTTPServer, status: ActorJobStatus
+    httpserver: HTTPServer, async_client: ApifyClientAsync, status: ActorJobStatus
 ) -> None:
     """A run that is aborting or timing out can still push items, so polling goes on until a terminal status."""
     api = FakeRunApi(
@@ -238,38 +248,37 @@ async def test_iterate_dataset_items_keeps_polling_until_terminal_async(
         ]
     )
     api.register(httpserver)
-    client = ApifyClientAsync(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
-    items = [item async for item in client.run(RUN_ID).iterate_dataset_items(poll_interval=NO_WAIT)]
+    items = [item async for item in async_client.run(RUN_ID).iterate_dataset_items(poll_interval=NO_WAIT)]
 
     assert items == shape_items(range(8))
 
 
-def test_iterate_dataset_items_respects_offset_and_limit_sync(httpserver: HTTPServer) -> None:
+def test_iterate_dataset_items_respects_offset_and_limit_sync(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """Iteration starts at `offset` and stops once `limit` rows are scanned, without waiting for the run to finish."""
     api = FakeRunApi(
         [Step(pushed_rows=4, item_count=4, status='RUNNING'), Step(pushed_rows=20, item_count=20, status='RUNNING')]
     )
     api.register(httpserver)
-    client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
-    items = list(client.run(RUN_ID).iterate_dataset_items(offset=2, limit=7, chunk_size=3, poll_interval=NO_WAIT))
+    items = list(sync_client.run(RUN_ID).iterate_dataset_items(offset=2, limit=7, chunk_size=3, poll_interval=NO_WAIT))
 
     assert items == shape_items(range(2, 9))
     assert api.step.status == 'RUNNING'
 
 
-async def test_iterate_dataset_items_respects_offset_and_limit_async(httpserver: HTTPServer) -> None:
+async def test_iterate_dataset_items_respects_offset_and_limit_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
     """Iteration starts at `offset` and stops once `limit` rows are scanned, without waiting for the run to finish."""
     api = FakeRunApi(
         [Step(pushed_rows=4, item_count=4, status='RUNNING'), Step(pushed_rows=20, item_count=20, status='RUNNING')]
     )
     api.register(httpserver)
-    client = ApifyClientAsync(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
 
     items = [
         item
-        async for item in client.run(RUN_ID).iterate_dataset_items(
+        async for item in async_client.run(RUN_ID).iterate_dataset_items(
             offset=2, limit=7, chunk_size=3, poll_interval=NO_WAIT
         )
     ]
@@ -278,31 +287,56 @@ async def test_iterate_dataset_items_respects_offset_and_limit_async(httpserver:
     assert api.step.status == 'RUNNING'
 
 
+def test_iterate_dataset_items_limit_ends_reading_past_item_count_sync(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """A `limit` beyond the lagging item count of a finished run stops the reads past it at the limit."""
+    api = FakeRunApi(LAGGING_RUN_STEPS)
+    api.register(httpserver)
+
+    items = list(sync_client.run(RUN_ID).iterate_dataset_items(limit=60, chunk_size=10, poll_interval=NO_WAIT))
+
+    assert items == shape_items(range(60))
+
+
+async def test_iterate_dataset_items_limit_ends_reading_past_item_count_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """A `limit` beyond the lagging item count of a finished run stops the reads past it at the limit."""
+    api = FakeRunApi(LAGGING_RUN_STEPS)
+    api.register(httpserver)
+
+    items = [
+        item
+        async for item in async_client.run(RUN_ID).iterate_dataset_items(limit=60, chunk_size=10, poll_interval=NO_WAIT)
+    ]
+
+    assert items == shape_items(range(60))
+
+
 def test_iterate_dataset_items_sleeps_between_polls_sync(
-    httpserver: HTTPServer, monkeypatch: pytest.MonkeyPatch
+    httpserver: HTTPServer, sync_client: ApifyClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The iterator waits `poll_interval` after each poll of an unfinished run and not after the final one."""
     api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    client = ApifyClient(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
     sleep = Mock()
     monkeypatch.setattr('apify_client._resource_clients.run.time.sleep', sleep)
 
-    list(client.run(RUN_ID).iterate_dataset_items(poll_interval=timedelta(seconds=2)))
+    list(sync_client.run(RUN_ID).iterate_dataset_items(poll_interval=timedelta(seconds=2)))
 
     assert sleep.call_args_list == [call(2.0)] * 3
 
 
 async def test_iterate_dataset_items_sleeps_between_polls_async(
-    httpserver: HTTPServer, monkeypatch: pytest.MonkeyPatch
+    httpserver: HTTPServer, async_client: ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The iterator waits `poll_interval` after each poll of an unfinished run and not after the final one."""
     api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    client = ApifyClientAsync(token='test-token', api_url=httpserver.url_for('/').removesuffix('/'))
     sleep = AsyncMock()
     monkeypatch.setattr('apify_client._resource_clients.run.asyncio.sleep', sleep)
 
-    [item async for item in client.run(RUN_ID).iterate_dataset_items(poll_interval=timedelta(seconds=2))]
+    [item async for item in async_client.run(RUN_ID).iterate_dataset_items(poll_interval=timedelta(seconds=2))]
 
     assert sleep.call_args_list == [call(2.0)] * 3

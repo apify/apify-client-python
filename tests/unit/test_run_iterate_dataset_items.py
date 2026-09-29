@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, call
@@ -43,6 +43,7 @@ class FakeRunApi:
 
     steps: list[Step]
     step_index: int = -1
+    items_requests: list[dict[str, str]] = field(default_factory=list)
 
     @property
     def step(self) -> Step:
@@ -89,8 +90,14 @@ class FakeRunApi:
         """Scan exactly `limit` rows from `offset`, like the real endpoint, and derive the count from `itemCount`."""
         offset = int(request.args.get('offset', 0))
         limit = int(request.args.get('limit', 0)) or 999_999_999_999
+        self.items_requests.append(dict(request.args))
         rows = range(offset, min(offset + limit, self.step.pushed_rows))
-        items = shape_items(rows, clean=request.args.get('clean') == 'true', unwind=bool(request.args.get('unwind')))
+        items = shape_items(
+            rows,
+            clean=request.args.get('clean') == 'true',
+            skip_empty=request.args.get('skipEmpty') == 'true',
+            unwind=bool(request.args.get('unwind')),
+        )
         headers = {
             'x-apify-pagination-total': str(self.step.item_count),
             'x-apify-pagination-offset': str(offset),
@@ -101,12 +108,14 @@ class FakeRunApi:
         return Response(json.dumps(items), status=200, headers=headers, mimetype='application/json')
 
 
-def shape_items(rows: range, *, clean: bool = False, unwind: bool = False) -> list[dict[str, Any]]:
-    """Turn dataset rows into items: `clean` drops every odd row, `unwind` splits a row into `UNWIND_PARTS` items.
+def shape_items(
+    rows: range, *, clean: bool = False, skip_empty: bool = False, unwind: bool = False
+) -> list[dict[str, Any]]:
+    """Turn dataset rows into items: `clean` and `skip_empty` drop every odd row, `unwind` splits a row into items.
 
     Under `unwind`, every third row holds an empty array and so unwinds into no items at all.
     """
-    kept_rows = [row for row in rows if not (clean and row % 2)]
+    kept_rows = [row for row in rows if not ((clean or skip_empty) and row % 2)]
     if unwind:
         return [{'row': row, 'part': part} for row in kept_rows if row % 3 != 2 for part in range(UNWIND_PARTS)]
     return [{'row': row} for row in kept_rows]
@@ -156,6 +165,7 @@ CHUNK_SIZES = [
     'shaping',
     [
         pytest.param({'clean': True}, id='clean drops items'),
+        pytest.param({'skip_empty': True}, id='skip_empty drops items'),
         pytest.param({'unwind': True}, id='unwind multiplies or drops items'),
     ],
 )
@@ -169,6 +179,7 @@ def test_iterate_dataset_items_with_shaped_items_sync(
     items = list(
         sync_client.run(RUN_ID).iterate_dataset_items(
             clean=shaping.get('clean'),
+            skip_empty=shaping.get('skip_empty'),
             unwind=['parts'] if shaping.get('unwind') else None,
             chunk_size=chunk_size,
             poll_interval=NO_WAIT,
@@ -183,6 +194,7 @@ def test_iterate_dataset_items_with_shaped_items_sync(
     'shaping',
     [
         pytest.param({'clean': True}, id='clean drops items'),
+        pytest.param({'skip_empty': True}, id='skip_empty drops items'),
         pytest.param({'unwind': True}, id='unwind multiplies or drops items'),
     ],
 )
@@ -197,6 +209,7 @@ async def test_iterate_dataset_items_with_shaped_items_async(
         item
         async for item in async_client.run(RUN_ID).iterate_dataset_items(
             clean=shaping.get('clean'),
+            skip_empty=shaping.get('skip_empty'),
             unwind=['parts'] if shaping.get('unwind') else None,
             chunk_size=chunk_size,
             poll_interval=NO_WAIT,
@@ -312,6 +325,37 @@ async def test_iterate_dataset_items_limit_ends_reading_past_item_count_async(
     ]
 
     assert items == shape_items(range(60))
+
+
+def test_iterate_dataset_items_forwards_options_without_extra_read_sync(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """Item options reach every page request, and without a dropping filter an empty page ends with no plain read."""
+    api = FakeRunApi([Step(pushed_rows=5, item_count=3, status='SUCCEEDED')])
+    api.register(httpserver)
+
+    items = list(sync_client.run(RUN_ID).iterate_dataset_items(fields=['row'], chunk_size=10, poll_interval=NO_WAIT))
+
+    assert items == shape_items(range(5))
+    assert [request.get('fields') for request in api.items_requests] == ['row', 'row', 'row']
+
+
+async def test_iterate_dataset_items_forwards_options_without_extra_read_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Item options reach every page request, and without a dropping filter an empty page ends with no plain read."""
+    api = FakeRunApi([Step(pushed_rows=5, item_count=3, status='SUCCEEDED')])
+    api.register(httpserver)
+
+    items = [
+        item
+        async for item in async_client.run(RUN_ID).iterate_dataset_items(
+            fields=['row'], chunk_size=10, poll_interval=NO_WAIT
+        )
+    ]
+
+    assert items == shape_items(range(5))
+    assert [request.get('fields') for request in api.items_requests] == ['row', 'row', 'row']
 
 
 def test_iterate_dataset_items_sleeps_between_polls_sync(

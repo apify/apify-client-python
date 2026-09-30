@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.2.2 - **not yet released**
+
+### 🚀 Features
+
+- Stream request bodies from files, iterables, and responses ([#1060](https://github.com/apify/apify-client-python/pull/1060)) ([9be215b](https://github.com/apify/apify-client-python/commit/9be215b23a13de0abc4a255a18450cc764e7a6c7)) by [@vdusek](https://github.com/vdusek), closes [#972](https://github.com/apify/apify-client-python/issues/972)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.2.1](https://github.com/apify/apify-client-python/releases/tag/v3.2.1) (2026-09-25)
 
 ### 🐛 Bug Fixes

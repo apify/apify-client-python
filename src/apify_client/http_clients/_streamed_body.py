@@ -203,8 +203,8 @@ class StreamedRequestBody:
 
         The retry loop calls this once an attempt ends. A transport may stop pulling the chunks early, for example on
         an error response sent before the whole body arrived, and hold on to them for as long as its client lives,
-        which keeps the source suspended. When the transport is still pulling a chunk in a worker thread, the source
-        is closed as soon as that chunk arrives.
+        which keeps the source suspended. When the transport is still pulling a chunk in a worker thread, a generator
+        source is closed and a file-like source is read no further as soon as that chunk arrives.
         """
         chunks, self._chunks = self._chunks, None
         self._stop.set()
@@ -233,8 +233,9 @@ class StreamedRequestBody:
                     if data := _to_bytes(self._read()):
                         yield data
                 else:
-                    # A file-like source signals its end with an empty read.
-                    while data := _to_bytes(self._read(self._chunk_size)):
+                    # A file-like source signals its end with an empty read. The stop check ends the reads of an
+                    # attempt that is over, which a transport can keep pulling in a worker thread.
+                    while not stop.is_set() and (data := _to_bytes(self._read(self._chunk_size))):
                         yield data
             elif self._sync_chunks is not None:
                 chunks = iter(self._sync_chunks())
@@ -263,7 +264,7 @@ class StreamedRequestBody:
                 # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the thread
                 # goes on moving a seekable source's position. Reaching a retry from there would need a transport
                 # that swallows the cancellation and reports something retryable in its place.
-                while True:
+                while not stop.is_set():
                     chunk = await asyncio.to_thread(self._read, self._chunk_size)
                     if not (data := _to_bytes(chunk)):
                         return

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import collections
 import io
+import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import Mock
 
@@ -486,3 +488,53 @@ def test_rewind_clears_the_error() -> None:
 
     assert body.error is None
     assert b''.join(body.iter_bytes()) == b'data'
+
+
+class GatedBytesIO(io.BytesIO):
+    """A `BytesIO` whose reads wait for `release`, setting `reading` once a read has started."""
+
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+        self.reading = threading.Event()
+        self.release = threading.Event()
+
+    def read(self, size: int | None = -1) -> bytes:
+        self.reading.set()
+        self.release.wait(timeout=5)
+        return super().read(size)
+
+
+def test_file_source_pulled_in_a_worker_thread_is_read_no_further_once_closed() -> None:
+    """A file the transport is still reading when the attempt ends keeps its position after that read."""
+    source = GatedBytesIO(b'abcdef')
+    body = StreamedRequestBody(source, chunk_size=2)
+    chunks = body.iter_bytes()
+    pulled: list[bytes] = []
+    puller = threading.Thread(target=lambda: pulled.extend(chunks))
+    puller.start()
+    assert source.reading.wait(timeout=5)
+
+    body.close_chunks()
+    source.release.set()
+    puller.join(timeout=5)
+
+    assert pulled == [b'ab']
+    assert source.tell() == 2
+
+
+async def test_file_source_pulled_in_a_worker_thread_is_read_no_further_once_closed_async() -> None:
+    """A file the async transport is still reading when the attempt ends keeps its position after that read."""
+    source = GatedBytesIO(b'abcdef')
+    body = StreamedRequestBody(source, chunk_size=2)
+
+    async def pull() -> list[bytes]:
+        return [chunk async for chunk in body.aiter_bytes()]
+
+    puller = asyncio.create_task(pull())
+    assert await asyncio.to_thread(source.reading.wait, 5)
+
+    await body.aclose_chunks()
+    source.release.set()
+
+    assert await asyncio.wait_for(puller, timeout=5) == [b'ab']
+    assert source.tell() == 2

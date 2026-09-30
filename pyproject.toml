@@ -187,6 +187,10 @@ max-branches = 18
 addopts = "-r a --verbose --dist worksteal"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
+filterwarnings = [
+    # The tests stream request bodies throughout, and the warning has a unit test of its own.
+    "ignore:Streaming a request body is experimental:UserWarning",
+]
 pythonpath = ["."]
 timeout = 1800
 

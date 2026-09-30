@@ -373,7 +373,8 @@ class KeyValueStoreClient(ResourceClient):
                 chunks, or a streamed `HttpResponse` is uploaded in chunks as it is read, without being held in memory
                 whole or compressed. Any other object with a callable `read` is read whole and sent uncompressed. Only
                 a seekable `io.IOBase` value can be retried; any other streamed value gets a single attempt. See
-                `StreamedRequestBody` for details.
+                `StreamedRequestBody` for details. Streaming is experimental, and its behavior may change in future
+                versions.
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of
@@ -810,7 +811,8 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
                 chunks, or a streamed `HttpResponse` is uploaded in chunks as it is read, without being held in memory
                 whole or compressed. Any other object with a callable `read` is read whole and sent uncompressed. Only
                 a seekable `io.IOBase` value can be retried; any other streamed value gets a single attempt. See
-                `StreamedRequestBody` for details.
+                `StreamedRequestBody` for details. Streaming is experimental, and its behavior may change in future
+                versions.
             content_type: The content type of the saved value.
             content_encoding: The encoding already applied to `value`, sent as the `Content-Encoding` header. Pass it
                 to upload a pre-compressed value - the client then forwards the bytes as they are instead of

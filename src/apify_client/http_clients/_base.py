@@ -504,7 +504,8 @@ class HttpClient(HttpClientBase):
             params: Query parameters to append to the URL.
             data: Raw request body. An `io.IOBase` stream such as an open file, an iterable of byte chunks, or a
                 streamed `HttpResponse` is sent in chunks as it is read, and any other object with a callable `read`
-                is read whole, see `StreamedRequestBody`. Cannot be used together with json.
+                is read whole, see `StreamedRequestBody`. Streaming is experimental, and its behavior may change in
+                future versions. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
@@ -717,7 +718,8 @@ class HttpClientAsync(HttpClientBase):
             params: Query parameters to append to the URL.
             data: Raw request body. An `io.IOBase` stream such as an open file, an iterable of byte chunks, or a
                 streamed `HttpResponse` is sent in chunks as it is read, and any other object with a callable `read`
-                is read whole, see `StreamedRequestBody`. Cannot be used together with json.
+                is read whole, see `StreamedRequestBody`. Streaming is experimental, and its behavior may change in
+                future versions. Cannot be used together with json.
             json: JSON-serializable data for the request body. Cannot be used together with data.
             stream: Whether to stream the response body.
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for

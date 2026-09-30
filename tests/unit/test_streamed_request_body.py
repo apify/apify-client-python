@@ -619,3 +619,9 @@ def test_read_that_gets_the_lock_after_the_attempt_ended_reads_nothing(monkeypat
 
     assert pulled == []
     assert source.tell() == 0
+
+
+def test_streaming_a_request_body_warns_that_it_is_experimental() -> None:
+    """Building a streamed body emits a `UserWarning` saying the feature is experimental."""
+    with pytest.warns(UserWarning, match='Streaming a request body is experimental'):
+        StreamedRequestBody(io.BytesIO(b'payload'))

@@ -183,7 +183,7 @@ class RunClient(ResourceClient):
             run_input: The input to pass to the new run. Accepts the same values as
                 `KeyValueStoreClient.set_record`, including an `io.IOBase` stream such as an open file, an iterable
                 of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
-                memory.
+                memory. Streaming is experimental, and its behavior may change in future versions.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
 
@@ -614,7 +614,7 @@ class RunClientAsync(ResourceClientAsync):
             run_input: The input to pass to the new run. Accepts the same values as
                 `KeyValueStoreClientAsync.set_record`, including an `io.IOBase` stream such as an open file, an iterable
                 of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
-                memory.
+                memory. Streaming is experimental, and its behavior may change in future versions.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
 

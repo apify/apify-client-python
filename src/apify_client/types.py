@@ -78,6 +78,8 @@ compression rules that apply.
 
 Pass a `StreamedRequestBody` built by hand to choose the chunk size an `io.IOBase` source is read in, which no
 resource client exposes on its own.
+
+Streaming is experimental, and its behavior and interface may change in future versions.
 """
 
 JsonSerializable = Mapping[str, 'JsonSerializable'] | Sequence['JsonSerializable'] | str | int | float | bool | None

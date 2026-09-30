@@ -239,7 +239,7 @@ class ActorClient(ResourceClient):
             run_input: The input to pass to the Actor run. Accepts the same values as
                 `KeyValueStoreClient.set_record`, including an `io.IOBase` stream such as an open file, an iterable
                 of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
-                memory.
+                memory. Streaming is experimental, and its behavior may change in future versions.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -321,7 +321,7 @@ class ActorClient(ResourceClient):
             run_input: The input to pass to the Actor run. Accepts the same values as
                 `KeyValueStoreClient.set_record`, including an `io.IOBase` stream such as an open file, an iterable
                 of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
-                memory.
+                memory. Streaming is experimental, and its behavior may change in future versions.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -548,7 +548,8 @@ class ActorClient(ResourceClient):
         Args:
             run_input: The input to validate. Accepts the same values as `KeyValueStoreClient.set_record`,
                 including an `io.IOBase` stream such as an open file, an iterable of byte chunks, or a streamed
-                `HttpResponse`, which are uploaded in chunks without being held in memory.
+                `HttpResponse`, which are uploaded in chunks without being held in memory. Streaming is experimental,
+                and its behavior may change in future versions.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
@@ -749,7 +750,7 @@ class ActorClientAsync(ResourceClientAsync):
             run_input: The input to pass to the Actor run. Accepts the same values as
                 `KeyValueStoreClientAsync.set_record`, including an `io.IOBase` stream such as an open file, an iterable
                 of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
-                memory.
+                memory. Streaming is experimental, and its behavior may change in future versions.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -831,7 +832,7 @@ class ActorClientAsync(ResourceClientAsync):
             run_input: The input to pass to the Actor run. Accepts the same values as
                 `KeyValueStoreClientAsync.set_record`, including an `io.IOBase` stream such as an open file, an iterable
                 of byte chunks, or a streamed `HttpResponse`, which are uploaded in chunks without being held in
-                memory.
+                memory. Streaming is experimental, and its behavior may change in future versions.
             content_type: The content type of the input.
             build: Specifies the Actor build to run. It can be either a build tag or build number. By default,
                 the run uses the build specified in the default run configuration for the Actor (typically latest).
@@ -1059,7 +1060,8 @@ class ActorClientAsync(ResourceClientAsync):
         Args:
             run_input: The input to validate. Accepts the same values as `KeyValueStoreClientAsync.set_record`,
                 including an `io.IOBase` stream such as an open file, an iterable of byte chunks, or a streamed
-                `HttpResponse`, which are uploaded in chunks without being held in memory.
+                `HttpResponse`, which are uploaded in chunks without being held in memory. Streaming is experimental,
+                and its behavior may change in future versions.
             build_tag: The Actor's build tag.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.

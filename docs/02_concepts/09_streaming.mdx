@@ -46,6 +46,10 @@ The following example shows how to stream the logs of an Actor run incrementally
 
 ## Streaming uploads
 
+:::warning Experimental feature
+Streaming uploads are experimental. Their behavior and interface may change in future releases.
+:::
+
 <ApiLink to="class/KeyValueStoreClient#set_record">`KeyValueStoreClient.set_record`</ApiLink> and the `run_input` of <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink>, <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink>, and <ApiLink to="class/RunClient#metamorph">`RunClient.metamorph`</ApiLink> accept a value the client streams to the API in chunks:
 
 - An `io.IOBase` stream: an open file, an `io.BytesIO`, a member of a ZIP archive, or a pipe. The client reads it in chunks of 64 KiB, or 64 Ki characters for a text-mode file, from its current position and doesn't close it.

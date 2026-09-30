@@ -5,6 +5,7 @@ import contextlib
 import inspect
 import io
 import threading
+import warnings
 from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator, Collection, Generator, Iterable, Iterator
 from typing import IO, TYPE_CHECKING, Any, cast
 
@@ -44,6 +45,9 @@ class StreamedRequestBody:
     A file opened in text mode, or an iterable yielding strings, is UTF-8 encoded chunk by chunk. A file-like object
     whose `read` is a coroutine function, as `aiofiles` provides, and an async iterable can only be sent by the
     asynchronous client.
+
+    Warning:
+        This is an experimental feature. The behavior and interface may change in future versions.
     """
 
     def __init__(self, source: StreamedBodySource, *, chunk_size: int = STREAMED_BODY_CHUNK_SIZE) -> None:
@@ -63,6 +67,13 @@ class StreamedRequestBody:
                 'The source is already a streamed request body. Pass it as the `data` of a request directly, since '
                 'wrapping it again reads it as a response and drops its rewind position.'
             )
+
+        # Python's default warning filter shows this once per process for the client's own call site.
+        warnings.warn(
+            'Streaming a request body is experimental, and its behavior and interface may change in future versions.',
+            category=UserWarning,
+            stacklevel=2,
+        )
 
         self._chunk_size = chunk_size
         self._error: Exception | None = None

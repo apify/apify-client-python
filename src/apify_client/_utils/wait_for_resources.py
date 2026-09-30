@@ -16,7 +16,7 @@ T = TypeVar('T')
 RESOURCE_LIMIT_ERROR_TYPES = frozenset({'actor-memory-limit-exceeded', 'concurrent-runs-limit-exceeded'})
 """Error types the API rejects a run start with while the account has no free memory or concurrent-run slot for it.
 
-Both clear once other runs of the account finish.
+Both clear as other runs or builds finish.
 """
 
 WAIT_FOR_RESOURCES_COOLDOWN = timedelta(seconds=10)

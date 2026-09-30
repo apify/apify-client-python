@@ -264,9 +264,11 @@ class ActorClient(ResourceClient):
                     * `payload_template`: Optional template for the request payload.
             wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
                 that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
-                `concurrent-runs-limit-exceeded`. Both clear once other runs of the account finish. The start is
-                retried every 10 seconds, and any other error is raised right away. `True` retries until the run
-                starts, a `timedelta` stops retrying after that long and raises the last error.
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -348,10 +350,12 @@ class ActorClient(ResourceClient):
                 waits indefinitely.
             wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
                 that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
-                `concurrent-runs-limit-exceeded`. Both clear once other runs of the account finish. The start is
-                retried every 10 seconds, and any other error is raised right away. `True` retries until the run
-                starts, a `timedelta` stops retrying after that long and raises the last error. The time spent
-                retrying doesn't count toward `wait_duration`.
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
@@ -783,9 +787,11 @@ class ActorClientAsync(ResourceClientAsync):
                     * `payload_template`: Optional template for the request payload.
             wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
                 that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
-                `concurrent-runs-limit-exceeded`. Both clear once other runs of the account finish. The start is
-                retried every 10 seconds, and any other error is raised right away. `True` retries until the run
-                starts, a `timedelta` stops retrying after that long and raises the last error.
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -867,10 +873,12 @@ class ActorClientAsync(ResourceClientAsync):
                 waits indefinitely.
             wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
                 that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
-                `concurrent-runs-limit-exceeded`. Both clear once other runs of the account finish. The start is
-                retried every 10 seconds, and any other error is raised right away. `True` retries until the run
-                starts, a `timedelta` stops retrying after that long and raises the last error. The time spent
-                retrying doesn't count toward `wait_duration`.
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message

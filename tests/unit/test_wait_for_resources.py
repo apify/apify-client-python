@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import inspect
+import io
 import json
+import logging
 from datetime import timedelta
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
@@ -10,6 +12,7 @@ import pytest
 from werkzeug import Request, Response
 
 from apify_client import ApifyClient, ApifyClientAsync
+from apify_client._logging import logger
 from apify_client._utils import wait_for_resources
 from apify_client.errors import ApifyApiError
 
@@ -55,12 +58,12 @@ class StartServer:
 
     def __init__(self, httpserver: HTTPServer, start_path: str) -> None:
         self.rejections: list[str] = []
-        self.starts = 0
+        self.bodies: list[bytes] = []
         httpserver.expect_request(start_path, method='POST').respond_with_handler(self.handle_start)
         httpserver.expect_request('/v2/actor-runs/run-id').respond_with_json({'data': RUN})
 
-    def handle_start(self, _request: Request) -> Response:
-        self.starts += 1
+    def handle_start(self, request: Request) -> Response:
+        self.bodies.append(request.get_data())
         if self.rejections:
             error_type = self.rejections.pop(0)
             body = {'error': {'type': error_type, 'message': f'Rejected: {error_type}'}}
@@ -122,7 +125,7 @@ async def test_retries_start_every_10_seconds_until_it_succeeds(
 
     assert started_run is not None
     assert started_run.id == 'run-id'
-    assert server.starts == 3
+    assert len(server.bodies) == 3
     assert sleeps == [10, 10]
 
 
@@ -130,6 +133,7 @@ async def test_retries_start_every_10_seconds_until_it_succeeds(
 async def test_raises_first_rejection_without_the_option(
     httpserver: HTTPServer,
     client: ApifyClient | ApifyClientAsync,
+    sleeps: list[float],
     starter: Callable[..., Any],
     start_path: str,
 ) -> None:
@@ -141,7 +145,8 @@ async def test_raises_first_rejection_without_the_option(
         await run(starter, client)
 
     assert exc_info.value.type == 'actor-memory-limit-exceeded'
-    assert server.starts == 1
+    assert len(server.bodies) == 1
+    assert sleeps == []
 
 
 async def test_raises_any_other_error_right_away(
@@ -155,24 +160,35 @@ async def test_raises_any_other_error_right_away(
         await run(start_actor, client, wait_for_resources=True)
 
     assert exc_info.value.type == 'invalid-input'
-    assert server.starts == 1
+    assert len(server.bodies) == 1
     assert sleeps == []
 
 
 async def test_timedelta_bounds_the_retrying(
-    httpserver: HTTPServer, client: ApifyClient | ApifyClientAsync, sleeps: list[float]
+    *,
+    httpserver: HTTPServer,
+    client: ApifyClient | ApifyClientAsync,
+    sleeps: list[float],
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A `timedelta` bounds the retrying, after which the last rejection is raised."""
     server = StartServer(httpserver, '/v2/actors/actor-id/runs')
     server.rejections = ['actor-memory-limit-exceeded'] * 10
+    monkeypatch.setattr(logger, 'propagate', True)
 
-    with pytest.raises(ApifyApiError) as exc_info:
+    with caplog.at_level(logging.INFO, logger=logger.name), pytest.raises(ApifyApiError) as exc_info:
         await run(start_actor, client, wait_for_resources=timedelta(seconds=25))
 
     assert exc_info.value.type == 'actor-memory-limit-exceeded'
     # Attempts at 0, 10, 20 and 25 seconds, the last cooldown cut short by the bound.
-    assert server.starts == 4
+    assert len(server.bodies) == 4
     assert sleeps == [10, 10, 5]
+    assert [record.getMessage() for record in caplog.records] == [
+        'Not enough resources to start the run (actor-memory-limit-exceeded), retrying in 10s.',
+        'Not enough resources to start the run (actor-memory-limit-exceeded), retrying in 10s.',
+        'Not enough resources to start the run (actor-memory-limit-exceeded), retrying in 5s.',
+    ]
 
 
 async def test_zero_timedelta_makes_a_single_attempt(
@@ -185,5 +201,24 @@ async def test_zero_timedelta_makes_a_single_attempt(
     with pytest.raises(ApifyApiError):
         await run(start_actor, client, wait_for_resources=timedelta(0))
 
-    assert server.starts == 1
+    assert len(server.bodies) == 1
     assert sleeps == []
+
+
+async def test_retry_resends_a_file_like_input(
+    httpserver: HTTPServer, client: ApifyClient | ApifyClientAsync, sleeps: list[float]
+) -> None:
+    """A file-like run input is sent whole again on every retry of the start."""
+    server = StartServer(httpserver, '/v2/actors/actor-id/runs')
+    server.rejections = ['actor-memory-limit-exceeded']
+
+    await run(
+        start_actor,
+        client,
+        run_input=io.BytesIO(b'{"a": 1}'),
+        content_type='application/json',
+        wait_for_resources=True,
+    )
+
+    assert server.bodies == [b'{"a": 1}', b'{"a": 1}']
+    assert sleeps == [10]

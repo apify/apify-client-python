@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
     from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._literals import ActorJobStatus
+    from apify_client._models import Run
 
 pytestmark = pytest.mark.usefixtures('http_client_classes')
 
@@ -43,6 +44,7 @@ class FakeRunApi:
 
     steps: list[Step]
     step_index: int = -1
+    run_requests: list[dict[str, str]] = field(default_factory=list)
     items_requests: list[dict[str, str]] = field(default_factory=list)
 
     @property
@@ -54,7 +56,8 @@ class FakeRunApi:
         httpserver.expect_request(f'{RUN_PATH}/dataset', method='GET').respond_with_handler(self.handle_dataset)
         httpserver.expect_request(f'{RUN_PATH}/dataset/items', method='GET').respond_with_handler(self.handle_items)
 
-    def handle_run(self, _request: Request) -> Response:
+    def handle_run(self, request: Request) -> Response:
+        self.run_requests.append(dict(request.args))
         self.step_index = min(self.step_index + 1, len(self.steps) - 1)
         run = {
             'id': RUN_ID,
@@ -358,29 +361,47 @@ async def test_iterate_dataset_items_forwards_options_without_extra_read_async(
     assert [request.get('fields') for request in api.items_requests] == ['row', 'row', 'row']
 
 
-def test_iterate_dataset_items_sleeps_between_polls_sync(
+def test_iterate_dataset_items_waits_for_finish_between_polls_sync(
     httpserver: HTTPServer, sync_client: ApifyClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The iterator waits `poll_interval` after each poll of an unfinished run and not after the final one."""
+    """Each poll of an unfinished run waits up to `poll_interval` for the run to finish, and the final one does not."""
     api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    sleep = Mock()
-    monkeypatch.setattr('apify_client._resource_clients.run.time.sleep', sleep)
+    run_client = sync_client.run(RUN_ID)
+    wait_with_holding = run_client.wait_for_finish
 
-    list(sync_client.run(RUN_ID).iterate_dataset_items(poll_interval=timedelta(seconds=2)))
+    # The fake API answers at once, so a real wait would re-read the run until the deadline and skip steps.
+    def wait_without_holding(**kwargs: Any) -> Run | None:
+        return wait_with_holding(**{**kwargs, 'wait_duration': NO_WAIT})
 
-    assert sleep.call_args_list == [call(2.0)] * 3
+    wait_for_finish = Mock(side_effect=wait_without_holding)
+    monkeypatch.setattr(run_client, 'wait_for_finish', wait_for_finish)
+
+    items = list(run_client.iterate_dataset_items(poll_interval=timedelta(seconds=2)))
+
+    assert items == shape_items(range(75))
+    assert wait_for_finish.call_args_list == [call(wait_duration=timedelta(seconds=2), timeout='long')] * 3
+    assert api.run_requests == [{}] + [{'waitForFinish': '0'}] * 3
 
 
-async def test_iterate_dataset_items_sleeps_between_polls_async(
+async def test_iterate_dataset_items_waits_for_finish_between_polls_async(
     httpserver: HTTPServer, async_client: ApifyClientAsync, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The iterator waits `poll_interval` after each poll of an unfinished run and not after the final one."""
+    """Each poll of an unfinished run waits up to `poll_interval` for the run to finish, and the final one does not."""
     api = FakeRunApi(LAGGING_RUN_STEPS)
     api.register(httpserver)
-    sleep = AsyncMock()
-    monkeypatch.setattr('apify_client._resource_clients.run.asyncio.sleep', sleep)
+    run_client = async_client.run(RUN_ID)
+    wait_with_holding = run_client.wait_for_finish
 
-    [item async for item in async_client.run(RUN_ID).iterate_dataset_items(poll_interval=timedelta(seconds=2))]
+    # The fake API answers at once, so a real wait would re-read the run until the deadline and skip steps.
+    async def wait_without_holding(**kwargs: Any) -> Run | None:
+        return await wait_with_holding(**{**kwargs, 'wait_duration': NO_WAIT})
 
-    assert sleep.call_args_list == [call(2.0)] * 3
+    wait_for_finish = AsyncMock(side_effect=wait_without_holding)
+    monkeypatch.setattr(run_client, 'wait_for_finish', wait_for_finish)
+
+    items = [item async for item in run_client.iterate_dataset_items(poll_interval=timedelta(seconds=2))]
+
+    assert items == shape_items(range(75))
+    assert wait_for_finish.call_args_list == [call(wait_duration=timedelta(seconds=2), timeout='long')] * 3
+    assert api.run_requests == [{}] + [{'waitForFinish': '0'}] * 3

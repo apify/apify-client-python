@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import random
 import string
@@ -487,11 +486,11 @@ class RunClient(ResourceClient):
     ) -> Iterator[dict]:
         """Iterate over the items of the run's default dataset while the run is still producing them.
 
-        While the run has not finished, the dataset is polled every `poll_interval` and the rows below its
-        `item_count` are yielded. Each page is requested with a `limit` that ends at `item_count`, so it covers
-        exactly the rows it asks for, whatever the filters or `unwind` do to the items. `item_count` lags a few
-        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read a page
-        at a time until none are left, and the iterator returns.
+        While the run has not finished, each poll yields the rows below the dataset's `item_count` and then waits up to
+        `poll_interval` for the run to finish, so the last rows are read as soon as it does. Each page is requested with
+        a `limit` that ends at `item_count`, so it covers exactly the rows it asks for, whatever the filters or `unwind`
+        do to the items. `item_count` lags a few seconds behind the pushed items, so once the run reaches a terminal
+        status, the rows past it are read a page at a time until none are left, and the iterator returns.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -513,7 +512,7 @@ class RunClient(ResourceClient):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             chunk_size: Maximum number of dataset rows requested per API call.
-            poll_interval: How long to wait between polls while the run has not finished.
+            poll_interval: How long to wait for the run to finish between polls.
             timeout: Timeout for each API HTTP request.
 
         Yields:
@@ -537,8 +536,8 @@ class RunClient(ResourceClient):
                 timeout=timeout,
             )
 
+        run = self.get(timeout=timeout)
         while True:
-            run = self.get(timeout=timeout)
             is_finished = run is None or run.status in _TERMINAL_STATUSES
             dataset = dataset_client.get(timeout=timeout)
             item_count = dataset.item_count if dataset else 0
@@ -555,7 +554,7 @@ class RunClient(ResourceClient):
                 return
             if is_finished:
                 break
-            time.sleep(to_seconds(poll_interval))
+            run = self.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
 
         while True:
             page_limit = min(page_size, end - position) if end is not None else page_size
@@ -1021,11 +1020,11 @@ class RunClientAsync(ResourceClientAsync):
     ) -> AsyncIterator[dict]:
         """Iterate over the items of the run's default dataset while the run is still producing them.
 
-        While the run has not finished, the dataset is polled every `poll_interval` and the rows below its
-        `item_count` are yielded. Each page is requested with a `limit` that ends at `item_count`, so it covers
-        exactly the rows it asks for, whatever the filters or `unwind` do to the items. `item_count` lags a few
-        seconds behind the pushed items, so once the run reaches a terminal status, the rows past it are read a page
-        at a time until none are left, and the iterator returns.
+        While the run has not finished, each poll yields the rows below the dataset's `item_count` and then waits up to
+        `poll_interval` for the run to finish, so the last rows are read as soon as it does. Each page is requested with
+        a `limit` that ends at `item_count`, so it covers exactly the rows it asks for, whatever the filters or `unwind`
+        do to the items. `item_count` lags a few seconds behind the pushed items, so once the run reaches a terminal
+        status, the rows past it are read a page at a time until none are left, and the iterator returns.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -1047,7 +1046,7 @@ class RunClientAsync(ResourceClientAsync):
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
             chunk_size: Maximum number of dataset rows requested per API call.
-            poll_interval: How long to wait between polls while the run has not finished.
+            poll_interval: How long to wait for the run to finish between polls.
             timeout: Timeout for each API HTTP request.
 
         Yields:
@@ -1071,8 +1070,8 @@ class RunClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
 
+        run = await self.get(timeout=timeout)
         while True:
-            run = await self.get(timeout=timeout)
             is_finished = run is None or run.status in _TERMINAL_STATUSES
             dataset = await dataset_client.get(timeout=timeout)
             item_count = dataset.item_count if dataset else 0
@@ -1090,7 +1089,7 @@ class RunClientAsync(ResourceClientAsync):
                 return
             if is_finished:
                 break
-            await asyncio.sleep(to_seconds(poll_interval))
+            run = await self.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
 
         while True:
             page_limit = min(page_size, end - position) if end is not None else page_size

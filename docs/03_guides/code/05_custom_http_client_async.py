@@ -97,7 +97,7 @@ class AiohttpHttpClient(HttpClientAsync):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:

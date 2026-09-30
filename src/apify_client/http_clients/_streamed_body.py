@@ -83,6 +83,11 @@ class StreamedRequestBody:
         self._seek: Callable[[int], Any] | None = None
         self._start: int | None = None
 
+        # Held around every chunked `read` and the `rewind` seek. A transport can give up on an attempt, for example on
+        # a timeout, while a worker thread is still inside a read, so `rewind` waits for that read to finish, and a
+        # read of the ended attempt that gets the lock after the seek finds its stop event set and reads nothing.
+        self._read_lock = threading.Lock()
+
         # A response is recognized first, so its `read` is never touched - on an unread streaming response that
         # either raises or buffers the whole body.
         if _is_response(source):
@@ -168,7 +173,8 @@ class StreamedRequestBody:
         if self._seek is None or self._start is None:
             raise RuntimeError('The source of the streamed request body cannot be rewound.')
         self._error = None
-        self._seek(self._start)
+        with self._read_lock:
+            self._seek(self._start)
 
     def iter_bytes(self) -> Generator[bytes]:
         """Yield the body in chunks, reading an `io.IOBase` source in `chunk_size` pieces.
@@ -226,6 +232,10 @@ class StreamedRequestBody:
             with contextlib.suppress(RuntimeError):
                 await chunks.aclose()
 
+    def _read_chunk(self, read: Callable[[int], Any], stop: threading.Event) -> Any:
+        with self._read_lock:
+            return b'' if stop.is_set() else read(self._chunk_size)
+
     def _iter_chunks(self, stop: threading.Event) -> Generator[bytes]:
         try:
             if self._read is not None:
@@ -233,9 +243,9 @@ class StreamedRequestBody:
                     if data := _to_bytes(self._read()):
                         yield data
                 else:
-                    # A file-like source signals its end with an empty read. The stop check ends the reads of an
+                    # A file-like source signals its end with an empty read, and `_read_chunk` returns one for an
                     # attempt that is over, which a transport can keep pulling in a worker thread.
-                    while not stop.is_set() and (data := _to_bytes(self._read(self._chunk_size))):
+                    while data := _to_bytes(self._read_chunk(self._read, stop)):
                         yield data
             elif self._sync_chunks is not None:
                 chunks = iter(self._sync_chunks())
@@ -261,11 +271,8 @@ class StreamedRequestBody:
                     if data := _to_bytes(chunk):
                         yield data
                     return
-                # A cancelled `to_thread` await abandons the worker thread rather than stopping it, and the thread
-                # goes on moving a seekable source's position. Reaching a retry from there would need a transport
-                # that swallows the cancellation and reports something retryable in its place.
-                while not stop.is_set():
-                    chunk = await asyncio.to_thread(self._read, self._chunk_size)
+                while True:
+                    chunk = await asyncio.to_thread(self._read_chunk, self._read, stop)
                     if not (data := _to_bytes(chunk)):
                         return
                     yield data

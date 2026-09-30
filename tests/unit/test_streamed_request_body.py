@@ -538,3 +538,84 @@ async def test_file_source_pulled_in_a_worker_thread_is_read_no_further_once_clo
 
     assert await asyncio.wait_for(puller, timeout=5) == [b'ab']
     assert source.tell() == 2
+
+
+def test_rewind_waits_for_a_read_left_in_flight_by_the_ended_attempt() -> None:
+    """A read still running when the attempt ends finishes before `rewind` seeks, so the retry sends the whole file."""
+    source = GatedBytesIO(b'abcdef')
+    body = StreamedRequestBody(source, chunk_size=2)
+    chunks = body.iter_bytes()
+    puller = threading.Thread(target=lambda: list(chunks))
+    puller.start()
+    assert source.reading.wait(timeout=5)
+    body.close_chunks()
+
+    rewinder = threading.Thread(target=body.rewind)
+    rewinder.start()
+    rewinder.join(timeout=0.1)
+    assert rewinder.is_alive()
+
+    source.release.set()
+    rewinder.join(timeout=5)
+    puller.join(timeout=5)
+
+    assert source.tell() == 0
+    assert b''.join(body.iter_bytes()) == b'abcdef'
+
+
+async def test_rewind_waits_for_a_read_left_in_flight_by_the_ended_attempt_async() -> None:
+    """A worker-thread read still running when the async attempt ends finishes before `rewind` seeks."""
+    source = GatedBytesIO(b'abcdef')
+    body = StreamedRequestBody(source, chunk_size=2)
+    chunks = body.aiter_bytes()
+    puller = asyncio.create_task(anext(chunks))
+    assert await asyncio.to_thread(source.reading.wait, 5)
+    await body.aclose_chunks()
+
+    rewinder = asyncio.create_task(asyncio.to_thread(body.rewind))
+    done, _ = await asyncio.wait({rewinder}, timeout=0.1)
+    assert not done
+
+    source.release.set()
+    await asyncio.wait_for(rewinder, timeout=5)
+    assert await asyncio.wait_for(puller, timeout=5) == b'ab'
+
+    assert source.tell() == 0
+    assert b''.join([chunk async for chunk in body.aiter_bytes()]) == b'abcdef'
+
+
+class GatedLock:
+    """A lock whose acquisition waits for `release_gate`, setting `entering` once a thread tries to acquire it."""
+
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.entering = threading.Event()
+        self.release_gate = threading.Event()
+
+    def __enter__(self) -> None:
+        self.entering.set()
+        self.release_gate.wait(timeout=5)
+        self.lock.acquire()
+
+    def __exit__(self, *_: object) -> None:
+        self.lock.release()
+
+
+def test_read_that_gets_the_lock_after_the_attempt_ended_reads_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A read queued behind the lock when the attempt ends leaves the file where `rewind` put it."""
+    source = io.BytesIO(b'abcdef')
+    body = StreamedRequestBody(source, chunk_size=2)
+    lock = GatedLock()
+    monkeypatch.setattr(body, '_read_lock', lock)
+    chunks = body.iter_bytes()
+    pulled: list[bytes] = []
+    puller = threading.Thread(target=lambda: pulled.extend(chunks))
+    puller.start()
+    assert lock.entering.wait(timeout=5)
+
+    body.close_chunks()
+    lock.release_gate.set()
+    puller.join(timeout=5)
+
+    assert pulled == []
+    assert source.tell() == 0

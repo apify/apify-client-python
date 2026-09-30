@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import gzip
 import json
+import logging
 import threading
 import time
 from collections.abc import AsyncIterator, Iterator
@@ -17,8 +18,9 @@ import impit
 import pytest
 
 from apify_client._consts import MIN_COMPRESSION_SIZE
+from apify_client._logging import logger_name
 from apify_client._statistics import ClientStatistics
-from apify_client.errors import InvalidResponseBodyError
+from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 from apify_client.http_clients import (
     HttpClient,
     HttpClientAsync,
@@ -36,6 +38,8 @@ from apify_client.http_compressors._gzip import GzipHttpCompressor
 if TYPE_CHECKING:
     from collections.abc import Callable
     from typing import Any
+
+    from _pytest.logging import LogCaptureFixture
 
     from apify_client.types import JsonSerializable
 
@@ -1447,3 +1451,181 @@ def test_streamed_body_source_error_stops_retrying_when_the_transport_propagates
 
     assert exc_info.value.__cause__ is None
     assert len(transport.attempts_with_iterator) == 1
+
+
+class EarlyTimeoutTransport(HttpClient):
+    """A transport that, like Impit on a 408, answers after the first chunk and keeps the rest of the body."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.kept: Iterator[bytes] | None = None
+
+    def send_request(self, *, content: bytes | Iterator[bytes] | None, **kwargs: Any) -> HttpResponse:
+        _ = kwargs
+        assert isinstance(content, Iterator)
+        next(content)
+        self.kept = content
+        return Mock(status_code=408)
+
+
+class EarlyTimeoutTransportAsync(HttpClientAsync):
+    """Asynchronous counterpart of `EarlyTimeoutTransport`."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.kept: AsyncIterator[bytes] | None = None
+
+    async def send_request(self, *, content: bytes | AsyncIterator[bytes] | None, **kwargs: Any) -> HttpResponse:
+        _ = kwargs
+        assert isinstance(content, AsyncIterator)
+        await anext(content)
+        self.kept = content
+        return Mock(status_code=408, aread=AsyncMock())
+
+
+def tracked_chunks(closed: Mock) -> Iterator[bytes]:
+    try:
+        yield b'first chunk'
+        yield b'second chunk'
+    finally:
+        closed()
+
+
+async def tracked_async_chunks(closed: Mock) -> AsyncIterator[bytes]:
+    try:
+        yield b'first chunk'
+        yield b'second chunk'
+    finally:
+        closed()
+
+
+def test_generator_source_is_closed_when_the_transport_stops_pulling_early() -> None:
+    """A transport that answers before the whole body is sent and keeps the chunks still sees the source closed."""
+    transport = EarlyTimeoutTransport()
+    closed = Mock()
+
+    with pytest.raises(ApifyApiError):
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=tracked_chunks(closed))
+
+    closed.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    'make_source',
+    [
+        pytest.param(tracked_chunks, id='generator'),
+        pytest.param(tracked_async_chunks, id='async generator'),
+    ],
+)
+async def test_generator_source_is_closed_when_the_transport_stops_pulling_early_async(
+    make_source: Callable[[Mock], Any],
+) -> None:
+    """A transport that answers before the whole body is sent and keeps the chunks still sees the source closed."""
+    transport = EarlyTimeoutTransportAsync()
+    closed = Mock()
+
+    with pytest.raises(ApifyApiError):
+        await transport.call(method='PUT', url='https://api.test.com/endpoint', data=make_source(closed))
+
+    closed.assert_called_once()
+
+
+def test_file_source_is_left_open_when_the_transport_stops_pulling_early() -> None:
+    """A file belongs to the caller, so an attempt that ends early leaves it open."""
+    buffer = BytesIO(b'payload')
+
+    with pytest.raises(ApifyApiError):
+        EarlyTimeoutTransport().call(method='PUT', url='https://api.test.com/endpoint', data=buffer)
+
+    assert not buffer.closed
+
+
+def test_generator_source_pulled_in_a_worker_thread_is_closed_once_its_chunk_arrives() -> None:
+    """A source the transport is still pulling when the attempt ends is closed as soon as that chunk is produced."""
+    release = threading.Event()
+    closed = Mock()
+
+    def slow_chunks() -> Iterator[bytes]:
+        try:
+            yield b'first chunk'
+            release.wait()
+            yield b'second chunk'
+        finally:
+            closed()
+
+    class InFlightTransport(HttpClient):
+        """Answers while a worker thread, as in Impit, is still pulling the next chunk, and keeps the chunks."""
+
+        def send_request(self, *, content: bytes | Iterator[bytes] | None, **kwargs: Any) -> HttpResponse:
+            _ = kwargs
+            assert isinstance(content, Iterator)
+            next(content)
+            self.kept = content
+            self.puller = threading.Thread(target=next, args=(content, None))
+            self.puller.start()
+            return Mock(status_code=408)
+
+    transport = InFlightTransport()
+    with pytest.raises(ApifyApiError):
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=slow_chunks())
+    closed.assert_not_called()
+
+    release.set()
+    transport.puller.join(timeout=5)
+
+    closed.assert_called_once()
+
+
+async def test_async_generator_source_still_awaited_is_closed_once_its_chunk_arrives() -> None:
+    """An async source the transport is still awaiting when the attempt ends is closed once that chunk is produced."""
+    release = asyncio.Event()
+    closed = Mock()
+
+    async def slow_chunks() -> AsyncIterator[bytes]:
+        try:
+            yield b'first chunk'
+            await release.wait()
+            yield b'second chunk'
+        finally:
+            closed()
+
+    class InFlightTransportAsync(HttpClientAsync):
+        """Answers while a background task, as in Impit, is still awaiting the next chunk, and keeps the chunks."""
+
+        async def send_request(self, *, content: bytes | AsyncIterator[bytes] | None, **kwargs: Any) -> HttpResponse:
+            _ = kwargs
+            assert isinstance(content, AsyncIterator)
+            await anext(content)
+            self.kept = content
+            self.puller = asyncio.create_task(anext(content, None))
+            await asyncio.sleep(0)
+            return Mock(status_code=408, aread=AsyncMock())
+
+    transport = InFlightTransportAsync()
+    with pytest.raises(ApifyApiError):
+        await transport.call(method='PUT', url='https://api.test.com/endpoint', data=slow_chunks())
+    closed.assert_not_called()
+
+    release.set()
+    await transport.puller
+
+    closed.assert_called_once()
+
+
+def test_streamed_body_timed_out_by_the_api_logs_a_warning(caplog: LogCaptureFixture) -> None:
+    """A 408 on a streamed body names the API's time limit, since the empty error response does not."""
+    with caplog.at_level(logging.WARNING, logger=logger_name), pytest.raises(ApifyApiError):
+        EarlyTimeoutTransport().call(method='PUT', url='https://api.test.com/endpoint', data=iter([b'a', b'b']))
+
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
+    assert '408 Request Timeout' in caplog.records[0].message
+
+
+def test_buffered_body_timed_out_by_the_api_logs_no_warning(caplog: LogCaptureFixture) -> None:
+    """The warning is specific to streamed bodies, the only ones slow enough to hit the API's time limit."""
+    transport = StreamingTransport([408])
+
+    with caplog.at_level(logging.WARNING, logger=logger_name), pytest.raises(ApifyApiError):
+        transport.call(method='PUT', url='https://api.test.com/endpoint', data=b'payload')
+
+    assert caplog.records == []

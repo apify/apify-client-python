@@ -4,7 +4,8 @@ import asyncio
 import contextlib
 import inspect
 import io
-from collections.abc import AsyncIterable, AsyncIterator, Collection, Iterable, Iterator
+import threading
+from collections.abc import AsyncGenerator, AsyncIterable, AsyncIterator, Collection, Generator, Iterable, Iterator
 from typing import IO, TYPE_CHECKING, Any, cast
 
 from pydantic import BaseModel
@@ -73,6 +74,10 @@ class StreamedRequestBody:
         self._read_whole = False
         self._sync_chunks: Callable[[], Iterable[Any]] | None = None
         self._async_chunks: Callable[[], AsyncIterable[Any]] | None = None
+
+        # The chunks handed out for the current attempt, and the event that tells them to stop.
+        self._chunks: Generator[bytes] | AsyncGenerator[bytes] | None = None
+        self._stop = threading.Event()
 
         # Set for a seekable `io.IOBase` source, the only kind that can be sent more than once.
         self._seek: Callable[[int], Any] | None = None
@@ -165,8 +170,10 @@ class StreamedRequestBody:
         self._error = None
         self._seek(self._start)
 
-    def iter_bytes(self) -> Iterator[bytes]:
+    def iter_bytes(self) -> Generator[bytes]:
         """Yield the body in chunks, reading an `io.IOBase` source in `chunk_size` pieces.
+
+        Closing the returned generator, directly or through `close_chunks`, also closes a generator source.
 
         Raises:
             TypeError: If the source can only produce its chunks asynchronously, see `is_async`.
@@ -176,17 +183,50 @@ class StreamedRequestBody:
                 'The request body is streamed from an asynchronous source, which only the asynchronous client can '
                 'send. Use `ApifyClientAsync`, or pass a synchronous file-like object or iterator.'
             )
-        return self._iter_chunks()
+        self._stop = threading.Event()
+        self._chunks = self._iter_chunks(self._stop)
+        return self._chunks
 
-    def aiter_bytes(self) -> AsyncIterator[bytes]:
+    def aiter_bytes(self) -> AsyncGenerator[bytes]:
         """Yield the body in chunks asynchronously, pulling a synchronous source in a worker thread.
 
         A blocking `read` or `__next__` would stall the event loop, so a synchronous file-like object or iterator is
-        pulled through `asyncio.to_thread`, one chunk at a time.
+        pulled through `asyncio.to_thread`, one chunk at a time. Closing the returned generator, directly or through
+        `aclose_chunks`, also closes a generator or async generator source.
         """
-        return self._aiter_chunks()
+        self._stop = threading.Event()
+        self._chunks = self._aiter_chunks(self._stop)
+        return self._chunks
 
-    def _iter_chunks(self) -> Iterator[bytes]:
+    def close_chunks(self) -> None:
+        """Close the chunks the last `iter_bytes` call handed out, and with them a generator source.
+
+        The retry loop calls this once an attempt ends. A transport may stop pulling the chunks early, for example on
+        an error response sent before the whole body arrived, and hold on to them for as long as its client lives,
+        which keeps the source suspended. When the transport is still pulling a chunk in a worker thread, the source
+        is closed as soon as that chunk arrives.
+        """
+        chunks, self._chunks = self._chunks, None
+        self._stop.set()
+        if isinstance(chunks, Generator):
+            # A generator running in a worker thread refuses to close, and stops itself on the event instead.
+            with contextlib.suppress(ValueError):
+                chunks.close()
+
+    async def aclose_chunks(self) -> None:
+        """Close the chunks the last `aiter_bytes` call handed out, and with them a generator or async generator source.
+
+        The asynchronous counterpart of `close_chunks`.
+        """
+        chunks, self._chunks = self._chunks, None
+        self._stop.set()
+        if isinstance(chunks, AsyncGenerator):
+            # An async generator the transport is still awaiting refuses to close, and stops itself on the event
+            # instead.
+            with contextlib.suppress(RuntimeError):
+                await chunks.aclose()
+
+    def _iter_chunks(self, stop: threading.Event) -> Generator[bytes]:
         try:
             if self._read is not None:
                 if self._read_whole:
@@ -197,15 +237,22 @@ class StreamedRequestBody:
                     while data := _to_bytes(self._read(self._chunk_size)):
                         yield data
             elif self._sync_chunks is not None:
-                for chunk in self._sync_chunks():
-                    # In chunked transfer encoding an empty chunk terminates the body, so none is passed on.
-                    if data := _to_bytes(chunk):
-                        yield data
+                chunks = iter(self._sync_chunks())
+                try:
+                    for chunk in chunks:
+                        if stop.is_set():
+                            return
+                        # In chunked transfer encoding an empty chunk terminates the body, so none is passed on.
+                        if data := _to_bytes(chunk):
+                            yield data
+                finally:
+                    if isinstance(chunks, Generator):
+                        chunks.close()
         except Exception as exc:
             self._error = exc
             raise
 
-    async def _aiter_chunks(self) -> AsyncIterator[bytes]:
+    async def _aiter_chunks(self, stop: threading.Event) -> AsyncGenerator[bytes]:
         try:
             if self._read is not None:
                 if self._read_whole:
@@ -222,14 +269,30 @@ class StreamedRequestBody:
                         return
                     yield data
             elif self._async_chunks is not None:
-                async for chunk in self._async_chunks():
-                    if data := _to_bytes(chunk):
-                        yield data
+                async_chunks = aiter(self._async_chunks())
+                try:
+                    async for chunk in async_chunks:
+                        if stop.is_set():
+                            return
+                        if data := _to_bytes(chunk):
+                            yield data
+                finally:
+                    if isinstance(async_chunks, AsyncGenerator):
+                        await async_chunks.aclose()
             elif self._sync_chunks is not None:
-                iterator = iter(self._sync_chunks())
-                while (chunk := await asyncio.to_thread(next, iterator, _DONE)) is not _DONE:
-                    if data := _to_bytes(chunk):
-                        yield data
+                chunks = iter(self._sync_chunks())
+                try:
+                    while (chunk := await asyncio.to_thread(next, chunks, _DONE)) is not _DONE:
+                        if stop.is_set():
+                            return
+                        if data := _to_bytes(chunk):
+                            yield data
+                finally:
+                    # A worker thread abandoned by a cancelled `to_thread` await may still be running the generator,
+                    # which then refuses to close and is left to finish on its own.
+                    if isinstance(chunks, Generator):
+                        with contextlib.suppress(ValueError):
+                            chunks.close()
         except Exception as exc:
             self._error = exc
             raise

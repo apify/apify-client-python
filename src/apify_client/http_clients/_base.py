@@ -423,6 +423,7 @@ class HttpClientBase:
         response: HttpResponse,
         *,
         attempt: int,
+        streamed: bool,
         stop_retrying: Callable[[], None],
     ) -> bool:
         """Record the response status and stop retrying unless it is a server error or a rate limit.
@@ -437,6 +438,13 @@ class HttpClientBase:
             self._statistics.add_rate_limit_error(attempt)
 
         logger.debug('Request unsuccessful', extra={'status_code': response.status_code})
+        if streamed and response.status_code == HTTPStatus.REQUEST_TIMEOUT:
+            # The API answers with an empty body here, so the raised error alone does not say what went wrong.
+            logger.warning(
+                'The API ended the streamed request body with 408 Request Timeout, since the whole body did not arrive '
+                'within its time limit of about 5 minutes. Write a source that produces data slowly to a temporary '
+                'file first, and upload the file.'
+            )
         if (
             response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
             and response.status_code != HTTPStatus.TOO_MANY_REQUESTS
@@ -642,8 +650,13 @@ class HttpClient(HttpClientBase):
         except Exception as exc:
             self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
             raise
+        finally:
+            if isinstance(content, StreamedRequestBody):
+                content.close_chunks()
 
-        if self._handle_response_status(response, attempt=attempt, stop_retrying=stop_retrying):
+        if self._handle_response_status(
+            response, attempt=attempt, streamed=isinstance(content, StreamedRequestBody), stop_retrying=stop_retrying
+        ):
             return response
 
         # Read the response in case it is a stream, so the error can be raised properly. A failed read goes through
@@ -863,8 +876,13 @@ class HttpClientAsync(HttpClientBase):
         except Exception as exc:
             self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
             raise
+        finally:
+            if isinstance(content, StreamedRequestBody):
+                await content.aclose_chunks()
 
-        if self._handle_response_status(response, attempt=attempt, stop_retrying=stop_retrying):
+        if self._handle_response_status(
+            response, attempt=attempt, streamed=isinstance(content, StreamedRequestBody), stop_retrying=stop_retrying
+        ):
             return response
 
         # Read the response in case it is a stream, so the error can be raised properly. A failed read goes through

@@ -50,7 +50,7 @@ The following example shows how to stream the logs of an Actor run incrementally
 
 - An `io.IOBase` stream: an open file, an `io.BytesIO`, a member of a ZIP archive, or a pipe. The client reads it in chunks of 64 KiB, or 64 Ki characters for a text-mode file, from its current position and doesn't close it.
 - Any other object with a `read` method. The client can't tell how that `read` behaves, so it calls `read()` once and sends the result as a single chunk, which holds the whole source in memory.
-- An iterable of `bytes` or `str` chunks: an iterator such as a generator, or an object that only implements `__iter__`, for example a class that yields chunks from a generator method. The iterable decides the chunk sizes. An iterator is consumed by the upload, so passing the same one to a second upload sends an empty body. A `str`, `bytes`, `list`, `tuple`, `dict`, or other container, and a pydantic model, are never streamed even though they can be iterated - they are the values the client uploads whole or serializes as JSON.
+- An iterable of `bytes` or `str` chunks: an iterator such as a generator, or an object that only implements `__iter__`, for example a class that yields chunks from a generator method. The iterable decides the chunk sizes. An iterator is consumed by the upload, so passing the same one to a second upload sends an empty body. A generator is closed once the upload ends, even when the upload fails before reaching its end. A `str`, `bytes`, `list`, `tuple`, `dict`, or other container, and a pydantic model, are never streamed even though they can be iterated - they are the values the client uploads whole or serializes as JSON.
 - A streaming <ApiLink to="class/HttpResponse">`HttpResponse`</ApiLink> from one of the download methods, whose body is forwarded chunk by chunk.
 
 The asynchronous client also accepts an async iterable - an async generator or an object that only implements `__aiter__` - and an object with an `async def read`, such as a file opened with `aiofiles`, which is read whole like any other non-`io.IOBase` object. The synchronous client rejects those with a `TypeError`. A synchronous file or iterator works with both clients. The asynchronous client reads it in a worker thread, so the event loop stays free.
@@ -104,6 +104,14 @@ The client retries a failed request only when it can send the body again:
 - A failure inside the source itself, such as a disk error while reading the file, is raised as that error and isn't retried, whatever the source.
 
 If an upload from a source that can't be rewound needs retries, download the data to a temporary file first and upload the file. The object `tempfile.NamedTemporaryFile()` returns, which is also what `tempfile.TemporaryFile()` returns on Windows, isn't an `io.IOBase` stream, so pass its `file` attribute to have it read in chunks and retried. In the asynchronous client, prefer a file opened with `open()` over one opened with `aiofiles`: the plain file is read in chunks in a worker thread and can be sought back for a retry, while the `aiofiles` file is read whole in one call and gets a single attempt.
+
+### Time limits
+
+The API ends a request whose body doesn't arrive in full within about 5 minutes with a `408 Request Timeout`. The client doesn't retry the error and logs a warning that names the limit.
+
+The client's own timeout applies to an upload as well. With the default Impit HTTP client, the timeout covers the whole request, so `set_record` gives up on an upload after its default of 360 seconds, and `ActorClient.start` after 30 seconds. For a slow upload that still fits within the API's limit, pass a longer `timeout`.
+
+To upload data that a source produces slowly, such as the results of a long-running query, write it to a temporary file first and upload the file. The upload then runs at network speed, and a failed attempt can be retried. For details, see [Retries](#retries).
 
 ### Custom HTTP clients
 

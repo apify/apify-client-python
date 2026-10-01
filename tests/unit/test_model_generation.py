@@ -33,7 +33,7 @@ MINIMAL_SPEC = {
                 },
             },
             # Post-processing fails unless every TypedDict seed is present in the generated file. Each gets its own
-            # field, so `reuse_model` doesn't merge them into one class.
+            # field, so `reuse_model` doesn't turn them into empty subclasses of one shared class.
             **{
                 name: {
                     'type': 'object',
@@ -53,7 +53,6 @@ def run_datamodel_codegen(*args: str) -> None:
         [sys.executable, '-m', 'datamodel_code_generator', *args],
         check=True,
         cwd=REPO_ROOT,
-        capture_output=True,
     )
 
 

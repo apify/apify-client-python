@@ -490,7 +490,8 @@ class RunClient(ResourceClient):
         `poll_interval` for the run to finish, so the last rows are read as soon as it does. Each page is requested with
         a `limit` that ends at `item_count`, so it covers exactly the rows it asks for, whatever the filters or `unwind`
         do to the items. `item_count` lags a few seconds behind the pushed items, so once the run reaches a terminal
-        status, the rows past it are read a page at a time until none are left, and the iterator returns.
+        status, the rows past it are read a page at a time until none are left, and the iterator returns. On a
+        `last_run()` client, the iterator sticks to the run that its first request resolves to.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -518,10 +519,24 @@ class RunClient(ResourceClient):
         Yields:
             An item from the dataset.
         """
-        dataset_client = self.dataset()
         page_size = chunk_size or DEFAULT_CHUNK_SIZE
         position = offset or 0
         end = position + limit if limit else None
+
+        run = self.get(timeout=timeout)
+        # A `last_run()` client resolves `runs/last` per request, so a newer run would swap the dataset mid-iteration.
+        run_client = (
+            self._client_registry.run_client(
+                resource_id=run.id,
+                base_url=self._api_base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_registry=self._client_registry,
+            )
+            if run is not None and run.id != self._resource_id
+            else self
+        )
+        dataset_client = run_client.dataset()
 
         def list_page(page_offset: int, page_limit: int) -> DatasetItemsPage:
             return dataset_client.list_items(
@@ -536,7 +551,6 @@ class RunClient(ResourceClient):
                 timeout=timeout,
             )
 
-        run = self.get(timeout=timeout)
         while True:
             is_finished = run is None or run.status in _TERMINAL_STATUSES
             dataset = dataset_client.get(timeout=timeout)
@@ -554,7 +568,7 @@ class RunClient(ResourceClient):
                 return
             if is_finished:
                 break
-            run = self.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
+            run = run_client.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
 
         while True:
             page_limit = min(page_size, end - position) if end is not None else page_size
@@ -1024,7 +1038,8 @@ class RunClientAsync(ResourceClientAsync):
         `poll_interval` for the run to finish, so the last rows are read as soon as it does. Each page is requested with
         a `limit` that ends at `item_count`, so it covers exactly the rows it asks for, whatever the filters or `unwind`
         do to the items. `item_count` lags a few seconds behind the pushed items, so once the run reaches a terminal
-        status, the rows past it are read a page at a time until none are left, and the iterator returns.
+        status, the rows past it are read a page at a time until none are left, and the iterator returns. On a
+        `last_run()` client, the iterator sticks to the run that its first request resolves to.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -1052,10 +1067,24 @@ class RunClientAsync(ResourceClientAsync):
         Yields:
             An item from the dataset.
         """
-        dataset_client = self.dataset()
         page_size = chunk_size or DEFAULT_CHUNK_SIZE
         position = offset or 0
         end = position + limit if limit else None
+
+        run = await self.get(timeout=timeout)
+        # A `last_run()` client resolves `runs/last` per request, so a newer run would swap the dataset mid-iteration.
+        run_client = (
+            self._client_registry.run_client(
+                resource_id=run.id,
+                base_url=self._api_base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_registry=self._client_registry,
+            )
+            if run is not None and run.id != self._resource_id
+            else self
+        )
+        dataset_client = run_client.dataset()
 
         async def list_page(page_offset: int, page_limit: int) -> DatasetItemsPage:
             return await dataset_client.list_items(
@@ -1070,7 +1099,6 @@ class RunClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
 
-        run = await self.get(timeout=timeout)
         while True:
             is_finished = run is None or run.status in _TERMINAL_STATUSES
             dataset = await dataset_client.get(timeout=timeout)
@@ -1089,7 +1117,7 @@ class RunClientAsync(ResourceClientAsync):
                 return
             if is_finished:
                 break
-            run = await self.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
+            run = await run_client.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
 
         while True:
             page_limit = min(page_size, end - position) if end is not None else page_size

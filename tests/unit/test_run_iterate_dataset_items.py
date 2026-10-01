@@ -21,6 +21,7 @@ pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 RUN_ID = 'test-run-id'
 RUN_PATH = f'/v2/actor-runs/{RUN_ID}'
+ACTOR_ID = 'test-actor-id'
 UNWIND_PARTS = 3
 NO_WAIT = timedelta(0)
 
@@ -45,6 +46,7 @@ class FakeRunApi:
     steps: list[Step]
     step_index: int = -1
     run_requests: list[dict[str, str]] = field(default_factory=list)
+    last_run_requests: int = 0
     items_requests: list[dict[str, str]] = field(default_factory=list)
 
     @property
@@ -55,13 +57,16 @@ class FakeRunApi:
         httpserver.expect_request(RUN_PATH, method='GET').respond_with_handler(self.handle_run)
         httpserver.expect_request(f'{RUN_PATH}/dataset', method='GET').respond_with_handler(self.handle_dataset)
         httpserver.expect_request(f'{RUN_PATH}/dataset/items', method='GET').respond_with_handler(self.handle_items)
+        httpserver.expect_request(f'/v2/actors/{ACTOR_ID}/runs/last', method='GET').respond_with_handler(
+            self.handle_last_run
+        )
 
     def handle_run(self, request: Request) -> Response:
         self.run_requests.append(dict(request.args))
         self.step_index = min(self.step_index + 1, len(self.steps) - 1)
         run = {
             'id': RUN_ID,
-            'actId': 'test-actor-id',
+            'actId': ACTOR_ID,
             'userId': 'test-user-id',
             'startedAt': '2019-11-30T07:34:24.202Z',
             'status': self.step.status,
@@ -75,6 +80,10 @@ class FakeRunApi:
             'containerUrl': 'https://test.runs.apify.net',
         }
         return Response(json.dumps({'data': run}), status=200, mimetype='application/json')
+
+    def handle_last_run(self, request: Request) -> Response:
+        self.last_run_requests += 1
+        return self.handle_run(request)
 
     def handle_dataset(self, _request: Request) -> Response:
         dataset = {
@@ -405,3 +414,29 @@ async def test_iterate_dataset_items_waits_for_finish_between_polls_async(
     assert items == shape_items(range(75))
     assert wait_for_finish.call_args_list == [call(wait_duration=timedelta(seconds=2), timeout='long')] * 3
     assert api.run_requests == [{}] + [{'waitForFinish': '0'}] * 3
+
+
+def test_iterate_dataset_items_pins_the_last_run_sync(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A `last_run()` client resolves `runs/last` once and reads that run's dataset to the end."""
+    api = FakeRunApi(LAGGING_RUN_STEPS)
+    api.register(httpserver)
+
+    run_client = sync_client.actor(ACTOR_ID).last_run()
+    items = list(run_client.iterate_dataset_items(chunk_size=10, poll_interval=NO_WAIT))
+
+    assert items == shape_items(range(75))
+    assert api.last_run_requests == 1
+
+
+async def test_iterate_dataset_items_pins_the_last_run_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """A `last_run()` client resolves `runs/last` once and reads that run's dataset to the end."""
+    api = FakeRunApi(LAGGING_RUN_STEPS)
+    api.register(httpserver)
+
+    run_client = async_client.actor(ACTOR_ID).last_run()
+    items = [item async for item in run_client.iterate_dataset_items(chunk_size=10, poll_interval=NO_WAIT)]
+
+    assert items == shape_items(range(75))
+    assert api.last_run_requests == 1

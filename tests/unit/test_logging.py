@@ -7,10 +7,10 @@ import logging
 import math
 import threading
 import time
-from contextlib import nullcontext
+from contextlib import asynccontextmanager, nullcontext
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from werkzeug import Request, Response
@@ -22,7 +22,7 @@ from apify_client._status_message_watcher import StatusMessageWatcher, StatusMes
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import AsyncIterator, Callable, Iterator
 
     from _pytest.logging import LogCaptureFixture
     from pytest_httpserver import HTTPServer
@@ -1530,6 +1530,40 @@ async def test_streamed_log_async_stop_reads_log_when_streams_stay_empty(
         await asyncio.to_thread(wait_until, lambda: len(stream_requests) >= 2)
         await streamed_log.stop()
 
+    assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
+
+
+async def chunks(*data: bytes) -> AsyncIterator[bytes]:
+    for item in data:
+        yield item
+
+
+async def test_streamed_log_async_stop_reads_log_when_it_lands_while_stream_reopens(
+    caplog: LogCaptureFixture,
+) -> None:
+    """A `stop` that lands while an empty stream is being reopened still redirects the whole log."""
+    empty_stream = Mock()
+    empty_stream.aiter_bytes.side_effect = chunks
+    reopening = asyncio.Event()
+
+    @asynccontextmanager
+    async def never_opening_stream() -> AsyncIterator[None]:
+        reopening.set()
+        await asyncio.Event().wait()
+        yield
+
+    log_client = Mock()
+    log_client.stream.side_effect = [nullcontext(empty_stream), never_opening_stream()]
+    log_client.get_as_bytes = AsyncMock(return_value=b''.join(_MOCKED_ACTOR_LOGS))
+    logger = logging.getLogger('apify_client.tests.stop_while_stream_reopens_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        await asyncio.wait_for(reopening.wait(), timeout=5)
+        await streamed_log.stop()
+
+    log_client.get_as_bytes.assert_awaited_once()
     assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 

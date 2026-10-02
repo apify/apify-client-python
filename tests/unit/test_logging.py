@@ -1421,6 +1421,11 @@ def wait_until(condition: Callable[[], bool], *, timeout: float = 5) -> None:
     assert condition(), 'condition not met in time'
 
 
+def redirected_messages(caplog: LogCaptureFixture, logger: logging.Logger) -> list[tuple[str, int]]:
+    """Return the messages and levels `caplog` captured from `logger`, ignoring records other loggers emitted."""
+    return [(record.message, record.levelno) for record in caplog.records if record.name == logger.name]
+
+
 def test_streamed_log_sync_reopens_empty_stream(caplog: LogCaptureFixture, httpserver: HTTPServer) -> None:
     """A log stream that ends empty is reopened, and the reopened stream delivers the log."""
     serve_log_after_empty_streams(httpserver, empty_streams=1)
@@ -1432,10 +1437,10 @@ def test_streamed_log_sync_reopens_empty_stream(caplog: LogCaptureFixture, https
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         streamed_log.start()
         # Only the reopened stream can deliver the log before `stop` would read it in one request.
-        wait_until(lambda: len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS))
+        wait_until(lambda: len(redirected_messages(caplog, logger)) == len(_EXPECTED_MESSAGES_AND_LEVELS))
         streamed_log.stop()
 
-    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+    assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
 async def test_streamed_log_async_reopens_empty_stream(caplog: LogCaptureFixture, httpserver: HTTPServer) -> None:
@@ -1449,10 +1454,12 @@ async def test_streamed_log_async_reopens_empty_stream(caplog: LogCaptureFixture
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         streamed_log.start()
         # Only the reopened stream can deliver the log before `stop` would read it in one request.
-        await asyncio.to_thread(wait_until, lambda: len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS))
+        await asyncio.to_thread(
+            wait_until, lambda: len(redirected_messages(caplog, logger)) == len(_EXPECTED_MESSAGES_AND_LEVELS)
+        )
         await streamed_log.stop()
 
-    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+    assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
 def test_streamed_log_sync_stop_reads_log_when_streams_stay_empty(
@@ -1470,7 +1477,7 @@ def test_streamed_log_sync_stop_reads_log_when_streams_stay_empty(
         wait_until(lambda: len(stream_requests) >= 2)
         streamed_log.stop()
 
-    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+    assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
 async def test_streamed_log_async_stop_reads_log_when_streams_stay_empty(
@@ -1488,7 +1495,7 @@ async def test_streamed_log_async_stop_reads_log_when_streams_stay_empty(
         await asyncio.to_thread(wait_until, lambda: len(stream_requests) >= 2)
         await streamed_log.stop()
 
-    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+    assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

@@ -1480,6 +1480,40 @@ def test_streamed_log_sync_stop_reads_log_when_streams_stay_empty(
     assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
+def test_streamed_log_sync_stop_reads_log_when_it_lands_while_stream_reopens(
+    caplog: LogCaptureFixture, httpserver: HTTPServer
+) -> None:
+    """A `stop` that lands while an empty stream is being reopened still redirects the whole log."""
+    stream_requests: list[Request] = []
+    reopened_stream_gate = threading.Event()
+
+    def handler(request: Request) -> Response:
+        if 'stream' in request.args:
+            stream_requests.append(request)
+            if len(stream_requests) == 1:
+                return Response(b'', status=200, mimetype='application/octet-stream')
+            reopened_stream_gate.wait(timeout=5)
+        return Response(b''.join(_MOCKED_ACTOR_LOGS), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET').respond_with_handler(handler)
+    logger = logging.getLogger('apify_client.tests.stop_while_stream_reopens_sync')
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        wait_until(lambda: len(stream_requests) == 2)
+        stop_thread = threading.Thread(target=streamed_log.stop)
+        stop_thread.start()
+        wait_until(streamed_log._stop_event.is_set)
+        reopened_stream_gate.set()
+        stop_thread.join(timeout=10)
+
+    assert not stop_thread.is_alive()
+    assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
+
+
 async def test_streamed_log_async_stop_reads_log_when_streams_stay_empty(
     caplog: LogCaptureFixture, httpserver: HTTPServer
 ) -> None:

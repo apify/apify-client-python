@@ -42,6 +42,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         client_registry: Any,
         resource_id: str | None = None,
         params: dict | None = None,
+        api_base_url: str | None = None,
     ) -> None:
         """Initialize the resource client.
 
@@ -53,11 +54,13 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
             client_registry: Bundle of client classes for dependency injection.
             resource_id: Optional resource ID for single-resource clients.
             params: Optional default parameters for all requests.
+            api_base_url: Base URL of the API itself, for clients of top-level resources. Defaults to `base_url`.
         """
         if resource_path.endswith('/'):
             raise ValueError('resource_path must not end with "/"')
 
         self._base_url = base_url
+        self._api_base_url = api_base_url or base_url
         self._public_base_url = public_base_url
         self._http_client = http_client
         self._default_params = params or {}
@@ -82,11 +85,12 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
     def _base_client_kwargs(self) -> dict[str, Any]:
         """Base kwargs for creating nested/child clients.
 
-        Returns dict with base_url, public_base_url, http_client, and client_registry. Caller adds
+        Returns dict with base_url, api_base_url, public_base_url, http_client, and client_registry. Caller adds
         resource_path, resource_id, and params as needed.
         """
         return {
             'base_url': self._resource_url,
+            'api_base_url': self._api_base_url,
             'public_base_url': self._public_base_url,
             'http_client': self._http_client,
             'client_registry': self._client_registry,
@@ -197,6 +201,7 @@ class ResourceClient(ResourceClientBase):
         client_registry: ClientRegistry,
         resource_id: str | None = None,
         params: dict | None = None,
+        api_base_url: str | None = None,
     ) -> None:
         """Initialize the resource client.
 
@@ -208,6 +213,7 @@ class ResourceClient(ResourceClientBase):
             client_registry: Bundle of client classes for dependency injection.
             resource_id: Optional resource ID for single-resource clients.
             params: Optional default parameters for all requests.
+            api_base_url: Base URL of the API itself, for clients of top-level resources. Defaults to `base_url`.
         """
         super().__init__(
             base_url=base_url,
@@ -217,6 +223,7 @@ class ResourceClient(ResourceClientBase):
             client_registry=client_registry,
             resource_id=resource_id,
             params=params,
+            api_base_url=api_base_url,
         )
 
     def _get(self, *, timeout: Timeout) -> dict | None:
@@ -389,6 +396,7 @@ class ResourceClientAsync(ResourceClientBase):
         client_registry: ClientRegistryAsync,
         resource_id: str | None = None,
         params: dict | None = None,
+        api_base_url: str | None = None,
     ) -> None:
         """Initialize the resource client.
 
@@ -400,6 +408,7 @@ class ResourceClientAsync(ResourceClientBase):
             client_registry: Bundle of client classes for dependency injection.
             resource_id: Optional resource ID for single-resource clients.
             params: Optional default parameters for all requests.
+            api_base_url: Base URL of the API itself, for clients of top-level resources. Defaults to `base_url`.
         """
         super().__init__(
             base_url=base_url,
@@ -409,6 +418,7 @@ class ResourceClientAsync(ResourceClientBase):
             client_registry=client_registry,
             resource_id=resource_id,
             params=params,
+            api_base_url=api_base_url,
         )
 
     async def _get(self, *, timeout: Timeout) -> dict | None:

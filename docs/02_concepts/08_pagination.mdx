@@ -83,3 +83,5 @@ The next example uses `iterate_items` on a dataset client to stream items past a
         </CodeBlock>
     </TabItem>
 </Tabs>
+
+To read the items of a run that's still going, use <ApiLink to="class/RunClient#iterate_dataset_items">`RunClient.iterate_dataset_items`</ApiLink>. Its `offset` and `limit` also count dataset rows. For details, see [Retrieve Actor data](/api/client/python/docs/guides/retrieve-actor-data#read-items-while-the-run-is-going).

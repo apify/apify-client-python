@@ -1567,6 +1567,51 @@ async def test_streamed_log_async_stop_reads_log_when_it_lands_while_stream_reop
     assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
+def test_streamed_log_sync_stop_reports_failing_log_read(caplog: LogCaptureFixture) -> None:
+    """A failing one-shot log read on `stop` is logged, and `stop` still returns."""
+    empty_stream = Mock()
+    empty_stream.iter_bytes.return_value = []
+    log_client = Mock()
+    log_client.stream.side_effect = lambda **_: nullcontext(empty_stream)
+    log_client.get_as_bytes.side_effect = RuntimeError('Simulated log read failure')
+    logger = logging.getLogger('apify_client.tests.failing_log_read_sync')
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streaming_thread = streamed_log.start()
+        wait_until(lambda: log_client.stream.called)
+        streamed_log.stop()
+
+    assert not streaming_thread.is_alive()
+    log_client.get_as_bytes.assert_called_once()
+    assert any(
+        record.levelno == logging.ERROR and record.message == 'Log redirection stopped due to unexpected error:'
+        for record in caplog.records
+    )
+
+
+async def test_streamed_log_async_stop_reports_failing_log_read(caplog: LogCaptureFixture) -> None:
+    """A failing one-shot log read on `stop` is logged, and `stop` still returns."""
+    empty_stream = Mock()
+    empty_stream.aiter_bytes.side_effect = chunks
+    log_client = Mock()
+    log_client.stream.side_effect = lambda **_: nullcontext(empty_stream)
+    log_client.get_as_bytes = AsyncMock(side_effect=RuntimeError('Simulated log read failure'))
+    logger = logging.getLogger('apify_client.tests.failing_log_read_async')
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        await asyncio.to_thread(wait_until, lambda: log_client.stream.called)
+        await streamed_log.stop()
+
+    log_client.get_as_bytes.assert_awaited_once()
+    assert any(
+        record.levelno == logging.ERROR and record.message == 'Log redirection stopped due to unexpected error:'
+        for record in caplog.records
+    )
+
+
 def test_streamed_log_sync_missing_log_is_neither_reopened_nor_read() -> None:
     """A log that does not exist ends the streaming thread without a reopen or a one-shot read on `stop`."""
     log_client = Mock()

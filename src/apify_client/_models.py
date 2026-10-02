@@ -595,6 +595,12 @@ class Build(BaseModel):
     build_number: Annotated[
         str, Field(examples=['0.1.1'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
     ]
+    image_digest: Annotated[
+        str | None, Field(examples=['1b2f1e8c0d5a4c7f9e3b6a2d8c4e0f7a5b9d3c1e6f8a2b4d0c7e9f1a3b5d7c9e'])
+    ] = None
+    """
+    Digest of the built Docker image manifest, without the `sha256:` prefix. Compare digests of two builds to find out whether their image contents differ. `null` if the digest is not available.
+    """
     act_version: Annotated[ActVersion | None, Field(title='BuildActVersion')] = None
     """
     Snapshot of the Actor version that this build was created from.

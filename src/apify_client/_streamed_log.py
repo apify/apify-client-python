@@ -85,7 +85,7 @@ class StreamedLogBase:
             self._to_logger.log(level=self._guess_log_level_from_message(message), msg=message.strip())
 
     def _process_whole_log(self, log: bytes | None) -> None:
-        """Redirect a log read in one request, for a stop that came before the stream delivered anything."""
+        """Redirect a whole log read in one request, including its last part."""
         if log:
             self._process_new_data(log)
             self._log_buffer_content(include_last_part=True)
@@ -135,7 +135,6 @@ class StreamedLog(StreamedLogBase):
         self._log_client = log_client
         self._streaming_thread: Thread | None = None
         self._log_stream: HttpResponse | None = None
-        self._stop_logging = False
         self._stop_event = threading.Event()
 
     def start(self) -> Thread:
@@ -145,7 +144,6 @@ class StreamedLog(StreamedLogBase):
         """
         if self._streaming_thread and self._streaming_thread.is_alive():
             raise RuntimeError('Streaming thread already active')
-        self._stop_logging = False
         self._stop_event.clear()
         # A daemon thread so a stream still blocked on a read can never hold up interpreter shutdown.
         self._streaming_thread = threading.Thread(target=self._stream_log, daemon=True)
@@ -155,14 +153,13 @@ class StreamedLog(StreamedLogBase):
     def stop(self) -> None:
         """Signal the streaming thread to stop logging and wait up to `_stop_timeout_s` for it to finish.
 
-        A thread that outlives the wait is a daemon with `_stop_logging` set, so it exits after at most one more chunk,
+        A thread that outlives the wait is a daemon with `_stop_event` set, so it exits after at most one more chunk,
         and only then does its buffered tail reach the logger. Its handle is kept while it is alive, so `start` cannot
         revive it beside a second thread on the same buffer. If no stream has delivered anything yet, the thread reads
         the whole log in one request before it ends.
         """
         if not self._streaming_thread:
             raise RuntimeError('Streaming thread is not active')
-        self._stop_logging = True
         self._stop_event.set()
         # Read once; the streaming thread clears the attribute as soon as the stream ends.
         log_stream = self._log_stream
@@ -193,12 +190,12 @@ class StreamedLog(StreamedLogBase):
     def _stream_log(self) -> None:
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
-            while not self._stop_logging:
+            while not self._stop_event.is_set():
                 if not self._stream_log_once() or self._received_data:
                     return
                 self._stop_event.wait(self._empty_stream_retry_s)
         except Exception as exc:
-            if self._stop_logging:
+            if self._stop_event.is_set():
                 # `stop` closed the stream out from under the read, so the failure is expected.
                 self._to_logger.debug('Log streaming stopped while `stop` was in progress: %r', exc)
             elif self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
@@ -227,11 +224,11 @@ class StreamedLog(StreamedLogBase):
             try:
                 # `stop` may have run before the response existed for it to close. A stream opened this late would
                 # end after its first chunk, so the whole log is read in one request instead.
-                if self._stop_logging:
+                if self._stop_event.is_set():
                     return True
                 for data in log_stream.iter_bytes():
                     self._process_new_data(data)
-                    if self._stop_logging:
+                    if self._stop_event.is_set():
                         break
             finally:
                 self._log_stream = None

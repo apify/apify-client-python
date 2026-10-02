@@ -4,6 +4,7 @@ import asyncio
 import itertools
 import json
 import logging
+import math
 import threading
 import time
 from datetime import datetime, timedelta
@@ -20,7 +21,7 @@ from apify_client._status_message_watcher import StatusMessageWatcher, StatusMes
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
     from _pytest.logging import LogCaptureFixture
     from pytest_httpserver import HTTPServer
@@ -1391,6 +1392,103 @@ def test_streamed_log_sync_stop_reports_failing_stream_close(
     finally:
         release_thread.set()
         streaming_thread.join(timeout=5)
+
+
+def serve_log_after_empty_streams(httpserver: HTTPServer, *, empty_streams: float) -> list[Request]:
+    """Serve the mocked log, but answer the first `empty_streams` stream requests with an empty body.
+
+    That is how the API answers a log stream request before the run has logged anything. Return the list the stream
+    requests are recorded in.
+    """
+    stream_requests: list[Request] = []
+
+    def handler(request: Request) -> Response:
+        if 'stream' in request.args:
+            stream_requests.append(request)
+            if len(stream_requests) <= empty_streams:
+                return Response(b'', status=200, mimetype='application/octet-stream')
+        return Response(b''.join(_MOCKED_ACTOR_LOGS), status=200, mimetype='application/octet-stream')
+
+    httpserver.expect_request(f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET').respond_with_handler(handler)
+    return stream_requests
+
+
+def wait_until(condition: Callable[[], bool], *, timeout: float = 5) -> None:
+    """Poll `condition` until it holds. Async tests call it through `asyncio.to_thread` to keep the event loop free."""
+    deadline = time.monotonic() + timeout
+    while not condition() and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert condition(), 'condition not met in time'
+
+
+def test_streamed_log_sync_reopens_empty_stream(caplog: LogCaptureFixture, httpserver: HTTPServer) -> None:
+    """A log stream that ends empty is reopened, and the reopened stream delivers the log."""
+    serve_log_after_empty_streams(httpserver, empty_streams=1)
+    logger = logging.getLogger('apify_client.tests.reopen_empty_stream_sync')
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        # Only the reopened stream can deliver the log before `stop` would read it in one request.
+        wait_until(lambda: len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS))
+        streamed_log.stop()
+
+    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+
+
+async def test_streamed_log_async_reopens_empty_stream(caplog: LogCaptureFixture, httpserver: HTTPServer) -> None:
+    """A log stream that ends empty is reopened, and the reopened stream delivers the log."""
+    serve_log_after_empty_streams(httpserver, empty_streams=1)
+    logger = logging.getLogger('apify_client.tests.reopen_empty_stream_async')
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        # Only the reopened stream can deliver the log before `stop` would read it in one request.
+        await asyncio.to_thread(wait_until, lambda: len(caplog.records) == len(_EXPECTED_MESSAGES_AND_LEVELS))
+        await streamed_log.stop()
+
+    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+
+
+def test_streamed_log_sync_stop_reads_log_when_streams_stay_empty(
+    caplog: LogCaptureFixture, httpserver: HTTPServer
+) -> None:
+    """When every log stream is empty until `stop`, the whole log is read in one request."""
+    stream_requests = serve_log_after_empty_streams(httpserver, empty_streams=math.inf)
+    logger = logging.getLogger('apify_client.tests.empty_streams_sync')
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClient(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        wait_until(lambda: len(stream_requests) >= 2)
+        streamed_log.stop()
+
+    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
+
+
+async def test_streamed_log_async_stop_reads_log_when_streams_stay_empty(
+    caplog: LogCaptureFixture, httpserver: HTTPServer
+) -> None:
+    """When every log stream is empty until `stop`, the whole log is read in one request."""
+    stream_requests = serve_log_after_empty_streams(httpserver, empty_streams=math.inf)
+    logger = logging.getLogger('apify_client.tests.empty_streams_async')
+    api_url = httpserver.url_for('/').removesuffix('/')
+    log_client = ApifyClientAsync(token='mocked_token', api_url=api_url).run(run_id=_MOCKED_RUN_ID).log()
+    streamed_log = StreamedLogAsync(log_client=log_client, to_logger=logger)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        streamed_log.start()
+        await asyncio.to_thread(wait_until, lambda: len(stream_requests) >= 2)
+        await streamed_log.stop()
+
+    assert [(record.message, record.levelno) for record in caplog.records] == list(_EXPECTED_MESSAGES_AND_LEVELS)
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

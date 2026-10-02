@@ -7,6 +7,7 @@ import logging
 import math
 import threading
 import time
+from contextlib import nullcontext
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
@@ -1530,6 +1531,34 @@ async def test_streamed_log_async_stop_reads_log_when_streams_stay_empty(
         await streamed_log.stop()
 
     assert redirected_messages(caplog, logger) == list(_EXPECTED_MESSAGES_AND_LEVELS)
+
+
+def test_streamed_log_sync_missing_log_is_neither_reopened_nor_read() -> None:
+    """A log that does not exist ends the streaming thread without a reopen or a one-shot read on `stop`."""
+    log_client = Mock()
+    log_client.stream.return_value = nullcontext(None)
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logging.getLogger('apify_client.tests.missing_sync'))
+
+    streamed_log.start().join(timeout=5)
+    streamed_log.stop()
+
+    log_client.stream.assert_called_once()
+    log_client.get_as_bytes.assert_not_called()
+
+
+async def test_streamed_log_async_missing_log_is_neither_reopened_nor_read() -> None:
+    """A log that does not exist ends the streaming task without a reopen or a one-shot read on `stop`."""
+    log_client = Mock()
+    log_client.stream.return_value = nullcontext(None)
+    streamed_log = StreamedLogAsync(
+        log_client=log_client, to_logger=logging.getLogger('apify_client.tests.missing_async')
+    )
+
+    await asyncio.wait_for(streamed_log.start(), timeout=5)
+    await streamed_log.stop()
+
+    log_client.stream.assert_called_once()
+    log_client.get_as_bytes.assert_not_called()
 
 
 def test_logger_once_logs_the_first_call(caplog: LogCaptureFixture) -> None:

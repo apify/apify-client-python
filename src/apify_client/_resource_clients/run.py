@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._logging import create_redirect_logger
 from apify_client._models import Run, RunResponse
+from apify_client._pagination import DEFAULT_CHUNK_SIZE
 from apify_client._resource_clients._resource_client import _TERMINAL_STATUSES, ResourceClient, ResourceClientAsync
 from apify_client._status_message_watcher import StatusMessageWatcher, StatusMessageWatcherAsync
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
         RequestQueueClient,
         RequestQueueClientAsync,
     )
+    from apify_client._resource_clients.dataset import DatasetItemsPage
     from apify_client.types import Timeout
 
 
@@ -484,10 +486,12 @@ class RunClient(ResourceClient):
     ) -> Iterator[dict]:
         """Iterate over the items of the run's default dataset while the run is still producing them.
 
-        A thin wrapper over the dataset client's `iterate_items` with a `stop_condition`: between polls of the dataset,
-        it waits up to `poll_interval` for the run to finish, so the last rows are read as soon as it does. Once the run
-        reaches a terminal status, the iterator reads the remaining rows and returns. On a `last_run()` client, the
-        iterator sticks to the run that its first request resolves to.
+        While the run has not finished, each poll yields the rows below the dataset's `item_count` and then waits up to
+        `poll_interval` for the run to finish, so the last rows are read as soon as it does. Each page is requested with
+        a `limit` that ends at `item_count`, so it covers exactly the rows it asks for, whatever the filters or `unwind`
+        do to the items. `item_count` lags a few seconds behind the pushed items, so once the run reaches a terminal
+        status, the rows past it are read a page at a time until none are left, and the iterator returns. On a
+        `last_run()` client, the iterator sticks to the run that its first request resolves to.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -515,6 +519,10 @@ class RunClient(ResourceClient):
         Yields:
             An item from the dataset.
         """
+        page_size = chunk_size or DEFAULT_CHUNK_SIZE
+        position = offset or 0
+        end = position + limit if limit else None
+
         run = self.get(timeout=timeout)
         # A `last_run()` client resolves `runs/last` per request, so a newer run would swap the dataset mid-iteration.
         run_client = (
@@ -529,29 +537,53 @@ class RunClient(ResourceClient):
             else self
         )
         dataset_client = run_client.dataset()
-        is_first_poll = True
 
-        def is_run_finished() -> bool:
-            nonlocal run, is_first_poll
-            # The first poll reuses the run read above, every later one waits for the run to finish first.
-            if not is_first_poll:
-                run = run_client.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
-            is_first_poll = False
-            return run is None or run.status in _TERMINAL_STATUSES
+        def list_page(page_offset: int, page_limit: int) -> DatasetItemsPage:
+            return dataset_client.list_items(
+                offset=page_offset,
+                limit=page_limit,
+                clean=clean,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+                timeout=timeout,
+            )
 
-        yield from dataset_client.iterate_items(
-            offset=offset,
-            limit=limit,
-            clean=clean,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_hidden=skip_hidden,
-            chunk_size=chunk_size,
-            timeout=timeout,
-            stop_condition=is_run_finished,
-        )
+        while True:
+            is_finished = run is None or run.status in _TERMINAL_STATUSES
+            dataset = dataset_client.get(timeout=timeout)
+            item_count = dataset.item_count if dataset else 0
+            if end is not None:
+                item_count = min(item_count, end)
+
+            while position < item_count:
+                page_limit = min(page_size, item_count - position)
+                page = list_page(position, page_limit)
+                yield from page.items
+                position += page_limit
+
+            if end is not None and position >= end:
+                return
+            if is_finished:
+                break
+            run = run_client.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
+
+        while True:
+            page_limit = min(page_size, end - position) if end is not None else page_size
+            page = list_page(position, page_limit)
+            yield from page.items
+            # Only an empty page marks the end, as filters can shorten a full one. A page that `clean`, `skip_empty` or
+            # `unwind` emptied past a lagging `item_count` reports no scanned rows either, so a plain read checks.
+            if not page.count and (
+                not (clean or skip_empty or unwind)
+                or not dataset_client.list_items(offset=position, limit=1, timeout=timeout).items
+            ):
+                return
+            position += page_limit
+            if end is not None and position >= end:
+                return
 
 
 @docs_group('Resource clients')
@@ -1002,10 +1034,12 @@ class RunClientAsync(ResourceClientAsync):
     ) -> AsyncIterator[dict]:
         """Iterate over the items of the run's default dataset while the run is still producing them.
 
-        A thin wrapper over the dataset client's `iterate_items` with a `stop_condition`: between polls of the dataset,
-        it waits up to `poll_interval` for the run to finish, so the last rows are read as soon as it does. Once the run
-        reaches a terminal status, the iterator reads the remaining rows and returns. On a `last_run()` client, the
-        iterator sticks to the run that its first request resolves to.
+        While the run has not finished, each poll yields the rows below the dataset's `item_count` and then waits up to
+        `poll_interval` for the run to finish, so the last rows are read as soon as it does. Each page is requested with
+        a `limit` that ends at `item_count`, so it covers exactly the rows it asks for, whatever the filters or `unwind`
+        do to the items. `item_count` lags a few seconds behind the pushed items, so once the run reaches a terminal
+        status, the rows past it are read a page at a time until none are left, and the iterator returns. On a
+        `last_run()` client, the iterator sticks to the run that its first request resolves to.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
 
@@ -1033,6 +1067,10 @@ class RunClientAsync(ResourceClientAsync):
         Yields:
             An item from the dataset.
         """
+        page_size = chunk_size or DEFAULT_CHUNK_SIZE
+        position = offset or 0
+        end = position + limit if limit else None
+
         run = await self.get(timeout=timeout)
         # A `last_run()` client resolves `runs/last` per request, so a newer run would swap the dataset mid-iteration.
         run_client = (
@@ -1047,27 +1085,52 @@ class RunClientAsync(ResourceClientAsync):
             else self
         )
         dataset_client = run_client.dataset()
-        is_first_poll = True
 
-        async def is_run_finished() -> bool:
-            nonlocal run, is_first_poll
-            # The first poll reuses the run read above, every later one waits for the run to finish first.
-            if not is_first_poll:
-                run = await run_client.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
-            is_first_poll = False
-            return run is None or run.status in _TERMINAL_STATUSES
+        async def list_page(page_offset: int, page_limit: int) -> DatasetItemsPage:
+            return await dataset_client.list_items(
+                offset=page_offset,
+                limit=page_limit,
+                clean=clean,
+                fields=fields,
+                omit=omit,
+                unwind=unwind,
+                skip_empty=skip_empty,
+                skip_hidden=skip_hidden,
+                timeout=timeout,
+            )
 
-        async for item in dataset_client.iterate_items(
-            offset=offset,
-            limit=limit,
-            clean=clean,
-            fields=fields,
-            omit=omit,
-            unwind=unwind,
-            skip_empty=skip_empty,
-            skip_hidden=skip_hidden,
-            chunk_size=chunk_size,
-            timeout=timeout,
-            stop_condition=is_run_finished,
-        ):
-            yield item
+        while True:
+            is_finished = run is None or run.status in _TERMINAL_STATUSES
+            dataset = await dataset_client.get(timeout=timeout)
+            item_count = dataset.item_count if dataset else 0
+            if end is not None:
+                item_count = min(item_count, end)
+
+            while position < item_count:
+                page_limit = min(page_size, item_count - position)
+                page = await list_page(position, page_limit)
+                for item in page.items:
+                    yield item
+                position += page_limit
+
+            if end is not None and position >= end:
+                return
+            if is_finished:
+                break
+            run = await run_client.wait_for_finish(wait_duration=poll_interval, timeout=timeout)
+
+        while True:
+            page_limit = min(page_size, end - position) if end is not None else page_size
+            page = await list_page(position, page_limit)
+            for item in page.items:
+                yield item
+            # Only an empty page marks the end, as filters can shorten a full one. A page that `clean`, `skip_empty` or
+            # `unwind` emptied past a lagging `item_count` reports no scanned rows either, so a plain read checks.
+            if not page.count and (
+                not (clean or skip_empty or unwind)
+                or not (await dataset_client.list_items(offset=position, limit=1, timeout=timeout)).items
+            ):
+                return
+            position += page_limit
+            if end is not None and position >= end:
+                return

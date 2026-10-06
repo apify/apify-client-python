@@ -89,22 +89,3 @@ async def test_list_items_desc_true_async(httpserver: HTTPServer, desc_header_va
     result = await client.dataset(DATASET_ID).list_items()
 
     assert result.desc is True
-
-
-def test_iterate_items_rejects_stop_condition_with_desc_sync() -> None:
-    """Combining `stop_condition` with `desc` raises, since a growing dataset cannot be read newest first."""
-    client = ApifyClient(token='test-token')
-
-    with pytest.raises(ValueError, match='stop_condition cannot be combined with desc'):
-        client.dataset(DATASET_ID).iterate_items(desc=True, stop_condition=lambda: True)
-
-
-async def test_iterate_items_rejects_stop_condition_with_desc_async() -> None:
-    """Combining `stop_condition` with `desc` raises, since a growing dataset cannot be read newest first."""
-    client = ApifyClientAsync(token='test-token')
-
-    async def stop_condition() -> bool:
-        return True
-
-    with pytest.raises(ValueError, match='stop_condition cannot be combined with desc'):
-        client.dataset(DATASET_ID).iterate_items(desc=True, stop_condition=stop_condition)

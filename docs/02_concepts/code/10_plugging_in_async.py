@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+
 from typing_extensions import override
 
 from apify_client import ApifyClientAsync
@@ -16,7 +18,7 @@ class MyHttpClientAsync(HttpClientAsync):
         method: str,
         url: str,
         headers: dict[str, str],
-        content: bytes | None,
+        content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
     ) -> HttpResponse:

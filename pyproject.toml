@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "apify_client"
-version = "3.2.1"
+version = "3.2.2"
 description = "Apify API client for Python"
 authors = [{ name = "Apify Technologies s.r.o.", email = "support@apify.com" }]
 license = "Apache-2.0"
@@ -187,6 +187,10 @@ max-branches = 18
 addopts = "-r a --verbose --dist worksteal"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
+filterwarnings = [
+    # The tests stream request bodies throughout, and the warning has a unit test of its own.
+    "ignore:Streaming a request body is experimental:UserWarning",
+]
 pythonpath = ["."]
 timeout = 1800
 
@@ -246,7 +250,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-08-31T125154Z"
+version = "v2-2026-10-01T153946Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

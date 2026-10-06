@@ -2286,6 +2286,10 @@ class Profile(BaseModel):
         alias_generator=to_camel,
     )
     bio: Annotated[str | None, Field(examples=['I started web scraping in 1985 using Altair BASIC.'])] = None
+    readme: Annotated[str | None, Field(examples=['### Hello world 👋🏻\nI build web scrapers.'])] = None
+    """
+    Markdown README shown on the user's public profile page.
+    """
     name: Annotated[str | None, Field(examples=['Jane Doe'])] = None
     picture_url: Annotated[AnyUrl | None, Field(examples=['https://apify.com/img/anonymous_user_picture.png'])] = None
     github_username: Annotated[str | None, Field(examples=['torvalds.'])] = None

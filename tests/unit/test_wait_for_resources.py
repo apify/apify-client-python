@@ -39,6 +39,22 @@ RUN = {
 }
 
 
+ERROR_MESSAGES = {
+    'actor-memory-limit-exceeded': (
+        'By launching this job you will exceed the memory limit of 8192MB for all your Actor runs and builds '
+        '(currently used: 4096MB, requested: 8192MB). Please consider upgrading or purchasing extra memory as an '
+        'add-on at https://console.apify.com/billing/subscription to increase your Actor memory limit.'
+    ),
+    'concurrent-runs-limit-exceeded': (
+        'By launching this job you will exceed your limit of 25 concurrent Actor runs. Please consider upgrading or '
+        'purchasing an increase to concurrent Actor runs as an add-on at '
+        'https://console.apify.com/billing/subscription to increase your limit.'
+    ),
+    'invalid-input': 'Input is not valid.',
+}
+"""Error messages the API rejects a run start with, by error type."""
+
+
 def start_actor(client: ApifyClient | ApifyClientAsync, **kwargs: Any) -> Any:
     return client.actor('actor-id').start(**kwargs)
 
@@ -66,7 +82,7 @@ class StartServer:
         self.bodies.append(request.get_data())
         if self.rejections:
             error_type = self.rejections.pop(0)
-            body = {'error': {'type': error_type, 'message': f'Rejected: {error_type}'}}
+            body = {'error': {'type': error_type, 'message': ERROR_MESSAGES[error_type]}}
             return Response(json.dumps(body), status=400 if error_type == 'invalid-input' else 402)
         return Response(json.dumps({'data': RUN}), status=201, mimetype='application/json')
 
@@ -185,9 +201,9 @@ async def test_timedelta_bounds_the_retrying(
     assert len(server.bodies) == 4
     assert sleeps == [10, 10, 5]
     assert [record.getMessage() for record in caplog.records] == [
-        'Not enough resources to start the run, retrying in 10s: Rejected: actor-memory-limit-exceeded',
-        'Not enough resources to start the run, retrying in 10s: Rejected: actor-memory-limit-exceeded',
-        'Not enough resources to start the run, retrying in 5s: Rejected: actor-memory-limit-exceeded',
+        f'Not enough resources to start the run, retrying in 10s: {ERROR_MESSAGES["actor-memory-limit-exceeded"]}',
+        f'Not enough resources to start the run, retrying in 10s: {ERROR_MESSAGES["actor-memory-limit-exceeded"]}',
+        f'Not enough resources to start the run, retrying in 5s: {ERROR_MESSAGES["actor-memory-limit-exceeded"]}',
     ]
 
 

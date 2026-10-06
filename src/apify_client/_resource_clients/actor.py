@@ -26,7 +26,11 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.time import to_seconds
-from apify_client._utils.wait_for_resources import start_waiting_for_resources, start_waiting_for_resources_async
+from apify_client._utils.wait_for_resources import (
+    prepare_resendable_body,
+    start_waiting_for_resources,
+    start_waiting_for_resources_async,
+)
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -271,13 +275,15 @@ class ActorClient(ResourceClient):
                 every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
                 `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
-                never starts, so `True` retries it forever.
+                never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
+                generator, is sent only once, so its start is not retried.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
+        run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
         request_params = self._build_params(
             build=build,
@@ -803,13 +809,15 @@ class ActorClientAsync(ResourceClientAsync):
                 every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
                 `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
                 than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
-                never starts, so `True` retries it forever.
+                never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
+                generator, is sent only once, so its start is not retried.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
+        run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
         request_params = self._build_params(
             build=build,

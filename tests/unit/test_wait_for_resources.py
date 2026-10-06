@@ -222,3 +222,23 @@ async def test_retry_resends_a_file_like_input(
 
     assert server.bodies == [b'{"a": 1}', b'{"a": 1}']
     assert sleeps == [10]
+
+
+async def test_unrewindable_streamed_input_is_not_retried(
+    httpserver: HTTPServer, client: ApifyClient | ApifyClientAsync, sleeps: list[float]
+) -> None:
+    """A streamed run input that cannot be rewound is sent once, and its rejection is raised without a retry."""
+    server = StartServer(httpserver, '/v2/actors/actor-id/runs')
+    server.rejections = ['actor-memory-limit-exceeded']
+
+    with pytest.raises(ApifyApiError):
+        await run(
+            start_actor,
+            client,
+            run_input=iter([b'{"a": ', b'1}']),
+            content_type='application/json',
+            wait_for_resources=True,
+        )
+
+    assert server.bodies == [b'{"a": 1}']
+    assert sleeps == []

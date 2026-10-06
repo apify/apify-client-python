@@ -12,7 +12,7 @@ from apify_client._utils.crypto import create_storage_content_signature
 from apify_client._utils.http import response_to_dict, response_to_list
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
     from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
@@ -227,6 +227,7 @@ class DatasetClient(ResourceClient):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
+        stop_condition: Callable[[], bool] | None = None,
     ) -> Iterator[dict]:
         """Iterate over the items in the dataset.
 
@@ -263,6 +264,11 @@ class DatasetClient(ResourceClient):
             signature: Signature used to access the items.
             chunk_size: Maximum number of dataset rows requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
+            stop_condition: Makes the iterator follow a dataset that is still being written to. It is called before
+                each poll of the dataset, returns whether the writer has finished, and paces the polls, so it should
+                block until new items may have arrived. Each poll reads the rows below the dataset's `item_count`.
+                Once it returns True, the rows past the lagging `item_count` are read a page at a time until none are
+                left. Cannot be combined with `desc`.
 
         Yields:
             An item from the dataset.
@@ -283,7 +289,68 @@ class DatasetClient(ResourceClient):
                 timeout=timeout,
             )
 
-        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE)
+        if stop_condition is None:
+            return get_items_iterator(
+                _callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE
+            )
+        if desc:
+            raise ValueError('stop_condition cannot be combined with desc')
+        return self._iterate_live_items(
+            _callback,
+            stop_condition=stop_condition,
+            offset=offset,
+            limit=limit,
+            chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
+            is_filtered=bool(clean or skip_empty or unwind),
+            timeout=timeout,
+        )
+
+    def _iterate_live_items(
+        self,
+        list_page: Callable[..., DatasetItemsPage],
+        *,
+        stop_condition: Callable[[], bool],
+        offset: int | None,
+        limit: int | None,
+        chunk_size: int,
+        is_filtered: bool,
+        timeout: Timeout,
+    ) -> Iterator[dict]:
+        """Yield the items of a dataset that is still being written to, see `iterate_items` with `stop_condition`."""
+        position = offset or 0
+        end = position + limit if limit else None
+
+        # Pages end at `item_count`, so each covers exactly the rows it asks for, whatever filters or `unwind` do.
+        while True:
+            is_finished = stop_condition()
+            dataset = self.get(timeout=timeout)
+            item_count = dataset.item_count if dataset else 0
+            if end is not None:
+                item_count = min(item_count, end)
+
+            while position < item_count:
+                page_limit = min(chunk_size, item_count - position)
+                yield from list_page(offset=position, limit=page_limit).items
+                position += page_limit
+
+            if end is not None and position >= end:
+                return
+            if is_finished:
+                break
+
+        while True:
+            page_limit = min(chunk_size, end - position) if end is not None else chunk_size
+            page = list_page(offset=position, limit=page_limit)
+            yield from page.items
+            # Only an empty page marks the end, as filters can shorten a full one. A page that `clean`, `skip_empty` or
+            # `unwind` emptied past a lagging `item_count` reports no scanned rows either, so a plain read checks.
+            if not page.count and (
+                not is_filtered or not self.list_items(offset=position, limit=1, timeout=timeout).items
+            ):
+                return
+            position += page_limit
+            if end is not None and position >= end:
+                return
 
     def get_items_as_bytes(
         self,
@@ -787,6 +854,7 @@ class DatasetClientAsync(ResourceClientAsync):
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
+        stop_condition: Callable[[], Awaitable[bool]] | None = None,
     ) -> AsyncIterator[dict]:
         """Iterate over the items in the dataset.
 
@@ -823,6 +891,11 @@ class DatasetClientAsync(ResourceClientAsync):
             signature: Signature used to access the items.
             chunk_size: Maximum number of dataset rows requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
+            stop_condition: Makes the iterator follow a dataset that is still being written to. It is called before
+                each poll of the dataset, returns whether the writer has finished, and paces the polls, so it should
+                block until new items may have arrived. Each poll reads the rows below the dataset's `item_count`.
+                Once it returns True, the rows past the lagging `item_count` are read a page at a time until none are
+                left. Cannot be combined with `desc`.
 
         Yields:
             An item from the dataset.
@@ -843,9 +916,70 @@ class DatasetClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
 
-        return get_items_iterator_async(
-            _callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE
+        if stop_condition is None:
+            return get_items_iterator_async(
+                _callback, limit=limit, offset=offset, chunk_size=chunk_size or DEFAULT_CHUNK_SIZE
+            )
+        if desc:
+            raise ValueError('stop_condition cannot be combined with desc')
+        return self._iterate_live_items(
+            _callback,
+            stop_condition=stop_condition,
+            offset=offset,
+            limit=limit,
+            chunk_size=chunk_size or DEFAULT_CHUNK_SIZE,
+            is_filtered=bool(clean or skip_empty or unwind),
+            timeout=timeout,
         )
+
+    async def _iterate_live_items(
+        self,
+        list_page: Callable[..., Awaitable[DatasetItemsPage]],
+        *,
+        stop_condition: Callable[[], Awaitable[bool]],
+        offset: int | None,
+        limit: int | None,
+        chunk_size: int,
+        is_filtered: bool,
+        timeout: Timeout,
+    ) -> AsyncIterator[dict]:
+        """Yield the items of a dataset that is still being written to, see `iterate_items` with `stop_condition`."""
+        position = offset or 0
+        end = position + limit if limit else None
+
+        # Pages end at `item_count`, so each covers exactly the rows it asks for, whatever filters or `unwind` do.
+        while True:
+            is_finished = await stop_condition()
+            dataset = await self.get(timeout=timeout)
+            item_count = dataset.item_count if dataset else 0
+            if end is not None:
+                item_count = min(item_count, end)
+
+            while position < item_count:
+                page_limit = min(chunk_size, item_count - position)
+                for item in (await list_page(offset=position, limit=page_limit)).items:
+                    yield item
+                position += page_limit
+
+            if end is not None and position >= end:
+                return
+            if is_finished:
+                break
+
+        while True:
+            page_limit = min(chunk_size, end - position) if end is not None else chunk_size
+            page = await list_page(offset=position, limit=page_limit)
+            for item in page.items:
+                yield item
+            # Only an empty page marks the end, as filters can shorten a full one. A page that `clean`, `skip_empty` or
+            # `unwind` emptied past a lagging `item_count` reports no scanned rows either, so a plain read checks.
+            if not page.count and (
+                not is_filtered or not (await self.list_items(offset=position, limit=1, timeout=timeout)).items
+            ):
+                return
+            position += page_limit
+            if end is not None and position >= end:
+                return
 
     async def get_items_as_bytes(
         self,

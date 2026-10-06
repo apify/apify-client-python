@@ -185,9 +185,9 @@ async def test_timedelta_bounds_the_retrying(
     assert len(server.bodies) == 4
     assert sleeps == [10, 10, 5]
     assert [record.getMessage() for record in caplog.records] == [
-        'Not enough resources to start the run (actor-memory-limit-exceeded), retrying in 10s.',
-        'Not enough resources to start the run (actor-memory-limit-exceeded), retrying in 10s.',
-        'Not enough resources to start the run (actor-memory-limit-exceeded), retrying in 5s.',
+        'Not enough resources to start the run, retrying in 10s: Rejected: actor-memory-limit-exceeded',
+        'Not enough resources to start the run, retrying in 10s: Rejected: actor-memory-limit-exceeded',
+        'Not enough resources to start the run, retrying in 5s: Rejected: actor-memory-limit-exceeded',
     ]
 
 

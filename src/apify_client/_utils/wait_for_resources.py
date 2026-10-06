@@ -46,7 +46,7 @@ def _next_delay(exc: ApifyApiError, deadline: float | None) -> float:
         if remaining <= 0:
             raise exc
         delay = min(delay, remaining)
-    logger.info('Not enough resources to start the run (%s), retrying in %.3gs.', exc.type, delay)
+    logger.info('Not enough resources to start the run, retrying in %.3gs: %s', delay, exc.message)
     return delay
 
 

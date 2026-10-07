@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
     from pytest_httpserver import HTTPServer
 
+pytestmark = pytest.mark.usefixtures('http_client_classes')
+
 RUN = {
     'id': 'run-id',
     'actId': 'actor-id',

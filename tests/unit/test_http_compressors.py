@@ -6,6 +6,7 @@ import json
 import sys
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
 import brotli
 import pytest
@@ -57,6 +58,15 @@ def _brotli_unavailable() -> Iterator[None]:
         for name in [name for name in sys.modules if _affected(name)]:
             del sys.modules[name]
         sys.modules.update(saved)
+
+
+def test_gzip_compressor_defaults_to_quality_6(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Gzip compressor uses compression level `6` when no quality is given."""
+    compress = Mock(return_value=b'compressed')
+    monkeypatch.setattr(gzip, 'compress', compress)
+
+    assert GzipHttpCompressor().compress(b'payload') == b'compressed'
+    compress.assert_called_once_with(b'payload', compresslevel=6)
 
 
 @pytest.mark.parametrize(

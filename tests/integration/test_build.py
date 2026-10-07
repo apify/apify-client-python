@@ -7,7 +7,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from .._utils import get_random_resource_name, maybe_await
-from apify_client._models import Actor, Build, BuildShort, ListOfBuilds
+from apify_client._models import ActorResource, Build, BuildListItem, ListOfBuilds
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -26,7 +26,7 @@ SMALL_MIN_MEMORY_ACTOR = 'apify/instagram-profile-scraper'
 CI_ORIGIN_ACTOR = 'apify/cheerio-scraper'
 
 
-def _pick_build_id(actor: Actor) -> str:
+def _pick_build_id(actor: ActorResource) -> str:
     """Return a stable `build_id` from `actor.tagged_builds`, preferring the `latest` tag.
 
     Avoids relying on API-side dict ordering (`next(iter(...))` would otherwise pick
@@ -181,7 +181,7 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
             ],
         )
     )
-    assert isinstance(created_actor, Actor)
+    assert isinstance(created_actor, ActorResource)
     actor_client = client.actor(created_actor.id)
 
     try:
@@ -221,7 +221,7 @@ async def test_build_delete_and_abort(client: ApifyClient | ApifyClientAsync) ->
 async def test_build_get_accepts_small_min_memory_mbytes(client: ApifyClient | ApifyClientAsync) -> None:
     """Test that build.get() parses actorDefinition.minMemoryMbytes values below 256 MB."""
     actor = await maybe_await(client.actor(SMALL_MIN_MEMORY_ACTOR).get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     build_id = _pick_build_id(actor)
 
     build = await maybe_await(client.build(build_id).get())
@@ -257,7 +257,7 @@ async def test_actor_builds_list_accepts_ci_origin(client: ApifyClient | ApifyCl
 async def test_actor_definition_version_accepts_semver_triplet(client: ApifyClient | ApifyClientAsync) -> None:
     """Test that ActorDefinition.version accepts semver-triplet strings like '0.0.1'."""
     actor = await maybe_await(client.actor(SMALL_MIN_MEMORY_ACTOR).get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     build_id = _pick_build_id(actor)
 
     build = await maybe_await(client.build(build_id).get())
@@ -294,16 +294,16 @@ async def test_build_get_open_api_definition(client: ApifyClient | ApifyClientAs
 async def test_builds_iterate_for_actor(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over an Actor's builds."""
     iterator = client.actor(HELLO_WORLD_ACTOR).builds().iterate(limit=5)
-    collected: list[BuildShort] = []
+    collected: list[BuildListItem] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for b in iterator:
-            assert isinstance(b, BuildShort)
+            assert isinstance(b, BuildListItem)
             collected.append(b)
     else:
         assert isinstance(iterator, Iterator)
         for b in iterator:
-            assert isinstance(b, BuildShort)
+            assert isinstance(b, BuildListItem)
             collected.append(b)
 
     assert 1 <= len(collected) <= 5
@@ -315,16 +315,16 @@ async def test_builds_iterate_for_actor(client: ApifyClient | ApifyClientAsync, 
 async def test_user_builds_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over the user's builds."""
     iterator = client.builds().iterate(limit=5)
-    collected: list[BuildShort] = []
+    collected: list[BuildListItem] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for b in iterator:
-            assert isinstance(b, BuildShort)
+            assert isinstance(b, BuildListItem)
             collected.append(b)
     else:
         assert isinstance(iterator, Iterator)
         for b in iterator:
-            assert isinstance(b, BuildShort)
+            assert isinstance(b, BuildListItem)
             collected.append(b)
 
     assert len(collected) <= 5

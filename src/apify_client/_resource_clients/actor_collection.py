@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    Actor,
+    ActorResource,
     ActorResponse,
     ActorStandby,
     CreateActorRequest,
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._models import ActorShort
+    from apify_client._models import ActorListItem
     from apify_client.types import Timeout
 
 
@@ -81,7 +81,7 @@ class ActorCollectionClient(ResourceClient):
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
         timeout: Timeout = 'medium',
-    ) -> Iterator[ActorShort]:
+    ) -> Iterator[ActorListItem]:
         """Iterate over the Actors the user has created or used.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -132,7 +132,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> Actor:
+    ) -> ActorResource:
         """Create a new Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor
@@ -260,7 +260,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[ActorShort]:
+    ) -> AsyncIterator[ActorListItem]:
         """Iterate over the Actors the user has created or used.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -311,7 +311,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> Actor:
+    ) -> ActorResource:
         """Create a new Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-collection/create-actor

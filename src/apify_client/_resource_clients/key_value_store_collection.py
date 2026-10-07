@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    KeyValueStore,
+    KeyValueStoreResource,
     KeyValueStoreResponse,
     ListOfKeyValueStores,
     ListOfKeyValueStoresResponse,
@@ -83,7 +83,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[KeyValueStore]:
+    ) -> Iterator[KeyValueStoreResource]:
         """Iterate over the available key-value stores.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -117,7 +117,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         name: str | None = None,
         schema: dict | None = None,
         timeout: Timeout = 'short',
-    ) -> KeyValueStore:
+    ) -> KeyValueStoreResource:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store
@@ -198,7 +198,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[KeyValueStore]:
+    ) -> AsyncIterator[KeyValueStoreResource]:
         """Iterate over the available key-value stores.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -232,7 +232,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         name: str | None = None,
         schema: dict | None = None,
         timeout: Timeout = 'short',
-    ) -> KeyValueStore:
+    ) -> KeyValueStoreResource:
         """Retrieve a named key-value store, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-collection/create-key-value-store

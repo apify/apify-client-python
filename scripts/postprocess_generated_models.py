@@ -15,7 +15,7 @@ Applied to `_typeddicts.py`:
 - Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive dependencies).
   The file is generated in full by datamodel-codegen; the trimming happens here.
 - Rename every kept class to add a `Dict` suffix so it doesn't clash with the Pydantic model name
-  (e.g. `WebhookCreate` -> `WebhookCreateDict`) and rewire references.
+  (e.g. `CreateWebhookRequest` -> `CreateWebhookRequestDict`) and rewire references.
 - Generate a camelCase sibling for every kept TypedDict (`FooDict` -> `FooCamelDict`) so users can pass API-shaped
   dicts and still satisfy the type checker. Field identifiers are looked up in the Pydantic alias map extracted
   from `_models.py`; nested TypedDict refs are rewired to the camel variant.
@@ -55,11 +55,11 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 # union is introduced on a resource-client method signature.
 RESOURCE_INPUT_TYPEDDICTS: frozenset[str] = frozenset(
     {
-        'Request',  # RequestQueueClient.update_request
+        'RequestResource',  # RequestQueueClient.update_request
         'RequestWithoutId',  # RequestQueueClient.add_request, batch_add_requests
-        'RequestDraftDelete',  # RequestQueueClient.batch_delete_requests
+        'RequestToDelete',  # RequestQueueClient.batch_delete_requests
         'TaskInput',  # Actor/Task start/call/update default input
-        'WebhookCreate',  # Actor/Task start/call webhook list element
+        'CreateWebhookRequest',  # Actor/Task start/call webhook list element
         'WebhookRepresentation',  # Actor/Task start/call ad-hoc webhook list element
     }
 )

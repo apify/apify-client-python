@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol, TypeVar, overload
 
-from apify_client._models import KeyValueStoreKey, ListOfKeys, ListOfRequests, Request
+from apify_client._models import KeyValueStoreKey, ListOfKeys, ListOfRequests, RequestResource
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
@@ -120,14 +120,14 @@ def get_cursor_iterator(
     cursor: str | None = None,
     limit: int | None = None,
     chunk_size: int | None = None,
-) -> Iterator[Request]: ...
+) -> Iterator[RequestResource]: ...
 def get_cursor_iterator(
     callback: Callable[..., ListOfKeys | ListOfRequests],
     *,
     cursor: str | None = None,
     limit: int | None = None,
     chunk_size: int | None = None,
-) -> Iterator[KeyValueStoreKey] | Iterator[Request]:
+) -> Iterator[KeyValueStoreKey] | Iterator[RequestResource]:
     """Yield individual items from a cursor-paginated API response.
 
     This iterator supports the two API responses that use cursor pagination. `ListOfKeys` is used for key-value store
@@ -188,14 +188,14 @@ def get_cursor_iterator_async(
     cursor: str | None = None,
     limit: int | None = None,
     chunk_size: int | None = None,
-) -> AsyncIterator[Request]: ...
+) -> AsyncIterator[RequestResource]: ...
 async def get_cursor_iterator_async(
     callback: Callable[..., Awaitable[ListOfKeys | ListOfRequests]],
     *,
     cursor: str | None = None,
     limit: int | None = None,
     chunk_size: int | None = None,
-) -> AsyncIterator[KeyValueStoreKey] | AsyncIterator[Request]:
+) -> AsyncIterator[KeyValueStoreKey] | AsyncIterator[RequestResource]:
     """Async variant of :func:`get_cursor_iterator`."""
     effective_chunk = chunk_size or 0
     initial_limit = limit or 0

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._models import TaskShort
+    from apify_client._models import TaskListItem
     from apify_client._typeddicts import TaskInputDict
     from apify_client.types import Timeout
 
@@ -77,7 +77,7 @@ class TaskCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[TaskShort]:
+    ) -> Iterator[TaskListItem]:
         """Iterate over the available tasks.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -250,7 +250,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[TaskShort]:
+    ) -> AsyncIterator[TaskListItem]:
         """Iterate over the available tasks.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method

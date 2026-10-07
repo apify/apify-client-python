@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
+from apify_client._models import DatasetResource, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.crypto import create_storage_content_signature
@@ -70,7 +70,7 @@ class DatasetClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Dataset | None:
+    def get(self, *, timeout: Timeout = 'short') -> DatasetResource | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -92,7 +92,7 @@ class DatasetClient(ResourceClient):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
-    ) -> Dataset:
+    ) -> DatasetResource:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -630,7 +630,7 @@ class DatasetClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Dataset | None:
+    async def get(self, *, timeout: Timeout = 'short') -> DatasetResource | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -652,7 +652,7 @@ class DatasetClientAsync(ResourceClientAsync):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
-    ) -> Dataset:
+    ) -> DatasetResource:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset

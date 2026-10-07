@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
+    CreateOrUpdateScheduleRequest,
     Schedule,
-    ScheduleCreate,
-    ScheduleInvoked,
+    ScheduleLogEntry,
     ScheduleLogResponse,
     ScheduleResponse,
 )
@@ -87,7 +87,7 @@ class ScheduleClient(ResourceClient):
         Returns:
             The updated schedule.
         """
-        schedule_fields = ScheduleCreate(
+        schedule_fields = CreateOrUpdateScheduleRequest(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
@@ -110,7 +110,7 @@ class ScheduleClient(ResourceClient):
         """
         self._delete(timeout=timeout)
 
-    def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked]:
+    def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleLogEntry]:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log
@@ -204,7 +204,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         Returns:
             The updated schedule.
         """
-        schedule_fields = ScheduleCreate(
+        schedule_fields = CreateOrUpdateScheduleRequest(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
@@ -227,7 +227,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         """
         await self._delete(timeout=timeout)
 
-    async def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleInvoked]:
+    async def get_log(self, *, timeout: Timeout = 'medium') -> list[ScheduleLogEntry]:
         """Return log for the given schedule.
 
         https://docs.apify.com/api/v2#/reference/schedules/schedule-log/get-schedule-log

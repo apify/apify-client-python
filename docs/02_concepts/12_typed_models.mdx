@@ -38,7 +38,7 @@ Date strings are automatically parsed into timezone-aware `datetime.datetime` ob
 
 ## URL fields
 
-Fields holding a URL, such as `Run.container_url` or `Dataset.console_url`, are typed as [`AnyUrl`](https://docs.pydantic.dev/latest/api/networks/#pydantic.networks.AnyUrl). Their values are validated and normalized, so the string you read back can differ from the one the API sent. Both forms denote the same URL under [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.3), they're just different strings.
+Fields holding a URL, such as `Run.container_url` or `DatasetResource.console_url`, are typed as [`AnyUrl`](https://docs.pydantic.dev/latest/api/networks/#pydantic.networks.AnyUrl). Their values are validated and normalized, so the string you read back can differ from the one the API sent. Both forms denote the same URL under [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.3), they're just different strings.
 
 ```python
 from pydantic import AnyUrl

@@ -6,12 +6,12 @@ from pydantic import AnyUrl
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    TestWebhookResponse,
-    Webhook,
+    UpdateWebhookRequest,
     WebhookCondition,
     WebhookDispatch,
+    WebhookDispatchResponse,
+    WebhookResource,
     WebhookResponse,
-    WebhookUpdate,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.http import response_to_dict
@@ -43,7 +43,7 @@ class WebhookClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Webhook | None:
+    def get(self, *, timeout: Timeout = 'short') -> WebhookResource | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -73,7 +73,7 @@ class WebhookClient(ResourceClient):
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
         timeout: Timeout = 'short',
-    ) -> Webhook:
+    ) -> WebhookResource:
         """Update the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
@@ -95,7 +95,7 @@ class WebhookClient(ResourceClient):
         Returns:
             The updated webhook.
         """
-        webhook_update = WebhookUpdate(
+        webhook_update = UpdateWebhookRequest(
             event_types=list(event_types) if event_types is not None else None,
             request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
@@ -146,7 +146,7 @@ class WebhookClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return TestWebhookResponse.model_validate(result).data
+        return WebhookDispatchResponse.model_validate(result).data
 
     def dispatches(self) -> WebhookDispatchCollectionClient:
         """Get dispatches of the webhook.
@@ -183,7 +183,7 @@ class WebhookClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Webhook | None:
+    async def get(self, *, timeout: Timeout = 'short') -> WebhookResource | None:
         """Retrieve the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/get-webhook
@@ -213,7 +213,7 @@ class WebhookClientAsync(ResourceClientAsync):
         do_not_retry: bool | None = None,
         is_ad_hoc: bool | None = None,
         timeout: Timeout = 'short',
-    ) -> Webhook:
+    ) -> WebhookResource:
         """Update the webhook.
 
         https://docs.apify.com/api/v2#/reference/webhooks/webhook-object/update-webhook
@@ -235,7 +235,7 @@ class WebhookClientAsync(ResourceClientAsync):
         Returns:
             The updated webhook.
         """
-        webhook_update = WebhookUpdate(
+        webhook_update = UpdateWebhookRequest(
             event_types=list(event_types) if event_types is not None else None,
             request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
@@ -286,7 +286,7 @@ class WebhookClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return TestWebhookResponse.model_validate(result).data
+        return WebhookDispatchResponse.model_validate(result).data
 
     def dispatches(self) -> WebhookDispatchCollectionClientAsync:
         """Get dispatches of the webhook.

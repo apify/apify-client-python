@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    KeyValueStore,
     KeyValueStoreKey,
+    KeyValueStoreResource,
     KeyValueStoreResponse,
     ListOfKeys,
     ListOfKeysResponse,
@@ -85,7 +85,7 @@ class KeyValueStoreClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> KeyValueStore | None:
+    def get(self, *, timeout: Timeout = 'short') -> KeyValueStoreResource | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
@@ -107,7 +107,7 @@ class KeyValueStoreClient(ResourceClient):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'long',
-    ) -> KeyValueStore:
+    ) -> KeyValueStoreResource:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store
@@ -521,7 +521,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> KeyValueStore | None:
+    async def get(self, *, timeout: Timeout = 'short') -> KeyValueStoreResource | None:
         """Retrieve the key-value store.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/get-store
@@ -543,7 +543,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'long',
-    ) -> KeyValueStore:
+    ) -> KeyValueStoreResource:
         """Update the key-value store with specified fields.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/store-object/update-store

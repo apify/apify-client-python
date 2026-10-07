@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Stream request bodies from files, iterables, and responses ([#1060](https://github.com/apify/apify-client-python/pull/1060)) ([9be215b](https://github.com/apify/apify-client-python/commit/9be215b23a13de0abc4a255a18450cc764e7a6c7)) by [@vdusek](https://github.com/vdusek), closes [#972](https://github.com/apify/apify-client-python/issues/972)
 - Retry starting a run on memory and concurrent-runs limits ([#1081](https://github.com/apify/apify-client-python/pull/1081)) ([3dd8ca5](https://github.com/apify/apify-client-python/commit/3dd8ca5fe4d2537cb009cb310ba12b39927a9558)) by [@vdusek](https://github.com/vdusek), closes [#1071](https://github.com/apify/apify-client-python/issues/1071)
 - Add live iteration over a run&#x27;s dataset items ([#1079](https://github.com/apify/apify-client-python/pull/1079)) ([6aa8ead](https://github.com/apify/apify-client-python/commit/6aa8ead676a3520f6a418597eb62f319a3d19d30)) by [@vdusek](https://github.com/vdusek), closes [#1065](https://github.com/apify/apify-client-python/issues/1065)
+- Add max_total_charge_usd to task start() and call() ([#1097](https://github.com/apify/apify-client-python/pull/1097)) ([966d3d6](https://github.com/apify/apify-client-python/commit/966d3d687d8d45737bf706fb13de379e682897d5)) by [@vdusek](https://github.com/vdusek), closes [#1096](https://github.com/apify/apify-client-python/issues/1096)
 
 ### 🐛 Bug Fixes
 

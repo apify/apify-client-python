@@ -146,7 +146,7 @@ client = ApifyClient(token='MY-APIFY-TOKEN', compression=IdentityCompressor())
 | **Availability**              | Requires the `brotli` extra             | Built-in, no extra needed       |
 | **`Content-Encoding` header** | `br`                                    | `gzip`                          |
 | **Quality range**             | `0–11`                                  | `1–9`                           |
-| **Default quality**           | `6`                                     | `9`                             |
+| **Default quality**           | `6`                                     | `6`                             |
 | **Enable via config**         | `compression='brotli'`                  | `compression='gzip'` (default)  |
 | **Best for**                  | Large payloads where bandwidth matters  | Minimal-dependency environments |
 

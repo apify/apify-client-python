@@ -26,6 +26,11 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.time import to_seconds
+from apify_client._utils.wait_for_resources import (
+    prepare_resendable_body,
+    start_waiting_for_resources,
+    start_waiting_for_resources_async,
+)
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -229,6 +234,7 @@ class ActorClient(ResourceClient):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: WebhooksList | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -263,12 +269,21 @@ class ActorClient(ResourceClient):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
+                generator, is sent only once, so its start is not retried.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
+        run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
         request_params = self._build_params(
             build=build,
@@ -282,13 +297,16 @@ class ActorClient(ResourceClient):
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
-        response = self._http_client.call(
-            url=self._build_url('runs'),
-            method='POST',
-            headers={'content-type': content_type},
-            data=run_input,
-            params=request_params,
-            timeout=timeout,
+        response = start_waiting_for_resources(
+            lambda: self._http_client.call(
+                url=self._build_url('runs'),
+                method='POST',
+                headers={'content-type': content_type},
+                data=run_input,
+                params=request_params,
+                timeout=timeout,
+            ),
+            wait_for_resources=wait_for_resources,
         )
 
         result = response_to_dict(response)
@@ -308,6 +326,7 @@ class ActorClient(ResourceClient):
         webhooks: WebhooksList | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
+        wait_for_resources: bool | timedelta = False,
         logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -341,6 +360,14 @@ class ActorClient(ResourceClient):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the run to finish. If not provided,
                 waits indefinitely.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
@@ -361,6 +388,7 @@ class ActorClient(ResourceClient):
             run_timeout=run_timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
+            wait_for_resources=wait_for_resources,
             timeout=timeout,
         )
         run_client = self._client_registry.run_client(
@@ -740,6 +768,7 @@ class ActorClientAsync(ResourceClientAsync):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: WebhooksList | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -774,12 +803,21 @@ class ActorClientAsync(ResourceClientAsync):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
+                generator, is sent only once, so its start is not retried.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
+        run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
         request_params = self._build_params(
             build=build,
@@ -793,13 +831,16 @@ class ActorClientAsync(ResourceClientAsync):
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
-        response = await self._http_client.call(
-            url=self._build_url('runs'),
-            method='POST',
-            headers={'content-type': content_type},
-            data=run_input,
-            params=request_params,
-            timeout=timeout,
+        response = await start_waiting_for_resources_async(
+            lambda: self._http_client.call(
+                url=self._build_url('runs'),
+                method='POST',
+                headers={'content-type': content_type},
+                data=run_input,
+                params=request_params,
+                timeout=timeout,
+            ),
+            wait_for_resources=wait_for_resources,
         )
 
         result = response_to_dict(response)
@@ -819,6 +860,7 @@ class ActorClientAsync(ResourceClientAsync):
         webhooks: WebhooksList | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
+        wait_for_resources: bool | timedelta = False,
         logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -852,6 +894,14 @@ class ActorClientAsync(ResourceClientAsync):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the run to finish. If not provided,
                 waits indefinitely.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
@@ -872,6 +922,7 @@ class ActorClientAsync(ResourceClientAsync):
             run_timeout=run_timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
+            wait_for_resources=wait_for_resources,
             timeout=timeout,
         )
 

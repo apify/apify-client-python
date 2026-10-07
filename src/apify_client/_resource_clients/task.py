@@ -22,6 +22,7 @@ from apify_client._utils.wait_for_resources import start_waiting_for_resources, 
 
 if TYPE_CHECKING:
     from datetime import timedelta
+    from decimal import Decimal
 
     from apify_client._literals import ActorJobStatus, RunOrigin
     from apify_client._resource_clients import (
@@ -217,6 +218,7 @@ class TaskClient(ResourceClient):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
@@ -235,6 +237,7 @@ class TaskClient(ResourceClient):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -268,6 +271,7 @@ class TaskClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
@@ -296,6 +300,7 @@ class TaskClient(ResourceClient):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
@@ -316,6 +321,7 @@ class TaskClient(ResourceClient):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
                 you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -344,6 +350,7 @@ class TaskClient(ResourceClient):
             task_input=task_input,
             build=build,
             max_items=max_items,
+            max_total_charge_usd=max_total_charge_usd,
             memory_mbytes=memory_mbytes,
             run_timeout=run_timeout,
             restart_on_error=restart_on_error,
@@ -619,6 +626,7 @@ class TaskClientAsync(ResourceClientAsync):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
@@ -637,6 +645,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -670,6 +679,7 @@ class TaskClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
@@ -698,6 +708,7 @@ class TaskClientAsync(ResourceClientAsync):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
@@ -718,6 +729,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
                 you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -746,6 +758,7 @@ class TaskClientAsync(ResourceClientAsync):
             task_input=task_input,
             build=build,
             max_items=max_items,
+            max_total_charge_usd=max_total_charge_usd,
             memory_mbytes=memory_mbytes,
             run_timeout=run_timeout,
             restart_on_error=restart_on_error,

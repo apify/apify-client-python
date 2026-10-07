@@ -15,6 +15,10 @@ All notable changes to this project will be documented in this file.
 
 - Add missing `readme` field to `Profile` model ([#1086](https://github.com/apify/apify-client-python/pull/1086)) ([ae17148](https://github.com/apify/apify-client-python/commit/ae1714891c4f70d66ab4964c1783fee0a96776f1)) by [@apify-service-account](https://github.com/apify-service-account)
 
+### ⚡ Performance
+
+- Default gzip compression quality to 6 ([#1099](https://github.com/apify/apify-client-python/pull/1099)) ([00cfb65](https://github.com/apify/apify-client-python/commit/00cfb658c19645886adaca68b26f71867e0a6826)) by [@vdusek](https://github.com/vdusek), closes [#1095](https://github.com/apify/apify-client-python/issues/1095)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.2.1](https://github.com/apify/apify-client-python/releases/tag/v3.2.1) (2026-09-25)

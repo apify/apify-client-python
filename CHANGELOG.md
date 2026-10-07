@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Stream request bodies from files, iterables, and responses ([#1060](https://github.com/apify/apify-client-python/pull/1060)) ([9be215b](https://github.com/apify/apify-client-python/commit/9be215b23a13de0abc4a255a18450cc764e7a6c7)) by [@vdusek](https://github.com/vdusek), closes [#972](https://github.com/apify/apify-client-python/issues/972)
+- Retry starting a run on memory and concurrent-runs limits ([#1081](https://github.com/apify/apify-client-python/pull/1081)) ([3dd8ca5](https://github.com/apify/apify-client-python/commit/3dd8ca5fe4d2537cb009cb310ba12b39927a9558)) by [@vdusek](https://github.com/vdusek), closes [#1071](https://github.com/apify/apify-client-python/issues/1071)
+
+### 🐛 Bug Fixes
+
+- Add missing `readme` field to `Profile` model ([#1086](https://github.com/apify/apify-client-python/pull/1086)) ([ae17148](https://github.com/apify/apify-client-python/commit/ae1714891c4f70d66ab4964c1783fee0a96776f1)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
 <!-- git-cliff-unreleased-end -->

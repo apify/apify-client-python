@@ -19,7 +19,7 @@ class GzipHttpCompressor(HttpCompressor):
     _max_quality = 9
     """Highest valid quality (slowest, best compression)."""
 
-    def __init__(self, *, quality: int = _max_quality) -> None:
+    def __init__(self, *, quality: int = 6) -> None:
         """Initialize the gzip compressor.
 
         Args:

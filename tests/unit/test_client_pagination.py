@@ -126,7 +126,6 @@ _RELAXED_LIST_MODELS = (
 # construction time, so they need a forced rebuild to pick up the relaxation. The wrappers themselves are not mutated -
 # their own field annotations stay as-is.
 _REBUILT_RESPONSE_WRAPPERS = (
-    'ListOfStoreActorsResponse',
     'ListOfActorsResponse',
     'ListOfBuildsResponse',
     'ListOfDatasetsResponse',
@@ -137,6 +136,7 @@ _REBUILT_RESPONSE_WRAPPERS = (
     'ListOfRequestsResponse',
     'ListOfRunsResponse',
     'ListOfSchedulesResponse',
+    'ListOfStoreActorsResponse',
     'ListOfTasksResponse',
     'ListOfVersionsResponse',
     'ListOfWebhooksResponse',
@@ -148,9 +148,9 @@ def _relax_item_validation() -> Any:
     """Relax only the element type of `items` on paginated list models for the test run.
 
     Pagination tests feed synthetic `{'id': N}` items that don't satisfy the real API schemas (`ActorListItem`,
-    `BuildListItem`, `Request`, `EnvVar`, ...). Instead of bypassing validation wholesale, each inner `ListOf*` model
-    has its `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every pagination-metadata
-    field remain validated.
+    `BuildListItem`, `RequestResource`, `EnvVar`, ...). Instead of bypassing validation wholesale, each inner `ListOf*`
+    model has its `items` field swapped to `list[dict]` and rebuilt. Outer `.data` wrapping and every
+    pagination-metadata field remain validated.
     """
     relaxed_field = FieldInfo.from_annotation(list[dict])
     originals: dict[type[BaseModel], FieldInfo] = {}

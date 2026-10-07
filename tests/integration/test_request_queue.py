@@ -50,7 +50,7 @@ HANDLED_AT = datetime(2019, 6, 16, 10, 23, 31, 607000, tzinfo=UTC)
 
 # Every request field beyond `id`/`unique_key`/`url`, snake_cased. The API declares its write bodies with
 # `additionalProperties: false`, so each of these has to reach it camelCased to be stored at all. A fragment, not
-# a full `RequestDict`: every use spreads it alongside `unique_key`/`url` supplied separately.
+# a full `RequestResourceDict`: every use spreads it alongside `unique_key`/`url` supplied separately.
 ALL_REQUEST_FIELDS: dict[str, Any] = {
     'method': 'POST',
     'user_data': {'label': 'DETAIL', 'depth': 2},

@@ -575,7 +575,7 @@ def add_camel_case_typeddicts(content: str, alias_map: dict[str, dict[str, str]]
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
             # Every class kept in `_typeddicts.py` is a TypedDict — either directly (base is `TypedDict`) or by
-            # inheriting from a sibling TypedDict (e.g. `RequestDict(RequestBaseDict)`). The `Dict` suffix
+            # inheriting from a sibling TypedDict (e.g. `RequestResourceDict(RequestBaseDict)`). The `Dict` suffix
             # is the load-bearing filter; the base check is informational only.
             if not node.name.endswith('Dict') or node.name.endswith('CamelDict'):
                 continue

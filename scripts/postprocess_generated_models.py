@@ -497,7 +497,7 @@ def build_alias_map(models_source: str) -> dict[str, dict[str, str]]:
 
 
 def _camel_dict_name(snake_name: str) -> str:
-    """Insert `Camel` before the trailing `Dict` (e.g. `RequestDict` -> `RequestCamelDict`)."""
+    """Insert `Camel` before the trailing `Dict` (e.g. `RequestResourceDict` -> `RequestResourceCamelDict`)."""
     if not snake_name.endswith('Dict'):
         raise ValueError(f"Expected name to end with 'Dict': {snake_name!r}")
     return snake_name[: -len('Dict')] + 'CamelDict'

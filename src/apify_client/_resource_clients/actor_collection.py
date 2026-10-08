@@ -131,6 +131,8 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> Actor:
         """Create a new Actor.
@@ -165,6 +167,10 @@ class ActorCollectionClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -194,6 +200,8 @@ class ActorCollectionClient(ResourceClient):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -310,6 +318,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> Actor:
         """Create a new Actor.
@@ -344,6 +354,10 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -373,6 +387,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,

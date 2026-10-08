@@ -12,10 +12,13 @@ All notable changes to this project will be documented in this file.
 - Add live iteration over a run&#x27;s dataset items ([#1079](https://github.com/apify/apify-client-python/pull/1079)) ([6aa8ead](https://github.com/apify/apify-client-python/commit/6aa8ead676a3520f6a418597eb62f319a3d19d30)) by [@vdusek](https://github.com/vdusek), closes [#1065](https://github.com/apify/apify-client-python/issues/1065)
 - Add max_total_charge_usd to task start() and call() ([#1097](https://github.com/apify/apify-client-python/pull/1097)) ([966d3d6](https://github.com/apify/apify-client-python/commit/966d3d687d8d45737bf706fb13de379e682897d5)) by [@vdusek](https://github.com/vdusek), closes [#1096](https://github.com/apify/apify-client-python/issues/1096)
 - Add missing Standby fields to Actor update and create ([#1107](https://github.com/apify/apify-client-python/pull/1107)) ([8dd5b67](https://github.com/apify/apify-client-python/commit/8dd5b678d1440143f47dc57e29d6a2ef251d041d)) by [@vdusek](https://github.com/vdusek), closes [#1101](https://github.com/apify/apify-client-python/issues/1101)
+- Add flatten to dataset stream_items ([#1106](https://github.com/apify/apify-client-python/pull/1106)) ([1d1e9f6](https://github.com/apify/apify-client-python/commit/1d1e9f65e6fb6bf752f5dd552b9a2424c73f52fe)) by [@vdusek](https://github.com/vdusek), closes [#1100](https://github.com/apify/apify-client-python/issues/1100)
 
 ### 🐛 Bug Fixes
 
 - Add missing `readme` field to `Profile` model ([#1086](https://github.com/apify/apify-client-python/pull/1086)) ([ae17148](https://github.com/apify/apify-client-python/commit/ae1714891c4f70d66ab4964c1783fee0a96776f1)) by [@apify-service-account](https://github.com/apify-service-account)
+- Rename `build_tag` to `build` in `validate_input()` ([#1110](https://github.com/apify/apify-client-python/pull/1110)) ([0616e1a](https://github.com/apify/apify-client-python/commit/0616e1a0a5354f609eb5759f3729f6795a3192c4)) by [@vdusek](https://github.com/vdusek), closes [#1091](https://github.com/apify/apify-client-python/issues/1091)
+- Type `example_run_input_body` as `str` ([#1105](https://github.com/apify/apify-client-python/pull/1105)) ([a1047fa](https://github.com/apify/apify-client-python/commit/a1047faee0c1065844b9639a47cb02422f9302ff)) by [@vdusek](https://github.com/vdusek), closes [#1102](https://github.com/apify/apify-client-python/issues/1102)
 
 ### ⚡ Performance
 

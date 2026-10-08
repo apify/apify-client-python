@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import ListOfActorsInStoreResponse, ListOfStoreActors
+from apify_client._models import ListOfStoreActors, ListOfStoreActorsResponse
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    from apify_client._models import StoreListActor
+    from apify_client._models import StoreActor
     from apify_client.types import Timeout
 
 
@@ -73,7 +73,7 @@ class StoreCollectionClient(ResourceClient):
             username=username,
             pricingModel=pricing_model,
         )
-        return ListOfActorsInStoreResponse.model_validate(result).data
+        return ListOfStoreActorsResponse.model_validate(result).data
 
     def iterate(
         self,
@@ -86,7 +86,7 @@ class StoreCollectionClient(ResourceClient):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[StoreListActor]:
+    ) -> Iterator[StoreActor]:
         """Iterate over Actors in Apify store.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -183,7 +183,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             username=username,
             pricingModel=pricing_model,
         )
-        return ListOfActorsInStoreResponse.model_validate(result).data
+        return ListOfStoreActorsResponse.model_validate(result).data
 
     def iterate(
         self,
@@ -196,7 +196,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         username: str | None = None,
         pricing_model: str | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[StoreListActor]:
+    ) -> AsyncIterator[StoreActor]:
         """Iterate over Actors in Apify store.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method

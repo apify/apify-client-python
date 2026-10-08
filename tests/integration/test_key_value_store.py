@@ -20,7 +20,7 @@ from .._utils import (
     maybe_sleep,
     poll_until_condition,
 )
-from apify_client._models import KeyValueStore, KeyValueStoreKey, ListOfKeys, ListOfKeyValueStores
+from apify_client._models import KeyValueStoreKey, KeyValueStoreResource, ListOfKeys, ListOfKeyValueStores
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
 
@@ -50,14 +50,14 @@ async def test_key_value_store_collection_get_or_create(client: ApifyClient | Ap
 
     # Create new KVS
     kvs = await maybe_await(client.key_value_stores().get_or_create(name=unique_name))
-    assert isinstance(kvs, KeyValueStore)
+    assert isinstance(kvs, KeyValueStoreResource)
 
     try:
         assert kvs.name == unique_name
 
         # Get same KVS again (should return existing)
         same_kvs = await maybe_await(client.key_value_stores().get_or_create(name=unique_name))
-        assert isinstance(same_kvs, KeyValueStore)
+        assert isinstance(same_kvs, KeyValueStoreResource)
         assert same_kvs.id == kvs.id
     finally:
         await maybe_await(client.key_value_store(kvs.id).delete())
@@ -68,7 +68,7 @@ async def test_key_value_store_should_create_expiring_keys_public_url_with_param
 ) -> None:
     store_name = get_random_resource_name('key-value-store')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
 
     store = client.key_value_store(created_store.id)
 
@@ -95,7 +95,7 @@ async def test_key_value_store_should_create_public_keys_non_expiring_url(
 ) -> None:
     store_name = get_random_resource_name('key-value-store')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
 
     store = client.key_value_store(created_store.id)
 
@@ -218,7 +218,7 @@ async def test_key_value_store_get_or_create_and_get(client: ApifyClient | Apify
 
     # Create store
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     assert created_store.id is not None
     assert created_store.name == store_name
 
@@ -227,7 +227,7 @@ async def test_key_value_store_get_or_create_and_get(client: ApifyClient | Apify
 
     try:
         retrieved_store = await maybe_await(store_client.get())
-        assert isinstance(retrieved_store, KeyValueStore)
+        assert isinstance(retrieved_store, KeyValueStoreResource)
         assert retrieved_store.id == created_store.id
         assert retrieved_store.name == store_name
     finally:
@@ -240,19 +240,19 @@ async def test_key_value_store_update(client: ApifyClient | ApifyClientAsync) ->
     new_name = get_random_resource_name('kvs-updated')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
         # Update the name
         updated_store = await maybe_await(store_client.update(name=new_name))
-        assert isinstance(updated_store, KeyValueStore)
+        assert isinstance(updated_store, KeyValueStoreResource)
         assert updated_store.name == new_name
         assert updated_store.id == created_store.id
 
         # Verify the update persisted
         retrieved_store = await maybe_await(store_client.get())
-        assert isinstance(retrieved_store, KeyValueStore)
+        assert isinstance(retrieved_store, KeyValueStoreResource)
         assert retrieved_store.name == new_name
     finally:
         await maybe_await(store_client.delete())
@@ -263,7 +263,7 @@ async def test_key_value_store_set_and_get_record(client: ApifyClient | ApifyCli
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -289,7 +289,7 @@ async def test_key_value_store_set_and_get_text_record(client: ApifyClient | Api
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -315,7 +315,7 @@ async def test_key_value_store_list_keys(client: ApifyClient | ApifyClientAsync)
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -345,7 +345,7 @@ async def test_key_value_store_list_keys_with_limit(client: ApifyClient | ApifyC
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -370,7 +370,7 @@ async def test_key_value_store_record_exists(client: ApifyClient | ApifyClientAs
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -396,7 +396,7 @@ async def test_key_value_store_delete_record(client: ApifyClient | ApifyClientAs
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -425,7 +425,7 @@ async def test_key_value_store_delete_nonexistent(client: ApifyClient | ApifyCli
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     # Delete store
@@ -441,7 +441,7 @@ async def test_key_value_store_iterate_keys(client: ApifyClient | ApifyClientAsy
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -483,7 +483,7 @@ async def test_key_value_store_iterate_keys_with_limit(
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -520,7 +520,7 @@ async def test_key_value_store_iterate_keys_with_prefix(
     store_name = get_random_resource_name('kvs')
 
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -560,14 +560,14 @@ async def test_key_value_store_collection_iterate(client: ApifyClient | ApifyCli
 
     for _ in range(3):
         kvs = await maybe_await(client.key_value_stores().get_or_create(name=get_random_resource_name('kvs')))
-        assert isinstance(kvs, KeyValueStore)
+        assert isinstance(kvs, KeyValueStoreResource)
         created_ids.append(kvs.id)
 
     try:
         collected = await collect_iterate_until_present(
             lambda: client.key_value_stores().iterate(desc=True),
             set(created_ids),
-            item_type=KeyValueStore,
+            item_type=KeyValueStoreResource,
             is_async=is_async,
         )
         collected_ids = {kvs.id for kvs in collected}
@@ -582,7 +582,7 @@ async def test_key_value_store_set_and_get_binary_record(client: ApifyClient | A
     """Test setting and retrieving a binary (bytes) record."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -608,7 +608,7 @@ async def test_key_value_store_set_and_get_pre_compressed_record(client: ApifyCl
     """A record uploaded with an explicit `content_encoding` is stored as sent and served back under that encoding."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -644,7 +644,7 @@ async def test_key_value_store_get_record_public_url(client: ApifyClient | Apify
     """Test get_record_public_url returns a working signed URL."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -675,7 +675,7 @@ async def test_key_value_store_create_keys_public_url(client: ApifyClient | Apif
     """Test create_keys_public_url returns a working signed URL for listing keys."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -711,7 +711,7 @@ async def test_key_value_store_stream_record_own(client: ApifyClient | ApifyClie
     """Test streaming a record from one's own key-value store (no signature)."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -747,7 +747,7 @@ async def test_key_value_store_list_keys_with_exclusive_start_key(client: ApifyC
     """Test listing keys with the exclusive_start_key cursor parameter."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -784,7 +784,7 @@ async def test_key_value_store_set_streamed_record(client: ApifyClient | ApifyCl
     """A file-like value is streamed to the API in chunks and stored whole."""
     store_name = get_random_resource_name('kvs')
     created_store = await maybe_await(client.key_value_stores().get_or_create(name=store_name))
-    assert isinstance(created_store, KeyValueStore)
+    assert isinstance(created_store, KeyValueStoreResource)
     store_client = client.key_value_store(created_store.id)
 
     try:
@@ -815,8 +815,8 @@ async def test_key_value_store_pipe_record_between_stores(
     """A record streamed from one store is uploaded to another as it downloads, keeping its content type."""
     source_store = await maybe_await(client.key_value_stores().get_or_create(name=get_random_resource_name('kvs')))
     target_store = await maybe_await(client.key_value_stores().get_or_create(name=get_random_resource_name('kvs')))
-    assert isinstance(source_store, KeyValueStore)
-    assert isinstance(target_store, KeyValueStore)
+    assert isinstance(source_store, KeyValueStoreResource)
+    assert isinstance(target_store, KeyValueStoreResource)
     source_client = client.key_value_store(source_store.id)
     target_client = client.key_value_store(target_store.id)
 

@@ -15,7 +15,7 @@ Applied to `_typeddicts.py`:
 - Keep only the TypedDicts actually used as resource-client method inputs (plus their transitive dependencies).
   The file is generated in full by datamodel-codegen; the trimming happens here.
 - Rename every kept class to add a `Dict` suffix so it doesn't clash with the Pydantic model name
-  (e.g. `WebhookCreate` -> `WebhookCreateDict`) and rewire references.
+  (e.g. `CreateWebhookRequest` -> `CreateWebhookRequestDict`) and rewire references.
 - Generate a camelCase sibling for every kept TypedDict (`FooDict` -> `FooCamelDict`) so users can pass API-shaped
   dicts and still satisfy the type checker. Field identifiers are looked up in the Pydantic alias map extracted
   from `_models.py`; nested TypedDict refs are rewired to the camel variant.
@@ -55,11 +55,11 @@ DISCRIMINATOR_FIXES: dict[str, str] = {
 # union is introduced on a resource-client method signature.
 RESOURCE_INPUT_TYPEDDICTS: frozenset[str] = frozenset(
     {
-        'Request',  # RequestQueueClient.update_request
+        'RequestResource',  # RequestQueueClient.update_request
         'RequestWithoutId',  # RequestQueueClient.add_request, batch_add_requests
-        'RequestDraftDelete',  # RequestQueueClient.batch_delete_requests
+        'RequestToDelete',  # RequestQueueClient.batch_delete_requests
         'TaskInput',  # Actor/Task start/call/update default input
-        'WebhookCreate',  # Actor/Task start/call webhook list element
+        'CreateWebhookRequest',  # Actor/Task start/call webhook list element
         'WebhookRepresentation',  # Actor/Task start/call ad-hoc webhook list element
     }
 )
@@ -497,7 +497,7 @@ def build_alias_map(models_source: str) -> dict[str, dict[str, str]]:
 
 
 def _camel_dict_name(snake_name: str) -> str:
-    """Insert `Camel` before the trailing `Dict` (e.g. `RequestDict` -> `RequestCamelDict`)."""
+    """Insert `Camel` before the trailing `Dict` (e.g. `RequestResourceDict` -> `RequestResourceCamelDict`)."""
     if not snake_name.endswith('Dict'):
         raise ValueError(f"Expected name to end with 'Dict': {snake_name!r}")
     return snake_name[: -len('Dict')] + 'CamelDict'
@@ -575,7 +575,7 @@ def add_camel_case_typeddicts(content: str, alias_map: dict[str, dict[str, str]]
     for node in tree.body:
         if isinstance(node, ast.ClassDef):
             # Every class kept in `_typeddicts.py` is a TypedDict — either directly (base is `TypedDict`) or by
-            # inheriting from a sibling TypedDict (e.g. `RequestDict(RequestBaseDict)`). The `Dict` suffix
+            # inheriting from a sibling TypedDict (e.g. `RequestResourceDict(RequestBaseDict)`). The `Dict` suffix
             # is the load-bearing filter; the base check is informational only.
             if not node.name.endswith('Dict') or node.name.endswith('CamelDict'):
                 continue

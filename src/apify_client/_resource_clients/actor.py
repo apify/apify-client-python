@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    Actor,
+    ActorResource,
     ActorResponse,
     ActorStandby,
     Build,
@@ -86,7 +87,7 @@ class ActorClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Actor | None:
+    def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -119,7 +120,7 @@ class ActorClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        example_run_input_body: Any = None,
+        example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -127,11 +128,13 @@ class ActorClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
-    ) -> Actor:
+    ) -> ActorResource:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -153,7 +156,8 @@ class ActorClient(ResourceClient):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
+                as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -164,6 +168,10 @@ class ActorClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -200,6 +208,8 @@ class ActorClient(ResourceClient):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -567,9 +577,10 @@ class ActorClient(ResourceClient):
         self,
         run_input: Any = None,
         *,
-        build_tag: str | None = None,
+        build: str | None = None,
         content_type: str | None = None,
         timeout: Timeout = 'short',
+        build_tag: str | None = None,
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -578,13 +589,25 @@ class ActorClient(ResourceClient):
                 including an `io.IOBase` stream such as an open file, an iterable of byte chunks, or a streamed
                 `HttpResponse`, which are uploaded in chunks without being held in memory. Streaming is experimental,
                 and its behavior may change in future versions.
-            build_tag: The Actor's build tag.
+            build: The Actor build to validate the input against. It can be either a build tag or build number. By
+                default, the build specified in the default run configuration for the Actor (typically latest) is used.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
+            build_tag: Deprecated alias of `build`. Will be removed in v4.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
+        if build_tag is not None:
+            warnings.warn(
+                'The `build_tag` argument is deprecated and will be removed in v4. Use `build` instead.',
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            if build is not None:
+                raise ValueError('Pass only one of `build` and `build_tag`.')
+            build = build_tag
+
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         self._http_client.call(
@@ -592,7 +615,7 @@ class ActorClient(ResourceClient):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
-            params=self._build_params(build=build_tag),
+            params=self._build_params(build=build),
             timeout=timeout,
         )
 
@@ -620,7 +643,7 @@ class ActorClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Actor | None:
+    async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -653,7 +676,7 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        example_run_input_body: Any = None,
+        example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -661,11 +684,13 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
-    ) -> Actor:
+    ) -> ActorResource:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -687,7 +712,8 @@ class ActorClientAsync(ResourceClientAsync):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
+                as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -698,6 +724,10 @@ class ActorClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -734,6 +764,8 @@ class ActorClientAsync(ResourceClientAsync):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -1102,9 +1134,10 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         run_input: Any = None,
         *,
-        build_tag: str | None = None,
+        build: str | None = None,
         content_type: str | None = None,
         timeout: Timeout = 'short',
+        build_tag: str | None = None,
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -1113,13 +1146,25 @@ class ActorClientAsync(ResourceClientAsync):
                 including an `io.IOBase` stream such as an open file, an iterable of byte chunks, or a streamed
                 `HttpResponse`, which are uploaded in chunks without being held in memory. Streaming is experimental,
                 and its behavior may change in future versions.
-            build_tag: The Actor's build tag.
+            build: The Actor build to validate the input against. It can be either a build tag or build number. By
+                default, the build specified in the default run configuration for the Actor (typically latest) is used.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
+            build_tag: Deprecated alias of `build`. Will be removed in v4.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
+        if build_tag is not None:
+            warnings.warn(
+                'The `build_tag` argument is deprecated and will be removed in v4. Use `build` instead.',
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            if build is not None:
+                raise ValueError('Pass only one of `build` and `build_tag`.')
+            build = build_tag
+
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         await self._http_client.call(
@@ -1127,7 +1172,7 @@ class ActorClientAsync(ResourceClientAsync):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
-            params=self._build_params(build=build_tag),
+            params=self._build_params(build=build),
             timeout=timeout,
         )
 

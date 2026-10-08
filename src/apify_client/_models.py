@@ -32,7 +32,17 @@ class AccountLimits(BaseModel):
     )
     monthly_usage_cycle: UsageCycle
     limits: Limits
-    current: Current
+    current: CurrentUsage
+
+
+@docs_group('Models')
+class AccountLimitsResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: AccountLimits
 
 
 @docs_group('Models')
@@ -62,7 +72,137 @@ class ActVersion(BaseModel):
 
 
 @docs_group('Models')
-class Actor(BaseModel):
+class ActorChargeEvent(BaseModel):
+    """Definition of a single chargeable event for a pay-per-event Actor. Each event is either flat-priced
+    (`eventPriceUsd` is set) or tier-priced (`eventTieredPricingUsd` is set); the two are mutually exclusive.
+
+    """
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    event_title: str
+    """
+    Human-readable title shown to users in the billing UI.
+    """
+    event_description: str
+    """
+    Human-readable description of what triggers this event.
+    """
+    event_price_usd: float | None = None
+    """
+    Flat price per event in USD. Present only for non-tiered events. Mutually exclusive with `eventTieredPricingUsd`.
+
+    """
+    event_tiered_pricing_usd: dict[str, TieredPricingPerEventEntry] | None = None
+    is_primary_event: bool | None = None
+    """
+    Whether this event is the Actor's primary chargeable event.
+    """
+    is_one_time_event: bool | None = None
+    """
+    Whether this event can only be charged once per Actor run.
+    """
+
+
+@docs_group('Models')
+class ActorDefinition(BaseModel):
+    """The definition of the Actor, the full specification of this field can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/actor-json)."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    actor_specification: Literal[1] | None = None
+    """
+    The Actor specification version that this Actor follows. This property must be set to 1.
+    """
+    name: str | None = None
+    """
+    The name of the Actor.
+    """
+    version: Annotated[str | None, Field(pattern='^[0-9]+(\\.[0-9]+)+$')] = None
+    """
+    The version of the Actor, typically a dot-separated sequence of numbers (e.g., `0.1`, `1.0`, or `0.0.1`).
+    """
+    build_tag: str | None = None
+    """
+    The tag name to be applied to a successful build of the Actor. Defaults to 'latest' if not specified.
+    """
+    environment_variables: dict[str, str] | None = None
+    """
+    A map of environment variables to be used during local development and deployment.
+    """
+    dockerfile: str | None = None
+    """
+    The path to the Dockerfile used for building the Actor on the platform.
+    """
+    docker_context_dir: str | None = None
+    """
+    The path to the directory used as the Docker context when building the Actor.
+    """
+    readme: str | None = None
+    """
+    The path to the README file for the Actor.
+    """
+    input: dict[str, Any] | None = None
+    """
+    The input schema object, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/input-schema)
+    """
+    changelog: str | None = None
+    """
+    The path to the CHANGELOG file displayed in the Actor's information tab.
+    """
+    storages: Storages | None = None
+    default_memory_mbytes: str | int | None = None
+    """
+    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/actors/development/actor-definition/dynamic-actor-memory).
+    """
+    min_memory_mbytes: Annotated[int | None, Field(ge=128)] = None
+    """
+    Specifies the minimum amount of memory in megabytes required by the Actor.
+    """
+    max_memory_mbytes: Annotated[int | None, Field(ge=128)] = None
+    """
+    Specifies the maximum amount of memory in megabytes required by the Actor.
+    """
+    uses_standby_mode: bool | None = None
+    """
+    Specifies whether Standby mode is enabled for the Actor.
+    """
+
+
+@docs_group('Models')
+class ActorListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['br9CKmk457'])]
+    created_at: Annotated[AwareDatetime, Field(examples=['2019-10-29T07:34:24.202Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2019-10-30T07:34:24.202Z'])]
+    name: Annotated[str, Field(examples=['MyAct'])]
+    username: Annotated[str, Field(examples=['janedoe'])]
+    title: Annotated[str | None, Field(examples=['Hello World Example'])] = None
+    stats: ActorStats | None = None
+
+
+@docs_group('Models')
+class ActorNotice(Enum):
+    """A warning displayed on the Actor's page in Apify Store and Console. Can be set by the Actor's developer or automatically by Apify's quality checks."""
+
+    NONE = 'NONE'
+    RESIDENTIAL_PROXY_REQUIRED = 'RESIDENTIAL_PROXY_REQUIRED'
+    UNDER_MAINTENANCE = 'UNDER_MAINTENANCE'
+    NONE_TYPE_NONE = None
+
+
+@docs_group('Models')
+class ActorResource(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -185,120 +325,6 @@ class Actor(BaseModel):
 
 
 @docs_group('Models')
-class ActorChargeEvent(BaseModel):
-    """Definition of a single chargeable event for a pay-per-event Actor. Each event is either flat-priced
-    (`eventPriceUsd` is set) or tier-priced (`eventTieredPricingUsd` is set); the two are mutually exclusive.
-
-    """
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    event_title: str
-    """
-    Human-readable title shown to users in the billing UI.
-    """
-    event_description: str
-    """
-    Human-readable description of what triggers this event.
-    """
-    event_price_usd: float | None = None
-    """
-    Flat price per event in USD. Present only for non-tiered events. Mutually exclusive with `eventTieredPricingUsd`.
-
-    """
-    event_tiered_pricing_usd: dict[str, TieredPricingPerEventEntry] | None = None
-    is_primary_event: bool | None = None
-    """
-    Whether this event is the Actor's primary chargeable event.
-    """
-    is_one_time_event: bool | None = None
-    """
-    Whether this event can only be charged once per Actor run.
-    """
-
-
-@docs_group('Models')
-class ActorDefinition(BaseModel):
-    """The definition of the Actor, the full specification of this field can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/actor-json)."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    actor_specification: Literal[1] | None = None
-    """
-    The Actor specification version that this Actor follows. This property must be set to 1.
-    """
-    name: str | None = None
-    """
-    The name of the Actor.
-    """
-    version: Annotated[str | None, Field(pattern='^[0-9]+(\\.[0-9]+)+$')] = None
-    """
-    The version of the Actor, typically a dot-separated sequence of numbers (e.g., `0.1`, `1.0`, or `0.0.1`).
-    """
-    build_tag: str | None = None
-    """
-    The tag name to be applied to a successful build of the Actor. Defaults to 'latest' if not specified.
-    """
-    environment_variables: dict[str, str] | None = None
-    """
-    A map of environment variables to be used during local development and deployment.
-    """
-    dockerfile: str | None = None
-    """
-    The path to the Dockerfile used for building the Actor on the platform.
-    """
-    docker_context_dir: str | None = None
-    """
-    The path to the directory used as the Docker context when building the Actor.
-    """
-    readme: str | None = None
-    """
-    The path to the README file for the Actor.
-    """
-    input: dict[str, Any] | None = None
-    """
-    The input schema object, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/input-schema)
-    """
-    changelog: str | None = None
-    """
-    The path to the CHANGELOG file displayed in the Actor's information tab.
-    """
-    storages: Storages | None = None
-    default_memory_mbytes: str | int | None = None
-    """
-    Specifies the default amount of memory in megabytes to be used when the Actor is started. Can be an integer or a [dynamic memory expression](https://docs.apify.com/actors/development/actor-definition/dynamic-actor-memory).
-    """
-    min_memory_mbytes: Annotated[int | None, Field(ge=128)] = None
-    """
-    Specifies the minimum amount of memory in megabytes required by the Actor.
-    """
-    max_memory_mbytes: Annotated[int | None, Field(ge=128)] = None
-    """
-    Specifies the maximum amount of memory in megabytes required by the Actor.
-    """
-    uses_standby_mode: bool | None = None
-    """
-    Specifies whether Standby mode is enabled for the Actor.
-    """
-
-
-@docs_group('Models')
-class ActorNotice(Enum):
-    """A warning displayed on the Actor's page in Apify Store and Console. Can be set by the Actor's developer or automatically by Apify's quality checks."""
-
-    NONE = 'NONE'
-    RESIDENTIAL_PROXY_REQUIRED = 'RESIDENTIAL_PROXY_REQUIRED'
-    UNDER_MAINTENANCE = 'UNDER_MAINTENANCE'
-    NONE_TYPE_NONE = None
-
-
-@docs_group('Models')
 class ActorResponse(BaseModel):
     """Response containing Actor data."""
 
@@ -307,23 +333,7 @@ class ActorResponse(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    data: Actor
-
-
-@docs_group('Models')
-class ActorShort(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['br9CKmk457'])]
-    created_at: Annotated[AwareDatetime, Field(examples=['2019-10-29T07:34:24.202Z'])]
-    modified_at: Annotated[AwareDatetime, Field(examples=['2019-10-30T07:34:24.202Z'])]
-    name: Annotated[str, Field(examples=['MyAct'])]
-    username: Annotated[str, Field(examples=['janedoe'])]
-    title: Annotated[str | None, Field(examples=['Hello World Example'])] = None
-    stats: ActorStats | None = None
+    data: ActorResource
 
 
 @docs_group('Models')
@@ -492,7 +502,7 @@ class BatchAddResult(BaseModel):
     """
     Requests that were successfully added to the request queue.
     """
-    unprocessed_requests: list[RequestDraft]
+    unprocessed_requests: list[UnprocessedRequest]
     """
     Requests that failed to be added and can be retried.
     """
@@ -523,7 +533,7 @@ class BatchDeleteResult(BaseModel):
     """
     Requests that were successfully deleted from the request queue.
     """
-    unprocessed_requests: list[RequestDraft]
+    unprocessed_requests: list[UnprocessedRequest]
     """
     Requests that failed to be deleted and can be retried.
     """
@@ -578,7 +588,7 @@ class Build(BaseModel):
     started_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:34:24.202Z'])]
     finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-12T09:30:12.202Z'])] = None
     status: ActorJobStatus
-    meta: BuildsMeta
+    meta: BuildMeta
     stats: BuildStats | None = None
     options: BuildOptions | None = None
     usage: BuildUsage | None = None
@@ -609,6 +619,45 @@ class Build(BaseModel):
 
 
 @docs_group('Models')
+class BuildListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
+    act_id: Annotated[str | None, Field(examples=['janedoe~my-actor'])] = None
+    user_id: Annotated[str | None, Field(examples=['klmdEpoiojmdEMlk3'])] = None
+    status: ActorJobStatus
+    started_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:34:24.202Z'])]
+    finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-12T09:30:12.202Z'])] = None
+    usage_total_usd: Annotated[float, Field(examples=[0.02])]
+    build_number: Annotated[
+        str, Field(examples=['0.1.1'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
+    ]
+    build_number_int: Annotated[int | None, Field(examples=[10000])] = None
+    meta: BuildMeta | None = None
+
+
+@docs_group('Models')
+class BuildMeta(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    origin: RunOrigin
+    client_ip: Annotated[str | None, Field(examples=['172.234.12.34'])] = None
+    """
+    IP address of the client that started the build.
+    """
+    user_agent: Annotated[str | None, Field(examples=['Mozilla/5.0 (iPad)'])] = None
+    """
+    User agent of the client that started the build.
+    """
+
+
+@docs_group('Models')
 class BuildOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -634,27 +683,6 @@ class BuildResponse(BaseModel):
 
 
 @docs_group('Models')
-class BuildShort(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
-    act_id: Annotated[str | None, Field(examples=['janedoe~my-actor'])] = None
-    user_id: Annotated[str | None, Field(examples=['klmdEpoiojmdEMlk3'])] = None
-    status: ActorJobStatus
-    started_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:34:24.202Z'])]
-    finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-12T09:30:12.202Z'])] = None
-    usage_total_usd: Annotated[float, Field(examples=[0.02])]
-    build_number: Annotated[
-        str, Field(examples=['0.1.1'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
-    ]
-    build_number_int: Annotated[int | None, Field(examples=[10000])] = None
-    meta: BuildsMeta | None = None
-
-
-@docs_group('Models')
 class BuildStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -668,21 +696,6 @@ class BuildStats(BaseModel):
 
 
 @docs_group('Models')
-class BuildTag(BaseModel):
-    """The name of the build tag."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    build_id: str
-    """
-    The ID of the build to assign to the tag.
-    """
-
-
-@docs_group('Models')
 class BuildUsage(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -690,24 +703,6 @@ class BuildUsage(BaseModel):
         alias_generator=to_camel,
     )
     actor_compute_units: Annotated[float | None, Field(alias='ACTOR_COMPUTE_UNITS', examples=[0.08])] = None
-
-
-@docs_group('Models')
-class BuildsMeta(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    origin: RunOrigin
-    client_ip: Annotated[str | None, Field(examples=['172.234.12.34'])] = None
-    """
-    IP address of the client that started the build.
-    """
-    user_agent: Annotated[str | None, Field(examples=['Mozilla/5.0 (iPad)'])] = None
-    """
-    User agent of the client that started the build.
-    """
 
 
 @docs_group('Models')
@@ -820,6 +815,26 @@ class CreateActorRequest(BaseModel):
 
 
 @docs_group('Models')
+class CreateOrUpdateScheduleRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    name: Annotated[str | None, Field(examples=['my-schedule'])] = None
+    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
+    is_exclusive: Annotated[bool | None, Field(examples=[True])] = None
+    cron_expression: Annotated[str | None, Field(examples=['* * * * *'])] = None
+    timezone: Annotated[str | None, Field(examples=['UTC'])] = None
+    description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
+    title: str | None = None
+    actions: (
+        list[Annotated[ScheduleCreateActionRunActor | ScheduleCreateActionRunActorTask, Field(discriminator='type')]]
+        | None
+    ) = None
+
+
+@docs_group('Models')
 class CreateOrUpdateVersionRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -889,23 +904,23 @@ class CreateTaskRequest(BaseModel):
 
 
 @docs_group('Models')
-class Current(BaseModel):
+class CreateWebhookRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    monthly_usage_usd: Annotated[float, Field(examples=[43])]
-    monthly_actor_compute_units: Annotated[float, Field(examples=[500.784475])]
-    monthly_external_data_transfer_gbytes: Annotated[float, Field(examples=[3.00861903931946])]
-    monthly_proxy_serps: Annotated[int, Field(examples=[34])]
-    monthly_residential_proxy_gbytes: Annotated[float, Field(examples=[0.4])]
-    actor_memory_gbytes: Annotated[float, Field(examples=[8])]
-    actor_count: Annotated[int, Field(examples=[31])]
-    actor_task_count: Annotated[int, Field(examples=[130])]
-    active_actor_job_count: Annotated[int, Field(examples=[0])]
-    team_account_seat_count: Annotated[int, Field(examples=[5])]
-    schedule_count: Annotated[int | None, Field(examples=[77])] = None
+    is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
+    event_types: Annotated[list[WebhookEventType], Field(examples=[['ACTOR.RUN.SUCCEEDED']])]
+    condition: WebhookCondition
+    idempotency_key: Annotated[str | None, Field(examples=['fdSJmdP3nfs7sfk3y'])] = None
+    ignore_ssl_errors: Annotated[bool | None, Field(examples=[False])] = None
+    do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
+    request_url: Annotated[str, Field(examples=['http://example.com/'])]
+    payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
+    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
+    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
+    should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
 
 
 @docs_group('Models')
@@ -942,7 +957,27 @@ class CurrentPricingInfo(BaseModel):
 
 
 @docs_group('Models')
-class DailyServiceUsages(BaseModel):
+class CurrentUsage(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    monthly_usage_usd: Annotated[float, Field(examples=[43])]
+    monthly_actor_compute_units: Annotated[float, Field(examples=[500.784475])]
+    monthly_external_data_transfer_gbytes: Annotated[float, Field(examples=[3.00861903931946])]
+    monthly_proxy_serps: Annotated[int, Field(examples=[34])]
+    monthly_residential_proxy_gbytes: Annotated[float, Field(examples=[0.4])]
+    actor_memory_gbytes: Annotated[float, Field(examples=[8])]
+    actor_count: Annotated[int, Field(examples=[31])]
+    actor_task_count: Annotated[int, Field(examples=[130])]
+    active_actor_job_count: Annotated[int, Field(examples=[0])]
+    team_account_seat_count: Annotated[int, Field(examples=[5])]
+    schedule_count: Annotated[int | None, Field(examples=[77])] = None
+
+
+@docs_group('Models')
+class DailyServiceUsage(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -954,7 +989,84 @@ class DailyServiceUsages(BaseModel):
 
 
 @docs_group('Models')
-class Dataset(BaseModel):
+class DatasetFieldStatistics(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    min: float | None = None
+    """
+    Minimum value of the field. For numbers, this is calculated directly. For strings, this is the length of the shortest string. For arrays, this is the length of the shortest array. For objects, this is the number of keys in the smallest object.
+    """
+    max: float | None = None
+    """
+    Maximum value of the field. For numbers, this is calculated directly. For strings, this is the length of the longest string. For arrays, this is the length of the longest array. For objects, this is the number of keys in the largest object.
+    """
+    null_count: int | None = None
+    """
+    How many items in the dataset have a null value for this field.
+    """
+    empty_count: int | None = None
+    """
+    How many items in the dataset are `undefined`, meaning that for example empty string is not considered empty.
+    """
+
+
+@docs_group('Models')
+class DatasetItemValidationError(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    instance_path: str | None = None
+    """
+    The path to the instance being validated.
+    """
+    schema_path: str | None = None
+    """
+    The path to the schema that failed the validation.
+    """
+    keyword: str | None = None
+    """
+    The validation keyword that caused the error.
+    """
+    message: str | None = None
+    """
+    A message describing the validation error.
+    """
+    params: dict[str, Any] | None = None
+    """
+    Additional parameters specific to the validation error.
+    """
+
+
+@docs_group('Models')
+class DatasetListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
+    name: Annotated[str, Field(examples=['d7b9MDYsbtX5L7XAj'])]
+    user_id: Annotated[str, Field(examples=['tbXmWu7GCxnyYtSiL'])]
+    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
+    accessed_at: Annotated[AwareDatetime, Field(examples=['2019-12-14T08:36:13.202Z'])]
+    item_count: Annotated[int, Field(examples=[7])]
+    clean_item_count: Annotated[int, Field(examples=[5])]
+    act_id: Annotated[str | None, Field(examples=['zdc3Pyhyz3m8vjDeM'])] = None
+    act_run_id: Annotated[str | None, Field(examples=['HG7ML7M8z78YcAPEB'])] = None
+    title: Annotated[str | None, Field(examples=['My Dataset'])] = None
+    username: Annotated[str | None, Field(examples=['janedoe'])] = None
+    general_access: GeneralAccess | None = None
+    stats: DatasetStats | None = None
+
+
+@docs_group('Models')
+class DatasetResource(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -1012,54 +1124,6 @@ class Dataset(BaseModel):
 
 
 @docs_group('Models')
-class DatasetFieldStatistics(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    min: float | None = None
-    """
-    Minimum value of the field. For numbers, this is calculated directly. For strings, this is the length of the shortest string. For arrays, this is the length of the shortest array. For objects, this is the number of keys in the smallest object.
-    """
-    max: float | None = None
-    """
-    Maximum value of the field. For numbers, this is calculated directly. For strings, this is the length of the longest string. For arrays, this is the length of the longest array. For objects, this is the number of keys in the largest object.
-    """
-    null_count: int | None = None
-    """
-    How many items in the dataset have a null value for this field.
-    """
-    empty_count: int | None = None
-    """
-    How many items in the dataset are `undefined`, meaning that for example empty string is not considered empty.
-    """
-
-
-@docs_group('Models')
-class DatasetListItem(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
-    name: Annotated[str, Field(examples=['d7b9MDYsbtX5L7XAj'])]
-    user_id: Annotated[str, Field(examples=['tbXmWu7GCxnyYtSiL'])]
-    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
-    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
-    accessed_at: Annotated[AwareDatetime, Field(examples=['2019-12-14T08:36:13.202Z'])]
-    item_count: Annotated[int, Field(examples=[7])]
-    clean_item_count: Annotated[int, Field(examples=[5])]
-    act_id: Annotated[str | None, Field(examples=['zdc3Pyhyz3m8vjDeM'])] = None
-    act_run_id: Annotated[str | None, Field(examples=['HG7ML7M8z78YcAPEB'])] = None
-    title: Annotated[str | None, Field(examples=['My Dataset'])] = None
-    username: Annotated[str | None, Field(examples=['janedoe'])] = None
-    general_access: GeneralAccess | None = None
-    stats: DatasetStats | None = None
-
-
-@docs_group('Models')
 class DatasetResponse(BaseModel):
     """Response containing dataset metadata."""
 
@@ -1068,7 +1132,7 @@ class DatasetResponse(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    data: Dataset
+    data: DatasetResource
 
 
 @docs_group('Models')
@@ -1086,7 +1150,20 @@ class DatasetSchemaValidationError(BaseModel):
     """
     A human-readable message describing the error.
     """
-    data: SchemaValidationErrorData | None = None
+    data: DatasetSchemaValidationErrorData | None = None
+
+
+@docs_group('Models')
+class DatasetSchemaValidationErrorData(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    invalid_items: list[InvalidDatasetItem]
+    """
+    A list of invalid items in the received array of items.
+    """
 
 
 @docs_group('Models')
@@ -1150,7 +1227,17 @@ class Datasets(BaseModel):
 
 
 @docs_group('Models')
-class DecodeAndVerifyData(BaseModel):
+class DecodeAndVerifyResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: DecodeAndVerifyResult
+
+
+@docs_group('Models')
+class DecodeAndVerifyResult(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -1162,16 +1249,6 @@ class DecodeAndVerifyData(BaseModel):
     """
     encoded_by_user_id: Annotated[str | None, Field(examples=['wRwJZtadYvn4mBZmm'])]
     is_verified_user: Annotated[bool, Field(examples=[False])]
-
-
-@docs_group('Models')
-class DecodeAndVerifyResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: DecodeAndVerifyData
 
 
 @docs_group('Models')
@@ -1285,7 +1362,17 @@ class EffectivePlatformFeatures(BaseModel):
 
 
 @docs_group('Models')
-class EncodeAndSignData(BaseModel):
+class EncodeAndSignResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: EncodeAndSignResult
+
+
+@docs_group('Models')
+class EncodeAndSignResult(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -1295,18 +1382,8 @@ class EncodeAndSignData(BaseModel):
 
 
 @docs_group('Models')
-class DecodeAndVerifyRequest(EncodeAndSignData):
+class DecodeAndVerifyRequest(EncodeAndSignResult):
     pass
-
-
-@docs_group('Models')
-class EncodeAndSignResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: EncodeAndSignData
 
 
 @docs_group('Models')
@@ -1408,18 +1485,6 @@ class ExampleRunInput(BaseModel):
 
 
 @docs_group('Models')
-class ExampleWebhookDispatch(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    status: WebhookDispatchStatus
-    finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-13T08:36:13.202Z'])] = None
-    removed_at: Annotated[AwareDatetime | None, Field(examples=[None])] = None
-
-
-@docs_group('Models')
 class FlatPricePerMonthActorPricingInfo(CommonActorPricingInfo):
     model_config = ConfigDict(
         extra='allow',
@@ -1448,59 +1513,7 @@ class FreeActorPricingInfo(CommonActorPricingInfo):
 
 
 @docs_group('Models')
-class HeadAndLockResponse(BaseModel):
-    """Response containing locked requests from the request queue head."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: LockedRequestQueueHead
-
-
-@docs_group('Models')
-class HeadRequest(BaseModel):
-    """A request from the request queue head without lock information."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['sbJ7klsdf7ujN9l'])]
-    """
-    A unique identifier assigned to the request.
-    """
-    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: Annotated[str, Field(examples=['https://apify.com'])]
-    """
-    The URL of the request.
-    """
-    method: HttpMethod | None = None
-    retry_count: Annotated[int | None, Field(examples=[0])] = None
-    """
-    The number of times this request has been retried.
-    """
-
-
-@docs_group('Models')
-class HeadResponse(BaseModel):
-    """Response containing requests from the request queue head without locking."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: RequestQueueHead
-
-
-@docs_group('Models')
-class InvalidItem(BaseModel):
+class InvalidDatasetItem(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -1510,14 +1523,34 @@ class InvalidItem(BaseModel):
     """
     The position of the invalid item in the array.
     """
-    validation_errors: list[ValidationError] | None = None
+    validation_errors: list[DatasetItemValidationError] | None = None
     """
     A complete list of AJV validation error objects for the invalid item.
     """
 
 
 @docs_group('Models')
-class KeyValueStore(BaseModel):
+class KeyValueStoreKey(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    key: Annotated[str, Field(examples=['second-key'])]
+    size: Annotated[int, Field(examples=[36])]
+    record_public_url: Annotated[
+        AnyUrl,
+        Field(
+            examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/records/some-key?signature=abc123']
+        ),
+    ]
+    """
+    A public link to access this record directly.
+    """
+
+
+@docs_group('Models')
+class KeyValueStoreResource(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -1561,26 +1594,6 @@ class KeyValueStore(BaseModel):
 
 
 @docs_group('Models')
-class KeyValueStoreKey(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    key: Annotated[str, Field(examples=['second-key'])]
-    size: Annotated[int, Field(examples=[36])]
-    record_public_url: Annotated[
-        AnyUrl,
-        Field(
-            examples=['https://api.apify.com/v2/key-value-stores/WkzbQMuFYuamGv3YF/records/some-key?signature=abc123']
-        ),
-    ]
-    """
-    A public link to access this record directly.
-    """
-
-
-@docs_group('Models')
 class KeyValueStoreResponse(BaseModel):
     """Response containing key-value store data."""
 
@@ -1589,7 +1602,7 @@ class KeyValueStoreResponse(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    data: KeyValueStore
+    data: KeyValueStoreResource
 
 
 @docs_group('Models')
@@ -1644,26 +1657,6 @@ class Limits(BaseModel):
     max_team_account_seat_count: Annotated[int, Field(examples=[9])]
     data_retention_days: Annotated[int, Field(examples=[90])]
     max_schedule_count: Annotated[int | None, Field(examples=[100])] = None
-
-
-@docs_group('Models')
-class LimitsResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: AccountLimits
-
-
-@docs_group('Models')
-class ListOfActorsInStoreResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: ListOfStoreActors
 
 
 @docs_group('Models')
@@ -1773,7 +1766,7 @@ class ListOfRequests(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[Request]
+    items: list[RequestResource]
     """
     The array of requests.
     """
@@ -1828,6 +1821,16 @@ class ListOfSchedulesResponse(BaseModel):
 
 
 @docs_group('Models')
+class ListOfStoreActorsResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: ListOfStoreActors
+
+
+@docs_group('Models')
 class ListOfTasksResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1879,38 +1882,6 @@ class ListOfWebhooksResponse(BaseModel):
 
 
 @docs_group('Models')
-class LockedHeadRequest(BaseModel):
-    """A request from the request queue head that has been locked for processing."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['sbJ7klsdf7ujN9l'])]
-    """
-    A unique identifier assigned to the request.
-    """
-    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: Annotated[str, Field(examples=['https://apify.com'])]
-    """
-    The URL of the request.
-    """
-    method: HttpMethod | None = None
-    retry_count: Annotated[int | None, Field(examples=[0])] = None
-    """
-    The number of times this request has been retried.
-    """
-    lock_expires_at: Annotated[AwareDatetime, Field(examples=['2022-06-14T23:00:00.000Z'])]
-    """
-    The timestamp when the lock on this request expires.
-    """
-
-
-@docs_group('Models')
 class LockedRequestQueueHead(BaseModel):
     """A batch of locked requests from the request queue head."""
 
@@ -1943,37 +1914,54 @@ class LockedRequestQueueHead(BaseModel):
     """
     The number of seconds the locks will be held.
     """
-    items: list[LockedHeadRequest]
+    items: list[LockedRequestQueueHeadItem]
     """
     The array of locked requests from the request queue head.
     """
 
 
 @docs_group('Models')
-class Metamorph(BaseModel):
-    """Information about a metamorph event that occurred during the run."""
+class LockedRequestQueueHeadItem(BaseModel):
+    """A request from the request queue head that has been locked for processing."""
 
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    created_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:39:24.202Z'])]
+    id: Annotated[str, Field(examples=['sbJ7klsdf7ujN9l'])]
     """
-    Time when the metamorph occurred.
+    A unique identifier assigned to the request.
     """
-    actor_id: Annotated[str, Field(examples=['nspoEjklmnsF2oosD'])]
+    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
     """
-    ID of the Actor that the run was metamorphed to.
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
     """
-    build_id: Annotated[str, Field(examples=['ME6oKecqy5kXDS4KQ'])]
+    url: Annotated[str, Field(examples=['https://apify.com'])]
     """
-    ID of the build used for the metamorphed Actor.
+    The URL of the request.
     """
-    input_key: Annotated[str | None, Field(examples=['INPUT-METAMORPH-1'])] = None
+    method: HttpMethod | None = None
+    retry_count: Annotated[int | None, Field(examples=[0])] = None
     """
-    Key of the input record in the key-value store.
+    The number of times this request has been retried.
     """
+    lock_expires_at: Annotated[AwareDatetime, Field(examples=['2022-06-14T23:00:00.000Z'])]
+    """
+    The timestamp when the lock on this request expires.
+    """
+
+
+@docs_group('Models')
+class LockedRequestQueueHeadResponse(BaseModel):
+    """Response containing locked requests from the request queue head."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: LockedRequestQueueHead
 
 
 @docs_group('Models')
@@ -1985,7 +1973,7 @@ class MonthlyUsage(BaseModel):
     )
     usage_cycle: UsageCycle
     monthly_service_usage: dict[str, UsageItem]
-    daily_service_usages: list[DailyServiceUsages]
+    daily_service_usages: list[DailyServiceUsage]
     total_usage_credits_usd_before_volume_discount: Annotated[float, Field(examples=[0.786143673840067])]
     total_usage_credits_usd_after_volume_discount: Annotated[float, Field(examples=[0.786143673840067])]
 
@@ -2050,7 +2038,7 @@ class ListOfActors(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[ActorShort]
+    items: list[ActorListItem]
 
 
 @docs_group('Models')
@@ -2060,7 +2048,7 @@ class ListOfBuilds(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[BuildShort]
+    items: list[BuildListItem]
 
 
 @docs_group('Models')
@@ -2088,7 +2076,7 @@ class ListOfKeyValueStores(PaginationResponse):
     """
     Whether the listing was filtered to only unnamed key-value stores.
     """
-    items: list[KeyValueStore]
+    items: list[KeyValueStoreResource]
 
 
 @docs_group('Models')
@@ -2104,7 +2092,7 @@ class ListOfRequestQueues(PaginationResponse):
     """
     Whether the listing was filtered to only unnamed request queues.
     """
-    items: list[RequestQueueShort]
+    items: list[RequestQueueListItem]
     """
     The array of request queues.
     """
@@ -2117,7 +2105,7 @@ class ListOfRuns(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[RunShort]
+    items: list[RunListItem]
 
 
 @docs_group('Models')
@@ -2127,7 +2115,7 @@ class ListOfSchedules(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[ScheduleShort]
+    items: list[ScheduleListItem]
 
 
 @docs_group('Models')
@@ -2137,7 +2125,7 @@ class ListOfStoreActors(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[StoreListActor]
+    items: list[StoreActor]
 
 
 @docs_group('Models')
@@ -2147,7 +2135,7 @@ class ListOfTasks(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[TaskShort]
+    items: list[TaskListItem]
 
 
 @docs_group('Models')
@@ -2167,7 +2155,7 @@ class ListOfWebhooks(PaginationResponse):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    items: list[WebhookShort]
+    items: list[WebhookListItem]
 
 
 @docs_group('Models')
@@ -2180,47 +2168,6 @@ class PayPerEventActorPricingInfo(CommonActorPricingInfo):
     pricing_model: Literal['PAY_PER_EVENT']
     pricing_per_event: PricingPerEvent
     minimal_max_total_charge_usd: float | None = None
-
-
-@docs_group('Models')
-class Plan(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str | None, Field(examples=['Personal'])] = None
-    description: Annotated[
-        str | None, Field(examples=['Cost-effective plan for freelancers, developers and students.'])
-    ] = None
-    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
-    monthly_base_price_usd: Annotated[float | None, Field(examples=[49])] = None
-    monthly_usage_credits_usd: Annotated[float | None, Field(examples=[49])] = None
-    usage_discount_percent: Annotated[float | None, Field(examples=[0])] = None
-    enabled_platform_features: Annotated[
-        list[str] | None, Field(examples=[['ACTORS', 'STORAGE', 'PROXY_SERPS', 'SCHEDULER', 'WEBHOOKS']])
-    ] = None
-    max_monthly_usage_usd: Annotated[float | None, Field(examples=[9999])] = None
-    max_actor_memory_gbytes: Annotated[float | None, Field(examples=[32])] = None
-    max_monthly_actor_compute_units: Annotated[float | None, Field(examples=[1000])] = None
-    max_monthly_residential_proxy_gbytes: Annotated[float | None, Field(examples=[10])] = None
-    max_monthly_proxy_serps: Annotated[int | None, Field(examples=[30000])] = None
-    max_monthly_external_data_transfer_gbytes: Annotated[float | None, Field(examples=[1000])] = None
-    max_actor_count: Annotated[int | None, Field(examples=[100])] = None
-    max_actor_task_count: Annotated[int | None, Field(examples=[1000])] = None
-    data_retention_days: Annotated[int | None, Field(examples=[14])] = None
-    available_proxy_groups: dict[str, int]
-    team_account_seat_count: Annotated[int | None, Field(examples=[1])] = None
-    support_level: Annotated[str | None, Field(examples=['COMMUNITY'])] = None
-    available_add_ons: Annotated[list[str] | None, Field(examples=[[]])] = None
-    tier: Annotated[str | None, Field(examples=['FREE'])] = None
-    api_rate_limit_boosts: Annotated[int | None, Field(examples=[0])] = None
-    max_schedule_count: Annotated[int | None, Field(examples=[100])] = None
-    max_concurrent_actor_runs: Annotated[int | None, Field(examples=[25])] = None
-    plan_pricing: dict[str, Any] | None = None
-    """
-    Pricing details for this plan.
-    """
 
 
 @docs_group('Models')
@@ -2245,7 +2192,7 @@ class PricePerDatasetItemActorPricingInfo(CommonActorPricingInfo):
 
 
 @docs_group('Models')
-class PriceTiers(BaseModel):
+class PriceTier(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -2269,35 +2216,6 @@ class PricingPerEvent(BaseModel):
 
 
 @docs_group('Models')
-class PrivateUserDataResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: UserPrivateInfo
-
-
-@docs_group('Models')
-class Profile(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    bio: Annotated[str | None, Field(examples=['I started web scraping in 1985 using Altair BASIC.'])] = None
-    readme: Annotated[str | None, Field(examples=['### Hello world 👋🏻\nI build web scrapers.'])] = None
-    """
-    Markdown README shown on the user's public profile page.
-    """
-    name: Annotated[str | None, Field(examples=['Jane Doe'])] = None
-    picture_url: Annotated[AnyUrl | None, Field(examples=['https://apify.com/img/anonymous_user_picture.png'])] = None
-    github_username: Annotated[str | None, Field(examples=['torvalds.'])] = None
-    website_url: Annotated[AnyUrl | None, Field(examples=['http://www.example.com'])] = None
-    twitter_username: Annotated[str | None, Field(examples=['@BillGates'])] = None
-
-
-@docs_group('Models')
 class ProlongRequestLockResponse(BaseModel):
     """Response containing updated lock information after prolonging a request lock."""
 
@@ -2310,17 +2228,6 @@ class ProlongRequestLockResponse(BaseModel):
 
 
 @docs_group('Models')
-class Proxy(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    password: Annotated[str, Field(examples=['ad78knd9Jkjd86'])]
-    groups: list[ProxyGroup]
-
-
-@docs_group('Models')
 class ProxyGroup(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2330,6 +2237,17 @@ class ProxyGroup(BaseModel):
     name: Annotated[str, Field(examples=['Group1'])]
     description: Annotated[str | None, Field(examples=['Group1 description'])]
     available_count: Annotated[int, Field(examples=[10])]
+
+
+@docs_group('Models')
+class ProxyResource(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    password: Annotated[str, Field(examples=['ad78knd9Jkjd86'])]
+    groups: list[ProxyGroup]
 
 
 @docs_group('Models')
@@ -2367,17 +2285,7 @@ class PublicActorRunStats30Days(BaseModel):
 
 
 @docs_group('Models')
-class PublicUserDataResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: UserPublicInfo
-
-
-@docs_group('Models')
-class PutItemResponseError(BaseModel):
+class PutItemsErrorResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -2476,91 +2384,6 @@ class RequestBase(BaseModel):
 
 
 @docs_group('Models')
-class Request(RequestBase):
-    """A request stored in the request queue, including its metadata and processing state."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
-    """
-    A unique identifier assigned to the request.
-    """
-
-
-@docs_group('Models')
-class RequestDraft(BaseModel):
-    """A request that failed to be processed during a request queue operation and can be retried."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
-    """
-    A unique identifier assigned to the request.
-    """
-    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-    url: Annotated[str, Field(examples=['https://apify.com'])]
-    """
-    The URL of the request.
-    """
-    method: HttpMethod | None = None
-
-
-@docs_group('Models')
-class RequestDraftDeleteById(BaseModel):
-    """A request that should be deleted, identified by its ID."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['sbJ7klsdf7ujN9l'])]
-    """
-    A unique identifier assigned to the request.
-    """
-    unique_key: Annotated[str | None, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])] = None
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-
-
-@docs_group('Models')
-class RequestDraftDeleteByUniqueKey(BaseModel):
-    """A request that should be deleted, identified by its unique key."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
-    """
-    A unique identifier assigned to the request.
-    """
-    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
-    """
-    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
-    """
-
-
-@docs_group('Models')
-class RequestDraftDelete(RootModel[RequestDraftDeleteById | RequestDraftDeleteByUniqueKey]):
-    root: Annotated[RequestDraftDeleteById | RequestDraftDeleteByUniqueKey, Field(title='RequestDraftDelete')]
-    """
-    A request that should be deleted.
-    """
-
-
-@docs_group('Models')
 class RequestLockInfo(BaseModel):
     """Information about a request lock."""
 
@@ -2573,71 +2396,6 @@ class RequestLockInfo(BaseModel):
     """
     The timestamp when the lock on this request expires.
     """
-
-
-@docs_group('Models')
-class RequestQueue(BaseModel):
-    """A request queue object containing metadata and statistics."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
-    """
-    A unique identifier assigned to the request queue.
-    """
-    name: Annotated[str | None, Field(examples=['some-name'])] = None
-    """
-    The name of the request queue.
-    """
-    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
-    """
-    The ID of the user who owns the request queue.
-    """
-    act_id: str | None = None
-    """
-    The ID of the Actor that created this request queue.
-    """
-    act_run_id: str | None = None
-    """
-    The ID of the Actor run that created this request queue.
-    """
-    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
-    """
-    The timestamp when the request queue was created.
-    """
-    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
-    """
-    The timestamp when the request queue was last modified. Modifications include adding, updating, or removing requests, as well as locking or unlocking requests in the request queue.
-    """
-    accessed_at: Annotated[AwareDatetime, Field(examples=['2019-12-14T08:36:13.202Z'])]
-    """
-    The timestamp when the request queue was last accessed.
-    """
-    total_request_count: Annotated[int, Field(examples=[870], ge=0)]
-    """
-    The total number of requests in the request queue.
-    """
-    handled_request_count: Annotated[int, Field(examples=[100], ge=0)]
-    """
-    The number of requests that have been handled.
-    """
-    pending_request_count: Annotated[int, Field(examples=[670])]
-    """
-    The number of requests that are pending and have not been handled yet.
-    """
-    had_multiple_clients: Annotated[bool, Field(examples=[True])]
-    """
-    Whether the request queue has been accessed by multiple different clients.
-    """
-    console_url: Annotated[AnyUrl, Field(examples=['https://api.apify.com/v2/request-queues/27TmTznX9YPeAYhkC'])]
-    """
-    The URL to view the request queue in the Apify console.
-    """
-    stats: RequestQueueStats | None = None
-    general_access: GeneralAccess | None = None
 
 
 @docs_group('Models')
@@ -2661,26 +2419,54 @@ class RequestQueueHead(BaseModel):
     """
     Whether the request queue has been accessed by multiple different clients.
     """
-    items: list[HeadRequest]
+    items: list[RequestQueueHeadItem]
     """
     The array of requests from the request queue head.
     """
 
 
 @docs_group('Models')
-class RequestQueueResponse(BaseModel):
-    """Response containing request queue data."""
+class RequestQueueHeadItem(BaseModel):
+    """A request from the request queue head without lock information."""
 
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    data: RequestQueue
+    id: Annotated[str, Field(examples=['sbJ7klsdf7ujN9l'])]
+    """
+    A unique identifier assigned to the request.
+    """
+    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+    url: Annotated[str, Field(examples=['https://apify.com'])]
+    """
+    The URL of the request.
+    """
+    method: HttpMethod | None = None
+    retry_count: Annotated[int | None, Field(examples=[0])] = None
+    """
+    The number of times this request has been retried.
+    """
 
 
 @docs_group('Models')
-class RequestQueueShort(BaseModel):
+class RequestQueueHeadResponse(BaseModel):
+    """Response containing requests from the request queue head without locking."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: RequestQueueHead
+
+
+@docs_group('Models')
+class RequestQueueListItem(BaseModel):
     """A shortened request queue object for list responses."""
 
     model_config = ConfigDict(
@@ -2746,6 +2532,83 @@ class RequestQueueShort(BaseModel):
     """
     general_access: GeneralAccess | None = None
     stats: RequestQueueStats | None = None
+
+
+@docs_group('Models')
+class RequestQueueResource(BaseModel):
+    """A request queue object containing metadata and statistics."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
+    """
+    A unique identifier assigned to the request queue.
+    """
+    name: Annotated[str | None, Field(examples=['some-name'])] = None
+    """
+    The name of the request queue.
+    """
+    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
+    """
+    The ID of the user who owns the request queue.
+    """
+    act_id: str | None = None
+    """
+    The ID of the Actor that created this request queue.
+    """
+    act_run_id: str | None = None
+    """
+    The ID of the Actor run that created this request queue.
+    """
+    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
+    """
+    The timestamp when the request queue was created.
+    """
+    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
+    """
+    The timestamp when the request queue was last modified. Modifications include adding, updating, or removing requests, as well as locking or unlocking requests in the request queue.
+    """
+    accessed_at: Annotated[AwareDatetime, Field(examples=['2019-12-14T08:36:13.202Z'])]
+    """
+    The timestamp when the request queue was last accessed.
+    """
+    total_request_count: Annotated[int, Field(examples=[870], ge=0)]
+    """
+    The total number of requests in the request queue.
+    """
+    handled_request_count: Annotated[int, Field(examples=[100], ge=0)]
+    """
+    The number of requests that have been handled.
+    """
+    pending_request_count: Annotated[int, Field(examples=[670])]
+    """
+    The number of requests that are pending and have not been handled yet.
+    """
+    had_multiple_clients: Annotated[bool, Field(examples=[True])]
+    """
+    Whether the request queue has been accessed by multiple different clients.
+    """
+    console_url: Annotated[AnyUrl, Field(examples=['https://api.apify.com/v2/request-queues/27TmTznX9YPeAYhkC'])]
+    """
+    The URL to view the request queue in the Apify console.
+    """
+    stats: RequestQueueStats | None = None
+    general_access: GeneralAccess | None = None
+
+
+@docs_group('Models')
+class RequestQueueResponse(BaseModel):
+    """Response containing request queue data."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: RequestQueueResource
 
 
 @docs_group('Models')
@@ -2821,6 +2684,21 @@ class RequestRegistration(BaseModel):
 
 
 @docs_group('Models')
+class RequestResource(RequestBase):
+    """A request stored in the request queue, including its metadata and processing state."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
+    """
+    A unique identifier assigned to the request.
+    """
+
+
+@docs_group('Models')
 class RequestResponse(BaseModel):
     """Response containing a single request from the request queue."""
 
@@ -2829,7 +2707,53 @@ class RequestResponse(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    data: Request
+    data: RequestResource
+
+
+@docs_group('Models')
+class RequestToDeleteById(BaseModel):
+    """A request that should be deleted, identified by its ID."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['sbJ7klsdf7ujN9l'])]
+    """
+    A unique identifier assigned to the request.
+    """
+    unique_key: Annotated[str | None, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])] = None
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+
+
+@docs_group('Models')
+class RequestToDeleteByUniqueKey(BaseModel):
+    """A request that should be deleted, identified by its unique key."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
+    """
+    A unique identifier assigned to the request.
+    """
+    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+
+
+@docs_group('Models')
+class RequestToDelete(RootModel[RequestToDeleteById | RequestToDeleteByUniqueKey]):
+    root: Annotated[RequestToDeleteById | RequestToDeleteByUniqueKey, Field(title='RequestToDelete')]
+    """
+    A request that should be deleted.
+    """
 
 
 @docs_group('Models')
@@ -2986,7 +2910,7 @@ class Run(BaseModel):
     """
     Platform usage costs breakdown in USD. Only present if you own the run AND are paying for platform usage (Pay-Per-Usage, Rental, or Pay-Per-Event with usage costs like standby Actors). Not available for standard Pay-Per-Event Actors. Requires authentication token to access.
     """
-    metamorphs: list[Metamorph] | None = None
+    metamorphs: list[RunMetamorphEvent] | None = None
     """
     List of metamorph events that occurred during the run.
     """
@@ -2994,6 +2918,32 @@ class Run(BaseModel):
     """
     Indicates which party covers platform usage costs for this run.
     """
+
+
+@docs_group('Models')
+class RunListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
+    act_id: Annotated[str, Field(examples=['HDSasDasz78YcAPEB'])]
+    user_id: Annotated[str | None, Field(examples=['7sT5jcggjjA9fNcxF'])] = None
+    actor_task_id: Annotated[str | None, Field(examples=['KJHSKHausidyaJKHs'])] = None
+    status: ActorJobStatus
+    started_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:34:24.202Z'])]
+    finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-12T09:30:12.202Z'])] = None
+    build_id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
+    build_number: Annotated[
+        str | None, Field(examples=['0.0.2'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
+    ] = None
+    build_number_int: Annotated[int | None, Field(examples=[10000])] = None
+    meta: RunMeta
+    usage_total_usd: Annotated[float, Field(examples=[0.2])]
+    default_key_value_store_id: Annotated[str, Field(examples=['sfAjeR4QmeJCQzTfe'])]
+    default_dataset_id: Annotated[str, Field(examples=['3ZojQDdFTsyE7Moy4'])]
+    default_request_queue_id: Annotated[str, Field(examples=['so93g2shcDzK3pA85'])]
 
 
 @docs_group('Models')
@@ -3023,6 +2973,33 @@ class RunMeta(BaseModel):
 
 
 @docs_group('Models')
+class RunMetamorphEvent(BaseModel):
+    """Information about a metamorph event that occurred during the run."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    created_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:39:24.202Z'])]
+    """
+    Time when the metamorph occurred.
+    """
+    actor_id: Annotated[str, Field(examples=['nspoEjklmnsF2oosD'])]
+    """
+    ID of the Actor that the run was metamorphed to.
+    """
+    build_id: Annotated[str, Field(examples=['ME6oKecqy5kXDS4KQ'])]
+    """
+    ID of the build used for the metamorphed Actor.
+    """
+    input_key: Annotated[str | None, Field(examples=['INPUT-METAMORPH-1'])] = None
+    """
+    Key of the input record in the key-value store.
+    """
+
+
+@docs_group('Models')
 class RunOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3045,32 +3022,6 @@ class RunResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: Run
-
-
-@docs_group('Models')
-class RunShort(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
-    act_id: Annotated[str, Field(examples=['HDSasDasz78YcAPEB'])]
-    user_id: Annotated[str | None, Field(examples=['7sT5jcggjjA9fNcxF'])] = None
-    actor_task_id: Annotated[str | None, Field(examples=['KJHSKHausidyaJKHs'])] = None
-    status: ActorJobStatus
-    started_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:34:24.202Z'])]
-    finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-12T09:30:12.202Z'])] = None
-    build_id: Annotated[str, Field(examples=['HG7ML7M8z78YcAPEB'])]
-    build_number: Annotated[
-        str | None, Field(examples=['0.0.2'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
-    ] = None
-    build_number_int: Annotated[int | None, Field(examples=[10000])] = None
-    meta: RunMeta
-    usage_total_usd: Annotated[float, Field(examples=[0.2])]
-    default_key_value_store_id: Annotated[str, Field(examples=['sfAjeR4QmeJCQzTfe'])]
-    default_dataset_id: Annotated[str, Field(examples=['3ZojQDdFTsyE7Moy4'])]
-    default_request_queue_id: Annotated[str, Field(examples=['so93g2shcDzK3pA85'])]
 
 
 @docs_group('Models')
@@ -3194,30 +3145,6 @@ class ScheduleActionRunInput(BaseModel):
 
 
 @docs_group('Models')
-class ScheduleActionShortRunActor(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['ZReCs7hkdieq8ZUki'])]
-    type: Literal['RUN_ACTOR']
-    actor_id: Annotated[str, Field(examples=['HKhKmiCMrDgu9eXeE'])]
-
-
-@docs_group('Models')
-class ScheduleActionShortRunActorTask(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['ZReCs7hkdieq8ZUki'])]
-    type: Literal['RUN_ACTOR_TASK']
-    actor_task_id: Annotated[str, Field(examples=['HKhKmiCMrDgu9eXeE'])]
-
-
-@docs_group('Models')
 class ScheduleBase(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3254,26 +3181,6 @@ class Schedule(ScheduleBase):
 
 
 @docs_group('Models')
-class ScheduleCreate(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    name: Annotated[str | None, Field(examples=['my-schedule'])] = None
-    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
-    is_exclusive: Annotated[bool | None, Field(examples=[True])] = None
-    cron_expression: Annotated[str | None, Field(examples=['* * * * *'])] = None
-    timezone: Annotated[str | None, Field(examples=['UTC'])] = None
-    description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
-    title: str | None = None
-    actions: (
-        list[Annotated[ScheduleCreateActionRunActor | ScheduleCreateActionRunActorTask, Field(discriminator='type')]]
-        | None
-    ) = None
-
-
-@docs_group('Models')
 class ScheduleCreateActionRunActor(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3299,7 +3206,43 @@ class ScheduleCreateActionRunActorTask(BaseModel):
 
 
 @docs_group('Models')
-class ScheduleInvoked(BaseModel):
+class ScheduleListItem(ScheduleBase):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    actions: list[
+        Annotated[ScheduleListItemActionRunActor | ScheduleListItemActionRunActorTask, Field(discriminator='type')]
+    ]
+
+
+@docs_group('Models')
+class ScheduleListItemActionRunActor(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['ZReCs7hkdieq8ZUki'])]
+    type: Literal['RUN_ACTOR']
+    actor_id: Annotated[str, Field(examples=['HKhKmiCMrDgu9eXeE'])]
+
+
+@docs_group('Models')
+class ScheduleListItemActionRunActorTask(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['ZReCs7hkdieq8ZUki'])]
+    type: Literal['RUN_ACTOR_TASK']
+    actor_task_id: Annotated[str, Field(examples=['HKhKmiCMrDgu9eXeE'])]
+
+
+@docs_group('Models')
+class ScheduleLogEntry(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -3317,7 +3260,7 @@ class ScheduleLogResponse(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    data: list[ScheduleInvoked]
+    data: list[ScheduleLogEntry]
 
 
 @docs_group('Models')
@@ -3328,29 +3271,6 @@ class ScheduleResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: Schedule
-
-
-@docs_group('Models')
-class ScheduleShort(ScheduleBase):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    actions: list[Annotated[ScheduleActionShortRunActor | ScheduleActionShortRunActorTask, Field(discriminator='type')]]
-
-
-@docs_group('Models')
-class SchemaValidationErrorData(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    invalid_items: list[InvalidItem]
-    """
-    A list of invalid items in the received array of items.
-    """
 
 
 @docs_group('Models')
@@ -3435,7 +3355,7 @@ class Storages(BaseModel):
 
 
 @docs_group('Models')
-class StoreListActor(BaseModel):
+class StoreActor(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -3542,6 +3462,25 @@ class TaskInput(BaseModel):
 
 
 @docs_group('Models')
+class TaskListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['zdc3Pyhyz3m8vjDeM'])]
+    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
+    act_id: Annotated[str, Field(examples=['asADASadYvn4mBZmm'])]
+    act_name: Annotated[str | None, Field(examples=['my-actor'])] = None
+    name: Annotated[str, Field(examples=['my-task'])]
+    username: Annotated[str | None, Field(examples=['janedoe'])] = None
+    act_username: Annotated[str | None, Field(examples=['janedoe'])] = None
+    created_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T07:23:14.855Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T13:30:49.578Z'])]
+    stats: TaskStats | None = None
+
+
+@docs_group('Models')
 class TaskOptions(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3620,25 +3559,6 @@ class TaskResponse(BaseModel):
 
 
 @docs_group('Models')
-class TaskShort(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['zdc3Pyhyz3m8vjDeM'])]
-    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
-    act_id: Annotated[str, Field(examples=['asADASadYvn4mBZmm'])]
-    act_name: Annotated[str | None, Field(examples=['my-actor'])] = None
-    name: Annotated[str, Field(examples=['my-task'])]
-    username: Annotated[str | None, Field(examples=['janedoe'])] = None
-    act_username: Annotated[str | None, Field(examples=['janedoe'])] = None
-    created_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T07:23:14.855Z'])]
-    modified_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T13:30:49.578Z'])]
-    stats: TaskStats | None = None
-
-
-@docs_group('Models')
 class TaskStats(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3646,16 +3566,6 @@ class TaskStats(BaseModel):
         alias_generator=to_camel,
     )
     total_runs: Annotated[int | None, Field(examples=[15])] = None
-
-
-@docs_group('Models')
-class TestWebhookResponse(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: WebhookDispatch
 
 
 @docs_group('Models')
@@ -3713,6 +3623,30 @@ class UnlockRequestsResult(BaseModel):
     """
     Number of requests that were successfully unlocked.
     """
+
+
+@docs_group('Models')
+class UnprocessedRequest(BaseModel):
+    """A request that failed to be processed during a request queue operation and can be retried."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
+    """
+    A unique identifier assigned to the request.
+    """
+    unique_key: Annotated[str, Field(examples=['GET|60d83e70|e3b0c442|https://apify.com'])]
+    """
+    A unique key used for request de-duplication. Requests with the same unique key are considered identical.
+    """
+    url: Annotated[str, Field(examples=['https://apify.com'])]
+    """
+    The URL of the request.
+    """
+    method: HttpMethod | None = None
 
 
 @docs_group('Models')
@@ -3806,6 +3740,11 @@ class UpdateDatasetRequest(BaseModel):
 
 
 @docs_group('Models')
+class UpdateKeyValueStoreRequest(UpdateDatasetRequest):
+    pass
+
+
+@docs_group('Models')
 class UpdateLimitsRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3866,11 +3805,6 @@ class UpdateRunRequest(BaseModel):
 
 
 @docs_group('Models')
-class UpdateStoreRequest(UpdateDatasetRequest):
-    pass
-
-
-@docs_group('Models')
 class UpdateTaskRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3902,6 +3836,40 @@ class UpdateTaskRequest(BaseModel):
 
 
 @docs_group('Models')
+class UpdateWebhookRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
+    event_types: Annotated[list[WebhookEventType] | None, Field(examples=[['ACTOR.RUN.SUCCEEDED']])] = None
+    condition: WebhookCondition | None = None
+    ignore_ssl_errors: Annotated[bool | None, Field(examples=[False])] = None
+    do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
+    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
+    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
+    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
+    should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
+
+
+@docs_group('Models')
+class UpdatedBuildProperty(BaseModel):
+    """The name of the build tag."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    build_id: str
+    """
+    The ID of the build to assign to the tag.
+    """
+
+
+@docs_group('Models')
 class UsageCycle(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -3923,7 +3891,48 @@ class UsageItem(BaseModel):
     base_amount_usd: Annotated[float, Field(examples=[0.69611875])]
     base_unit_price_usd: Annotated[float | None, Field(examples=[0.25])] = None
     amount_after_volume_discount_usd: Annotated[float | None, Field(examples=[0.69611875])] = None
-    price_tiers: list[PriceTiers] | None = None
+    price_tiers: list[PriceTier] | None = None
+
+
+@docs_group('Models')
+class UserPlan(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str | None, Field(examples=['Personal'])] = None
+    description: Annotated[
+        str | None, Field(examples=['Cost-effective plan for freelancers, developers and students.'])
+    ] = None
+    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
+    monthly_base_price_usd: Annotated[float | None, Field(examples=[49])] = None
+    monthly_usage_credits_usd: Annotated[float | None, Field(examples=[49])] = None
+    usage_discount_percent: Annotated[float | None, Field(examples=[0])] = None
+    enabled_platform_features: Annotated[
+        list[str] | None, Field(examples=[['ACTORS', 'STORAGE', 'PROXY_SERPS', 'SCHEDULER', 'WEBHOOKS']])
+    ] = None
+    max_monthly_usage_usd: Annotated[float | None, Field(examples=[9999])] = None
+    max_actor_memory_gbytes: Annotated[float | None, Field(examples=[32])] = None
+    max_monthly_actor_compute_units: Annotated[float | None, Field(examples=[1000])] = None
+    max_monthly_residential_proxy_gbytes: Annotated[float | None, Field(examples=[10])] = None
+    max_monthly_proxy_serps: Annotated[int | None, Field(examples=[30000])] = None
+    max_monthly_external_data_transfer_gbytes: Annotated[float | None, Field(examples=[1000])] = None
+    max_actor_count: Annotated[int | None, Field(examples=[100])] = None
+    max_actor_task_count: Annotated[int | None, Field(examples=[1000])] = None
+    data_retention_days: Annotated[int | None, Field(examples=[14])] = None
+    available_proxy_groups: dict[str, int]
+    team_account_seat_count: Annotated[int | None, Field(examples=[1])] = None
+    support_level: Annotated[str | None, Field(examples=['COMMUNITY'])] = None
+    available_add_ons: Annotated[list[str] | None, Field(examples=[[]])] = None
+    tier: Annotated[str | None, Field(examples=['FREE'])] = None
+    api_rate_limit_boosts: Annotated[int | None, Field(examples=[0])] = None
+    max_schedule_count: Annotated[int | None, Field(examples=[100])] = None
+    max_concurrent_actor_runs: Annotated[int | None, Field(examples=[25])] = None
+    plan_pricing: dict[str, Any] | None = None
+    """
+    Pricing details for this plan.
+    """
 
 
 @docs_group('Models')
@@ -3935,13 +3944,42 @@ class UserPrivateInfo(BaseModel):
     )
     id: Annotated[str | None, Field(examples=['YiKoxjkaS9gjGTqhF'])] = None
     username: Annotated[str, Field(examples=['myusername'])]
-    profile: Profile | None = None
+    profile: UserProfile | None = None
     email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
-    proxy: Proxy | None = None
-    plan: Plan | None = None
+    proxy: ProxyResource | None = None
+    plan: UserPlan | None = None
     effective_platform_features: EffectivePlatformFeatures | None = None
     created_at: Annotated[AwareDatetime | None, Field(examples=['2022-11-29T14:48:29.381Z'])] = None
     is_paying: Annotated[bool | None, Field(examples=[True])] = None
+
+
+@docs_group('Models')
+class UserPrivateInfoResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: UserPrivateInfo
+
+
+@docs_group('Models')
+class UserProfile(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    bio: Annotated[str | None, Field(examples=['I started web scraping in 1985 using Altair BASIC.'])] = None
+    readme: Annotated[str | None, Field(examples=['### Hello world 👋🏻\nI build web scrapers.'])] = None
+    """
+    Markdown README shown on the user's public profile page.
+    """
+    name: Annotated[str | None, Field(examples=['Jane Doe'])] = None
+    picture_url: Annotated[AnyUrl | None, Field(examples=['https://apify.com/img/anonymous_user_picture.png'])] = None
+    github_username: Annotated[str | None, Field(examples=['torvalds.'])] = None
+    website_url: Annotated[AnyUrl | None, Field(examples=['http://www.example.com'])] = None
+    twitter_username: Annotated[str | None, Field(examples=['@BillGates'])] = None
 
 
 @docs_group('Models')
@@ -3952,36 +3990,17 @@ class UserPublicInfo(BaseModel):
         alias_generator=to_camel,
     )
     username: Annotated[str, Field(examples=['d7b9MDYsbtX5L7XAj'])]
-    profile: Profile | None = None
+    profile: UserProfile | None = None
 
 
 @docs_group('Models')
-class ValidationError(BaseModel):
+class UserPublicInfoResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    instance_path: str | None = None
-    """
-    The path to the instance being validated.
-    """
-    schema_path: str | None = None
-    """
-    The path to the schema that failed the validation.
-    """
-    keyword: str | None = None
-    """
-    The validation keyword that caused the error.
-    """
-    message: str | None = None
-    """
-    A message describing the validation error.
-    """
-    params: dict[str, Any] | None = None
-    """
-    Additional parameters specific to the validation error.
-    """
+    data: UserPublicInfo
 
 
 @docs_group('Models')
@@ -4040,34 +4059,6 @@ class VersionResponse(BaseModel):
 
 
 @docs_group('Models')
-class Webhook(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    id: Annotated[str, Field(examples=['YiKoxjkaS9gjGTqhF'])]
-    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
-    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
-    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
-    is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
-    should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
-    event_types: Annotated[list[WebhookEventType], Field(examples=[['ACTOR.RUN.SUCCEEDED']])]
-    condition: WebhookCondition
-    ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
-    do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
-    """
-    URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
-    """
-    payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
-    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
-    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
-    last_dispatch: ExampleWebhookDispatch | None = None
-    stats: WebhookStats | None = None
-
-
-@docs_group('Models')
 class WebhookCondition(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -4077,26 +4068,6 @@ class WebhookCondition(BaseModel):
     actor_id: Annotated[str | None, Field(examples=['hksJZtadYvn4mBuin'])] = None
     actor_task_id: Annotated[str | None, Field(examples=['asdLZtadYvn4mBZmm'])] = None
     actor_run_id: Annotated[str | None, Field(examples=['hgdKZtadYvn4mBpoi'])] = None
-
-
-@docs_group('Models')
-class WebhookCreate(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
-    event_types: Annotated[list[WebhookEventType], Field(examples=[['ACTOR.RUN.SUCCEEDED']])]
-    condition: WebhookCondition
-    idempotency_key: Annotated[str | None, Field(examples=['fdSJmdP3nfs7sfk3y'])] = None
-    ignore_ssl_errors: Annotated[bool | None, Field(examples=[False])] = None
-    do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[str, Field(examples=['http://example.com/'])]
-    payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
-    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
-    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
-    should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
 
 
 @docs_group('Models')
@@ -4118,8 +4089,13 @@ class WebhookDispatch(BaseModel):
 
 
 @docs_group('Models')
-class WebhookDispatchResponse(TestWebhookResponse):
-    pass
+class WebhookDispatchResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: WebhookDispatch
 
 
 @docs_group('Models')
@@ -4138,6 +4114,43 @@ class WebhookDispatchWebhookSummary(BaseModel):
     URL of the HTTP request sent by the webhook. It is `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
     """
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
+
+
+@docs_group('Models')
+class WebhookLastDispatch(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    status: WebhookDispatchStatus
+    finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-13T08:36:13.202Z'])] = None
+    removed_at: Annotated[AwareDatetime | None, Field(examples=[None])] = None
+
+
+@docs_group('Models')
+class WebhookListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['YiKoxjkaS9gjGTqhF'])]
+    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
+    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
+    is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
+    is_apify_integration: Annotated[bool | None, Field(examples=[False])] = None
+    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
+    action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
+    should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
+    event_types: Annotated[list[WebhookEventType], Field(examples=[['ACTOR.RUN.SUCCEEDED']])]
+    condition: WebhookCondition
+    ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
+    do_not_retry: Annotated[bool, Field(examples=[False])]
+    request_url: Annotated[AnyUrl, Field(examples=['http://example.com/'])]
+    last_dispatch: WebhookLastDispatch | None = None
+    stats: WebhookStats | None = None
 
 
 @docs_group('Models')
@@ -4185,19 +4198,7 @@ class WebhookRepresentation(BaseModel):
 
 
 @docs_group('Models')
-class WebhookResponse(BaseModel):
-    """Response containing webhook data."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    data: Webhook
-
-
-@docs_group('Models')
-class WebhookShort(BaseModel):
+class WebhookResource(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -4208,17 +4209,32 @@ class WebhookShort(BaseModel):
     modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
-    is_apify_integration: Annotated[bool | None, Field(examples=[False])] = None
-    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
-    action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
     should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
     event_types: Annotated[list[WebhookEventType], Field(examples=[['ACTOR.RUN.SUCCEEDED']])]
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
-    do_not_retry: Annotated[bool, Field(examples=[False])]
-    request_url: Annotated[AnyUrl, Field(examples=['http://example.com/'])]
-    last_dispatch: ExampleWebhookDispatch | None = None
+    do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
+    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    """
+    URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
+    """
+    payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
+    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
+    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
+    last_dispatch: WebhookLastDispatch | None = None
     stats: WebhookStats | None = None
+
+
+@docs_group('Models')
+class WebhookResponse(BaseModel):
+    """Response containing webhook data."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: WebhookResource
 
 
 @docs_group('Models')
@@ -4229,22 +4245,3 @@ class WebhookStats(BaseModel):
         alias_generator=to_camel,
     )
     total_dispatches: Annotated[int | None, Field(examples=[1])] = None
-
-
-@docs_group('Models')
-class WebhookUpdate(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
-    event_types: Annotated[list[WebhookEventType] | None, Field(examples=[['ACTOR.RUN.SUCCEEDED']])] = None
-    condition: WebhookCondition | None = None
-    ignore_ssl_errors: Annotated[bool | None, Field(examples=[False])] = None
-    do_not_retry: Annotated[bool | None, Field(examples=[False])] = None
-    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
-    payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
-    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
-    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
-    should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None

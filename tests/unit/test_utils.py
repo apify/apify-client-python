@@ -13,7 +13,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from apify_client._models import WebhookCondition, WebhookCreate
+from apify_client._models import CreateWebhookRequest, WebhookCondition
 from apify_client._resource_clients._resource_client import ResourceClientBase
 from apify_client._utils.crypto import create_hmac_signature, create_storage_content_signature, encode_base62
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
@@ -104,12 +104,12 @@ def test_encode_webhooks_to_base64() -> None:
     assert (
         encode_webhooks_to_base64(
             [
-                WebhookCreate(
+                CreateWebhookRequest(
                     event_types=['ACTOR.RUN.CREATED'],
                     condition=WebhookCondition(),
                     request_url='https://example.com/run-created',
                 ),
-                WebhookCreate(
+                CreateWebhookRequest(
                     event_types=['ACTOR.RUN.SUCCEEDED'],
                     condition=WebhookCondition(),
                     request_url='https://example.com/run-succeeded',
@@ -126,7 +126,7 @@ def test_encode_webhooks_to_base64() -> None:
     [
         pytest.param(
             [
-                WebhookCreate(
+                CreateWebhookRequest(
                     event_types=['ACTOR.RUN.SUCCEEDED'],
                     condition=WebhookCondition(),
                     request_url='https://example.com/run-succeeded',
@@ -196,15 +196,15 @@ def test_encode_webhooks_to_base64_from_dicts() -> None:
 
     assert result is not None
 
-    # Also verify round-trip: dicts and WebhookCreate models should produce the same base64
+    # Also verify round-trip: dicts and CreateWebhookRequest models should produce the same base64
     result_from_models = encode_webhooks_to_base64(
         [
-            WebhookCreate(
+            CreateWebhookRequest(
                 event_types=['ACTOR.RUN.CREATED'],
                 condition=WebhookCondition(),
                 request_url='https://example.com/run-created',
             ),
-            WebhookCreate(
+            CreateWebhookRequest(
                 event_types=['ACTOR.RUN.SUCCEEDED'],
                 condition=WebhookCondition(),
                 request_url='https://example.com/run-succeeded',

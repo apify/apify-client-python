@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 
 from .._utils import get_random_resource_name, maybe_await
 from apify_client._models import (
-    Actor,
     ActorChargeEvent,
-    ActorShort,
+    ActorListItem,
+    ActorResource,
     Build,
     ListOfActors,
     ListOfWebhooks,
@@ -33,7 +33,7 @@ async def test_get_public_actor(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting a public Actor by ID."""
     # Use a well-known public actor (Apify's web scraper)
     actor = await maybe_await(client.actor('apify/web-scraper').get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     assert actor.id is not None
     assert actor.name == 'web-scraper'
     assert actor.username == 'apify'
@@ -42,7 +42,7 @@ async def test_get_public_actor(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_get_actor_by_full_name(client: ApifyClient | ApifyClientAsync) -> None:
     """Test getting an Actor using username/actorname format."""
     actor = await maybe_await(client.actor('apify/hello-world').get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     assert actor.name == 'hello-world'
     assert actor.username == 'apify'
 
@@ -109,7 +109,7 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
             ],
         )
     )
-    assert isinstance(created_actor, Actor)
+    assert isinstance(created_actor, ActorResource)
     assert created_actor.id is not None
     assert created_actor.name == actor_name
 
@@ -125,13 +125,13 @@ async def test_actor_create_update_delete(client: ApifyClient | ApifyClientAsync
                 description=new_description,
             )
         )
-        assert isinstance(updated_actor, Actor)
+        assert isinstance(updated_actor, ActorResource)
         assert updated_actor.title == new_title
         assert updated_actor.description == new_description
 
         # Verify update persisted
         retrieved_actor = await maybe_await(actor_client.get())
-        assert isinstance(retrieved_actor, Actor)
+        assert isinstance(retrieved_actor, ActorResource)
         assert retrieved_actor.title == new_title
 
     finally:
@@ -212,16 +212,16 @@ async def test_list_actors_desc_ascending(client: ApifyClient | ApifyClientAsync
 async def test_actors_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over user's Actors."""
     iterator = client.actors().iterate(my=True, limit=10)
-    collected: list[ActorShort] = []
+    collected: list[ActorListItem] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for a in iterator:
-            assert isinstance(a, ActorShort)
+            assert isinstance(a, ActorListItem)
             collected.append(a)
     else:
         assert isinstance(iterator, Iterator)
         for a in iterator:
-            assert isinstance(a, ActorShort)
+            assert isinstance(a, ActorListItem)
             collected.append(a)
 
     assert len(collected) <= 10
@@ -315,7 +315,7 @@ async def test_actor_update_categories(client: ApifyClient | ApifyClientAsync) -
             title='Test Actor for Categories',
         )
     )
-    assert isinstance(created_actor, Actor)
+    assert isinstance(created_actor, ActorResource)
     actor_client = client.actor(created_actor.id)
 
     try:
@@ -326,7 +326,7 @@ async def test_actor_update_categories(client: ApifyClient | ApifyClientAsync) -
                 seo_description='SEO Test Description',
             )
         )
-        assert isinstance(updated, Actor)
+        assert isinstance(updated, ActorResource)
         # `categories` and `seo_title` are not declared fields on the Actor model but are returned via
         # `extra='allow'` so we read them from the dumped representation.
         dumped = updated.model_dump(by_alias=True)
@@ -346,7 +346,7 @@ async def test_actor_webhooks(client: ApifyClient | ApifyClientAsync) -> None:
             title='Test Actor for Webhooks',
         )
     )
-    assert isinstance(created_actor, Actor)
+    assert isinstance(created_actor, ActorResource)
     actor_client = client.actor(created_actor.id)
 
     try:
@@ -371,7 +371,7 @@ async def test_actor_default_build_wait_for_finish(client: ApifyClient | ApifyCl
 async def test_actor_get_parses_tiered_price_per_dataset_item(client: ApifyClient | ApifyClientAsync) -> None:
     """Test that actor.get() parses PRICE_PER_DATASET_ITEM entries with tieredPricing."""
     actor = await maybe_await(client.actor(ALL_PRICING_VARIANTS_ACTOR).get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     assert actor.pricing_infos
 
     tiered_ppd_entries = [
@@ -403,7 +403,7 @@ async def test_actor_get_parses_tiered_price_per_dataset_item(client: ApifyClien
 async def test_actor_get_parses_tiered_pay_per_event(client: ApifyClient | ApifyClientAsync) -> None:
     """Test that actor.get() parses tiered PAY_PER_EVENT events with isPrimaryEvent and isOneTimeEvent flags."""
     actor = await maybe_await(client.actor(ALL_PRICING_VARIANTS_ACTOR).get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     assert actor.pricing_infos
 
     tiered_ppe_events: list[ActorChargeEvent] = []

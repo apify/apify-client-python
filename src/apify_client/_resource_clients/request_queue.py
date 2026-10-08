@@ -17,24 +17,24 @@ from apify_client._models import (
     BatchAddResult,
     BatchDeleteResponse,
     BatchDeleteResult,
-    HeadAndLockResponse,
-    HeadResponse,
     ListOfRequests,
     ListOfRequestsResponse,
     LockedRequestQueueHead,
+    LockedRequestQueueHeadResponse,
     ProlongRequestLockResponse,
-    Request,
-    RequestDraft,
-    RequestDraftDelete,
     RequestLockInfo,
-    RequestQueue,
     RequestQueueHead,
+    RequestQueueHeadResponse,
+    RequestQueueResource,
     RequestQueueResponse,
     RequestRegistration,
+    RequestResource,
     RequestResponse,
+    RequestToDelete,
     RequestWithoutId,
     UnlockRequestsResponse,
     UnlockRequestsResult,
+    UnprocessedRequest,
 )
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_cursor_iterator, get_cursor_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -49,10 +49,10 @@ if TYPE_CHECKING:
 
     from apify_client._literals import GeneralAccess
     from apify_client._typeddicts import (
-        RequestCamelDict,
-        RequestDict,
-        RequestDraftDeleteCamelDict,
-        RequestDraftDeleteDict,
+        RequestResourceCamelDict,
+        RequestResourceDict,
+        RequestToDeleteCamelDict,
+        RequestToDeleteDict,
         RequestWithoutIdCamelDict,
         RequestWithoutIdDict,
     )
@@ -120,7 +120,7 @@ class RequestQueueClient(ResourceClient):
         )
         self.client_key = client_key
 
-    def get(self, *, timeout: Timeout = 'short') -> RequestQueue | None:
+    def get(self, *, timeout: Timeout = 'short') -> RequestQueueResource | None:
         """Retrieve the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
@@ -142,7 +142,7 @@ class RequestQueueClient(ResourceClient):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
-    ) -> RequestQueue:
+    ) -> RequestQueueResource:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -190,7 +190,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return HeadResponse.model_validate(result).data
+        return RequestQueueHeadResponse.model_validate(result).data
 
     def list_and_lock_head(
         self,
@@ -225,7 +225,7 @@ class RequestQueueClient(ResourceClient):
         )
 
         result = response_to_dict(response)
-        return HeadAndLockResponse.model_validate(result).data
+        return LockedRequestQueueHeadResponse.model_validate(result).data
 
     def add_request(
         self,
@@ -262,7 +262,7 @@ class RequestQueueClient(ResourceClient):
         result = response_to_dict(response)
         return AddRequestResponse.model_validate(result).data
 
-    def get_request(self, request_id: str, *, timeout: Timeout = 'short') -> Request | None:
+    def get_request(self, request_id: str, *, timeout: Timeout = 'short') -> RequestResource | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -291,7 +291,7 @@ class RequestQueueClient(ResourceClient):
 
     def update_request(
         self,
-        request: RequestDict | RequestCamelDict | Request,
+        request: RequestResourceDict | RequestResourceCamelDict | RequestResource,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'medium',
@@ -311,8 +311,8 @@ class RequestQueueClient(ResourceClient):
         Raises:
             ValueError: If the request carries no ID.
         """
-        if not isinstance(request, Request):
-            request = Request.model_validate(request)
+        if not isinstance(request, RequestResource):
+            request = RequestResource.model_validate(request)
 
         if request.id is None:
             raise ValueError('The request to update must have an ID.')
@@ -462,7 +462,7 @@ class RequestQueueClient(ResourceClient):
             batch_queue.put(batch)
 
         processed_requests = list[AddedRequest]()
-        unprocessed_requests = list[RequestDraft]()
+        unprocessed_requests = list[UnprocessedRequest]()
 
         # Process all batches in the queue sequentially.
         while not batch_queue.empty():
@@ -492,7 +492,7 @@ class RequestQueueClient(ResourceClient):
 
     def batch_delete_requests(
         self,
-        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict] | list[RequestDraftDeleteCamelDict],
+        requests: list[RequestToDelete] | list[RequestToDeleteDict] | list[RequestToDeleteCamelDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -507,8 +507,8 @@ class RequestQueueClient(ResourceClient):
         requests_as_dicts = [
             (
                 request
-                if isinstance(request, RequestDraftDelete)
-                else RequestDraftDelete.model_validate(
+                if isinstance(request, RequestToDelete)
+                else RequestToDelete.model_validate(
                     request,
                 )
             ).root.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str)
@@ -571,7 +571,7 @@ class RequestQueueClient(ResourceClient):
         cursor: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[Request]:
+    ) -> Iterator[RequestResource]:
         """Iterate over requests in the queue.
 
         Simple `list_requests` does only one API call, possibly not listing all items matching the criteria.
@@ -653,7 +653,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
         self.client_key = client_key
 
-    async def get(self, *, timeout: Timeout = 'short') -> RequestQueue | None:
+    async def get(self, *, timeout: Timeout = 'short') -> RequestQueueResource | None:
         """Retrieve the request queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/get-request-queue
@@ -675,7 +675,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
-    ) -> RequestQueue:
+    ) -> RequestQueueResource:
         """Update the request queue with specified fields.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue/update-request-queue
@@ -723,7 +723,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return HeadResponse.model_validate(result).data
+        return RequestQueueHeadResponse.model_validate(result).data
 
     async def list_and_lock_head(
         self,
@@ -758,7 +758,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         )
 
         result = response_to_dict(response)
-        return HeadAndLockResponse.model_validate(result).data
+        return LockedRequestQueueHeadResponse.model_validate(result).data
 
     async def add_request(
         self,
@@ -795,7 +795,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         result = response_to_dict(response)
         return AddRequestResponse.model_validate(result).data
 
-    async def get_request(self, request_id: str, *, timeout: Timeout = 'short') -> Request | None:
+    async def get_request(self, request_id: str, *, timeout: Timeout = 'short') -> RequestResource | None:
         """Retrieve a request from the queue.
 
         https://docs.apify.com/api/v2#/reference/request-queues/request/get-request
@@ -822,7 +822,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def update_request(
         self,
-        request: RequestDict | RequestCamelDict | Request,
+        request: RequestResourceDict | RequestResourceCamelDict | RequestResource,
         *,
         forefront: bool | None = None,
         timeout: Timeout = 'medium',
@@ -842,8 +842,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Raises:
             ValueError: If the request carries no ID.
         """
-        if not isinstance(request, Request):
-            request = Request.model_validate(request)
+        if not isinstance(request, RequestResource):
+            request = RequestResource.model_validate(request)
 
         if request.id is None:
             raise ValueError('The request to update must have an ID.')
@@ -952,7 +952,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         Return result containing lists of processed and unprocessed requests by the worker.
         """
         processed_requests = list[AddedRequest]()
-        unprocessed_requests = list[RequestDraft]()
+        unprocessed_requests = list[UnprocessedRequest]()
 
         while True:
             # Get the next batch from the queue.
@@ -1060,7 +1060,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         # Combine the results from all workers and return them.
         processed_requests = list[AddedRequest]()
-        unprocessed_requests = list[RequestDraft]()
+        unprocessed_requests = list[UnprocessedRequest]()
 
         for worker in workers:
             result = worker.result()
@@ -1076,7 +1076,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
     async def batch_delete_requests(
         self,
-        requests: list[RequestDraftDelete] | list[RequestDraftDeleteDict] | list[RequestDraftDeleteCamelDict],
+        requests: list[RequestToDelete] | list[RequestToDeleteDict] | list[RequestToDeleteCamelDict],
         *,
         timeout: Timeout = 'short',
     ) -> BatchDeleteResult:
@@ -1091,8 +1091,8 @@ class RequestQueueClientAsync(ResourceClientAsync):
         requests_as_dicts = [
             (
                 request
-                if isinstance(request, RequestDraftDelete)
-                else RequestDraftDelete.model_validate(
+                if isinstance(request, RequestToDelete)
+                else RequestToDelete.model_validate(
                     request,
                 )
             ).root.model_dump(mode='json', by_alias=True, exclude_none=True, fallback=str)
@@ -1154,7 +1154,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         cursor: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[Request]:
+    ) -> AsyncIterator[RequestResource]:
         """Iterate over requests in the queue.
 
         Simple `list_requests` does only one API call, possibly not listing all items matching the criteria.

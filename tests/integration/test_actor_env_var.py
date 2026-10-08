@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 from .._utils import get_random_resource_name, maybe_await
-from apify_client._models import Actor, EnvVar, ListOfEnvVars
+from apify_client._models import ActorResource, EnvVar, ListOfEnvVars
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -43,7 +43,7 @@ async def test_actor_env_var_list(client: ApifyClient | ApifyClientAsync) -> Non
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.0')
 
@@ -87,7 +87,7 @@ async def test_actor_env_var_create_and_get(client: ApifyClient | ApifyClientAsy
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('1.0')
 
@@ -147,7 +147,7 @@ async def test_actor_env_var_update(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.1')
     env_var_client = version_client.env_var('UPDATE_VAR')
@@ -209,7 +209,7 @@ async def test_actor_env_var_delete(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.1')
 
@@ -249,7 +249,7 @@ async def test_actor_env_var_collection_iterate(client: ApifyClient | ApifyClien
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.0')
 
@@ -291,7 +291,7 @@ async def test_actor_env_var_secret(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.0')
 
@@ -335,7 +335,7 @@ async def test_actor_env_var_get_nonexistent_returns_none(
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.0')
 

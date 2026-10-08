@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .._utils import maybe_await
-from apify_client._models import ListOfStoreActors, StoreListActor
+from apify_client._models import ListOfStoreActors, StoreActor
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -84,16 +84,16 @@ async def test_store_list_sort_by_popularity(client: ApifyClient | ApifyClientAs
 async def test_store_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over store Actors."""
     iterator = client.store().iterate(limit=20)
-    collected: list[StoreListActor] = []
+    collected: list[StoreActor] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for a in iterator:
-            assert isinstance(a, StoreListActor)
+            assert isinstance(a, StoreActor)
             collected.append(a)
     else:
         assert isinstance(iterator, Iterator)
         for a in iterator:
-            assert isinstance(a, StoreListActor)
+            assert isinstance(a, StoreActor)
             collected.append(a)
 
     assert len(collected) > 0
@@ -109,16 +109,16 @@ async def test_store_iterate(client: ApifyClient | ApifyClientAsync, *, is_async
 async def test_store_iterate_filter_by_username(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration with a username filter applied."""
     iterator = client.store().iterate(limit=15, username='apify')
-    collected: list[StoreListActor] = []
+    collected: list[StoreActor] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for a in iterator:
-            assert isinstance(a, StoreListActor)
+            assert isinstance(a, StoreActor)
             collected.append(a)
     else:
         assert isinstance(iterator, Iterator)
         for a in iterator:
-            assert isinstance(a, StoreListActor)
+            assert isinstance(a, StoreActor)
             collected.append(a)
 
     assert len(collected) > 0

@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
 from .._utils import get_random_resource_name, maybe_await
-from apify_client._models import Actor, ListOfVersions, Version
+from apify_client._models import ActorResource, ListOfVersions, Version
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -36,7 +36,7 @@ async def test_actor_version_list(client: ApifyClient | ApifyClientAsync) -> Non
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
 
     try:
@@ -61,7 +61,7 @@ async def test_actor_version_create_and_get(client: ApifyClient | ApifyClientAsy
 
     # Create an actor without versions
     actor = await maybe_await(client.actors().create(name=actor_name))
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
 
     try:
@@ -120,7 +120,7 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
     version_client = actor_client.version('0.1')
 
@@ -187,7 +187,7 @@ async def test_actor_version_delete(client: ApifyClient | ApifyClientAsync) -> N
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
 
     try:
@@ -232,7 +232,7 @@ async def test_actor_version_collection_iterate(client: ApifyClient | ApifyClien
             ],
         )
     )
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
 
     try:
@@ -264,7 +264,7 @@ async def test_actor_version_get_nonexistent_returns_none(
     actor_name = get_random_resource_name('actor')
 
     actor = await maybe_await(client.actors().create(name=actor_name))
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
     actor_client = client.actor(actor.id)
 
     try:

@@ -6,7 +6,7 @@ from apify_client._docs import docs_group
 from apify_client._models import (
     ListOfRequestQueues,
     ListOfRequestQueuesResponse,
-    RequestQueue,
+    RequestQueueResource,
     RequestQueueResponse,
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._literals import StorageOwnership
-    from apify_client._models import RequestQueueShort
+    from apify_client._models import RequestQueueListItem
     from apify_client.types import Timeout
 
 
@@ -84,7 +84,7 @@ class RequestQueueCollectionClient(ResourceClient):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[RequestQueueShort]:
+    ) -> Iterator[RequestQueueListItem]:
         """Iterate over the available request queues.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -117,7 +117,7 @@ class RequestQueueCollectionClient(ResourceClient):
         *,
         name: str | None = None,
         timeout: Timeout = 'short',
-    ) -> RequestQueue:
+    ) -> RequestQueueResource:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue
@@ -197,7 +197,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[RequestQueueShort]:
+    ) -> AsyncIterator[RequestQueueListItem]:
         """Iterate over the available request queues.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -230,7 +230,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         *,
         name: str | None = None,
         timeout: Timeout = 'short',
-    ) -> RequestQueue:
+    ) -> RequestQueueResource:
         """Retrieve a named request queue, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/request-queues/queue-collection/create-request-queue

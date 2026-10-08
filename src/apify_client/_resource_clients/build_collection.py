@@ -10,7 +10,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    from apify_client._models import BuildShort
+    from apify_client._models import BuildListItem
     from apify_client.types import Timeout
 
 
@@ -68,7 +68,7 @@ class BuildCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[BuildShort]:
+    ) -> Iterator[BuildListItem]:
         """Iterate over all Actor builds.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -147,7 +147,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[BuildShort]:
+    ) -> AsyncIterator[BuildListItem]:
         """Iterate over all Actor builds.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method

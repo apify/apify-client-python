@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._models import RequestDraftDelete
+from apify_client._models import RequestToDelete
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug.wrappers import Request
 
-    from apify_client._typeddicts import RequestDict, RequestWithoutIdDict
+    from apify_client._typeddicts import RequestResourceDict, RequestWithoutIdDict
 
 # The Apify API limit on the payload size of a batch-add request, which the client's batching must respect.
 pytestmark = pytest.mark.usefixtures('http_client_classes')
@@ -266,7 +266,7 @@ _REQUEST_REGISTRATION_RESPONSE_CONTENT = (
     '{"data": {"requestId": "YiKoxjkaS9gjGTqhF", "wasAlreadyPresent": false, "wasAlreadyHandled": false}}'
 )
 
-_FULL_REQUEST_DICT: RequestDict = {
+_FULL_REQUEST_DICT: RequestResourceDict = {
     'id': 'YiKoxjkaS9gjGTqhF',
     'unique_key': 'http://example.com/1',
     'url': 'http://example.com/1',
@@ -466,7 +466,7 @@ async def test_batch_delete_requests_stringifies_unserializable_extra_async(http
     )
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    request = RequestDraftDelete.model_validate({'id': 'YiKoxjkaS9gjGTqhF', 'weird': Unserializable()})
+    request = RequestToDelete.model_validate({'id': 'YiKoxjkaS9gjGTqhF', 'weird': Unserializable()})
     await rq_client.batch_delete_requests(requests=[request])
 
     (sent_request,) = json.loads(payloads[0])
@@ -484,7 +484,7 @@ def test_batch_delete_requests_stringifies_unserializable_extra_sync(httpserver:
     )
     rq_client = client.request_queue(request_queue_id='whatever')
 
-    request = RequestDraftDelete.model_validate({'id': 'YiKoxjkaS9gjGTqhF', 'weird': Unserializable()})
+    request = RequestToDelete.model_validate({'id': 'YiKoxjkaS9gjGTqhF', 'weird': Unserializable()})
     rq_client.batch_delete_requests(requests=[request])
 
     (sent_request,) = json.loads(payloads[0])

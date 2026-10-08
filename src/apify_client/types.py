@@ -4,10 +4,10 @@ from collections.abc import AsyncIterable, Iterable, Mapping, Sequence
 from datetime import timedelta
 from typing import IO, TYPE_CHECKING, Literal, Protocol
 
-from apify_client._models import WebhookCreate, WebhookRepresentation
+from apify_client._models import CreateWebhookRequest, WebhookRepresentation
 from apify_client._typeddicts import (
-    WebhookCreateCamelDict,
-    WebhookCreateDict,
+    CreateWebhookRequestCamelDict,
+    CreateWebhookRequestDict,
     WebhookRepresentationCamelDict,
     WebhookRepresentationDict,
 )
@@ -27,9 +27,9 @@ A `timedelta` overrides the timeout for this call, and `'no_timeout'` disables t
 """
 
 WebhooksList = (
-    list[WebhookCreate]
-    | list[WebhookCreateDict]
-    | list[WebhookCreateCamelDict]
+    list[CreateWebhookRequest]
+    | list[CreateWebhookRequestDict]
+    | list[CreateWebhookRequestCamelDict]
     | list[WebhookRepresentation]
     | list[WebhookRepresentationDict]
     | list[WebhookRepresentationCamelDict]
@@ -37,8 +37,8 @@ WebhooksList = (
 """Type for the `webhooks` parameter on resource-client `start`/`call` methods and `from_webhooks`.
 
 `WebhookRepresentation` / `WebhookRepresentationDict` / `WebhookRepresentationCamelDict` are the minimal ad-hoc
-webhook shape (only `event_types` and `request_url` required). `WebhookCreate` / `WebhookCreateDict` /
-`WebhookCreateCamelDict` are accepted so a persistent-webhook definition can be reused; their fields not relevant
+webhook shape (only `event_types` and `request_url` required). `CreateWebhookRequest` / `CreateWebhookRequestDict` /
+`CreateWebhookRequestCamelDict` are accepted so a persistent-webhook definition can be reused; their fields not relevant
 to ad-hoc webhooks (e.g. `condition`) are ignored at runtime. The `*CamelDict` variants accept camelCase keys
 matching the Apify API spelling.
 """

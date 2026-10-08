@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
+    CreateOrUpdateScheduleRequest,
     ListOfSchedules,
     ListOfSchedulesResponse,
     Schedule,
-    ScheduleCreate,
     ScheduleResponse,
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
@@ -16,7 +16,7 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
-    from apify_client._models import ScheduleShort
+    from apify_client._models import ScheduleListItem
     from apify_client.types import Timeout
 
 
@@ -70,7 +70,7 @@ class ScheduleCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[ScheduleShort]:
+    ) -> Iterator[ScheduleListItem]:
         """Iterate over the available schedules.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -129,7 +129,7 @@ class ScheduleCollectionClient(ResourceClient):
         if not actions:
             actions = []
 
-        schedule_fields = ScheduleCreate(
+        schedule_fields = CreateOrUpdateScheduleRequest(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,
@@ -193,7 +193,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[ScheduleShort]:
+    ) -> AsyncIterator[ScheduleListItem]:
         """Iterate over the available schedules.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -252,7 +252,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         if not actions:
             actions = []
 
-        schedule_fields = ScheduleCreate(
+        schedule_fields = CreateOrUpdateScheduleRequest(
             cron_expression=cron_expression,
             is_enabled=is_enabled,
             is_exclusive=is_exclusive,

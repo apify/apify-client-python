@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from apify_client._literals import ActorJobStatus
-    from apify_client._models import RunShort
+    from apify_client._models import RunListItem
     from apify_client.types import Timeout
 
 
@@ -89,7 +89,7 @@ class RunCollectionClient(ResourceClient):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[RunShort]:
+    ) -> Iterator[RunListItem]:
         """Iterate over all Actor runs.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -198,7 +198,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[RunShort]:
+    ) -> AsyncIterator[RunListItem]:
         """Iterate over all Actor runs.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method

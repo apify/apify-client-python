@@ -11,7 +11,7 @@ from scripts.postprocess_generated_models import (
     split_literals_to_file,
 )
 
-from apify_client._models import Request
+from apify_client._models import RequestResource
 
 # -- fix_discriminators -------------------------------------------------------
 
@@ -677,4 +677,4 @@ def test_add_camel_case_typeddicts_camel_validates_with_pydantic() -> None:
         'loaded_url': 'https://example.com/final',
         'user_data': {'tag': 'x'},
     }
-    assert Request.model_validate(camel_payload) == Request.model_validate(snake_payload)
+    assert RequestResource.model_validate(camel_payload) == RequestResource.model_validate(snake_payload)

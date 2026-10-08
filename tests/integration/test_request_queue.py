@@ -21,12 +21,12 @@ from apify_client._models import (
     ListOfRequestQueues,
     ListOfRequests,
     LockedRequestQueueHead,
-    Request,
     RequestLockInfo,
-    RequestQueue,
     RequestQueueHead,
-    RequestQueueShort,
+    RequestQueueListItem,
+    RequestQueueResource,
     RequestRegistration,
+    RequestResource,
     RequestWithoutId,
     UnlockRequestsResult,
 )
@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
     from apify_client._resource_clients.request_queue import RequestQueueClient, RequestQueueClientAsync
     from apify_client._typeddicts import (
-        RequestDict,
-        RequestDraftDeleteDict,
+        RequestResourceDict,
+        RequestToDeleteDict,
         RequestWithoutIdCamelDict,
         RequestWithoutIdDict,
     )
@@ -50,7 +50,7 @@ HANDLED_AT = datetime(2019, 6, 16, 10, 23, 31, 607000, tzinfo=UTC)
 
 # Every request field beyond `id`/`unique_key`/`url`, snake_cased. The API declares its write bodies with
 # `additionalProperties: false`, so each of these has to reach it camelCased to be stored at all. A fragment, not
-# a full `RequestDict`: every use spreads it alongside `unique_key`/`url` supplied separately.
+# a full `RequestResourceDict`: every use spreads it alongside `unique_key`/`url` supplied separately.
 ALL_REQUEST_FIELDS: dict[str, Any] = {
     'method': 'POST',
     'user_data': {'label': 'DETAIL', 'depth': 2},
@@ -67,18 +67,18 @@ ALL_REQUEST_FIELDS: dict[str, Any] = {
 async def fetch_stored_request(
     rq_client: RequestQueueClient | RequestQueueClientAsync,
     request_id: str,
-) -> Request:
+) -> RequestResource:
     """Poll until `request_id` is readable back from the queue, then return it."""
 
-    async def get_request() -> Request | None:
+    async def get_request() -> RequestResource | None:
         return await maybe_await(rq_client.get_request(request_id))
 
     stored = await poll_until_condition(get_request, lambda request: request is not None)
-    assert isinstance(stored, Request)
+    assert isinstance(stored, RequestResource)
     return stored
 
 
-def non_identity_fields(request: Request) -> dict[str, Any]:
+def non_identity_fields(request: RequestResource) -> dict[str, Any]:
     """Return a stored request's fields without the ones identifying it, so two write paths can be compared."""
     dumped = request.model_dump(by_alias=True)
     for key in ('id', 'uniqueKey', 'url'):
@@ -86,7 +86,7 @@ def non_identity_fields(request: Request) -> dict[str, Any]:
     return dumped
 
 
-def assert_all_fields_stored(request: Request) -> None:
+def assert_all_fields_stored(request: RequestResource) -> None:
     """Assert the stored request carries every value of `ALL_REQUEST_FIELDS`."""
     assert request.method == 'POST'
     assert request.user_data is not None
@@ -142,14 +142,14 @@ async def test_request_queue_collection_get_or_create(client: ApifyClient | Apif
 
     # Create new RQ
     rq = await maybe_await(client.request_queues().get_or_create(name=unique_name))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
 
     try:
         assert rq.name == unique_name
 
         # Get same RQ again (should return existing)
         same_rq = await maybe_await(client.request_queues().get_or_create(name=unique_name))
-        assert isinstance(same_rq, RequestQueue)
+        assert isinstance(same_rq, RequestQueueResource)
         assert same_rq.id == rq.id
     finally:
         await maybe_await(client.request_queue(rq.id).delete())
@@ -157,7 +157,7 @@ async def test_request_queue_collection_get_or_create(client: ApifyClient | Apif
 
 async def test_request_queue_lock(client: ApifyClient | ApifyClientAsync) -> None:
     created_rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('queue')))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq = client.request_queue(created_rq.id, client_key=get_random_string(10))
 
     try:
@@ -215,7 +215,7 @@ async def test_request_queue_get_or_create_and_get(client: ApifyClient | ApifyCl
 
     # Create queue
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -224,7 +224,7 @@ async def test_request_queue_get_or_create_and_get(client: ApifyClient | ApifyCl
 
         # Get the same queue
         retrieved_rq = await maybe_await(rq_client.get())
-        assert isinstance(retrieved_rq, RequestQueue)
+        assert isinstance(retrieved_rq, RequestQueueResource)
         assert retrieved_rq.id == created_rq.id
         assert retrieved_rq.name == rq_name
     finally:
@@ -237,19 +237,19 @@ async def test_request_queue_update(client: ApifyClient | ApifyClientAsync) -> N
     new_name = get_random_resource_name('queue-updated')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
         # Update the name
         updated_rq = await maybe_await(rq_client.update(name=new_name))
-        assert isinstance(updated_rq, RequestQueue)
+        assert isinstance(updated_rq, RequestQueueResource)
         assert updated_rq.name == new_name
         assert updated_rq.id == created_rq.id
 
         # Verify the update persisted
         retrieved_rq = await maybe_await(rq_client.get())
-        assert isinstance(retrieved_rq, RequestQueue)
+        assert isinstance(retrieved_rq, RequestQueueResource)
         assert retrieved_rq.name == new_name
     finally:
         await maybe_await(rq_client.delete())
@@ -260,7 +260,7 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -276,11 +276,11 @@ async def test_request_queue_add_and_get_request(client: ApifyClient | ApifyClie
         assert add_result.was_already_present is False
 
         # Poll until the request is visible (eventual consistency)
-        async def get_added_request() -> Request | None:
+        async def get_added_request() -> RequestResource | None:
             return await maybe_await(rq_client.get_request(add_result.request_id))
 
         request = await poll_until_condition(get_added_request, lambda request: request is not None)
-        assert isinstance(request, Request)
+        assert isinstance(request, RequestResource)
         assert str(request.url) == 'https://example.com/test'
         assert request.unique_key == 'test-key-1'
     finally:
@@ -292,7 +292,7 @@ async def test_request_queue_list_head(client: ApifyClient | ApifyClientAsync) -
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -319,7 +319,7 @@ async def test_request_queue_list_requests(client: ApifyClient | ApifyClientAsyn
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -346,7 +346,7 @@ async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsy
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -357,7 +357,7 @@ async def test_request_queue_delete_request(client: ApifyClient | ApifyClientAsy
         assert isinstance(add_result, RequestRegistration)
 
         # Poll until the request is visible (eventual consistency)
-        async def get_added_request() -> Request | None:
+        async def get_added_request() -> RequestResource | None:
             return await maybe_await(rq_client.get_request(add_result.request_id))
 
         request = await poll_until_condition(get_added_request, lambda request: request is not None)
@@ -378,7 +378,7 @@ async def test_request_queue_batch_add_requests(client: ApifyClient | ApifyClien
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -408,7 +408,7 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -426,7 +426,7 @@ async def test_request_queue_batch_delete_requests(client: ApifyClient | ApifyCl
 
         list_response = await poll_until_condition(get_requests, lambda response: len(response.items) == 10)
         assert len(list_response.items) == 10
-        requests_to_delete: list[RequestDraftDeleteDict] = []
+        requests_to_delete: list[RequestToDeleteDict] = []
         for item in list_response.items[:5]:
             assert item.unique_key is not None
             requests_to_delete.append({'unique_key': item.unique_key})
@@ -448,7 +448,7 @@ async def test_request_queue_delete_nonexistent(client: ApifyClient | ApifyClien
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     # Delete queue
@@ -464,7 +464,7 @@ async def test_request_queue_list_and_lock_head(client: ApifyClient | ApifyClien
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id, client_key=get_random_string(10))
 
     try:
@@ -494,7 +494,7 @@ async def test_request_queue_prolong_request_lock(client: ApifyClient | ApifyCli
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id, client_key=get_random_string(10))
 
     try:
@@ -528,7 +528,7 @@ async def test_request_queue_delete_request_lock(client: ApifyClient | ApifyClie
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id, client_key=get_random_string(10))
 
     try:
@@ -561,7 +561,7 @@ async def test_request_queue_unlock_requests(client: ApifyClient | ApifyClientAs
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id, client_key=get_random_string(10))
 
     try:
@@ -599,7 +599,7 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
     rq_name = get_random_resource_name('queue')
 
     created_rq = await maybe_await(client.request_queues().get_or_create(name=rq_name))
-    assert isinstance(created_rq, RequestQueue)
+    assert isinstance(created_rq, RequestQueueResource)
     rq_client = client.request_queue(created_rq.id)
 
     try:
@@ -614,15 +614,15 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
         assert add_result.request_id is not None
 
         # Poll until the request is visible (eventual consistency), then use its full data
-        async def get_added_request() -> Request | None:
+        async def get_added_request() -> RequestResource | None:
             return await maybe_await(rq_client.get_request(add_result.request_id))
 
         original_request = await poll_until_condition(get_added_request, lambda request: request is not None)
-        assert isinstance(original_request, Request)
+        assert isinstance(original_request, RequestResource)
 
         assert original_request.unique_key is not None
         # Update the request (change method and add user data)
-        updated_request_data: RequestDict = {
+        updated_request_data: RequestResourceDict = {
             'id': add_result.request_id,
             'url': str(original_request.url),
             'unique_key': original_request.unique_key,
@@ -639,7 +639,7 @@ async def test_request_queue_update_request(client: ApifyClient | ApifyClientAsy
 async def test_request_queue_add_request_round_trips_all_fields(client: ApifyClient | ApifyClientAsync) -> None:
     """Every field of a snake_cased request survives `add_request` and comes back from `get_request`."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -662,7 +662,7 @@ async def test_request_queue_batch_add_requests_round_trips_all_fields(
 ) -> None:
     """Every field of a snake_cased request survives `batch_add_requests` and comes back from `get_request`."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -689,7 +689,7 @@ async def test_request_queue_add_and_update_request_store_identical_fields(
 ) -> None:
     """The same field dict stored through `add_request` and through `update_request` lands identically."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -728,7 +728,7 @@ async def test_request_queue_add_and_update_request_store_identical_fields(
 async def test_request_queue_add_request_accepts_camel_cased_fields(client: ApifyClient | ApifyClientAsync) -> None:
     """A camelCased request dict stores the same fields as its snake_cased equivalent."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -757,7 +757,7 @@ async def test_request_queue_add_request_accepts_camel_cased_fields(client: Apif
 async def test_request_queue_add_request_rejects_undeclared_fields(client: ApifyClient | ApifyClientAsync) -> None:
     """The API refuses a body key its schema does not declare, so a snake_cased field takes the whole write down."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -780,14 +780,14 @@ async def test_request_queue_collection_iterate(client: ApifyClient | ApifyClien
 
     for _ in range(3):
         rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-        assert isinstance(rq, RequestQueue)
+        assert isinstance(rq, RequestQueueResource)
         created_ids.append(rq.id)
 
     try:
         collected = await collect_iterate_until_present(
             lambda: client.request_queues().iterate(desc=True),
             set(created_ids),
-            item_type=RequestQueueShort,
+            item_type=RequestQueueListItem,
             is_async=is_async,
         )
         collected_ids = {rq.id for rq in collected}
@@ -801,7 +801,7 @@ async def test_request_queue_collection_iterate(client: ApifyClient | ApifyClien
 async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over requests within a queue."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -817,16 +817,16 @@ async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientA
 
         # Iterate with a small chunk so multiple pages are fetched
         iterator = rq_client.iterate_requests(chunk_size=3)
-        collected: list[Request] = []
+        collected: list[RequestResource] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)
             async for req in iterator:
-                assert isinstance(req, Request)
+                assert isinstance(req, RequestResource)
                 collected.append(req)
         else:
             assert isinstance(iterator, Iterator)
             for req in iterator:
-                assert isinstance(req, Request)
+                assert isinstance(req, RequestResource)
                 collected.append(req)
 
         assert len(collected) == 7
@@ -840,7 +840,7 @@ async def test_request_queue_iterate_requests(client: ApifyClient | ApifyClientA
 async def test_request_queue_list_requests_with_cursor(client: ApifyClient | ApifyClientAsync) -> None:
     """Test list_requests pagination via limit and the opaque cursor token."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:
@@ -872,7 +872,7 @@ async def test_request_queue_list_requests_with_cursor(client: ApifyClient | Api
 async def test_request_queue_list_requests_with_filter(client: ApifyClient | ApifyClientAsync) -> None:
     """Test list_requests with the `filter` parameter (pending only)."""
     rq = await maybe_await(client.request_queues().get_or_create(name=get_random_resource_name('rq')))
-    assert isinstance(rq, RequestQueue)
+    assert isinstance(rq, RequestQueueResource)
     rq_client = client.request_queue(rq.id)
 
     try:

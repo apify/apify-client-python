@@ -14,9 +14,9 @@ from apify_client._models import (
     ListOfWebhookDispatches,
     ListOfWebhooks,
     Run,
-    Webhook,
     WebhookDispatch,
-    WebhookShort,
+    WebhookListItem,
+    WebhookResource,
 )
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
@@ -75,13 +75,13 @@ async def test_webhook_create_and_get(client: ApifyClient | ApifyClientAsync) ->
     )
 
     try:
-        assert isinstance(created_webhook, Webhook)
+        assert isinstance(created_webhook, WebhookResource)
 
         # Get the same webhook
         webhook_client = client.webhook(created_webhook.id)
         retrieved_webhook = await maybe_await(webhook_client.get())
 
-        assert isinstance(retrieved_webhook, Webhook)
+        assert isinstance(retrieved_webhook, WebhookResource)
         assert retrieved_webhook.id == created_webhook.id
     finally:
         await maybe_await(webhook_client.delete())
@@ -100,7 +100,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
-    assert isinstance(created_webhook, Webhook)
+    assert isinstance(created_webhook, WebhookResource)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -111,7 +111,7 @@ async def test_webhook_update(client: ApifyClient | ApifyClientAsync) -> None:
                 actor_run_id=run_id,
             )
         )
-        assert isinstance(updated_webhook, Webhook)
+        assert isinstance(updated_webhook, WebhookResource)
         assert str(updated_webhook.request_url) == 'https://httpbin.org/anything'
     finally:
         await maybe_await(webhook_client.delete())
@@ -130,7 +130,7 @@ async def test_webhook_test(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
-    assert isinstance(created_webhook, Webhook)
+    assert isinstance(created_webhook, WebhookResource)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -156,7 +156,7 @@ async def test_webhook_dispatches(client: ApifyClient | ApifyClientAsync) -> Non
         )
     )
 
-    assert isinstance(created_webhook, Webhook)
+    assert isinstance(created_webhook, WebhookResource)
     webhook_client = client.webhook(created_webhook.id)
 
     try:
@@ -189,7 +189,7 @@ async def test_webhook_delete(client: ApifyClient | ApifyClientAsync) -> None:
             is_ad_hoc=True,
         )
     )
-    assert isinstance(created_webhook, Webhook)
+    assert isinstance(created_webhook, WebhookResource)
     webhook_client = client.webhook(created_webhook.id)
 
     # Delete webhook
@@ -215,7 +215,7 @@ async def test_webhook_collection_iterate(client: ApifyClient | ApifyClientAsync
                 is_ad_hoc=True,
             )
         )
-        assert isinstance(webhook, Webhook)
+        assert isinstance(webhook, WebhookResource)
         created_ids.append(webhook.id)
 
     # The API must return 3 distinct webhooks - otherwise dedup happened
@@ -225,7 +225,7 @@ async def test_webhook_collection_iterate(client: ApifyClient | ApifyClientAsync
         collected = await collect_iterate_until_present(
             lambda: client.webhooks().iterate(desc=True),
             set(created_ids),
-            item_type=WebhookShort,
+            item_type=WebhookListItem,
             is_async=is_async,
         )
         collected_ids = {w.id for w in collected}
@@ -254,7 +254,7 @@ async def test_webhook_dispatches_iterate(client: ApifyClient | ApifyClientAsync
             is_ad_hoc=True,
         )
     )
-    assert isinstance(created_webhook, Webhook)
+    assert isinstance(created_webhook, WebhookResource)
     webhook_client = client.webhook(created_webhook.id)
 
     try:

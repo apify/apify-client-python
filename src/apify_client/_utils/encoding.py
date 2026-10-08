@@ -6,7 +6,7 @@ from base64 import b64encode
 from functools import cache
 from typing import TYPE_CHECKING, Any
 
-from apify_client._models import WebhookCreate, WebhookRepresentation
+from apify_client._models import CreateWebhookRequest, WebhookRepresentation
 from apify_client.http_clients._streamed_body import StreamedRequestBody
 
 if TYPE_CHECKING:
@@ -105,7 +105,7 @@ def encode_webhooks_to_base64(webhooks: WebhooksList | None) -> str | None:
 
     Returns `None` for `None` or an empty list, so the query parameter is omitted.
 
-    See `WebhooksList` for the accepted shapes. `WebhookRepresentation` instances are used as-is. `WebhookCreate`
+    See `WebhooksList` for the accepted shapes. `WebhookRepresentation` instances are used as-is. `CreateWebhookRequest`
     instances and dict shapes are projected onto the fields `WebhookRepresentation` declares, dropping anything else
     (e.g. persistent-only fields like `condition`). Filtering by the declared field names and aliases means new
     ad-hoc fields added to `WebhookRepresentation` flow through automatically, without touching this function.
@@ -121,7 +121,7 @@ def encode_webhooks_to_base64(webhooks: WebhooksList | None) -> str | None:
             representations.append(webhook)
             continue
 
-        data = webhook.model_dump(by_alias=True) if isinstance(webhook, WebhookCreate) else dict(webhook)
+        data = webhook.model_dump(by_alias=True) if isinstance(webhook, CreateWebhookRequest) else dict(webhook)
         filtered = {key: value for key, value in data.items() if key in allowed}
         representations.append(WebhookRepresentation.model_validate(filtered))
 

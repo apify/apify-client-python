@@ -78,7 +78,11 @@ class HttpResponse(Protocol):
         """Response headers as a mapping."""
 
     def json(self) -> Any:
-        """Parse response body as JSON."""
+        """Parse response body as JSON.
+
+        Raises:
+            ValueError: If the body is not valid JSON.
+        """
 
     def read(self) -> bytes:
         """Read the entire response body."""

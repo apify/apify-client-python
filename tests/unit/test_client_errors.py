@@ -12,6 +12,7 @@ from apify_client.errors import (
     ConflictError,
     ForbiddenError,
     InvalidRequestError,
+    InvalidResponseBodyError,
     NotFoundError,
     RateLimitError,
     ServerError,
@@ -278,6 +279,24 @@ def test_apify_api_error_falls_back_for_unparsable_body(
 
     assert type(exc.value) is ApifyApiError
     assert exc.value.type is None
+
+
+def test_get_raises_invalid_response_body_error_on_malformed_json(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """A successful response whose body is not valid JSON raises `InvalidResponseBodyError`."""
+    httpserver.expect_request('/v2/datasets/ds-1').respond_with_data(b'{"data": ', content_type='application/json')
+    with pytest.raises(InvalidResponseBodyError):
+        sync_client.dataset('ds-1').get()
+
+
+async def test_get_raises_invalid_response_body_error_on_malformed_json_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """A successful response whose body is not valid JSON raises `InvalidResponseBodyError`."""
+    httpserver.expect_request('/v2/datasets/ds-1').respond_with_data(b'{"data": ', content_type='application/json')
+    with pytest.raises(InvalidResponseBodyError):
+        await async_client.dataset('ds-1').get()
 
 
 def test_direct_get_returns_none_on_404(httpserver: HTTPServer, sync_client: ApifyClient) -> None:

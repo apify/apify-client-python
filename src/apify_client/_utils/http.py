@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
 from apify_client._consts import (
@@ -11,6 +11,7 @@ from apify_client._consts import (
     COMPRESSIBLE_MEDIA_TYPES,
     OVERRIDABLE_DEFAULT_HEADERS,
 )
+from apify_client.errors import InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from apify_client.http_clients import HttpResponse
@@ -80,6 +81,18 @@ def is_compressible_content_type(content_type: str | None) -> bool:
     )
 
 
+def _parse_json(response: HttpResponse) -> Any:
+    """Parse the response body as JSON.
+
+    Raises:
+        InvalidResponseBodyError: If the response body is not valid JSON.
+    """
+    try:
+        return response.json()
+    except ValueError as err:
+        raise InvalidResponseBodyError(response) from err
+
+
 def response_to_dict(response: HttpResponse) -> dict:
     """Parse the API response as a dictionary and validate its type.
 
@@ -90,9 +103,10 @@ def response_to_dict(response: HttpResponse) -> dict:
         The parsed response as a dictionary.
 
     Raises:
+        InvalidResponseBodyError: If the response body is not valid JSON.
         ValueError: If the response is not a dictionary.
     """
-    data = response.json()
+    data = _parse_json(response)
 
     if isinstance(data, dict):
         return data
@@ -110,9 +124,10 @@ def response_to_list(response: HttpResponse) -> list:
         The parsed response as a list.
 
     Raises:
+        InvalidResponseBodyError: If the response body is not valid JSON.
         ValueError: If the response is not a list.
     """
-    data = response.json()
+    data = _parse_json(response)
 
     if isinstance(data, list):
         return data

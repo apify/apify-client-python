@@ -134,12 +134,13 @@ class ServerError(ApifyApiError):
 
 
 @docs_group('Errors')
-class InvalidResponseBodyError(ApifyClientError):
+class InvalidResponseBodyError(ApifyClientError, ValueError):
     """Error raised when a response body cannot be parsed.
 
     This occurs when the API returns a body that does not match its content type, for example a malformed JSON
     document. It is raised on a response the client already accepted, so it is not retried - a transfer that breaks
-    mid-body surfaces as a transport error inside the retry loop instead.
+    mid-body surfaces as a transport error inside the retry loop instead. It subclasses `ValueError`, the error
+    a failed JSON decode raises, so an `except ValueError` handler catches it too.
     """
 
     def __init__(self, response: HttpResponse) -> None:

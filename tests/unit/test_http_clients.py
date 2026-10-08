@@ -1542,12 +1542,14 @@ def test_file_source_is_left_open_when_the_transport_stops_pulling_early() -> No
 
 def test_generator_source_pulled_in_a_worker_thread_is_closed_once_its_chunk_arrives() -> None:
     """A source the transport is still pulling when the attempt ends is closed as soon as that chunk is produced."""
+    pulling = threading.Event()
     release = threading.Event()
     closed = Mock()
 
     def slow_chunks() -> Iterator[bytes]:
         try:
             yield b'first chunk'
+            pulling.set()
             release.wait()
             yield b'second chunk'
         finally:
@@ -1563,6 +1565,8 @@ def test_generator_source_pulled_in_a_worker_thread_is_closed_once_its_chunk_arr
             self.kept = content
             self.puller = threading.Thread(target=next, args=(content, None))
             self.puller.start()
+            # The attempt must end while the worker thread is inside the source, or the source closes right away.
+            assert pulling.wait(timeout=5)
             return Mock(status_code=408)
 
     transport = InFlightTransport()

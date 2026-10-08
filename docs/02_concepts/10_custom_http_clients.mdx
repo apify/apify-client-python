@@ -115,7 +115,7 @@ Decorate your implementations with `@override`, as the built-in Impit and HTTPX2
 | `text: str` | Response body as text |
 | `content: bytes` | Raw response body |
 | `headers: Mapping[str, str]` | Response headers |
-| `json() -> Any` | Parse body as JSON |
+| `json() -> Any` | Parse body as JSON, raising `ValueError` if it is not valid JSON |
 | `read() -> bytes` | Read entire response body |
 | `aread() -> bytes` | Read entire response body (async) |
 | `close() -> None` | Close the response |

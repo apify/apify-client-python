@@ -26,7 +26,7 @@ from apify_client._utils.http import (
     to_safe_id,
 )
 from apify_client._utils.try_import import FailedImport, try_import
-from apify_client.errors import ApifyApiError
+from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Callable
@@ -483,6 +483,24 @@ def test_response_to_list_raises_for_non_list() -> None:
     mock_response.json.return_value = 'string'
     with pytest.raises(ValueError, match='The response is not a list'):
         response_to_list(mock_response)
+
+
+@pytest.mark.parametrize(
+    'parse',
+    [
+        pytest.param(response_to_dict, id='response_to_dict'),
+        pytest.param(response_to_list, id='response_to_list'),
+    ],
+)
+def test_response_parsing_raises_invalid_response_body_error(parse: Callable[[Any], object]) -> None:
+    """A body that is not valid JSON raises `InvalidResponseBodyError`, which is also a `ValueError`."""
+    mock_response = Mock()
+    mock_response.json.side_effect = json.JSONDecodeError('Expecting value', 'not json', 0)
+    with pytest.raises(InvalidResponseBodyError) as exc_info:
+        parse(mock_response)
+    assert isinstance(exc_info.value, ValueError)
+    assert exc_info.value.response is mock_response
+    assert isinstance(exc_info.value.__cause__, json.JSONDecodeError)
 
 
 @pytest.mark.parametrize(

@@ -120,6 +120,7 @@ class ActorClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
+        default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
@@ -156,6 +157,8 @@ class ActorClient(ResourceClient):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
+            default_run_force_permission_level: Permission level to force on the runs of this Actor, overriding the
+                permission level of the Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
                 as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
@@ -199,6 +202,7 @@ class ActorClient(ResourceClient):
                 max_items=default_run_max_items,
                 memory_mbytes=default_run_memory_mbytes,
                 timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -676,6 +680,7 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
+        default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
@@ -712,6 +717,8 @@ class ActorClientAsync(ResourceClientAsync):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
+            default_run_force_permission_level: Permission level to force on the runs of this Actor, overriding the
+                permission level of the Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
                 as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
@@ -755,6 +762,7 @@ class ActorClientAsync(ResourceClientAsync):
                 max_items=default_run_max_items,
                 memory_mbytes=default_run_memory_mbytes,
                 timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(

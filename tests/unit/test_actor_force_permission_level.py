@@ -34,13 +34,7 @@ _ACTOR_RESPONSE = {
     }
 }
 
-_FIELDS: dict[str, Any] = {
-    'default_run_force_permission_level': 'FULL_PERMISSIONS',
-}
-
-_EXPECTED_BODY = {
-    'defaultRunOptions': {'forcePermissionLevel': 'FULL_PERMISSIONS'},
-}
+_EXPECTED_DEFAULT_RUN_OPTIONS = {'forcePermissionLevel': 'FULL_PERMISSIONS'}
 
 
 def capture(captured: list[Request]) -> Callable[[Request], Response]:
@@ -51,9 +45,8 @@ def capture(captured: list[Request]) -> Callable[[Request], Response]:
     return handler
 
 
-def body_subset(request: Request) -> dict[str, Any]:
-    body = json.loads(request.get_data())
-    return {key: body[key] for key in _EXPECTED_BODY}
+def default_run_options_of(request: Request) -> dict[str, Any]:
+    return json.loads(request.get_data())['defaultRunOptions']
 
 
 def test_update_sends_force_permission_level(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
@@ -61,10 +54,10 @@ def test_update_sends_force_permission_level(httpserver: HTTPServer, sync_client
     captured: list[Request] = []
     httpserver.expect_request(_ACTOR_PATH, method='PUT').respond_with_handler(capture(captured))
 
-    sync_client.actor(_MOCKED_ACTOR_ID).update(**_FIELDS)
+    sync_client.actor(_MOCKED_ACTOR_ID).update(default_run_force_permission_level='FULL_PERMISSIONS')
 
     assert len(captured) == 1
-    assert body_subset(captured[0]) == _EXPECTED_BODY
+    assert default_run_options_of(captured[0]) == _EXPECTED_DEFAULT_RUN_OPTIONS
 
 
 async def test_update_sends_force_permission_level_async(
@@ -74,10 +67,10 @@ async def test_update_sends_force_permission_level_async(
     captured: list[Request] = []
     httpserver.expect_request(_ACTOR_PATH, method='PUT').respond_with_handler(capture(captured))
 
-    await async_client.actor(_MOCKED_ACTOR_ID).update(**_FIELDS)
+    await async_client.actor(_MOCKED_ACTOR_ID).update(default_run_force_permission_level='FULL_PERMISSIONS')
 
     assert len(captured) == 1
-    assert body_subset(captured[0]) == _EXPECTED_BODY
+    assert default_run_options_of(captured[0]) == _EXPECTED_DEFAULT_RUN_OPTIONS
 
 
 def test_create_sends_force_permission_level(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
@@ -85,10 +78,10 @@ def test_create_sends_force_permission_level(httpserver: HTTPServer, sync_client
     captured: list[Request] = []
     httpserver.expect_request(_ACTORS_PATH, method='POST').respond_with_handler(capture(captured))
 
-    sync_client.actors().create(name='test-actor', **_FIELDS)
+    sync_client.actors().create(name='test-actor', default_run_force_permission_level='FULL_PERMISSIONS')
 
     assert len(captured) == 1
-    assert body_subset(captured[0]) == _EXPECTED_BODY
+    assert default_run_options_of(captured[0]) == _EXPECTED_DEFAULT_RUN_OPTIONS
 
 
 async def test_create_sends_force_permission_level_async(
@@ -98,7 +91,7 @@ async def test_create_sends_force_permission_level_async(
     captured: list[Request] = []
     httpserver.expect_request(_ACTORS_PATH, method='POST').respond_with_handler(capture(captured))
 
-    await async_client.actors().create(name='test-actor', **_FIELDS)
+    await async_client.actors().create(name='test-actor', default_run_force_permission_level='FULL_PERMISSIONS')
 
     assert len(captured) == 1
-    assert body_subset(captured[0]) == _EXPECTED_BODY
+    assert default_run_options_of(captured[0]) == _EXPECTED_DEFAULT_RUN_OPTIONS

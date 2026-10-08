@@ -33,10 +33,15 @@ class StreamedLogBase:
     """
 
     _empty_stream_retry_s: ClassVar[float] = 0.5
-    """Pause before reopening a log stream that ended before the run logged anything.
+    """Pause before the first reopen of a log stream that ended before the run logged anything.
 
-    The API serves the log of a run that has not logged anything yet as an empty stream that ends at once.
+    The API serves the log of a run that has not logged anything yet as an empty stream that ends at once. Each further
+    reopen doubles the pause up to `_empty_stream_max_retry_s`, so a run that waits long to start, for example for free
+    memory, is not polled twice a second.
     """
+
+    _empty_stream_max_retry_s: ClassVar[float] = 5
+    """Upper bound on the pause between reopens of an empty log stream."""
 
     def __init__(self, to_logger: logging.Logger, *, from_start: bool = True) -> None:
         if self._force_propagate:
@@ -145,6 +150,7 @@ class StreamedLog(StreamedLogBase):
         if self._streaming_thread and self._streaming_thread.is_alive():
             raise RuntimeError('Streaming thread already active')
         self._stop_event.clear()
+        self._received_data = False
         # A daemon thread so a stream still blocked on a read can never hold up interpreter shutdown.
         self._streaming_thread = threading.Thread(target=self._stream_log, daemon=True)
         self._streaming_thread.start()
@@ -190,10 +196,12 @@ class StreamedLog(StreamedLogBase):
     def _stream_log(self) -> None:
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
+            retry_s = self._empty_stream_retry_s
             while not self._stop_event.is_set():
                 if not self._stream_log_once() or self._received_data:
                     return
-                self._stop_event.wait(self._empty_stream_retry_s)
+                self._stop_event.wait(retry_s)
+                retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
         except Exception as exc:
             if self._stop_event.is_set():
                 # `stop` closed the stream out from under the read, so the failure is expected.
@@ -274,6 +282,7 @@ class StreamedLogAsync(StreamedLogBase):
         """
         if self._streaming_task and not self._streaming_task.done():
             raise RuntimeError('Streaming task already active')
+        self._received_data = False
         self._streaming_task = asyncio.create_task(self._stream_log())
         return self._streaming_task
 
@@ -315,6 +324,7 @@ class StreamedLogAsync(StreamedLogBase):
     async def _stream_log(self) -> None:
         try:
             # An empty stream means the run has not logged anything yet, so reopen it until the first bytes arrive.
+            retry_s = self._empty_stream_retry_s
             while True:
                 async with self._log_client.stream(raw=True, timeout=self._stream_timeout) as log_stream:
                     if not log_stream:
@@ -332,7 +342,8 @@ class StreamedLogAsync(StreamedLogBase):
                             self._to_logger.exception('Log redirection stopped due to unexpected error:')
                 if self._received_data:
                     return
-                await asyncio.sleep(self._empty_stream_retry_s)
+                await asyncio.sleep(retry_s)
+                retry_s = min(retry_s * 2, self._empty_stream_max_retry_s)
         except Exception as exc:
             if self._log_client._http_client.is_timeout_error(exc):  # noqa: SLF001
                 # A timeout on the long-lived stream is an expected terminal condition, not an error.

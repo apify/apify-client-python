@@ -1612,6 +1612,88 @@ async def test_streamed_log_async_stop_reports_failing_log_read(caplog: LogCaptu
     )
 
 
+def test_streamed_log_sync_backs_off_between_empty_streams() -> None:
+    """The pause before reopening an empty log stream doubles up to its cap."""
+    empty_stream = Mock()
+    empty_stream.iter_bytes.return_value = []
+    log_stream = Mock()
+    log_stream.iter_bytes.return_value = list(_MOCKED_ACTOR_LOGS)
+    log_client = Mock()
+    log_client.stream.side_effect = [nullcontext(empty_stream)] * 6 + [nullcontext(log_stream)]
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logging.getLogger('apify_client.tests.backoff_sync'))
+    wait = Mock(return_value=False)
+    streamed_log._stop_event.wait = wait
+
+    streamed_log._stream_log()
+
+    assert [call.args[0] for call in wait.call_args_list] == [0.5, 1, 2, 4, 5, 5]
+
+
+async def test_streamed_log_async_backs_off_between_empty_streams(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The pause before reopening an empty log stream doubles up to its cap."""
+    empty_stream = Mock()
+    empty_stream.aiter_bytes.side_effect = chunks
+    log_stream = Mock()
+    log_stream.aiter_bytes.side_effect = lambda: chunks(*_MOCKED_ACTOR_LOGS)
+    log_client = Mock()
+    log_client.stream.side_effect = [nullcontext(empty_stream)] * 6 + [nullcontext(log_stream)]
+    streamed_log = StreamedLogAsync(
+        log_client=log_client, to_logger=logging.getLogger('apify_client.tests.backoff_async')
+    )
+    sleep = AsyncMock()
+    monkeypatch.setattr(asyncio, 'sleep', sleep)
+
+    await streamed_log._stream_log()
+
+    assert [call.args[0] for call in sleep.await_args_list] == [0.5, 1, 2, 4, 5, 5]
+
+
+def test_streamed_log_sync_restart_reads_log_when_streams_stay_empty() -> None:
+    """After a session that received data, a restarted session whose streams stay empty reads the log on `stop`."""
+    log_stream = Mock()
+    log_stream.iter_bytes.return_value = list(_MOCKED_ACTOR_LOGS)
+    empty_stream = Mock()
+    empty_stream.iter_bytes.return_value = []
+    log_client = Mock()
+    log_client.stream.side_effect = itertools.chain(
+        [nullcontext(log_stream)], itertools.repeat(nullcontext(empty_stream))
+    )
+    log_client.get_as_bytes.return_value = b''.join(_MOCKED_ACTOR_LOGS)
+    streamed_log = StreamedLog(log_client=log_client, to_logger=logging.getLogger('apify_client.tests.restart_sync'))
+
+    streamed_log.start().join(timeout=5)
+    streamed_log.stop()
+    streamed_log.start()
+    wait_until(lambda: log_client.stream.call_count >= 2)
+    streamed_log.stop()
+
+    log_client.get_as_bytes.assert_called_once()
+
+
+async def test_streamed_log_async_restart_reads_log_when_streams_stay_empty() -> None:
+    """After a session that received data, a restarted session whose streams stay empty reads the log on `stop`."""
+    log_stream = Mock()
+    log_stream.aiter_bytes.side_effect = lambda: chunks(*_MOCKED_ACTOR_LOGS)
+    empty_stream = Mock()
+    empty_stream.aiter_bytes.side_effect = chunks
+    log_client = Mock()
+    log_client.stream.side_effect = itertools.chain(
+        [nullcontext(log_stream)], itertools.repeat(nullcontext(empty_stream))
+    )
+    log_client.get_as_bytes = AsyncMock(return_value=b''.join(_MOCKED_ACTOR_LOGS))
+    streamed_log = StreamedLogAsync(
+        log_client=log_client, to_logger=logging.getLogger('apify_client.tests.restart_async')
+    )
+
+    await streamed_log.start()
+    await streamed_log.stop()
+    streamed_log.start()
+    await asyncio.to_thread(wait_until, lambda: log_client.stream.call_count >= 2)
+    await streamed_log.stop()
+
+    log_client.get_as_bytes.assert_awaited_once()
+
+
 def test_streamed_log_sync_missing_log_is_neither_reopened_nor_read() -> None:
     """A log that does not exist ends the streaming thread without a reopen or a one-shot read on `stop`."""
     log_client = Mock()

@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Add missing `readme` field to `Profile` model ([#1086](https://github.com/apify/apify-client-python/pull/1086)) ([ae17148](https://github.com/apify/apify-client-python/commit/ae1714891c4f70d66ab4964c1783fee0a96776f1)) by [@apify-service-account](https://github.com/apify-service-account)
 - Rename `build_tag` to `build` in `validate_input()` ([#1110](https://github.com/apify/apify-client-python/pull/1110)) ([0616e1a](https://github.com/apify/apify-client-python/commit/0616e1a0a5354f609eb5759f3729f6795a3192c4)) by [@vdusek](https://github.com/vdusek), closes [#1091](https://github.com/apify/apify-client-python/issues/1091)
 - Type `example_run_input_body` as `str` ([#1105](https://github.com/apify/apify-client-python/pull/1105)) ([a1047fa](https://github.com/apify/apify-client-python/commit/a1047faee0c1065844b9639a47cb02422f9302ff)) by [@vdusek](https://github.com/vdusek), closes [#1102](https://github.com/apify/apify-client-python/issues/1102)
+- Align model names with the renamed OpenAPI schemas ([#1098](https://github.com/apify/apify-client-python/pull/1098)) ([eeabbba](https://github.com/apify/apify-client-python/commit/eeabbba0d02b1ac810b7922e8670261a122ea741)) by [@vdusek](https://github.com/vdusek)
 
 ### ⚡ Performance
 

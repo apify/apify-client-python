@@ -69,6 +69,10 @@ class LogClient(ResourceClient):
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
+        404s collapse to `None` only when this client targets a specific log by ID (e.g.
+        `client.log(run_id).get_as_bytes()`). For chained clients without a `resource_id` (e.g.
+        `run.log().get_as_bytes()`), a 404 is ambiguous and propagates.
+
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
             timeout: Timeout for the API HTTP request.
@@ -96,6 +100,9 @@ class LogClient(ResourceClient):
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        404s collapse to `None` only when this client targets a specific log by ID (e.g. `client.log(run_id).stream()`).
+        For chained clients without a `resource_id` (e.g. `run.log().stream()`), a 404 is ambiguous and propagates.
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
@@ -177,6 +184,10 @@ class LogClientAsync(ResourceClientAsync):
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
 
+        404s collapse to `None` only when this client targets a specific log by ID (e.g.
+        `client.log(run_id).get_as_bytes()`). For chained clients without a `resource_id` (e.g.
+        `run.log().get_as_bytes()`), a 404 is ambiguous and propagates.
+
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.
             timeout: Timeout for the API HTTP request.
@@ -204,6 +215,9 @@ class LogClientAsync(ResourceClientAsync):
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
+
+        404s collapse to `None` only when this client targets a specific log by ID (e.g. `client.log(run_id).stream()`).
+        For chained clients without a `resource_id` (e.g. `run.log().stream()`), a 404 is ambiguous and propagates.
 
         Args:
             raw: If true, the log will include formatting. For example, coloring character sequences.

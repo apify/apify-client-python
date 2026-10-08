@@ -53,6 +53,28 @@ async def test_dataset_stream_items_async(
         assert await response.aread() == STREAM_CONTENT
 
 
+def test_dataset_stream_items_flatten_sync(httpserver: HTTPServer) -> None:
+    """`flatten` is sent as a comma-separated query parameter."""
+    httpserver.expect_request(
+        f'/v2/datasets/{DATASET_ID}/items', query_string={'format': 'json', 'flatten': 'a,b.c'}
+    ).respond_with_data(STREAM_CONTENT)
+    client = ApifyClient(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    with client.dataset(DATASET_ID).stream_items(flatten=['a', 'b.c']) as response:
+        assert response.read() == STREAM_CONTENT
+
+
+async def test_dataset_stream_items_flatten_async(httpserver: HTTPServer) -> None:
+    """`flatten` is sent as a comma-separated query parameter."""
+    httpserver.expect_request(
+        f'/v2/datasets/{DATASET_ID}/items', query_string={'format': 'json', 'flatten': 'a,b.c'}
+    ).respond_with_data(STREAM_CONTENT)
+    client = ApifyClientAsync(token='test', api_url=httpserver.url_for('/').removesuffix('/'))
+
+    async with client.dataset(DATASET_ID).stream_items(flatten=['a', 'b.c']) as response:
+        assert await response.aread() == STREAM_CONTENT
+
+
 def test_key_value_store_stream_record_sync(
     httpserver: HTTPServer,
     http_client_class: type[HttpClient],

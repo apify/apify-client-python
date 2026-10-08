@@ -402,6 +402,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
+        flatten: list[str] | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> Iterator[HttpResponse]:
@@ -445,6 +446,7 @@ class DatasetClient(ResourceClient):
             xml_root: Overrides default root element name of xml output. By default the root element is items.
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -469,6 +471,7 @@ class DatasetClient(ResourceClient):
                 skipHidden=skip_hidden,
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
+                flatten=flatten,
                 signature=signature,
             )
 
@@ -964,6 +967,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
+        flatten: list[str] | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> AsyncIterator[HttpResponse]:
@@ -1007,6 +1011,7 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_root: Overrides default root element name of xml output. By default the root element is items.
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -1031,6 +1036,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 skipHidden=skip_hidden,
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
+                flatten=flatten,
                 signature=signature,
             )
 

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
+    from apify_client._literals import ActorPermissionLevel
     from apify_client._models import ActorShort
     from apify_client.types import Timeout
 
@@ -123,6 +124,7 @@ class ActorCollectionClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
+        default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
@@ -131,6 +133,8 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> Actor:
         """Create a new Actor.
@@ -154,6 +158,8 @@ class ActorCollectionClient(ResourceClient):
                 of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
+            default_run_force_permission_level: Permission level to force on the runs of this Actor, overriding the
+                permission level of the Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -165,6 +171,10 @@ class ActorCollectionClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -185,6 +195,7 @@ class ActorCollectionClient(ResourceClient):
                 max_items=default_run_max_items,
                 memory_mbytes=default_run_memory_mbytes,
                 timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -194,6 +205,8 @@ class ActorCollectionClient(ResourceClient):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -302,6 +315,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
+        default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
@@ -310,6 +324,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> Actor:
         """Create a new Actor.
@@ -333,6 +349,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
+            default_run_force_permission_level: Permission level to force on the runs of this Actor, overriding the
+                permission level of the Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -344,6 +362,10 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -364,6 +386,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 max_items=default_run_max_items,
                 memory_mbytes=default_run_memory_mbytes,
                 timeout_secs=to_seconds(default_run_timeout, as_int=True),
+                force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -373,6 +396,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,

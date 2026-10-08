@@ -119,7 +119,7 @@ class ActorClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        example_run_input_body: Any = None,
+        example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -153,7 +153,8 @@ class ActorClient(ResourceClient):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
+                as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -653,7 +654,7 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        example_run_input_body: Any = None,
+        example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -687,7 +688,8 @@ class ActorClientAsync(ResourceClientAsync):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
+                as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for

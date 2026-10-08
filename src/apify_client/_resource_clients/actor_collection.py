@@ -21,7 +21,6 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
     from datetime import timedelta
 
-    from apify_client._literals import ActorPermissionLevel
     from apify_client._models import ActorShort
     from apify_client.types import Timeout
 
@@ -124,7 +123,6 @@ class ActorCollectionClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
@@ -158,8 +156,6 @@ class ActorCollectionClient(ResourceClient):
                 of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            default_run_force_permission_level: Permission level to force on the runs of this Actor, overriding the
-                permission level of the Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -195,7 +191,6 @@ class ActorCollectionClient(ResourceClient):
                 max_items=default_run_max_items,
                 memory_mbytes=default_run_memory_mbytes,
                 timeout_secs=to_seconds(default_run_timeout, as_int=True),
-                force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(
@@ -315,7 +310,6 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        default_run_force_permission_level: ActorPermissionLevel | None = None,
         example_run_input_body: Any = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
@@ -349,8 +343,6 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            default_run_force_permission_level: Permission level to force on the runs of this Actor, overriding the
-                permission level of the Actor.
             example_run_input_body: Input to be prefilled as default input to new users of this Actor.
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
@@ -386,7 +378,6 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 max_items=default_run_max_items,
                 memory_mbytes=default_run_memory_mbytes,
                 timeout_secs=to_seconds(default_run_timeout, as_int=True),
-                force_permission_level=default_run_force_permission_level,
                 restart_on_error=restart_on_error,
             ),
             actor_standby=ActorStandby(

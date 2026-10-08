@@ -35,13 +35,11 @@ _ACTOR_RESPONSE = {
 }
 
 _FIELDS: dict[str, Any] = {
-    'default_run_force_permission_level': 'FULL_PERMISSIONS',
     'actor_standby_disable_standby_fields_override': True,
     'actor_standby_should_pass_actor_input': False,
 }
 
 _EXPECTED_BODY = {
-    'defaultRunOptions': {'forcePermissionLevel': 'FULL_PERMISSIONS'},
     'actorStandby': {'disableStandbyFieldsOverride': True, 'shouldPassActorInput': False},
 }
 
@@ -59,8 +57,8 @@ def body_subset(request: Request) -> dict[str, Any]:
     return {key: body[key] for key in _EXPECTED_BODY}
 
 
-def test_update_sends_permission_and_standby_fields(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """`update` nests the forced permission level and the Standby flags into the request body."""
+def test_update_sends_standby_fields(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`update` nests the Standby flags into `actorStandby`."""
     captured: list[Request] = []
     httpserver.expect_request(_ACTOR_PATH, method='PUT').respond_with_handler(capture(captured))
 
@@ -70,10 +68,8 @@ def test_update_sends_permission_and_standby_fields(httpserver: HTTPServer, sync
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
 
-async def test_update_sends_permission_and_standby_fields_async(
-    httpserver: HTTPServer, async_client: ApifyClientAsync
-) -> None:
-    """Async `update` nests the forced permission level and the Standby flags into the request body."""
+async def test_update_sends_standby_fields_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async `update` nests the Standby flags into `actorStandby`."""
     captured: list[Request] = []
     httpserver.expect_request(_ACTOR_PATH, method='PUT').respond_with_handler(capture(captured))
 
@@ -83,8 +79,8 @@ async def test_update_sends_permission_and_standby_fields_async(
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
 
-def test_create_sends_permission_and_standby_fields(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """`create` nests the forced permission level and the Standby flags into the request body."""
+def test_create_sends_standby_fields(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`create` nests the Standby flags into `actorStandby`."""
     captured: list[Request] = []
     httpserver.expect_request(_ACTORS_PATH, method='POST').respond_with_handler(capture(captured))
 
@@ -94,10 +90,8 @@ def test_create_sends_permission_and_standby_fields(httpserver: HTTPServer, sync
     assert body_subset(captured[0]) == _EXPECTED_BODY
 
 
-async def test_create_sends_permission_and_standby_fields_async(
-    httpserver: HTTPServer, async_client: ApifyClientAsync
-) -> None:
-    """Async `create` nests the forced permission level and the Standby flags into the request body."""
+async def test_create_sends_standby_fields_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async `create` nests the Standby flags into `actorStandby`."""
     captured: list[Request] = []
     httpserver.expect_request(_ACTORS_PATH, method='POST').respond_with_handler(capture(captured))
 

@@ -8,6 +8,10 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
+import ApiLink from '@theme/ApiLink';
+
+import LiveItemsAsyncExample from '!!raw-loader!./code/03_live_items_async.py';
+import LiveItemsSyncExample from '!!raw-loader!./code/03_live_items_sync.py';
 import RetrieveAsyncExample from '!!raw-loader!./code/03_retrieve_async.py';
 import RetrieveSyncExample from '!!raw-loader!./code/03_retrieve_sync.py';
 
@@ -24,6 +28,32 @@ The following example shows how to fetch datasets from an Actor's runs, paginate
     <TabItem value="SyncExample" label="Sync client">
         <CodeBlock className="language-python">
             {RetrieveSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Read items while the run is going
+
+To process a run's output before the run finishes, use <ApiLink to="class/RunClient#iterate_dataset_items">`RunClient.iterate_dataset_items`</ApiLink>. It yields the items of the run's default dataset shortly after the run pushes them, and it returns once the run has finished and every item is read.
+
+Note that:
+
+- Between polls, the iterator waits up to `poll_interval` (5 seconds by default) for the run to finish. Once it finishes, the iterator reads the remaining items right away. An explicit `timeout` has to leave room for that wait.
+- The item options are the same as in <ApiLink to="class/DatasetClient#iterate_items">`DatasetClient.iterate_items`</ApiLink>, except for `desc` and `signature`.
+- `offset` and `limit` count dataset rows, not the items you get back. With `clean`, `skip_empty` or `unwind`, the iterator can yield fewer or more items than `limit`.
+- A run that's `ABORTING` or `TIMING-OUT` can still push items, so the iterator keeps polling until the run reaches a terminal status.
+
+The following example starts an Actor and prints its items as the run produces them:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {LiveItemsAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {LiveItemsSyncExample}
         </CodeBlock>
     </TabItem>
 </Tabs>

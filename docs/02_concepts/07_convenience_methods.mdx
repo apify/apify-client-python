@@ -18,6 +18,7 @@ The Apify client provides several convenience methods to handle actions that the
 - <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink> - Starts an Actor and waits for it to finish, handling network timeouts internally. Waits indefinitely by default, or up to the specified `wait_duration`.
 - <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink> - Starts an Actor and immediately returns the Run object without waiting for it to finish.
 - <ApiLink to="class/RunClient#wait_for_finish">`RunClient.wait_for_finish`</ApiLink> - Waits for an already-started run to reach a terminal status.
+- <ApiLink to="class/RunClient#iterate_dataset_items">`RunClient.iterate_dataset_items`</ApiLink> - Yields the items of the run's default dataset as the run pushes them, and returns once the run has finished and every item is read.
 
 Additionally, storage-related resources offer flexible options for data retrieval:
 

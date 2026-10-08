@@ -18,7 +18,7 @@ from .._utils import (
     maybe_await,
     poll_until_condition,
 )
-from apify_client._models import Dataset, DatasetListItem, DatasetStatistics, ListOfDatasets
+from apify_client._models import DatasetListItem, DatasetResource, DatasetStatistics, ListOfDatasets
 from apify_client._resource_clients.dataset import DatasetItemsPage
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
@@ -49,14 +49,14 @@ async def test_dataset_collection_get_or_create(client: ApifyClient | ApifyClien
 
     # Create new dataset
     dataset = await maybe_await(client.datasets().get_or_create(name=unique_name))
-    assert isinstance(dataset, Dataset)
+    assert isinstance(dataset, DatasetResource)
 
     try:
         assert dataset.name == unique_name
 
         # Get same dataset again (should return existing)
         same_dataset = await maybe_await(client.datasets().get_or_create(name=unique_name))
-        assert isinstance(same_dataset, Dataset)
+        assert isinstance(same_dataset, DatasetResource)
         assert same_dataset.id == dataset.id
     finally:
         await maybe_await(client.dataset(dataset.id).delete())
@@ -67,7 +67,7 @@ async def test_dataset_should_create_public_items_expiring_url_with_params(
 ) -> None:
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
 
     dataset = client.dataset(created_dataset.id)
 
@@ -96,7 +96,7 @@ async def test_dataset_should_create_public_items_non_expiring_url(
 ) -> None:
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
 
     dataset = client.dataset(created_dataset.id)
 
@@ -199,7 +199,7 @@ async def test_dataset_get_or_create_and_get(client: ApifyClient | ApifyClientAs
 
     # Create dataset
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     assert created_dataset.id is not None
     assert created_dataset.name == dataset_name
 
@@ -208,7 +208,7 @@ async def test_dataset_get_or_create_and_get(client: ApifyClient | ApifyClientAs
 
     try:
         retrieved_dataset = await maybe_await(dataset_client.get())
-        assert isinstance(retrieved_dataset, Dataset)
+        assert isinstance(retrieved_dataset, DatasetResource)
         assert retrieved_dataset.id == created_dataset.id
         assert retrieved_dataset.name == dataset_name
     finally:
@@ -221,19 +221,19 @@ async def test_dataset_update(client: ApifyClient | ApifyClientAsync) -> None:
     new_name = get_random_resource_name('dataset-updated')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
         # Update the name
         updated_dataset = await maybe_await(dataset_client.update(name=new_name))
-        assert isinstance(updated_dataset, Dataset)
+        assert isinstance(updated_dataset, DatasetResource)
         assert updated_dataset.name == new_name
         assert updated_dataset.id == created_dataset.id
 
         # Verify the update persisted
         retrieved_dataset = await maybe_await(dataset_client.get())
-        assert isinstance(retrieved_dataset, Dataset)
+        assert isinstance(retrieved_dataset, DatasetResource)
         assert retrieved_dataset.name == new_name
     finally:
         await maybe_await(dataset_client.delete())
@@ -244,7 +244,7 @@ async def test_dataset_push_and_list_items(client: ApifyClient | ApifyClientAsyn
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -281,7 +281,7 @@ async def test_dataset_list_items_with_pagination(client: ApifyClient | ApifyCli
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -323,7 +323,7 @@ async def test_dataset_list_items_with_fields(client: ApifyClient | ApifyClientA
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -358,7 +358,7 @@ async def test_dataset_iterate_items(client: ApifyClient | ApifyClientAsync, *, 
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -400,7 +400,7 @@ async def test_dataset_delete_nonexistent(client: ApifyClient | ApifyClientAsync
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     # Delete dataset
@@ -416,7 +416,7 @@ async def test_dataset_get_statistics(client: ApifyClient | ApifyClientAsync) ->
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -452,7 +452,7 @@ async def test_dataset_collection_iterate(client: ApifyClient | ApifyClientAsync
     # Create three datasets so pagination has work to do
     for _ in range(3):
         dataset = await maybe_await(client.datasets().get_or_create(name=get_random_resource_name('dataset')))
-        assert isinstance(dataset, Dataset)
+        assert isinstance(dataset, DatasetResource)
         created_ids.append(dataset.id)
 
     try:
@@ -474,7 +474,7 @@ async def test_dataset_list_items_desc(client: ApifyClient | ApifyClientAsync) -
     """Test listing items in descending order."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -507,7 +507,7 @@ async def test_dataset_list_items_omit_and_clean(client: ApifyClient | ApifyClie
     """Test list_items with `omit`, `clean`, `skip_hidden`, and `skip_empty` filters."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -559,7 +559,7 @@ async def test_dataset_iterate_items_chunked(client: ApifyClient | ApifyClientAs
     """Test iterate_items with a small chunk_size to force multiple API requests."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -600,7 +600,7 @@ async def test_dataset_iterate_items_unwound(client: ApifyClient | ApifyClientAs
     """Test iterate_items with `unwind`, where a page carries more items than the rows it scanned."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -641,7 +641,7 @@ async def test_dataset_iterate_items_with_fields(client: ApifyClient | ApifyClie
     """Test iterate_items with `fields` filter."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -680,7 +680,7 @@ async def test_dataset_create_items_public_url(client: ApifyClient | ApifyClient
     """Test generating a signed public URL for dataset items and fetching from it."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -713,7 +713,7 @@ async def test_dataset_get_items_as_bytes_csv(client: ApifyClient | ApifyClientA
     """Test get_items_as_bytes with non-JSON item_format (csv)."""
     dataset_name = get_random_resource_name('dataset')
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:
@@ -744,7 +744,7 @@ async def test_dataset_stream_items(client: ApifyClient | ApifyClientAsync, *, i
     dataset_name = get_random_resource_name('dataset')
 
     created_dataset = await maybe_await(client.datasets().get_or_create(name=dataset_name))
-    assert isinstance(created_dataset, Dataset)
+    assert isinstance(created_dataset, DatasetResource)
     dataset_client = client.dataset(created_dataset.id)
 
     try:

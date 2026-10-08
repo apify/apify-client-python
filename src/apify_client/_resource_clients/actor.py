@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    Actor,
+    ActorResource,
     ActorResponse,
     ActorStandby,
     Build,
@@ -26,6 +27,11 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_key_value_store_record_value, encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.time import to_seconds
+from apify_client._utils.wait_for_resources import (
+    prepare_resendable_body,
+    start_waiting_for_resources,
+    start_waiting_for_resources_async,
+)
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -81,7 +87,7 @@ class ActorClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Actor | None:
+    def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -114,7 +120,7 @@ class ActorClient(ResourceClient):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        example_run_input_body: Any = None,
+        example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -122,11 +128,13 @@ class ActorClient(ResourceClient):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
-    ) -> Actor:
+    ) -> ActorResource:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -148,7 +156,8 @@ class ActorClient(ResourceClient):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
+                as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -159,6 +168,10 @@ class ActorClient(ResourceClient):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -195,6 +208,8 @@ class ActorClient(ResourceClient):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -229,6 +244,7 @@ class ActorClient(ResourceClient):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: WebhooksList | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -263,12 +279,21 @@ class ActorClient(ResourceClient):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
+                generator, is sent only once, so its start is not retried.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
+        run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
         request_params = self._build_params(
             build=build,
@@ -282,13 +307,16 @@ class ActorClient(ResourceClient):
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
-        response = self._http_client.call(
-            url=self._build_url('runs'),
-            method='POST',
-            headers={'content-type': content_type},
-            data=run_input,
-            params=request_params,
-            timeout=timeout,
+        response = start_waiting_for_resources(
+            lambda: self._http_client.call(
+                url=self._build_url('runs'),
+                method='POST',
+                headers={'content-type': content_type},
+                data=run_input,
+                params=request_params,
+                timeout=timeout,
+            ),
+            wait_for_resources=wait_for_resources,
         )
 
         result = response_to_dict(response)
@@ -308,6 +336,7 @@ class ActorClient(ResourceClient):
         webhooks: WebhooksList | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
+        wait_for_resources: bool | timedelta = False,
         logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -341,6 +370,14 @@ class ActorClient(ResourceClient):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the run to finish. If not provided,
                 waits indefinitely.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
@@ -361,6 +398,7 @@ class ActorClient(ResourceClient):
             run_timeout=run_timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
+            wait_for_resources=wait_for_resources,
             timeout=timeout,
         )
         run_client = self._client_registry.run_client(
@@ -539,9 +577,10 @@ class ActorClient(ResourceClient):
         self,
         run_input: Any = None,
         *,
-        build_tag: str | None = None,
+        build: str | None = None,
         content_type: str | None = None,
         timeout: Timeout = 'short',
+        build_tag: str | None = None,
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -550,13 +589,25 @@ class ActorClient(ResourceClient):
                 including an `io.IOBase` stream such as an open file, an iterable of byte chunks, or a streamed
                 `HttpResponse`, which are uploaded in chunks without being held in memory. Streaming is experimental,
                 and its behavior may change in future versions.
-            build_tag: The Actor's build tag.
+            build: The Actor build to validate the input against. It can be either a build tag or build number. By
+                default, the build specified in the default run configuration for the Actor (typically latest) is used.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
+            build_tag: Deprecated alias of `build`. Will be removed in v4.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
+        if build_tag is not None:
+            warnings.warn(
+                'The `build_tag` argument is deprecated and will be removed in v4. Use `build` instead.',
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            if build is not None:
+                raise ValueError('Pass only one of `build` and `build_tag`.')
+            build = build_tag
+
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         self._http_client.call(
@@ -564,7 +615,7 @@ class ActorClient(ResourceClient):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
-            params=self._build_params(build=build_tag),
+            params=self._build_params(build=build),
             timeout=timeout,
         )
 
@@ -592,7 +643,7 @@ class ActorClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Actor | None:
+    async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -625,7 +676,7 @@ class ActorClientAsync(ResourceClientAsync):
         default_run_max_items: int | None = None,
         default_run_memory_mbytes: int | None = None,
         default_run_timeout: timedelta | None = None,
-        example_run_input_body: Any = None,
+        example_run_input_body: str | None = None,
         example_run_input_content_type: str | None = None,
         actor_standby_is_enabled: bool | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
@@ -633,11 +684,13 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_idle_timeout: timedelta | None = None,
         actor_standby_build: str | None = None,
         actor_standby_memory_mbytes: int | None = None,
+        actor_standby_disable_standby_fields_override: bool | None = None,
+        actor_standby_should_pass_actor_input: bool | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
-    ) -> Actor:
+    ) -> ActorResource:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -659,7 +712,8 @@ class ActorClientAsync(ResourceClientAsync):
                 by runs of this Actor, if the Actor is charged per result.
             default_run_memory_mbytes: Default amount of memory allocated for the runs of this Actor, in megabytes.
             default_run_timeout: Default timeout for the runs of this Actor.
-            example_run_input_body: Input to be prefilled as default input to new users of this Actor.
+            example_run_input_body: Input to be prefilled as default input to new users of this Actor, serialized
+                as a string (e.g. `json.dumps(input)` for a JSON input).
             example_run_input_content_type: The content type of the example run input.
             actor_standby_is_enabled: Whether the Actor Standby is enabled.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
@@ -670,6 +724,10 @@ class ActorClientAsync(ResourceClientAsync):
                 it will be shut down.
             actor_standby_build: The build tag or number to run when the Actor is in Standby mode.
             actor_standby_memory_mbytes: The memory in megabytes to use when the Actor is in Standby mode.
+            actor_standby_disable_standby_fields_override: If true, prevents the Standby configuration from being
+                overridden elsewhere.
+            actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
+                the Standby runs start with no input.
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -706,6 +764,8 @@ class ActorClientAsync(ResourceClientAsync):
                 idle_timeout_secs=to_seconds(actor_standby_idle_timeout, as_int=True),
                 build=actor_standby_build,
                 memory_mbytes=actor_standby_memory_mbytes,
+                disable_standby_fields_override=actor_standby_disable_standby_fields_override,
+                should_pass_actor_input=actor_standby_should_pass_actor_input,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -740,6 +800,7 @@ class ActorClientAsync(ResourceClientAsync):
         force_permission_level: ActorPermissionLevel | None = None,
         wait_for_finish: int | None = None,
         webhooks: WebhooksList | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the Actor and immediately return the Run object.
@@ -774,12 +835,21 @@ class ActorClientAsync(ResourceClientAsync):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. A streamed `run_input` that cannot be rewound, such as a
+                generator, is sent only once, so its start is not retried.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The run object.
         """
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
+        run_input, wait_for_resources = prepare_resendable_body(run_input, wait_for_resources=wait_for_resources)
 
         request_params = self._build_params(
             build=build,
@@ -793,13 +863,16 @@ class ActorClientAsync(ResourceClientAsync):
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
-        response = await self._http_client.call(
-            url=self._build_url('runs'),
-            method='POST',
-            headers={'content-type': content_type},
-            data=run_input,
-            params=request_params,
-            timeout=timeout,
+        response = await start_waiting_for_resources_async(
+            lambda: self._http_client.call(
+                url=self._build_url('runs'),
+                method='POST',
+                headers={'content-type': content_type},
+                data=run_input,
+                params=request_params,
+                timeout=timeout,
+            ),
+            wait_for_resources=wait_for_resources,
         )
 
         result = response_to_dict(response)
@@ -819,6 +892,7 @@ class ActorClientAsync(ResourceClientAsync):
         webhooks: WebhooksList | None = None,
         force_permission_level: ActorPermissionLevel | None = None,
         wait_duration: timedelta | None = None,
+        wait_for_resources: bool | timedelta = False,
         logger: Logger | Literal['default'] | None = 'default',
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
@@ -852,6 +926,14 @@ class ActorClientAsync(ResourceClientAsync):
                 a webhook set up for the Actor, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the run to finish. If not provided,
                 waits indefinitely.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             logger: Logger used to redirect logs from the Actor run. Using "default" literal means that a predefined
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
@@ -872,6 +954,7 @@ class ActorClientAsync(ResourceClientAsync):
             run_timeout=run_timeout,
             webhooks=webhooks,
             force_permission_level=force_permission_level,
+            wait_for_resources=wait_for_resources,
             timeout=timeout,
         )
 
@@ -1051,9 +1134,10 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         run_input: Any = None,
         *,
-        build_tag: str | None = None,
+        build: str | None = None,
         content_type: str | None = None,
         timeout: Timeout = 'short',
+        build_tag: str | None = None,
     ) -> bool:
         """Validate an input for the Actor that defines an input schema.
 
@@ -1062,13 +1146,25 @@ class ActorClientAsync(ResourceClientAsync):
                 including an `io.IOBase` stream such as an open file, an iterable of byte chunks, or a streamed
                 `HttpResponse`, which are uploaded in chunks without being held in memory. Streaming is experimental,
                 and its behavior may change in future versions.
-            build_tag: The Actor's build tag.
+            build: The Actor build to validate the input against. It can be either a build tag or build number. By
+                default, the build specified in the default run configuration for the Actor (typically latest) is used.
             content_type: The content type of the input.
             timeout: Timeout for the API HTTP request.
+            build_tag: Deprecated alias of `build`. Will be removed in v4.
 
         Returns:
             True if the input is valid, else raise an exception with validation error details.
         """
+        if build_tag is not None:
+            warnings.warn(
+                'The `build_tag` argument is deprecated and will be removed in v4. Use `build` instead.',
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            if build is not None:
+                raise ValueError('Pass only one of `build` and `build_tag`.')
+            build = build_tag
+
         run_input, content_type = encode_key_value_store_record_value(run_input, content_type=content_type)
 
         await self._http_client.call(
@@ -1076,7 +1172,7 @@ class ActorClientAsync(ResourceClientAsync):
             method='POST',
             headers={'content-type': content_type},
             data=run_input,
-            params=self._build_params(build=build_tag),
+            params=self._build_params(build=build),
             timeout=timeout,
         )
 

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
-from apify_client._models import Dataset, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
+from apify_client._models import DatasetResource, DatasetResponse, DatasetStatistics, DatasetStatisticsResponse
 from apify_client._pagination import DEFAULT_CHUNK_SIZE, get_items_iterator, get_items_iterator_async
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.crypto import create_storage_content_signature
@@ -70,7 +70,7 @@ class DatasetClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Dataset | None:
+    def get(self, *, timeout: Timeout = 'short') -> DatasetResource | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -92,7 +92,7 @@ class DatasetClient(ResourceClient):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
-    ) -> Dataset:
+    ) -> DatasetResource:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -402,6 +402,7 @@ class DatasetClient(ResourceClient):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
+        flatten: list[str] | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> Iterator[HttpResponse]:
@@ -445,6 +446,7 @@ class DatasetClient(ResourceClient):
             xml_root: Overrides default root element name of xml output. By default the root element is items.
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -469,6 +471,7 @@ class DatasetClient(ResourceClient):
                 skipHidden=skip_hidden,
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
+                flatten=flatten,
                 signature=signature,
             )
 
@@ -630,7 +633,7 @@ class DatasetClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Dataset | None:
+    async def get(self, *, timeout: Timeout = 'short') -> DatasetResource | None:
         """Retrieve the dataset.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/get-dataset
@@ -652,7 +655,7 @@ class DatasetClientAsync(ResourceClientAsync):
         name: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
-    ) -> Dataset:
+    ) -> DatasetResource:
         """Update the dataset with specified fields.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset/update-dataset
@@ -964,6 +967,7 @@ class DatasetClientAsync(ResourceClientAsync):
         skip_hidden: bool | None = None,
         xml_root: str | None = None,
         xml_row: str | None = None,
+        flatten: list[str] | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> AsyncIterator[HttpResponse]:
@@ -1007,6 +1011,7 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_root: Overrides default root element name of xml output. By default the root element is items.
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
+            flatten: A list of fields that should be flattened.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -1031,6 +1036,7 @@ class DatasetClientAsync(ResourceClientAsync):
                 skipHidden=skip_hidden,
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
+                flatten=flatten,
                 signature=signature,
             )
 

@@ -18,9 +18,11 @@ from apify_client._resource_clients._resource_client import ResourceClient, Reso
 from apify_client._utils.encoding import encode_webhooks_to_base64
 from apify_client._utils.http import response_to_dict
 from apify_client._utils.time import to_seconds
+from apify_client._utils.wait_for_resources import start_waiting_for_resources, start_waiting_for_resources_async
 
 if TYPE_CHECKING:
     from datetime import timedelta
+    from decimal import Decimal
 
     from apify_client._literals import ActorJobStatus, RunOrigin
     from apify_client._resource_clients import (
@@ -216,11 +218,13 @@ class TaskClient(ResourceClient):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: WebhooksList | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -233,6 +237,7 @@ class TaskClient(ResourceClient):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -248,6 +253,13 @@ class TaskClient(ResourceClient):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -259,6 +271,7 @@ class TaskClient(ResourceClient):
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
@@ -266,13 +279,16 @@ class TaskClient(ResourceClient):
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
-        response = self._http_client.call(
-            url=self._build_url('runs'),
-            method='POST',
-            headers={'content-type': 'application/json; charset=utf-8'},
-            json=task_input.model_dump() if task_input is not None else None,
-            params=request_params,
-            timeout=timeout,
+        response = start_waiting_for_resources(
+            lambda: self._http_client.call(
+                url=self._build_url('runs'),
+                method='POST',
+                headers={'content-type': 'application/json; charset=utf-8'},
+                json=task_input.model_dump() if task_input is not None else None,
+                params=request_params,
+                timeout=timeout,
+            ),
+            wait_for_resources=wait_for_resources,
         )
 
         result = response_to_dict(response)
@@ -284,11 +300,13 @@ class TaskClient(ResourceClient):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         webhooks: WebhooksList | None = None,
         wait_duration: timedelta | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
@@ -303,6 +321,7 @@ class TaskClient(ResourceClient):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
                 you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -314,6 +333,14 @@ class TaskClient(ResourceClient):
                 the Actor or task, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the task run to finish. If not provided,
                 waits indefinitely.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -323,10 +350,12 @@ class TaskClient(ResourceClient):
             task_input=task_input,
             build=build,
             max_items=max_items,
+            max_total_charge_usd=max_total_charge_usd,
             memory_mbytes=memory_mbytes,
             run_timeout=run_timeout,
             restart_on_error=restart_on_error,
             webhooks=webhooks,
+            wait_for_resources=wait_for_resources,
             timeout=timeout,
         )
 
@@ -597,11 +626,13 @@ class TaskClientAsync(ResourceClientAsync):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         wait_for_finish: int | None = None,
         webhooks: WebhooksList | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'medium',
     ) -> Run:
         """Start the task and immediately return the Run object.
@@ -614,6 +645,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged
                 per result, you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -629,6 +661,13 @@ class TaskClientAsync(ResourceClientAsync):
                     * `event_types`: List of `WebhookEventType` values which trigger the webhook.
                     * `request_url`: URL to which to send the webhook HTTP request.
                     * `payload_template`: Optional template for the request payload.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -640,6 +679,7 @@ class TaskClientAsync(ResourceClientAsync):
         request_params = self._build_params(
             build=build,
             maxItems=max_items,
+            maxTotalChargeUsd=max_total_charge_usd,
             memory=memory_mbytes,
             timeout=to_seconds(run_timeout, as_int=True),
             restartOnError=restart_on_error,
@@ -647,13 +687,16 @@ class TaskClientAsync(ResourceClientAsync):
             webhooks=encode_webhooks_to_base64(webhooks),
         )
 
-        response = await self._http_client.call(
-            url=self._build_url('runs'),
-            method='POST',
-            headers={'content-type': 'application/json; charset=utf-8'},
-            json=task_input.model_dump() if task_input is not None else None,
-            params=request_params,
-            timeout=timeout,
+        response = await start_waiting_for_resources_async(
+            lambda: self._http_client.call(
+                url=self._build_url('runs'),
+                method='POST',
+                headers={'content-type': 'application/json; charset=utf-8'},
+                json=task_input.model_dump() if task_input is not None else None,
+                params=request_params,
+                timeout=timeout,
+            ),
+            wait_for_resources=wait_for_resources,
         )
 
         result = response_to_dict(response)
@@ -665,11 +708,13 @@ class TaskClientAsync(ResourceClientAsync):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         webhooks: WebhooksList | None = None,
         wait_duration: timedelta | None = None,
+        wait_for_resources: bool | timedelta = False,
         timeout: Timeout = 'no_timeout',
     ) -> Run | None:
         """Start a task and wait for it to finish before returning the Run object.
@@ -684,6 +729,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the run uses the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
                 you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -695,6 +741,14 @@ class TaskClientAsync(ResourceClientAsync):
                 the Actor or task, you do not have to add it again here.
             wait_duration: The maximum time the server waits for the task run to finish. If not provided,
                 waits indefinitely.
+            wait_for_resources: Retry the start while the account lacks the memory or a concurrent-run slot for the run,
+                that is while the API rejects it with an `ApifyApiError` of type `actor-memory-limit-exceeded` or
+                `concurrent-runs-limit-exceeded`. Both clear as other runs or builds finish. The start is retried
+                every 10 seconds, and any other error is raised right away. `True` retries until the run starts, a
+                `timedelta` stops retrying after that long and raises the last error. A run that requests more memory
+                than the whole memory limit of the account is rejected with `actor-memory-limit-exceeded` as well and
+                never starts, so `True` retries it forever. The time spent retrying doesn't count toward
+                `wait_duration`.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -704,10 +758,12 @@ class TaskClientAsync(ResourceClientAsync):
             task_input=task_input,
             build=build,
             max_items=max_items,
+            max_total_charge_usd=max_total_charge_usd,
             memory_mbytes=memory_mbytes,
             run_timeout=run_timeout,
             restart_on_error=restart_on_error,
             webhooks=webhooks,
+            wait_for_resources=wait_for_resources,
             timeout=timeout,
         )
         run_client = self._client_registry.run_client(

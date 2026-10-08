@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .._utils import collect_iterate_until_present, get_random_resource_name, maybe_await, poll_until_condition
-from apify_client._models import Actor, ListOfSchedules, Schedule, ScheduleActionRunActor, ScheduleShort
+from apify_client._models import ActorResource, ListOfSchedules, Schedule, ScheduleActionRunActor, ScheduleListItem
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
@@ -201,7 +201,7 @@ async def test_schedule_collection_iterate(client: ApifyClient | ApifyClientAsyn
         collected = await collect_iterate_until_present(
             lambda: client.schedules().iterate(),
             set(created_ids),
-            item_type=ScheduleShort,
+            item_type=ScheduleListItem,
             is_async=is_async,
         )
         collected_ids = {s.id for s in collected}
@@ -215,7 +215,7 @@ async def test_schedule_collection_iterate(client: ApifyClient | ApifyClientAsyn
 async def test_schedule_with_actor_action(client: ApifyClient | ApifyClientAsync) -> None:
     """Test creating a schedule that runs an Actor on a cron expression."""
     actor = await maybe_await(client.actor('apify/hello-world').get())
-    assert isinstance(actor, Actor)
+    assert isinstance(actor, ActorResource)
 
     schedule_name = get_random_resource_name('schedule')
     created_schedule = await maybe_await(

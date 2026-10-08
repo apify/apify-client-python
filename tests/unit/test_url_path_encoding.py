@@ -7,7 +7,7 @@ import pytest
 from werkzeug import Response
 
 from apify_client import ApifyClient, ApifyClientAsync
-from apify_client._models import Request
+from apify_client._models import RequestResource
 from apify_client._utils.crypto import create_hmac_signature
 
 if TYPE_CHECKING:
@@ -419,7 +419,7 @@ def test_degenerate_resource_id_is_rejected_before_the_request(
 def test_update_request_without_an_id_is_rejected_sync(*, api_url: str) -> None:
     """A request carrying no ID cannot address a queue record, so the update is refused before it is sent."""
     client = ApifyClient(token='test_token', api_url=api_url)
-    request = Request(url='https://example.com', unique_key='https://example.com')
+    request = RequestResource(url='https://example.com', unique_key='https://example.com')
 
     with pytest.raises(ValueError, match='must have an ID'):
         client.request_queue(_QUEUE_ID).update_request(request)
@@ -428,7 +428,7 @@ def test_update_request_without_an_id_is_rejected_sync(*, api_url: str) -> None:
 async def test_update_request_without_an_id_is_rejected_async(*, api_url: str) -> None:
     """A request carrying no ID cannot address a queue record, so the update is refused before it is sent."""
     client = ApifyClientAsync(token='test_token', api_url=api_url)
-    request = Request(url='https://example.com', unique_key='https://example.com')
+    request = RequestResource(url='https://example.com', unique_key='https://example.com')
 
     with pytest.raises(ValueError, match='must have an ID'):
         await client.request_queue(_QUEUE_ID).update_request(request)

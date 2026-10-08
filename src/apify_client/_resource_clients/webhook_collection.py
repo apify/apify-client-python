@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
+    CreateWebhookRequest,
     ListOfWebhooks,
     ListOfWebhooksResponse,
     WebhookCondition,
-    WebhookCreate,
     WebhookResponse,
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
     from apify_client._literals import WebhookEventType
-    from apify_client._models import Webhook, WebhookShort
+    from apify_client._models import WebhookListItem, WebhookResource
     from apify_client.types import Timeout
 
 
@@ -71,7 +71,7 @@ class WebhookCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[WebhookShort]:
+    ) -> Iterator[WebhookListItem]:
         """Iterate over the available webhooks.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -109,7 +109,7 @@ class WebhookCollectionClient(ResourceClient):
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
         timeout: Timeout = 'short',
-    ) -> Webhook:
+    ) -> WebhookResource:
         """Create a new webhook.
 
         You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
@@ -135,7 +135,7 @@ class WebhookCollectionClient(ResourceClient):
         Returns:
            The created webhook.
         """
-        webhook_create = WebhookCreate(
+        webhook_create = CreateWebhookRequest(
             event_types=list(event_types),
             request_url=request_url,
             payload_template=payload_template,
@@ -204,7 +204,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[WebhookShort]:
+    ) -> AsyncIterator[WebhookListItem]:
         """Iterate over the available webhooks.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -242,7 +242,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         idempotency_key: str | None = None,
         is_ad_hoc: bool | None = None,
         timeout: Timeout = 'short',
-    ) -> Webhook:
+    ) -> WebhookResource:
         """Create a new webhook.
 
         You have to specify exactly one out of actor_id, actor_task_id or actor_run_id.
@@ -268,7 +268,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         Returns:
            The created webhook.
         """
-        webhook_create = WebhookCreate(
+        webhook_create = CreateWebhookRequest(
             event_types=list(event_types),
             request_url=request_url,
             payload_template=payload_template,

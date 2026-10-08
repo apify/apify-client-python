@@ -12,6 +12,8 @@ import ApiLink from '@theme/ApiLink';
 
 import RetriesAsyncExample from '!!raw-loader!./code/05_retries_async.py';
 import RetriesSyncExample from '!!raw-loader!./code/05_retries_sync.py';
+import WaitForResourcesAsyncExample from '!!raw-loader!./code/05_wait_for_resources_async.py';
+import WaitForResourcesSyncExample from '!!raw-loader!./code/05_wait_for_resources_sync.py';
 
 The Apify client automatically retries requests that fail due to:
 
@@ -40,6 +42,30 @@ Retries with exponential backoff help reduce the load on the server and increase
     <TabItem value="SyncExample" label="Sync client">
         <CodeBlock className="language-python">
             {RetriesSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Wait for resources to start a run
+
+Starting a run fails with an HTTP 402 error when the account doesn't have enough free memory for the run, or when it already runs as many Actors as its plan allows. The error `type` is `actor-memory-limit-exceeded` or `concurrent-runs-limit-exceeded`. The client doesn't retry these errors on its own, since they clear only after other runs or builds of the account finish.
+
+To keep retrying the start until the resources free up, set the `wait_for_resources` argument of <ApiLink to="class/ActorClient#start">`ActorClient.start`</ApiLink>, <ApiLink to="class/ActorClient#call">`ActorClient.call`</ApiLink>, or the same methods of <ApiLink to="class/TaskClient">`TaskClient`</ApiLink>. The client then retries the start every 10 seconds, and the argument value sets how long:
+
+- `True` retries until the run starts.
+- A `timedelta` stops retrying after that time and raises the last error.
+
+Any other error raises right away. A run that asks for more memory than the account's whole memory limit gets the same `actor-memory-limit-exceeded` error and never starts, so with `True` the client retries it forever. In `call`, the time spent retrying doesn't count toward `wait_duration`.
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {WaitForResourcesAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {WaitForResourcesSyncExample}
         </CodeBlock>
     </TabItem>
 </Tabs>

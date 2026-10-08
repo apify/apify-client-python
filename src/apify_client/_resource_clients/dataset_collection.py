@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    Dataset,
+    DatasetResource,
     DatasetResponse,
     ListOfDatasets,
     ListOfDatasetsResponse,
@@ -118,7 +118,7 @@ class DatasetCollectionClient(ResourceClient):
         name: str | None = None,
         schema: dict | None = None,
         timeout: Timeout = 'short',
-    ) -> Dataset:
+    ) -> DatasetResource:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset
@@ -233,7 +233,7 @@ class DatasetCollectionClientAsync(ResourceClientAsync):
         name: str | None = None,
         schema: dict | None = None,
         timeout: Timeout = 'short',
-    ) -> Dataset:
+    ) -> DatasetResource:
         """Retrieve a named dataset, or create a new one when it doesn't exist.
 
         https://docs.apify.com/api/v2#/reference/datasets/dataset-collection/create-dataset

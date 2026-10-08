@@ -7,13 +7,13 @@ from pydantic import ValidationError
 from apify_client._docs import docs_group
 from apify_client._models import (
     AccountLimits,
-    LimitsResponse,
+    AccountLimitsResponse,
     MonthlyUsage,
     MonthlyUsageResponse,
-    PrivateUserDataResponse,
-    PublicUserDataResponse,
     UserPrivateInfo,
+    UserPrivateInfoResponse,
     UserPublicInfo,
+    UserPublicInfoResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
 from apify_client._utils.http import response_to_dict
@@ -60,9 +60,9 @@ class UserClient(ResourceClient):
         if result is None:
             return None
         try:
-            return PrivateUserDataResponse.model_validate(result).data
+            return UserPrivateInfoResponse.model_validate(result).data
         except ValidationError:
-            return PublicUserDataResponse.model_validate(result).data
+            return UserPublicInfoResponse.model_validate(result).data
 
     def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage:
         """Return monthly usage of the user account.
@@ -115,7 +115,7 @@ class UserClient(ResourceClient):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return LimitsResponse.model_validate(result).data
+        return AccountLimitsResponse.model_validate(result).data
 
     def update_limits(
         self,
@@ -183,9 +183,9 @@ class UserClientAsync(ResourceClientAsync):
         if result is None:
             return None
         try:
-            return PrivateUserDataResponse.model_validate(result).data
+            return UserPrivateInfoResponse.model_validate(result).data
         except ValidationError:
-            return PublicUserDataResponse.model_validate(result).data
+            return UserPublicInfoResponse.model_validate(result).data
 
     async def monthly_usage(self, *, timeout: Timeout = 'short') -> MonthlyUsage:
         """Return monthly usage of the user account.
@@ -238,7 +238,7 @@ class UserClientAsync(ResourceClientAsync):
             timeout=timeout,
         )
         result = response_to_dict(response)
-        return LimitsResponse.model_validate(result).data
+        return AccountLimitsResponse.model_validate(result).data
 
     async def update_limits(
         self,

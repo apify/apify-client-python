@@ -6,14 +6,51 @@ from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
-from .._utils import maybe_await, poll_until_condition
-from apify_client._models import Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
+from .._utils import get_random_resource_name, maybe_await, poll_until_condition
+from apify_client._models import (
+    ActorResource,
+    Build,
+    DatasetResource,
+    KeyValueStoreResource,
+    ListOfRuns,
+    RequestQueueResource,
+    Run,
+    RunListItem,
+)
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
     from apify_client import ApifyClient, ApifyClientAsync
 
 HELLO_WORLD_ACTOR = 'apify/hello-world'
+
+LIVE_ITEM_COUNT = 10
+
+LIVE_ITEMS_SOURCE_FILES = [
+    {
+        'name': 'Dockerfile',
+        'format': 'TEXT',
+        'content': 'FROM apify/actor-node:22\nCOPY . ./\nCMD ["node", "main.mjs"]\n',
+    },
+    {
+        'name': 'main.mjs',
+        'format': 'TEXT',
+        'content': f"""
+const apiUrl = (process.env.APIFY_API_BASE_URL || 'https://api.apify.com').replace(/\\/$/, '');
+const itemsUrl = `${{apiUrl}}/v2/datasets/${{process.env.ACTOR_DEFAULT_DATASET_ID}}/items`;
+for (let index = 0; index < {LIVE_ITEM_COUNT}; index++) {{
+    const response = await fetch(itemsUrl, {{
+        method: 'POST',
+        headers: {{ 'Content-Type': 'application/json', Authorization: `Bearer ${{process.env.APIFY_TOKEN}}` }},
+        body: JSON.stringify({{ runId: process.env.ACTOR_RUN_ID, index }}),
+    }});
+    if (!response.ok) throw new Error(`Pushing item ${{index}} failed with ${{response.status}}`);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+}}
+""",
+    },
+]
+"""Source of an Actor that pushes `LIVE_ITEM_COUNT` items tagged with its run ID to its dataset, one per second."""
 
 
 async def test_run_collection_list_multiple_statuses(client: ApifyClient | ApifyClientAsync) -> None:
@@ -116,7 +153,7 @@ async def test_run_dataset(client: ApifyClient | ApifyClientAsync) -> None:
 
         # Get dataset info
         dataset = await maybe_await(dataset_client.get())
-        assert isinstance(dataset, Dataset)
+        assert isinstance(dataset, DatasetResource)
         assert dataset.id == run.default_dataset_id
     finally:
         await maybe_await(run_client.delete())
@@ -137,7 +174,7 @@ async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> No
 
         # Get KVS info
         kvs = await maybe_await(kvs_client.get())
-        assert isinstance(kvs, KeyValueStore)
+        assert isinstance(kvs, KeyValueStoreResource)
         assert kvs.id == run.default_key_value_store_id
     finally:
         await maybe_await(run_client.delete())
@@ -158,7 +195,7 @@ async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None
 
         # Get RQ info
         rq = await maybe_await(rq_client.get())
-        assert isinstance(rq, RequestQueue)
+        assert isinstance(rq, RequestQueueResource)
         assert rq.id == run.default_request_queue_id
     finally:
         await maybe_await(run_client.delete())
@@ -390,16 +427,16 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_runs_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over user runs."""
     iterator = client.runs().iterate(limit=5)
-    collected: list[RunShort] = []
+    collected: list[RunListItem] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for run in iterator:
-            assert isinstance(run, RunShort)
+            assert isinstance(run, RunListItem)
             collected.append(run)
     else:
         assert isinstance(iterator, Iterator)
         for run in iterator:
-            assert isinstance(run, RunShort)
+            assert isinstance(run, RunListItem)
             collected.append(run)
 
     assert len(collected) <= 5
@@ -435,16 +472,16 @@ async def test_run_collection_iterate_actor_runs(client: ApifyClient | ApifyClie
 
     try:
         iterator = actor.runs().iterate(limit=3, desc=True)
-        collected: list[RunShort] = []
+        collected: list[RunListItem] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)
             async for r in iterator:
-                assert isinstance(r, RunShort)
+                assert isinstance(r, RunListItem)
                 collected.append(r)
         else:
             assert isinstance(iterator, Iterator)
             for r in iterator:
-                assert isinstance(r, RunShort)
+                assert isinstance(r, RunListItem)
                 collected.append(r)
 
         assert len(collected) >= 1
@@ -452,3 +489,63 @@ async def test_run_collection_iterate_actor_runs(client: ApifyClient | ApifyClie
         assert all(r.act_id == run.act_id for r in collected)
     finally:
         await maybe_await(client.run(run.id).delete())
+
+
+async def test_run_iterate_dataset_items_of_last_run(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
+    """`iterate_dataset_items` on `last_run()` reads the run it resolved to, even after a newer run starts."""
+    created_actor = await maybe_await(
+        client.actors().create(
+            name=get_random_resource_name('actor'),
+            versions=[
+                {
+                    'versionNumber': '0.0',
+                    'sourceType': 'SOURCE_FILES',
+                    'buildTag': 'latest',
+                    'sourceFiles': LIVE_ITEMS_SOURCE_FILES,
+                }
+            ],
+        )
+    )
+    assert isinstance(created_actor, ActorResource)
+    actor_client = client.actor(created_actor.id)
+    run_ids: list[str] = []
+
+    try:
+        started_build = await maybe_await(actor_client.build(version_number='0.0'))
+        assert isinstance(started_build, Build)
+        build = await maybe_await(client.build(started_build.id).wait_for_finish())
+        assert isinstance(build, Build)
+        assert build.status == 'SUCCEEDED'
+
+        async def start_run() -> str:
+            run = await maybe_await(actor_client.start(memory_mbytes=256, run_timeout=timedelta(seconds=120)))
+            assert isinstance(run, Run)
+            return run.id
+
+        first_run_id = await start_run()
+        run_ids.append(first_run_id)
+
+        items: list[dict] = []
+
+        async def collect(item: dict) -> None:
+            items.append(item)
+            if len(run_ids) == 1:
+                run_ids.append(await start_run())
+
+        # A page of one row makes every further read a fresh request, which could land on the newer run.
+        iterator = actor_client.last_run().iterate_dataset_items(chunk_size=1, poll_interval=timedelta(seconds=1))
+        if is_async:
+            assert isinstance(iterator, AsyncIterator)
+            async for item in iterator:
+                await collect(item)
+        else:
+            assert isinstance(iterator, Iterator)
+            for item in iterator:
+                await collect(item)
+
+        assert items == [{'runId': first_run_id, 'index': index} for index in range(LIVE_ITEM_COUNT)]
+    finally:
+        for run_id in run_ids:
+            await maybe_await(client.run(run_id).wait_for_finish())
+            await maybe_await(client.run(run_id).delete())
+        await maybe_await(actor_client.delete())

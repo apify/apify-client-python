@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.2.2 - **not yet released**
+## [3.3.0](https://github.com/apify/apify-client-python/releases/tag/v3.3.0) (2026-10-08)
 
 ### 🚀 Features
 
@@ -28,7 +27,6 @@ All notable changes to this project will be documented in this file.
 - Default gzip compression quality to 6 ([#1099](https://github.com/apify/apify-client-python/pull/1099)) ([00cfb65](https://github.com/apify/apify-client-python/commit/00cfb658c19645886adaca68b26f71867e0a6826)) by [@vdusek](https://github.com/vdusek), closes [#1095](https://github.com/apify/apify-client-python/issues/1095)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.2.1](https://github.com/apify/apify-client-python/releases/tag/v3.2.1) (2026-09-25)
 
 ### 🐛 Bug Fixes

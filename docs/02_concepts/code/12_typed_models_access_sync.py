@@ -6,7 +6,7 @@ TOKEN = 'MY-APIFY-TOKEN'
 def main() -> None:
     apify_client = ApifyClient(TOKEN)
 
-    # `get` returns an `Actor` Pydantic model — fields are typed and IDE-completable.
+    # `get` returns an `ActorResource` Pydantic model with typed, IDE-completable fields.
     actor = apify_client.actor('apify/hello-world').get()
     if actor is None:
         return

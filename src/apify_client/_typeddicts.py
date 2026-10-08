@@ -8,6 +8,66 @@ from apify_client._docs import docs_group
 
 
 @docs_group('Typed dicts')
+class CreateWebhookRequestDict(TypedDict):
+    is_ad_hoc: NotRequired[bool | None]
+    event_types: list[
+        Literal[
+            'ACTOR.BUILD.ABORTED',
+            'ACTOR.BUILD.CREATED',
+            'ACTOR.BUILD.FAILED',
+            'ACTOR.BUILD.SUCCEEDED',
+            'ACTOR.BUILD.TIMED_OUT',
+            'ACTOR.RUN.ABORTED',
+            'ACTOR.RUN.CREATED',
+            'ACTOR.RUN.FAILED',
+            'ACTOR.RUN.RESURRECTED',
+            'ACTOR.RUN.SUCCEEDED',
+            'ACTOR.RUN.TIMED_OUT',
+            'TEST',
+        ]
+    ]
+    condition: WebhookConditionDict
+    idempotency_key: NotRequired[str | None]
+    ignore_ssl_errors: NotRequired[bool | None]
+    do_not_retry: NotRequired[bool | None]
+    request_url: str
+    payload_template: NotRequired[str | None]
+    headers_template: NotRequired[str | None]
+    description: NotRequired[str | None]
+    should_interpolate_strings: NotRequired[bool | None]
+
+
+@docs_group('Typed dicts')
+class CreateWebhookRequestCamelDict(TypedDict):
+    isAdHoc: NotRequired[bool | None]
+    eventTypes: list[
+        Literal[
+            'ACTOR.BUILD.ABORTED',
+            'ACTOR.BUILD.CREATED',
+            'ACTOR.BUILD.FAILED',
+            'ACTOR.BUILD.SUCCEEDED',
+            'ACTOR.BUILD.TIMED_OUT',
+            'ACTOR.RUN.ABORTED',
+            'ACTOR.RUN.CREATED',
+            'ACTOR.RUN.FAILED',
+            'ACTOR.RUN.RESURRECTED',
+            'ACTOR.RUN.SUCCEEDED',
+            'ACTOR.RUN.TIMED_OUT',
+            'TEST',
+        ]
+    ]
+    condition: WebhookConditionCamelDict
+    idempotencyKey: NotRequired[str | None]
+    ignoreSslErrors: NotRequired[bool | None]
+    doNotRetry: NotRequired[bool | None]
+    requestUrl: str
+    payloadTemplate: NotRequired[str | None]
+    headersTemplate: NotRequired[str | None]
+    description: NotRequired[str | None]
+    shouldInterpolateStrings: NotRequired[bool | None]
+
+
+@docs_group('Typed dicts')
 class RequestBaseDict(TypedDict):
     unique_key: str
     """
@@ -98,7 +158,7 @@ class RequestBaseCamelDict(TypedDict):
 
 
 @docs_group('Typed dicts')
-class RequestDict(RequestBaseDict):
+class RequestResourceDict(RequestBaseDict):
     """A request stored in the request queue, including its metadata and processing state."""
 
     id: NotRequired[str]
@@ -108,7 +168,7 @@ class RequestDict(RequestBaseDict):
 
 
 @docs_group('Typed dicts')
-class RequestCamelDict(RequestBaseCamelDict):
+class RequestResourceCamelDict(RequestBaseCamelDict):
     """A request stored in the request queue, including its metadata and processing state."""
 
     id: NotRequired[str]
@@ -118,7 +178,7 @@ class RequestCamelDict(RequestBaseCamelDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDeleteByIdDict(TypedDict):
+class RequestToDeleteByIdDict(TypedDict):
     """A request that should be deleted, identified by its ID."""
 
     id: str
@@ -132,7 +192,7 @@ class RequestDraftDeleteByIdDict(TypedDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDeleteByIdCamelDict(TypedDict):
+class RequestToDeleteByIdCamelDict(TypedDict):
     """A request that should be deleted, identified by its ID."""
 
     id: str
@@ -146,7 +206,7 @@ class RequestDraftDeleteByIdCamelDict(TypedDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDeleteByUniqueKeyDict(TypedDict):
+class RequestToDeleteByUniqueKeyDict(TypedDict):
     """A request that should be deleted, identified by its unique key."""
 
     id: NotRequired[str]
@@ -160,7 +220,7 @@ class RequestDraftDeleteByUniqueKeyDict(TypedDict):
 
 
 @docs_group('Typed dicts')
-class RequestDraftDeleteByUniqueKeyCamelDict(TypedDict):
+class RequestToDeleteByUniqueKeyCamelDict(TypedDict):
     """A request that should be deleted, identified by its unique key."""
 
     id: NotRequired[str]
@@ -173,12 +233,12 @@ class RequestDraftDeleteByUniqueKeyCamelDict(TypedDict):
     """
 
 
-RequestDraftDeleteDict: TypeAlias = RequestDraftDeleteByIdDict | RequestDraftDeleteByUniqueKeyDict
+RequestToDeleteDict: TypeAlias = RequestToDeleteByIdDict | RequestToDeleteByUniqueKeyDict
 """
 A request that should be deleted.
 """
 
-RequestDraftDeleteCamelDict: TypeAlias = RequestDraftDeleteByIdCamelDict | RequestDraftDeleteByUniqueKeyCamelDict
+RequestToDeleteCamelDict: TypeAlias = RequestToDeleteByIdCamelDict | RequestToDeleteByUniqueKeyCamelDict
 """
 A request that should be deleted.
 """
@@ -216,66 +276,6 @@ class WebhookConditionCamelDict(TypedDict):
     actorId: NotRequired[str | None]
     actorTaskId: NotRequired[str | None]
     actorRunId: NotRequired[str | None]
-
-
-@docs_group('Typed dicts')
-class WebhookCreateDict(TypedDict):
-    is_ad_hoc: NotRequired[bool | None]
-    event_types: list[
-        Literal[
-            'ACTOR.BUILD.ABORTED',
-            'ACTOR.BUILD.CREATED',
-            'ACTOR.BUILD.FAILED',
-            'ACTOR.BUILD.SUCCEEDED',
-            'ACTOR.BUILD.TIMED_OUT',
-            'ACTOR.RUN.ABORTED',
-            'ACTOR.RUN.CREATED',
-            'ACTOR.RUN.FAILED',
-            'ACTOR.RUN.RESURRECTED',
-            'ACTOR.RUN.SUCCEEDED',
-            'ACTOR.RUN.TIMED_OUT',
-            'TEST',
-        ]
-    ]
-    condition: WebhookConditionDict
-    idempotency_key: NotRequired[str | None]
-    ignore_ssl_errors: NotRequired[bool | None]
-    do_not_retry: NotRequired[bool | None]
-    request_url: str
-    payload_template: NotRequired[str | None]
-    headers_template: NotRequired[str | None]
-    description: NotRequired[str | None]
-    should_interpolate_strings: NotRequired[bool | None]
-
-
-@docs_group('Typed dicts')
-class WebhookCreateCamelDict(TypedDict):
-    isAdHoc: NotRequired[bool | None]
-    eventTypes: list[
-        Literal[
-            'ACTOR.BUILD.ABORTED',
-            'ACTOR.BUILD.CREATED',
-            'ACTOR.BUILD.FAILED',
-            'ACTOR.BUILD.SUCCEEDED',
-            'ACTOR.BUILD.TIMED_OUT',
-            'ACTOR.RUN.ABORTED',
-            'ACTOR.RUN.CREATED',
-            'ACTOR.RUN.FAILED',
-            'ACTOR.RUN.RESURRECTED',
-            'ACTOR.RUN.SUCCEEDED',
-            'ACTOR.RUN.TIMED_OUT',
-            'TEST',
-        ]
-    ]
-    condition: WebhookConditionCamelDict
-    idempotencyKey: NotRequired[str | None]
-    ignoreSslErrors: NotRequired[bool | None]
-    doNotRetry: NotRequired[bool | None]
-    requestUrl: str
-    payloadTemplate: NotRequired[str | None]
-    headersTemplate: NotRequired[str | None]
-    description: NotRequired[str | None]
-    shouldInterpolateStrings: NotRequired[bool | None]
 
 
 @docs_group('Typed dicts')

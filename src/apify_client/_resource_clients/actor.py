@@ -7,7 +7,7 @@ from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    Actor,
+    ActorResource,
     ActorResponse,
     ActorStandby,
     Build,
@@ -87,7 +87,7 @@ class ActorClient(ResourceClient):
             **kwargs,
         )
 
-    def get(self, *, timeout: Timeout = 'short') -> Actor | None:
+    def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -134,7 +134,7 @@ class ActorClient(ResourceClient):
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
-    ) -> Actor:
+    ) -> ActorResource:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor
@@ -643,7 +643,7 @@ class ActorClientAsync(ResourceClientAsync):
             **kwargs,
         )
 
-    async def get(self, *, timeout: Timeout = 'short') -> Actor | None:
+    async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/get-actor
@@ -690,7 +690,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
         timeout: Timeout = 'short',
-    ) -> Actor:
+    ) -> ActorResource:
         """Update the Actor with the specified fields.
 
         https://docs.apify.com/api/v2#/reference/actors/actor-object/update-actor

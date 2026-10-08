@@ -89,6 +89,6 @@ def test_model_generation_pipeline(tmp_path: Path) -> None:
     assert "RunStatus = Literal[\n    'READY',\n    'RUNNING',\n    'SUCCEEDED',\n] | str" in literals
 
     typeddicts = typeddicts_path.read_text()
-    assert 'class RequestDict(TypedDict):\n    request_id: str' in typeddicts
-    assert 'class RequestCamelDict(TypedDict):\n    requestId: str' in typeddicts
+    assert 'class RequestResourceDict(TypedDict):\n    request_resource_id: str' in typeddicts
+    assert 'class RequestResourceCamelDict(TypedDict):\n    requestResourceId: str' in typeddicts
     assert 'class Run' not in typeddicts

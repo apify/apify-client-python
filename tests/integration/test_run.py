@@ -7,7 +7,16 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from .._utils import get_random_resource_name, maybe_await, poll_until_condition
-from apify_client._models import Actor, Build, Dataset, KeyValueStore, ListOfRuns, RequestQueue, Run, RunShort
+from apify_client._models import (
+    ActorResource,
+    Build,
+    DatasetResource,
+    KeyValueStoreResource,
+    ListOfRuns,
+    RequestQueueResource,
+    Run,
+    RunListItem,
+)
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
@@ -144,7 +153,7 @@ async def test_run_dataset(client: ApifyClient | ApifyClientAsync) -> None:
 
         # Get dataset info
         dataset = await maybe_await(dataset_client.get())
-        assert isinstance(dataset, Dataset)
+        assert isinstance(dataset, DatasetResource)
         assert dataset.id == run.default_dataset_id
     finally:
         await maybe_await(run_client.delete())
@@ -165,7 +174,7 @@ async def test_run_key_value_store(client: ApifyClient | ApifyClientAsync) -> No
 
         # Get KVS info
         kvs = await maybe_await(kvs_client.get())
-        assert isinstance(kvs, KeyValueStore)
+        assert isinstance(kvs, KeyValueStoreResource)
         assert kvs.id == run.default_key_value_store_id
     finally:
         await maybe_await(run_client.delete())
@@ -186,7 +195,7 @@ async def test_run_request_queue(client: ApifyClient | ApifyClientAsync) -> None
 
         # Get RQ info
         rq = await maybe_await(rq_client.get())
-        assert isinstance(rq, RequestQueue)
+        assert isinstance(rq, RequestQueueResource)
         assert rq.id == run.default_request_queue_id
     finally:
         await maybe_await(run_client.delete())
@@ -418,16 +427,16 @@ async def test_run_charge(client: ApifyClient | ApifyClientAsync) -> None:
 async def test_runs_iterate(client: ApifyClient | ApifyClientAsync, *, is_async: bool) -> None:
     """Test paginated iteration over user runs."""
     iterator = client.runs().iterate(limit=5)
-    collected: list[RunShort] = []
+    collected: list[RunListItem] = []
     if is_async:
         assert isinstance(iterator, AsyncIterator)
         async for run in iterator:
-            assert isinstance(run, RunShort)
+            assert isinstance(run, RunListItem)
             collected.append(run)
     else:
         assert isinstance(iterator, Iterator)
         for run in iterator:
-            assert isinstance(run, RunShort)
+            assert isinstance(run, RunListItem)
             collected.append(run)
 
     assert len(collected) <= 5
@@ -463,16 +472,16 @@ async def test_run_collection_iterate_actor_runs(client: ApifyClient | ApifyClie
 
     try:
         iterator = actor.runs().iterate(limit=3, desc=True)
-        collected: list[RunShort] = []
+        collected: list[RunListItem] = []
         if is_async:
             assert isinstance(iterator, AsyncIterator)
             async for r in iterator:
-                assert isinstance(r, RunShort)
+                assert isinstance(r, RunListItem)
                 collected.append(r)
         else:
             assert isinstance(iterator, Iterator)
             for r in iterator:
-                assert isinstance(r, RunShort)
+                assert isinstance(r, RunListItem)
                 collected.append(r)
 
         assert len(collected) >= 1
@@ -497,7 +506,7 @@ async def test_run_iterate_dataset_items_of_last_run(client: ApifyClient | Apify
             ],
         )
     )
-    assert isinstance(created_actor, Actor)
+    assert isinstance(created_actor, ActorResource)
     actor_client = client.actor(created_actor.id)
     run_ids: list[str] = []
 

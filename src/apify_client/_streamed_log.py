@@ -36,8 +36,8 @@ class StreamedLogBase:
     """Pause before the first reopen of a log stream that ended before the run logged anything.
 
     The API serves the log of a run that has not logged anything yet as an empty stream that ends at once. Each further
-    reopen doubles the pause up to `_empty_stream_max_retry_s`, so a run that waits long to start, for example for free
-    memory, is not polled twice a second.
+    reopen doubles the pause up to `_empty_stream_max_retry_s`, which bounds the request rate while a run waits long to
+    start, for example for free memory.
     """
 
     _empty_stream_max_retry_s: ClassVar[float] = 5

@@ -230,8 +230,9 @@ class StreamedLog(StreamedLogBase):
             # Published so `stop` can close the response.
             self._log_stream = log_stream
             try:
-                # `stop` may have run before the response existed for it to close. A stream opened this late would
-                # end after its first chunk, so the whole log is read in one request instead.
+                # `stop` may have run before the response existed for it to close. No earlier stream delivered
+                # anything, and one opened this late would end after its first chunk, so read the whole log in one
+                # request.
                 if self._stop_event.is_set():
                     return True
                 for data in log_stream.iter_bytes():

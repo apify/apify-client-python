@@ -1270,8 +1270,11 @@ def test_streamed_log_sync_stop_returns_on_silent_stream(
     assert not streaming_thread.is_alive()
     restarted_thread = streamed_log.start()
     assert restarted_thread is not streaming_thread
-    streamed_log.stop()
+    # The released server ends the stream after its line, so the thread finishes on its own. A `stop` before that
+    # line arrived would read the whole log, which this test does not serve.
     restarted_thread.join(timeout=5)
+    assert not restarted_thread.is_alive()
+    streamed_log.stop()
 
 
 @pytest.mark.usefixtures('propagate_stream_logs')

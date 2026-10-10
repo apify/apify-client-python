@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.3.1 - **not yet released**
+
+### 🐛 Bug Fixes
+
+- Redirect the run log when the first log stream comes back empty ([#1084](https://github.com/apify/apify-client-python/pull/1084)) ([a370e7a](https://github.com/apify/apify-client-python/commit/a370e7a9db75053c2f65ad626ba1bcb67c4cf398)) by [@vdusek](https://github.com/vdusek)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.3.0](https://github.com/apify/apify-client-python/releases/tag/v3.3.0) (2026-10-08)
 
 ### 🚀 Features

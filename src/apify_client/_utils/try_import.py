@@ -7,7 +7,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Generator
     from typing import Any
 
 
@@ -19,7 +19,7 @@ class ImportState:
 
 
 @contextmanager
-def try_import(module_name: str, *symbol_names: str, dependency_name: str, extra_name: str) -> Iterator[ImportState]:
+def try_import(module_name: str, *symbol_names: str, dependency_name: str, extra_name: str) -> Generator[ImportState]:
     """Context manager to attempt importing symbols into a module.
 
     If the named optional dependency is missing, the symbols are replaced with `FailedImport` objects whose message

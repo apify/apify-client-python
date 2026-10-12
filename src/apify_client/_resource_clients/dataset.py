@@ -12,7 +12,7 @@ from apify_client._utils.crypto import create_storage_content_signature
 from apify_client._utils.http import response_to_dict, response_to_list
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
     from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
@@ -405,7 +405,7 @@ class DatasetClient(ResourceClient):
         flatten: list[str] | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
-    ) -> Iterator[HttpResponse]:
+    ) -> Generator[HttpResponse]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items
@@ -970,7 +970,7 @@ class DatasetClientAsync(ResourceClientAsync):
         flatten: list[str] | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
-    ) -> AsyncIterator[HttpResponse]:
+    ) -> AsyncGenerator[HttpResponse]:
         """Retrieve the items in the dataset as a stream.
 
         https://docs.apify.com/api/v2#/reference/datasets/item-collection/get-items

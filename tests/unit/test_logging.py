@@ -227,6 +227,10 @@ def mock_api(httpserver: HTTPServer) -> None:
     httpserver.expect_request(
         f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
     ).respond_with_handler(_streaming_log_handler)
+    # A streamed log stopped before its first chunk falls back to reading the whole log.
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='raw=true'
+    ).respond_with_data(b''.join(_MOCKED_ACTOR_LOGS), content_type='application/octet-stream')
 
 
 @pytest.fixture
@@ -1137,6 +1141,9 @@ def mock_api_failing_status_poll(httpserver: HTTPServer) -> None:
     httpserver.expect_request(
         f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='stream=true&raw=true'
     ).respond_with_handler(_streaming_log_handler)
+    httpserver.expect_request(
+        f'/v2/actor-runs/{_MOCKED_RUN_ID}/log', method='GET', query_string='raw=true'
+    ).respond_with_data(b''.join(_MOCKED_ACTOR_LOGS), content_type='application/octet-stream')
 
 
 @pytest.mark.usefixtures('mock_api_failing_status_poll', 'propagate_stream_logs')

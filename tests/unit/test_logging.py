@@ -22,7 +22,7 @@ from apify_client._status_message_watcher import StatusMessageWatcher, StatusMes
 from apify_client._streamed_log import StreamedLog, StreamedLogAsync, StreamedLogBase
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Callable, Iterator
+    from collections.abc import AsyncGenerator, AsyncIterator, Callable, Iterator
 
     from _pytest.logging import LogCaptureFixture
     from pytest_httpserver import HTTPServer
@@ -1557,7 +1557,7 @@ async def test_streamed_log_async_stop_reads_log_when_it_lands_while_stream_reop
     reopening = asyncio.Event()
 
     @asynccontextmanager
-    async def never_opening_stream() -> AsyncIterator[None]:
+    async def never_opening_stream() -> AsyncGenerator[None]:
         reopening.set()
         await asyncio.Event().wait()
         yield

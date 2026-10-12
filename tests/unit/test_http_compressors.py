@@ -18,7 +18,7 @@ from apify_client.http_compressors import BrotliHttpCompressor, GzipHttpCompress
 from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Generator
 
     from pytest_httpserver import HTTPServer
 
@@ -29,7 +29,7 @@ pytestmark = pytest.mark.usefixtures('http_client_classes')
 
 
 @contextmanager
-def _brotli_unavailable() -> Iterator[None]:
+def _brotli_unavailable() -> Generator[None]:
     """Reimport the `http_compressors` package with the `brotli` import forced to fail.
 
     Simulates an environment where the optional `brotli` extra is not installed, and restores the

@@ -9,7 +9,7 @@ from apify_client._utils.errors import catch_not_found_for_resource_or_throw
 from apify_client.errors import ApifyApiError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncGenerator, Generator
 
     from apify_client.http_clients import HttpResponse
     from apify_client.types import Timeout
@@ -96,7 +96,7 @@ class LogClient(ResourceClient):
         return None
 
     @contextmanager
-    def stream(self, *, raw: bool = False, timeout: Timeout = 'long') -> Iterator[HttpResponse | None]:
+    def stream(self, *, raw: bool = False, timeout: Timeout = 'long') -> Generator[HttpResponse | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log
@@ -211,7 +211,7 @@ class LogClientAsync(ResourceClientAsync):
         return None
 
     @asynccontextmanager
-    async def stream(self, *, raw: bool = False, timeout: Timeout = 'long') -> AsyncIterator[HttpResponse | None]:
+    async def stream(self, *, raw: bool = False, timeout: Timeout = 'long') -> AsyncGenerator[HttpResponse | None]:
         """Retrieve the log as a stream.
 
         https://docs.apify.com/api/v2#/reference/logs/log/get-log

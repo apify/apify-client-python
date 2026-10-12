@@ -22,7 +22,7 @@ from apify_client._utils.http import response_to_dict, to_path_segment
 from apify_client.errors import ApifyApiError, InvalidResponseBodyError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Iterator
+    from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
     from datetime import timedelta
 
     from apify_client._literals import GeneralAccess
@@ -318,7 +318,7 @@ class KeyValueStoreClient(ResourceClient):
     @contextmanager
     def stream_record(
         self, key: str, *, signature: str | None = None, timeout: Timeout = 'long'
-    ) -> Iterator[dict | None]:
+    ) -> Generator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record
@@ -756,7 +756,7 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
     @asynccontextmanager
     async def stream_record(
         self, key: str, *, signature: str | None = None, timeout: Timeout = 'long'
-    ) -> AsyncIterator[dict | None]:
+    ) -> AsyncGenerator[dict | None]:
         """Retrieve the given record from the key-value store, as a stream.
 
         https://docs.apify.com/api/v2#/reference/key-value-stores/record/get-record

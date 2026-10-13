@@ -284,12 +284,14 @@ async def test_task_runs(client: ApifyClient | ApifyClientAsync) -> None:
         run = await maybe_await(task_client.call())
         assert isinstance(run, Run)
 
-        # List runs for this task
-        runs_client = task_client.runs()
-        runs_page = await maybe_await(runs_client.list(limit=10))
-        assert isinstance(runs_page, ListOfRuns)
-        assert runs_page.items is not None
-        assert len(runs_page.items) >= 1
+        # Poll until the run appears in the task's run listing (eventual consistency)
+        async def list_runs() -> ListOfRuns:
+            page = await maybe_await(task_client.runs().list(limit=10))
+            assert isinstance(page, ListOfRuns)
+            return page
+
+        runs_page = await poll_until_condition(list_runs, lambda page: run.id in {r.id for r in page.items})
+        assert run.id in {r.id for r in runs_page.items}
 
         # Cleanup run
         await maybe_await(client.run(run.id).delete())
@@ -322,9 +324,12 @@ async def test_task_last_run(client: ApifyClient | ApifyClientAsync) -> None:
         run = await maybe_await(task_client.call())
         assert isinstance(run, Run)
 
-        # Get last run client
+        # Poll until the last run resolves to this run (eventual consistency)
         last_run_client = task_client.last_run()
-        last_run = await maybe_await(last_run_client.get())
+        last_run = await poll_until_condition(
+            lambda: maybe_await(last_run_client.get()),
+            lambda r: isinstance(r, Run) and r.id == run.id,
+        )
         assert isinstance(last_run, Run)
         assert last_run.id == run.id
 

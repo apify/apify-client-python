@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Iterator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -468,19 +467,12 @@ async def test_task_runs_iterate(client: ApifyClient | ApifyClientAsync, *, is_a
         run = await maybe_await(task_client.call())
         assert isinstance(run, Run)
 
-        iterator = task_client.runs().iterate(limit=5)
-        collected: list[RunListItem] = []
-        if is_async:
-            assert isinstance(iterator, AsyncIterator)
-            async for r in iterator:
-                assert isinstance(r, RunListItem)
-                collected.append(r)
-        else:
-            assert isinstance(iterator, Iterator)
-            for r in iterator:
-                assert isinstance(r, RunListItem)
-                collected.append(r)
-
+        collected = await collect_iterate_until_present(
+            lambda: task_client.runs().iterate(limit=5),
+            {run.id},
+            item_type=RunListItem,
+            is_async=is_async,
+        )
         run_ids = [r.id for r in collected]
         assert run.id in run_ids
 

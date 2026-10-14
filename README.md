@@ -224,12 +224,7 @@ The full documentation lives at **[docs.apify.com/api/client/python](https://doc
 
 ## Contributing
 
-Bug reports, fixes, and improvements are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development setup, coding standards, testing, and the release process. The repo uses [uv](https://docs.astral.sh/uv/) for project management and [Poe the Poet](https://poethepoet.natn.io/) as a task runner; the typical loop is:
-
-```bash
-uv run poe install-dev   # install dev deps and git hooks
-uv run poe check-code    # lint, type-check, unit tests, docstring check
-```
+Bug reports, fixes, and improvements are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for the development setup, coding standards, testing, and the release process.
 
 ## License
 

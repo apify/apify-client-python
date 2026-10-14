@@ -265,39 +265,45 @@ crawlee = false
 
 # Run tasks with: uv run poe <task>
 [tool.poe.tasks]
-clean = "rm -rf .coverage .pytest_cache .ruff_cache .ty_cache build dist htmlcov"
-install-sync = "uv sync --all-extras"
-build = "uv build"
-publish-to-pypi = "uv publish --token ${APIFY_PYPI_TOKEN_CRAWLEE}"
-type-check = "uv run ty check"
-unit-tests = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/unit"
-unit-tests-cov = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-unit.xml tests/unit"
-integration-tests = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/integration"
-integration-tests-cov = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-integration.xml tests/integration"
-check-docstrings = "uv run python -m scripts.check_docstrings"
-fix-docstrings = "uv run python -m scripts.fix_docstrings"
-check-code = ["lint", "type-check", "check-docstrings", "unit-tests"]
+clean = { cmd = "rm -rf .coverage .pytest_cache .ruff_cache .ty_cache build dist htmlcov", help = "Remove build artifacts and clean caches" }
+install-sync = { cmd = "uv sync --all-extras", help = "Sync dependencies with all extras" }
+build = { cmd = "uv build", help = "Build the package" }
+publish-to-pypi = { cmd = "uv publish --token ${APIFY_PYPI_TOKEN_CRAWLEE}", help = "Publish the package to PyPI" }
+type-check = { cmd = "uv run ty check", help = "Run the type checker" }
+unit-tests = { cmd = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/unit", help = "Run unit tests" }
+unit-tests-cov = { cmd = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-unit.xml tests/unit", help = "Run unit tests with an XML coverage report" }
+integration-tests = { cmd = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} tests/integration", help = "Run integration tests" }
+integration-tests-cov = { cmd = "uv run pytest --numprocesses=${TESTS_CONCURRENCY:-auto} --cov=src/apify_client --cov-report=xml:coverage-integration.xml tests/integration", help = "Run integration tests with an XML coverage report" }
+check-docstrings = { cmd = "uv run python -m scripts.check_docstrings", help = "Check that async client docstrings match their sync counterparts" }
+fix-docstrings = { cmd = "uv run python -m scripts.fix_docstrings", help = "Copy sync client docstrings to their async counterparts" }
+check-code = { sequence = ["lint", "type-check", "check-docstrings", "unit-tests"], help = "Run lint, type check, docstring check, and unit tests" }
 
 [tool.poe.tasks.install-dev]
 shell = "uv sync --all-extras && uv run pre-commit install"
+help = "Install development dependencies and pre-commit hooks"
 
 [tool.poe.tasks.lint]
 shell = "uv run ruff format --check && uv run ruff check"
+help = "Run the linter and check formatting"
 
 [tool.poe.tasks.format]
 shell = "uv run ruff check --fix && uv run ruff format"
+help = "Fix lint issues and format code"
 
 [tool.poe.tasks.update-docs-theme]
 shell = "pnpm update @apify/docs-theme"
 cwd = "website"
+help = "Update the documentation website theme"
 
 [tool.poe.tasks.build-docs]
 shell = "./build_api_reference.sh && pnpm install && uv run pnpm build"
 cwd = "website"
+help = "Build the documentation website"
 
 [tool.poe.tasks.run-docs]
 shell = "./build_api_reference.sh && pnpm install && uv run pnpm start"
 cwd = "website"
+help = "Run the documentation website locally"
 
 # Both passes read one downloaded copy, so a specification redeployed mid-run can't leave the generated files
 # describing two different inputs. The version is recorded last, once generation succeeded.
@@ -316,6 +322,7 @@ uv run python -m scripts.openapi_spec fetch \
     && python scripts/postprocess_generated_models.py \
     && uv run python -m scripts.openapi_spec record-version
 """
+help = "Regenerate models from the published OpenAPI specification"
 
 # For a candidate specification that isn't published yet. The recorded version deliberately stays put - it names
 # the published specification - so models generated this way must not be committed, hence the warning.
@@ -331,3 +338,4 @@ uv run datamodel-codegen --input $input_file \
     && echo "Generated from $input_file - the version in [tool.apify.openapi-spec] still names the published specification, so do not commit these models."
 """
 args = [{ name = "input-file", positional = true, required = true }]
+help = "Generate models from a local OpenAPI specification file (don't commit the result)"

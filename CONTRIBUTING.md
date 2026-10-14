@@ -35,6 +35,11 @@ We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [ty](htt
 
 ## Code style
 
+### Readability
+
+- Prefer a few simple statements over one dense line. Give intermediate values a name instead of nesting calls, comprehensions, and unpacking into a single long expression.
+- When replacing a call with an equivalent one, change only the call and keep the surrounding statements as they were.
+
 ### Comments and docstrings
 
 - Every module starts with `from __future__ import annotations`.

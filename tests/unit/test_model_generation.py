@@ -5,6 +5,8 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING
 
+import pytest
+
 from scripts.postprocess_generated_models import (
     REPO_ROOT,
     RESOURCE_INPUT_TYPEDDICTS,
@@ -56,6 +58,10 @@ def run_datamodel_codegen(*args: str) -> None:
     )
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 15),
+    reason='datamodel-code-generator fails to import on Python 3.15 (koxudaxi/datamodel-code-generator#4609)',
+)
 def test_model_generation_pipeline(tmp_path: Path) -> None:
     """The `generate-models` pipeline (both codegen passes and post-processing) runs on a minimal spec."""
     # PR CI never runs `poe generate-models`, so this catches a dependency update that breaks the generator.

@@ -5,9 +5,14 @@ All notable changes to this project will be documented in this file.
 <!-- git-cliff-unreleased-start -->
 ## 3.3.1 - **not yet released**
 
+### 🚀 Features
+
+- Add support for Python 3.15 ([#1122](https://github.com/apify/apify-client-python/pull/1122)) ([ef8f088](https://github.com/apify/apify-client-python/commit/ef8f088c3d4fb5f6facfc2728343298464c5ecb6)) by [@vdusek](https://github.com/vdusek)
+
 ### 🐛 Bug Fixes
 
 - Redirect the run log when the first log stream comes back empty ([#1084](https://github.com/apify/apify-client-python/pull/1084)) ([a370e7a](https://github.com/apify/apify-client-python/commit/a370e7a9db75053c2f65ad626ba1bcb67c4cf398)) by [@vdusek](https://github.com/vdusek)
+- **deps:** Allow impit v0.15 ([#1128](https://github.com/apify/apify-client-python/pull/1128)) ([eb9e188](https://github.com/apify/apify-client-python/commit/eb9e188dfb4cdbae620307c7696b0886ed8a6db3)) by [@vdusek](https://github.com/vdusek)
 
 
 <!-- git-cliff-unreleased-end -->

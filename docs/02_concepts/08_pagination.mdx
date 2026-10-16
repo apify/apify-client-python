@@ -55,7 +55,7 @@ automatically, so you don't need to manage offsets, limits or cursors yourself.
 
 To control how many items each API call fetches, pass `chunk_size`. It caps the size of every page, and a page
 never asks for more items than `limit` has left. Without `chunk_size`, collection clients let the API pick the
-page size.
+page size, while the storage helpers fetch 1,000 items per call.
 
 The example below iterates over every Actor owned by the current user using a collection client's `iterate`
 method:

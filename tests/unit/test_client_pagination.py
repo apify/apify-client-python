@@ -445,7 +445,7 @@ TEST_CASES = (
         'chunk_size',
         {'chunk_size': 100, 'limit': 250},
         create_items(0, 250),
-        COLLECTION_CLIENTS | STORAGE_CLIENTS,
+        OPTIONS_CLIENTS,
     ),
     _PaginationCase(
         'Offset, limit, chunk_size',
@@ -679,6 +679,7 @@ COLLECTION_CHUNK_SIZE_PARAMS = [
         id=f'{client_name}:{case_id}',
     )
     for case_id, inputs, expected_pages in (
+        ('no chunk_size', {}, [(0, 0), (1000, 0), (2000, 0), (2500, 0)]),
         (
             'chunk_size',
             {'chunk_size': 400},

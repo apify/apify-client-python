@@ -66,11 +66,13 @@ class WebhookClient(ResourceClient):
         request_url: str | None = None,
         payload_template: str | None = None,
         headers_template: str | None = None,
+        should_interpolate_strings: bool | None = None,
         actor_id: str | None = None,
         actor_task_id: str | None = None,
         actor_run_id: str | None = None,
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
+        description: str | None = None,
         is_ad_hoc: bool | None = None,
         timeout: Timeout = 'short',
     ) -> WebhookResource:
@@ -83,11 +85,14 @@ class WebhookClient(ResourceClient):
             request_url: URL that will be invoked once the webhook is triggered.
             payload_template: Specification of the payload that will be sent to request_url.
             headers_template: Headers that will be sent to the request_url.
+            should_interpolate_strings: Whether to also interpolate `{{...}}` variables inside string values of the
+                payload and headers templates.
             actor_id: Id of the Actor whose runs should trigger the webhook.
             actor_task_id: Id of the Actor task whose runs should trigger the webhook.
             actor_run_id: Id of the Actor run which should trigger the webhook.
             ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
             do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            description: Description of the webhook.
             is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
                 is fulfilled. Only applicable when actor_run_id is filled.
             timeout: Timeout for the API HTTP request.
@@ -100,8 +105,10 @@ class WebhookClient(ResourceClient):
             request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
             headers_template=headers_template,
+            should_interpolate_strings=should_interpolate_strings,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
+            description=description,
             is_ad_hoc=is_ad_hoc if actor_run_id else None,
             condition=WebhookCondition(
                 actor_run_id=actor_run_id,
@@ -206,11 +213,13 @@ class WebhookClientAsync(ResourceClientAsync):
         request_url: str | None = None,
         payload_template: str | None = None,
         headers_template: str | None = None,
+        should_interpolate_strings: bool | None = None,
         actor_id: str | None = None,
         actor_task_id: str | None = None,
         actor_run_id: str | None = None,
         ignore_ssl_errors: bool | None = None,
         do_not_retry: bool | None = None,
+        description: str | None = None,
         is_ad_hoc: bool | None = None,
         timeout: Timeout = 'short',
     ) -> WebhookResource:
@@ -223,11 +232,14 @@ class WebhookClientAsync(ResourceClientAsync):
             request_url: URL that will be invoked once the webhook is triggered.
             payload_template: Specification of the payload that will be sent to request_url.
             headers_template: Headers that will be sent to the request_url.
+            should_interpolate_strings: Whether to also interpolate `{{...}}` variables inside string values of the
+                payload and headers templates.
             actor_id: Id of the Actor whose runs should trigger the webhook.
             actor_task_id: Id of the Actor task whose runs should trigger the webhook.
             actor_run_id: Id of the Actor run which should trigger the webhook.
             ignore_ssl_errors: Whether the webhook should ignore SSL errors returned by request_url.
             do_not_retry: Whether the webhook should retry sending the payload to request_url upon failure.
+            description: Description of the webhook.
             is_ad_hoc: Set to True if you want the webhook to be triggered only the first time the condition
                 is fulfilled. Only applicable when actor_run_id is filled.
             timeout: Timeout for the API HTTP request.
@@ -240,8 +252,10 @@ class WebhookClientAsync(ResourceClientAsync):
             request_url=AnyUrl(request_url) if request_url is not None else None,
             payload_template=payload_template,
             headers_template=headers_template,
+            should_interpolate_strings=should_interpolate_strings,
             ignore_ssl_errors=ignore_ssl_errors,
             do_not_retry=do_not_retry,
+            description=description,
             is_ad_hoc=is_ad_hoc if actor_run_id else None,
             condition=WebhookCondition(
                 actor_run_id=actor_run_id,

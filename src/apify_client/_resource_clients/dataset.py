@@ -90,6 +90,7 @@ class DatasetClient(ResourceClient):
         self,
         *,
         name: str | None = None,
+        title: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
     ) -> DatasetResource:
@@ -99,6 +100,7 @@ class DatasetClient(ResourceClient):
 
         Args:
             name: The new name for the dataset.
+            title: The new title for the dataset.
             general_access: Determines how others can access the dataset.
             timeout: Timeout for the API HTTP request.
 
@@ -108,6 +110,7 @@ class DatasetClient(ResourceClient):
         result = self._update(
             timeout=timeout,
             name=name,
+            title=title,
             generalAccess=general_access,
         )
         return DatasetResponse.model_validate(result).data
@@ -224,6 +227,8 @@ class DatasetClient(ResourceClient):
         unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
+        flatten: list[str] | None = None,
+        view: str | None = None,
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
@@ -260,6 +265,8 @@ class DatasetClient(ResourceClient):
                 contain less items than the limit value.
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
+            flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
             signature: Signature used to access the items.
             chunk_size: Maximum number of dataset rows requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
@@ -279,6 +286,8 @@ class DatasetClient(ResourceClient):
                 unwind=unwind,
                 skip_empty=skip_empty,
                 skip_hidden=skip_hidden,
+                flatten=flatten,
+                view=view,
                 signature=signature,
                 timeout=timeout,
             )
@@ -304,6 +313,8 @@ class DatasetClient(ResourceClient):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        view: str | None = None,
+        attachment: bool | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> bytes:
@@ -348,6 +359,9 @@ class DatasetClient(ResourceClient):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
+            attachment: If True, the response defines the `Content-Disposition: attachment` header, which makes a web
+                browser download the file without displaying it.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -371,6 +385,8 @@ class DatasetClient(ResourceClient):
             xmlRoot=xml_root,
             xmlRow=xml_row,
             flatten=flatten,
+            view=view,
+            attachment=attachment,
             signature=signature,
         )
 
@@ -403,6 +419,8 @@ class DatasetClient(ResourceClient):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        view: str | None = None,
+        attachment: bool | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> Generator[HttpResponse]:
@@ -447,6 +465,9 @@ class DatasetClient(ResourceClient):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
+            attachment: If True, the response defines the `Content-Disposition: attachment` header, which makes a web
+                browser download the file without displaying it.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -472,6 +493,8 @@ class DatasetClient(ResourceClient):
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
                 flatten=flatten,
+                view=view,
+                attachment=attachment,
                 signature=signature,
             )
 
@@ -541,6 +564,7 @@ class DatasetClient(ResourceClient):
     def create_items_public_url(
         self,
         *,
+        item_format: str | None = None,
         offset: int | None = None,
         limit: int | None = None,
         clean: bool | None = None,
@@ -567,6 +591,8 @@ class DatasetClient(ResourceClient):
         Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
 
         Args:
+            item_format: Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss.
+                By default, the URL serves JSON.
             offset: Number of items that should be skipped at the start. The default value is 0.
             limit: Maximum number of items to return. By default there is no limit.
             clean: If True, returns only non-empty items and skips hidden fields.
@@ -588,6 +614,7 @@ class DatasetClient(ResourceClient):
         dataset = self.get(timeout=timeout)
 
         request_params = self._build_params(
+            format=item_format,
             offset=offset,
             limit=limit,
             desc=desc,
@@ -653,6 +680,7 @@ class DatasetClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
+        title: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
     ) -> DatasetResource:
@@ -662,6 +690,7 @@ class DatasetClientAsync(ResourceClientAsync):
 
         Args:
             name: The new name for the dataset.
+            title: The new title for the dataset.
             general_access: Determines how others can access the dataset.
             timeout: Timeout for the API HTTP request.
 
@@ -671,6 +700,7 @@ class DatasetClientAsync(ResourceClientAsync):
         result = await self._update(
             timeout=timeout,
             name=name,
+            title=title,
             generalAccess=general_access,
         )
         return DatasetResponse.model_validate(result).data
@@ -787,6 +817,8 @@ class DatasetClientAsync(ResourceClientAsync):
         unwind: list[str] | None = None,
         skip_empty: bool | None = None,
         skip_hidden: bool | None = None,
+        flatten: list[str] | None = None,
+        view: str | None = None,
         signature: str | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'long',
@@ -823,6 +855,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 contain less items than the limit value.
             skip_hidden: If True, then hidden fields are skipped from the output, i.e. fields starting with
                 the # character.
+            flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
             signature: Signature used to access the items.
             chunk_size: Maximum number of dataset rows requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
@@ -842,6 +876,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 unwind=unwind,
                 skip_empty=skip_empty,
                 skip_hidden=skip_hidden,
+                flatten=flatten,
+                view=view,
                 signature=signature,
                 timeout=timeout,
             )
@@ -869,6 +905,8 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        view: str | None = None,
+        attachment: bool | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> bytes:
@@ -913,6 +951,9 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
+            attachment: If True, the response defines the `Content-Disposition: attachment` header, which makes a web
+                browser download the file without displaying it.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -936,6 +977,8 @@ class DatasetClientAsync(ResourceClientAsync):
             xmlRoot=xml_root,
             xmlRow=xml_row,
             flatten=flatten,
+            view=view,
+            attachment=attachment,
             signature=signature,
         )
 
@@ -968,6 +1011,8 @@ class DatasetClientAsync(ResourceClientAsync):
         xml_root: str | None = None,
         xml_row: str | None = None,
         flatten: list[str] | None = None,
+        view: str | None = None,
+        attachment: bool | None = None,
         signature: str | None = None,
         timeout: Timeout = 'long',
     ) -> AsyncGenerator[HttpResponse]:
@@ -1012,6 +1057,9 @@ class DatasetClientAsync(ResourceClientAsync):
             xml_row: Overrides default element name that wraps each page or page function result object in xml output.
                 By default the element name is item.
             flatten: A list of fields that should be flattened.
+            view: Name of the dataset view to be used.
+            attachment: If True, the response defines the `Content-Disposition: attachment` header, which makes a web
+                browser download the file without displaying it.
             signature: Signature used to access the items.
             timeout: Timeout for the API HTTP request.
 
@@ -1037,6 +1085,8 @@ class DatasetClientAsync(ResourceClientAsync):
                 xmlRoot=xml_root,
                 xmlRow=xml_row,
                 flatten=flatten,
+                view=view,
+                attachment=attachment,
                 signature=signature,
             )
 
@@ -1106,6 +1156,7 @@ class DatasetClientAsync(ResourceClientAsync):
     async def create_items_public_url(
         self,
         *,
+        item_format: str | None = None,
         offset: int | None = None,
         limit: int | None = None,
         clean: bool | None = None,
@@ -1132,6 +1183,8 @@ class DatasetClientAsync(ResourceClientAsync):
         Any other options (like `limit` or `offset`) will be included as query parameters in the URL.
 
         Args:
+            item_format: Format of the results, possible values are: json, jsonl, csv, html, xlsx, xml and rss.
+                By default, the URL serves JSON.
             offset: Number of items that should be skipped at the start. The default value is 0.
             limit: Maximum number of items to return. By default there is no limit.
             clean: If True, returns only non-empty items and skips hidden fields.
@@ -1153,6 +1206,7 @@ class DatasetClientAsync(ResourceClientAsync):
         dataset = await self.get(timeout=timeout)
 
         request_params = self._build_params(
+            format=item_format,
             offset=offset,
             limit=limit,
             desc=desc,

@@ -250,8 +250,10 @@ class ApifyClient:
         Args:
             token: The Apify API token. It is set as the `Authorization` header on the custom client,
                 unless the client already has one configured.
-            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
+            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com. The `/v2`
+                API version segment is appended unless the URL path already ends with it.
             api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
+                The `/v2` API version segment is appended unless the URL path already ends with it.
             http_client: A custom HTTP client instance extending `HttpClient`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)
@@ -615,8 +617,10 @@ class ApifyClientAsync:
         Args:
             token: The Apify API token. It is set as the `Authorization` header on the custom client,
                 unless the client already has one configured.
-            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com.
+            api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com. The `/v2`
+                API version segment is appended unless the URL path already ends with it.
             api_public_url: The globally accessible URL of the Apify API server. Defaults to https://api.apify.com.
+                The `/v2` API version segment is appended unless the URL path already ends with it.
             http_client: A custom HTTP client instance extending `HttpClientAsync`.
         """
         instance = cls(token=token, api_url=api_url, api_public_url=api_public_url)

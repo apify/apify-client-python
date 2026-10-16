@@ -34,8 +34,8 @@ def to_api_base_url(url: str) -> str:
     """Turn a user-supplied API server URL into the versioned base URL that request paths are appended to.
 
     The API version segment is appended only when the URL path does not already end with it, so both
-    `https://api.apify.com` and `https://api.apify.com/v2` resolve to `https://api.apify.com/v2`. Trailing slashes
-    are dropped.
+    `https://api.apify.com` and `https://api.apify.com/v2` resolve to `https://api.apify.com/v2`. Trailing slashes are
+    dropped.
 
     Args:
         url: The URL of the Apify API server, with or without the API version segment.

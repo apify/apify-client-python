@@ -61,6 +61,7 @@ class ImpitHttpClient(HttpClient):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
+        user_agent_suffix: str | list[str] | None = None,
         http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based synchronous HTTP client.
@@ -75,6 +76,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
+            user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `.
             http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
@@ -87,6 +89,7 @@ class ImpitHttpClient(HttpClient):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
+            user_agent_suffix=user_agent_suffix,
             http_compressor=http_compressor,
         )
 
@@ -161,6 +164,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
+        user_agent_suffix: str | list[str] | None = None,
         http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the Impit-based asynchronous HTTP client.
@@ -175,6 +179,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
+            user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `.
             http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         super().__init__(
@@ -187,6 +192,7 @@ class ImpitHttpClientAsync(HttpClientAsync):
             min_delay_between_retries=min_delay_between_retries,
             statistics=statistics,
             headers=headers,
+            user_agent_suffix=user_agent_suffix,
             http_compressor=http_compressor,
         )
 

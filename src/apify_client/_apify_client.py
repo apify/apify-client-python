@@ -126,6 +126,7 @@ class ApifyClient:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
+        user_agent_suffix: str | list[str] | None = None,
         compression: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
     ) -> None:
         """Initialize the Apify API client.
@@ -148,6 +149,9 @@ class ApifyClient:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             headers: Additional HTTP headers to include in all API requests.
+            user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `, for
+                example to identify the tool built on top of the client. With `with_custom_http_client`, pass it to
+                the HTTP client's constructor.
             compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
                 or an `HttpCompressor` instance for finer-grained control.
 
@@ -218,6 +222,7 @@ class ApifyClient:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
+        self._user_agent_suffix = user_agent_suffix
         self._http_compressor = resolve_compressor(compression)
 
     @classmethod
@@ -289,6 +294,7 @@ class ApifyClient:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
+                user_agent_suffix=self._user_agent_suffix,
                 http_compressor=self._http_compressor,
             )
 
@@ -496,6 +502,7 @@ class ApifyClientAsync:
         timeout_long: timedelta = DEFAULT_TIMEOUT_LONG,
         timeout_max: timedelta = DEFAULT_TIMEOUT_MAX,
         headers: dict[str, str] | None = None,
+        user_agent_suffix: str | list[str] | None = None,
         compression: HttpCompressionAlgorithm | HttpCompressor = 'gzip',
     ) -> None:
         """Initialize the Apify API client.
@@ -518,6 +525,9 @@ class ApifyClientAsync:
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
             headers: Additional HTTP headers to include in all API requests.
+            user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `, for
+                example to identify the tool built on top of the client. With `with_custom_http_client`, pass it to
+                the HTTP client's constructor.
             compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
                 or an `HttpCompressor` instance for finer-grained control.
 
@@ -588,6 +598,7 @@ class ApifyClientAsync:
         self._timeout_long = timeout_long
         self._timeout_max = timeout_max
         self._headers = headers
+        self._user_agent_suffix = user_agent_suffix
         self._http_compressor = resolve_compressor(compression)
 
     @classmethod
@@ -659,6 +670,7 @@ class ApifyClientAsync:
                 min_delay_between_retries=self._min_delay_between_retries,
                 statistics=self._statistics,
                 headers=self._headers,
+                user_agent_suffix=self._user_agent_suffix,
                 http_compressor=self._http_compressor,
             )
         return self._http_client

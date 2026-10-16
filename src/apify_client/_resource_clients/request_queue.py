@@ -140,6 +140,7 @@ class RequestQueueClient(ResourceClient):
         self,
         *,
         name: str | None = None,
+        title: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
     ) -> RequestQueueResource:
@@ -149,13 +150,14 @@ class RequestQueueClient(ResourceClient):
 
         Args:
             name: The new name for the request queue.
+            title: The new title for the request queue.
             general_access: Determines how others can access the request queue.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated request queue.
         """
-        result = self._update(timeout=timeout, name=name, generalAccess=general_access)
+        result = self._update(timeout=timeout, name=name, title=title, generalAccess=general_access)
         return RequestQueueResponse.model_validate(result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
@@ -673,6 +675,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         *,
         name: str | None = None,
+        title: str | None = None,
         general_access: GeneralAccess | None = None,
         timeout: Timeout = 'short',
     ) -> RequestQueueResource:
@@ -682,13 +685,14 @@ class RequestQueueClientAsync(ResourceClientAsync):
 
         Args:
             name: The new name for the request queue.
+            title: The new title for the request queue.
             general_access: Determines how others can access the request queue.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The updated request queue.
         """
-        result = await self._update(timeout=timeout, name=name, generalAccess=general_access)
+        result = await self._update(timeout=timeout, name=name, title=title, generalAccess=general_access)
         return RequestQueueResponse.model_validate(result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:

@@ -75,7 +75,7 @@ class Httpx2HttpClient(HttpClient):
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
-            max_retries: Maximum number of retry attempts for failed requests.
+            max_retries: Maximum number of retry attempts for failed requests. Set to 0 to disable retries.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
@@ -179,7 +179,7 @@ class Httpx2HttpClientAsync(HttpClientAsync):
             timeout_medium: Default timeout for medium-duration API operations (batch operations, listing, ...).
             timeout_long: Default timeout for long-duration API operations (long-polling, streaming, ...).
             timeout_max: Maximum timeout cap for any single request attempt, including tier and per-call timeouts.
-            max_retries: Maximum number of retry attempts for failed requests.
+            max_retries: Maximum number of retry attempts for failed requests. Set to 0 to disable retries.
             min_delay_between_retries: Minimum delay between retries (increases exponentially with each attempt).
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.

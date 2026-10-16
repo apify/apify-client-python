@@ -140,7 +140,7 @@ class ApifyClient:
                 as well.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
                 is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
-            max_retries: How many times to retry a failed request at most.
+            max_retries: How many times to retry a failed request at most. Set to 0 to disable retries.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
@@ -150,7 +150,13 @@ class ApifyClient:
             headers: Additional HTTP headers to include in all API requests.
             compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
                 or an `HttpCompressor` instance for finer-grained control.
+
+        Raises:
+            ValueError: If `max_retries` is negative.
         """
+        if max_retries < 0:
+            raise ValueError(f'max_retries must be a non-negative integer, got {max_retries}')
+
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url
@@ -504,7 +510,7 @@ class ApifyClientAsync:
                 as well.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
                 is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
-            max_retries: How many times to retry a failed request at most.
+            max_retries: How many times to retry a failed request at most. Set to 0 to disable retries.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
             timeout_short: Default timeout for short-duration API operations (simple CRUD operations, ...).
@@ -514,7 +520,13 @@ class ApifyClientAsync:
             headers: Additional HTTP headers to include in all API requests.
             compression: Compression algorithm for request bodies. Pass a string literal to select an algorithm,
                 or an `HttpCompressor` instance for finer-grained control.
+
+        Raises:
+            ValueError: If `max_retries` is negative.
         """
+        if max_retries < 0:
+            raise ValueError(f'max_retries must be a non-negative integer, got {max_retries}')
+
         # We need to do this because of mocking in tests and default mutable arguments.
         api_url = DEFAULT_API_URL if api_url is None else api_url
         api_public_url = DEFAULT_API_URL if api_public_url is None else api_public_url

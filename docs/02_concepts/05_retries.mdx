@@ -28,7 +28,7 @@ By default, the client retries a failed request up to 4 times. The retry interva
 
 You can customize this behavior using the following options in the <ApiLink to="class/ApifyClient">`ApifyClient`</ApiLink> constructor:
 
-- `max_retries`: Defines the maximum number of retry attempts.
+- `max_retries`: Defines the maximum number of retry attempts. Set it to `0` to disable retries.
 - `min_delay_between_retries`: Sets the minimum delay between retries as a `timedelta`.
 
 Retries with exponential backoff help reduce the load on the server and increase the chances of a successful request.

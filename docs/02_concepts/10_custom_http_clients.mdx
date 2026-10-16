@@ -45,6 +45,8 @@ You can configure the default client through the <ApiLink to="class/ApifyClient"
     </TabItem>
 </Tabs>
 
+To identify a tool built on top of the client, pass `user_agent_suffix`. The client appends it to its default `User-Agent` header after a semicolon and a space. Pass a list, such as `['MyTool/1.0', 'MyPlugin/2.0']`, to append several parts. The built-in HTTP clients accept the same option, so with `with_custom_http_client`, pass it to the HTTP client's constructor.
+
 ## Built-in HTTPX2 client
 
 The package also provides <ApiLink to="class/Httpx2HttpClient">`Httpx2HttpClient`</ApiLink> and <ApiLink to="class/Httpx2HttpClientAsync">`Httpx2HttpClientAsync`</ApiLink>. They use the same request preparation, compression, retry policy, timeout tiers and growth, error handling, logging, and statistics as the default Impit clients, with [HTTPX2](https://github.com/pydantic/httpx2) as the transport.

@@ -126,6 +126,7 @@ class HttpClientBase:
         min_delay_between_retries: timedelta = DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
         statistics: ClientStatistics | None = None,
         headers: dict[str, str] | None = None,
+        user_agent_suffix: str | list[str] | None = None,
         http_compressor: HttpCompressor | None = None,
     ) -> None:
         """Initialize the HTTP client base.
@@ -140,6 +141,7 @@ class HttpClientBase:
             min_delay_between_retries: Minimum delay between retries.
             statistics: Statistics tracker for API calls. Created automatically if not provided.
             headers: Additional HTTP headers to include in all requests.
+            user_agent_suffix: Extra part or parts appended to the default `User-Agent` header, separated by `; `.
             http_compressor: Compressor used to compress request bodies. Defaults to `GzipHttpCompressor`.
         """
         self._http_compressor = http_compressor if http_compressor is not None else GzipHttpCompressor()
@@ -163,6 +165,9 @@ class HttpClientBase:
         client_version = metadata.version('apify-client')
 
         user_agent = f'ApifyClient/{client_version} ({sys.platform}; Python/{python_version}); isAtHome/{is_at_home}'
+        if user_agent_suffix:
+            suffix_parts = [user_agent_suffix] if isinstance(user_agent_suffix, str) else user_agent_suffix
+            user_agent += f'; {"; ".join(suffix_parts)}'
         default_headers['User-Agent'] = user_agent
 
         if token is not None:

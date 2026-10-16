@@ -7,8 +7,10 @@ from importlib import metadata
 from typing import TYPE_CHECKING
 
 import httpx2
+import pytest
 from werkzeug import Request, Response
 
+from apify_client import ApifyClient, ApifyClientAsync
 from apify_client.http_clients import Httpx2HttpClient, Httpx2HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 
 if TYPE_CHECKING:
@@ -147,6 +149,81 @@ def test_headers_sync(httpserver: HTTPServer, http_client_class: type[HttpClient
     }
     assert {k: v for k, v in request_headers.items() if k != 'Accept-Encoding'} == expected_headers
     assert _parse_accept_encoding(request_headers['Accept-Encoding']) == expected_encodings
+
+
+user_agent_suffix_cases = [
+    pytest.param(None, '', id='no suffix'),
+    pytest.param('MyTool/1.0', '; MyTool/1.0', id='string suffix'),
+    pytest.param(['SDK/3.0.0', 'Crawlee/1.0.0'], '; SDK/3.0.0; Crawlee/1.0.0', id='list suffix'),
+]
+
+
+@pytest.mark.parametrize(('user_agent_suffix', 'expected_suffix'), user_agent_suffix_cases)
+async def test_user_agent_suffix_async(
+    httpserver: HTTPServer,
+    http_client_async_class: type[HttpClientAsync],
+    user_agent_suffix: str | list[str] | None,
+    expected_suffix: str,
+) -> None:
+    """The HTTP client appends `user_agent_suffix` to the default `User-Agent` header."""
+    client = http_client_async_class(user_agent_suffix=user_agent_suffix)
+    httpserver.expect_request('/').respond_with_handler(_header_handler)
+
+    response = await client.call(method='GET', url=httpserver.url_for('/'))
+
+    request_headers = json.loads(response.text)['received_headers']
+    assert request_headers['User-Agent'] == f'{_get_user_agent()}{expected_suffix}'
+
+
+@pytest.mark.parametrize(('user_agent_suffix', 'expected_suffix'), user_agent_suffix_cases)
+def test_user_agent_suffix_sync(
+    httpserver: HTTPServer,
+    http_client_class: type[HttpClient],
+    user_agent_suffix: str | list[str] | None,
+    expected_suffix: str,
+) -> None:
+    """The HTTP client appends `user_agent_suffix` to the default `User-Agent` header."""
+    client = http_client_class(user_agent_suffix=user_agent_suffix)
+    httpserver.expect_request('/').respond_with_handler(_header_handler)
+
+    response = client.call(method='GET', url=httpserver.url_for('/'))
+
+    request_headers = json.loads(response.text)['received_headers']
+    assert request_headers['User-Agent'] == f'{_get_user_agent()}{expected_suffix}'
+
+
+@pytest.mark.usefixtures('http_client_classes')
+@pytest.mark.parametrize(('user_agent_suffix', 'expected_suffix'), user_agent_suffix_cases)
+async def test_apify_client_user_agent_suffix_async(
+    httpserver: HTTPServer,
+    user_agent_suffix: str | list[str] | None,
+    expected_suffix: str,
+) -> None:
+    """`ApifyClientAsync` passes `user_agent_suffix` to its default HTTP client."""
+    client = ApifyClientAsync(token='placeholder_token', user_agent_suffix=user_agent_suffix)
+    httpserver.expect_request('/').respond_with_handler(_header_handler)
+
+    response = await client.http_client.call(method='GET', url=httpserver.url_for('/'))
+
+    request_headers = json.loads(response.text)['received_headers']
+    assert request_headers['User-Agent'] == f'{_get_user_agent()}{expected_suffix}'
+
+
+@pytest.mark.usefixtures('http_client_classes')
+@pytest.mark.parametrize(('user_agent_suffix', 'expected_suffix'), user_agent_suffix_cases)
+def test_apify_client_user_agent_suffix_sync(
+    httpserver: HTTPServer,
+    user_agent_suffix: str | list[str] | None,
+    expected_suffix: str,
+) -> None:
+    """`ApifyClient` passes `user_agent_suffix` to its default HTTP client."""
+    client = ApifyClient(token='placeholder_token', user_agent_suffix=user_agent_suffix)
+    httpserver.expect_request('/').respond_with_handler(_header_handler)
+
+    response = client.http_client.call(method='GET', url=httpserver.url_for('/'))
+
+    request_headers = json.loads(response.text)['received_headers']
+    assert request_headers['User-Agent'] == f'{_get_user_agent()}{expected_suffix}'
 
 
 async def test_per_request_headers_override_defaults_async(

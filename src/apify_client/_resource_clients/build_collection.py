@@ -67,6 +67,7 @@ class BuildCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[BuildListItem]:
         """Iterate over all Actor builds.
@@ -81,6 +82,7 @@ class BuildCollectionClient(ResourceClient):
             limit: How many builds to retrieve.
             offset: What build to include as first when retrieving the list.
             desc: Whether to sort the builds in descending order based on their start date.
+            chunk_size: Maximum number of builds requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -90,7 +92,7 @@ class BuildCollectionClient(ResourceClient):
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfBuilds:
             return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
 
 @docs_group('Resource clients')
@@ -146,6 +148,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[BuildListItem]:
         """Iterate over all Actor builds.
@@ -160,6 +163,7 @@ class BuildCollectionClientAsync(ResourceClientAsync):
             limit: How many builds to retrieve.
             offset: What build to include as first when retrieving the list.
             desc: Whether to sort the builds in descending order based on their start date.
+            chunk_size: Maximum number of builds requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -169,4 +173,4 @@ class BuildCollectionClientAsync(ResourceClientAsync):
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfBuilds:
             return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)

@@ -445,7 +445,13 @@ TEST_CASES = (
         'chunk_size',
         {'chunk_size': 100, 'limit': 250},
         create_items(0, 250),
-        STORAGE_CLIENTS,
+        OPTIONS_CLIENTS,
+    ),
+    _PaginationCase(
+        'Offset, limit, chunk_size',
+        {'offset': 1000, 'limit': 250, 'chunk_size': 100},
+        create_items(1000, 1250),
+        COLLECTION_CLIENTS | DATASET_CLIENTS,
     ),
     _PaginationCase(
         'Offset, limit, descending, chunk_size',
@@ -663,6 +669,62 @@ async def test_rq_list_requests_iterable_async(
     client: RequestQueueClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
     returned_items = [dict(item) async for item in client.iterate_requests(**inputs)]
     assert returned_items == expected_items
+
+
+COLLECTION_CHUNK_SIZE_PARAMS = [
+    pytest.param(
+        client_name,
+        inputs,
+        expected_pages,
+        id=f'{client_name}:{case_id}',
+    )
+    for case_id, inputs, expected_pages in (
+        ('no chunk_size', {}, [(0, 0), (1000, 0), (2000, 0), (2500, 0)]),
+        (
+            'chunk_size',
+            {'chunk_size': 400},
+            [(0, 400), (400, 400), (800, 400), (1200, 400), (1600, 400), (2000, 400), (2400, 400), (2500, 400)],
+        ),
+        ('chunk_size and limit', {'chunk_size': 400, 'limit': 1000}, [(0, 400), (400, 400), (800, 200)]),
+        ('chunk_size, limit and offset', {'chunk_size': 400, 'limit': 500, 'offset': 300}, [(300, 400), (700, 100)]),
+        ('chunk_size above limit', {'chunk_size': 400, 'limit': 150, 'offset': 10}, [(10, 150)]),
+    )
+    for client_name in sorted(COLLECTION_CLIENTS)
+]
+
+
+def requested_pages(httpserver: HTTPServer) -> list[tuple[int, int]]:
+    """Return the `(offset, limit)` query params of every request the server received."""
+    return [
+        (_parse_int_param(request.args.get('offset')), _parse_int_param(request.args.get('limit')))
+        for request, _ in httpserver.log
+    ]
+
+
+@pytest.mark.parametrize(('client_name', 'inputs', 'expected_pages'), COLLECTION_CHUNK_SIZE_PARAMS)
+def test_collection_iterate_chunk_size_caps_page_limit(
+    pagination_server: HTTPServer,
+    client_name: str,
+    inputs: dict,
+    expected_pages: list[tuple[int, int]],
+) -> None:
+    """A sync collection `iterate()` sends `chunk_size` as each page's `limit`, clamped to the rows still left."""
+    client: CollectionClient = _CLIENT_FACTORIES[client_name](_make_sync_client(pagination_server))
+    list(client.iterate(**inputs))
+    assert requested_pages(pagination_server) == expected_pages
+
+
+@pytest.mark.parametrize(('client_name', 'inputs', 'expected_pages'), COLLECTION_CHUNK_SIZE_PARAMS)
+async def test_collection_iterate_chunk_size_caps_page_limit_async(
+    pagination_server: HTTPServer,
+    client_name: str,
+    inputs: dict,
+    expected_pages: list[tuple[int, int]],
+) -> None:
+    """An async collection `iterate()` sends `chunk_size` as each page's `limit`, clamped to the rows still left."""
+    client: CollectionClientAsync = _CLIENT_FACTORIES[client_name](_make_async_client(pagination_server))
+    _ = [item async for item in client.iterate(**inputs)]
+    assert requested_pages(pagination_server) == expected_pages
 
 
 class FakeOffsetPage:

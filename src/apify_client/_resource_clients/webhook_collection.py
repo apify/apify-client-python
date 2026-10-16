@@ -70,6 +70,7 @@ class WebhookCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[WebhookListItem]:
         """Iterate over the available webhooks.
@@ -83,6 +84,7 @@ class WebhookCollectionClient(ResourceClient):
             limit: How many webhooks to retrieve.
             offset: What webhook to include as first when retrieving the list.
             desc: Whether to sort the webhooks in descending order based on their date of creation.
+            chunk_size: Maximum number of webhooks requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -92,7 +94,7 @@ class WebhookCollectionClient(ResourceClient):
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhooks:
             return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     def create(
         self,
@@ -203,6 +205,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[WebhookListItem]:
         """Iterate over the available webhooks.
@@ -216,6 +219,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
             limit: How many webhooks to retrieve.
             offset: What webhook to include as first when retrieving the list.
             desc: Whether to sort the webhooks in descending order based on their date of creation.
+            chunk_size: Maximum number of webhooks requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -225,7 +229,7 @@ class WebhookCollectionClientAsync(ResourceClientAsync):
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhooks:
             return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     async def create(
         self,

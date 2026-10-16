@@ -83,6 +83,7 @@ class RequestQueueCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[RequestQueueListItem]:
         """Iterate over the available request queues.
@@ -99,6 +100,7 @@ class RequestQueueCollectionClient(ResourceClient):
             desc: Whether to sort the request queues in descending order based on their modification date.
             ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
                 'sharedWithMe' returns only request queues shared with the user.
+            chunk_size: Maximum number of request queues requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -110,7 +112,7 @@ class RequestQueueCollectionClient(ResourceClient):
                 unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
             )
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     def get_or_create(
         self,
@@ -196,6 +198,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[RequestQueueListItem]:
         """Iterate over the available request queues.
@@ -212,6 +215,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
             desc: Whether to sort the request queues in descending order based on their modification date.
             ownership: Filter by ownership. 'ownedByMe' returns only user's own request queues,
                 'sharedWithMe' returns only request queues shared with the user.
+            chunk_size: Maximum number of request queues requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -223,7 +227,7 @@ class RequestQueueCollectionClientAsync(ResourceClientAsync):
                 unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
             )
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     async def get_or_create(
         self,

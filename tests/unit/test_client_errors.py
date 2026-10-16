@@ -195,7 +195,7 @@ def test_apify_api_error_dispatches_5xx_to_server_error(
     httpserver.expect_request('/server_error').respond_with_json(
         {'error': {'type': 'internal-error', 'message': 'boom'}}, status=503
     )
-    client = http_client_class(max_retries=1)
+    client = http_client_class(max_retries=0)
 
     with pytest.raises(ServerError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/server_error')))
@@ -268,8 +268,8 @@ def test_apify_api_error_dispatches_all_mapped_statuses(
     httpserver.expect_request('/dispatch_all').respond_with_json(
         {'error': {'type': 'some-type', 'message': 'msg'}}, status=status_code
     )
-    # Use max_retries=1 so retryable statuses (429) don't loop during the test.
-    client = http_client_class(max_retries=1)
+    # `max_retries=0` keeps retryable statuses (429) from being retried.
+    client = http_client_class(max_retries=0)
 
     with pytest.raises(expected_cls) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/dispatch_all')))
@@ -298,7 +298,7 @@ def test_apify_api_error_falls_back_for_unparsable_body(
 ) -> None:
     """When the body can't be parsed, status-based dispatch still applies and `.type` is None."""
     httpserver.expect_request('/unparsable').respond_with_data('<not json>', status=418, content_type='text/html')
-    client = http_client_class(max_retries=1)
+    client = http_client_class(max_retries=0)
 
     with pytest.raises(ApifyApiError) as exc:
         client.call(method='GET', url=str(httpserver.url_for('/unparsable')))

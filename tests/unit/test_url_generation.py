@@ -238,3 +238,43 @@ async def test_kvs_record_public_url_async(api_url: str, api_public_url: str | N
             f'{(api_public_url or DEFAULT_API_URL).strip("/")}/v2/key-value-stores/{MOCKED_KVS_ID}/'
             f'records/{key}{expected_signature}'
         )
+
+
+parametrized_versioned_api_urls = pytest.mark.parametrize(
+    ('api_url', 'expected_base_url'),
+    [
+        pytest.param('https://api.apify.com', 'https://api.apify.com/v2', id='no version'),
+        pytest.param('https://api.apify.com/', 'https://api.apify.com/v2', id='no version, trailing slash'),
+        pytest.param('https://api.apify.com/v2', 'https://api.apify.com/v2', id='with version'),
+        pytest.param('https://api.apify.com/v2/', 'https://api.apify.com/v2', id='with version, trailing slash'),
+        pytest.param('http://10.0.88.214:8010/v2', 'http://10.0.88.214:8010/v2', id='internal url with version'),
+        pytest.param('https://proxy.example.com/apify/v2', 'https://proxy.example.com/apify/v2', id='custom path'),
+        pytest.param('https://v2.example.com', 'https://v2.example.com/v2', id='version only in host'),
+    ],
+)
+
+
+@parametrized_versioned_api_urls
+def test_api_url_version_appended_once_sync(api_url: str, expected_base_url: str) -> None:
+    """The `/v2` segment is appended to `api_url` and `api_public_url` only when missing, with sync client."""
+    client = ApifyClient(token='dummy-token', api_url=api_url, api_public_url=api_url)
+    kvs = client.key_value_store(MOCKED_KVS_ID)
+
+    with mock.patch.object(client._http_client, 'call', return_value=_get_mocked_kvs_response()) as call_mock:
+        public_url = kvs.get_record_public_url(key='some_key')
+
+    assert call_mock.call_args.kwargs['url'] == f'{expected_base_url}/key-value-stores/{MOCKED_KVS_ID}'
+    assert public_url == f'{expected_base_url}/key-value-stores/{MOCKED_KVS_ID}/records/some_key'
+
+
+@parametrized_versioned_api_urls
+async def test_api_url_version_appended_once_async(api_url: str, expected_base_url: str) -> None:
+    """The `/v2` segment is appended to `api_url` and `api_public_url` only when missing, with async client."""
+    client = ApifyClientAsync(token='dummy-token', api_url=api_url, api_public_url=api_url)
+    kvs = client.key_value_store(MOCKED_KVS_ID)
+
+    with mock.patch.object(client._http_client, 'call', return_value=_get_mocked_kvs_response()) as call_mock:
+        public_url = await kvs.get_record_public_url(key='some_key')
+
+    assert call_mock.call_args.kwargs['url'] == f'{expected_base_url}/key-value-stores/{MOCKED_KVS_ID}'
+    assert public_url == f'{expected_base_url}/key-value-stores/{MOCKED_KVS_ID}/records/some_key'

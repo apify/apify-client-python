@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import warnings
 from typing import TYPE_CHECKING, Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from apify_client._consts import (
     ALREADY_COMPRESSED_MEDIA_TYPE_PREFIXES,
     ALREADY_COMPRESSED_MEDIA_TYPES,
+    API_VERSION,
     COMPRESSIBLE_MEDIA_TYPE_SUFFIXES,
     COMPRESSIBLE_MEDIA_TYPES,
     OVERRIDABLE_DEFAULT_HEADERS,
@@ -27,6 +28,25 @@ def to_safe_id(id: str) -> str:
         The resource identifier with `/` characters replaced by `~`.
     """
     return id.replace('/', '~')
+
+
+def to_api_base_url(url: str) -> str:
+    """Turn a user-supplied API server URL into the versioned base URL that request paths are appended to.
+
+    The API version segment is appended only when the URL path does not already end with it, so both
+    `https://api.apify.com` and `https://api.apify.com/v2` resolve to `https://api.apify.com/v2`. Trailing slashes
+    are dropped.
+
+    Args:
+        url: The URL of the Apify API server, with or without the API version segment.
+
+    Returns:
+        The URL ending with the API version segment and no trailing slash.
+    """
+    base_url = url.rstrip('/')
+    if urlsplit(base_url).path.endswith(f'/{API_VERSION}'):
+        return base_url
+    return f'{base_url}/{API_VERSION}'
 
 
 def to_path_segment(value: str) -> str:

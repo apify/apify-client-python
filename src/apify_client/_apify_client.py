@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
 from apify_client._consts import (
-    API_VERSION,
     DEFAULT_API_URL,
     DEFAULT_MAX_RETRIES,
     DEFAULT_MIN_DELAY_BETWEEN_RETRIES,
@@ -72,7 +71,7 @@ from apify_client._resource_clients import (
     WebhookDispatchCollectionClientAsync,
 )
 from apify_client._statistics import ClientStatistics
-from apify_client._utils.http import check_custom_headers
+from apify_client._utils.http import check_custom_headers, to_api_base_url
 from apify_client.http_clients import HttpClient, HttpClientAsync, ImpitHttpClient, ImpitHttpClientAsync
 from apify_client.http_compressors._resolve import resolve_compressor
 
@@ -137,9 +136,10 @@ class ApifyClient:
                 [Integrations](https://console.apify.com/account/integrations) page in the Apify Console.
             api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com. It can
                 be an internal URL that is not globally accessible, in which case `api_public_url` should be set
-                as well.
+                as well. The `/v2` API version segment is appended unless the URL path already ends with it.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
-                is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
+                is an internal URL that is not globally accessible. Defaults to https://api.apify.com. The `/v2`
+                API version segment is appended unless the URL path already ends with it.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
@@ -161,10 +161,10 @@ class ApifyClient:
         self._token = token
         """Apify API token for authentication."""
 
-        self._base_url = f'{api_url.rstrip("/")}/{API_VERSION}'
+        self._base_url = to_api_base_url(api_url)
         """Base URL of the Apify API."""
 
-        self._public_base_url = f'{api_public_url.rstrip("/")}/{API_VERSION}'
+        self._public_base_url = to_api_base_url(api_public_url)
         """Public base URL for CDN access."""
 
         self._statistics = ClientStatistics()
@@ -501,9 +501,10 @@ class ApifyClientAsync:
                 [Integrations](https://console.apify.com/account/integrations) page in the Apify Console.
             api_url: The URL of the Apify API server to connect to. Defaults to https://api.apify.com. It can
                 be an internal URL that is not globally accessible, in which case `api_public_url` should be set
-                as well.
+                as well. The `/v2` API version segment is appended unless the URL path already ends with it.
             api_public_url: The globally accessible URL of the Apify API server. Should be set only if `api_url`
-                is an internal URL that is not globally accessible. Defaults to https://api.apify.com.
+                is an internal URL that is not globally accessible. Defaults to https://api.apify.com. The `/v2`
+                API version segment is appended unless the URL path already ends with it.
             max_retries: How many times to retry a failed request at most.
             min_delay_between_retries: How long will the client wait between retrying requests
                 (increases exponentially from this value).
@@ -525,10 +526,10 @@ class ApifyClientAsync:
         self._token = token
         """Apify API token for authentication."""
 
-        self._base_url = f'{api_url.rstrip("/")}/{API_VERSION}'
+        self._base_url = to_api_base_url(api_url)
         """Base URL of the Apify API."""
 
-        self._public_base_url = f'{api_public_url.rstrip("/")}/{API_VERSION}'
+        self._public_base_url = to_api_base_url(api_public_url)
         """Public base URL for CDN access."""
 
         self._statistics = ClientStatistics()

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import (
     CreateOrUpdateScheduleRequest,
+    Notifications,
     Schedule,
     ScheduleLogEntry,
     ScheduleLogResponse,
@@ -65,6 +66,7 @@ class ScheduleClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        notifications_email: bool | None = None,
         timeout: Timeout = 'short',
     ) -> Schedule:
         """Update the schedule with specified fields.
@@ -82,6 +84,7 @@ class ScheduleClient(ResourceClient):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: A human-friendly equivalent of the name.
+            notifications_email: Whether to send email notifications about the schedule's runs.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -97,7 +100,11 @@ class ScheduleClient(ResourceClient):
             timezone=timezone,
             title=title,
         )
-        result = self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
+        schedule_body = schedule_fields.model_dump(by_alias=True, exclude_none=True)
+        # The generated `CreateOrUpdateScheduleRequest` has no `notifications` field, so it goes into the body directly.
+        if notifications_email is not None:
+            schedule_body['notifications'] = Notifications(email=notifications_email).model_dump(by_alias=True)
+        result = self._update(timeout=timeout, **schedule_body)
         return ScheduleResponse.model_validate(result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
@@ -182,6 +189,7 @@ class ScheduleClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        notifications_email: bool | None = None,
         timeout: Timeout = 'short',
     ) -> Schedule:
         """Update the schedule with specified fields.
@@ -199,6 +207,7 @@ class ScheduleClientAsync(ResourceClientAsync):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: A human-friendly equivalent of the name.
+            notifications_email: Whether to send email notifications about the schedule's runs.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -214,7 +223,11 @@ class ScheduleClientAsync(ResourceClientAsync):
             timezone=timezone,
             title=title,
         )
-        result = await self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
+        schedule_body = schedule_fields.model_dump(by_alias=True, exclude_none=True)
+        # The generated `CreateOrUpdateScheduleRequest` has no `notifications` field, so it goes into the body directly.
+        if notifications_email is not None:
+            schedule_body['notifications'] = Notifications(email=notifications_email).model_dump(by_alias=True)
+        result = await self._update(timeout=timeout, **schedule_body)
         return ScheduleResponse.model_validate(result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:

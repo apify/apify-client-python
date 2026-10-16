@@ -77,10 +77,12 @@ class TaskClient(ResourceClient):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         title: str | None = None,
+        description: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
         actor_standby_idle_timeout: timedelta | None = None,
@@ -104,6 +106,7 @@ class TaskClient(ResourceClient):
                 the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
                 you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -112,6 +115,7 @@ class TaskClient(ResourceClient):
                 a non-zero status code.
             task_input: Task input dictionary.
             title: A human-friendly equivalent of the name.
+            description: Description of the task.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
@@ -141,6 +145,7 @@ class TaskClient(ResourceClient):
         task_fields = UpdateTaskRequest(
             name=name,
             title=title,
+            description=description,
             input=task_input,
             is_public=is_public,
             public_config=TaskPublicConfig(
@@ -153,6 +158,7 @@ class TaskClient(ResourceClient):
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
+                max_total_charge_usd=max_total_charge_usd,
                 memory_mbytes=memory_mbytes,
                 timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,
@@ -485,10 +491,12 @@ class TaskClientAsync(ResourceClientAsync):
         task_input: TaskInputDict | TaskInput | None = None,
         build: str | None = None,
         max_items: int | None = None,
+        max_total_charge_usd: Decimal | None = None,
         memory_mbytes: int | None = None,
         run_timeout: timedelta | None = None,
         restart_on_error: bool | None = None,
         title: str | None = None,
+        description: str | None = None,
         actor_standby_desired_requests_per_actor_run: int | None = None,
         actor_standby_max_requests_per_actor_run: int | None = None,
         actor_standby_idle_timeout: timedelta | None = None,
@@ -512,6 +520,7 @@ class TaskClientAsync(ResourceClientAsync):
                 the build specified in the task settings (typically latest).
             max_items: Maximum number of results that will be returned by this run. If the Actor is charged per result,
                 you will not be charged for more results than the given limit.
+            max_total_charge_usd: A limit on the total charged amount for pay-per-event Actors.
             memory_mbytes: Memory limit for the run, in megabytes. By default, the run uses a memory limit specified
                 in the task settings.
             run_timeout: Optional timeout for the run. By default, the run uses timeout specified
@@ -520,6 +529,7 @@ class TaskClientAsync(ResourceClientAsync):
                 a non-zero status code.
             task_input: Task input dictionary.
             title: A human-friendly equivalent of the name.
+            description: Description of the task.
             actor_standby_desired_requests_per_actor_run: The desired number of concurrent HTTP requests for
                 a single Actor Standby run.
             actor_standby_max_requests_per_actor_run: The maximum number of concurrent HTTP requests for
@@ -549,6 +559,7 @@ class TaskClientAsync(ResourceClientAsync):
         task_fields = UpdateTaskRequest(
             name=name,
             title=title,
+            description=description,
             input=task_input,
             is_public=is_public,
             public_config=TaskPublicConfig(
@@ -561,6 +572,7 @@ class TaskClientAsync(ResourceClientAsync):
             options=TaskOptions(
                 build=build,
                 max_items=max_items,
+                max_total_charge_usd=max_total_charge_usd,
                 memory_mbytes=memory_mbytes,
                 timeout_secs=to_seconds(run_timeout, as_int=True),
                 restart_on_error=restart_on_error,

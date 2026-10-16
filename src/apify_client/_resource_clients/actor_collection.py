@@ -135,6 +135,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
         """Create a new Actor.
@@ -176,6 +177,7 @@ class ActorCollectionClient(ResourceClient):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_permission_level: The permission level of the Actor on Apify platform.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -214,7 +216,11 @@ class ActorCollectionClient(ResourceClient):
                 content_type=example_run_input_content_type,
             ),
         )
-        result = self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
+        actor_body = actor_fields.model_dump(by_alias=True, exclude_none=True)
+        # The generated `CreateActorRequest` has no `actor_permission_level` field, so it goes into the body directly.
+        if actor_permission_level is not None:
+            actor_body['actorPermissionLevel'] = actor_permission_level
+        result = self._create(timeout=timeout, **actor_body)
         return ActorResponse.model_validate(result).data
 
 
@@ -327,6 +333,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
         """Create a new Actor.
@@ -368,6 +375,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_permission_level: The permission level of the Actor on Apify platform.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -406,5 +414,9 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 content_type=example_run_input_content_type,
             ),
         )
-        result = await self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
+        actor_body = actor_fields.model_dump(by_alias=True, exclude_none=True)
+        # The generated `CreateActorRequest` has no `actor_permission_level` field, so it goes into the body directly.
+        if actor_permission_level is not None:
+            actor_body['actorPermissionLevel'] = actor_permission_level
+        result = await self._create(timeout=timeout, **actor_body)
         return ActorResponse.model_validate(result).data

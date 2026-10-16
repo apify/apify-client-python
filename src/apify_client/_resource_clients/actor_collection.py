@@ -81,6 +81,7 @@ class ActorCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[ActorListItem]:
         """Iterate over the Actors the user has created or used.
@@ -96,6 +97,7 @@ class ActorCollectionClient(ResourceClient):
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
             sort_by: Field to sort the results by.
+            chunk_size: Maximum number of Actors requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -105,7 +107,7 @@ class ActorCollectionClient(ResourceClient):
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfActors:
             return self.list(my=my, limit=limit, offset=offset, desc=desc, sort_by=sort_by, timeout=timeout)
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     def create(
         self,
@@ -273,6 +275,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         sort_by: Literal['createdAt', 'stats.lastRunStartedAt'] | None = 'createdAt',
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[ActorListItem]:
         """Iterate over the Actors the user has created or used.
@@ -288,6 +291,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             offset: What Actor to include as first when retrieving the list.
             desc: Whether to sort the Actors in descending order based on their creation date.
             sort_by: Field to sort the results by.
+            chunk_size: Maximum number of Actors requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -297,7 +301,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfActors:
             return await self.list(my=my, limit=limit, offset=offset, desc=desc, sort_by=sort_by, timeout=timeout)
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     async def create(
         self,

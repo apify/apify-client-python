@@ -88,6 +88,7 @@ class RunCollectionClient(ResourceClient):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[RunListItem]:
         """Iterate over all Actor runs.
@@ -105,6 +106,7 @@ class RunCollectionClient(ResourceClient):
             status: Retrieve only runs with the provided statuses.
             started_before: Only return runs started before this date (inclusive).
             started_after: Only return runs started after this date (inclusive).
+            chunk_size: Maximum number of runs requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -122,7 +124,7 @@ class RunCollectionClient(ResourceClient):
                 timeout=timeout,
             )
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
 
 @docs_group('Resource clients')
@@ -197,6 +199,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
         status: ActorJobStatus | list[ActorJobStatus] | None = None,  # ty: ignore[invalid-type-form]
         started_before: str | datetime | None = None,
         started_after: str | datetime | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[RunListItem]:
         """Iterate over all Actor runs.
@@ -214,6 +217,7 @@ class RunCollectionClientAsync(ResourceClientAsync):
             status: Retrieve only runs with the provided statuses.
             started_before: Only return runs started before this date (inclusive).
             started_after: Only return runs started after this date (inclusive).
+            chunk_size: Maximum number of runs requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -231,4 +235,4 @@ class RunCollectionClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)

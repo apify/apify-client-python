@@ -63,6 +63,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[WebhookDispatch]:
         """Iterate over all webhook dispatches of a user.
@@ -76,6 +77,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
             limit: How many webhook dispatches to retrieve.
             offset: What webhook dispatch to include as first when retrieving the list.
             desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
+            chunk_size: Maximum number of webhook dispatches requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -85,7 +87,7 @@ class WebhookDispatchCollectionClient(ResourceClient):
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhookDispatches:
             return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
 
 @docs_group('Resource clients')
@@ -137,6 +139,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[WebhookDispatch]:
         """Iterate over all webhook dispatches of a user.
@@ -150,6 +153,7 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
             limit: How many webhook dispatches to retrieve.
             offset: What webhook dispatch to include as first when retrieving the list.
             desc: Whether to sort the webhook dispatches in descending order based on the date of their creation.
+            chunk_size: Maximum number of webhook dispatches requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -159,4 +163,4 @@ class WebhookDispatchCollectionClientAsync(ResourceClientAsync):
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfWebhookDispatches:
             return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)

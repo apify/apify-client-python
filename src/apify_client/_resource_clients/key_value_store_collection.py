@@ -82,6 +82,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         offset: int | None = None,
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[KeyValueStoreResource]:
         """Iterate over the available key-value stores.
@@ -98,6 +99,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
             desc: Whether to sort the key-value stores in descending order based on their modification date.
             ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
                 'sharedWithMe' returns only key-value stores shared with the user.
+            chunk_size: Maximum number of key-value stores requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -109,7 +111,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
                 unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
             )
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     def get_or_create(
         self,
@@ -197,6 +199,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         offset: int | None = None,
         desc: bool | None = None,
         ownership: StorageOwnership | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[KeyValueStoreResource]:
         """Iterate over the available key-value stores.
@@ -213,6 +216,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
             desc: Whether to sort the key-value stores in descending order based on their modification date.
             ownership: Filter by ownership. 'ownedByMe' returns only user's own key-value stores,
                 'sharedWithMe' returns only key-value stores shared with the user.
+            chunk_size: Maximum number of key-value stores requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -224,7 +228,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
                 unnamed=unnamed, limit=limit, offset=offset, desc=desc, ownership=ownership, timeout=timeout
             )
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     async def get_or_create(
         self,

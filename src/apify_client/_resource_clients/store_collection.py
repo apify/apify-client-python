@@ -85,6 +85,7 @@ class StoreCollectionClient(ResourceClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[StoreActor]:
         """Iterate over Actors in Apify store.
@@ -103,6 +104,7 @@ class StoreCollectionClient(ResourceClient):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            chunk_size: Maximum number of Actors requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -121,7 +123,7 @@ class StoreCollectionClient(ResourceClient):
                 timeout=timeout,
             )
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
 
 @docs_group('Resource clients')
@@ -195,6 +197,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[StoreActor]:
         """Iterate over Actors in Apify store.
@@ -213,6 +216,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            chunk_size: Maximum number of Actors requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -231,4 +235,4 @@ class StoreCollectionClientAsync(ResourceClientAsync):
                 timeout=timeout,
             )
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)

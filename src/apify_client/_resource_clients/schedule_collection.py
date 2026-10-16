@@ -69,6 +69,7 @@ class ScheduleCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[ScheduleListItem]:
         """Iterate over the available schedules.
@@ -82,6 +83,7 @@ class ScheduleCollectionClient(ResourceClient):
             limit: How many schedules to retrieve.
             offset: What schedules to include as first when retrieving the list.
             desc: Whether to sort the schedules in descending order based on their modification date.
+            chunk_size: Maximum number of schedules requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -91,7 +93,7 @@ class ScheduleCollectionClient(ResourceClient):
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfSchedules:
             return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     def create(
         self,
@@ -192,6 +194,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[ScheduleListItem]:
         """Iterate over the available schedules.
@@ -205,6 +208,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             limit: How many schedules to retrieve.
             offset: What schedules to include as first when retrieving the list.
             desc: Whether to sort the schedules in descending order based on their modification date.
+            chunk_size: Maximum number of schedules requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -214,7 +218,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfSchedules:
             return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     async def create(
         self,

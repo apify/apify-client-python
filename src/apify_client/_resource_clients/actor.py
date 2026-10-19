@@ -1290,7 +1290,7 @@ class ActorClientAsync(ResourceClientAsync):
             The response of the Actor's server.
 
         Raises:
-            ApifyClientAsyncError: If the Actor does not have Standby mode enabled.
+            ApifyClientError: If the Actor does not have Standby mode enabled.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
         """
         if self._standby_url is None:

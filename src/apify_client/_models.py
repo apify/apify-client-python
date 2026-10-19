@@ -779,7 +779,7 @@ class CreateActorRequest(BaseModel):
     """
     Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
     """
-    is_public: Literal[False] | None = None
+    is_public: Annotated[bool | None, Field(examples=[False])] = None
     """
     Whether the Actor is available to users in Apify Store. A new Actor is always private. To publish it, build it first, then update it with `isPublic` set to `true`.
     """
@@ -874,7 +874,7 @@ class CreateVersionRequest(BaseModel):
     """
     Where the source code of the version lives.
     """
-    env_vars: Annotated[list[EnvVarRequest] | None, Field(max_length=100)] = None
+    env_vars: list[EnvVarRequest] | None = None
     """
     Environment variables for the version.
     """
@@ -882,39 +882,25 @@ class CreateVersionRequest(BaseModel):
     """
     Whether to inject the environment variables at build time.
     """
-    build_tag: Annotated[
-        str | None,
-        Field(
-            examples=['latest'],
-            max_length=30,
-            min_length=1,
-            pattern='^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])$',
-        ),
-    ] = None
+    build_tag: Annotated[str | None, Field(examples=['latest'])] = None
     """
     The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
     """
     source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
     """
-    Required when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
     """
-    git_repo_url: Annotated[str | None, Field(pattern='^(?:https?://|git@)?[^/|:]+[/:]')] = None
+    git_repo_url: str | None = None
     """
-    URL of the Git repository to clone the source code from. Required when the `sourceType` is `GIT_REPO`.
+    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
     """
-    tarball_url: Annotated[str | None, Field(pattern='^(?:[hH][tT][tT][pP][sS]?:)?//\\S+')] = None
+    tarball_url: str | None = None
     """
-    URL of the tarball to download the source code from. Required when the `sourceType` is `TARBALL`.
+    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
-    github_gist_url: Annotated[
-        str | None,
-        Field(
-            alias='gitHubGistUrl',
-            pattern='^[hH][tT][tT][pP][sS]://[gG][iI][sS][tT]\\.[gG][iI][tT][hH][uU][bB]\\.[cC][oO][mM]/[A-Za-z0-9][A-Za-z0-9-]{0,38}/[0-9a-fA-F]{32}$',
-        ),
-    ] = None
+    github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
-    URL of the GitHub Gist to clone the source code from. Required when the `sourceType` is `GITHUB_GIST`.
+    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
 
 
@@ -1429,11 +1415,11 @@ class EnvVarRequest(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    name: Annotated[str, Field(examples=['MY_ENV_VAR'], max_length=100, min_length=1, pattern='^[^=]*$')]
+    name: Annotated[str, Field(examples=['MY_ENV_VAR'])]
     """
     The name of the environment variable. Can't contain `=`.
     """
-    value: Annotated[str, Field(examples=['my-value'], max_length=50000)]
+    value: Annotated[str, Field(examples=['my-value'])]
     """
     The value of the environment variable.
     """
@@ -3872,7 +3858,7 @@ class UpdateVersionRequest(BaseModel):
     """
     Where the source code of the version lives.
     """
-    env_vars: Annotated[list[EnvVarRequest] | None, Field(max_length=100)] = None
+    env_vars: list[EnvVarRequest] | None = None
     """
     Environment variables for the version.
     """
@@ -3880,39 +3866,25 @@ class UpdateVersionRequest(BaseModel):
     """
     Whether to inject the environment variables at build time.
     """
-    build_tag: Annotated[
-        str | None,
-        Field(
-            examples=['latest'],
-            max_length=30,
-            min_length=1,
-            pattern='^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])$',
-        ),
-    ] = None
+    build_tag: Annotated[str | None, Field(examples=['latest'])] = None
     """
     The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
     """
     source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
     """
-    Required when the request sets `sourceType` to `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
     """
-    git_repo_url: Annotated[str | None, Field(pattern='^(?:https?://|git@)?[^/|:]+[/:]')] = None
+    git_repo_url: str | None = None
     """
-    URL of the Git repository to clone the source code from. Required when the request sets `sourceType` to `GIT_REPO`.
+    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
     """
-    tarball_url: Annotated[str | None, Field(pattern='^(?:[hH][tT][tT][pP][sS]?:)?//\\S+')] = None
+    tarball_url: str | None = None
     """
-    URL of the tarball to download the source code from. Required when the request sets `sourceType` to `TARBALL`.
+    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
     """
-    github_gist_url: Annotated[
-        str | None,
-        Field(
-            alias='gitHubGistUrl',
-            pattern='^[hH][tT][tT][pP][sS]://[gG][iI][sS][tT]\\.[gG][iI][tT][hH][uU][bB]\\.[cC][oO][mM]/[A-Za-z0-9][A-Za-z0-9-]{0,38}/[0-9a-fA-F]{32}$',
-        ),
-    ] = None
+    github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
     """
-    URL of the GitHub Gist to clone the source code from. Required when the request sets `sourceType` to `GITHUB_GIST`.
+    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
 
 

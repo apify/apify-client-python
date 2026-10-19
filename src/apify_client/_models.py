@@ -20,6 +20,7 @@ from apify_client._literals import (
     VersionSourceType,
     WebhookDispatchStatus,
     WebhookEventType,
+    WritableVersionSourceType,
 )
 
 
@@ -778,10 +779,11 @@ class CreateActorRequest(BaseModel):
     """
     Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
     """
-    is_public: Annotated[bool | None, Field(examples=[False])] = None
+    is_public: Literal[False] | None = None
     """
-    Whether the Actor is available to users in Apify Store. If `false`, the Actor is private and only visible to you.
+    Whether the Actor is available to users in Apify Store. A new Actor is always private. To publish it, build it first, then update it with `isPublic` set to `true`.
     """
+    actor_permission_level: ActorPermissionLevel | None = None
     seo_title: Annotated[str | None, Field(examples=['Free Instagram scraper'])] = None
     """
     Name of the Actor to display by search engines such as Google. Can be different from the Actor's name displayed in Apify Store and Console. Recommended length is 40-50 characters.
@@ -791,7 +793,7 @@ class CreateActorRequest(BaseModel):
     Description of the Actor to display by search engines such as Google. Recommended length is 140-156 characters.
     """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
-    versions: list[Version] | None = None
+    versions: Annotated[list[CreateVersionRequest] | None, Field(max_length=10, min_length=1)] = None
     """
     An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
     """
@@ -828,57 +830,11 @@ class CreateOrUpdateScheduleRequest(BaseModel):
     timezone: Annotated[str | None, Field(examples=['UTC'])] = None
     description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
     title: str | None = None
+    notifications: ScheduleNotifications | None = None
     actions: (
         list[Annotated[ScheduleCreateActionRunActor | ScheduleCreateActionRunActorTask, Field(discriminator='type')]]
         | None
     ) = None
-
-
-@docs_group('Models')
-class CreateOrUpdateVersionRequest(BaseModel):
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    version_number: Annotated[
-        str | None, Field(examples=['1.6'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
-    ] = None
-    """
-    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
-    """
-    source_type: VersionSourceType | None = None
-    """
-    Where the source code of the version lives.
-    """
-    env_vars: list[EnvVar] | None = None
-    """
-    Environment variables for the version.
-    """
-    apply_env_vars_to_build: Annotated[bool | None, Field(examples=[False])] = None
-    """
-    Whether to inject the environment variables at build time.
-    """
-    build_tag: Annotated[str | None, Field(examples=['latest'])] = None
-    """
-    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
-    """
-    source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
-    """
-    Applies when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
-    """
-    git_repo_url: str | None = None
-    """
-    URL of the Git repository to clone the source code from. Applies when the `sourceType` is `GIT_REPO`.
-    """
-    tarball_url: str | None = None
-    """
-    URL of the tarball to download the source code from. Applies when the `sourceType` is `TARBALL`.
-    """
-    github_gist_url: Annotated[str | None, Field(alias='gitHubGistUrl')] = None
-    """
-    URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
-    """
 
 
 @docs_group('Models')
@@ -900,6 +856,65 @@ class CreateTaskRequest(BaseModel):
     Configuration that controls how the published task appears on its public landing page.
     Editing this object requires write permission to the Actor that the task belongs to.
 
+    """
+
+
+@docs_group('Models')
+class CreateVersionRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    version_number: Annotated[str, Field(examples=['1.6'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')]
+    """
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
+    """
+    source_type: WritableVersionSourceType
+    """
+    Where the source code of the version lives.
+    """
+    env_vars: Annotated[list[EnvVarRequest] | None, Field(max_length=100)] = None
+    """
+    Environment variables for the version.
+    """
+    apply_env_vars_to_build: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether to inject the environment variables at build time.
+    """
+    build_tag: Annotated[
+        str | None,
+        Field(
+            examples=['latest'],
+            max_length=30,
+            min_length=1,
+            pattern='^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])$',
+        ),
+    ] = None
+    """
+    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
+    """
+    source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
+    """
+    Required when the `sourceType` is `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    """
+    git_repo_url: Annotated[str | None, Field(pattern='^(?:https?://|git@)?[^/|:]+[/:]')] = None
+    """
+    URL of the Git repository to clone the source code from. Required when the `sourceType` is `GIT_REPO`.
+    """
+    tarball_url: Annotated[str | None, Field(pattern='^(?:[hH][tT][tT][pP][sS]?:)?//\\S+')] = None
+    """
+    URL of the tarball to download the source code from. Required when the `sourceType` is `TARBALL`.
+    """
+    github_gist_url: Annotated[
+        str | None,
+        Field(
+            alias='gitHubGistUrl',
+            pattern='^[hH][tT][tT][pP][sS]://[gG][iI][sS][tT]\\.[gG][iI][tT][hH][uU][bB]\\.[cC][oO][mM]/[A-Za-z0-9][A-Za-z0-9-]{0,38}/[0-9a-fA-F]{32}$',
+        ),
+    ] = None
+    """
+    URL of the GitHub Gist to clone the source code from. Required when the `sourceType` is `GITHUB_GIST`.
     """
 
 
@@ -1408,15 +1423,23 @@ class EnvVar(BaseModel):
 
 
 @docs_group('Models')
-class EnvVarRequest(EnvVar):
+class EnvVarRequest(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    value: Annotated[str, Field(examples=['my-value'])]
+    name: Annotated[str, Field(examples=['MY_ENV_VAR'], max_length=100, min_length=1, pattern='^[^=]*$')]
     """
-    The value of the environment variable. If `isSecret` is `true`, this value isn't returned by the API.
+    The name of the environment variable. Can't contain `=`.
+    """
+    value: Annotated[str, Field(examples=['my-value'], max_length=50000)]
+    """
+    The value of the environment variable.
+    """
+    is_secret: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the environment variable is encrypted. Secret values aren't returned by the API.
     """
 
 
@@ -1986,18 +2009,6 @@ class MonthlyUsageResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: MonthlyUsage
-
-
-@docs_group('Models')
-class Notifications(BaseModel):
-    """Notification settings for this schedule."""
-
-    model_config = ConfigDict(
-        extra='allow',
-        populate_by_name=True,
-        alias_generator=to_camel,
-    )
-    email: Annotated[bool | None, Field(examples=[True])] = None
 
 
 @docs_group('Models')
@@ -3173,10 +3184,7 @@ class Schedule(ScheduleBase):
     )
     description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
     title: str | None = None
-    notifications: Annotated[Notifications | None, Field(title='ScheduleNotifications')] = None
-    """
-    Notification settings for this schedule.
-    """
+    notifications: ScheduleNotifications | None = None
     actions: list[Annotated[ScheduleActionRunActor | ScheduleActionRunActorTask, Field(discriminator='type')]]
 
 
@@ -3261,6 +3269,18 @@ class ScheduleLogResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: list[ScheduleLogEntry]
+
+
+@docs_group('Models')
+class ScheduleNotifications(BaseModel):
+    """Notification settings for this schedule."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    email: Annotated[bool | None, Field(examples=[True])] = None
 
 
 @docs_group('Models')
@@ -3684,7 +3704,7 @@ class UpdateActorRequest(BaseModel):
     Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
     """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
-    versions: list[CreateOrUpdateVersionRequest] | None = None
+    versions: Annotated[list[CreateVersionRequest] | None, Field(max_length=10, min_length=1)] = None
     """
     An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
     """
@@ -3832,6 +3852,67 @@ class UpdateTaskRequest(BaseModel):
     Set to `true` to publish the task on its public landing page, or `false` to unpublish it.
     Sending the value the task already has does nothing.
 
+    """
+
+
+@docs_group('Models')
+class UpdateVersionRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    version_number: Annotated[
+        str | None, Field(examples=['1.6'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
+    ] = None
+    """
+    The version number of the Actor. Two numbers separated by a dot, that represent the `MAJOR.MINOR` part of the semantic versioning.
+    """
+    source_type: WritableVersionSourceType | None = None
+    """
+    Where the source code of the version lives.
+    """
+    env_vars: Annotated[list[EnvVarRequest] | None, Field(max_length=100)] = None
+    """
+    Environment variables for the version.
+    """
+    apply_env_vars_to_build: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether to inject the environment variables at build time.
+    """
+    build_tag: Annotated[
+        str | None,
+        Field(
+            examples=['latest'],
+            max_length=30,
+            min_length=1,
+            pattern='^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])$',
+        ),
+    ] = None
+    """
+    The tag name to apply to a successful build of this version. Can be `null` when the version has no build tag.
+    """
+    source_files: Annotated[list[SourceCodeFile | SourceCodeFolder] | None, Field(title='VersionSourceFiles')] = None
+    """
+    Required when the request sets `sourceType` to `SOURCE_FILES`. Represents the Actor's file structure as an array of files and folders.
+    """
+    git_repo_url: Annotated[str | None, Field(pattern='^(?:https?://|git@)?[^/|:]+[/:]')] = None
+    """
+    URL of the Git repository to clone the source code from. Required when the request sets `sourceType` to `GIT_REPO`.
+    """
+    tarball_url: Annotated[str | None, Field(pattern='^(?:[hH][tT][tT][pP][sS]?:)?//\\S+')] = None
+    """
+    URL of the tarball to download the source code from. Required when the request sets `sourceType` to `TARBALL`.
+    """
+    github_gist_url: Annotated[
+        str | None,
+        Field(
+            alias='gitHubGistUrl',
+            pattern='^[hH][tT][tT][pP][sS]://[gG][iI][sS][tT]\\.[gG][iI][tT][hH][uU][bB]\\.[cC][oO][mM]/[A-Za-z0-9][A-Za-z0-9-]{0,38}/[0-9a-fA-F]{32}$',
+        ),
+    ] = None
+    """
+    URL of the GitHub Gist to clone the source code from. Required when the request sets `sourceType` to `GITHUB_GIST`.
     """
 
 

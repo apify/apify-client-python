@@ -538,3 +538,15 @@ WebhookEventType = (
     | str
 )
 """Type of event that triggers the webhook."""
+
+
+WritableVersionSourceType = (
+    Literal[
+        'SOURCE_FILES',
+        'GIT_REPO',
+        'TARBALL',
+        'GITHUB_GIST',
+    ]
+    | str
+)
+"""The version source types accepted in request bodies. Same as `VersionSourceType`, without `SOURCE_CODE`."""

@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import gzip
 import json
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from werkzeug import Request, Response
 
 from apify_client.errors import ApifyClientError, NotFoundError
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
+    from werkzeug import Request
 
     from apify_client import ApifyClient, ApifyClientAsync
 
@@ -43,19 +44,14 @@ def expect_standby_actor(httpserver: HTTPServer) -> None:
     httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(standby_url))
 
 
-def capture(captured: list[Request]) -> Any:
-    def handler(request: Request) -> Response:
-        captured.append(request)
-        return Response(json.dumps({'ok': True}), status=200, mimetype='application/json')
-
-    return handler
+def standby_requests(httpserver: HTTPServer) -> list[Request]:
+    return [request for request, _ in httpserver.log if request.path.startswith(f'{_STANDBY_PREFIX}/')]
 
 
 def test_standby_request_sends_request_to_standby_url(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """The request goes to the Standby URL with the method, path, query, body, and the client's token."""
     expect_standby_actor(httpserver)
-    captured: list[Request] = []
-    httpserver.expect_request(f'{_STANDBY_PREFIX}/search', method='POST').respond_with_handler(capture(captured))
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/search', method='POST').respond_with_json({'ok': True})
 
     response = sync_client.actor(_MOCKED_ACTOR_ID).standby_request(
         '/search', method='POST', params={'q': 'apify'}, json={'limit': 5}
@@ -63,6 +59,7 @@ def test_standby_request_sends_request_to_standby_url(httpserver: HTTPServer, sy
 
     assert response.status_code == 200
     assert response.json() == {'ok': True}
+    captured = standby_requests(httpserver)
     assert len(captured) == 1
     assert captured[0].args.to_dict() == {'q': 'apify'}
     assert json.loads(captured[0].get_data()) == {'limit': 5}
@@ -74,8 +71,7 @@ async def test_standby_request_sends_request_to_standby_url_async(
 ) -> None:
     """Async variant of `test_standby_request_sends_request_to_standby_url`."""
     expect_standby_actor(httpserver)
-    captured: list[Request] = []
-    httpserver.expect_request(f'{_STANDBY_PREFIX}/search', method='POST').respond_with_handler(capture(captured))
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/search', method='POST').respond_with_json({'ok': True})
 
     response = await async_client.actor(_MOCKED_ACTOR_ID).standby_request(
         '/search', method='POST', params={'q': 'apify'}, json={'limit': 5}
@@ -83,6 +79,7 @@ async def test_standby_request_sends_request_to_standby_url_async(
 
     assert response.status_code == 200
     assert response.json() == {'ok': True}
+    captured = standby_requests(httpserver)
     assert len(captured) == 1
     assert captured[0].args.to_dict() == {'q': 'apify'}
     assert json.loads(captured[0].get_data()) == {'limit': 5}
@@ -135,22 +132,67 @@ def test_standby_request_path_stays_on_standby_host(
     response = sync_client.actor(_MOCKED_ACTOR_ID).standby_request(path)
 
     assert response.status_code == 200
-    standby_requests = [request for request, _ in httpserver.log if request.path.startswith(f'{_STANDBY_PREFIX}/')]
-    assert len(standby_requests) == 1
+    assert len(standby_requests(httpserver)) == 1
 
 
 def test_standby_request_sends_body_uncompressed(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """A body large enough for the client to compress is sent as is, since Standby servers may not decode it."""
     expect_standby_actor(httpserver)
-    captured: list[Request] = []
-    httpserver.expect_request(f'{_STANDBY_PREFIX}/items', method='POST').respond_with_handler(capture(captured))
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/items', method='POST').respond_with_json({'ok': True})
     payload = {'items': ['x' * 100] * 100}
 
     sync_client.actor(_MOCKED_ACTOR_ID).standby_request('/items', method='POST', json=payload)
 
+    captured = standby_requests(httpserver)
     assert len(captured) == 1
     assert captured[0].headers.get('Content-Encoding') == 'identity'
     assert json.loads(captured[0].get_data()) == payload
+
+
+async def test_standby_request_sends_body_uncompressed_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_standby_request_sends_body_uncompressed`."""
+    expect_standby_actor(httpserver)
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/items', method='POST').respond_with_json({'ok': True})
+    payload = {'items': ['x' * 100] * 100}
+
+    await async_client.actor(_MOCKED_ACTOR_ID).standby_request('/items', method='POST', json=payload)
+
+    captured = standby_requests(httpserver)
+    assert len(captured) == 1
+    assert captured[0].headers.get('Content-Encoding') == 'identity'
+    assert json.loads(captured[0].get_data()) == payload
+
+
+def test_standby_request_without_body_sends_no_content_encoding(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """A request without a body carries no `Content-Encoding` header."""
+    expect_standby_actor(httpserver)
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/search', method='GET').respond_with_json({'ok': True})
+
+    sync_client.actor(_MOCKED_ACTOR_ID).standby_request('/search')
+
+    captured = standby_requests(httpserver)
+    assert len(captured) == 1
+    assert 'Content-Encoding' not in captured[0].headers
+
+
+def test_standby_request_keeps_caller_content_encoding(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A `Content-Encoding` header passed by the caller is sent as given, with the body untouched."""
+    expect_standby_actor(httpserver)
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/items', method='POST').respond_with_json({'ok': True})
+    body = gzip.compress(b'x' * 2000)
+
+    sync_client.actor(_MOCKED_ACTOR_ID).standby_request(
+        '/items', method='POST', headers={'content-encoding': 'gzip'}, data=body
+    )
+
+    captured = standby_requests(httpserver)
+    assert len(captured) == 1
+    assert captured[0].headers.get('Content-Encoding') == 'gzip'
+    assert captured[0].get_data() == body
 
 
 def test_standby_request_without_standby_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:

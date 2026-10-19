@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add support for Python 3.15 ([#1122](https://github.com/apify/apify-client-python/pull/1122)) ([ef8f088](https://github.com/apify/apify-client-python/commit/ef8f088c3d4fb5f6facfc2728343298464c5ecb6)) by [@vdusek](https://github.com/vdusek)
 - Add a `user_agent_suffix` option ([#1145](https://github.com/apify/apify-client-python/pull/1145)) ([ecccadb](https://github.com/apify/apify-client-python/commit/ecccadb1cf0cab8d7e8e89bdb36e31a71ad12526)) by [@vdusek](https://github.com/vdusek), closes [#1148](https://github.com/apify/apify-client-python/issues/1148)
 - Add `chunk_size` to collection `iterate()` methods ([#1146](https://github.com/apify/apify-client-python/pull/1146)) ([a4b6975](https://github.com/apify/apify-client-python/commit/a4b6975cd55cc71b19ca7e58d8ce1348513bc615)) by [@vdusek](https://github.com/vdusek), closes [#1149](https://github.com/apify/apify-client-python/issues/1149)
+- Add missing optional parameters to resource clients ([#1144](https://github.com/apify/apify-client-python/pull/1144)) ([8b3c6f4](https://github.com/apify/apify-client-python/commit/8b3c6f4df2a5761e7cb882b792049d5be80a6bb7)) by [@vdusek](https://github.com/vdusek), closes [#1147](https://github.com/apify/apify-client-python/issues/1147)
 
 ### 🐛 Bug Fixes
 

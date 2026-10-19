@@ -656,7 +656,9 @@ class ActorClient(ResourceClient):
             path: The path on the Actor's server, for example `/search`. It is always resolved against the Standby URL,
                 so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
             method: HTTP method of the request.
-            params: Query parameters of the request.
+            params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
+                or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
+                in UTC, and `None` values are left out.
             headers: Additional headers of the request.
             data: Raw request body. Cannot be used together with `json`.
             json: JSON-serializable request body. Cannot be used together with `data`.
@@ -668,6 +670,7 @@ class ActorClient(ResourceClient):
         Raises:
             ApifyClientError: If the Actor does not have Standby mode enabled.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+            ValueError: If both `data` and `json` are passed.
         """
         if self._standby_url is None:
             response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
@@ -1280,7 +1283,9 @@ class ActorClientAsync(ResourceClientAsync):
             path: The path on the Actor's server, for example `/search`. It is always resolved against the Standby URL,
                 so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
             method: HTTP method of the request.
-            params: Query parameters of the request.
+            params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
+                or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
+                in UTC, and `None` values are left out.
             headers: Additional headers of the request.
             data: Raw request body. Cannot be used together with `json`.
             json: JSON-serializable request body. Cannot be used together with `data`.
@@ -1292,6 +1297,7 @@ class ActorClientAsync(ResourceClientAsync):
         Raises:
             ApifyClientError: If the Actor does not have Standby mode enabled.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+            ValueError: If both `data` and `json` are passed.
         """
         if self._standby_url is None:
             response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')

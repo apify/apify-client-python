@@ -17,6 +17,7 @@ import httpx2
 import impit
 import pytest
 
+from apify_client import ApifyClient, ApifyClientAsync
 from apify_client._consts import MIN_COMPRESSION_SIZE
 from apify_client._logging import logger_name
 from apify_client._statistics import ClientStatistics
@@ -208,6 +209,24 @@ def test_base_http_client_initialization() -> None:
     # Test without statistics (should create default)
     client2 = ConcreteHttpClient(token='test_token')
     assert isinstance(client2._statistics, ClientStatistics)
+
+
+@pytest.mark.parametrize(
+    'client_class',
+    [
+        pytest.param(ApifyClient, id='ApifyClient'),
+        pytest.param(ApifyClientAsync, id='ApifyClientAsync'),
+        pytest.param(ConcreteHttpClient, id='custom HttpClient'),
+        pytest.param(ImpitHttpClient, id='ImpitHttpClient'),
+        pytest.param(ImpitHttpClientAsync, id='ImpitHttpClientAsync'),
+        pytest.param(Httpx2HttpClient, id='Httpx2HttpClient'),
+        pytest.param(Httpx2HttpClientAsync, id='Httpx2HttpClientAsync'),
+    ],
+)
+def test_negative_max_retries_is_rejected_at_construction(client_class: Callable[..., object]) -> None:
+    """A negative `max_retries` raises `ValueError` from the constructor, before any request is made."""
+    with pytest.raises(ValueError, match='max_retries must be a non-negative integer, got -1'):
+        client_class(max_retries=-1)
 
 
 def test_http_client_init_headers_override_defaults_case_insensitively() -> None:

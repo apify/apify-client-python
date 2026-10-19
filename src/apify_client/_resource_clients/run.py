@@ -370,7 +370,7 @@ class RunClient(ResourceClient):
         if actor_id:
             actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
-                base_url=self._base_url,
+                base_url=self._api_base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
                 client_registry=self._client_registry,
@@ -458,7 +458,7 @@ class RunClient(ResourceClient):
         if actor_id:
             actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
-                base_url=self._base_url,
+                base_url=self._api_base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
                 client_registry=self._client_registry,
@@ -920,7 +920,7 @@ class RunClientAsync(ResourceClientAsync):
         if actor_id:
             actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
-                base_url=self._base_url,
+                base_url=self._api_base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
                 client_registry=self._client_registry,
@@ -1009,7 +1009,7 @@ class RunClientAsync(ResourceClientAsync):
         if actor_id:
             actor_client = self._client_registry.actor_client(
                 resource_id=actor_id,
-                base_url=self._base_url,
+                base_url=self._api_base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
                 client_registry=self._client_registry,

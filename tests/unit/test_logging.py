@@ -562,6 +562,67 @@ def test_redirect_status_message_sync(
     assert caplog.records[2].message == 'Status: SUCCEEDED, Message: Final message'
 
 
+LAST_RUN_PARENTS = (
+    pytest.param('actor', 'actors', id='actor last run'),
+    pytest.param('task', 'actor-tasks', id='task last run'),
+)
+
+LOGGING_HELPERS = (
+    pytest.param('get_streamed_log', id='streamed log'),
+    pytest.param('get_status_message_watcher', id='status message watcher'),
+)
+
+
+def mock_last_run(httpserver: HTTPServer, parent_path: str) -> None:
+    """Serve the mocked run at `runs/last` of the parent with ID `parent_id`."""
+    run_data = StatusResponseGenerator()._create_minimal_run_data('Initial message', 'RUNNING', is_terminal=False)
+    httpserver.expect_request(f'/v2/{parent_path}/parent_id/runs/last', method='GET').respond_with_json(
+        {'data': run_data}
+    )
+
+
+@pytest.mark.parametrize(('parent_method', 'parent_path'), LAST_RUN_PARENTS)
+@pytest.mark.parametrize('helper_method', LOGGING_HELPERS)
+@pytest.mark.usefixtures('mock_api')
+def test_last_run_logger_name_includes_actor_name_sync(
+    *,
+    httpserver: HTTPServer,
+    parent_method: str,
+    parent_path: str,
+    helper_method: str,
+) -> None:
+    """A `last_run()` client fetches the Actor from the API root and puts its name in the logger name."""
+    mock_last_run(httpserver, parent_path)
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='mocked_token', api_url=api_url)
+    run_client = getattr(client, parent_method)('parent_id').last_run()
+
+    redirector = getattr(run_client, helper_method)()
+
+    assert redirector._to_logger.name == f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+
+
+@pytest.mark.parametrize(('parent_method', 'parent_path'), LAST_RUN_PARENTS)
+@pytest.mark.parametrize('helper_method', LOGGING_HELPERS)
+@pytest.mark.usefixtures('mock_api')
+async def test_last_run_logger_name_includes_actor_name_async(
+    *,
+    httpserver: HTTPServer,
+    parent_method: str,
+    parent_path: str,
+    helper_method: str,
+) -> None:
+    """A `last_run()` client fetches the Actor from the API root and puts its name in the logger name."""
+    mock_last_run(httpserver, parent_path)
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='mocked_token', api_url=api_url)
+    run_client = getattr(client, parent_method)('parent_id').last_run()
+
+    redirector = await getattr(run_client, helper_method)()
+
+    assert redirector._to_logger.name == f'apify.{_MOCKED_ACTOR_NAME} runId:{_MOCKED_RUN_ID}'
+
+
 async def test_streamed_log_async_restart_after_normal_completion(httpserver: HTTPServer) -> None:
     """Test that StreamedLogAsync cannot be restarted after task completes normally."""
     # Set up a quick-completing stream endpoint

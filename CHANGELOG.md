@@ -8,11 +8,14 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Add support for Python 3.15 ([#1122](https://github.com/apify/apify-client-python/pull/1122)) ([ef8f088](https://github.com/apify/apify-client-python/commit/ef8f088c3d4fb5f6facfc2728343298464c5ecb6)) by [@vdusek](https://github.com/vdusek)
+- Add a `user_agent_suffix` option ([#1145](https://github.com/apify/apify-client-python/pull/1145)) ([ecccadb](https://github.com/apify/apify-client-python/commit/ecccadb1cf0cab8d7e8e89bdb36e31a71ad12526)) by [@vdusek](https://github.com/vdusek), closes [#1148](https://github.com/apify/apify-client-python/issues/1148)
 
 ### 🐛 Bug Fixes
 
 - Redirect the run log when the first log stream comes back empty ([#1084](https://github.com/apify/apify-client-python/pull/1084)) ([a370e7a](https://github.com/apify/apify-client-python/commit/a370e7a9db75053c2f65ad626ba1bcb67c4cf398)) by [@vdusek](https://github.com/vdusek)
 - **deps:** Allow impit v0.15 ([#1128](https://github.com/apify/apify-client-python/pull/1128)) ([eb9e188](https://github.com/apify/apify-client-python/commit/eb9e188dfb4cdbae620307c7696b0886ed8a6db3)) by [@vdusek](https://github.com/vdusek)
+- Allow `max_retries=0` to disable retries ([#1142](https://github.com/apify/apify-client-python/pull/1142)) ([3b128d1](https://github.com/apify/apify-client-python/commit/3b128d1f8481fdfe1107d7768b1dff9f9b80b94d)) by [@vdusek](https://github.com/vdusek), closes [#1139](https://github.com/apify/apify-client-python/issues/1139)
+- Fetch the Actor from the API root in `get_streamed_log()` on `last_run()` clients ([#1143](https://github.com/apify/apify-client-python/pull/1143)) ([2b58a2b](https://github.com/apify/apify-client-python/commit/2b58a2ba26a920d1dab22accd4a783effaaabca6)) by [@vdusek](https://github.com/vdusek), closes [#1137](https://github.com/apify/apify-client-python/issues/1137)
 
 
 <!-- git-cliff-unreleased-end -->

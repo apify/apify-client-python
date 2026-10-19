@@ -193,6 +193,7 @@ class ActorCollectionClient(ResourceClient):
             seo_description=seo_description,
             versions=versions,
             is_public=is_public,
+            actor_permission_level=actor_permission_level,
             is_deprecated=is_deprecated,
             categories=categories,
             default_run_options=DefaultRunOptions(
@@ -218,11 +219,7 @@ class ActorCollectionClient(ResourceClient):
                 content_type=example_run_input_content_type,
             ),
         )
-        actor_body = actor_fields.model_dump(by_alias=True, exclude_none=True)
-        # The generated `CreateActorRequest` has no `actor_permission_level` field, so it goes into the body directly.
-        if actor_permission_level is not None:
-            actor_body['actorPermissionLevel'] = actor_permission_level
-        result = self._create(timeout=timeout, **actor_body)
+        result = self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data
 
 
@@ -393,6 +390,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             seo_description=seo_description,
             versions=versions,
             is_public=is_public,
+            actor_permission_level=actor_permission_level,
             is_deprecated=is_deprecated,
             categories=categories,
             default_run_options=DefaultRunOptions(
@@ -418,9 +416,5 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 content_type=example_run_input_content_type,
             ),
         )
-        actor_body = actor_fields.model_dump(by_alias=True, exclude_none=True)
-        # The generated `CreateActorRequest` has no `actor_permission_level` field, so it goes into the body directly.
-        if actor_permission_level is not None:
-            actor_body['actorPermissionLevel'] = actor_permission_level
-        result = await self._create(timeout=timeout, **actor_body)
+        result = await self._create(timeout=timeout, **actor_fields.model_dump(by_alias=True, exclude_none=True))
         return ActorResponse.model_validate(result).data

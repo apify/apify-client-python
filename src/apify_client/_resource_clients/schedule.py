@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any
 from apify_client._docs import docs_group
 from apify_client._models import (
     CreateOrUpdateScheduleRequest,
-    Notifications,
     Schedule,
     ScheduleLogEntry,
     ScheduleLogResponse,
+    ScheduleNotifications,
     ScheduleResponse,
 )
 from apify_client._resource_clients._resource_client import ResourceClient, ResourceClientAsync
@@ -99,12 +99,9 @@ class ScheduleClient(ResourceClient):
             description=description,
             timezone=timezone,
             title=title,
+            notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
-        schedule_body = schedule_fields.model_dump(by_alias=True, exclude_none=True)
-        # The generated `CreateOrUpdateScheduleRequest` has no `notifications` field, so it goes into the body directly.
-        if notifications_email is not None:
-            schedule_body['notifications'] = Notifications(email=notifications_email).model_dump(by_alias=True)
-        result = self._update(timeout=timeout, **schedule_body)
+        result = self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
     def delete(self, *, timeout: Timeout = 'short') -> None:
@@ -222,12 +219,9 @@ class ScheduleClientAsync(ResourceClientAsync):
             description=description,
             timezone=timezone,
             title=title,
+            notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
-        schedule_body = schedule_fields.model_dump(by_alias=True, exclude_none=True)
-        # The generated `CreateOrUpdateScheduleRequest` has no `notifications` field, so it goes into the body directly.
-        if notifications_email is not None:
-            schedule_body['notifications'] = Notifications(email=notifications_email).model_dump(by_alias=True)
-        result = await self._update(timeout=timeout, **schedule_body)
+        result = await self._update(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
     async def delete(self, *, timeout: Timeout = 'short') -> None:

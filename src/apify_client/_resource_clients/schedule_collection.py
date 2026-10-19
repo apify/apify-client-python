@@ -7,8 +7,8 @@ from apify_client._models import (
     CreateOrUpdateScheduleRequest,
     ListOfSchedules,
     ListOfSchedulesResponse,
-    Notifications,
     Schedule,
+    ScheduleNotifications,
     ScheduleResponse,
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
@@ -143,12 +143,9 @@ class ScheduleCollectionClient(ResourceClient):
             description=description,
             timezone=timezone,
             title=title,
+            notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
-        schedule_body = schedule_fields.model_dump(by_alias=True, exclude_none=True)
-        # The generated `CreateOrUpdateScheduleRequest` has no `notifications` field, so it goes into the body directly.
-        if notifications_email is not None:
-            schedule_body['notifications'] = Notifications(email=notifications_email).model_dump(by_alias=True)
-        result = self._create(timeout=timeout, **schedule_body)
+        result = self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
 
 
@@ -274,10 +271,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             description=description,
             timezone=timezone,
             title=title,
+            notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
-        schedule_body = schedule_fields.model_dump(by_alias=True, exclude_none=True)
-        # The generated `CreateOrUpdateScheduleRequest` has no `notifications` field, so it goes into the body directly.
-        if notifications_email is not None:
-            schedule_body['notifications'] = Notifications(email=notifications_email).model_dump(by_alias=True)
-        result = await self._create(timeout=timeout, **schedule_body)
+        result = await self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data

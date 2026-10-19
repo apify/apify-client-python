@@ -137,6 +137,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
         """Create a new Actor.
@@ -178,6 +179,7 @@ class ActorCollectionClient(ResourceClient):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_permission_level: The permission level of the Actor on Apify platform.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -191,6 +193,7 @@ class ActorCollectionClient(ResourceClient):
             seo_description=seo_description,
             versions=versions,
             is_public=is_public,
+            actor_permission_level=actor_permission_level,
             is_deprecated=is_deprecated,
             categories=categories,
             default_run_options=DefaultRunOptions(
@@ -331,6 +334,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
         """Create a new Actor.
@@ -372,6 +376,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_permission_level: The permission level of the Actor on Apify platform.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -385,6 +390,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
             seo_description=seo_description,
             versions=versions,
             is_public=is_public,
+            actor_permission_level=actor_permission_level,
             is_deprecated=is_deprecated,
             categories=categories,
             default_run_options=DefaultRunOptions(

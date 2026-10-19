@@ -99,3 +99,27 @@ async def test_create_sends_standby_fields_async(httpserver: HTTPServer, async_c
 
     assert len(captured) == 1
     assert body_subset(captured[0]) == _EXPECTED_BODY
+
+
+def test_create_sends_actor_permission_level(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`create` sends `actor_permission_level` as `actorPermissionLevel`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_ACTORS_PATH, method='POST').respond_with_handler(capture(captured))
+
+    sync_client.actors().create(name='test-actor', actor_permission_level='LIMITED_PERMISSIONS')
+
+    assert len(captured) == 1
+    assert json.loads(captured[0].get_data()) == {'name': 'test-actor', 'actorPermissionLevel': 'LIMITED_PERMISSIONS'}
+
+
+async def test_create_sends_actor_permission_level_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async `create` sends `actor_permission_level` as `actorPermissionLevel`."""
+    captured: list[Request] = []
+    httpserver.expect_request(_ACTORS_PATH, method='POST').respond_with_handler(capture(captured))
+
+    await async_client.actors().create(name='test-actor', actor_permission_level='LIMITED_PERMISSIONS')
+
+    assert len(captured) == 1
+    assert json.loads(captured[0].get_data()) == {'name': 'test-actor', 'actorPermissionLevel': 'LIMITED_PERMISSIONS'}

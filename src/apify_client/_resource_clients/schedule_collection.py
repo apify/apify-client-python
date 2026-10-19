@@ -8,6 +8,7 @@ from apify_client._models import (
     ListOfSchedules,
     ListOfSchedulesResponse,
     Schedule,
+    ScheduleNotifications,
     ScheduleResponse,
 )
 from apify_client._pagination import get_items_iterator, get_items_iterator_async
@@ -106,6 +107,7 @@ class ScheduleCollectionClient(ResourceClient):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        notifications_email: bool | None = None,
         timeout: Timeout = 'short',
     ) -> Schedule:
         """Create a new schedule.
@@ -123,6 +125,7 @@ class ScheduleCollectionClient(ResourceClient):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: Title of this schedule.
+            notifications_email: Whether to send email notifications about the schedule's runs.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -140,6 +143,7 @@ class ScheduleCollectionClient(ResourceClient):
             description=description,
             timezone=timezone,
             title=title,
+            notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
         result = self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data
@@ -231,6 +235,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
         description: str | None = None,
         timezone: str | None = None,
         title: str | None = None,
+        notifications_email: bool | None = None,
         timeout: Timeout = 'short',
     ) -> Schedule:
         """Create a new schedule.
@@ -248,6 +253,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             timezone: Timezone in which your cron expression runs (TZ database name from
                 https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
             title: Title of this schedule.
+            notifications_email: Whether to send email notifications about the schedule's runs.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -265,6 +271,7 @@ class ScheduleCollectionClientAsync(ResourceClientAsync):
             description=description,
             timezone=timezone,
             title=title,
+            notifications=ScheduleNotifications(email=notifications_email) if notifications_email is not None else None,
         )
         result = await self._create(timeout=timeout, **schedule_fields.model_dump(by_alias=True, exclude_none=True))
         return ScheduleResponse.model_validate(result).data

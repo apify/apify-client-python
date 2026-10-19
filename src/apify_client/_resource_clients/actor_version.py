@@ -6,10 +6,10 @@ from pydantic import TypeAdapter
 
 from apify_client._docs import docs_group
 from apify_client._models import (
-    CreateOrUpdateVersionRequest,
     EnvVarRequest,
     SourceCodeFile,
     SourceCodeFolder,
+    UpdateVersionRequest,
     Version,
     VersionResponse,
 )
@@ -102,7 +102,7 @@ class ActorVersionClient(ResourceClient):
         Returns:
             The updated Actor version.
         """
-        version_fields = CreateOrUpdateVersionRequest(
+        version_fields = UpdateVersionRequest(
             build_tag=build_tag,
             env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,
@@ -218,7 +218,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         Returns:
             The updated Actor version.
         """
-        version_fields = CreateOrUpdateVersionRequest(
+        version_fields = UpdateVersionRequest(
             build_tag=build_tag,
             env_vars=[EnvVarRequest.model_validate(v) for v in env_vars] if env_vars else None,
             apply_env_vars_to_build=apply_env_vars_to_build,

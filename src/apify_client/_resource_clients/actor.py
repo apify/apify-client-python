@@ -32,6 +32,7 @@ from apify_client._utils.wait_for_resources import (
     start_waiting_for_resources,
     start_waiting_for_resources_async,
 )
+from apify_client.errors import ApifyClientError
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -55,7 +56,8 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client.types import Timeout, WebhooksList
+    from apify_client.http_clients import HttpResponse
+    from apify_client.types import JsonSerializable, Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -86,6 +88,7 @@ class ActorClient(ResourceClient):
             resource_path=resource_path,
             **kwargs,
         )
+        self._standby_url: str | None = None
 
     def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -625,6 +628,68 @@ class ActorClient(ResourceClient):
 
         return True
 
+    def standby_request(
+        self,
+        path: str = '/',
+        *,
+        method: str = 'GET',
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        data: str | bytes | None = None,
+        json: JsonSerializable | None = None,
+        timeout: Timeout = 'long',
+    ) -> HttpResponse:
+        """Send an HTTP request to the Actor's Standby server.
+
+        An Actor in Standby mode runs a web server that is called over HTTP, without starting a run for each call. The
+        server's URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on
+        this client. The request carries the client's token, which the Standby router consumes, so it never reaches
+        the Actor's code. The first request to an idle Actor waits for the platform to start a Standby run, which is
+        why the timeout defaults to `long`.
+
+        A server error or a rate-limit response is retried like an API call, so the server may receive the same
+        request more than once. Request bodies are sent uncompressed.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Args:
+            path: The path on the Actor's server, for example `/search`. It is always resolved against the Standby URL,
+                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
+            method: HTTP method of the request.
+            params: Query parameters of the request.
+            headers: Additional headers of the request.
+            data: Raw request body. Cannot be used together with `json`.
+            json: JSON-serializable request body. Cannot be used together with `data`.
+            timeout: Timeout for the HTTP request.
+
+        Returns:
+            The response of the Actor's server.
+
+        Raises:
+            ApifyClientError: If the Actor does not have Standby mode enabled.
+            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+        """
+        if self._standby_url is None:
+            response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            actor = ActorResponse.model_validate(response_to_dict(response)).data
+            if actor.standby_url is None:
+                raise ApifyClientError(f'Actor {self.resource_id} does not have Standby mode enabled.')
+            self._standby_url = actor.standby_url
+
+        # The client compresses large bodies by default, and a Standby server is not expected to decode them.
+        if data is not None or json is not None:
+            headers = self._http_client._merge_headers({'Content-Encoding': 'identity'}, headers)  # noqa: SLF001
+
+        return self._http_client.call(
+            url=f'{self._standby_url.rstrip("/")}/{path.lstrip("/")}',
+            method=method,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            timeout=timeout,
+        )
+
 
 @docs_group('Resource clients')
 class ActorClientAsync(ResourceClientAsync):
@@ -646,6 +711,7 @@ class ActorClientAsync(ResourceClientAsync):
             resource_path=resource_path,
             **kwargs,
         )
+        self._standby_url: str | None = None
 
     async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -1185,3 +1251,65 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         return True
+
+    async def standby_request(
+        self,
+        path: str = '/',
+        *,
+        method: str = 'GET',
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        data: str | bytes | None = None,
+        json: JsonSerializable | None = None,
+        timeout: Timeout = 'long',
+    ) -> HttpResponse:
+        """Send an HTTP request to the Actor's Standby server.
+
+        An Actor in Standby mode runs a web server that is called over HTTP, without starting a run for each call. The
+        server's URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on
+        this client. The request carries the client's token, which the Standby router consumes, so it never reaches
+        the Actor's code. The first request to an idle Actor waits for the platform to start a Standby run, which is
+        why the timeout defaults to `long`.
+
+        A server error or a rate-limit response is retried like an API call, so the server may receive the same
+        request more than once. Request bodies are sent uncompressed.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Args:
+            path: The path on the Actor's server, for example `/search`. It is always resolved against the Standby URL,
+                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
+            method: HTTP method of the request.
+            params: Query parameters of the request.
+            headers: Additional headers of the request.
+            data: Raw request body. Cannot be used together with `json`.
+            json: JSON-serializable request body. Cannot be used together with `data`.
+            timeout: Timeout for the HTTP request.
+
+        Returns:
+            The response of the Actor's server.
+
+        Raises:
+            ApifyClientAsyncError: If the Actor does not have Standby mode enabled.
+            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+        """
+        if self._standby_url is None:
+            response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            actor = ActorResponse.model_validate(response_to_dict(response)).data
+            if actor.standby_url is None:
+                raise ApifyClientError(f'Actor {self.resource_id} does not have Standby mode enabled.')
+            self._standby_url = actor.standby_url
+
+        # The client compresses large bodies by default, and a Standby server is not expected to decode them.
+        if data is not None or json is not None:
+            headers = self._http_client._merge_headers({'Content-Encoding': 'identity'}, headers)  # noqa: SLF001
+
+        return await self._http_client.call(
+            url=f'{self._standby_url.rstrip("/")}/{path.lstrip("/")}',
+            method=method,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            timeout=timeout,
+        )

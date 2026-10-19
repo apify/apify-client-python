@@ -793,7 +793,7 @@ class CreateActorRequest(BaseModel):
     Description of the Actor to display by search engines such as Google. Recommended length is 140-156 characters.
     """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
-    versions: Annotated[list[CreateVersionRequest] | None, Field(max_length=10, min_length=1)] = None
+    versions: Annotated[list[CreateVersionRequest] | None, Field(min_length=1)] = None
     """
     An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
     """
@@ -3690,7 +3690,7 @@ class UpdateActorRequest(BaseModel):
     Human-readable name of the Actor, displayed in Apify Store and Console. Can contain spaces and capital letters. Recommended length is 40-50 characters. You can change this title without affecting the Actor's URL or SEO.
     """
     restart_on_error: Annotated[bool | None, Field(deprecated=True, examples=[False])] = None
-    versions: Annotated[list[CreateVersionRequest] | None, Field(max_length=10, min_length=1)] = None
+    versions: Annotated[list[CreateVersionRequest] | None, Field(min_length=1)] = None
     """
     An array of `Version` objects. Each object represents a specific version of the Actor's source code: its location, builds, and environment configuration.
     """

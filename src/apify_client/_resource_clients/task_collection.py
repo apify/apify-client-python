@@ -76,6 +76,7 @@ class TaskCollectionClient(ResourceClient):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[TaskListItem]:
         """Iterate over the available tasks.
@@ -89,6 +90,7 @@ class TaskCollectionClient(ResourceClient):
             limit: How many tasks to list.
             offset: What task to include as first when retrieving the list.
             desc: Whether to sort the tasks in descending order based on their creation date.
+            chunk_size: Maximum number of tasks requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -98,7 +100,7 @@ class TaskCollectionClient(ResourceClient):
         def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfTasks:
             return self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator(_callback, limit=limit, offset=offset)
+        return get_items_iterator(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     def create(
         self,
@@ -249,6 +251,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         limit: int | None = None,
         offset: int | None = None,
         desc: bool | None = None,
+        chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[TaskListItem]:
         """Iterate over the available tasks.
@@ -262,6 +265,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
             limit: How many tasks to list.
             offset: What task to include as first when retrieving the list.
             desc: Whether to sort the tasks in descending order based on their creation date.
+            chunk_size: Maximum number of tasks requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
         Yields:
@@ -271,7 +275,7 @@ class TaskCollectionClientAsync(ResourceClientAsync):
         async def _callback(*, limit: int | None = None, offset: int | None = None) -> ListOfTasks:
             return await self.list(limit=limit, offset=offset, desc=desc, timeout=timeout)
 
-        return get_items_iterator_async(_callback, limit=limit, offset=offset)
+        return get_items_iterator_async(_callback, limit=limit, offset=offset, chunk_size=chunk_size)
 
     async def create(
         self,

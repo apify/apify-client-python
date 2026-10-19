@@ -12,7 +12,7 @@ import ApiLink from '@theme/ApiLink';
 import StandbyAsyncExample from '!!raw-loader!./code/14_standby_async.py';
 import StandbySyncExample from '!!raw-loader!./code/14_standby_sync.py';
 
-An Actor in [Standby mode](https://docs.apify.com/platform/actors/running/standby) runs a web server that you call over HTTP. To send it a request, use <ApiLink to="class/ActorClient#standby_request">`ActorClient.standby_request`</ApiLink> with a path on the Actor's server:
+An Actor in [Standby mode](https://docs.apify.com/platform/actors/running/standby) runs a web server. You call it over HTTP, and the platform keeps a run ready to answer, so each call skips the run startup. To send a request to such an Actor, use <ApiLink to="class/ActorClient#standby_request">`ActorClient.standby_request`</ApiLink>. It takes the path on the Actor's server, and optionally the HTTP method, query parameters, headers, and a body:
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -27,6 +27,19 @@ An Actor in [Standby mode](https://docs.apify.com/platform/actors/running/standb
     </TabItem>
 </Tabs>
 
-The client looks up the Actor's Standby URL and authenticates the request with your API token. For how the platform handles the token, see [How do I authenticate my requests](https://docs.apify.com/platform/actors/running/standby#how-do-i-authenticate-my-requests).
+The method returns the server's response. To find out which endpoints an Actor serves, see its page in [Apify Store](https://apify.com/store) or its README.
 
-The first request to an idle Actor can take a few minutes, so the method uses the `long` [timeout](./11_timeouts.mdx) tier. Server errors and rate-limit responses are [retried](./05_retries.mdx), so an endpoint that isn't safe to call twice may get the same request more than once.
+## How the request is sent
+
+Note that:
+
+- The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls on the same `ActorClient`. If the Actor doesn't have Standby mode enabled, the method raises an `ApifyClientError`.
+- The path is always resolved against that URL, so a path can't send the request to another host.
+- The request carries your API token in the `Authorization` header. For how the platform handles it, see [How do I authenticate my requests](https://docs.apify.com/platform/actors/running/standby#how-do-i-authenticate-my-requests).
+- The request body is sent uncompressed, since the Actor's server may not decode a compressed body.
+
+## Timeouts, retries, and errors
+
+When no Standby run is ready, the first request waits for the platform to start one, which can take a few minutes. The method uses the `long` timeout tier by default for that reason. You can pass a different `timeout`, the same way as for API calls. For details, see [Timeouts](./11_timeouts.mdx).
+
+An error status from the Actor's server raises an `ApifyApiError`, like an error from the API. Server errors and rate-limit responses are retried with the client's retry settings, so a request that the server failed to answer may reach it more than once. If your endpoint isn't safe to call twice, lower `max_retries` on the client. For details, see [Retries](./05_retries.mdx) and [Error handling](./04_error_handling.mdx).

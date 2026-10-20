@@ -35,8 +35,15 @@ Note that:
 
 - The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls on the same `ActorClient`. If the Actor doesn't have Standby mode enabled, the method raises an `ApifyClientError`.
 - The path is always resolved against that URL, so a path can't send the request to another host.
-- The request carries your API token in the `Authorization` header. For how the platform handles it, see [How do I authenticate my requests](https://docs.apify.com/platform/actors/running/standby#how-do-i-authenticate-my-requests).
-- The request body is sent uncompressed, since the Actor's server may not decode a compressed body.
+- The request body is sent uncompressed, since the Actor's server may not decode a compressed body. If the server decodes it, pass `compression`, for example `compression='gzip'`. The client then compresses large bodies the same way as for API calls.
+
+## Authentication
+
+The request carries the client's API token in the `Authorization` header. The platform removes the token before it forwards the request, so the token doesn't reach the Actor's code.
+
+If the Actor reads the `Authorization` header for its own authentication, pass that header in `headers`, and send your Apify token in the `X-Apify-Authorization` header instead. A header you pass in `headers` replaces the client's `Authorization` header for that request.
+
+For details, see [How do I authenticate my requests](https://docs.apify.com/platform/actors/running/standby#how-do-i-authenticate-my-requests) in the platform documentation.
 
 ## Timeouts, retries, and errors
 

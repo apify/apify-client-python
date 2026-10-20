@@ -71,3 +71,59 @@ async def test_run_charge_preserves_count_async(httpserver: HTTPServer, count: i
     assert len(captured_requests) == 1
     body = json.loads(captured_requests[0].get_data())
     assert body['count'] == count
+
+
+@pytest.mark.parametrize(
+    ('apify_request_id', 'expected_body'),
+    [
+        pytest.param(None, {'eventName': 'test-event', 'count': 1}, id='omitted'),
+        pytest.param('req_123', {'eventName': 'test-event', 'count': 1, 'requestId': 'req_123'}, id='provided'),
+    ],
+)
+def test_run_charge_sends_apify_request_id_sync(
+    httpserver: HTTPServer, apify_request_id: str | None, expected_body: dict
+) -> None:
+    """Ensure `apify_request_id` is sent as `requestId` in the body, and left out when not provided."""
+    captured_requests: list[Request] = []
+
+    def capture_request(request: Request) -> Response:
+        captured_requests.append(request)
+        return Response(status=200, mimetype='application/json')
+
+    httpserver.expect_request(_CHARGE_PATH, method='POST').respond_with_handler(capture_request)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClient(token='test_token', api_url=api_url)
+
+    client.run(_MOCKED_RUN_ID).charge('test-event', apify_request_id=apify_request_id)
+
+    assert len(captured_requests) == 1
+    assert json.loads(captured_requests[0].get_data()) == expected_body
+
+
+@pytest.mark.parametrize(
+    ('apify_request_id', 'expected_body'),
+    [
+        pytest.param(None, {'eventName': 'test-event', 'count': 1}, id='omitted'),
+        pytest.param('req_123', {'eventName': 'test-event', 'count': 1, 'requestId': 'req_123'}, id='provided'),
+    ],
+)
+async def test_run_charge_sends_apify_request_id_async(
+    httpserver: HTTPServer, apify_request_id: str | None, expected_body: dict
+) -> None:
+    """Async variant of `test_run_charge_sends_apify_request_id_sync`."""
+    captured_requests: list[Request] = []
+
+    def capture_request(request: Request) -> Response:
+        captured_requests.append(request)
+        return Response(status=200, mimetype='application/json')
+
+    httpserver.expect_request(_CHARGE_PATH, method='POST').respond_with_handler(capture_request)
+
+    api_url = httpserver.url_for('/').removesuffix('/')
+    client = ApifyClientAsync(token='test_token', api_url=api_url)
+
+    await client.run(_MOCKED_RUN_ID).charge('test-event', apify_request_id=apify_request_id)
+
+    assert len(captured_requests) == 1
+    assert json.loads(captured_requests[0].get_data()) == expected_body

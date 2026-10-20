@@ -783,6 +783,28 @@ def test_prepare_request_call_skips_compression_below_threshold(compressor_case:
     assert not any(key.lower() == 'content-encoding' for key in headers)
 
 
+def test_prepare_request_call_skips_compression_when_disabled() -> None:
+    """With `compression=False`, a body above the threshold is sent verbatim with no `Content-Encoding`."""
+    client = ConcreteHttpClient()
+    body = b'x' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(data=body, compression=False)
+
+    assert data == body
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_uses_per_request_compressor() -> None:
+    """A compressor passed in `compression` is used for the request in place of the client's compressor."""
+    client = ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+    body = b'x' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(data=body, compression=BrotliHttpCompressor())
+
+    assert headers['Content-Encoding'] == 'br'
+    assert brotli.decompress(data) == body
+
+
 def test_prepare_request_call_compresses_bytearray_data(compressor_case: tuple) -> None:
     """A `bytearray` body above the threshold is compressed without error (regression: needs bytes conversion)."""
     compressor, content_encoding, decompress = compressor_case
@@ -1215,6 +1237,22 @@ async def test_async_call_skips_thread_offload_for_a_body_it_cannot_compress(
     body: Any = BytesIO(b'x' * MIN_COMPRESSION_SIZE)
 
     await client.call(method='PUT', url='https://api.test.com/endpoint', data=body)
+
+    spy.assert_not_called()
+
+
+async def test_async_call_skips_thread_offload_when_compression_is_disabled(
+    http_client_async_class: type[HttpClientAsync],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A raw body is prepared inline when compression is disabled, whatever its size."""
+    client = http_client_async_class(token='test_token')
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
+    spy = _to_thread_spy(monkeypatch)
+
+    await client.call(
+        method='PUT', url='https://api.test.com/endpoint', data=b'x' * MIN_COMPRESSION_SIZE, compression=False
+    )
 
     spy.assert_not_called()
 

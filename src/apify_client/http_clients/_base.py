@@ -312,6 +312,7 @@ class HttpClientBase:
         params: dict[str, Any] | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
+        compression: HttpCompressor | bool = True,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | StreamedRequestBody | None]:
         """Prepare headers, params, and body for an HTTP request.
 
@@ -319,11 +320,11 @@ class HttpClientBase:
         JSON body. Header names are treated case-insensitively and per-request values win over the client
         defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one.
 
-        The body is compressed unless a `Content-Encoding` header is already set, the body is smaller than
+        The body is compressed with the client's compressor, or with the one passed in `compression`, unless
+        `compression` is `False`, a `Content-Encoding` header is already set, the body is smaller than
         `MIN_COMPRESSION_SIZE`, or its content type says the payload is already compressed. A caller-supplied
         `Content-Encoding` is forwarded verbatim, which is how a pre-encoded body is uploaded - including one in
-        an encoding the client ships no compressor for. `Content-Encoding: identity` therefore opts a single
-        request out of compression.
+        an encoding the client ships no compressor for.
 
         A body streamed from a file-like object, an iterable of byte chunks, or a streamed response is wrapped in
         `StreamedRequestBody` and never compressed, since its chunks go out as they are produced. A caller-supplied
@@ -353,13 +354,15 @@ class HttpClientBase:
 
             # A caller-supplied encoding says the body arrives already encoded, so compressing it here would
             # both mislabel it and waste the work.
+            compressor = self._http_compressor if compression is True else compression
             if (
-                self._get_header(headers, 'content-encoding') is None
+                compressor is not False
+                and self._get_header(headers, 'content-encoding') is None
                 and len(content) >= MIN_COMPRESSION_SIZE
                 and is_compressible_content_type(self._get_header(headers, 'content-type'))
             ):
-                content = self._http_compressor.compress(content)
-                headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+                content = compressor.compress(content)
+                headers = self._merge_headers(headers, {'Content-Encoding': compressor.content_encoding})
 
         elif data is not None:
             # Without this the request would go out with no body at all, losing the payload without a word.
@@ -509,6 +512,7 @@ class HttpClient(HttpClientBase):
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -526,6 +530,8 @@ class HttpClient(HttpClientBase):
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
                 preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
                 `no_timeout` disables the timeout entirely.
+            compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
+                is used for this request only, and `False` sends the body uncompressed.
 
         Returns:
             The HTTP response object.
@@ -545,6 +551,7 @@ class HttpClient(HttpClientBase):
             params=params,
             data=data,
             json=json,
+            compression=compression,
         )
 
         return self._retry_with_exp_backoff(
@@ -720,6 +727,7 @@ class HttpClientAsync(HttpClientBase):
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -737,6 +745,8 @@ class HttpClientAsync(HttpClientBase):
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
                 preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
                 `no_timeout` disables the timeout entirely.
+            compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
+                is used for this request only, and `False` sends the body uncompressed.
 
         Returns:
             The HTTP response object.
@@ -755,13 +765,14 @@ class HttpClientAsync(HttpClientBase):
         # offload preparation to a worker thread whenever there is something to compress. A body the
         # client sends as it is costs less to prepare inline than the hop itself. A `json` body always
         # hops, as its size is only known once serialized.
-        if json is not None or self._is_body_worth_compressing(data):
+        if json is not None or (compression is not False and self._is_body_worth_compressing(data)):
             prepared_headers, prepared_params, content = await asyncio.to_thread(
                 self._prepare_request_call,
                 headers=headers,
                 params=params,
                 data=data,
                 json=json,
+                compression=compression,
             )
         else:
             prepared_headers, prepared_params, content = self._prepare_request_call(
@@ -769,6 +780,7 @@ class HttpClientAsync(HttpClientBase):
                 params=params,
                 data=data,
                 json=json,
+                compression=compression,
             )
 
         return await self._retry_with_exp_backoff(

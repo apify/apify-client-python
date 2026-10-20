@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     from pytest_httpserver import HTTPServer
 
+    from apify_client.http_compressors import HttpCompressor
     from apify_client.types import StreamedBodySource, Timeout
 
 
@@ -99,6 +100,7 @@ class FakeHttpClient(HttpClient):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -110,6 +112,7 @@ class FakeHttpClient(HttpClient):
                 'json': json,
                 'stream': stream,
                 'timeout': timeout,
+                'compression': compression,
             }
         )
         return _make_fake_response()
@@ -133,6 +136,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -144,6 +148,7 @@ class FakeHttpClientAsync(HttpClientAsync):
                 'json': json,
                 'stream': stream,
                 'timeout': timeout,
+                'compression': compression,
             }
         )
         return _make_fake_response()

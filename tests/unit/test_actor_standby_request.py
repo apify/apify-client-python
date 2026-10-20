@@ -7,12 +7,15 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from apify_client.errors import ApifyClientError, NotFoundError
+from apify_client.http_compressors import GzipHttpCompressor
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
     from werkzeug import Request
 
     from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client.http_compressors import HttpCompressor
+    from apify_client.types import HttpCompressionAlgorithm
 
 pytestmark = pytest.mark.usefixtures('http_client_classes')
 
@@ -145,7 +148,7 @@ def test_standby_request_sends_body_uncompressed(httpserver: HTTPServer, sync_cl
 
     captured = standby_requests(httpserver)
     assert len(captured) == 1
-    assert captured[0].headers.get('Content-Encoding') == 'identity'
+    assert 'Content-Encoding' not in captured[0].headers
     assert json.loads(captured[0].get_data()) == payload
 
 
@@ -161,22 +164,59 @@ async def test_standby_request_sends_body_uncompressed_async(
 
     captured = standby_requests(httpserver)
     assert len(captured) == 1
-    assert captured[0].headers.get('Content-Encoding') == 'identity'
+    assert 'Content-Encoding' not in captured[0].headers
     assert json.loads(captured[0].get_data()) == payload
 
 
-def test_standby_request_without_body_sends_no_content_encoding(
-    httpserver: HTTPServer, sync_client: ApifyClient
+@pytest.mark.parametrize(
+    'compression',
+    [
+        pytest.param('gzip', id='algorithm name'),
+        pytest.param(GzipHttpCompressor(quality=1), id='compressor instance'),
+    ],
+)
+def test_standby_request_compresses_body_when_asked(
+    httpserver: HTTPServer, sync_client: ApifyClient, compression: HttpCompressionAlgorithm | HttpCompressor
 ) -> None:
-    """A request without a body carries no `Content-Encoding` header."""
+    """With `compression` set, a body large enough to compress is sent compressed and labeled with its encoding."""
     expect_standby_actor(httpserver)
-    httpserver.expect_request(f'{_STANDBY_PREFIX}/search', method='GET').respond_with_json({'ok': True})
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/items', method='POST').respond_with_json({'ok': True})
+    payload = {'items': ['x' * 100] * 100}
 
-    sync_client.actor(_MOCKED_ACTOR_ID).standby_request('/search')
+    sync_client.actor(_MOCKED_ACTOR_ID).standby_request('/items', method='POST', json=payload, compression=compression)
 
     captured = standby_requests(httpserver)
     assert len(captured) == 1
-    assert 'Content-Encoding' not in captured[0].headers
+    assert captured[0].headers.get('Content-Encoding') == 'gzip'
+    assert json.loads(gzip.decompress(captured[0].get_data())) == payload
+
+
+async def test_standby_request_compresses_body_when_asked_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_standby_request_compresses_body_when_asked`."""
+    expect_standby_actor(httpserver)
+    httpserver.expect_request(f'{_STANDBY_PREFIX}/items', method='POST').respond_with_json({'ok': True})
+    payload = {'items': ['x' * 100] * 100}
+
+    await async_client.actor(_MOCKED_ACTOR_ID).standby_request(
+        '/items', method='POST', json=payload, compression='gzip'
+    )
+
+    captured = standby_requests(httpserver)
+    assert len(captured) == 1
+    assert captured[0].headers.get('Content-Encoding') == 'gzip'
+    assert json.loads(gzip.decompress(captured[0].get_data())) == payload
+
+
+def test_standby_request_rejects_unknown_compression(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """An unsupported compression algorithm raises a `ValueError` without sending a request to the Standby server."""
+    expect_standby_actor(httpserver)
+
+    with pytest.raises(ValueError, match='Unsupported compression algorithm'):
+        sync_client.actor(_MOCKED_ACTOR_ID).standby_request('/items', method='POST', data='x', compression='zip')  # ty: ignore[invalid-argument-type]
+
+    assert standby_requests(httpserver) == []
 
 
 def test_standby_request_keeps_caller_content_encoding(httpserver: HTTPServer, sync_client: ApifyClient) -> None:

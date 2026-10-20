@@ -33,6 +33,7 @@ from apify_client._utils.wait_for_resources import (
     start_waiting_for_resources_async,
 )
 from apify_client.errors import ApifyClientError
+from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -57,7 +58,8 @@ if TYPE_CHECKING:
         WebhookCollectionClientAsync,
     )
     from apify_client.http_clients import HttpResponse
-    from apify_client.types import JsonSerializable, Timeout, WebhooksList
+    from apify_client.http_compressors import HttpCompressor
+    from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -637,6 +639,7 @@ class ActorClient(ResourceClient):
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
         timeout: Timeout = 'long',
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's Standby server.
@@ -648,7 +651,8 @@ class ActorClient(ResourceClient):
         why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
-        request more than once. Request bodies are sent uncompressed.
+        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
+        server may not decode a compressed body.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -662,6 +666,9 @@ class ActorClient(ResourceClient):
             headers: Additional headers of the request.
             data: Raw request body. Cannot be used together with `json`.
             json: JSON-serializable request body. Cannot be used together with `data`.
+            compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
+                instance. The body is compressed under the same conditions as for API calls. Set it only if the
+                Actor's server decodes the resulting `Content-Encoding`.
             timeout: Timeout for the HTTP request.
 
         Returns:
@@ -670,7 +677,8 @@ class ActorClient(ResourceClient):
         Raises:
             ApifyClientError: If the Actor does not have Standby mode enabled.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
-            ValueError: If both `data` and `json` are passed.
+            ImportError: If `compression` needs an optional extra that is not installed.
+            ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
         if self._standby_url is None:
             response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
@@ -678,10 +686,6 @@ class ActorClient(ResourceClient):
             if actor.standby_url is None:
                 raise ApifyClientError(f'Actor {self.resource_id} does not have Standby mode enabled.')
             self._standby_url = actor.standby_url
-
-        # The client compresses large bodies by default, and a Standby server is not expected to decode them.
-        if data is not None or json is not None:
-            headers = self._http_client._merge_headers({'Content-Encoding': 'identity'}, headers)  # noqa: SLF001
 
         return self._http_client.call(
             url=f'{self._standby_url.rstrip("/")}/{path.lstrip("/")}',
@@ -691,6 +695,7 @@ class ActorClient(ResourceClient):
             data=data,
             json=json,
             timeout=timeout,
+            compression=resolve_compressor(compression) if compression is not None else False,
         )
 
 
@@ -1264,6 +1269,7 @@ class ActorClientAsync(ResourceClientAsync):
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
         timeout: Timeout = 'long',
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's Standby server.
@@ -1275,7 +1281,8 @@ class ActorClientAsync(ResourceClientAsync):
         why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
-        request more than once. Request bodies are sent uncompressed.
+        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
+        server may not decode a compressed body.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -1289,6 +1296,9 @@ class ActorClientAsync(ResourceClientAsync):
             headers: Additional headers of the request.
             data: Raw request body. Cannot be used together with `json`.
             json: JSON-serializable request body. Cannot be used together with `data`.
+            compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
+                instance. The body is compressed under the same conditions as for API calls. Set it only if the
+                Actor's server decodes the resulting `Content-Encoding`.
             timeout: Timeout for the HTTP request.
 
         Returns:
@@ -1297,7 +1307,8 @@ class ActorClientAsync(ResourceClientAsync):
         Raises:
             ApifyClientError: If the Actor does not have Standby mode enabled.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
-            ValueError: If both `data` and `json` are passed.
+            ImportError: If `compression` needs an optional extra that is not installed.
+            ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
         if self._standby_url is None:
             response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
@@ -1305,10 +1316,6 @@ class ActorClientAsync(ResourceClientAsync):
             if actor.standby_url is None:
                 raise ApifyClientError(f'Actor {self.resource_id} does not have Standby mode enabled.')
             self._standby_url = actor.standby_url
-
-        # The client compresses large bodies by default, and a Standby server is not expected to decode them.
-        if data is not None or json is not None:
-            headers = self._http_client._merge_headers({'Content-Encoding': 'identity'}, headers)  # noqa: SLF001
 
         return await self._http_client.call(
             url=f'{self._standby_url.rstrip("/")}/{path.lstrip("/")}',
@@ -1318,4 +1325,5 @@ class ActorClientAsync(ResourceClientAsync):
             data=data,
             json=json,
             timeout=timeout,
+            compression=resolve_compressor(compression) if compression is not None else False,
         )

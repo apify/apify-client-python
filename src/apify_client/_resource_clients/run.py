@@ -403,8 +403,8 @@ class RunClient(ResourceClient):
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             apify_request_id: ID of the request served by a multi-tenant Standby run, taken from the
-                `X-Apify-Request-ID` header of the incoming request. The charge then goes to the account of the
-                caller who made that request, not the account that started the run.
+                `X-Apify-Request-ID` header of the incoming request. The charge then goes to the account of the caller
+                who made that request, not the account that started the run.
             timeout: Timeout for the API HTTP request.
 
         Raises:
@@ -959,8 +959,8 @@ class RunClientAsync(ResourceClientAsync):
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
             apify_request_id: ID of the request served by a multi-tenant Standby run, taken from the
-                `X-Apify-Request-ID` header of the incoming request. The charge then goes to the account of the
-                caller who made that request, not the account that started the run.
+                `X-Apify-Request-ID` header of the incoming request. The charge then goes to the account of the caller
+                who made that request, not the account that started the run.
             timeout: Timeout for the API HTTP request.
 
         Raises:

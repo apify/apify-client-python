@@ -57,6 +57,9 @@ class ActVersion(BaseModel):
     )
     source_type: VersionSourceType | None = None
     build_tag: Annotated[str | None, Field(examples=['experimental'])] = None
+    """
+    The build tag of the Actor version this build was created from. Can be `null` when the version has no build tag, in which case the build is tagged on success only if the `tag` parameter was passed when starting it.
+    """
     version_number: Annotated[
         str | None, Field(examples=['0.0'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])$')
     ] = None
@@ -260,6 +263,9 @@ class ActorResource(BaseModel):
         ]
         | None
     ) = None
+    """
+    The Actor's pricing records, including past ones.
+    """
     default_run_options: DefaultRunOptions
     example_run_input: ExampleRunInput | None = None
     is_deprecated: Annotated[bool | None, Field(examples=[False])] = None
@@ -947,9 +953,6 @@ class CurrentPricingInfo(BaseModel):
         bool | None, Field(alias='isPPEPlatformUsagePaidByUser', examples=[False])
     ] = None
     reason_for_change: Annotated[str | None, Field(examples=[None])] = None
-    trial_minutes: Annotated[int | None, Field(examples=[None])] = None
-    unit_name: Annotated[str | None, Field(examples=[None])] = None
-    price_per_unit_usd: Annotated[float | None, Field(examples=[None])] = None
     minimal_max_total_charge_usd: Annotated[float | None, Field(examples=[0.5])] = None
     pricing_per_event: dict[str, Any] | None = None
     """
@@ -1495,6 +1498,8 @@ class ExampleRunInput(BaseModel):
 
 @docs_group('Models')
 class FlatPricePerMonthActorPricingInfo(CommonActorPricingInfo):
+    """Rental pricing model, which is no longer supported."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
@@ -1503,11 +1508,11 @@ class FlatPricePerMonthActorPricingInfo(CommonActorPricingInfo):
     pricing_model: Literal['FLAT_PRICE_PER_MONTH']
     trial_minutes: int
     """
-    For how long this Actor can be used for free in trial period
+    Number of minutes a user could run the Actor for free before having to rent it. Apify no longer offers rental pricing, so you can see this field only in pricing history and in runs started before rented Actors moved to other pricing models.
     """
     price_per_unit_usd: float
     """
-    Monthly flat price in USD
+    Monthly flat price in USD. Apify no longer offers rental pricing, so you can see this field only in pricing history and in runs started before rented Actors moved to other pricing models.
     """
 
 
@@ -2901,11 +2906,11 @@ class Run(BaseModel):
     """
     usage_total_usd: Annotated[float | None, Field(examples=[0.2654])] = None
     """
-    Total cost in USD for this run. Represents what you actually pay. For run owners: includes platform usage (compute units) and/or event costs depending on the Actor's pricing model. For run non-owners: only available for Pay-Per-Event Actors (event costs only). Requires authentication token to access.
+    Total cost in USD for this run. Represents what you actually pay. For run owners: includes platform usage (compute units) and/or event costs depending on the Actor's pricing model. For run non-owners: only available for pay-per-event Actors (event costs only). Requires authentication token to access.
     """
     usage_usd: RunUsageUsd | None = None
     """
-    Platform usage costs breakdown in USD. Only present if you own the run AND are paying for platform usage (Pay-Per-Usage, Rental, or Pay-Per-Event with usage costs like standby Actors). Not available for standard Pay-Per-Event Actors. Requires authentication token to access.
+    Platform usage costs breakdown in USD. Only present if you own the run and are paying for platform usage (pay-per-usage or pay-per-event with usage costs like Standby Actors). Not available for standard pay-per-event Actors. Requires authentication token to access.
     """
     metamorphs: list[RunMetamorphEvent] | None = None
     """
@@ -3518,7 +3523,7 @@ class TaskPublicConfig(BaseModel):
     """
     Time when the task was published, or `null` if the task isn't published.
     This field is server-controlled. To publish or unpublish a task, use the
-    [Update task](https://docs.apify.com/api/v2/actor-task-put) endpoint and set `isPublic`.
+    [Update Actor task](https://docs.apify.com/api/v2/actor-task-put) endpoint and set `isPublic`.
 
     """
     seo_title: Annotated[str | None, Field(examples=['Scrape data from a website'], max_length=60)] = None
@@ -3706,6 +3711,9 @@ class UpdateActorRequest(BaseModel):
         ]
         | None
     ) = None
+    """
+    The Actor's pricing records. You can't add the `FLAT_PRICE_PER_MONTH` or `PRICE_PER_DATASET_ITEM` records, because these pricing models are no longer supported.
+    """
     categories: Annotated[list[str] | None, Field(examples=[['SOCIAL_MEDIA']])] = None
     """
     A list of categories that best define the Actor. Reflected in Apify Store's search and filtering options.

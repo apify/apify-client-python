@@ -418,7 +418,7 @@ class RunClient(ResourceClient):
             timestamp_ms = int(time.time() * 1000)
             idempotency_key = f'{self._resource_id}-{event_name}-{timestamp_ms}-{random_suffix}'
 
-        body: dict[str, Any] = {
+        body: dict[str, str | int] = {
             'eventName': event_name,
             'count': count,
         }
@@ -974,7 +974,7 @@ class RunClientAsync(ResourceClientAsync):
             timestamp_ms = int(time.time() * 1000)
             idempotency_key = f'{self._resource_id}-{event_name}-{timestamp_ms}-{random_suffix}'
 
-        body: dict[str, Any] = {
+        body: dict[str, str | int] = {
             'eventName': event_name,
             'count': count,
         }

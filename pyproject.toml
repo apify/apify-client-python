@@ -255,7 +255,7 @@ version = "v2-2026-10-20T095308Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.
-exclude-newer = "24 hours"
+exclude-newer = "7 days"
 
 [tool.uv.exclude-newer-package]
 # Allow internal Apify packages to install immediately.

@@ -735,6 +735,10 @@ class ChargeRunRequest(BaseModel):
     )
     event_name: Annotated[str, Field(examples=['ANALYZE_PAGE'])]
     count: Annotated[int, Field(examples=[1])]
+    request_id: Annotated[str | None, Field(examples=['7Hs2kQw9LxP4mN1vB'])] = None
+    """
+    ID of the Server Actor request being charged, from the `X-Actor-Request-ID` header of the incoming request. Required for multi-tenant Server Actor runs, where it identifies the request the charge belongs to.
+    """
 
 
 @docs_group('Models')

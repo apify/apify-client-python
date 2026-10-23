@@ -74,16 +74,14 @@ async def test_run_charge_preserves_count_async(httpserver: HTTPServer, count: i
 
 
 @pytest.mark.parametrize(
-    ('apify_request_id', 'expected_body'),
+    ('request_id', 'expected_body'),
     [
         pytest.param(None, {'eventName': 'test-event', 'count': 1}, id='omitted'),
         pytest.param('req_123', {'eventName': 'test-event', 'count': 1, 'requestId': 'req_123'}, id='provided'),
     ],
 )
-def test_run_charge_sends_apify_request_id_sync(
-    httpserver: HTTPServer, apify_request_id: str | None, expected_body: dict
-) -> None:
-    """Ensure `apify_request_id` is sent as `requestId` in the body, and left out when not provided."""
+def test_run_charge_sends_request_id_sync(httpserver: HTTPServer, request_id: str | None, expected_body: dict) -> None:
+    """Ensure `request_id` is sent as `requestId` in the body, and left out when not provided."""
     captured_requests: list[Request] = []
 
     def capture_request(request: Request) -> Response:
@@ -95,23 +93,23 @@ def test_run_charge_sends_apify_request_id_sync(
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClient(token='test_token', api_url=api_url)
 
-    client.run(_MOCKED_RUN_ID).charge('test-event', apify_request_id=apify_request_id)
+    client.run(_MOCKED_RUN_ID).charge('test-event', request_id=request_id)
 
     assert len(captured_requests) == 1
     assert json.loads(captured_requests[0].get_data()) == expected_body
 
 
 @pytest.mark.parametrize(
-    ('apify_request_id', 'expected_body'),
+    ('request_id', 'expected_body'),
     [
         pytest.param(None, {'eventName': 'test-event', 'count': 1}, id='omitted'),
         pytest.param('req_123', {'eventName': 'test-event', 'count': 1, 'requestId': 'req_123'}, id='provided'),
     ],
 )
-async def test_run_charge_sends_apify_request_id_async(
-    httpserver: HTTPServer, apify_request_id: str | None, expected_body: dict
+async def test_run_charge_sends_request_id_async(
+    httpserver: HTTPServer, request_id: str | None, expected_body: dict
 ) -> None:
-    """Async variant of `test_run_charge_sends_apify_request_id_sync`."""
+    """Async variant of `test_run_charge_sends_request_id_sync`."""
     captured_requests: list[Request] = []
 
     def capture_request(request: Request) -> Response:
@@ -123,7 +121,7 @@ async def test_run_charge_sends_apify_request_id_async(
     api_url = httpserver.url_for('/').removesuffix('/')
     client = ApifyClientAsync(token='test_token', api_url=api_url)
 
-    await client.run(_MOCKED_RUN_ID).charge('test-event', apify_request_id=apify_request_id)
+    await client.run(_MOCKED_RUN_ID).charge('test-event', request_id=request_id)
 
     assert len(captured_requests) == 1
     assert json.loads(captured_requests[0].get_data()) == expected_body

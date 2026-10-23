@@ -390,7 +390,7 @@ class RunClient(ResourceClient):
         *,
         count: int = 1,
         idempotency_key: str | None = None,
-        apify_request_id: str | None = None,
+        request_id: str | None = None,
         timeout: Timeout = 'short',
     ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
@@ -402,9 +402,9 @@ class RunClient(ResourceClient):
             count: The number of events to charge.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
-            apify_request_id: ID of the request served by a multi-tenant Standby run, taken from the
-                `X-Apify-Request-ID` header of the incoming request. The charge then goes to the account of the caller
-                who made that request, not the account that started the run.
+            request_id: ID of the request served by a multi-tenant Actor Server run, taken from the `X-Actor-Request-ID`
+                header of the incoming request. The charge then goes to the account of the caller who made that request,
+                not the account that started the run.
             timeout: Timeout for the API HTTP request.
 
         Raises:
@@ -422,8 +422,8 @@ class RunClient(ResourceClient):
             'eventName': event_name,
             'count': count,
         }
-        if apify_request_id is not None:
-            body['requestId'] = apify_request_id
+        if request_id is not None:
+            body['requestId'] = request_id
 
         self._http_client.call(
             url=self._build_url('charge'),
@@ -946,7 +946,7 @@ class RunClientAsync(ResourceClientAsync):
         *,
         count: int = 1,
         idempotency_key: str | None = None,
-        apify_request_id: str | None = None,
+        request_id: str | None = None,
         timeout: Timeout = 'short',
     ) -> None:
         """Charge for an event of a Pay-Per-Event Actor run.
@@ -958,9 +958,9 @@ class RunClientAsync(ResourceClientAsync):
             count: The number of events to charge.
             idempotency_key: A unique key to ensure idempotent charging. If not provided,
                 one will be auto-generated.
-            apify_request_id: ID of the request served by a multi-tenant Standby run, taken from the
-                `X-Apify-Request-ID` header of the incoming request. The charge then goes to the account of the caller
-                who made that request, not the account that started the run.
+            request_id: ID of the request served by a multi-tenant Actor Server run, taken from the `X-Actor-Request-ID`
+                header of the incoming request. The charge then goes to the account of the caller who made that request,
+                not the account that started the run.
             timeout: Timeout for the API HTTP request.
 
         Raises:
@@ -978,8 +978,8 @@ class RunClientAsync(ResourceClientAsync):
             'eventName': event_name,
             'count': count,
         }
-        if apify_request_id is not None:
-            body['requestId'] = apify_request_id
+        if request_id is not None:
+            body['requestId'] = request_id
 
         await self._http_client.call(
             url=self._build_url('charge'),

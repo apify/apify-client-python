@@ -20,3 +20,4 @@ extend-exclude = [
 [default.extend-words]
 # Add project-specific words that should not be treated as typos
 consts = "consts"  # Common abbreviation for "constants"
+certifi = "certifi"  # Python package name

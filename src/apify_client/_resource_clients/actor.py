@@ -32,6 +32,8 @@ from apify_client._utils.wait_for_resources import (
     start_waiting_for_resources,
     start_waiting_for_resources_async,
 )
+from apify_client.errors import ApifyClientError
+from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -55,7 +57,9 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client.types import Timeout, WebhooksList
+    from apify_client.http_clients import HttpResponse
+    from apify_client.http_compressors import HttpCompressor
+    from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -86,6 +90,7 @@ class ActorClient(ResourceClient):
             resource_path=resource_path,
             **kwargs,
         )
+        self._server_url: str | None = None
 
     def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -625,6 +630,74 @@ class ActorClient(ResourceClient):
 
         return True
 
+    def server_request(
+        self,
+        path: str = '/',
+        *,
+        method: str = 'GET',
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        data: str | bytes | None = None,
+        json: JsonSerializable | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
+        timeout: Timeout = 'long',
+    ) -> HttpResponse:
+        """Send an HTTP request to the Actor's server.
+
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The server's
+        URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
+        client. The request carries the client's token, which the platform consumes, so it never reaches the Actor's
+        code. The first request to an idle Actor waits for the platform to start a server run, which is why the timeout
+        defaults to `long`.
+
+        A server error or a rate-limit response is retried like an API call, so the server may receive the same
+        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
+        server may not decode a compressed body.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Args:
+            path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
+                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
+            method: HTTP method of the request.
+            params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
+                or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
+                in UTC, and `None` values are left out.
+            headers: Additional headers of the request.
+            data: Raw request body. Cannot be used together with `json`.
+            json: JSON-serializable request body. Cannot be used together with `data`.
+            compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
+                instance. The body is compressed under the same conditions as for API calls. Set it only if the
+                Actor's server decodes the resulting `Content-Encoding`.
+            timeout: Timeout for the HTTP request.
+
+        Returns:
+            The response of the Actor's server.
+
+        Raises:
+            ApifyClientError: If the Actor is not a Server Actor.
+            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+            ImportError: If `compression` needs an optional extra that is not installed.
+            ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
+        """
+        if self._server_url is None:
+            response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            actor = ActorResponse.model_validate(response_to_dict(response)).data
+            if actor.standby_url is None:
+                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+            self._server_url = actor.standby_url
+
+        return self._http_client.call(
+            url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
+            method=method,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            timeout=timeout,
+            compression=resolve_compressor(compression) if compression is not None else False,
+        )
+
 
 @docs_group('Resource clients')
 class ActorClientAsync(ResourceClientAsync):
@@ -646,6 +719,7 @@ class ActorClientAsync(ResourceClientAsync):
             resource_path=resource_path,
             **kwargs,
         )
+        self._server_url: str | None = None
 
     async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -1185,3 +1259,71 @@ class ActorClientAsync(ResourceClientAsync):
         )
 
         return True
+
+    async def server_request(
+        self,
+        path: str = '/',
+        *,
+        method: str = 'GET',
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        data: str | bytes | None = None,
+        json: JsonSerializable | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
+        timeout: Timeout = 'long',
+    ) -> HttpResponse:
+        """Send an HTTP request to the Actor's server.
+
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The server's
+        URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
+        client. The request carries the client's token, which the platform consumes, so it never reaches the Actor's
+        code. The first request to an idle Actor waits for the platform to start a server run, which is why the timeout
+        defaults to `long`.
+
+        A server error or a rate-limit response is retried like an API call, so the server may receive the same
+        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
+        server may not decode a compressed body.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Args:
+            path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
+                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
+            method: HTTP method of the request.
+            params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
+                or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
+                in UTC, and `None` values are left out.
+            headers: Additional headers of the request.
+            data: Raw request body. Cannot be used together with `json`.
+            json: JSON-serializable request body. Cannot be used together with `data`.
+            compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
+                instance. The body is compressed under the same conditions as for API calls. Set it only if the
+                Actor's server decodes the resulting `Content-Encoding`.
+            timeout: Timeout for the HTTP request.
+
+        Returns:
+            The response of the Actor's server.
+
+        Raises:
+            ApifyClientError: If the Actor is not a Server Actor.
+            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+            ImportError: If `compression` needs an optional extra that is not installed.
+            ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
+        """
+        if self._server_url is None:
+            response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            actor = ActorResponse.model_validate(response_to_dict(response)).data
+            if actor.standby_url is None:
+                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+            self._server_url = actor.standby_url
+
+        return await self._http_client.call(
+            url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
+            method=method,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            timeout=timeout,
+            compression=resolve_compressor(compression) if compression is not None else False,
+        )

@@ -90,7 +90,7 @@ class ActorClient(ResourceClient):
             resource_path=resource_path,
             **kwargs,
         )
-        self._standby_url: str | None = None
+        self._server_url: str | None = None
 
     def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -630,7 +630,7 @@ class ActorClient(ResourceClient):
 
         return True
 
-    def standby_request(
+    def server_request(
         self,
         path: str = '/',
         *,
@@ -642,13 +642,13 @@ class ActorClient(ResourceClient):
         compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
         timeout: Timeout = 'long',
     ) -> HttpResponse:
-        """Send an HTTP request to the Actor's Standby server.
+        """Send an HTTP request to the Actor's server.
 
-        An Actor in Standby mode runs a web server that is called over HTTP, without starting a run for each call. The
-        server's URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on
-        this client. The request carries the client's token, which the Standby router consumes, so it never reaches
-        the Actor's code. The first request to an idle Actor waits for the platform to start a Standby run, which is
-        why the timeout defaults to `long`.
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The server's
+        URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
+        client. The request carries the client's token, which the platform consumes, so it never reaches the Actor's
+        code. The first request to an idle Actor waits for the platform to start a server run, which is why the timeout
+        defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -657,7 +657,7 @@ class ActorClient(ResourceClient):
         https://docs.apify.com/platform/actors/running/standby
 
         Args:
-            path: The path on the Actor's server, for example `/search`. It is always resolved against the Standby URL,
+            path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
                 so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
             method: HTTP method of the request.
             params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
@@ -675,20 +675,20 @@ class ActorClient(ResourceClient):
             The response of the Actor's server.
 
         Raises:
-            ApifyClientError: If the Actor does not have Standby mode enabled.
+            ApifyClientError: If the Actor is not a Server Actor.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
-        if self._standby_url is None:
+        if self._server_url is None:
             response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
             actor = ActorResponse.model_validate(response_to_dict(response)).data
             if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} does not have Standby mode enabled.')
-            self._standby_url = actor.standby_url
+                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+            self._server_url = actor.standby_url
 
         return self._http_client.call(
-            url=f'{self._standby_url.rstrip("/")}/{path.lstrip("/")}',
+            url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
             params=params,
             headers=headers,
@@ -719,7 +719,7 @@ class ActorClientAsync(ResourceClientAsync):
             resource_path=resource_path,
             **kwargs,
         )
-        self._standby_url: str | None = None
+        self._server_url: str | None = None
 
     async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -1260,7 +1260,7 @@ class ActorClientAsync(ResourceClientAsync):
 
         return True
 
-    async def standby_request(
+    async def server_request(
         self,
         path: str = '/',
         *,
@@ -1272,13 +1272,13 @@ class ActorClientAsync(ResourceClientAsync):
         compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
         timeout: Timeout = 'long',
     ) -> HttpResponse:
-        """Send an HTTP request to the Actor's Standby server.
+        """Send an HTTP request to the Actor's server.
 
-        An Actor in Standby mode runs a web server that is called over HTTP, without starting a run for each call. The
-        server's URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on
-        this client. The request carries the client's token, which the Standby router consumes, so it never reaches
-        the Actor's code. The first request to an idle Actor waits for the platform to start a Standby run, which is
-        why the timeout defaults to `long`.
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The server's
+        URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
+        client. The request carries the client's token, which the platform consumes, so it never reaches the Actor's
+        code. The first request to an idle Actor waits for the platform to start a server run, which is why the timeout
+        defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -1287,7 +1287,7 @@ class ActorClientAsync(ResourceClientAsync):
         https://docs.apify.com/platform/actors/running/standby
 
         Args:
-            path: The path on the Actor's server, for example `/search`. It is always resolved against the Standby URL,
+            path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
                 so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
             method: HTTP method of the request.
             params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
@@ -1305,20 +1305,20 @@ class ActorClientAsync(ResourceClientAsync):
             The response of the Actor's server.
 
         Raises:
-            ApifyClientError: If the Actor does not have Standby mode enabled.
+            ApifyClientError: If the Actor is not a Server Actor.
             ApifyApiError: If the Actor does not exist, or the server responds with an error status.
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
-        if self._standby_url is None:
+        if self._server_url is None:
             response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
             actor = ActorResponse.model_validate(response_to_dict(response)).data
             if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} does not have Standby mode enabled.')
-            self._standby_url = actor.standby_url
+                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+            self._server_url = actor.standby_url
 
         return await self._http_client.call(
-            url=f'{self._standby_url.rstrip("/")}/{path.lstrip("/")}',
+            url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
             params=params,
             headers=headers,

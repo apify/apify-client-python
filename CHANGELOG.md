@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add support for Python 3.15 ([#1122](https://github.com/apify/apify-client-python/pull/1122)) ([ef8f088](https://github.com/apify/apify-client-python/commit/ef8f088c3d4fb5f6facfc2728343298464c5ecb6)) by [@vdusek](https://github.com/vdusek)
 - Add a `user_agent_suffix` option ([#1145](https://github.com/apify/apify-client-python/pull/1145)) ([ecccadb](https://github.com/apify/apify-client-python/commit/ecccadb1cf0cab8d7e8e89bdb36e31a71ad12526)) by [@vdusek](https://github.com/vdusek), closes [#1148](https://github.com/apify/apify-client-python/issues/1148)
 - Add `chunk_size` to collection `iterate()` methods ([#1146](https://github.com/apify/apify-client-python/pull/1146)) ([a4b6975](https://github.com/apify/apify-client-python/commit/a4b6975cd55cc71b19ca7e58d8ce1348513bc615)) by [@vdusek](https://github.com/vdusek), closes [#1149](https://github.com/apify/apify-client-python/issues/1149)
+- Add missing optional parameters to resource clients ([#1144](https://github.com/apify/apify-client-python/pull/1144)) ([8b3c6f4](https://github.com/apify/apify-client-python/commit/8b3c6f4df2a5761e7cb882b792049d5be80a6bb7)) by [@vdusek](https://github.com/vdusek), closes [#1147](https://github.com/apify/apify-client-python/issues/1147)
 
 ### 🐛 Bug Fixes
 
@@ -18,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Allow `max_retries=0` to disable retries ([#1142](https://github.com/apify/apify-client-python/pull/1142)) ([3b128d1](https://github.com/apify/apify-client-python/commit/3b128d1f8481fdfe1107d7768b1dff9f9b80b94d)) by [@vdusek](https://github.com/vdusek), closes [#1139](https://github.com/apify/apify-client-python/issues/1139)
 - Fetch the Actor from the API root in `get_streamed_log()` on `last_run()` clients ([#1143](https://github.com/apify/apify-client-python/pull/1143)) ([2b58a2b](https://github.com/apify/apify-client-python/commit/2b58a2ba26a920d1dab22accd4a783effaaabca6)) by [@vdusek](https://github.com/vdusek), closes [#1137](https://github.com/apify/apify-client-python/issues/1137)
 - Append `&#x2F;v2` to `api_url` only when it is missing ([#1141](https://github.com/apify/apify-client-python/pull/1141)) ([909d916](https://github.com/apify/apify-client-python/commit/909d916af870bace2ba1ca5787ea0dc147f419a1)) by [@vdusek](https://github.com/vdusek), closes [#1138](https://github.com/apify/apify-client-python/issues/1138)
+- Add new error types and drop rental pricing fields from CurrentPricingInfo ([#1156](https://github.com/apify/apify-client-python/pull/1156)) ([a94d78a](https://github.com/apify/apify-client-python/commit/a94d78a7d796a03b7cbb26cff3cbb034f8a3340f)) by [@apify-service-account](https://github.com/apify-service-account)
 
 
 <!-- git-cliff-unreleased-end -->

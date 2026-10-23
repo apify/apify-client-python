@@ -43,6 +43,7 @@ class StoreCollectionClient(ResourceClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        include_unrunnable_actors: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfStoreActors:
         """List Actors in Apify store.
@@ -58,6 +59,9 @@ class StoreCollectionClient(ResourceClient):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            include_unrunnable_actors: Whether to include Actors that are not safe to run automatically, such as
+                Actors whose developers have not passed KYC, or full-permission Actors without a large user base.
+                By default, they are excluded.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -72,6 +76,7 @@ class StoreCollectionClient(ResourceClient):
             category=category,
             username=username,
             pricingModel=pricing_model,
+            includeUnrunnableActors=include_unrunnable_actors,
         )
         return ListOfStoreActorsResponse.model_validate(result).data
 
@@ -85,6 +90,7 @@ class StoreCollectionClient(ResourceClient):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        include_unrunnable_actors: bool | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> Iterator[StoreActor]:
@@ -104,6 +110,9 @@ class StoreCollectionClient(ResourceClient):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            include_unrunnable_actors: Whether to include Actors that are not safe to run automatically, such as
+                Actors whose developers have not passed KYC, or full-permission Actors without a large user base.
+                By default, they are excluded.
             chunk_size: Maximum number of Actors requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
@@ -120,6 +129,7 @@ class StoreCollectionClient(ResourceClient):
                 category=category,
                 username=username,
                 pricing_model=pricing_model,
+                include_unrunnable_actors=include_unrunnable_actors,
                 timeout=timeout,
             )
 
@@ -155,6 +165,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        include_unrunnable_actors: bool | None = None,
         timeout: Timeout = 'medium',
     ) -> ListOfStoreActors:
         """List Actors in Apify store.
@@ -170,6 +181,9 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            include_unrunnable_actors: Whether to include Actors that are not safe to run automatically, such as
+                Actors whose developers have not passed KYC, or full-permission Actors without a large user base.
+                By default, they are excluded.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -184,6 +198,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             category=category,
             username=username,
             pricingModel=pricing_model,
+            includeUnrunnableActors=include_unrunnable_actors,
         )
         return ListOfStoreActorsResponse.model_validate(result).data
 
@@ -197,6 +212,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
         category: str | None = None,
         username: str | None = None,
         pricing_model: str | None = None,
+        include_unrunnable_actors: bool | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
     ) -> AsyncIterator[StoreActor]:
@@ -216,6 +232,9 @@ class StoreCollectionClientAsync(ResourceClientAsync):
             category: Filter by this category.
             username: Filter by this username.
             pricing_model: Filter by this pricing model.
+            include_unrunnable_actors: Whether to include Actors that are not safe to run automatically, such as
+                Actors whose developers have not passed KYC, or full-permission Actors without a large user base.
+                By default, they are excluded.
             chunk_size: Maximum number of Actors requested per API call when iterating across pages.
             timeout: Timeout for the API HTTP request.
 
@@ -232,6 +251,7 @@ class StoreCollectionClientAsync(ResourceClientAsync):
                 category=category,
                 username=username,
                 pricing_model=pricing_model,
+                include_unrunnable_actors=include_unrunnable_actors,
                 timeout=timeout,
             )
 

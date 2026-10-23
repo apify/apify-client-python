@@ -156,6 +156,36 @@ async def test_dataset_public_url_normalizes_params_async() -> None:
     assert query['fields'] == ['title,url']
 
 
+def test_dataset_public_url_sends_item_format_sync() -> None:
+    """`item_format` becomes the `format` query parameter of the public URL."""
+    client = ApifyClient(token='dummy-token', api_url='https://api.apify.com')
+    dataset = client.dataset('someID')
+
+    mock_response = Mock()
+    mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
+
+    with mock.patch.object(client._http_client, 'call', return_value=mock_response):
+        public_url = dataset.create_items_public_url(item_format='csv')
+
+    query = parse_qs(urlparse(public_url).query)
+    assert query['format'] == ['csv']
+
+
+async def test_dataset_public_url_sends_item_format_async() -> None:
+    """`item_format` becomes the `format` query parameter of the public URL."""
+    client = ApifyClientAsync(token='dummy-token', api_url='https://api.apify.com')
+    dataset = client.dataset('someID')
+
+    mock_response = Mock()
+    mock_response.json.return_value = json.loads(MOCKED_DATASET_RESPONSE)
+
+    with mock.patch.object(client._http_client, 'call', return_value=mock_response):
+        public_url = await dataset.create_items_public_url(item_format='csv')
+
+    query = parse_qs(urlparse(public_url).query)
+    assert query['format'] == ['csv']
+
+
 @pytest.mark.parametrize('signing_key', [None, 'custom-signing-key'])
 @parametrized_api_urls
 def test_kvs_public_url_sync(api_url: str, api_public_url: str | None, signing_key: str | None) -> None:

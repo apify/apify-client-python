@@ -352,9 +352,10 @@ class HttpClientBase:
         if isinstance(data, (str, bytes, bytearray)):
             content = data.encode('utf-8') if isinstance(data, str) else bytes(data)
 
+            compressor = self._http_compressor if compression is True else compression
+
             # A caller-supplied encoding says the body arrives already encoded, so compressing it here would
             # both mislabel it and waste the work.
-            compressor = self._http_compressor if compression is True else compression
             if (
                 compressor is not False
                 and self._get_header(headers, 'content-encoding') is None

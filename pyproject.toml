@@ -26,7 +26,7 @@ classifiers = [
 keywords = ["apify", "api", "client", "automation", "crawling", "scraping"]
 dependencies = [
     "colorama>=0.4.0",
-    "impit>=0.14.0",
+    "impit>=0.15.1",
     "more_itertools>=10.0.0",
     "pydantic[email]>=2.11.0",
     # 4.6.0 is the first release whose runtime protocol checks look attributes up statically.
@@ -251,7 +251,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-10-21T115842Z"
+version = "v2-2026-10-26T112451Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

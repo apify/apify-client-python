@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - Fetch the Actor from the API root in `get_streamed_log()` on `last_run()` clients ([#1143](https://github.com/apify/apify-client-python/pull/1143)) ([2b58a2b](https://github.com/apify/apify-client-python/commit/2b58a2ba26a920d1dab22accd4a783effaaabca6)) by [@vdusek](https://github.com/vdusek), closes [#1137](https://github.com/apify/apify-client-python/issues/1137)
 - Append `&#x2F;v2` to `api_url` only when it is missing ([#1141](https://github.com/apify/apify-client-python/pull/1141)) ([909d916](https://github.com/apify/apify-client-python/commit/909d916af870bace2ba1ca5787ea0dc147f419a1)) by [@vdusek](https://github.com/vdusek), closes [#1138](https://github.com/apify/apify-client-python/issues/1138)
 - Add new error types and drop rental pricing fields from CurrentPricingInfo ([#1156](https://github.com/apify/apify-client-python/pull/1156)) ([a94d78a](https://github.com/apify/apify-client-python/commit/a94d78a7d796a03b7cbb26cff3cbb034f8a3340f)) by [@apify-service-account](https://github.com/apify-service-account)
+- Add missing fields to the Actor definition model ([#1165](https://github.com/apify/apify-client-python/pull/1165)) ([4de7379](https://github.com/apify/apify-client-python/commit/4de73793f5c2aa03856feda5af6b32787f78f6e8)) by [@apify-service-account](https://github.com/apify-service-account)
+- **deps:** Require impit&gt;=0.15.1 to drop the compromised emSign CA ([#1160](https://github.com/apify/apify-client-python/pull/1160)) ([6c4fd72](https://github.com/apify/apify-client-python/commit/6c4fd72fd885b2c40d3991f97113add2f4c20cce)) by [@Pijukatel](https://github.com/Pijukatel)
 
 
 <!-- git-cliff-unreleased-end -->

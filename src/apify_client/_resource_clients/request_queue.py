@@ -56,7 +56,7 @@ if TYPE_CHECKING:
         RequestWithoutIdCamelDict,
         RequestWithoutIdDict,
     )
-    from apify_client.types import Timeout
+    from apify_client.types import QueryParams, Timeout
 
 _RQ_MAX_REQUESTS_PER_BATCH = 25
 """Maximum number of requests the API accepts in a single batch call."""
@@ -946,7 +946,7 @@ class RequestQueueClientAsync(ResourceClientAsync):
         self,
         *,
         queue: asyncio.Queue[Iterable[bytes]],
-        request_params: dict,
+        request_params: QueryParams,
         timeout: Timeout,
     ) -> BatchAddResponse:
         """Worker function to process a batch of requests.

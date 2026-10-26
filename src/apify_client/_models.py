@@ -128,6 +128,14 @@ class ActorDefinition(BaseModel):
     """
     The name of the Actor.
     """
+    title: str | None = None
+    """
+    The human-readable display title of the Actor, shown in Apify Console and Apify Store.
+    """
+    description: str | None = None
+    """
+    The description of the Actor.
+    """
     version: Annotated[str | None, Field(pattern='^[0-9]+(\\.[0-9]+)+$')] = None
     """
     The version of the Actor, typically a dot-separated sequence of numbers (e.g., `0.1`, `1.0`, or `0.0.1`).
@@ -136,6 +144,7 @@ class ActorDefinition(BaseModel):
     """
     The tag name to be applied to a successful build of the Actor. Defaults to 'latest' if not specified.
     """
+    meta: ActorDefinitionMeta | None = None
     environment_variables: dict[str, str] | None = None
     """
     A map of environment variables to be used during local development and deployment.
@@ -155,6 +164,10 @@ class ActorDefinition(BaseModel):
     input: dict[str, Any] | None = None
     """
     The input schema object, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/input-schema)
+    """
+    output: dict[str, Any] | None = None
+    """
+    The output schema object, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/output-schema)
     """
     changelog: str | None = None
     """
@@ -176,6 +189,33 @@ class ActorDefinition(BaseModel):
     uses_standby_mode: bool | None = None
     """
     Specifies whether Standby mode is enabled for the Actor.
+    """
+    web_server_schema: dict[str, Any] | None = None
+    """
+    The OpenAPI v3 specification of the web server running in the Actor, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema)
+    """
+    web_server_mcp_path: str | None = None
+    """
+    The HTTP path where the Actor's web server exposes its MCP (Model Context Protocol) server, for example `/mcp`.
+    """
+
+
+@docs_group('Models')
+class ActorDefinitionMeta(BaseModel):
+    """Additional information about the Actor."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    template_id: str | None = None
+    """
+    The ID of the template from which the Actor was created.
+    """
+    generated_by: str | None = None
+    """
+    The tool or model that generated the Actor.
     """
 
 
@@ -3366,6 +3406,14 @@ class Storages(BaseModel):
     dataset: dict[str, Any] | None = None
     """
     Defines the schema of items in your dataset, the full specification can be found in [Apify docs](https://docs.apify.com/platform/actors/development/actor-definition/dataset-schema)
+    """
+    datasets: dict[str, dict[str, Any]] | None = None
+    """
+    Maps dataset aliases to the schemas of the Actor's datasets, the full specification can be found in [Apify docs](https://docs.apify.com/platform/storage/dataset-schema/multiple-datasets)
+    """
+    key_value_store: dict[str, Any] | None = None
+    """
+    Defines the schema of the Actor's default key-value store, the full specification can be found in [Apify docs](https://docs.apify.com/platform/storage/key-value-store-schema)
     """
 
 

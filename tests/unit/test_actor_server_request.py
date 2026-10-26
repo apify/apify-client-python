@@ -117,6 +117,38 @@ async def test_server_request_fetches_server_url_once_async(
     assert len(actor_gets) == 1
 
 
+def test_get_server_url_returns_standby_url(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`get_server_url` returns the Actor's `standby_url` and fetches it from the API only once."""
+    expect_server_actor(httpserver)
+    actor_client = sync_client.actor(_MOCKED_ACTOR_ID)
+
+    assert actor_client.get_server_url() == httpserver.url_for(_SERVER_PREFIX)
+    assert actor_client.get_server_url() == httpserver.url_for(_SERVER_PREFIX)
+
+    actor_gets = [request for request, _ in httpserver.log if request.path == _ACTOR_PATH]
+    assert len(actor_gets) == 1
+
+
+async def test_get_server_url_returns_standby_url_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async variant of `test_get_server_url_returns_standby_url`."""
+    expect_server_actor(httpserver)
+    actor_client = async_client.actor(_MOCKED_ACTOR_ID)
+
+    assert await actor_client.get_server_url() == httpserver.url_for(_SERVER_PREFIX)
+    assert await actor_client.get_server_url() == httpserver.url_for(_SERVER_PREFIX)
+
+    actor_gets = [request for request, _ in httpserver.log if request.path == _ACTOR_PATH]
+    assert len(actor_gets) == 1
+
+
+def test_get_server_url_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`get_server_url` raises for an Actor without Server mode enabled."""
+    httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))
+
+    with pytest.raises(ApifyClientError, match='is not a Server Actor'):
+        sync_client.actor(_MOCKED_ACTOR_ID).get_server_url()
+
+
 @pytest.mark.parametrize(
     'path',
     [

@@ -631,6 +631,30 @@ class ActorClient(ResourceClient):
 
         return True
 
+    def get_server_url(self) -> str:
+        """Return the URL of the Actor's server.
+
+        The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
+        client. Use it to call the server with another HTTP client, for example one generated from the server's
+        OpenAPI specification.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Returns:
+            The URL of the Actor's server.
+
+        Raises:
+            ApifyClientError: If the Actor is not a Server Actor.
+            ApifyApiError: If the Actor does not exist.
+        """
+        if self._server_url is None:
+            response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            actor = ActorResponse.model_validate(response_to_dict(response)).data
+            if actor.standby_url is None:
+                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+            self._server_url = actor.standby_url
+        return self._server_url
+
     def server_request(
         self,
         path: str = '/',
@@ -645,11 +669,10 @@ class ActorClient(ResourceClient):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
 
-        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The server's
-        URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
-        client. The request carries the client's token, which the platform consumes, so it never reaches the Actor's
-        code. The first request to an idle Actor waits for the platform to start a server run, which is why the timeout
-        defaults to `long`.
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The request
+        goes to the URL returned by `get_server_url` and carries the client's token, which the platform consumes, so it
+        never reaches the Actor's code. The first request to an idle Actor waits for the platform to start a server
+        run, which is why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -681,15 +704,9 @@ class ActorClient(ResourceClient):
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
-        if self._server_url is None:
-            response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
-            actor = ActorResponse.model_validate(response_to_dict(response)).data
-            if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-            self._server_url = actor.standby_url
-
+        server_url = self.get_server_url()
         return self._http_client.call(
-            url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
+            url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
             params=dict(params) if params is not None else None,
             headers=headers,
@@ -1261,6 +1278,30 @@ class ActorClientAsync(ResourceClientAsync):
 
         return True
 
+    async def get_server_url(self) -> str:
+        """Return the URL of the Actor's server.
+
+        The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
+        client. Use it to call the server with another HTTP client, for example one generated from the server's
+        OpenAPI specification.
+
+        https://docs.apify.com/platform/actors/running/standby
+
+        Returns:
+            The URL of the Actor's server.
+
+        Raises:
+            ApifyClientError: If the Actor is not a Server Actor.
+            ApifyApiError: If the Actor does not exist.
+        """
+        if self._server_url is None:
+            response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            actor = ActorResponse.model_validate(response_to_dict(response)).data
+            if actor.standby_url is None:
+                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+            self._server_url = actor.standby_url
+        return self._server_url
+
     async def server_request(
         self,
         path: str = '/',
@@ -1275,11 +1316,10 @@ class ActorClientAsync(ResourceClientAsync):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
 
-        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The server's
-        URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
-        client. The request carries the client's token, which the platform consumes, so it never reaches the Actor's
-        code. The first request to an idle Actor waits for the platform to start a server run, which is why the timeout
-        defaults to `long`.
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The request
+        goes to the URL returned by `get_server_url` and carries the client's token, which the platform consumes, so it
+        never reaches the Actor's code. The first request to an idle Actor waits for the platform to start a server
+        run, which is why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -1311,15 +1351,9 @@ class ActorClientAsync(ResourceClientAsync):
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
-        if self._server_url is None:
-            response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
-            actor = ActorResponse.model_validate(response_to_dict(response)).data
-            if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-            self._server_url = actor.standby_url
-
+        server_url = await self.get_server_url()
         return await self._http_client.call(
-            url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
+            url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
             params=dict(params) if params is not None else None,
             headers=headers,

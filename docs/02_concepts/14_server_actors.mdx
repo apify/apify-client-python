@@ -35,6 +35,7 @@ Note that:
 
 - The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls on the same `ActorClient`. If the Actor isn't a Server Actor, the method raises an `ApifyClientError`.
 - The path is always resolved against that URL, so a path can't send the request to another host.
+- To call the server with another HTTP client, for example one generated from the server's OpenAPI specification, get its URL with <ApiLink to="class/ActorClient#get_server_url">`ActorClient.get_server_url`</ApiLink>. It fetches and reuses the URL the same way.
 - By default, the request body is sent uncompressed, since the Actor's server may not decode a compressed body. If the server decodes it, pass `compression`, for example `compression='gzip'`. The client then compresses large bodies the same way as for API calls.
 
 ## Authentication

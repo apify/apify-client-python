@@ -486,6 +486,9 @@ class HttpClient(HttpClientBase):
     The client's default headers from `self._headers` have to go out with every request, otherwise the
     `Authorization` header never reaches the API. The inherited `call` merges them into the per-request headers
     through `_prepare_request_call`, so only a client that replaces `call` has to do it itself.
+
+    A replaced `call` has to accept every argument of the inherited one, including `compression`, which
+    `ActorClient.server_request` always passes, as `False` unless its caller asks for compression.
     """
 
     def __enter__(self) -> Self:

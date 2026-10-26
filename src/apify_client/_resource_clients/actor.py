@@ -683,7 +683,7 @@ class ActorClient(ResourceClient):
         if tagged_build is not None:
             build_id = tagged_build.build_id
         else:
-            # Not a tag, so `build_ref` is a build number, which the API can't look up directly.
+            # Not a tag, so look `build_ref` up as a build number, which the API can't resolve directly.
             for build_item in self.builds().iterate(desc=True):
                 if build_item.build_number == build_ref:
                     build_id = build_item.id
@@ -1381,7 +1381,7 @@ class ActorClientAsync(ResourceClientAsync):
         if tagged_build is not None:
             build_id = tagged_build.build_id
         else:
-            # Not a tag, so `build_ref` is a build number, which the API can't look up directly.
+            # Not a tag, so look `build_ref` up as a build number, which the API can't resolve directly.
             async for build_item in self.builds().iterate(desc=True):
                 if build_item.build_number == build_ref:
                     build_id = build_item.id

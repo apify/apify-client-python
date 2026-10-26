@@ -655,6 +655,57 @@ class ActorClient(ResourceClient):
             self._server_url = actor.standby_url
         return self._server_url
 
+    def get_server_openapi_spec(self) -> dict[str, Any] | None:
+        """Return the OpenAPI specification of the Actor's server.
+
+        The specification is the web server schema from the Actor's definition, taken from the build the Actor runs in
+        Server mode: the build set in `actor_standby.build`, or `latest` if none is set. Use it to generate an HTTP
+        client for the server, and point that client at the URL returned by `get_server_url`.
+
+        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
+
+        Returns:
+            The OpenAPI specification of the Actor's server, or `None` if the Actor's definition doesn't include one.
+
+        Raises:
+            ApifyClientError: If the Actor is not a Server Actor, or its Server mode build doesn't exist.
+            ApifyApiError: If the Actor does not exist.
+        """
+        response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+        actor = ActorResponse.model_validate(response_to_dict(response)).data
+        if actor.standby_url is None:
+            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+
+        build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
+
+        build_id = None
+        tagged_build = (actor.tagged_builds or {}).get(build_ref)
+        if tagged_build is not None:
+            build_id = tagged_build.build_id
+        else:
+            # Not a tag, so `build_ref` is a build number, which the API can't look up directly.
+            for build_item in self.builds().iterate(desc=True):
+                if build_item.build_number == build_ref:
+                    build_id = build_item.id
+                    break
+
+        build = None
+        if build_id is not None:
+            build_client = self._client_registry.build_client(
+                resource_id=build_id,
+                base_url=self._base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_registry=self._client_registry,
+            )
+            build = build_client.get()
+        if build is None:
+            raise ApifyClientError(f'Build {build_ref} of Actor {self.resource_id} does not exist.')
+
+        if build.actor_definition is None:
+            return None
+        return build.actor_definition.web_server_schema
+
     def server_request(
         self,
         path: str = '/',
@@ -1301,6 +1352,57 @@ class ActorClientAsync(ResourceClientAsync):
                 raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
             self._server_url = actor.standby_url
         return self._server_url
+
+    async def get_server_openapi_spec(self) -> dict[str, Any] | None:
+        """Return the OpenAPI specification of the Actor's server.
+
+        The specification is the web server schema from the Actor's definition, taken from the build the Actor runs in
+        Server mode: the build set in `actor_standby.build`, or `latest` if none is set. Use it to generate an HTTP
+        client for the server, and point that client at the URL returned by `get_server_url`.
+
+        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
+
+        Returns:
+            The OpenAPI specification of the Actor's server, or `None` if the Actor's definition doesn't include one.
+
+        Raises:
+            ApifyClientError: If the Actor is not a Server Actor, or its Server mode build doesn't exist.
+            ApifyApiError: If the Actor does not exist.
+        """
+        response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+        actor = ActorResponse.model_validate(response_to_dict(response)).data
+        if actor.standby_url is None:
+            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+
+        build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
+
+        build_id = None
+        tagged_build = (actor.tagged_builds or {}).get(build_ref)
+        if tagged_build is not None:
+            build_id = tagged_build.build_id
+        else:
+            # Not a tag, so `build_ref` is a build number, which the API can't look up directly.
+            async for build_item in self.builds().iterate(desc=True):
+                if build_item.build_number == build_ref:
+                    build_id = build_item.id
+                    break
+
+        build = None
+        if build_id is not None:
+            build_client = self._client_registry.build_client(
+                resource_id=build_id,
+                base_url=self._base_url,
+                public_base_url=self._public_base_url,
+                http_client=self._http_client,
+                client_registry=self._client_registry,
+            )
+            build = await build_client.get()
+        if build is None:
+            raise ApifyClientError(f'Build {build_ref} of Actor {self.resource_id} does not exist.')
+
+        if build.actor_definition is None:
+            return None
+        return build.actor_definition.web_server_schema
 
     async def server_request(
         self,

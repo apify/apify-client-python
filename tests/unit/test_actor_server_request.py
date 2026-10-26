@@ -5,6 +5,7 @@ import json
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from werkzeug import Response
 
 from apify_client.errors import ApifyClientError, NotFoundError
 from apify_client.http_compressors import GzipHttpCompressor
@@ -24,7 +25,7 @@ _ACTOR_PATH = f'/v2/actors/{_MOCKED_ACTOR_ID}'
 _SERVER_PREFIX = '/server'
 
 
-def actor_response(server_url: str | None) -> dict[str, Any]:
+def actor_response(server_url: str | None, **extra_fields: Any) -> dict[str, Any]:
     return {
         'data': {
             'id': _MOCKED_ACTOR_ID,
@@ -38,6 +39,7 @@ def actor_response(server_url: str | None) -> dict[str, Any]:
             'versions': [],
             'defaultRunOptions': {},
             'standbyUrl': server_url,
+            **extra_fields,
         }
     }
 
@@ -298,3 +300,145 @@ def test_server_request_error_status_raises(httpserver: HTTPServer, sync_client:
 
     with pytest.raises(NotFoundError, match='Not here'):
         sync_client.actor(_MOCKED_ACTOR_ID).server_request('/missing')
+
+
+_OPENAPI_SPEC = {'openapi': '3.0.0', 'info': {'title': 'Test server', 'version': '1.0.0'}, 'paths': {}}
+_TAGGED_BUILDS = {
+    'latest': {'buildId': 'latest_build_id', 'buildNumber': '0.0.2'},
+    'beta': {'buildId': 'beta_build_id', 'buildNumber': '0.0.3'},
+}
+
+
+def build_response(build_id: str, actor_definition: dict[str, Any] | None) -> dict[str, Any]:
+    return {
+        'data': {
+            'id': build_id,
+            'actId': _MOCKED_ACTOR_ID,
+            'userId': 'test_user_id',
+            'startedAt': '2026-08-01T10:00:00.000Z',
+            'status': 'SUCCEEDED',
+            'meta': {'origin': 'API'},
+            'buildNumber': '0.0.1',
+            'actorDefinition': actor_definition,
+        }
+    }
+
+
+def expect_builds_list(httpserver: HTTPServer, builds: dict[str, str]) -> None:
+    """Serve the Actor's builds list as one page, so a request for a later offset gets no items."""
+    items = [
+        {
+            'id': build_id,
+            'status': 'SUCCEEDED',
+            'startedAt': '2026-08-01T10:00:00.000Z',
+            'usageTotalUsd': 0.01,
+            'buildNumber': build_number,
+        }
+        for build_id, build_number in builds.items()
+    ]
+
+    def handler(request: Request) -> Response:
+        offset = int(request.args.get('offset', 0))
+        page = items[offset:]
+        data = {'total': len(items), 'offset': offset, 'limit': 1000, 'desc': True, 'count': len(page), 'items': page}
+        return Response(json.dumps({'data': data}), content_type='application/json')
+
+    httpserver.expect_request(f'{_ACTOR_PATH}/builds', method='GET').respond_with_handler(handler)
+
+
+def expect_server_actor_with_build(
+    httpserver: HTTPServer, *, standby_build: str | None, build_id: str, actor_definition: dict[str, Any] | None
+) -> None:
+    actor_standby = {'isEnabled': True, 'build': standby_build}
+    httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(
+        actor_response(httpserver.url_for(_SERVER_PREFIX), taggedBuilds=_TAGGED_BUILDS, actorStandby=actor_standby)
+    )
+    httpserver.expect_request(f'/v2/actor-builds/{build_id}', method='GET').respond_with_json(
+        build_response(build_id, actor_definition)
+    )
+
+
+@pytest.mark.parametrize(
+    ('standby_build', 'build_id'),
+    [
+        pytest.param(None, 'latest_build_id', id='no build set uses latest'),
+        pytest.param('beta', 'beta_build_id', id='build tag'),
+    ],
+)
+def test_get_server_openapi_spec_from_tagged_build(
+    httpserver: HTTPServer, sync_client: ApifyClient, standby_build: str | None, build_id: str
+) -> None:
+    """The specification comes from the web server schema of the build tagged for Server mode."""
+    expect_server_actor_with_build(
+        httpserver, standby_build=standby_build, build_id=build_id, actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+
+    assert sync_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec() == _OPENAPI_SPEC
+
+
+async def test_get_server_openapi_spec_from_tagged_build_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_get_server_openapi_spec_from_tagged_build`."""
+    expect_server_actor_with_build(
+        httpserver, standby_build='beta', build_id='beta_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+
+    assert await async_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec() == _OPENAPI_SPEC
+
+
+def test_get_server_openapi_spec_from_build_number(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A build number set for Server mode is looked up in the Actor's builds."""
+    expect_server_actor_with_build(
+        httpserver, standby_build='0.0.1', build_id='old_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+    expect_builds_list(httpserver, {'latest_build_id': '0.0.2', 'old_build_id': '0.0.1'})
+
+    assert sync_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec() == _OPENAPI_SPEC
+
+
+async def test_get_server_openapi_spec_from_build_number_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_get_server_openapi_spec_from_build_number`."""
+    expect_server_actor_with_build(
+        httpserver, standby_build='0.0.1', build_id='old_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+    expect_builds_list(httpserver, {'latest_build_id': '0.0.2', 'old_build_id': '0.0.1'})
+
+    assert await async_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec() == _OPENAPI_SPEC
+
+
+@pytest.mark.parametrize(
+    'actor_definition',
+    [
+        pytest.param({'name': 'test-actor'}, id='no web server schema'),
+        pytest.param(None, id='no actor definition'),
+    ],
+)
+def test_get_server_openapi_spec_without_schema_returns_none(
+    httpserver: HTTPServer, sync_client: ApifyClient, actor_definition: dict[str, Any] | None
+) -> None:
+    """A build without a web server schema has no specification to return."""
+    expect_server_actor_with_build(
+        httpserver, standby_build=None, build_id='latest_build_id', actor_definition=actor_definition
+    )
+
+    assert sync_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec() is None
+
+
+def test_get_server_openapi_spec_unknown_build_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A Server mode build that is neither a tag nor a listed build number raises an error."""
+    expect_server_actor_with_build(httpserver, standby_build='9.9.9', build_id='unused_build_id', actor_definition=None)
+    expect_builds_list(httpserver, {'latest_build_id': '0.0.2'})
+
+    with pytest.raises(ApifyClientError, match='does not exist'):
+        sync_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec()
+
+
+def test_get_server_openapi_spec_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """`get_server_openapi_spec` raises for an Actor without Server mode enabled."""
+    httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))
+
+    with pytest.raises(ApifyClientError, match='is not a Server Actor'):
+        sync_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec()

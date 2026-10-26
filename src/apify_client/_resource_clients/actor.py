@@ -36,11 +36,12 @@ from apify_client.errors import ApifyClientError
 from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
-    from datetime import timedelta
+    from collections.abc import Mapping
+    from datetime import datetime, timedelta
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
+    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, HttpMethod, RunOrigin
     from apify_client._resource_clients import (
         ActorVersionClient,
         ActorVersionClientAsync,
@@ -634,8 +635,8 @@ class ActorClient(ResourceClient):
         self,
         path: str = '/',
         *,
-        method: str = 'GET',
-        params: dict[str, Any] | None = None,
+        method: HttpMethod = 'GET',
+        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
@@ -690,7 +691,7 @@ class ActorClient(ResourceClient):
         return self._http_client.call(
             url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
-            params=params,
+            params=dict(params) if params is not None else None,
             headers=headers,
             data=data,
             json=json,
@@ -1264,8 +1265,8 @@ class ActorClientAsync(ResourceClientAsync):
         self,
         path: str = '/',
         *,
-        method: str = 'GET',
-        params: dict[str, Any] | None = None,
+        method: HttpMethod = 'GET',
+        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
@@ -1320,7 +1321,7 @@ class ActorClientAsync(ResourceClientAsync):
         return await self._http_client.call(
             url=f'{self._server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
-            params=params,
+            params=dict(params) if params is not None else None,
             headers=headers,
             data=data,
             json=json,

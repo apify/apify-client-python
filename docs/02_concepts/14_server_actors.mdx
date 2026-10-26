@@ -1,7 +1,7 @@
 ---
 id: server-actors
 title: Server Actors
-description: Send HTTP requests to Server Actors.
+description: Send HTTP requests to Server Actors, and get their URL and OpenAPI specification.
 ---
 
 import Tabs from '@theme/Tabs';
@@ -11,6 +11,8 @@ import ApiLink from '@theme/ApiLink';
 
 import ServerAsyncExample from '!!raw-loader!./code/14_server_async.py';
 import ServerSyncExample from '!!raw-loader!./code/14_server_sync.py';
+import ServerOtherClientAsyncExample from '!!raw-loader!./code/14_server_other_client_async.py';
+import ServerOtherClientSyncExample from '!!raw-loader!./code/14_server_other_client_sync.py';
 
 A [Server Actor](https://docs.apify.com/platform/actors/running/standby) runs a web server. You call it over HTTP, and the platform keeps a run ready to answer, so each call skips the run startup. To send a request to such an Actor, use <ApiLink to="class/ActorClient#server_request">`ActorClient.server_request`</ApiLink>. It takes the path on the Actor's server, and optionally the HTTP method, query parameters, headers, and a body:
 
@@ -35,9 +37,33 @@ Note that:
 
 - The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls on the same `ActorClient`. If the Actor isn't a Server Actor, the method raises an `ApifyClientError`.
 - The path is always resolved against that URL, so a path can't send the request to another host.
-- To call the server with another HTTP client, for example one generated from the server's OpenAPI specification, get its URL with <ApiLink to="class/ActorClient#get_server_url">`ActorClient.get_server_url`</ApiLink>. It fetches and reuses the URL the same way.
-- To get that specification, use <ApiLink to="class/ActorClient#get_server_openapi_spec">`ActorClient.get_server_openapi_spec`</ApiLink>. It returns the [web server schema](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema) from the build the Actor runs in Server mode, or `None` if the Actor doesn't define one.
 - By default, the request body is sent uncompressed, since the Actor's server may not decode a compressed body. If the server decodes it, pass `compression`, for example `compression='gzip'`. The client then compresses large bodies the same way as for API calls.
+
+## Calling the server with another HTTP client
+
+For an Actor with many endpoints, you may prefer a client generated from the server's OpenAPI specification, or an HTTP client you already use. Two methods give such a client what it needs:
+
+- <ApiLink to="class/ActorClient#get_server_url">`ActorClient.get_server_url`</ApiLink> returns the server's URL. It fetches and reuses the URL the same way as `server_request`.
+- <ApiLink to="class/ActorClient#get_server_openapi_spec">`ActorClient.get_server_openapi_spec`</ApiLink> returns the server's OpenAPI specification as a `dict`. It's the [web server schema](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema) from the Actor's definition, taken from the build the Actor runs in Server mode. That's the build set in the Actor's Standby settings, or `latest` if none is set. If the Actor doesn't define a web server schema, the method returns `None`.
+
+A request from another client needs your Apify token in the `Authorization` header, and a timeout long enough for a server run to start. For details, see [Authentication](#authentication) and [Timeouts, retries, and errors](#timeouts-retries-and-errors). The following example uses [HTTPX2](https://github.com/pydantic/httpx2), which you can install with the `httpx2` extra:
+
+```sh
+pip install "apify-client[httpx2]"
+```
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {ServerOtherClientAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {ServerOtherClientSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
 
 ## Authentication
 

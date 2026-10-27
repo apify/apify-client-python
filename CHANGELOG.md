@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-<!-- git-cliff-unreleased-start -->
-## 3.3.1 - **not yet released**
+## [3.4.0](https://github.com/apify/apify-client-python/releases/tag/v3.4.0) (2026-10-27)
 
 ### 🚀 Features
 
@@ -26,7 +25,6 @@ All notable changes to this project will be documented in this file.
 - **deps:** Drop the upper bound on impit ([#1163](https://github.com/apify/apify-client-python/pull/1163)) ([d1bc83a](https://github.com/apify/apify-client-python/commit/d1bc83af873b3bb945bd2865e61b3ffa1fd0123f)) by [@vdusek](https://github.com/vdusek)
 
 
-<!-- git-cliff-unreleased-end -->
 ## [3.3.0](https://github.com/apify/apify-client-python/releases/tag/v3.3.0) (2026-10-08)
 
 ### 🚀 Features

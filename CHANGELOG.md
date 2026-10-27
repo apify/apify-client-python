@@ -454,14 +454,14 @@ All notable changes to this project will be documented in this file.
 - Add `monthlyUsage()` and `limits()` methods to `UserClient`
 
 
-## [1.6.3](https://github.com/apify/apify-client-python/releases/tag/v1.6.3) (2023-02-16)
+## [1.6.3](https://github.com/apify/apify-client-python/releases/tag/v1.6.3) (2024-02-16)
 
 ### 🚀 Features
 
 - Add `log()` method to `BuildClient`
 
 
-## [1.6.2](https://github.com/apify/apify-client-python/releases/tag/v1.6.2) (2023-01-08)
+## [1.6.2](https://github.com/apify/apify-client-python/releases/tag/v1.6.2) (2024-01-08)
 
 ### ⚙️ Miscellaneous Tasks
 

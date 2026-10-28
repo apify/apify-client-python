@@ -137,7 +137,7 @@ For a guided walkthrough — authenticating, running an Actor, and reading its r
 - **Convenience methods** — `call()`, `wait_for_finish()`, nested resource access, and other shortcuts that hide platform quirks ([Convenience methods](https://docs.apify.com/api/client/python/docs/concepts/convenience-methods)).
 - **Pluggable HTTP layer** — use the default [Impit](https://github.com/apify/impit)-based client, opt in to the built-in [HTTPX2](https://github.com/pydantic/httpx2) client, or plug in any custom implementation ([HTTP clients](https://docs.apify.com/api/client/python/docs/concepts/custom-http-clients)).
 - **Structured errors** — every API error surfaces as an [`ApifyApiError`](https://docs.apify.com/api/client/python/reference/class/ApifyApiError) with HTTP-specific subclasses for precise handling ([Error handling](https://docs.apify.com/api/client/python/docs/concepts/error-handling)).
-- **Server Actors** — send HTTP requests to Actors running a web server in Server mode, also called Actor Standby, and get the server's URL and OpenAPI specification ([Server Actors](https://docs.apify.com/api/client/python/docs/concepts/server-actors)).
+- **Server Actors** — send HTTP requests to an Actor's server interface (Actor Standby), and get the server's URL and OpenAPI specification ([Server Actors](https://docs.apify.com/api/client/python/docs/concepts/server-actors)).
 - **Debug logging** — opt-in structured logging on the `apify_client` logger captures request URLs, status codes, retry attempts, and more ([Logging](https://docs.apify.com/api/client/python/docs/concepts/logging)).
 
 ## Usage examples

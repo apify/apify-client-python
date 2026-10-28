@@ -144,7 +144,7 @@ async def test_get_server_url_returns_standby_url_async(httpserver: HTTPServer, 
 
 
 def test_get_server_url_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """`get_server_url` raises for an Actor without Server mode enabled."""
+    """`get_server_url` raises for an Actor without a server interface."""
     httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))
 
     with pytest.raises(ApifyClientError, match='is not a Server Actor'):
@@ -266,7 +266,7 @@ def test_server_request_keeps_caller_content_encoding(httpserver: HTTPServer, sy
 
 
 def test_server_request_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """An Actor without Server mode enabled raises an error before any request to a server."""
+    """An Actor without a server interface raises an error before any request to a server."""
     httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))
 
     with pytest.raises(ApifyClientError, match='is not a Server Actor'):
@@ -368,7 +368,7 @@ def expect_server_actor_with_build(
 def test_get_server_openapi_spec_from_tagged_build(
     httpserver: HTTPServer, sync_client: ApifyClient, standby_build: str | None, build_id: str
 ) -> None:
-    """The specification comes from the web server schema of the build tagged for Server mode."""
+    """The specification comes from the web server schema of the tagged build that serves the server interface."""
     expect_server_actor_with_build(
         httpserver, standby_build=standby_build, build_id=build_id, actor_definition={'webServerSchema': _OPENAPI_SPEC}
     )
@@ -388,7 +388,7 @@ async def test_get_server_openapi_spec_from_tagged_build_async(
 
 
 def test_get_server_openapi_spec_from_build_number(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """A build number set for Server mode is looked up in the Actor's builds."""
+    """A build number set for the server interface is looked up in the Actor's builds."""
     expect_server_actor_with_build(
         httpserver, standby_build='0.0.1', build_id='old_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
     )
@@ -428,7 +428,7 @@ def test_get_server_openapi_spec_without_schema_returns_none(
 
 
 def test_get_server_openapi_spec_unknown_build_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """A Server mode build that is neither a tag nor a listed build number raises an error."""
+    """A server interface build that is neither a tag nor a listed build number raises an error."""
     expect_server_actor_with_build(httpserver, standby_build='9.9.9', build_id='unused_build_id', actor_definition=None)
     expect_builds_list(httpserver, {'latest_build_id': '0.0.2'})
 
@@ -437,7 +437,7 @@ def test_get_server_openapi_spec_unknown_build_raises(httpserver: HTTPServer, sy
 
 
 def test_get_server_openapi_spec_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """`get_server_openapi_spec` raises for an Actor without Server mode enabled."""
+    """`get_server_openapi_spec` raises for an Actor without a server interface."""
     httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))
 
     with pytest.raises(ApifyClientError, match='is not a Server Actor'):

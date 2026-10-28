@@ -12,9 +12,12 @@ from apify_client._docs import docs_group
 from apify_client._literals import (
     ActorJobStatus,
     ActorPermissionLevel,
+    Encoding,
     ErrorType,
     GeneralAccess,
     HttpMethod,
+    OAuthProviderType,
+    Provider,
     RunOrigin,
     SourceCodeFileFormat,
     VersionSourceType,
@@ -72,6 +75,17 @@ class ActVersion(BaseModel):
     source_files: list[SourceCodeFile] | None = None
     """
     Inline source files, present when sourceType is SOURCE_FILES.
+    """
+    github_gist_url: Annotated[
+        str | None,
+        Field(alias='gitHubGistUrl', examples=['https://gist.github.com/jancurn/2dd8fa0dd5bf9ea2b4d5a6e0f6a0e8c5']),
+    ] = None
+    """
+    URL of the GitHub Gist, present when sourceType is GITHUB_GIST.
+    """
+    tarball_url: Annotated[str | None, Field(examples=['https://example.com/my-actor.zip'])] = None
+    """
+    URL of the tarball or ZIP file, present when sourceType is TARBALL. Returned only to the Actor owner.
     """
 
 
@@ -246,6 +260,63 @@ class ActorNotice(Enum):
 
 
 @docs_group('Models')
+class ActorOAuthAccount(BaseModel):
+    """An account a user connected through an Actor OAuth connection."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    field_id: Annotated[str, Field(alias='_id', examples=['Rk3mP8xQ2vN5tY7wZ'])]
+    user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
+    connection_id: Annotated[str, Field(examples=['kD9fm2Xp4cJq7Lw8N'])]
+    created_at: Annotated[AwareDatetime, Field(examples=['2026-01-28T10:00:00.000Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2026-01-28T10:05:00.000Z'])]
+    authorized_at: Annotated[AwareDatetime | None, Field(examples=['2026-01-28T10:05:00.000Z'])] = None
+    description: Annotated[str | None, Field(examples=['jane.doe@example.com'])] = None
+    """
+    Label of the connected account, usually its email address.
+    """
+    data: dict[str, Any]
+    """
+    The OAuth tokens of the account, such as `access_token`, `refresh_token`, `scope` and `expiry_date`. The exact
+    fields depend on the OAuth provider.
+
+    """
+
+
+@docs_group('Models')
+class ActorOAuthAccountResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: ActorOAuthAccount
+
+
+@docs_group('Models')
+class ActorOAuthConnection(BaseModel):
+    """An OAuth connection configured on an Actor. Secret credentials are never returned."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    field_id: Annotated[str, Field(alias='_id', examples=['kD9fm2Xp4cJq7Lw8N'])]
+    actor_id: Annotated[str, Field(examples=['zdc3Pyhyz3m8vjDeM'])]
+    o_auth_provider_type: Annotated[OAuthProviderType, Field(examples=['GOOGLE'])]
+    created_at: Annotated[AwareDatetime, Field(examples=['2026-01-28T10:00:00.000Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2026-01-28T10:00:00.000Z'])]
+    credentials: Credentials | None = None
+    """
+    The public part of the connection's OAuth client configuration.
+    """
+
+
+@docs_group('Models')
 class ActorResource(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -314,7 +385,7 @@ class ActorResource(BaseModel):
     """
     deployment_key: Annotated[str | None, Field(examples=['ssh-rsa AAAA ...'])] = None
     """
-    The Actor's public SSH key, used as a deployment key for private Git repositories.
+    The Actor's public SSH key, used as a deployment key for private Git repositories. Returned only by the get Actor endpoint.
     """
     title: Annotated[str | None, Field(examples=['Google Search Extractor'])] = None
     """
@@ -421,6 +492,18 @@ class ActorStandby(BaseModel):
     should_pass_actor_input: bool | None = None
     """
     Whether to pass the Actor's input to the standby run. If `false`, the standby runs start with no input.
+    """
+    tenancy: Annotated[str | None, Field(examples=['SINGLE_TENANT'])] = None
+    """
+    Whether each user gets their own standby runs (`SINGLE_TENANT`) or runs are shared across users (`MULTI_TENANT`). Set by Apify.
+    """
+    is_console_auth_enabled: bool | None = None
+    """
+    Whether standby requests can be authenticated with an Apify Console session. Set by Apify.
+    """
+    is_tokenless_enabled: bool | None = None
+    """
+    Whether standby requests can be made without an API token. Set by Apify.
     """
 
 
@@ -649,6 +732,25 @@ class Build(BaseModel):
     """
     input_schema: Annotated[str | None, Field(deprecated=True, examples=['{\\n  "title": "Schema for ... }'])] = None
     readme: Annotated[str | None, Field(deprecated=True, examples=['# Magic Actor\\nThis Actor is magic.'])] = None
+    changelog: Annotated[
+        str | None, Field(deprecated=True, examples=['# Changelog\\n## 0.1.1\\n- Initial release'])
+    ] = None
+    exit_code: Annotated[int | None, Field(examples=[0])] = None
+    """
+    Exit code of the build process. Set when the build finishes.
+    """
+    git_commit_id: Annotated[str | None, Field(examples=['5f1d2b3c4a5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a'])] = None
+    """
+    ID of the Git commit the build was created from. Present only for builds from a Git repository.
+    """
+    git_branch_name: Annotated[str | None, Field(examples=['main'])] = None
+    """
+    Name of the Git branch the build was created from. Present only for builds from a Git repository.
+    """
+    created_by_organization_member_user_id: Annotated[str | None, Field(examples=['klmdEpoiojmdEMlk3'])] = None
+    """
+    ID of the organization member who started the build. Present only for builds started in an organization account.
+    """
     build_number: Annotated[
         str, Field(examples=['0.1.1'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
     ]
@@ -678,7 +780,10 @@ class BuildListItem(BaseModel):
     status: ActorJobStatus
     started_at: Annotated[AwareDatetime, Field(examples=['2019-11-30T07:34:24.202Z'])]
     finished_at: Annotated[AwareDatetime | None, Field(examples=['2019-12-12T09:30:12.202Z'])] = None
-    usage_total_usd: Annotated[float, Field(examples=[0.02])]
+    usage_total_usd: Annotated[float | None, Field(examples=[0.02])] = None
+    """
+    Total cost in USD for this build. Requires authentication token to access.
+    """
     build_number: Annotated[
         str, Field(examples=['0.1.1'], pattern='^([0-9]|[1-9][0-9])\\.([0-9]|[1-9][0-9])(\\.[1-9][0-9]{0,4})$')
     ]
@@ -700,7 +805,21 @@ class BuildMeta(BaseModel):
     """
     user_agent: Annotated[str | None, Field(examples=['Mozilla/5.0 (iPad)'])] = None
     """
-    User agent of the client that started the build.
+    User agent of the client that started the build. Returned only to the Actor owner.
+    """
+    github_actions_run_url: Annotated[
+        str | None, Field(examples=['https://github.com/apify/my-actor/actions/runs/123456789'])
+    ] = None
+    """
+    URL of the GitHub Actions run that started the build. Present only for builds started from CI.
+    """
+    actor_run_id: Annotated[str | None, Field(examples=['HG7ML7M8z78YcAPEB'])] = None
+    """
+    ID of the Actor run that started the build. Returned only to the Actor owner.
+    """
+    webhook_dispatch_id: Annotated[str | None, Field(examples=['Zib4xbZsmvZeK55ua'])] = None
+    """
+    ID of the webhook dispatch that started the build. Returned only to the Actor owner.
     """
 
 
@@ -715,6 +834,14 @@ class BuildOptions(BaseModel):
     beta_packages: Annotated[bool | None, Field(examples=[False])] = None
     memory_mbytes: Annotated[int | None, Field(examples=[1024])] = None
     disk_mbytes: Annotated[int | None, Field(examples=[2048])] = None
+    tag: Annotated[str | None, Field(examples=['latest'])] = None
+    """
+    The tag passed when starting the build. Present only when the `tag` parameter was used.
+    """
+    debug: bool | None = None
+    """
+    Whether this is a debug build. Present only on debug builds.
+    """
 
 
 @docs_group('Models')
@@ -764,6 +891,10 @@ class Call(BaseModel):
     error_message: Annotated[str | None, Field(examples=['Cannot send request'])] = None
     response_status: Annotated[int | None, Field(examples=[200])] = None
     response_body: Annotated[str | None, Field(examples=['{"foo": "bar"}'])] = None
+    debug_post_message: dict[str, Any] | None = None
+    """
+    Response of the Slack `chat.postMessage` call. Present only for successful calls of `SLACK_MESSAGE` webhooks.
+    """
 
 
 @docs_group('Models')
@@ -803,6 +934,7 @@ class CommonActorPricingInfo(BaseModel):
     """
     notified_about_future_change_at: AwareDatetime | None = None
     notified_about_change_at: AwareDatetime | None = None
+    notified_about_rental_to_ppe_price_change_at: AwareDatetime | None = None
     reason_for_change: str | None = None
     is_price_change_notification_suppressed: bool | None = None
     force_contains_significant_price_change: bool | None = None
@@ -863,6 +995,36 @@ class CreateActorRequest(BaseModel):
     is_deprecated: bool | None = None
     """
     Whether the Actor is deprecated.
+    """
+
+
+@docs_group('Models')
+class CreateGitRepoRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    workspace: Annotated[str, Field(examples=['janedoe'])]
+    """
+    Where to create the repository, as the `id` of one of the provider's workspaces. On GitLab, this is the
+    numeric namespace ID.
+
+    """
+    repo_name: Annotated[str, Field(examples=['my-actor'])]
+    is_private: Annotated[bool, Field(examples=[True])]
+    files: list[GitRepoFile] | None = None
+    """
+    Files to commit as the initial commit. Can't be combined with `templateArchiveUrl`.
+    """
+    template_archive_url: Annotated[
+        str | None,
+        Field(examples=['https://github.com/apify/actor-templates/blob/master/dist/templates/js-start.zip?raw=true']),
+    ] = None
+    """
+    URL of an Actor template archive whose files are committed as the initial commit. Can't be combined with
+    `files`.
+
     """
 
 
@@ -975,6 +1137,27 @@ class CreateWebhookRequest(BaseModel):
 
 
 @docs_group('Models')
+class Credentials(BaseModel):
+    """The public part of the connection's OAuth client configuration."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    client_id: Annotated[str | None, Field(examples=['1234567890-abc.apps.googleusercontent.com'])] = None
+    scope: Annotated[str | None, Field(examples=['https://www.googleapis.com/auth/drive.file'])] = None
+    label: Annotated[str | None, Field(examples=['My OAuth app'])] = None
+    """
+    Display name of a `CUSTOM` provider.
+    """
+    image_url: Annotated[str | None, Field(examples=['https://example.com/logo.png'])] = None
+    """
+    Logo URL of a `CUSTOM` provider.
+    """
+
+
+@docs_group('Models')
 class CurrentPricingInfo(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1002,6 +1185,25 @@ class CurrentPricingInfo(BaseModel):
     """
     Per-event pricing configuration for pay-per-event Actors.
     """
+    price_per_unit_usd: Annotated[float | None, Field(examples=[5])] = None
+    """
+    Price per unit in USD. Present only for `FLAT_PRICE_PER_MONTH` and non-tiered `PRICE_PER_DATASET_ITEM` pricing.
+    """
+    trial_minutes: Annotated[int | None, Field(examples=[1440])] = None
+    """
+    Length of the free trial in minutes. Present only for `FLAT_PRICE_PER_MONTH` pricing.
+    """
+    unit_name: Annotated[str | None, Field(examples=['result'])] = None
+    """
+    Name of the charged unit. Present only for `PRICE_PER_DATASET_ITEM` pricing.
+    """
+    tiered_pricing: Annotated[
+        dict[str, TieredPricing] | None, Field(examples=[{'FREE': {'tieredPricePerUnitUsd': 0.005}}])
+    ] = None
+    """
+    Price per unit for each pricing tier. Present only for tiered `PRICE_PER_DATASET_ITEM` pricing.
+    """
+    notified_about_rental_to_ppe_price_change_at: Annotated[AwareDatetime | None, Field(examples=[None])] = None
 
 
 @docs_group('Models')
@@ -1022,6 +1224,7 @@ class CurrentUsage(BaseModel):
     active_actor_job_count: Annotated[int, Field(examples=[0])]
     team_account_seat_count: Annotated[int, Field(examples=[5])]
     schedule_count: Annotated[int | None, Field(examples=[77])] = None
+    monthly_unblocker_units: Annotated[float | None, Field(examples=[1520])] = None
 
 
 @docs_group('Models')
@@ -1034,6 +1237,32 @@ class DailyServiceUsage(BaseModel):
     date: Annotated[AwareDatetime, Field(examples=['2022-10-02T00:00:00.000Z'])]
     service_usage: dict[str, UsageItem]
     total_usage_credits_usd: Annotated[float, Field(examples=[0.0474385791970591])]
+
+
+@docs_group('Models')
+class Data(BaseModel):
+    """Editor form values, such as the frequency settings the cron expression was built from."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    cron_expression: Annotated[str | None, Field(examples=['0 8 * * *'])] = None
+    timezone: Annotated[str | None, Field(examples=['UTC'])] = None
+
+
+@docs_group('Models')
+class Data1(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    repo_name: Annotated[str, Field(examples=['https://github.com/janedoe/my-actor'])]
+    """
+    The normalized URL of the repository the key is registered on.
+    """
 
 
 @docs_group('Models')
@@ -1098,7 +1327,7 @@ class DatasetListItem(BaseModel):
         alias_generator=to_camel,
     )
     id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
-    name: Annotated[str, Field(examples=['d7b9MDYsbtX5L7XAj'])]
+    name: Annotated[str | None, Field(examples=['d7b9MDYsbtX5L7XAj'])] = None
     user_id: Annotated[str, Field(examples=['tbXmWu7GCxnyYtSiL'])]
     created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
     modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
@@ -1122,6 +1351,7 @@ class DatasetResource(BaseModel):
     )
     id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
     name: Annotated[str | None, Field(examples=['d7b9MDYsbtX5L7XAj'])] = None
+    title: Annotated[str | None, Field(examples=['My Dataset'])] = None
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
     created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
     modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
@@ -1248,11 +1478,11 @@ class DatasetStats(BaseModel):
     write_count: Annotated[int | None, Field(examples=[3])] = None
     storage_bytes: Annotated[int | None, Field(examples=[783])] = None
     """
-    Total storage size in bytes. Only returned by the single-dataset endpoint.
+    Total storage size in bytes.
     """
     inflated_bytes: Annotated[int | None, Field(examples=[0])] = None
     """
-    Uncompressed size in bytes. Only returned by the dataset list endpoint.
+    Uncompressed size in bytes.
     """
 
 
@@ -1327,6 +1557,14 @@ class DefaultRunOptions(BaseModel):
     max_items: int | None = None
     """
     Maximum number of items the run might produce.
+    """
+    max_total_charge_usd: Annotated[float | None, Field(examples=[5])] = None
+    """
+    Maximum cost in USD that a pay-per-event run can charge to the user.
+    """
+    is_max_total_charge_usd_set_by_user: bool | None = None
+    """
+    Whether `maxTotalChargeUsd` was set explicitly by the user.
     """
     force_permission_level: ActorPermissionLevel | None = None
 
@@ -1453,6 +1691,10 @@ class EnvVar(BaseModel):
     """
     Whether the environment variable is encrypted. Secret values aren't returned by the API.
     """
+    value_hash: Annotated[str | None, Field(examples=['a1b2c3'])] = None
+    """
+    A short hash of the secret value, to detect value changes. Returned only for secret environment variables, in place of `value`.
+    """
 
 
 @docs_group('Models')
@@ -1498,6 +1740,10 @@ class ErrorDetail(BaseModel):
     """
     Human-readable error message describing what went wrong.
     """
+    data: dict[str, Any] | None = None
+    """
+    Additional machine-readable details about the error. Present only for some error types.
+    """
 
 
 @docs_group('Models')
@@ -1541,6 +1787,17 @@ class ExampleRunInput(BaseModel):
 
 
 @docs_group('Models')
+class FaqItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    question: str
+    answer: str
+
+
+@docs_group('Models')
 class FlatPricePerMonthActorPricingInfo(CommonActorPricingInfo):
     """Rental pricing model, which is no longer supported."""
 
@@ -1568,6 +1825,127 @@ class FreeActorPricingInfo(CommonActorPricingInfo):
         alias_generator=to_camel,
     )
     pricing_model: Literal['FREE']
+
+
+@docs_group('Models')
+class GitProviderIntegration(BaseModel):
+    """A connected git provider account the user can create repositories through."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['github-app'])]
+    """
+    The provider ID to use in the `providerId` path parameter: `github-app` for the GitHub App, or the ID of a
+    connected GitLab or Bitbucket integration.
+
+    """
+    provider: Annotated[Provider, Field(examples=['github'])]
+    workspaces: list[GitProviderWorkspace]
+    """
+    The workspaces the account can create a repository in. Empty if listing them failed.
+    """
+    add_workspace_url: Annotated[str | None, Field(examples=['https://github.com/apps/apify/installations/new'])] = None
+    """
+    URL where the user can install the GitHub App on another account or organization. Only for the GitHub App.
+    """
+
+
+@docs_group('Models')
+class GitProviderWorkspace(BaseModel):
+    """A place the user can create a repository in, such as their own account or an organization, group or workspace they can access."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['janedoe'])]
+    """
+    The workspace identifier to pass as `workspace` when creating a repository: the account or organization login
+    on GitHub, the numeric namespace ID on GitLab, or the workspace slug on Bitbucket.
+
+    """
+    label: Annotated[str, Field(examples=['janedoe'])]
+
+
+@docs_group('Models')
+class GitRepo(BaseModel):
+    """URLs of a newly created repository."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    ssh_url: Annotated[str, Field(examples=['git@github.com:janedoe/my-actor.git'])]
+    https_url: Annotated[str, Field(examples=['https://github.com/janedoe/my-actor.git'])]
+    html_url: Annotated[str, Field(examples=['https://github.com/janedoe/my-actor'])]
+
+
+@docs_group('Models')
+class GitRepoFile(BaseModel):
+    """A file to commit into the new repository."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    path: Annotated[str, Field(examples=['src/main.js'])]
+    content: Annotated[str, Field(examples=["console.log('Hello');"])]
+    encoding: Annotated[Encoding, Field(examples=['utf-8'])]
+
+
+@docs_group('Models')
+class GitRepoResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: GitRepo
+
+
+@docs_group('Models')
+class InputSchema(BaseModel):
+    """Compact input schema of the Actor's default build, with only property types and required properties. Returned only when `includeInputSchema=true` and the default build succeeded and defines input properties."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    type: Annotated[str, Field(examples=['object'])]
+    properties: Annotated[
+        dict[str, Properties], Field(examples=[{'startUrls': {'type': 'array'}, 'maxItems': {'type': 'integer'}}])
+    ]
+    required: Annotated[list[str] | None, Field(examples=[['startUrls']])] = None
+
+
+@docs_group('Models')
+class IntegrationTracking(BaseModel):
+    """Information about the third-party integration that created the resource."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    platform: Annotated[str | None, Field(examples=['zapier'])] = None
+    """
+    Name of the integration platform.
+    """
+    app_id: str | None = None
+    """
+    ID of the integration app.
+    """
+    is_ai_tool: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the resource was created by an AI tool.
+    """
 
 
 @docs_group('Models')
@@ -1608,6 +1986,48 @@ class KeyValueStoreKey(BaseModel):
 
 
 @docs_group('Models')
+class KeyValueStoreListItem(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
+    name: Annotated[str | None, Field(examples=['d7b9MDYsbtX5L7XAj'])] = None
+    title: Annotated[str | None, Field(examples=['My Store'])] = None
+    user_id: Annotated[str | None, Field(examples=['BPWDBd7Z9c746JAnF'])] = None
+    username: Annotated[str | None, Field(examples=['janedoe'])] = None
+    created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
+    modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
+    accessed_at: Annotated[AwareDatetime, Field(examples=['2019-12-14T08:36:13.202Z'])]
+    act_id: Annotated[str | None, Field(examples=[None])] = None
+    act_run_id: Annotated[str | None, Field(examples=[None])] = None
+    schema_: Annotated[dict[str, Any] | str | None, Field(alias='schema')] = None
+    """
+    Optional JSON schema describing the keys stored in the key-value store. Older stores return it as a JSON string.
+    """
+    general_access: GeneralAccess | None = None
+    stats: KeyValueStoreListStats | None = None
+
+
+@docs_group('Models')
+class KeyValueStoreListStats(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    read_count: Annotated[int | None, Field(examples=[9])] = None
+    write_count: Annotated[int | None, Field(examples=[3])] = None
+    delete_count: Annotated[int | None, Field(examples=[6])] = None
+    list_count: Annotated[int | None, Field(examples=[2])] = None
+    s3_storage_bytes: Annotated[int | None, Field(examples=[18])] = None
+    """
+    Storage size in bytes.
+    """
+
+
+@docs_group('Models')
 class KeyValueStoreResource(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -1616,6 +2036,7 @@ class KeyValueStoreResource(BaseModel):
     )
     id: Annotated[str, Field(examples=['WkzbQMuFYuamGv3YF'])]
     name: Annotated[str | None, Field(examples=['d7b9MDYsbtX5L7XAj'])] = None
+    title: Annotated[str | None, Field(examples=['My Store'])] = None
     user_id: Annotated[str | None, Field(examples=['BPWDBd7Z9c746JAnF'])] = None
     username: Annotated[str | None, Field(examples=['janedoe'])] = None
     created_at: Annotated[AwareDatetime, Field(examples=['2019-12-12T07:34:14.202Z'])]
@@ -1715,6 +2136,49 @@ class Limits(BaseModel):
     max_team_account_seat_count: Annotated[int, Field(examples=[9])]
     data_retention_days: Annotated[int, Field(examples=[90])]
     max_schedule_count: Annotated[int | None, Field(examples=[100])] = None
+    max_monthly_unblocker_units: Annotated[float | None, Field(examples=[1000000])] = None
+
+
+@docs_group('Models')
+class ListOfActorOAuthAccounts(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    total: Annotated[int, Field(examples=[1])]
+    items: list[ActorOAuthAccount]
+
+
+@docs_group('Models')
+class ListOfActorOAuthAccountsResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: ListOfActorOAuthAccounts
+
+
+@docs_group('Models')
+class ListOfActorOAuthConnections(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    total: Annotated[int, Field(examples=[1])]
+    items: list[ActorOAuthConnection]
+
+
+@docs_group('Models')
+class ListOfActorOAuthConnectionsResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: ListOfActorOAuthConnections
 
 
 @docs_group('Models')
@@ -1766,6 +2230,16 @@ class ListOfEnvVarsResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: ListOfEnvVars
+
+
+@docs_group('Models')
+class ListOfGitProviderIntegrationsResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: list[GitProviderIntegration]
 
 
 @docs_group('Models')
@@ -1930,6 +2404,16 @@ class ListOfWebhookDispatchesResponse(BaseModel):
 
 
 @docs_group('Models')
+class ListOfWebhookResourcesResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: ListOfWebhookResources
+
+
+@docs_group('Models')
 class ListOfWebhooksResponse(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2020,6 +2504,14 @@ class LockedRequestQueueHeadResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: LockedRequestQueueHead
+
+
+@docs_group('Models')
+class MonitoringLevel(Enum):
+    """Level of monitoring services included in the plan. `null` or missing means the plan includes no monitoring service."""
+
+    STANDARD = 'STANDARD'
+    NONE_TYPE_NONE = None
 
 
 @docs_group('Models')
@@ -2122,7 +2614,7 @@ class ListOfKeyValueStores(PaginationResponse):
     """
     Whether the listing was filtered to only unnamed key-value stores.
     """
-    items: list[KeyValueStoreResource]
+    items: list[KeyValueStoreListItem]
 
 
 @docs_group('Models')
@@ -2195,6 +2687,18 @@ class ListOfWebhookDispatches(PaginationResponse):
 
 
 @docs_group('Models')
+class ListOfWebhookResources(PaginationResponse):
+    """Paginated list of webhooks with all their fields, including `payloadTemplate`."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    items: list[WebhookResource]
+
+
+@docs_group('Models')
 class ListOfWebhooks(PaginationResponse):
     model_config = ConfigDict(
         extra='allow',
@@ -2214,6 +2718,12 @@ class PayPerEventActorPricingInfo(CommonActorPricingInfo):
     pricing_model: Literal['PAY_PER_EVENT']
     pricing_per_event: PricingPerEvent
     minimal_max_total_charge_usd: float | None = None
+    is_ppe_platform_usage_paid_by_user: Annotated[
+        bool | None, Field(alias='isPPEPlatformUsagePaidByUser', examples=[False])
+    ] = None
+    """
+    If `true`, the platform usage of the run is charged to the user running the Actor, in addition to the event prices.
+    """
 
 
 @docs_group('Models')
@@ -2274,25 +2784,38 @@ class ProlongRequestLockResponse(BaseModel):
 
 
 @docs_group('Models')
+class Properties(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    type: str | list[str] | None = None
+
+
+@docs_group('Models')
 class ProxyGroup(BaseModel):
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    id: Annotated[str | None, Field(examples=['Hsu2Sk8jPqxd3dNsB'])] = None
     name: Annotated[str, Field(examples=['Group1'])]
     description: Annotated[str | None, Field(examples=['Group1 description'])]
-    available_count: Annotated[int, Field(examples=[10])]
+    available_count: Annotated[int | None, Field(examples=[10])] = None
 
 
 @docs_group('Models')
 class ProxyResource(BaseModel):
+    """Proxy access info. Omitted when the user has no access to Apify Proxy."""
+
     model_config = ConfigDict(
         extra='allow',
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    password: Annotated[str, Field(examples=['ad78knd9Jkjd86'])]
+    password: Annotated[str | None, Field(examples=['ad78knd9Jkjd86'])] = None
     groups: list[ProxyGroup]
 
 
@@ -2380,6 +2903,33 @@ class RecordResponse(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+
+
+@docs_group('Models')
+class RegisterDeploymentKeyRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    actor_id: Annotated[str, Field(examples=['janedoe~my-actor'])]
+    """
+    ID or `username~name` of the Actor whose deployment key to register.
+    """
+    repo_name: Annotated[str, Field(examples=['https://github.com/janedoe/my-actor'])]
+    """
+    URL of the repository to register the key on. Its host must match the provider.
+    """
+
+
+@docs_group('Models')
+class RegisterDeploymentKeyResponse(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    data: Data1
 
 
 @docs_group('Models')
@@ -2524,15 +3074,19 @@ class RequestQueueListItem(BaseModel):
     """
     A unique identifier assigned to the request queue.
     """
-    name: Annotated[str, Field(examples=['some-name'])]
+    name: Annotated[str | None, Field(examples=['some-name'])] = None
     """
     The name of the request queue.
+    """
+    title: Annotated[str | None, Field(examples=['My Queue'])] = None
+    """
+    The title of the request queue.
     """
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
     """
     The ID of the user who owns the request queue.
     """
-    username: Annotated[str, Field(examples=['janedoe'])]
+    username: Annotated[str | None, Field(examples=['janedoe'])] = None
     """
     The username of the user who owns the request queue.
     """
@@ -2577,7 +3131,42 @@ class RequestQueueListItem(BaseModel):
     Whether the request queue has been accessed by multiple different clients.
     """
     general_access: GeneralAccess | None = None
-    stats: RequestQueueStats | None = None
+    stats: RequestQueueListStats | None = None
+
+
+@docs_group('Models')
+class RequestQueueListStats(BaseModel):
+    """Statistics about request queue operations and storage, as returned in request queue lists."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    delete_count: Annotated[int | None, Field(examples=[0])] = None
+    """
+    The number of delete operations performed on the request queue.
+    """
+    head_item_read_count: Annotated[int | None, Field(examples=[5])] = None
+    """
+    The number of times requests from the head were read.
+    """
+    read_count: Annotated[int | None, Field(examples=[100])] = None
+    """
+    The total number of read operations performed on the request queue.
+    """
+    write_count: Annotated[int | None, Field(examples=[10])] = None
+    """
+    The total number of write operations performed on the request queue.
+    """
+    s3_storage_bytes: Annotated[int | None, Field(examples=[0])] = None
+    """
+    The storage size in bytes of requests stored in S3.
+    """
+    dynamodb_storage_bytes: Annotated[int | None, Field(examples=[1024])] = None
+    """
+    The storage size in bytes of requests stored in DynamoDB.
+    """
 
 
 @docs_group('Models')
@@ -2596,6 +3185,10 @@ class RequestQueueResource(BaseModel):
     name: Annotated[str | None, Field(examples=['some-name'])] = None
     """
     The name of the request queue.
+    """
+    title: Annotated[str | None, Field(examples=['My Queue'])] = None
+    """
+    The title of the request queue.
     """
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
     """
@@ -2741,6 +3334,16 @@ class RequestResource(RequestBase):
     id: Annotated[str | None, Field(examples=['sbJ7klsdf7ujN9l'])] = None
     """
     A unique identifier assigned to the request.
+    """
+    lock_expires_at: Annotated[AwareDatetime | None, Field(examples=['2022-06-14T23:00:00.000Z'])] = None
+    """
+    The timestamp when the lock on this request expires. Only present while the request is locked.
+    """
+    lock_by_client: Annotated[str | None, Field(examples=['my-client-key'])] = None
+    """
+    Key of the client that last locked the request. It is set when the request is locked and removed only by
+    an explicit unlock or by an update of the request, so it can still be present after the lock has expired.
+
     """
 
 
@@ -2894,6 +3497,45 @@ class Run(BaseModel):
     """
     A map of charged event types to their counts. The keys are event type identifiers defined by the Actor's pricing model (pay-per-event), and the values are the number of times each event was charged during this run.
     """
+    accounted_charged_event_counts: Annotated[
+        dict[str, Any] | None, Field(examples=[{'actor-start': 1, 'page-crawled': 150}])
+    ] = None
+    """
+    A map of charged event types to the number of their charges that have already been accounted for billing. Present only for pay-per-event Actors.
+    """
+    event_usage: dict[str, RunEventUsage] | None = None
+    """
+    Cost breakdown of the pay-per-event charges in USD, keyed by event type. Present only for pay-per-event runs, and not when the run was started by the Actor's owner.
+    """
+    external_charged_total_usd: Annotated[float | None, Field(examples=[0.5])] = None
+    """
+    Total price in USD of the pay-per-event charges made to other users. Present only on multi-tenant Standby runs.
+    """
+    standby: RunStandby | None = None
+    """
+    Standby configuration of the run. `null` for runs that are not Actor Standby runs.
+    """
+    integration_tracking: IntegrationTracking | None = None
+    """
+    Present only when the run was started by a third-party integration.
+    """
+    created_by_organization_member_user_id: Annotated[str | None, Field(examples=['7sT5jcggjjA9fNcxF'])] = None
+    """
+    ID of the organization member who started the run. Present only for runs started on behalf of an organization.
+    """
+    console_url: Annotated[AnyUrl | None, Field(examples=['https://console.apify.com/view/runs/HG7ML7M8z78YcAPEB'])] = (
+        None
+    )
+    """
+    URL of the run in Apify Console. Returned only by the [Get Actor run](https://docs.apify.com/api/v2/actor-run-get) endpoint.
+    """
+    output: Annotated[
+        dict[str, AnyUrl] | None,
+        Field(examples=[{'results': 'https://api.apify.com/v2/datasets/wmKPijuyDnPZAPRMk/items'}]),
+    ] = None
+    """
+    Output links of the run, generated from the output schema of the Actor build. Present only if the build defines an output schema.
+    """
     options: RunOptions
     """
     Configuration options for the Actor run.
@@ -2967,6 +3609,25 @@ class Run(BaseModel):
 
 
 @docs_group('Models')
+class RunEventUsage(BaseModel):
+    """Cost of a single pay-per-event event type charged during the run."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    event_total_usd: Annotated[float, Field(examples=[0.15])]
+    """
+    Total cost of all charges of this event in USD.
+    """
+    event_title: Annotated[str, Field(examples=['Page crawled'])]
+    """
+    Human-readable title of the event.
+    """
+
+
+@docs_group('Models')
 class RunListItem(BaseModel):
     model_config = ConfigDict(
         extra='allow',
@@ -2990,6 +3651,10 @@ class RunListItem(BaseModel):
     default_key_value_store_id: Annotated[str, Field(examples=['sfAjeR4QmeJCQzTfe'])]
     default_dataset_id: Annotated[str, Field(examples=['3ZojQDdFTsyE7Moy4'])]
     default_request_queue_id: Annotated[str, Field(examples=['so93g2shcDzK3pA85'])]
+    standby: RunStandby | None = None
+    """
+    Standby configuration of the run. `null` for runs that are not Actor Standby runs.
+    """
 
 
 @docs_group('Models')
@@ -3015,6 +3680,22 @@ class RunMeta(BaseModel):
     scheduled_at: AwareDatetime | None = None
     """
     Time when the run was scheduled.
+    """
+    actor_run_id: Annotated[str | None, Field(examples=['HG7ML7M8z78YcAPEB'])] = None
+    """
+    ID of the Actor run that started this run. Present only when the run was started from another run.
+    """
+    webhook_dispatch_id: Annotated[str | None, Field(examples=['asdLZtadYvn4mBZmm'])] = None
+    """
+    ID of the webhook dispatch that started the run. Present only when the run was started by a webhook.
+    """
+    scheduled_act2_id: Annotated[str | None, Field(examples=['c6KfSgoQzFhMk3etc'])] = None
+    """
+    ID of the schedule action that started the Actor. Present only on runs of Actors started by a schedule.
+    """
+    scheduled_actor_task_id: Annotated[str | None, Field(examples=['c6KfSgoQzFhMk3etc'])] = None
+    """
+    ID of the schedule action that started the Actor task. Present only on runs of tasks started by a schedule.
     """
 
 
@@ -3043,6 +3724,10 @@ class RunMetamorphEvent(BaseModel):
     """
     Key of the input record in the key-value store.
     """
+    build_tags: Annotated[list[str] | None, Field(examples=[['latest']])] = None
+    """
+    Build tags of the build used for the metamorphed Actor.
+    """
 
 
 @docs_group('Models')
@@ -3056,8 +3741,16 @@ class RunOptions(BaseModel):
     timeout_secs: Annotated[int, Field(examples=[300], ge=0)]
     memory_mbytes: Annotated[int, Field(examples=[1024], ge=128, le=32768)]
     disk_mbytes: Annotated[int, Field(examples=[2048], ge=0)]
+    restart_on_error: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether to automatically restart the run if it fails.
+    """
     max_items: Annotated[int | None, Field(examples=[1000], ge=0)] = None
     max_total_charge_usd: Annotated[float | None, Field(examples=[5], ge=0.0)] = None
+    is_max_total_charge_usd_set_by_user: Annotated[bool | None, Field(examples=[True])] = None
+    """
+    Whether the user explicitly set `maxTotalChargeUsd` when starting the run. Not present for pay-per-result Actors.
+    """
 
 
 @docs_group('Models')
@@ -3068,6 +3761,23 @@ class RunResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: Run
+
+
+@docs_group('Models')
+class RunStandby(BaseModel):
+    """Standby configuration of the run. Present only on Actor Standby runs."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    deployment: Annotated[str, Field(examples=['SINGLE_TENANT'])]
+    """
+    How the Standby run is deployed: `SINGLE_TENANT`, `MULTI_TENANT_FREE_USERS`, `MULTI_TENANT_PAYING_USERS` or `MULTI_TENANT_OWNER_PAID`. `SINGLE_TENANT` is a private instance in the user's account.
+    The `MULTI_TENANT_*` values are runs in the Actor owner's account that serve requests from many users.
+
+    """
 
 
 @docs_group('Models')
@@ -3121,6 +3831,7 @@ class RunUsage(BaseModel):
         float | None, Field(alias='PROXY_RESIDENTIAL_TRANSFER_GBYTES', examples=[34])
     ] = None
     proxy_serps: Annotated[int | None, Field(alias='PROXY_SERPS', examples=[3])] = None
+    proxy_unblocker_units: Annotated[float | None, Field(alias='PROXY_UNBLOCKER_UNITS', examples=[0])] = None
 
 
 @docs_group('Models')
@@ -3150,6 +3861,7 @@ class RunUsageUsd(BaseModel):
         float | None, Field(alias='PROXY_RESIDENTIAL_TRANSFER_GBYTES', examples=[0.034])
     ] = None
     proxy_serps: Annotated[float | None, Field(alias='PROXY_SERPS', examples=[0.003])] = None
+    proxy_unblocker_units: Annotated[float | None, Field(alias='PROXY_UNBLOCKER_UNITS', examples=[0])] = None
 
 
 @docs_group('Models')
@@ -3220,6 +3932,11 @@ class Schedule(ScheduleBase):
     description: Annotated[str | None, Field(examples=['Schedule of actor ...'])] = None
     title: str | None = None
     notifications: ScheduleNotifications | None = None
+    ui_state: ScheduleUiState | None = None
+    integration_tracking: IntegrationTracking | None = None
+    """
+    Present only when the schedule was created by a third-party integration.
+    """
     actions: list[Annotated[ScheduleActionRunActor | ScheduleActionRunActorTask, Field(discriminator='type')]]
 
 
@@ -3255,6 +3972,12 @@ class ScheduleListItem(ScheduleBase):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    title: str | None = None
+    notifications: ScheduleNotifications | None = None
+    integration_tracking: IntegrationTracking | None = None
+    """
+    Present only when the schedule was created by a third-party integration.
+    """
     actions: list[
         Annotated[ScheduleListItemActionRunActor | ScheduleListItemActionRunActorTask, Field(discriminator='type')]
     ]
@@ -3326,6 +4049,25 @@ class ScheduleResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: Schedule
+
+
+@docs_group('Models')
+class ScheduleUiState(BaseModel):
+    """State of the schedule editor in Apify Console. It's removed when an API update changes `cronExpression` or `timezone`."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    version: Annotated[int | None, Field(examples=[1])] = None
+    """
+    Version of the editor state format.
+    """
+    data: Data | None = None
+    """
+    Editor form values, such as the frequency settings the cron expression was built from.
+    """
 
 
 @docs_group('Models')
@@ -3449,6 +4191,10 @@ class StoreActor(BaseModel):
     """
     A brief, LLM-generated readme summary
     """
+    input_schema: InputSchema | None = None
+    """
+    Compact input schema of the Actor's default build, with only property types and required properties. Returned only when `includeInputSchema=true` and the default build succeeded and defines input properties.
+    """
 
 
 @docs_group('Models')
@@ -3491,6 +4237,10 @@ class Task(BaseModel):
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
     act_id: Annotated[str, Field(examples=['asADASadYvn4mBZmm'])]
     name: Annotated[str, Field(examples=['my-task'])]
+    name_lower_case: Annotated[str | None, Field(examples=['my-task'])] = None
+    """
+    Task name in lowercase.
+    """
     username: Annotated[str | None, Field(examples=['janedoe'])] = None
     created_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T07:23:14.855Z'])]
     modified_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T13:30:49.578Z'])]
@@ -3536,11 +4286,17 @@ class TaskListItem(BaseModel):
     act_id: Annotated[str, Field(examples=['asADASadYvn4mBZmm'])]
     act_name: Annotated[str | None, Field(examples=['my-actor'])] = None
     name: Annotated[str, Field(examples=['my-task'])]
+    title: Annotated[str | None, Field(examples=['My task'])] = None
     username: Annotated[str | None, Field(examples=['janedoe'])] = None
     act_username: Annotated[str | None, Field(examples=['janedoe'])] = None
     created_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T07:23:14.855Z'])]
     modified_at: Annotated[AwareDatetime, Field(examples=['2018-10-26T13:30:49.578Z'])]
     stats: TaskStats | None = None
+    is_public: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Whether the task is published. Based on the `publicConfig.publishedAt` field.
+
+    """
 
 
 @docs_group('Models')
@@ -3556,6 +4312,14 @@ class TaskOptions(BaseModel):
     max_items: Annotated[int | None, Field(examples=[1000])] = None
     max_total_charge_usd: Annotated[float | None, Field(examples=[5])] = None
     restart_on_error: Annotated[bool | None, Field(examples=[False])] = None
+    is_max_total_charge_usd_set_by_user: Annotated[bool | None, Field(examples=[True])] = None
+    """
+    Whether the user explicitly set `maxTotalChargeUsd`. Returned only in schedule action `runOptions`, and only if it was provided.
+    """
+    force_permission_level: ActorPermissionLevel | None = None
+    """
+    Permission level to run the Actor with, overriding the Actor's own setting. Returned only in schedule action `runOptions`, and only if it was provided.
+    """
 
 
 @docs_group('Models')
@@ -3607,6 +4371,18 @@ class TaskPublicConfig(BaseModel):
     one of the views declared on the resolved dataset. You can't publish a task without it.
 
     """
+    categorization: str | None = None
+    """
+    ID of the use-case category of the task.
+    """
+    highlighted_fields: list[str] | None = None
+    """
+    Names of the dataset fields highlighted on the public task page.
+    """
+    faq: list[FaqItem] | None = None
+    """
+    Frequently asked questions displayed on the public task page.
+    """
 
 
 @docs_group('Models')
@@ -3629,6 +4405,20 @@ class TaskStats(BaseModel):
         alias_generator=to_camel,
     )
     total_runs: Annotated[int | None, Field(examples=[15])] = None
+    last_run_started_at: Annotated[AwareDatetime | None, Field(examples=['2019-11-30T07:34:24.202Z'])] = None
+    """
+    Time when the last run of the task started. In the task list, it's `null` if the task has no runs. In a single task, it's omitted if the task has no runs.
+    """
+
+
+@docs_group('Models')
+class TieredPricing(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    tiered_price_per_unit_usd: float | None = None
 
 
 @docs_group('Models')
@@ -3791,6 +4581,25 @@ class UpdateActorRequest(BaseModel):
     is_deprecated: bool | None = None
     """
     Whether the Actor is deprecated.
+    """
+
+
+@docs_group('Models')
+class UpdateBuildOnPushRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    provider_id: Annotated[str, Field(examples=['github-app'])]
+    """
+    The connected git account to register the push webhook through: `github-app` for the GitHub App, or the ID
+    of a connected GitLab or Bitbucket integration, as returned by the [Get git provider integrations](https://docs.apify.com/api/v2/integrations-git-get) endpoint.
+
+    """
+    enabled: Annotated[bool, Field(examples=[True])]
+    """
+    `true` registers the push webhook so that pushes to the repository build the version; `false` turns it off.
     """
 
 
@@ -4046,6 +4855,41 @@ class UserPlan(BaseModel):
     """
     Pricing details for this plan.
     """
+    plan_version: Annotated[float | None, Field(examples=[2])] = None
+    """
+    Version of the plan definition.
+    """
+    legacy_plan_id: Annotated[str | None, Field(examples=['STARTER'])] = None
+    """
+    ID of the legacy plan this plan was migrated from.
+    """
+    plan_tags: Annotated[list[str] | None, Field(examples=[[]])] = None
+    overage_threshold_usd: Annotated[float | None, Field(examples=[500])] = None
+    """
+    Mid-cycle overage threshold above which the user is billed for the current-cycle overage.
+    """
+    max_monthly_unblocker_units: Annotated[int | None, Field(examples=[1000000])] = None
+    max_public_actor_task_count: Annotated[int | None, Field(examples=[100])] = None
+    max_public_actor_task_count_per_actor: Annotated[int | None, Field(examples=[10])] = None
+    force_billing_interval: Annotated[str | None, Field(examples=['ANNUAL'])] = None
+    """
+    If set, the plan can be subscribed only in this billing interval.
+    """
+    personalized_support: Annotated[str | None, Field(examples=['4h/M'])] = None
+    """
+    Hours of personalized support with Apify engineers included in the plan, as `Nh/P`: `N` hours per period
+    `P`, where `P` is `M` (monthly), `Q` (quarterly), `B` (every 6 months) or `A` (annually), for example `1h/M`.
+    `null` or missing means the plan includes no personalized support.
+
+    """
+    monitoring_level: Annotated[MonitoringLevel | None, Field(examples=['STANDARD'])] = None
+    """
+    Level of monitoring services included in the plan. `null` or missing means the plan includes no monitoring service.
+    """
+    is_paying_customer: Annotated[bool | None, Field(examples=[False])] = None
+    """
+    Marks the user as a paying customer even without a subscription.
+    """
 
 
 @docs_group('Models')
@@ -4059,11 +4903,18 @@ class UserPrivateInfo(BaseModel):
     username: Annotated[str, Field(examples=['myusername'])]
     profile: UserProfile | None = None
     email: Annotated[EmailStr | None, Field(examples=['bob@example.com'])] = None
+    """
+    Primary email of the user. It is `null` when the email is not verified.
+    """
     proxy: ProxyResource | None = None
     plan: UserPlan | None = None
     effective_platform_features: EffectivePlatformFeatures | None = None
     created_at: Annotated[AwareDatetime | None, Field(examples=['2022-11-29T14:48:29.381Z'])] = None
     is_paying: Annotated[bool | None, Field(examples=[True])] = None
+    organization_owner_user_id: Annotated[str | None, Field(examples=['wRsJZtadYvn4mBZmm'])] = None
+    """
+    ID of the user who owns the organization. Present only for organization accounts.
+    """
 
 
 @docs_group('Models')
@@ -4159,6 +5010,18 @@ class Version(BaseModel):
     """
     URL of the GitHub Gist to clone the source code from. Applies when the `sourceType` is `GITHUB_GIST`.
     """
+    github_webhook_id: int | None = None
+    """
+    ID of the GitHub webhook that triggers a build on push. Present when build on push is enabled for a GitHub repository.
+    """
+    gitlab_webhook_id: int | None = None
+    """
+    ID of the GitLab webhook that triggers a build on push. Present when build on push is enabled for a GitLab repository.
+    """
+    bitbucket_webhook_id: str | None = None
+    """
+    ID of the Bitbucket webhook that triggers a build on push. Present when build on push is enabled for a Bitbucket repository.
+    """
 
 
 @docs_group('Models')
@@ -4181,6 +5044,19 @@ class WebhookCondition(BaseModel):
     actor_id: Annotated[str | None, Field(examples=['hksJZtadYvn4mBuin'])] = None
     actor_task_id: Annotated[str | None, Field(examples=['asdLZtadYvn4mBZmm'])] = None
     actor_run_id: Annotated[str | None, Field(examples=['hgdKZtadYvn4mBpoi'])] = None
+
+
+@docs_group('Models')
+class WebhookDatasetTransformation(BaseModel):
+    """Selects which dataset item fields are included in the output."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    fields: Annotated[list[str] | None, Field(examples=[['title', 'url']])] = None
+    omit: Annotated[list[str] | None, Field(examples=[['html']])] = None
 
 
 @docs_group('Models')
@@ -4220,6 +5096,10 @@ class WebhookDispatchWebhookSummary(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
+    field_id: Annotated[str | None, Field(alias='_id', examples=['YiKoxjkaS9gjGTqhF'])] = None
+    """
+    ID of the webhook. The API returns it under `_id`, not `id`.
+    """
     action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
     condition: WebhookCondition | None = None
     request_url: Annotated[AnyUrl | None, Field(examples=['https://example.com/webhook'])] = None
@@ -4227,6 +5107,58 @@ class WebhookDispatchWebhookSummary(BaseModel):
     URL of the HTTP request sent by the webhook. It is `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
     """
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
+    is_apify_integration: Annotated[bool | None, Field(examples=[False])] = None
+    slack_message: WebhookSlackMessage | None = None
+    google_mail: WebhookGoogleMail | None = None
+    google_drive: WebhookGoogleDrive | None = None
+    github_issue: WebhookGithubIssue | None = None
+
+
+@docs_group('Models')
+class WebhookGithubIssue(BaseModel):
+    """GitHub issue configuration. Present only when `actionType` is `GITHUB_ISSUE`."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    user_integration_id: Annotated[str | None, Field(examples=['kLcd8Z4dzXN1z3QzS'])] = None
+    repository: Annotated[str | None, Field(examples=['apify/apify-docs'])] = None
+    title: Annotated[str | None, Field(examples=['Actor run failed'])] = None
+    body: Annotated[str | None, Field(examples=['Actor run {{resource.id}} failed.'])] = None
+
+
+@docs_group('Models')
+class WebhookGoogleDrive(BaseModel):
+    """Google Drive upload configuration. Present only when `actionType` is `GOOGLE_DRIVE`."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    user_integration_id: Annotated[str | None, Field(examples=['kLcd8Z4dzXN1z3QzS'])] = None
+    filename: Annotated[str | None, Field(examples=['results'])] = None
+    format: Annotated[str | None, Field(examples=['json'])] = None
+    transformation: WebhookDatasetTransformation | None = None
+
+
+@docs_group('Models')
+class WebhookGoogleMail(BaseModel):
+    """Gmail email configuration. Present only when `actionType` is `GOOGLE_MAIL`."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    user_integration_id: Annotated[str | None, Field(examples=['kLcd8Z4dzXN1z3QzS'])] = None
+    email_to: Annotated[list[str] | None, Field(examples=[['bob@example.com']])] = None
+    subject: Annotated[str | None, Field(examples=['Actor run finished'])] = None
+    body: Annotated[str | None, Field(examples=['Actor run {{resource.id}} finished.'])] = None
+    attachment_format: Annotated[str | None, Field(examples=['csv'])] = None
+    attachment_transformation: WebhookDatasetTransformation | None = None
 
 
 @docs_group('Models')
@@ -4261,7 +5193,17 @@ class WebhookListItem(BaseModel):
     condition: WebhookCondition
     ignore_ssl_errors: Annotated[bool, Field(examples=[False])]
     do_not_retry: Annotated[bool, Field(examples=[False])]
-    request_url: Annotated[AnyUrl, Field(examples=['http://example.com/'])]
+    request_url: Annotated[AnyUrl | None, Field(examples=['http://example.com/'])] = None
+    """
+    URL of the HTTP request sent by the webhook. It is omitted or `null` for hook actions other than the conventional HTTP case (e.g. Slack or email notifications).
+    """
+    headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
+    title: Annotated[str | None, Field(examples=['Notify on failure'])] = None
+    description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
+    slack_message: WebhookSlackMessage | None = None
+    google_mail: WebhookGoogleMail | None = None
+    google_drive: WebhookGoogleDrive | None = None
+    github_issue: WebhookGithubIssue | None = None
     last_dispatch: WebhookLastDispatch | None = None
     stats: WebhookStats | None = None
 
@@ -4322,6 +5264,12 @@ class WebhookResource(BaseModel):
     modified_at: Annotated[AwareDatetime, Field(examples=['2019-12-13T08:36:13.202Z'])]
     user_id: Annotated[str, Field(examples=['wRsJZtadYvn4mBZmm'])]
     is_ad_hoc: Annotated[bool | None, Field(examples=[False])] = None
+    is_enabled: Annotated[bool | None, Field(examples=[True])] = None
+    action_type: Annotated[str | None, Field(examples=['HTTP_REQUEST'])] = None
+    """
+    Type of action the webhook performs: `HTTP_REQUEST`, `SLACK_MESSAGE`, `GOOGLE_MAIL`, `GOOGLE_DRIVE` or `GITHUB_ISSUE`.
+    """
+    is_apify_integration: Annotated[bool | None, Field(examples=[False])] = None
     should_interpolate_strings: Annotated[bool | None, Field(examples=[False])] = None
     event_types: Annotated[list[WebhookEventType], Field(examples=[['ACTOR.RUN.SUCCEEDED']])]
     condition: WebhookCondition
@@ -4333,7 +5281,12 @@ class WebhookResource(BaseModel):
     """
     payload_template: Annotated[str | None, Field(examples=['{\\n "userId": {{userId}}...'])] = None
     headers_template: Annotated[str | None, Field(examples=['{\\n "Authorization": "Bearer ..."}'])] = None
+    title: Annotated[str | None, Field(examples=['Notify on failure'])] = None
     description: Annotated[str | None, Field(examples=['this is webhook description'])] = None
+    slack_message: WebhookSlackMessage | None = None
+    google_mail: WebhookGoogleMail | None = None
+    google_drive: WebhookGoogleDrive | None = None
+    github_issue: WebhookGithubIssue | None = None
     last_dispatch: WebhookLastDispatch | None = None
     stats: WebhookStats | None = None
 
@@ -4348,6 +5301,20 @@ class WebhookResponse(BaseModel):
         alias_generator=to_camel,
     )
     data: WebhookResource
+
+
+@docs_group('Models')
+class WebhookSlackMessage(BaseModel):
+    """Slack message configuration. Present only when `actionType` is `SLACK_MESSAGE`."""
+
+    model_config = ConfigDict(
+        extra='allow',
+        populate_by_name=True,
+        alias_generator=to_camel,
+    )
+    user_integration_id: Annotated[str | None, Field(examples=['kLcd8Z4dzXN1z3QzS'])] = None
+    channel_id: Annotated[str | None, Field(examples=['C01234ABCDE'])] = None
+    message_template: Annotated[str | None, Field(examples=['Actor run {{resource.id}} finished.'])] = None
 
 
 @docs_group('Models')

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
 from apify_client._models import (
+    KeyValueStoreListItem,
     KeyValueStoreResource,
     KeyValueStoreResponse,
     ListOfKeyValueStores,
@@ -84,7 +85,7 @@ class KeyValueStoreCollectionClient(ResourceClient):
         ownership: StorageOwnership | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> Iterator[KeyValueStoreResource]:
+    ) -> Iterator[KeyValueStoreListItem]:
         """Iterate over the available key-value stores.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method
@@ -201,7 +202,7 @@ class KeyValueStoreCollectionClientAsync(ResourceClientAsync):
         ownership: StorageOwnership | None = None,
         chunk_size: int | None = None,
         timeout: Timeout = 'medium',
-    ) -> AsyncIterator[KeyValueStoreResource]:
+    ) -> AsyncIterator[KeyValueStoreListItem]:
         """Iterate over the available key-value stores.
 
         Simple `list` does only one API call, possibly not listing all items matching the criteria. This method

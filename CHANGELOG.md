@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+<!-- git-cliff-unreleased-start -->
+## 3.4.1 - **not yet released**
+
+### 🚀 Features
+
+- Add models for Actor OAuth, Git repositories and webhook integrations ([#1167](https://github.com/apify/apify-client-python/pull/1167)) ([4a3b30f](https://github.com/apify/apify-client-python/commit/4a3b30ffd09b219d8a4a739f715037de7c6680af)) by [@apify-service-account](https://github.com/apify-service-account)
+
+
+<!-- git-cliff-unreleased-end -->
 ## [3.4.0](https://github.com/apify/apify-client-python/releases/tag/v3.4.0) (2026-10-27)
 
 ### 🚀 Features

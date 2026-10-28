@@ -774,12 +774,13 @@ class ActorClient(ResourceClient):
     def get_standby_url(self) -> str:
         """Return the URL of the Actor's server in Standby mode.
 
-        Deprecated alias of `get_server_url`, named after Actor Standby. Use `get_server_url` instead.
+        Deprecated alias of `get_server_url`, named after Actor Standby. Will be removed in v4. Use `get_server_url`
+        instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
         warnings.warn(
-            '`get_standby_url` is deprecated. Use `get_server_url` instead.',
+            '`get_standby_url` is deprecated and will be removed in v4. Use `get_server_url` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
@@ -788,13 +789,14 @@ class ActorClient(ResourceClient):
     def get_standby_openapi_spec(self) -> dict[str, Any] | None:
         """Return the OpenAPI specification of the Actor's server in Standby mode.
 
-        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Use `get_server_openapi_spec`
-        instead.
+        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Will be removed in v4. Use
+        `get_server_openapi_spec` instead.
 
         https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
         """
         warnings.warn(
-            '`get_standby_openapi_spec` is deprecated. Use `get_server_openapi_spec` instead.',
+            '`get_standby_openapi_spec` is deprecated and will be removed in v4. '
+            'Use `get_server_openapi_spec` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
@@ -814,13 +816,13 @@ class ActorClient(ResourceClient):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server in Standby mode.
 
-        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Use
-        `server_request` instead.
+        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Will be removed in
+        v4. Use `server_request` instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
         warnings.warn(
-            '`standby_request` is deprecated. Use `server_request` instead.',
+            '`standby_request` is deprecated and will be removed in v4. Use `server_request` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
@@ -1540,12 +1542,13 @@ class ActorClientAsync(ResourceClientAsync):
     async def get_standby_url(self) -> str:
         """Return the URL of the Actor's server in Standby mode.
 
-        Deprecated alias of `get_server_url`, named after Actor Standby. Use `get_server_url` instead.
+        Deprecated alias of `get_server_url`, named after Actor Standby. Will be removed in v4. Use `get_server_url`
+        instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
         warnings.warn(
-            '`get_standby_url` is deprecated. Use `get_server_url` instead.',
+            '`get_standby_url` is deprecated and will be removed in v4. Use `get_server_url` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
@@ -1554,13 +1557,14 @@ class ActorClientAsync(ResourceClientAsync):
     async def get_standby_openapi_spec(self) -> dict[str, Any] | None:
         """Return the OpenAPI specification of the Actor's server in Standby mode.
 
-        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Use `get_server_openapi_spec`
-        instead.
+        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Will be removed in v4. Use
+        `get_server_openapi_spec` instead.
 
         https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
         """
         warnings.warn(
-            '`get_standby_openapi_spec` is deprecated. Use `get_server_openapi_spec` instead.',
+            '`get_standby_openapi_spec` is deprecated and will be removed in v4. '
+            'Use `get_server_openapi_spec` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
@@ -1580,13 +1584,13 @@ class ActorClientAsync(ResourceClientAsync):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server in Standby mode.
 
-        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Use
-        `server_request` instead.
+        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Will be removed in
+        v4. Use `server_request` instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
         warnings.warn(
-            '`standby_request` is deprecated. Use `server_request` instead.',
+            '`standby_request` is deprecated and will be removed in v4. Use `server_request` instead.',
             DeprecationWarning,
             stacklevel=3,
         )

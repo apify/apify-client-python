@@ -36,7 +36,7 @@ The method returns the server's response. To find out which endpoints an Actor s
 
 Server Actors are Actors with [Actor Standby](https://docs.apify.com/platform/actors/running/standby) enabled, and their web server is the Actor's server interface. The platform documentation and the API use the Standby name, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. If you're looking for Standby support in the client, use the methods on this page.
 
-The client also has the Standby-named methods. They're deprecated aliases that call the Server methods and emit a `DeprecationWarning`:
+The client also has the Standby-named methods. They're deprecated aliases that call the Server methods and emit a `DeprecationWarning`, and they'll be removed in v4:
 
 | Deprecated Standby method | Server method |
 | --- | --- |

@@ -1,7 +1,8 @@
 ---
 id: server-actors
 title: Server Actors
-description: Send HTTP requests to Server Actors, and get their URL and OpenAPI specification.
+description: Send HTTP requests to Server Actors (Actor Standby), and get their URL and OpenAPI specification.
+keywords: [server actor, server mode, standby, actor standby, standby_request, standby_url]
 ---
 
 import Tabs from '@theme/Tabs';
@@ -30,6 +31,20 @@ A [Server Actor](https://docs.apify.com/platform/actors/running/standby) runs a 
 </Tabs>
 
 The method returns the server's response. To find out which endpoints an Actor serves, see its page in [Apify Store](https://apify.com/store) or its README.
+
+## Server mode and Actor Standby
+
+Server mode is the same feature as [Actor Standby](https://docs.apify.com/platform/actors/running/standby). The platform documentation and the API use the Standby name, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. If you're looking for Standby support in the client, use the methods on this page.
+
+The client also has the Standby-named methods. They're deprecated aliases that call the Server methods and emit a `DeprecationWarning`:
+
+| Deprecated Standby method | Server method |
+| --- | --- |
+| `ActorClient.standby_request` | `ActorClient.server_request` |
+| `ActorClient.get_standby_url` | `ActorClient.get_server_url` |
+| `ActorClient.get_standby_openapi_spec` | `ActorClient.get_server_openapi_spec` |
+
+The same aliases exist on `ActorClientAsync`. They take the same arguments and return the same values, so to switch, rename the call.
 
 ## How the request is sent
 

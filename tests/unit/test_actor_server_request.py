@@ -442,3 +442,49 @@ def test_get_server_openapi_spec_without_server_mode_raises(httpserver: HTTPServ
 
     with pytest.raises(ApifyClientError, match='is not a Server Actor'):
         sync_client.actor(_MOCKED_ACTOR_ID).get_server_openapi_spec()
+
+
+def test_standby_aliases_warn_and_delegate(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """The deprecated Standby-named methods emit a `DeprecationWarning` pointing at the caller and return the same."""
+    expect_server_actor_with_build(
+        httpserver, standby_build=None, build_id='latest_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+    httpserver.expect_request(f'{_SERVER_PREFIX}/search', method='GET').respond_with_json({'ok': True})
+    actor_client = sync_client.actor(_MOCKED_ACTOR_ID)
+
+    with pytest.warns(DeprecationWarning, match='`get_standby_url` is deprecated') as record:
+        assert actor_client.get_standby_url() == httpserver.url_for(_SERVER_PREFIX)
+    assert record[0].filename == __file__
+
+    with pytest.warns(DeprecationWarning, match='`get_standby_openapi_spec` is deprecated') as record:
+        assert actor_client.get_standby_openapi_spec() == _OPENAPI_SPEC
+    assert record[0].filename == __file__
+
+    with pytest.warns(DeprecationWarning, match='`standby_request` is deprecated') as record:
+        response = actor_client.standby_request('/search', params={'q': 'apify'})
+    assert record[0].filename == __file__
+    assert response.json() == {'ok': True}
+    assert server_requests(httpserver)[0].args.to_dict() == {'q': 'apify'}
+
+
+async def test_standby_aliases_warn_and_delegate_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async variant of `test_standby_aliases_warn_and_delegate`."""
+    expect_server_actor_with_build(
+        httpserver, standby_build=None, build_id='latest_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+    httpserver.expect_request(f'{_SERVER_PREFIX}/search', method='GET').respond_with_json({'ok': True})
+    actor_client = async_client.actor(_MOCKED_ACTOR_ID)
+
+    with pytest.warns(DeprecationWarning, match='`get_standby_url` is deprecated') as record:
+        assert await actor_client.get_standby_url() == httpserver.url_for(_SERVER_PREFIX)
+    assert record[0].filename == __file__
+
+    with pytest.warns(DeprecationWarning, match='`get_standby_openapi_spec` is deprecated') as record:
+        assert await actor_client.get_standby_openapi_spec() == _OPENAPI_SPEC
+    assert record[0].filename == __file__
+
+    with pytest.warns(DeprecationWarning, match='`standby_request` is deprecated') as record:
+        response = await actor_client.standby_request('/search', params={'q': 'apify'})
+    assert record[0].filename == __file__
+    assert response.json() == {'ok': True}
+    assert server_requests(httpserver)[0].args.to_dict() == {'q': 'apify'}

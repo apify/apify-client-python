@@ -636,7 +636,8 @@ class ActorClient(ResourceClient):
 
         The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
         client. Use it to call the server with another HTTP client, for example one generated from the server's
-        OpenAPI specification.
+        OpenAPI specification. Server mode is also called Actor Standby, and `get_standby_url` is a deprecated alias of
+        this method.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -660,7 +661,8 @@ class ActorClient(ResourceClient):
 
         The specification is the web server schema from the Actor's definition, taken from the build the Actor runs in
         Server mode: the build set in `actor_standby.build`, or `latest` if none is set. Use it to generate an HTTP
-        client for the server, and point that client at the URL returned by `get_server_url`.
+        client for the server, and point that client at the URL returned by `get_server_url`. Server mode is also
+        called Actor Standby, and `get_standby_openapi_spec` is a deprecated alias of this method.
 
         https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
 
@@ -720,10 +722,11 @@ class ActorClient(ResourceClient):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
 
-        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The request
-        goes to the URL returned by `get_server_url` and carries the client's token, which the platform consumes, so it
-        never reaches the Actor's code. The first request to an idle Actor waits for the platform to start a server
-        run, which is why the timeout defaults to `long`.
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. Server mode is
+        also called Actor Standby, and `standby_request` is a deprecated alias of this method. The request goes to the
+        URL returned by `get_server_url` and carries the client's token, which the platform consumes, so it never
+        reaches the Actor's code. The first request to an idle Actor waits for the platform to start a server run,
+        which is why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -765,6 +768,70 @@ class ActorClient(ResourceClient):
             json=json,
             timeout=timeout,
             compression=resolve_compressor(compression) if compression is not None else False,
+        )
+
+    def get_standby_url(self) -> str:
+        """Return the URL of the Actor's server in Standby mode.
+
+        Deprecated alias of `get_server_url`, named after Actor Standby. Use `get_server_url` instead.
+
+        https://docs.apify.com/platform/actors/running/standby
+        """
+        warnings.warn(
+            '`get_standby_url` is deprecated. Use `get_server_url` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self.get_server_url()
+
+    def get_standby_openapi_spec(self) -> dict[str, Any] | None:
+        """Return the OpenAPI specification of the Actor's server in Standby mode.
+
+        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Use `get_server_openapi_spec`
+        instead.
+
+        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
+        """
+        warnings.warn(
+            '`get_standby_openapi_spec` is deprecated. Use `get_server_openapi_spec` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self.get_server_openapi_spec()
+
+    def standby_request(
+        self,
+        path: str = '/',
+        *,
+        method: HttpMethod = 'GET',
+        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
+        headers: dict[str, str] | None = None,
+        data: str | bytes | None = None,
+        json: JsonSerializable | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
+        timeout: Timeout = 'long',
+    ) -> HttpResponse:
+        """Send an HTTP request to the Actor's server in Standby mode.
+
+        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Use
+        `server_request` instead.
+
+        https://docs.apify.com/platform/actors/running/standby
+        """
+        warnings.warn(
+            '`standby_request` is deprecated. Use `server_request` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return self.server_request(
+            path,
+            method=method,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            compression=compression,
+            timeout=timeout,
         )
 
 
@@ -1334,7 +1401,8 @@ class ActorClientAsync(ResourceClientAsync):
 
         The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
         client. Use it to call the server with another HTTP client, for example one generated from the server's
-        OpenAPI specification.
+        OpenAPI specification. Server mode is also called Actor Standby, and `get_standby_url` is a deprecated alias of
+        this method.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -1358,7 +1426,8 @@ class ActorClientAsync(ResourceClientAsync):
 
         The specification is the web server schema from the Actor's definition, taken from the build the Actor runs in
         Server mode: the build set in `actor_standby.build`, or `latest` if none is set. Use it to generate an HTTP
-        client for the server, and point that client at the URL returned by `get_server_url`.
+        client for the server, and point that client at the URL returned by `get_server_url`. Server mode is also
+        called Actor Standby, and `get_standby_openapi_spec` is a deprecated alias of this method.
 
         https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
 
@@ -1418,10 +1487,11 @@ class ActorClientAsync(ResourceClientAsync):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
 
-        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. The request
-        goes to the URL returned by `get_server_url` and carries the client's token, which the platform consumes, so it
-        never reaches the Actor's code. The first request to an idle Actor waits for the platform to start a server
-        run, which is why the timeout defaults to `long`.
+        A Server Actor runs a web server that is called over HTTP, without starting a run for each call. Server mode is
+        also called Actor Standby, and `standby_request` is a deprecated alias of this method. The request goes to the
+        URL returned by `get_server_url` and carries the client's token, which the platform consumes, so it never
+        reaches the Actor's code. The first request to an idle Actor waits for the platform to start a server run,
+        which is why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -1463,4 +1533,68 @@ class ActorClientAsync(ResourceClientAsync):
             json=json,
             timeout=timeout,
             compression=resolve_compressor(compression) if compression is not None else False,
+        )
+
+    async def get_standby_url(self) -> str:
+        """Return the URL of the Actor's server in Standby mode.
+
+        Deprecated alias of `get_server_url`, named after Actor Standby. Use `get_server_url` instead.
+
+        https://docs.apify.com/platform/actors/running/standby
+        """
+        warnings.warn(
+            '`get_standby_url` is deprecated. Use `get_server_url` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return await self.get_server_url()
+
+    async def get_standby_openapi_spec(self) -> dict[str, Any] | None:
+        """Return the OpenAPI specification of the Actor's server in Standby mode.
+
+        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Use `get_server_openapi_spec`
+        instead.
+
+        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
+        """
+        warnings.warn(
+            '`get_standby_openapi_spec` is deprecated. Use `get_server_openapi_spec` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return await self.get_server_openapi_spec()
+
+    async def standby_request(
+        self,
+        path: str = '/',
+        *,
+        method: HttpMethod = 'GET',
+        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
+        headers: dict[str, str] | None = None,
+        data: str | bytes | None = None,
+        json: JsonSerializable | None = None,
+        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
+        timeout: Timeout = 'long',
+    ) -> HttpResponse:
+        """Send an HTTP request to the Actor's server in Standby mode.
+
+        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Use
+        `server_request` instead.
+
+        https://docs.apify.com/platform/actors/running/standby
+        """
+        warnings.warn(
+            '`standby_request` is deprecated. Use `server_request` instead.',
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return await self.server_request(
+            path,
+            method=method,
+            params=params,
+            headers=headers,
+            data=data,
+            json=json,
+            compression=compression,
+            timeout=timeout,
         )

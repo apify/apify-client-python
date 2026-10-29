@@ -18,7 +18,7 @@ from apify_client.errors import ApifyApiError
 if TYPE_CHECKING:
     from apify_client._client_registry import ClientRegistry, ClientRegistryAsync
     from apify_client.http_clients import HttpClient, HttpClientAsync
-    from apify_client.types import Timeout
+    from apify_client.types import QueryParams, QueryParamValue, Timeout
 
 _TerminalActorJobStatus = Literal['SUCCEEDED', 'FAILED', 'TIMED-OUT', 'ABORTED']
 """Subset of `ActorJobStatus` values that indicate the job has finished and will not change again."""
@@ -41,7 +41,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         resource_path: str,
         client_registry: Any,
         resource_id: str | None = None,
-        params: dict | None = None,
+        params: QueryParams | None = None,
         api_base_url: str | None = None,
     ) -> None:
         """Initialize the resource client.
@@ -63,7 +63,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
         self._api_base_url = api_base_url or base_url
         self._public_base_url = public_base_url
         self._http_client = http_client
-        self._default_params = params or {}
+        self._default_params = dict(params) if params else {}
         self._resource_path = resource_path
         self._resource_id = resource_id
         self._client_registry = client_registry
@@ -120,7 +120,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
 
         return url
 
-    def _build_public_url(self, path: str, params: dict[str, Any]) -> str:
+    def _build_public_url(self, path: str, params: QueryParams) -> str:
         """Build a public resource URL with API-normalized query params.
 
         Normalizes `params` the same way the HTTP request path does (bool -> true/false, list -> comma-joined,
@@ -139,7 +139,7 @@ class ResourceClientBase(metaclass=WithLogDetailsClient):
             public_url = public_url._replace(query=urlencode(filtered_params))
         return urlunparse(public_url)
 
-    def _build_params(self, **kwargs: Any) -> dict:
+    def _build_params(self, **kwargs: QueryParamValue) -> dict[str, QueryParamValue]:
         """Merge default params with method params, filtering out None values.
 
         Args:
@@ -200,7 +200,7 @@ class ResourceClient(ResourceClientBase):
         resource_path: str,
         client_registry: ClientRegistry,
         resource_id: str | None = None,
-        params: dict | None = None,
+        params: QueryParams | None = None,
         api_base_url: str | None = None,
     ) -> None:
         """Initialize the resource client.
@@ -313,7 +313,7 @@ class ResourceClient(ResourceClientBase):
         self,
         *,
         url: str,
-        params: dict,
+        params: QueryParams,
         timeout: Timeout,
         wait_duration: timedelta | None = None,
     ) -> dict | None:
@@ -395,7 +395,7 @@ class ResourceClientAsync(ResourceClientBase):
         resource_path: str,
         client_registry: ClientRegistryAsync,
         resource_id: str | None = None,
-        params: dict | None = None,
+        params: QueryParams | None = None,
         api_base_url: str | None = None,
     ) -> None:
         """Initialize the resource client.
@@ -508,7 +508,7 @@ class ResourceClientAsync(ResourceClientBase):
         self,
         *,
         url: str,
-        params: dict,
+        params: QueryParams,
         timeout: Timeout,
         wait_duration: timedelta | None = None,
     ) -> dict | None:

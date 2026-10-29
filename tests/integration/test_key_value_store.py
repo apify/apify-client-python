@@ -20,7 +20,13 @@ from .._utils import (
     maybe_sleep,
     poll_until_condition,
 )
-from apify_client._models import KeyValueStoreKey, KeyValueStoreResource, ListOfKeys, ListOfKeyValueStores
+from apify_client._models import (
+    KeyValueStoreKey,
+    KeyValueStoreListItem,
+    KeyValueStoreResource,
+    ListOfKeys,
+    ListOfKeyValueStores,
+)
 from apify_client.errors import ApifyApiError
 from apify_client.http_clients import HttpResponse
 
@@ -567,7 +573,7 @@ async def test_key_value_store_collection_iterate(client: ApifyClient | ApifyCli
         collected = await collect_iterate_until_present(
             lambda: client.key_value_stores().iterate(desc=True),
             set(created_ids),
-            item_type=KeyValueStoreResource,
+            item_type=KeyValueStoreListItem,
             is_async=is_async,
         )
         collected_ids = {kvs.id for kvs in collected}

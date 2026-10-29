@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "apify_client"
-version = "3.3.1"
+version = "3.4.1"
 description = "Apify API client for Python"
 authors = [{ name = "Apify Technologies s.r.o.", email = "support@apify.com" }]
 license = "Apache-2.0"
@@ -251,7 +251,7 @@ keep_model_order = true
 # workflow committing nothing unless the models changed. A local regeneration that only moves this line is that
 # same case - drop it rather than committing it alone.
 [tool.apify.openapi-spec]
-version = "v2-2026-10-26T112451Z"
+version = "v2-2026-10-27T134926Z"
 
 [tool.uv]
 # Minimal defense against supply-chain atatcks.

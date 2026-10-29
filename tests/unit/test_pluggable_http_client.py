@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
 
     from apify_client.http_compressors import HttpCompressor
-    from apify_client.types import StreamedBodySource, Timeout
+    from apify_client.types import QueryParams, StreamedBodySource, Timeout
 
 
 @dataclass
@@ -95,7 +95,7 @@ class FakeHttpClient(HttpClient):
         method: str,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         stream: bool | None = None,
@@ -131,7 +131,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         method: str,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         stream: bool | None = None,
@@ -555,7 +555,7 @@ class PreparingHttpClient(HttpClient):
         method: str,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         **_kwargs: Any,
@@ -580,7 +580,7 @@ class PreparingHttpClientAsync(HttpClientAsync):
         method: str,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: Any = None,
         **_kwargs: Any,

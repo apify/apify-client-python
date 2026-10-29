@@ -165,6 +165,16 @@ class RequestResourceDict(RequestBaseDict):
     """
     A unique identifier assigned to the request.
     """
+    lock_expires_at: NotRequired[str]
+    """
+    The timestamp when the lock on this request expires. Only present while the request is locked.
+    """
+    lock_by_client: NotRequired[str]
+    """
+    Key of the client that last locked the request. It is set when the request is locked and removed only by
+    an explicit unlock or by an update of the request, so it can still be present after the lock has expired.
+
+    """
 
 
 @docs_group('Typed dicts')
@@ -174,6 +184,16 @@ class RequestResourceCamelDict(RequestBaseCamelDict):
     id: NotRequired[str]
     """
     A unique identifier assigned to the request.
+    """
+    lockExpiresAt: NotRequired[str]
+    """
+    The timestamp when the lock on this request expires. Only present while the request is locked.
+    """
+    lockByClient: NotRequired[str]
+    """
+    Key of the client that last locked the request. It is set when the request is locked and removed only by
+    an explicit unlock or by an update of the request, so it can still be present after the lock has expired.
+
     """
 
 

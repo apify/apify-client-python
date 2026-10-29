@@ -30,6 +30,15 @@ ActorPermissionLevel = (
 """Determines the permission level that the Actor requires to run. For details, see [Actor permissions](https://docs.apify.com/platform/actors/development/permissions)."""
 
 
+Encoding = (
+    Literal[
+        'utf-8',
+        'base64',
+    ]
+    | str
+)
+
+
 ErrorType = (
     Literal[
         '3d-secure-auth-failed',
@@ -465,6 +474,25 @@ HttpMethod = (
         'OPTIONS',
         'TRACE',
         'PATCH',
+    ]
+    | str
+)
+
+
+OAuthProviderType = (
+    Literal[
+        'CUSTOM',
+        'GOOGLE',
+    ]
+    | str
+)
+
+
+Provider = (
+    Literal[
+        'github',
+        'gitlab',
+        'bitbucket',
     ]
     | str
 )

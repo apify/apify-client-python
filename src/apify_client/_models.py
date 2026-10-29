@@ -12,6 +12,7 @@ from apify_client._docs import docs_group
 from apify_client._literals import (
     ActorJobStatus,
     ActorPermissionLevel,
+    Deployment,
     Encoding,
     ErrorType,
     GeneralAccess,
@@ -3513,7 +3514,7 @@ class Run(BaseModel):
     """
     standby: RunStandby | None = None
     """
-    Standby configuration of the run. `null` for runs that are not Actor Standby runs.
+    Server Actor deployment of this run, `null` for runs not started by a Server Actor request.
     """
     integration_tracking: IntegrationTracking | None = None
     """
@@ -3772,10 +3773,11 @@ class RunStandby(BaseModel):
         populate_by_name=True,
         alias_generator=to_camel,
     )
-    deployment: Annotated[str, Field(examples=['SINGLE_TENANT'])]
+    deployment: Annotated[Deployment, Field(examples=['MULTI_TENANT_PAYING_USERS'])]
     """
-    How the Standby run is deployed: `SINGLE_TENANT`, `MULTI_TENANT_FREE_USERS`, `MULTI_TENANT_PAYING_USERS` or `MULTI_TENANT_OWNER_PAID`. `SINGLE_TENANT` is a private instance in the user's account.
-    The `MULTI_TENANT_*` values are runs in the Actor owner's account that serve requests from many users.
+    Which pool the Server Actor run serves. `SINGLE_TENANT` is a private instance in the caller's account.
+    The `MULTI_TENANT_*` pools run in the Actor owner's account and serve many callers;
+    charges in them require a `requestId` (see the charge endpoint).
 
     """
 

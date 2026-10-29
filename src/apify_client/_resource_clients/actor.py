@@ -632,8 +632,8 @@ class ActorClient(ResourceClient):
         """Retrieve a client for the server interface of this Actor.
 
         A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
-        call. Server Actors are also called Standby Actors, and `standby` is a deprecated alias of this method. Every
-        call returns the same client, so the server URL it fetches is reused.
+        call. Server Actors were formerly called Actor Standby, and `standby` is a deprecated alias of this method.
+        Every call returns the same client, so the server URL it fetches is reused.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -655,7 +655,8 @@ class ActorClient(ResourceClient):
     def standby(self) -> ActorServerClient:
         """Retrieve a client for the server interface of this Actor in Standby mode.
 
-        Deprecated alias of `server`, named after Actor Standby. Will be removed in v4. Use `server` instead.
+        Deprecated alias of `server`, named after Actor Standby, the former name of Server Actors. Will be removed in
+        v4. Use `server` instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
@@ -1232,8 +1233,8 @@ class ActorClientAsync(ResourceClientAsync):
         """Retrieve a client for the server interface of this Actor.
 
         A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
-        call. Server Actors are also called Standby Actors, and `standby` is a deprecated alias of this method. Every
-        call returns the same client, so the server URL it fetches is reused.
+        call. Server Actors were formerly called Actor Standby, and `standby` is a deprecated alias of this method.
+        Every call returns the same client, so the server URL it fetches is reused.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -1255,7 +1256,8 @@ class ActorClientAsync(ResourceClientAsync):
     def standby(self) -> ActorServerClientAsync:
         """Retrieve a client for the server interface of this Actor in Standby mode.
 
-        Deprecated alias of `server`, named after Actor Standby. Will be removed in v4. Use `server` instead.
+        Deprecated alias of `server`, named after Actor Standby, the former name of Server Actors. Will be removed in
+        v4. Use `server` instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """

@@ -19,7 +19,7 @@ A [Server Actor](https://docs.apify.com/platform/actors/running/standby) (former
 
 :::note Formerly Actor Standby
 
-Actor Standby is the former name of Server Actors, and it'll be deprecated. The platform documentation and the API still use it, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. In the client, `ActorClient.standby` is a deprecated alias of `ActorClient.server` that will be removed in v4. To switch, rename `standby()` to `server()`.
+Actor Standby is the former name of Server Actors, and it'll be deprecated. The platform documentation and the API still use it, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. In the client, `ActorClient.standby` is a deprecated alias of `ActorClient.server` that will be removed in v4.
 
 :::
 
@@ -50,7 +50,7 @@ Note that:
 
 ## Server URL and OpenAPI specification
 
-The server client also gives you the server's URL and its OpenAPI specification:
+The Actor server client also gives you the server's URL and its OpenAPI specification:
 
 - <ApiLink to="class/ActorServerClient#get_url">`ActorServerClient.get_url`</ApiLink> returns the server's URL. It fetches and reuses the URL the same way as `request`.
 - <ApiLink to="class/ActorServerClient#get_openapi_spec">`ActorServerClient.get_openapi_spec`</ApiLink> returns the server's OpenAPI specification as a `dict`. It's the [web server schema](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema) from the Actor's definition, taken from the build that serves the server interface. That's the build set in the Actor's `actor_standby.build` field, or `latest` if none is set. If the Actor doesn't define a web server schema, the method returns `None`.

@@ -7,11 +7,11 @@ TOKEN = 'MY-APIFY-TOKEN'
 
 async def main() -> None:
     apify_client = ApifyClientAsync(TOKEN)
-    actor_client = apify_client.actor('username/actor-name')
+    server_client = apify_client.actor('username/actor-name').server()
 
     # Get the server's URL and the OpenAPI specification of its endpoints.
-    server_url = await actor_client.get_server_url()
-    spec = await actor_client.get_server_openapi_spec()
+    server_url = await server_client.get_url()
+    spec = await server_client.get_openapi_spec()
     if spec is not None:
         print(list(spec['paths']))
 

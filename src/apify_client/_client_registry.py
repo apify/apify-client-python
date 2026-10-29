@@ -13,6 +13,8 @@ if TYPE_CHECKING:
         ActorEnvVarClientAsync,
         ActorEnvVarCollectionClient,
         ActorEnvVarCollectionClientAsync,
+        ActorServerClient,
+        ActorServerClientAsync,
         ActorVersionClient,
         ActorVersionClientAsync,
         ActorVersionCollectionClient,
@@ -74,6 +76,7 @@ class ClientRegistry:
     actor_collection_client: type[ActorCollectionClient]
     actor_env_var_client: type[ActorEnvVarClient]
     actor_env_var_collection_client: type[ActorEnvVarCollectionClient]
+    actor_server_client: type[ActorServerClient]
     actor_version_client: type[ActorVersionClient]
     actor_version_collection_client: type[ActorVersionCollectionClient]
     build_client: type[BuildClient]
@@ -111,6 +114,7 @@ class ClientRegistryAsync:
     actor_collection_client: type[ActorCollectionClientAsync]
     actor_env_var_client: type[ActorEnvVarClientAsync]
     actor_env_var_collection_client: type[ActorEnvVarCollectionClientAsync]
+    actor_server_client: type[ActorServerClientAsync]
     actor_version_client: type[ActorVersionClientAsync]
     actor_version_collection_client: type[ActorVersionCollectionClientAsync]
     build_client: type[BuildClientAsync]

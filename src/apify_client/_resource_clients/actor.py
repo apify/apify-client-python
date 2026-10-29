@@ -32,17 +32,16 @@ from apify_client._utils.wait_for_resources import (
     start_waiting_for_resources,
     start_waiting_for_resources_async,
 )
-from apify_client.errors import ApifyClientError
-from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     from decimal import Decimal
     from logging import Logger
 
-    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, HttpMethod, RunOrigin
+    from apify_client._literals import ActorJobStatus, ActorPermissionLevel, RunOrigin
     from apify_client._resource_clients import (
+        ActorServerClient,
+        ActorServerClientAsync,
         ActorVersionClient,
         ActorVersionClientAsync,
         ActorVersionCollectionClient,
@@ -58,9 +57,7 @@ if TYPE_CHECKING:
         WebhookCollectionClient,
         WebhookCollectionClientAsync,
     )
-    from apify_client.http_clients import HttpResponse
-    from apify_client.http_compressors import HttpCompressor
-    from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, Timeout, WebhooksList
+    from apify_client.types import Timeout, WebhooksList
 
 _PricingInfo = (
     PayPerEventActorPricingInfo
@@ -91,7 +88,7 @@ class ActorClient(ResourceClient):
             resource_path=resource_path,
             **kwargs,
         )
-        self._server_url: str | None = None
+        self._server_client: ActorServerClient | None = None
 
     def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -631,211 +628,43 @@ class ActorClient(ResourceClient):
 
         return True
 
-    def get_server_url(self) -> str:
-        """Return the URL of the Actor's server.
+    def server(self) -> ActorServerClient:
+        """Retrieve a client for the server interface of this Actor.
 
-        The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
-        client. Use it to call the server with another HTTP client, for example one generated from the server's
-        OpenAPI specification. Server Actors are also called Standby Actors, and `get_standby_url` is a deprecated alias
-        of this method.
+        A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
+        call. Server Actors are also called Standby Actors, and `standby` is a deprecated alias of this method. Every
+        call returns the same client, so the server URL it fetches is reused.
 
         https://docs.apify.com/platform/actors/running/standby
 
         Returns:
-            The URL of the Actor's server.
-
-        Raises:
-            ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist.
+            The client for the server interface of this Actor.
         """
-        if self._server_url is None:
-            response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
-            actor = ActorResponse.model_validate(response_to_dict(response)).data
-            if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-            self._server_url = actor.standby_url
-        return self._server_url
-
-    def get_server_openapi_spec(self) -> dict[str, Any] | None:
-        """Return the OpenAPI specification of the Actor's server.
-
-        The specification is the web server schema from the Actor's definition, taken from the build that serves the
-        server interface: the build set in `actor_standby.build`, or `latest` if none is set. Use it to generate an HTTP
-        client for the server, and point that client at the URL returned by `get_server_url`. Server Actors are also
-        called Standby Actors, and `get_standby_openapi_spec` is a deprecated alias of this method.
-
-        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
-
-        Returns:
-            The OpenAPI specification of the Actor's server, or `None` if the Actor's definition doesn't include one.
-
-        Raises:
-            ApifyClientError: If the Actor is not a Server Actor, or the build that serves its server interface doesn't
-                exist.
-            ApifyApiError: If the Actor does not exist.
-        """
-        response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
-        actor = ActorResponse.model_validate(response_to_dict(response)).data
-        if actor.standby_url is None:
-            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-
-        build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
-
-        build_id = None
-        tagged_build = (actor.tagged_builds or {}).get(build_ref)
-        if tagged_build is not None:
-            build_id = tagged_build.build_id
-        else:
-            # Not a tag, so look `build_ref` up as a build number, which the API can't resolve directly.
-            for build_item in self.builds().iterate(desc=True):
-                if build_item.build_number == build_ref:
-                    build_id = build_item.id
-                    break
-
-        build = None
-        if build_id is not None:
-            build_client = self._client_registry.build_client(
-                resource_id=build_id,
+        if self._server_client is None:
+            self._server_client = self._client_registry.actor_server_client(
+                resource_id=self._resource_id,
+                resource_path=self._resource_path,
                 base_url=self._base_url,
+                api_base_url=self._api_base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            build = build_client.get()
-        if build is None:
-            raise ApifyClientError(f'Build {build_ref} of Actor {self.resource_id} does not exist.')
+        return self._server_client
 
-        if build.actor_definition is None:
-            return None
-        return build.actor_definition.web_server_schema
+    def standby(self) -> ActorServerClient:
+        """Retrieve a client for the server interface of this Actor in Standby mode.
 
-    def server_request(
-        self,
-        path: str = '/',
-        *,
-        method: HttpMethod = 'GET',
-        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
-        headers: dict[str, str] | None = None,
-        data: str | bytes | None = None,
-        json: JsonSerializable | None = None,
-        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
-        timeout: Timeout = 'long',
-    ) -> HttpResponse:
-        """Send an HTTP request to the Actor's server.
-
-        A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
-        call. Server Actors are also called Standby Actors, and `standby_request` is a deprecated alias of this method.
-        The request goes to the URL returned by `get_server_url` and carries the client's token, which the platform
-        consumes, so it never reaches the Actor's code. The first request to an idle Actor waits for the platform to
-        start a server run, which is why the timeout defaults to `long`.
-
-        A server error or a rate-limit response is retried like an API call, so the server may receive the same
-        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
-        server may not decode a compressed body.
-
-        https://docs.apify.com/platform/actors/running/standby
-
-        Args:
-            path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
-                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
-            method: HTTP method of the request.
-            params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
-                or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
-                in UTC, and `None` values are left out.
-            headers: Additional headers of the request.
-            data: Raw request body. Cannot be used together with `json`.
-            json: JSON-serializable request body. Cannot be used together with `data`.
-            compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
-                instance. The body is compressed under the same conditions as for API calls. Set it only if the
-                Actor's server decodes the resulting `Content-Encoding`.
-            timeout: Timeout for the HTTP request.
-
-        Returns:
-            The response of the Actor's server.
-
-        Raises:
-            ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
-            ImportError: If `compression` needs an optional extra that is not installed.
-            ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
-        """
-        server_url = self.get_server_url()
-        return self._http_client.call(
-            url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
-            method=method,
-            params=dict(params) if params is not None else None,
-            headers=headers,
-            data=data,
-            json=json,
-            timeout=timeout,
-            compression=resolve_compressor(compression) if compression is not None else False,
-        )
-
-    def get_standby_url(self) -> str:
-        """Return the URL of the Actor's server in Standby mode.
-
-        Deprecated alias of `get_server_url`, named after Actor Standby. Will be removed in v4. Use `get_server_url`
-        instead.
+        Deprecated alias of `server`, named after Actor Standby. Will be removed in v4. Use `server` instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
         warnings.warn(
-            '`get_standby_url` is deprecated and will be removed in v4. Use `get_server_url` instead.',
+            '`standby` is deprecated and will be removed in v4. Use `server` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
-        return self.get_server_url()
-
-    def get_standby_openapi_spec(self) -> dict[str, Any] | None:
-        """Return the OpenAPI specification of the Actor's server in Standby mode.
-
-        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Will be removed in v4. Use
-        `get_server_openapi_spec` instead.
-
-        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
-        """
-        warnings.warn(
-            '`get_standby_openapi_spec` is deprecated and will be removed in v4. '
-            'Use `get_server_openapi_spec` instead.',
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return self.get_server_openapi_spec()
-
-    def standby_request(
-        self,
-        path: str = '/',
-        *,
-        method: HttpMethod = 'GET',
-        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
-        headers: dict[str, str] | None = None,
-        data: str | bytes | None = None,
-        json: JsonSerializable | None = None,
-        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
-        timeout: Timeout = 'long',
-    ) -> HttpResponse:
-        """Send an HTTP request to the Actor's server in Standby mode.
-
-        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Will be removed in
-        v4. Use `server_request` instead.
-
-        https://docs.apify.com/platform/actors/running/standby
-        """
-        warnings.warn(
-            '`standby_request` is deprecated and will be removed in v4. Use `server_request` instead.',
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return self.server_request(
-            path,
-            method=method,
-            params=params,
-            headers=headers,
-            data=data,
-            json=json,
-            compression=compression,
-            timeout=timeout,
-        )
+        return self.server()
 
 
 @docs_group('Resource clients')
@@ -858,7 +687,7 @@ class ActorClientAsync(ResourceClientAsync):
             resource_path=resource_path,
             **kwargs,
         )
-        self._server_url: str | None = None
+        self._server_client: ActorServerClientAsync | None = None
 
     async def get(self, *, timeout: Timeout = 'short') -> ActorResource | None:
         """Retrieve the Actor.
@@ -1399,208 +1228,40 @@ class ActorClientAsync(ResourceClientAsync):
 
         return True
 
-    async def get_server_url(self) -> str:
-        """Return the URL of the Actor's server.
+    def server(self) -> ActorServerClientAsync:
+        """Retrieve a client for the server interface of this Actor.
 
-        The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
-        client. Use it to call the server with another HTTP client, for example one generated from the server's
-        OpenAPI specification. Server Actors are also called Standby Actors, and `get_standby_url` is a deprecated alias
-        of this method.
+        A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
+        call. Server Actors are also called Standby Actors, and `standby` is a deprecated alias of this method. Every
+        call returns the same client, so the server URL it fetches is reused.
 
         https://docs.apify.com/platform/actors/running/standby
 
         Returns:
-            The URL of the Actor's server.
-
-        Raises:
-            ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist.
+            The client for the server interface of this Actor.
         """
-        if self._server_url is None:
-            response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
-            actor = ActorResponse.model_validate(response_to_dict(response)).data
-            if actor.standby_url is None:
-                raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-            self._server_url = actor.standby_url
-        return self._server_url
-
-    async def get_server_openapi_spec(self) -> dict[str, Any] | None:
-        """Return the OpenAPI specification of the Actor's server.
-
-        The specification is the web server schema from the Actor's definition, taken from the build that serves the
-        server interface: the build set in `actor_standby.build`, or `latest` if none is set. Use it to generate an HTTP
-        client for the server, and point that client at the URL returned by `get_server_url`. Server Actors are also
-        called Standby Actors, and `get_standby_openapi_spec` is a deprecated alias of this method.
-
-        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
-
-        Returns:
-            The OpenAPI specification of the Actor's server, or `None` if the Actor's definition doesn't include one.
-
-        Raises:
-            ApifyClientError: If the Actor is not a Server Actor, or the build that serves its server interface doesn't
-                exist.
-            ApifyApiError: If the Actor does not exist.
-        """
-        response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
-        actor = ActorResponse.model_validate(response_to_dict(response)).data
-        if actor.standby_url is None:
-            raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
-
-        build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
-
-        build_id = None
-        tagged_build = (actor.tagged_builds or {}).get(build_ref)
-        if tagged_build is not None:
-            build_id = tagged_build.build_id
-        else:
-            # Not a tag, so look `build_ref` up as a build number, which the API can't resolve directly.
-            async for build_item in self.builds().iterate(desc=True):
-                if build_item.build_number == build_ref:
-                    build_id = build_item.id
-                    break
-
-        build = None
-        if build_id is not None:
-            build_client = self._client_registry.build_client(
-                resource_id=build_id,
+        if self._server_client is None:
+            self._server_client = self._client_registry.actor_server_client(
+                resource_id=self._resource_id,
+                resource_path=self._resource_path,
                 base_url=self._base_url,
+                api_base_url=self._api_base_url,
                 public_base_url=self._public_base_url,
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            build = await build_client.get()
-        if build is None:
-            raise ApifyClientError(f'Build {build_ref} of Actor {self.resource_id} does not exist.')
+        return self._server_client
 
-        if build.actor_definition is None:
-            return None
-        return build.actor_definition.web_server_schema
+    def standby(self) -> ActorServerClientAsync:
+        """Retrieve a client for the server interface of this Actor in Standby mode.
 
-    async def server_request(
-        self,
-        path: str = '/',
-        *,
-        method: HttpMethod = 'GET',
-        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
-        headers: dict[str, str] | None = None,
-        data: str | bytes | None = None,
-        json: JsonSerializable | None = None,
-        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
-        timeout: Timeout = 'long',
-    ) -> HttpResponse:
-        """Send an HTTP request to the Actor's server.
-
-        A Server Actor runs a web server, its server interface, that is called over HTTP without starting a run for each
-        call. Server Actors are also called Standby Actors, and `standby_request` is a deprecated alias of this method.
-        The request goes to the URL returned by `get_server_url` and carries the client's token, which the platform
-        consumes, so it never reaches the Actor's code. The first request to an idle Actor waits for the platform to
-        start a server run, which is why the timeout defaults to `long`.
-
-        A server error or a rate-limit response is retried like an API call, so the server may receive the same
-        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
-        server may not decode a compressed body.
-
-        https://docs.apify.com/platform/actors/running/standby
-
-        Args:
-            path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
-                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
-            method: HTTP method of the request.
-            params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
-                or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
-                in UTC, and `None` values are left out.
-            headers: Additional headers of the request.
-            data: Raw request body. Cannot be used together with `json`.
-            json: JSON-serializable request body. Cannot be used together with `data`.
-            compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
-                instance. The body is compressed under the same conditions as for API calls. Set it only if the
-                Actor's server decodes the resulting `Content-Encoding`.
-            timeout: Timeout for the HTTP request.
-
-        Returns:
-            The response of the Actor's server.
-
-        Raises:
-            ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
-            ImportError: If `compression` needs an optional extra that is not installed.
-            ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
-        """
-        server_url = await self.get_server_url()
-        return await self._http_client.call(
-            url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
-            method=method,
-            params=dict(params) if params is not None else None,
-            headers=headers,
-            data=data,
-            json=json,
-            timeout=timeout,
-            compression=resolve_compressor(compression) if compression is not None else False,
-        )
-
-    async def get_standby_url(self) -> str:
-        """Return the URL of the Actor's server in Standby mode.
-
-        Deprecated alias of `get_server_url`, named after Actor Standby. Will be removed in v4. Use `get_server_url`
-        instead.
+        Deprecated alias of `server`, named after Actor Standby. Will be removed in v4. Use `server` instead.
 
         https://docs.apify.com/platform/actors/running/standby
         """
         warnings.warn(
-            '`get_standby_url` is deprecated and will be removed in v4. Use `get_server_url` instead.',
+            '`standby` is deprecated and will be removed in v4. Use `server` instead.',
             DeprecationWarning,
             stacklevel=3,
         )
-        return await self.get_server_url()
-
-    async def get_standby_openapi_spec(self) -> dict[str, Any] | None:
-        """Return the OpenAPI specification of the Actor's server in Standby mode.
-
-        Deprecated alias of `get_server_openapi_spec`, named after Actor Standby. Will be removed in v4. Use
-        `get_server_openapi_spec` instead.
-
-        https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
-        """
-        warnings.warn(
-            '`get_standby_openapi_spec` is deprecated and will be removed in v4. '
-            'Use `get_server_openapi_spec` instead.',
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return await self.get_server_openapi_spec()
-
-    async def standby_request(
-        self,
-        path: str = '/',
-        *,
-        method: HttpMethod = 'GET',
-        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
-        headers: dict[str, str] | None = None,
-        data: str | bytes | None = None,
-        json: JsonSerializable | None = None,
-        compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
-        timeout: Timeout = 'long',
-    ) -> HttpResponse:
-        """Send an HTTP request to the Actor's server in Standby mode.
-
-        Deprecated alias of `server_request`, named after Actor Standby. It takes the same arguments. Will be removed in
-        v4. Use `server_request` instead.
-
-        https://docs.apify.com/platform/actors/running/standby
-        """
-        warnings.warn(
-            '`standby_request` is deprecated and will be removed in v4. Use `server_request` instead.',
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return await self.server_request(
-            path,
-            method=method,
-            params=params,
-            headers=headers,
-            data=data,
-            json=json,
-            compression=compression,
-            timeout=timeout,
-        )
+        return self.server()

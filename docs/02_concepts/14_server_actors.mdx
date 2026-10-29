@@ -2,7 +2,7 @@
 id: server-actors
 title: Server Actors
 description: Send HTTP requests to Server Actors (Actor Standby), and get their URL and OpenAPI specification.
-keywords: [server actor, server interface, standby, actor standby, standby_request, standby_url]
+keywords: [server actor, server interface, standby, actor standby, standby_url, ActorServerClient]
 ---
 
 import Tabs from '@theme/Tabs';
@@ -15,7 +15,7 @@ import ServerSyncExample from '!!raw-loader!./code/14_server_sync.py';
 import ServerOtherClientAsyncExample from '!!raw-loader!./code/14_server_other_client_async.py';
 import ServerOtherClientSyncExample from '!!raw-loader!./code/14_server_other_client_sync.py';
 
-A [Server Actor](https://docs.apify.com/platform/actors/running/standby) runs a web server. You call it over HTTP, and the platform keeps a run ready to answer, so each call skips the run startup. To send a request to such an Actor, use <ApiLink to="class/ActorClient#server_request">`ActorClient.server_request`</ApiLink>. It takes the path on the Actor's server, and optionally the HTTP method, query parameters, headers, and a body:
+A [Server Actor](https://docs.apify.com/platform/actors/running/standby) runs a web server. You call it over HTTP, and the platform keeps a run ready to answer, so each call skips the run startup. To work with such an Actor, get its server client with <ApiLink to="class/ActorClient#server">`ActorClient.server`</ApiLink>. To send a request, use <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink>. It takes the path on the Actor's server, and optionally the HTTP method, query parameters, headers, and a body:
 
 <Tabs>
     <TabItem value="AsyncExample" label="Async client" default>
@@ -34,23 +34,15 @@ The method returns the server's response. To find out which endpoints an Actor s
 
 ## Server Actors and Actor Standby
 
-Server Actors are Actors with [Actor Standby](https://docs.apify.com/platform/actors/running/standby) enabled, and their web server is the Actor's server interface. The platform documentation and the API use the Standby name, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. If you're looking for Standby support in the client, use the methods on this page.
+Server Actors are Actors with [Actor Standby](https://docs.apify.com/platform/actors/running/standby) enabled, and their web server is the Actor's server interface. The platform documentation and the API use the Standby name, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. If you're looking for Standby support in the client, use the server client described on this page.
 
-The client also has the Standby-named methods. They're deprecated aliases that call the Server methods and emit a `DeprecationWarning`, and they'll be removed in v4:
-
-| Deprecated Standby method | Server method |
-| --- | --- |
-| `ActorClient.standby_request` | `ActorClient.server_request` |
-| `ActorClient.get_standby_url` | `ActorClient.get_server_url` |
-| `ActorClient.get_standby_openapi_spec` | `ActorClient.get_server_openapi_spec` |
-
-The same aliases exist on `ActorClientAsync`. They take the same arguments and return the same values, so to switch, rename the call.
+The client also has a Standby-named method. `ActorClient.standby` is a deprecated alias of `ActorClient.server`. It returns the same server client, emits a `DeprecationWarning`, and will be removed in v4. To switch, rename the call, for example `actor_client.standby().request('/search')` to `actor_client.server().request('/search')`. The same alias exists on `ActorClientAsync`.
 
 ## How the request is sent
 
 Note that:
 
-- The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls on the same `ActorClient`. If the Actor isn't a Server Actor, the method raises an `ApifyClientError`.
+- The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls through the same `ActorClient`. If the Actor isn't a Server Actor, the server client raises an `ApifyClientError`.
 - The path is always resolved against that URL, so a path can't send the request to another host.
 - By default, the request body is sent uncompressed, since the Actor's server may not decode a compressed body. If the server decodes it, pass `compression`, for example `compression='gzip'`. The client then compresses large bodies the same way as for API calls.
 
@@ -58,8 +50,8 @@ Note that:
 
 For an Actor with many endpoints, you may prefer a client generated from the server's OpenAPI specification, or an HTTP client you already use. Two methods give such a client what it needs:
 
-- <ApiLink to="class/ActorClient#get_server_url">`ActorClient.get_server_url`</ApiLink> returns the server's URL. It fetches and reuses the URL the same way as `server_request`.
-- <ApiLink to="class/ActorClient#get_server_openapi_spec">`ActorClient.get_server_openapi_spec`</ApiLink> returns the server's OpenAPI specification as a `dict`. It's the [web server schema](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema) from the Actor's definition, taken from the build that serves the server interface. That's the build set in the Actor's Standby settings, or `latest` if none is set. If the Actor doesn't define a web server schema, the method returns `None`.
+- <ApiLink to="class/ActorServerClient#get_url">`ActorServerClient.get_url`</ApiLink> returns the server's URL. It fetches and reuses the URL the same way as `request`.
+- <ApiLink to="class/ActorServerClient#get_openapi_spec">`ActorServerClient.get_openapi_spec`</ApiLink> returns the server's OpenAPI specification as a `dict`. It's the [web server schema](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema) from the Actor's definition, taken from the build that serves the server interface. That's the build set in the Actor's Standby settings, or `latest` if none is set. If the Actor doesn't define a web server schema, the method returns `None`.
 
 A request from another client needs your Apify token in the `Authorization` header, and a timeout long enough for a server run to start. For details, see [Authentication](#authentication) and [Timeouts, retries, and errors](#timeouts-retries-and-errors). The following example uses [HTTPX2](https://github.com/pydantic/httpx2), which you can install with the `httpx2` extra:
 

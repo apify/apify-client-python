@@ -80,7 +80,7 @@ For details, see [How do I authenticate my requests](https://docs.apify.com/plat
 
 ## Timeouts, retries, and errors
 
-When no server run is ready, the first request waits for the platform to start one, which can take a few minutes. The method uses the `long` timeout tier by default for that reason. You can pass a different `timeout`, the same way as for API calls. For details, see [Timeouts](./11_timeouts.mdx).
+When no server run is ready, the first request waits for the platform to start one. The method uses the `long` timeout tier by default for that reason. You can pass a different `timeout`, the same way as for API calls. For details, see [Timeouts](./11_timeouts.mdx).
 
 The method returns the server's response whatever its status, so check `status_code` before you use the body. Only rate-limit (429) and Service Unavailable (503) responses are retried, with the client's retry settings. Once the retries run out, the method returns the last response. For details, see [Retries](./05_retries.mdx).
 

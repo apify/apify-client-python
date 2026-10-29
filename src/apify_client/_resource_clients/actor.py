@@ -131,6 +131,7 @@ class ActorClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_standby_tenancy: str | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
@@ -175,6 +176,8 @@ class ActorClient(ResourceClient):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_standby_tenancy: Whether each user gets their own Standby runs (`SINGLE_TENANT`) or the runs are
+                shared across users (`MULTI_TENANT`).
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -214,6 +217,7 @@ class ActorClient(ResourceClient):
                 memory_mbytes=actor_standby_memory_mbytes,
                 disable_standby_fields_override=actor_standby_disable_standby_fields_override,
                 should_pass_actor_input=actor_standby_should_pass_actor_input,
+                tenancy=actor_standby_tenancy,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -691,6 +695,7 @@ class ActorClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_standby_tenancy: str | None = None,
         pricing_infos: list[dict[str, Any]] | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         tagged_builds: dict[str, dict[str, str] | None] | None = None,
@@ -735,6 +740,8 @@ class ActorClientAsync(ResourceClientAsync):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_standby_tenancy: Whether each user gets their own Standby runs (`SINGLE_TENANT`) or the runs are
+                shared across users (`MULTI_TENANT`).
             pricing_infos: A list of objects that describes the pricing of the Actor.
             actor_permission_level: The permission level of the Actor on Apify platform.
             tagged_builds: A dictionary mapping build tag names to their settings. Use it to create, update,
@@ -774,6 +781,7 @@ class ActorClientAsync(ResourceClientAsync):
                 memory_mbytes=actor_standby_memory_mbytes,
                 disable_standby_fields_override=actor_standby_disable_standby_fields_override,
                 should_pass_actor_input=actor_standby_should_pass_actor_input,
+                tenancy=actor_standby_tenancy,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,

@@ -72,9 +72,9 @@ The following example prints the server's URL and the paths of its endpoints:
 
 ## Authentication
 
-The request carries the client's API token in the `Authorization` header. The platform removes the token before it forwards the request, so the token doesn't reach the Actor's code.
+The request carries the client's API token in the `X-Apify-Authorization` header. The platform removes the token before it forwards the request, so the token doesn't reach the Actor's code.
 
-If the Actor reads the `Authorization` header for its own authentication, pass that header in `headers`, and send your Apify token in the `X-Apify-Authorization` header instead. A header you pass in `headers` replaces the client's `Authorization` header for that request.
+The headers you pass in `headers` reach the Actor's server as they are. If the Actor reads the `Authorization` header for its own authentication, pass that header in `headers`.
 
 For details, see [How do I authenticate my requests](https://docs.apify.com/platform/actors/running/standby#how-do-i-authenticate-my-requests) in the platform documentation.
 

@@ -70,7 +70,8 @@ def test_request_sends_request_to_server_url(httpserver: HTTPServer, sync_client
     assert len(captured) == 1
     assert captured[0].args.to_dict() == {'q': 'apify'}
     assert json.loads(captured[0].get_data()) == {'limit': 5}
-    assert captured[0].headers['Authorization'] == 'Bearer test'
+    assert captured[0].headers['X-Apify-Authorization'] == 'Bearer test'
+    assert 'Authorization' not in captured[0].headers
 
 
 async def test_request_sends_request_to_server_url_async(
@@ -92,7 +93,20 @@ async def test_request_sends_request_to_server_url_async(
     assert len(captured) == 1
     assert captured[0].args.to_dict() == {'q': 'apify'}
     assert json.loads(captured[0].get_data()) == {'limit': 5}
-    assert captured[0].headers['Authorization'] == 'Bearer test'
+    assert captured[0].headers['X-Apify-Authorization'] == 'Bearer test'
+    assert 'Authorization' not in captured[0].headers
+
+
+def test_request_sends_caller_authorization_header(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """An `Authorization` header passed by the caller reaches the server as it is, next to the client's token."""
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/', method='GET').respond_with_json({'ok': True})
+
+    sync_client.actor(_MOCKED_ACTOR_ID).server().request(headers={'Authorization': 'Bearer actor-token'})
+
+    captured = server_requests(httpserver)
+    assert captured[0].headers['Authorization'] == 'Bearer actor-token'
+    assert captured[0].headers['X-Apify-Authorization'] == 'Bearer test'
 
 
 def test_request_fetches_server_url_once(httpserver: HTTPServer, sync_client: ApifyClient) -> None:

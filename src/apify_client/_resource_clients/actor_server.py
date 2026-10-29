@@ -132,9 +132,10 @@ class ActorServerClient(ResourceClient):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
 
-        The request goes to the URL returned by `get_url` and carries the client's token, which the platform consumes,
-        so it never reaches the Actor's code. The first request to an idle Actor waits for the platform to start a
-        server run, which is why the timeout defaults to `long`.
+        The request goes to the URL returned by `get_url` and carries the client's token in the `X-Apify-Authorization`
+        header, which the platform consumes, so it never reaches the Actor's code. Headers you pass, `Authorization`
+        included, reach the Actor's server as they are. The first request to an idle Actor waits for the platform to
+        start a server run, which is why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -176,6 +177,7 @@ class ActorServerClient(ResourceClient):
             json=json,
             timeout=timeout,
             compression=resolve_compressor(compression) if compression is not None else False,
+            authorization_header='X-Apify-Authorization',
         )
 
 
@@ -295,9 +297,10 @@ class ActorServerClientAsync(ResourceClientAsync):
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
 
-        The request goes to the URL returned by `get_url` and carries the client's token, which the platform consumes,
-        so it never reaches the Actor's code. The first request to an idle Actor waits for the platform to start a
-        server run, which is why the timeout defaults to `long`.
+        The request goes to the URL returned by `get_url` and carries the client's token in the `X-Apify-Authorization`
+        header, which the platform consumes, so it never reaches the Actor's code. Headers you pass, `Authorization`
+        included, reach the Actor's server as they are. The first request to an idle Actor waits for the platform to
+        start a server run, which is why the timeout defaults to `long`.
 
         A server error or a rate-limit response is retried like an API call, so the server may receive the same
         request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
@@ -339,4 +342,5 @@ class ActorServerClientAsync(ResourceClientAsync):
             json=json,
             timeout=timeout,
             compression=resolve_compressor(compression) if compression is not None else False,
+            authorization_header='X-Apify-Authorization',
         )

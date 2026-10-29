@@ -106,4 +106,10 @@ async def test_actor_server(client: ApifyClient | ApifyClientAsync, server_actor
     assert echoed['url'] == '/echo?q=apify'
     assert json.loads(echoed['body']) == {'limit': 5}
     # The platform consumes the client's token, so it never reaches the Actor's code.
+    assert 'x-apify-authorization' not in echoed['headers']
     assert 'authorization' not in echoed['headers']
+
+    with_own_authorization = await maybe_await(
+        actor_server_client.request('/echo', headers={'Authorization': 'Bearer actor-token'})
+    )
+    assert with_own_authorization.json()['headers']['authorization'] == 'Bearer actor-token'

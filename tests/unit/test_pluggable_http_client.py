@@ -31,7 +31,7 @@ from apify_client.http_clients import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Collection, Iterator
 
     from pytest_httpserver import HTTPServer
 
@@ -101,6 +101,9 @@ class FakeHttpClient(HttpClient):
         stream: bool | None = None,
         timeout: Timeout = 'medium',
         compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -113,6 +116,9 @@ class FakeHttpClient(HttpClient):
                 'stream': stream,
                 'timeout': timeout,
                 'compression': compression,
+                'authorization_header': authorization_header,
+                'raise_for_status': raise_for_status,
+                'retry_status_codes': retry_status_codes,
             }
         )
         return _make_fake_response()
@@ -137,6 +143,9 @@ class FakeHttpClientAsync(HttpClientAsync):
         stream: bool | None = None,
         timeout: Timeout = 'medium',
         compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -149,6 +158,9 @@ class FakeHttpClientAsync(HttpClientAsync):
                 'stream': stream,
                 'timeout': timeout,
                 'compression': compression,
+                'authorization_header': authorization_header,
+                'raise_for_status': raise_for_status,
+                'retry_status_codes': retry_status_codes,
             }
         )
         return _make_fake_response()

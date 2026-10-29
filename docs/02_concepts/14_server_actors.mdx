@@ -38,7 +38,7 @@ To work with a Server Actor, get its server client with <ApiLink to="class/Actor
     </TabItem>
 </Tabs>
 
-The method returns the server's response. To find out which endpoints an Actor serves, see its page in [Apify Store](https://apify.com/store), its README, or its OpenAPI specification. For details, see [Server URL and OpenAPI specification](#server-url-and-openapi-specification).
+The method returns the server's response. To read a large body in chunks, pass `stream=True` and close the response when you're done with it. To find out which endpoints an Actor serves, see its page in [Apify Store](https://apify.com/store), its README, or its OpenAPI specification. For details, see [Server URL and OpenAPI specification](#server-url-and-openapi-specification).
 
 ## How the request is sent
 

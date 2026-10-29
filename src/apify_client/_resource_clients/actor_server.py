@@ -133,6 +133,7 @@ class ActorServerClient(ResourceClient):
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
         compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
+        stream: bool = False,
         timeout: Timeout = 'long',
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
@@ -162,7 +163,9 @@ class ActorServerClient(ResourceClient):
             compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
                 instance. The body is compressed under the same conditions as for API calls. Set it only if the
                 Actor's server decodes the resulting `Content-Encoding`.
-            timeout: Timeout for the HTTP request.
+            stream: Whether to return the response with the body unread, so it can be read in chunks with `iter_bytes`
+                (`aiter_bytes` in the async client). The response holds its connection open until you close it.
+            timeout: Timeout for the HTTP request. With `stream`, it bounds the wait for the server to start responding.
 
         Returns:
             The response of the Actor's server.
@@ -186,6 +189,7 @@ class ActorServerClient(ResourceClient):
             authorization_header='X-Apify-Authorization',
             raise_for_status=False,
             retry_status_codes=SERVER_RETRY_STATUS_CODES,
+            stream=stream,
         )
 
 
@@ -301,6 +305,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
         compression: HttpCompressionAlgorithm | HttpCompressor | None = None,
+        stream: bool = False,
         timeout: Timeout = 'long',
     ) -> HttpResponse:
         """Send an HTTP request to the Actor's server.
@@ -330,7 +335,9 @@ class ActorServerClientAsync(ResourceClientAsync):
             compression: Compression algorithm for the request body, as a string literal or an `HttpCompressor`
                 instance. The body is compressed under the same conditions as for API calls. Set it only if the
                 Actor's server decodes the resulting `Content-Encoding`.
-            timeout: Timeout for the HTTP request.
+            stream: Whether to return the response with the body unread, so it can be read in chunks with `iter_bytes`
+                (`aiter_bytes` in the async client). The response holds its connection open until you close it.
+            timeout: Timeout for the HTTP request. With `stream`, it bounds the wait for the server to start responding.
 
         Returns:
             The response of the Actor's server.
@@ -354,4 +361,5 @@ class ActorServerClientAsync(ResourceClientAsync):
             authorization_header='X-Apify-Authorization',
             raise_for_status=False,
             retry_status_codes=SERVER_RETRY_STATUS_CODES,
+            stream=stream,
         )

@@ -328,6 +328,32 @@ async def test_request_returns_error_response_async(httpserver: HTTPServer, asyn
     assert response.text == 'Not here'
 
 
+def test_request_returns_response_unread_with_stream(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """With `stream`, the body can be read in chunks."""
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/', method='GET').respond_with_data(b'x' * 10_000)
+
+    response = sync_client.actor(_MOCKED_ACTOR_ID).server().request(stream=True)
+    try:
+        assert b''.join(response.iter_bytes()) == b'x' * 10_000
+    finally:
+        response.close()
+
+
+async def test_request_returns_response_unread_with_stream_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_request_returns_response_unread_with_stream`."""
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/', method='GET').respond_with_data(b'x' * 10_000)
+
+    response = await async_client.actor(_MOCKED_ACTOR_ID).server().request(stream=True)
+    try:
+        assert b''.join([chunk async for chunk in response.aiter_bytes()]) == b'x' * 10_000
+    finally:
+        await response.aclose()
+
+
 def expect_flaky_server(httpserver: HTTPServer, statuses: list[int]) -> None:
     """Answer `/flaky` with each of `statuses` in turn, then with 200."""
     remaining = list(statuses)

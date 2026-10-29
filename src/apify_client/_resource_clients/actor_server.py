@@ -10,13 +10,10 @@ from apify_client.errors import ApifyClientError
 from apify_client.http_compressors._resolve import resolve_compressor
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
-    from datetime import datetime
-
     from apify_client._literals import HttpMethod
     from apify_client.http_clients import HttpResponse
     from apify_client.http_compressors import HttpCompressor
-    from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, Timeout
+    from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, QueryParams, Timeout
 
 
 @docs_group('Resource clients')
@@ -126,7 +123,7 @@ class ActorServerClient(ResourceClient):
         path: str = '/',
         *,
         method: HttpMethod = 'GET',
-        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
+        params: QueryParams | None = None,
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
@@ -173,7 +170,7 @@ class ActorServerClient(ResourceClient):
         return self._http_client.call(
             url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
-            params=dict(params) if params is not None else None,
+            params=params,
             headers=headers,
             data=data,
             json=json,
@@ -289,7 +286,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         path: str = '/',
         *,
         method: HttpMethod = 'GET',
-        params: Mapping[str, str | int | float | bool | datetime | list[str] | None] | None = None,
+        params: QueryParams | None = None,
         headers: dict[str, str] | None = None,
         data: str | bytes | None = None,
         json: JsonSerializable | None = None,
@@ -336,7 +333,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         return await self._http_client.call(
             url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
             method=method,
-            params=dict(params) if params is not None else None,
+            params=params,
             headers=headers,
             data=data,
             json=json,

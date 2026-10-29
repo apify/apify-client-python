@@ -2,19 +2,20 @@ from __future__ import annotations
 
 import gzip
 import json
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from werkzeug import Response
+from werkzeug import Request, Response
 
+from apify_client import ApifyClient
 from apify_client.errors import ApifyClientError, NotFoundError
 from apify_client.http_compressors import GzipHttpCompressor
 
 if TYPE_CHECKING:
     from pytest_httpserver import HTTPServer
-    from werkzeug import Request
 
-    from apify_client import ApifyClient, ApifyClientAsync
+    from apify_client import ApifyClientAsync
     from apify_client.http_compressors import HttpCompressor
     from apify_client.types import HttpCompressionAlgorithm
 
@@ -305,13 +306,75 @@ def test_request_missing_actor_raises_not_found(httpserver: HTTPServer, sync_cli
         sync_client.actor(_MOCKED_ACTOR_ID).server().request()
 
 
-def test_request_error_status_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
-    """An error status from the server raises the matching `ApifyApiError` subclass."""
+def test_request_returns_error_response(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """An error response of the server comes back as it is."""
     expect_server_actor(httpserver)
     httpserver.expect_request(f'{_SERVER_PREFIX}/missing', method='GET').respond_with_data('Not here', status=404)
 
-    with pytest.raises(NotFoundError, match='Not here'):
-        sync_client.actor(_MOCKED_ACTOR_ID).server().request('/missing')
+    response = sync_client.actor(_MOCKED_ACTOR_ID).server().request('/missing')
+
+    assert response.status_code == 404
+    assert response.text == 'Not here'
+
+
+async def test_request_returns_error_response_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:
+    """Async variant of `test_request_returns_error_response`."""
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/missing', method='GET').respond_with_data('Not here', status=404)
+
+    response = await async_client.actor(_MOCKED_ACTOR_ID).server().request('/missing')
+
+    assert response.status_code == 404
+    assert response.text == 'Not here'
+
+
+def expect_flaky_server(httpserver: HTTPServer, statuses: list[int]) -> None:
+    """Answer `/flaky` with each of `statuses` in turn, then with 200."""
+    remaining = list(statuses)
+
+    def handler(_request: Request) -> Response:
+        status = remaining.pop(0) if remaining else 200
+        return Response(json.dumps({'status': status}), status=status, content_type='application/json')
+
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/flaky').respond_with_handler(handler)
+
+
+def retrying_client(httpserver: HTTPServer, max_retries: int) -> ApifyClient:
+    api_url = httpserver.url_for('/').removesuffix('/')
+    return ApifyClient(token='test', api_url=api_url, max_retries=max_retries, min_delay_between_retries=timedelta(0))
+
+
+@pytest.mark.parametrize('status', [pytest.param(429, id='rate limit'), pytest.param(503, id='service unavailable')])
+def test_request_retries_platform_statuses(httpserver: HTTPServer, status: int) -> None:
+    """A rate-limit or Service Unavailable response is retried."""
+    expect_flaky_server(httpserver, [status, status])
+
+    response = retrying_client(httpserver, max_retries=2).actor(_MOCKED_ACTOR_ID).server().request('/flaky')
+
+    assert response.status_code == 200
+    assert len(server_requests(httpserver)) == 3
+
+
+def test_request_returns_last_retried_response(httpserver: HTTPServer) -> None:
+    """Once the retries run out, the last retried response comes back."""
+    expect_flaky_server(httpserver, [503, 503, 503])
+
+    response = retrying_client(httpserver, max_retries=1).actor(_MOCKED_ACTOR_ID).server().request('/flaky')
+
+    assert response.status_code == 503
+    assert len(server_requests(httpserver)) == 2
+
+
+def test_request_does_not_retry_other_server_errors(httpserver: HTTPServer) -> None:
+    """A server error other than 503 comes back after a single attempt."""
+    expect_flaky_server(httpserver, [500])
+
+    client = retrying_client(httpserver, max_retries=2)
+    response = client.actor(_MOCKED_ACTOR_ID).server().request('/flaky', method='POST', json={'a': 1})
+
+    assert response.status_code == 500
+    assert len(server_requests(httpserver)) == 1
 
 
 _OPENAPI_SPEC = {'openapi': '3.0.0', 'info': {'title': 'Test server', 'version': '1.0.0'}, 'paths': {}}

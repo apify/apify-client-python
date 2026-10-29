@@ -16,6 +16,11 @@ if TYPE_CHECKING:
     from apify_client.types import HttpCompressionAlgorithm, JsonSerializable, QueryParams, Timeout
 
 
+SERVER_RETRY_STATUS_CODES = frozenset({429, 503})
+"""Statuses a server request is retried on. Other statuses may come from the Actor's code, which a retry would run
+again."""
+
+
 @docs_group('Resource clients')
 class ActorServerClient(ResourceClient):
     """Sub-client for the server interface of a specific Actor.
@@ -137,9 +142,10 @@ class ActorServerClient(ResourceClient):
         included, reach the Actor's server as they are. The first request to an idle Actor waits for the platform to
         start a server run, which is why the timeout defaults to `long`.
 
-        A server error or a rate-limit response is retried like an API call, so the server may receive the same
-        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
-        server may not decode a compressed body.
+        The method returns any response of the server, error statuses included. A rate-limit (429) or Service
+        Unavailable (503) response is retried with the client's retry settings, and the last one is returned once the
+        retries run out. Request bodies are sent uncompressed unless `compression` is set, since the Actor's server may
+        not decode a compressed body.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -163,7 +169,7 @@ class ActorServerClient(ResourceClient):
 
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+            ApifyApiError: If the Actor does not exist.
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
@@ -178,6 +184,8 @@ class ActorServerClient(ResourceClient):
             timeout=timeout,
             compression=resolve_compressor(compression) if compression is not None else False,
             authorization_header='X-Apify-Authorization',
+            raise_for_status=False,
+            retry_status_codes=SERVER_RETRY_STATUS_CODES,
         )
 
 
@@ -302,9 +310,10 @@ class ActorServerClientAsync(ResourceClientAsync):
         included, reach the Actor's server as they are. The first request to an idle Actor waits for the platform to
         start a server run, which is why the timeout defaults to `long`.
 
-        A server error or a rate-limit response is retried like an API call, so the server may receive the same
-        request more than once. Request bodies are sent uncompressed unless `compression` is set, since the Actor's
-        server may not decode a compressed body.
+        The method returns any response of the server, error statuses included. A rate-limit (429) or Service
+        Unavailable (503) response is retried with the client's retry settings, and the last one is returned once the
+        retries run out. Request bodies are sent uncompressed unless `compression` is set, since the Actor's server may
+        not decode a compressed body.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -328,7 +337,7 @@ class ActorServerClientAsync(ResourceClientAsync):
 
         Raises:
             ApifyClientError: If the Actor is not a Server Actor.
-            ApifyApiError: If the Actor does not exist, or the server responds with an error status.
+            ApifyApiError: If the Actor does not exist.
             ImportError: If `compression` needs an optional extra that is not installed.
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
@@ -343,4 +352,6 @@ class ActorServerClientAsync(ResourceClientAsync):
             timeout=timeout,
             compression=resolve_compressor(compression) if compression is not None else False,
             authorization_header='X-Apify-Authorization',
+            raise_for_status=False,
+            retry_status_codes=SERVER_RETRY_STATUS_CODES,
         )

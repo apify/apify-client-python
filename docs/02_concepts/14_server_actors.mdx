@@ -82,4 +82,6 @@ For details, see [How do I authenticate my requests](https://docs.apify.com/plat
 
 When no server run is ready, the first request waits for the platform to start one, which can take a few minutes. The method uses the `long` timeout tier by default for that reason. You can pass a different `timeout`, the same way as for API calls. For details, see [Timeouts](./11_timeouts.mdx).
 
-An error status from the Actor's server raises an `ApifyApiError`, like an error from the API. Server errors and rate-limit responses are retried with the client's retry settings, so a request that the server failed to answer may reach it more than once. If your endpoint isn't safe to call twice, lower `max_retries` on the client. For details, see [Retries](./05_retries.mdx) and [Error handling](./04_error_handling.mdx).
+The method returns the server's response whatever its status, so check `status_code` before you use the body. Only rate-limit (429) and Service Unavailable (503) responses are retried, with the client's retry settings. Once the retries run out, the method returns the last response. For details, see [Retries](./05_retries.mdx).
+
+The method raises only when it can't reach the server: an `ApifyApiError` when the Actor doesn't exist, or an `ApifyClientError` when it isn't a Server Actor. For details, see [Error handling](./04_error_handling.mdx).

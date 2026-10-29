@@ -137,6 +137,7 @@ class ActorCollectionClient(ResourceClient):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_standby_tenancy: str | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
@@ -179,6 +180,8 @@ class ActorCollectionClient(ResourceClient):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_standby_tenancy: Whether each user gets their own Standby runs (`SINGLE_TENANT`) or the runs are
+                shared across users (`MULTI_TENANT`).
             actor_permission_level: The permission level of the Actor on Apify platform.
             timeout: Timeout for the API HTTP request.
 
@@ -213,6 +216,7 @@ class ActorCollectionClient(ResourceClient):
                 memory_mbytes=actor_standby_memory_mbytes,
                 disable_standby_fields_override=actor_standby_disable_standby_fields_override,
                 should_pass_actor_input=actor_standby_should_pass_actor_input,
+                tenancy=actor_standby_tenancy,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,
@@ -334,6 +338,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
         actor_standby_memory_mbytes: int | None = None,
         actor_standby_disable_standby_fields_override: bool | None = None,
         actor_standby_should_pass_actor_input: bool | None = None,
+        actor_standby_tenancy: str | None = None,
         actor_permission_level: ActorPermissionLevel | None = None,
         timeout: Timeout = 'medium',
     ) -> ActorResource:
@@ -376,6 +381,8 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 overridden elsewhere.
             actor_standby_should_pass_actor_input: Whether to pass the Actor input to the Standby runs. If false,
                 the Standby runs start with no input.
+            actor_standby_tenancy: Whether each user gets their own Standby runs (`SINGLE_TENANT`) or the runs are
+                shared across users (`MULTI_TENANT`).
             actor_permission_level: The permission level of the Actor on Apify platform.
             timeout: Timeout for the API HTTP request.
 
@@ -410,6 +417,7 @@ class ActorCollectionClientAsync(ResourceClientAsync):
                 memory_mbytes=actor_standby_memory_mbytes,
                 disable_standby_fields_override=actor_standby_disable_standby_fields_override,
                 should_pass_actor_input=actor_standby_should_pass_actor_input,
+                tenancy=actor_standby_tenancy,
             ),
             example_run_input=ExampleRunInput(
                 body=example_run_input_body,

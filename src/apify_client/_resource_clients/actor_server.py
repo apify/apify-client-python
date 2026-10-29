@@ -43,7 +43,7 @@ class ActorServerClient(ResourceClient):
         )
         self._url: str | None = None
 
-    def get_url(self) -> str:
+    def get_url(self, *, timeout: Timeout = 'short') -> str:
         """Return the URL of the Actor's server.
 
         The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
@@ -51,6 +51,9 @@ class ActorServerClient(ResourceClient):
         OpenAPI specification.
 
         https://docs.apify.com/platform/actors/running/standby
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The URL of the Actor's server.
@@ -60,14 +63,14 @@ class ActorServerClient(ResourceClient):
             ApifyApiError: If the Actor does not exist.
         """
         if self._url is None:
-            response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            response = self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
             actor = ActorResponse.model_validate(response_to_dict(response)).data
             if actor.standby_url is None:
                 raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
             self._url = actor.standby_url
         return self._url
 
-    def get_openapi_spec(self) -> dict[str, Any] | None:
+    def get_openapi_spec(self, *, timeout: Timeout = 'short') -> dict[str, Any] | None:
         """Return the OpenAPI specification of the Actor's server.
 
         The specification is the web server schema from the Actor's definition, taken from the build that serves the
@@ -75,6 +78,9 @@ class ActorServerClient(ResourceClient):
         client for the server, and point that client at the URL returned by `get_url`.
 
         https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
+
+        Args:
+            timeout: Timeout for each API HTTP request.
 
         Returns:
             The OpenAPI specification of the Actor's server, or `None` if the Actor's definition doesn't include one.
@@ -84,7 +90,7 @@ class ActorServerClient(ResourceClient):
                 exist.
             ApifyApiError: If the Actor does not exist.
         """
-        response = self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+        response = self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
         actor = ActorResponse.model_validate(response_to_dict(response)).data
         if actor.standby_url is None:
             raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
@@ -101,7 +107,7 @@ class ActorServerClient(ResourceClient):
                 resource_path='builds',
                 **self._base_client_kwargs,
             )
-            for build_item in builds_client.iterate(desc=True):
+            for build_item in builds_client.iterate(desc=True, timeout=timeout):
                 if build_item.build_number == build_ref:
                     build_id = build_item.id
                     break
@@ -115,7 +121,7 @@ class ActorServerClient(ResourceClient):
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            build = build_client.get()
+            build = build_client.get(timeout=timeout)
         if build is None:
             raise ApifyClientError(f'Build {build_ref} of Actor {self.resource_id} does not exist.')
 
@@ -215,7 +221,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         )
         self._url: str | None = None
 
-    async def get_url(self) -> str:
+    async def get_url(self, *, timeout: Timeout = 'short') -> str:
         """Return the URL of the Actor's server.
 
         The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
@@ -223,6 +229,9 @@ class ActorServerClientAsync(ResourceClientAsync):
         OpenAPI specification.
 
         https://docs.apify.com/platform/actors/running/standby
+
+        Args:
+            timeout: Timeout for the API HTTP request.
 
         Returns:
             The URL of the Actor's server.
@@ -232,14 +241,14 @@ class ActorServerClientAsync(ResourceClientAsync):
             ApifyApiError: If the Actor does not exist.
         """
         if self._url is None:
-            response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+            response = await self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
             actor = ActorResponse.model_validate(response_to_dict(response)).data
             if actor.standby_url is None:
                 raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
             self._url = actor.standby_url
         return self._url
 
-    async def get_openapi_spec(self) -> dict[str, Any] | None:
+    async def get_openapi_spec(self, *, timeout: Timeout = 'short') -> dict[str, Any] | None:
         """Return the OpenAPI specification of the Actor's server.
 
         The specification is the web server schema from the Actor's definition, taken from the build that serves the
@@ -247,6 +256,9 @@ class ActorServerClientAsync(ResourceClientAsync):
         client for the server, and point that client at the URL returned by `get_url`.
 
         https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema
+
+        Args:
+            timeout: Timeout for each API HTTP request.
 
         Returns:
             The OpenAPI specification of the Actor's server, or `None` if the Actor's definition doesn't include one.
@@ -256,7 +268,7 @@ class ActorServerClientAsync(ResourceClientAsync):
                 exist.
             ApifyApiError: If the Actor does not exist.
         """
-        response = await self._http_client.call(url=self._build_url(), method='GET', timeout='short')
+        response = await self._http_client.call(url=self._build_url(), method='GET', timeout=timeout)
         actor = ActorResponse.model_validate(response_to_dict(response)).data
         if actor.standby_url is None:
             raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
@@ -273,7 +285,7 @@ class ActorServerClientAsync(ResourceClientAsync):
                 resource_path='builds',
                 **self._base_client_kwargs,
             )
-            async for build_item in builds_client.iterate(desc=True):
+            async for build_item in builds_client.iterate(desc=True, timeout=timeout):
                 if build_item.build_number == build_ref:
                     build_id = build_item.id
                     break
@@ -287,7 +299,7 @@ class ActorServerClientAsync(ResourceClientAsync):
                 http_client=self._http_client,
                 client_registry=self._client_registry,
             )
-            build = await build_client.get()
+            build = await build_client.get(timeout=timeout)
         if build is None:
             raise ApifyClientError(f'Build {build_ref} of Actor {self.resource_id} does not exist.')
 

@@ -4,6 +4,7 @@ import gzip
 import json
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
+from unittest.mock import Mock
 
 import pytest
 from werkzeug import Request, Response
@@ -494,6 +495,35 @@ def test_get_openapi_spec_from_build_number(httpserver: HTTPServer, sync_client:
     expect_builds_list(httpserver, {'latest_build_id': '0.0.2', 'old_build_id': '0.0.1'})
 
     assert sync_client.actor(_MOCKED_ACTOR_ID).server().get_openapi_spec() == _OPENAPI_SPEC
+
+
+def test_get_openapi_spec_passes_timeout_to_every_api_call(
+    httpserver: HTTPServer, sync_client: ApifyClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The timeout of `get_openapi_spec` applies to fetching the Actor, listing its builds, and fetching the build."""
+    expect_server_actor_with_build(
+        httpserver, standby_build='0.0.1', build_id='old_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+    expect_builds_list(httpserver, {'old_build_id': '0.0.1'})
+    call = Mock(wraps=sync_client.http_client.call)
+    monkeypatch.setattr(sync_client.http_client, 'call', call)
+
+    sync_client.actor(_MOCKED_ACTOR_ID).server().get_openapi_spec(timeout='long')
+
+    assert [call_args.kwargs['timeout'] for call_args in call.call_args_list] == ['long', 'long', 'long']
+
+
+def test_get_url_passes_timeout(
+    httpserver: HTTPServer, sync_client: ApifyClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The timeout of `get_url` applies to fetching the Actor."""
+    expect_server_actor(httpserver)
+    call = Mock(wraps=sync_client.http_client.call)
+    monkeypatch.setattr(sync_client.http_client, 'call', call)
+
+    sync_client.actor(_MOCKED_ACTOR_ID).server().get_url(timeout='medium')
+
+    assert call.call_args.kwargs['timeout'] == 'medium'
 
 
 async def test_get_openapi_spec_from_build_number_async(httpserver: HTTPServer, async_client: ApifyClientAsync) -> None:

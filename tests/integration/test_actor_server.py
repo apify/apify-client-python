@@ -24,7 +24,8 @@ OPENAPI_SPEC = {
     'paths': {'/echo': {'post': {'responses': {'200': {'description': 'The echoed request.'}}}}},
 }
 
-# A web server that answers every request, including the platform's readiness probe, with the request it received.
+# A web server that answers every request, including the platform's readiness probe, with the request it received,
+# under the status in the `status` query parameter, or 200.
 ECHO_SERVER_SOURCE = """
 const http = require('http');
 
@@ -32,7 +33,8 @@ http.createServer((req, res) => {
     let body = '';
     req.on('data', (chunk) => { body += chunk; });
     req.on('end', () => {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        const status = Number(new URL(req.url, 'http://localhost').searchParams.get('status')) || 200;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ method: req.method, url: req.url, headers: req.headers, body }));
     });
 }).listen(process.env.ACTOR_WEB_SERVER_PORT);
@@ -113,3 +115,7 @@ async def test_actor_server(client: ApifyClient | ApifyClientAsync, server_actor
         actor_server_client.request('/echo', headers={'Authorization': 'Bearer actor-token'})
     )
     assert with_own_authorization.json()['headers']['authorization'] == 'Bearer actor-token'
+
+    error_response = await maybe_await(actor_server_client.request('/echo', params={'status': 404}))
+    assert error_response.status_code == 404
+    assert error_response.json()['url'] == '/echo?status=404'

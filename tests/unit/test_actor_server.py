@@ -513,6 +513,23 @@ def test_get_openapi_spec_passes_timeout_to_every_api_call(
     assert [call_args.kwargs['timeout'] for call_args in call.call_args_list] == ['long', 'long', 'long']
 
 
+def test_request_reuses_server_url_fetched_by_get_openapi_spec(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """A request after `get_openapi_spec` reuses the server URL it fetched."""
+    expect_server_actor_with_build(
+        httpserver, standby_build=None, build_id='latest_build_id', actor_definition={'webServerSchema': _OPENAPI_SPEC}
+    )
+    httpserver.expect_request(f'{_SERVER_PREFIX}/', method='GET').respond_with_json({'ok': True})
+    actor_server_client = sync_client.actor(_MOCKED_ACTOR_ID).server()
+
+    actor_server_client.get_openapi_spec()
+    actor_server_client.request()
+
+    actor_gets = [request for request, _ in httpserver.log if request.path == _ACTOR_PATH]
+    assert len(actor_gets) == 1
+
+
 def test_get_url_passes_timeout(
     httpserver: HTTPServer, sync_client: ApifyClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

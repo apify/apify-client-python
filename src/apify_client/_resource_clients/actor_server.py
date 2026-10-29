@@ -46,9 +46,9 @@ class ActorServerClient(ResourceClient):
     def get_url(self, *, timeout: Timeout = 'short') -> str:
         """Return the URL of the Actor's server.
 
-        The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
-        client. Use it to call the server with another HTTP client, for example one generated from the server's
-        OpenAPI specification.
+        The URL is the Actor's `standby_url`, fetched from the API by the first call of this method or
+        `get_openapi_spec` and reused by later calls on this client. Use it to call the server with another HTTP client,
+        for example one generated from the server's OpenAPI specification.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -94,6 +94,7 @@ class ActorServerClient(ResourceClient):
         actor = ActorResponse.model_validate(response_to_dict(response)).data
         if actor.standby_url is None:
             raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+        self._url = actor.standby_url
 
         build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
 
@@ -224,9 +225,9 @@ class ActorServerClientAsync(ResourceClientAsync):
     async def get_url(self, *, timeout: Timeout = 'short') -> str:
         """Return the URL of the Actor's server.
 
-        The URL is the Actor's `standby_url`, fetched from the API on the first call and reused by later calls on this
-        client. Use it to call the server with another HTTP client, for example one generated from the server's
-        OpenAPI specification.
+        The URL is the Actor's `standby_url`, fetched from the API by the first call of this method or
+        `get_openapi_spec` and reused by later calls on this client. Use it to call the server with another HTTP client,
+        for example one generated from the server's OpenAPI specification.
 
         https://docs.apify.com/platform/actors/running/standby
 
@@ -272,6 +273,7 @@ class ActorServerClientAsync(ResourceClientAsync):
         actor = ActorResponse.model_validate(response_to_dict(response)).data
         if actor.standby_url is None:
             raise ApifyClientError(f'Actor {self.resource_id} is not a Server Actor.')
+        self._url = actor.standby_url
 
         build_ref = (actor.actor_standby.build if actor.actor_standby else None) or 'latest'
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Iterable, Mapping, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import IO, TYPE_CHECKING, Literal, Protocol
 
 from apify_client._models import CreateWebhookRequest, WebhookRepresentation
@@ -18,6 +19,18 @@ if TYPE_CHECKING:
 
 HttpCompressionAlgorithm = Literal['brotli', 'gzip']
 """Accepted string literals for the `compression` parameter on `ApifyClient` and `ApifyClientAsync`."""
+
+QueryParamValue = str | int | float | bool | Decimal | datetime | list[str] | None
+"""Type of one query parameter value accepted by the client.
+
+The HTTP client converts a value before sending it: a `bool` becomes `true` or `false`, a `list[str]` becomes one
+comma-separated value, a `datetime` becomes an ISO 8601 string in UTC (a naive one is treated as UTC), and a `None`
+value is left out. Any other value is sent as its `str()`. Only a `list` is joined, so pass a `list`, not a tuple
+or another sequence.
+"""
+
+QueryParams = Mapping[str, QueryParamValue]
+"""Type for the `params` parameter on `HttpClient.call` and `HttpClientAsync.call`: query parameters of the request."""
 
 Timeout = timedelta | Literal['no_timeout', 'short', 'medium', 'long']
 """Type for the `timeout` parameter on resource client methods.
@@ -91,6 +104,8 @@ Based on the definition discussed in https://github.com/python/typing/issues/182
 __all__ = [
     'HttpCompressionAlgorithm',
     'JsonSerializable',
+    'QueryParamValue',
+    'QueryParams',
     'StreamedBodySource',
     'SupportsRead',
     'Timeout',

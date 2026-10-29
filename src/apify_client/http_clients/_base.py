@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from typing import Self
 
     from apify_client.http_compressors._base import HttpCompressor
-    from apify_client.types import JsonSerializable, StreamedBodySource, Timeout
+    from apify_client.types import JsonSerializable, QueryParams, StreamedBodySource, Timeout
 
 logger = logging.getLogger(logger_name)
 logger_once = LoggerOnce(logger)
@@ -227,7 +227,7 @@ class HttpClientBase:
         return next((value for key, value in headers.items() if key.lower() == name.lower()), None)
 
     @staticmethod
-    def _parse_params(params: dict[str, Any] | None) -> dict[str, Any] | None:
+    def _parse_params(params: QueryParams | None) -> dict[str, Any] | None:
         """Convert request parameters to Apify API-compatible formats.
 
         Converts booleans to 'false'/'true', lists to comma-separated strings, datetimes to ISO 8601 Zulu format.
@@ -309,7 +309,7 @@ class HttpClientBase:
         self,
         *,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | StreamedRequestBody | None]:
@@ -504,7 +504,7 @@ class HttpClient(HttpClientBase):
         method: str,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
@@ -516,7 +516,8 @@ class HttpClient(HttpClientBase):
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full URL to make the request to.
             headers: Additional headers to include.
-            params: Query parameters to append to the URL.
+            params: Query parameters to append to the URL. See `QueryParamValue` for how each value is converted
+                before it is sent.
             data: Raw request body. An `io.IOBase` stream such as an open file, an iterable of byte chunks, or a
                 streamed `HttpResponse` is sent in chunks as it is read, and any other object with a callable `read`
                 is read whole, see `StreamedRequestBody`. Streaming is experimental, and its behavior may change in
@@ -715,7 +716,7 @@ class HttpClientAsync(HttpClientBase):
         method: str,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
+        params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
         stream: bool | None = None,
@@ -727,7 +728,8 @@ class HttpClientAsync(HttpClientBase):
             method: HTTP method (GET, POST, PUT, DELETE, etc.).
             url: Full URL to make the request to.
             headers: Additional headers to include.
-            params: Query parameters to append to the URL.
+            params: Query parameters to append to the URL. See `QueryParamValue` for how each value is converted
+                before it is sent.
             data: Raw request body. An `io.IOBase` stream such as an open file, an iterable of byte chunks, or a
                 streamed `HttpResponse` is sent in chunks as it is read, and any other object with a callable `read`
                 is read whole, see `StreamedRequestBody`. Streaming is experimental, and its behavior may change in

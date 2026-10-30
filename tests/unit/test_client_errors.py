@@ -121,6 +121,53 @@ async def test_async_client_apify_api_error_with_data(
     assert exc.value.data == _EXPECTED_DATA
 
 
+def test_api_error_identifies_request_without_exposing_query_token(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
+    """A failed request reports its method and path but not a token in the query string."""
+    httpserver.expect_request('/errors', query_string='token=private-value&limit=1').respond_with_json(
+        {'error': {'message': 'not found', 'type': 'record-not-found'}}, status=404
+    )
+    client = http_client_class()
+    with pytest.raises(NotFoundError) as exc:
+        client.call(
+            method='POST', url=str(httpserver.url_for('/errors')), params={'token': 'private-value', 'limit': 1}
+        )
+
+    assert exc.value.path == '/errors'
+    assert str(exc.value) == 'POST /errors: not found'
+    assert 'private-value' not in str(exc.value)
+
+
+async def test_async_api_error_identifies_request_without_exposing_query_token(
+    httpserver: HTTPServer, http_client_async_class: type[HttpClientAsync]
+) -> None:
+    """The async request path is available without leaking query credentials."""
+    httpserver.expect_request('/errors', query_string='token=private-value').respond_with_json(
+        {'error': {'message': 'not found', 'type': 'record-not-found'}}, status=404
+    )
+    client = http_client_async_class()
+    with pytest.raises(NotFoundError) as exc:
+        await client.call(method='GET', url=str(httpserver.url_for('/errors')), params={'token': 'private-value'})
+
+    assert exc.value.path == '/errors'
+    assert str(exc.value) == 'GET /errors: not found'
+    assert 'private-value' not in str(exc.value)
+
+
+def test_api_error_with_empty_body_names_http_status(
+    httpserver: HTTPServer, http_client_class: type[HttpClient]
+) -> None:
+    """An empty proxy error still identifies the failed status and request."""
+    httpserver.expect_request('/empty-error').respond_with_data(b'', status=502)
+    client = http_client_class(max_retries=0)
+    with pytest.raises(ServerError) as exc:
+        client.call(method='GET', url=str(httpserver.url_for('/empty-error')))
+
+    assert exc.value.message == 'Unexpected error (HTTP 502)'
+    assert str(exc.value) == 'GET /empty-error: Unexpected error (HTTP 502)'
+
+
 def test_client_apify_api_error_streamed(httpserver: HTTPServer, http_client_class: type[HttpClient]) -> None:
     """Test that client correctly throws ApifyApiError when the response has stream."""
 

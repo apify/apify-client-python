@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from apify_client._docs import docs_group
 
@@ -33,13 +34,14 @@ class ApifyApiError(ApifyClientError):
         status_code: The HTTP status code of the error response.
         attempt: The attempt number when the error was raised.
         http_method: The HTTP method of the failed request.
+        path: The failed request path, without query parameters or credentials (if available).
         data: Additional error data from the API response.
     """
 
-    # Subclasses in `_STATUS_TO_CLASS` must keep the `(response, attempt, *, method='GET')` constructor signature —
-    # `__new__` forwards those arguments verbatim.
+    # Subclasses in `_STATUS_TO_CLASS` must keep the `__new__` constructor signature;
+    # the response, attempt, method, and url are forwarded verbatim.
 
-    def __new__(cls, response: HttpResponse, attempt: int, *, method: str = 'GET') -> Self:  # noqa: ARG004
+    def __new__(cls, response: HttpResponse, attempt: int, *, method: str = 'GET', url: str | None = None) -> Self:  # noqa: ARG004
         """Dispatch to the subclass matching the response's HTTP status code, if any."""
         if cls is ApifyApiError:
             status = response.status_code
@@ -52,27 +54,31 @@ class ApifyApiError(ApifyClientError):
                 return super().__new__(mapped)
         return super().__new__(cls)
 
-    def __init__(self, response: HttpResponse, attempt: int, *, method: str = 'GET') -> None:
+    def __init__(self, response: HttpResponse, attempt: int, *, method: str = 'GET', url: str | None = None) -> None:
         """Initialize the API error from a failed response.
 
         Args:
             response: The failed HTTP response from the Apify API.
             attempt: The attempt number when the request failed (1-indexed).
             method: The HTTP method of the failed request.
+            url: The failed request URL, if available.
         """
         payload = self._extract_error_payload(response)
 
-        self.message: str | None = f'Unexpected error: {response.text}'
+        self.message: str | None = f'Unexpected error (HTTP {response.status_code})'
+        if response.text:
+            self.message += f': {response.text}'
         self.type: str | None = None
         self.data = dict[str, str]()
 
         if payload is not None:
-            self.message = payload.get('message', self.message)
+            self.message = payload.get('message') or self.message
             self.type = payload.get('type')
             if 'data' in payload:
                 self.data = payload['data']
 
-        super().__init__(self.message)
+        self.path = urlsplit(url).path if url is not None else None
+        super().__init__(f'{method} {self.path}: {self.message}' if self.path is not None else self.message)
 
         self.status_code = response.status_code
         self.attempt = attempt

@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 
 - Add models for Actor OAuth, Git repositories and webhook integrations ([#1167](https://github.com/apify/apify-client-python/pull/1167)) ([4a3b30f](https://github.com/apify/apify-client-python/commit/4a3b30ffd09b219d8a4a739f715037de7c6680af)) by [@apify-service-account](https://github.com/apify-service-account)
 
+### 🐛 Bug Fixes
+
+- Align key iteration timeout with key listing ([#1181](https://github.com/apify/apify-client-python/pull/1181)) ([6097ad3](https://github.com/apify/apify-client-python/commit/6097ad3182522f73485c7c1733ecb4400624f456)) by [@kocaemre](https://github.com/kocaemre), closes [#1173](https://github.com/apify/apify-client-python/issues/1173)
+
 
 <!-- git-cliff-unreleased-end -->
 ## [3.4.0](https://github.com/apify/apify-client-python/releases/tag/v3.4.0) (2026-10-27)

@@ -49,6 +49,10 @@ class ConcreteHttpClient(HttpClient):
     """Minimal concrete HttpClient for testing base class helpers, relying on the hook defaults."""
 
 
+class ConcreteHttpClientAsync(HttpClientAsync):
+    """Minimal concrete HttpClientAsync for testing base class helpers, relying on the hook defaults."""
+
+
 class CallOnlyHttpClient(HttpClient):
     """Custom client written against the pre-hook contract, overriding `call` and nothing else."""
 
@@ -539,6 +543,30 @@ def test_transient_transport_error_is_retried() -> None:
     assert request.call_count == 3
 
 
+def test_transport_error_is_not_retried_with_retry_transport_errors_false() -> None:
+    """With `retry_transport_errors=False`, a transient transport failure is raised on the first attempt."""
+    client = ImpitHttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0))
+    request = Mock(side_effect=impit.TimeoutException('timeout'))
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.TimeoutException):
+        client.call(method='POST', url='https://api.test.com/endpoint', retry_transport_errors=False)
+
+    request.assert_called_once()
+
+
+async def test_transport_error_is_not_retried_with_retry_transport_errors_false_async() -> None:
+    """The async client also raises the first transport failure with `retry_transport_errors=False`."""
+    client = ImpitHttpClientAsync(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0))
+    request = AsyncMock(side_effect=impit.TimeoutException('timeout'))
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(impit.TimeoutException):
+        await client.call(method='POST', url='https://api.test.com/endpoint', retry_transport_errors=False)
+
+    request.assert_awaited_once()
+
+
 def test_httpx2_permanent_transport_error_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """The HTTPX2 adapter feeds the same fail-fast classification into the shared pipeline."""
     with Httpx2HttpClient(token='test_token', min_delay_between_retries=timedelta(0)) as client:
@@ -668,6 +696,86 @@ def test_error_response_read_failure_on_non_retryable_status_is_not_retried() ->
     response.close.assert_called_once()
 
 
+def error_response(status_code: int) -> Mock:
+    return Mock(status_code=status_code, text='', headers={}, json=Mock(side_effect=ValueError), aread=AsyncMock())
+
+
+def test_call_returns_a_non_retryable_error_response_with_raise_for_status_false(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With `raise_for_status=False`, a non-retryable error response comes back after one attempt, body unread."""
+    client = ConcreteHttpClient(min_delay_between_retries=timedelta(0))
+    response = error_response(404)
+    send_request = Mock(return_value=response)
+    monkeypatch.setattr(client, 'send_request', send_request)
+
+    result = client.call(method='GET', url='https://api.test.com/endpoint', stream=True, raise_for_status=False)
+
+    assert result is response
+    send_request.assert_called_once()
+    response.read.assert_not_called()
+
+
+def test_call_returns_the_last_error_response_once_the_retries_run_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With `raise_for_status=False`, a retryable error response is retried, and the last one comes back."""
+    client = ConcreteHttpClient(max_retries=2, min_delay_between_retries=timedelta(0))
+    responses = [error_response(500) for _ in range(3)]
+    send_request = Mock(side_effect=responses)
+    monkeypatch.setattr(client, 'send_request', send_request)
+
+    result = client.call(method='GET', url='https://api.test.com/endpoint', raise_for_status=False)
+
+    assert result is responses[-1]
+    assert send_request.call_count == 3
+
+
+async def test_call_returns_the_last_error_response_once_the_retries_run_out_async(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The async client also returns the last retried error response with `raise_for_status=False`."""
+    client = ConcreteHttpClientAsync(max_retries=2, min_delay_between_retries=timedelta(0))
+    responses = [error_response(500) for _ in range(3)]
+    send_request = AsyncMock(side_effect=responses)
+    monkeypatch.setattr(client, 'send_request', send_request)
+
+    result = await client.call(method='GET', url='https://api.test.com/endpoint', raise_for_status=False)
+
+    assert result is responses[-1]
+    assert send_request.await_count == 3
+
+
+def test_call_returns_a_retryable_error_response_for_a_body_it_cannot_resend(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With `raise_for_status=False`, a streamed body that cannot be rewound gets its error response back at once."""
+    client = ConcreteHttpClient(min_delay_between_retries=timedelta(0))
+    response = error_response(503)
+    send_request = Mock(return_value=response)
+    monkeypatch.setattr(client, 'send_request', send_request)
+
+    result = client.call(
+        method='POST', url='https://api.test.com/endpoint', data=iter([b'chunk']), raise_for_status=False
+    )
+
+    assert result is response
+    send_request.assert_called_once()
+
+
+def test_call_retries_only_the_statuses_in_retry_status_codes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """`retry_status_codes` replaces the default retried statuses."""
+    client = ConcreteHttpClient(min_delay_between_retries=timedelta(0))
+    send_request = Mock(
+        side_effect=[error_response(503), error_response(503), Mock(status_code=200), error_response(500)]
+    )
+    monkeypatch.setattr(client, 'send_request', send_request)
+
+    response = client.call(method='GET', url='https://api.test.com/endpoint', retry_status_codes=[503])
+    assert response.status_code == 200
+    assert send_request.call_count == 3
+
+    with pytest.raises(ApifyApiError):
+        client.call(method='GET', url='https://api.test.com/endpoint', retry_status_codes=[503])
+    assert send_request.call_count == 4
+
+
 @pytest.fixture(
     params=[
         pytest.param((GzipHttpCompressor(), 'gzip', gzip.decompress), id='gzip'),
@@ -781,6 +889,43 @@ def test_prepare_request_call_skips_compression_below_threshold(compressor_case:
 
     assert data == body
     assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_skips_compression_when_disabled() -> None:
+    """With `compression=False`, a body above the threshold is sent verbatim with no `Content-Encoding`."""
+    client = ConcreteHttpClient()
+    body = b'x' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(data=body, compression=False)
+
+    assert data == body
+    assert not any(key.lower() == 'content-encoding' for key in headers)
+
+
+def test_prepare_request_call_uses_per_request_compressor() -> None:
+    """A compressor passed in `compression` is used for the request in place of the client's compressor."""
+    client = ConcreteHttpClient(http_compressor=GzipHttpCompressor())
+    body = b'x' * MIN_COMPRESSION_SIZE
+
+    headers, _params, data = client._prepare_request_call(data=body, compression=BrotliHttpCompressor())
+
+    assert headers['Content-Encoding'] == 'br'
+    assert brotli.decompress(data) == body
+
+
+def test_prepare_request_call_moves_authorization_to_the_named_header() -> None:
+    """`authorization_header` sends the client's `Authorization` value in that header, and a caller's own one wins."""
+    client = ConcreteHttpClient(token='test_token')
+
+    headers, _params, _data = client._prepare_request_call(authorization_header='X-Apify-Authorization')
+    own_headers, _params, _data = client._prepare_request_call(
+        headers={'authorization': 'Basic own'}, authorization_header='X-Apify-Authorization'
+    )
+
+    assert headers['X-Apify-Authorization'] == 'Bearer test_token'
+    assert 'Authorization' not in headers
+    assert own_headers['X-Apify-Authorization'] == 'Bearer test_token'
+    assert own_headers['authorization'] == 'Basic own'
 
 
 def test_prepare_request_call_compresses_bytearray_data(compressor_case: tuple) -> None:
@@ -1215,6 +1360,22 @@ async def test_async_call_skips_thread_offload_for_a_body_it_cannot_compress(
     body: Any = BytesIO(b'x' * MIN_COMPRESSION_SIZE)
 
     await client.call(method='PUT', url='https://api.test.com/endpoint', data=body)
+
+    spy.assert_not_called()
+
+
+async def test_async_call_skips_thread_offload_when_compression_is_disabled(
+    http_client_async_class: type[HttpClientAsync],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A raw body is prepared inline when compression is disabled, whatever its size."""
+    client = http_client_async_class(token='test_token')
+    monkeypatch.setattr(client, 'send_request', AsyncMock(return_value=Mock(status_code=200)))
+    spy = _to_thread_spy(monkeypatch)
+
+    await client.call(
+        method='PUT', url='https://api.test.com/endpoint', data=b'x' * MIN_COMPRESSION_SIZE, compression=False
+    )
 
     spy.assert_not_called()
 

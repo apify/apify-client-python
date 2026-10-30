@@ -31,10 +31,11 @@ from apify_client.http_clients import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Collection, Iterator
 
     from pytest_httpserver import HTTPServer
 
+    from apify_client.http_compressors import HttpCompressor
     from apify_client.types import QueryParams, StreamedBodySource, Timeout
 
 
@@ -99,6 +100,11 @@ class FakeHttpClient(HttpClient):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -110,6 +116,11 @@ class FakeHttpClient(HttpClient):
                 'json': json,
                 'stream': stream,
                 'timeout': timeout,
+                'compression': compression,
+                'authorization_header': authorization_header,
+                'raise_for_status': raise_for_status,
+                'retry_status_codes': retry_status_codes,
+                'retry_transport_errors': retry_transport_errors,
             }
         )
         return _make_fake_response()
@@ -133,6 +144,11 @@ class FakeHttpClientAsync(HttpClientAsync):
         json: Any = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -144,6 +160,11 @@ class FakeHttpClientAsync(HttpClientAsync):
                 'json': json,
                 'stream': stream,
                 'timeout': timeout,
+                'compression': compression,
+                'authorization_header': authorization_header,
+                'raise_for_status': raise_for_status,
+                'retry_status_codes': retry_status_codes,
+                'retry_transport_errors': retry_transport_errors,
             }
         )
         return _make_fake_response()

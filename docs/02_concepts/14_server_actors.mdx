@@ -1,0 +1,87 @@
+---
+id: server-actors
+title: Server Actors
+description: Send HTTP requests to Server Actors (formerly Actor Standby), and get their URL and OpenAPI specification.
+keywords: [server actor, server interface, standby, actor standby, standby_url, ActorServerClient]
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import ApiLink from '@theme/ApiLink';
+
+import ServerAsyncExample from '!!raw-loader!./code/14_server_async.py';
+import ServerSyncExample from '!!raw-loader!./code/14_server_sync.py';
+import ServerUrlSpecAsyncExample from '!!raw-loader!./code/14_server_url_spec_async.py';
+import ServerUrlSpecSyncExample from '!!raw-loader!./code/14_server_url_spec_sync.py';
+
+A [Server Actor](https://docs.apify.com/platform/actors/running/standby) (formerly Actor Standby) runs a web server. You call it over HTTP, and the platform keeps a run ready to answer, so each call skips the run startup.
+
+:::note Formerly Actor Standby
+
+Actor Standby is the former name of Server Actors, and it'll be deprecated. The platform documentation and the API still use it, for example in the Actor's `standby_url` and `actor_standby` fields, and in the `actor_standby_*` arguments of `ActorClient.update`. In the client, `ActorClient.standby` is a deprecated alias of `ActorClient.server` that will be removed in v4.
+
+:::
+
+To work with a Server Actor, get its server client with <ApiLink to="class/ActorClient#server">`ActorClient.server`</ApiLink>. To send a request, use <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink>. It takes the path on the Actor's server, and optionally the HTTP method, query parameters, headers, and a body:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {ServerAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {ServerSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+The method returns the server's response. To read a large body in chunks, pass `stream=True` and close the response when you're done with it. To find out which endpoints an Actor serves, see its page in [Apify Store](https://apify.com/store), its README, or its OpenAPI specification. For details, see [Server URL and OpenAPI specification](#server-url-and-openapi-specification).
+
+## How the request is sent
+
+Note that:
+
+- The client takes the server's URL from the Actor's `standby_url`. It fetches the Actor from the API on the first call and reuses the URL for later calls through the same `ActorClient`. If the Actor isn't a Server Actor, the server client raises an `ApifyClientError`.
+- The path is always resolved against that URL, so a path can't send the request to another host.
+- By default, the request body is sent uncompressed, since the Actor's server may not decode a compressed body. If the server decodes it, pass `compression`, for example `compression='gzip'`. The client then compresses large bodies the same way as for API calls.
+
+## Server URL and OpenAPI specification
+
+The Actor server client also gives you the server's URL and its OpenAPI specification:
+
+- <ApiLink to="class/ActorServerClient#get_url">`ActorServerClient.get_url`</ApiLink> returns the server's URL. It fetches and reuses the URL the same way as `request`.
+- <ApiLink to="class/ActorServerClient#get_openapi_spec">`ActorServerClient.get_openapi_spec`</ApiLink> returns the server's OpenAPI specification as a `dict`. It's the [web server schema](https://docs.apify.com/platform/actors/development/actor-definition/web-server-schema) from the Actor's definition, taken from the build that serves the server interface. That's the build set in the Actor's `actor_standby.build` field, or `latest` if none is set. If the Actor doesn't define a web server schema, the method returns `None`.
+
+The following example prints the server's URL and the paths of its endpoints:
+
+<Tabs>
+    <TabItem value="AsyncExample" label="Async client" default>
+        <CodeBlock className="language-python">
+            {ServerUrlSpecAsyncExample}
+        </CodeBlock>
+    </TabItem>
+    <TabItem value="SyncExample" label="Sync client">
+        <CodeBlock className="language-python">
+            {ServerUrlSpecSyncExample}
+        </CodeBlock>
+    </TabItem>
+</Tabs>
+
+## Authentication
+
+The request carries the client's API token in the `X-Apify-Authorization` header. The platform removes the token before it forwards the request, so the token doesn't reach the Actor's code.
+
+The headers you pass in `headers` reach the Actor's server as they are. If the Actor reads the `Authorization` header for its own authentication, pass that header in `headers`.
+
+For details, see [How do I authenticate my requests](https://docs.apify.com/platform/actors/running/standby#how-do-i-authenticate-my-requests) in the platform documentation.
+
+## Timeouts, retries, and errors
+
+When no server run is ready, the first request waits for the platform to start one. The method uses the `long` timeout tier by default for that reason. You can pass a different `timeout`, the same way as for API calls. For details, see [Timeouts](./11_timeouts.mdx).
+
+The method returns the server's response whatever its status, so check `status_code` before you use the body. Only rate-limit (429) and Service Unavailable (503) responses are retried, with the client's retry settings. Once the retries run out, the method returns the last response. Network errors and timeouts aren't retried, since the Actor may have already handled the request. For details, see [Retries](./05_retries.mdx).
+
+The method raises only when it doesn't get a response from the server: an `ApifyApiError` when the API can't return the Actor, for example because it doesn't exist, an `ApifyClientError` when it isn't a Server Actor, or the HTTP library's error when the request fails or times out. For details, see [Error handling](./04_error_handling.mdx).

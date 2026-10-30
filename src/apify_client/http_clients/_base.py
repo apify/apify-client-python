@@ -38,7 +38,7 @@ from apify_client.http_clients._streamed_body import StreamedRequestBody
 from apify_client.http_compressors._gzip import GzipHttpCompressor
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Awaitable, Callable, Iterator, Mapping
+    from collections.abc import AsyncIterator, Awaitable, Callable, Collection, Iterator, Mapping
     from types import TracebackType
     from typing import Self
 
@@ -312,18 +312,21 @@ class HttpClientBase:
         params: QueryParams | None = None,
         data: str | bytes | bytearray | StreamedBodySource | None = None,
         json: JsonSerializable | None = None,
+        compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
     ) -> tuple[dict[str, str], dict[str, Any] | None, bytes | StreamedRequestBody | None]:
         """Prepare headers, params, and body for an HTTP request.
 
         Merges the client's default headers (including authorization) with per-request headers and serializes a
         JSON body. Header names are treated case-insensitively and per-request values win over the client
-        defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one.
+        defaults. For JSON bodies, a `Content-Type` header is set unless the caller supplied one. With
+        `authorization_header`, the client's `Authorization` value goes out in the header of that name instead.
 
-        The body is compressed unless a `Content-Encoding` header is already set, the body is smaller than
+        The body is compressed with the client's compressor, or with the one passed in `compression`, unless
+        `compression` is `False`, a `Content-Encoding` header is already set, the body is smaller than
         `MIN_COMPRESSION_SIZE`, or its content type says the payload is already compressed. A caller-supplied
         `Content-Encoding` is forwarded verbatim, which is how a pre-encoded body is uploaded - including one in
-        an encoding the client ships no compressor for. `Content-Encoding: identity` therefore opts a single
-        request out of compression.
+        an encoding the client ships no compressor for.
 
         A body streamed from a file-like object, an iterable of byte chunks, or a streamed response is wrapped in
         `StreamedRequestBody` and never compressed, since its chunks go out as they are produced. A caller-supplied
@@ -332,7 +335,15 @@ class HttpClientBase:
         if json is not None and data is not None:
             raise ValueError('Cannot pass both "json" and "data" parameters at the same time!')
 
-        headers = self._merge_headers(self._headers, headers)
+        default_headers = self._headers
+        authorization = self._get_header(default_headers, 'authorization')
+        if authorization_header is not None and authorization is not None:
+            without_authorization = {
+                key: value for key, value in default_headers.items() if key.lower() != 'authorization'
+            }
+            default_headers = self._merge_headers(without_authorization, {authorization_header: authorization})
+
+        headers = self._merge_headers(default_headers, headers)
 
         # Dump JSON data to a string so it can be sent as a request body.
         if json is not None:
@@ -351,15 +362,18 @@ class HttpClientBase:
         if isinstance(data, (str, bytes, bytearray)):
             content = data.encode('utf-8') if isinstance(data, str) else bytes(data)
 
+            compressor = self._http_compressor if compression is True else compression
+
             # A caller-supplied encoding says the body arrives already encoded, so compressing it here would
             # both mislabel it and waste the work.
             if (
-                self._get_header(headers, 'content-encoding') is None
+                compressor is not False
+                and self._get_header(headers, 'content-encoding') is None
                 and len(content) >= MIN_COMPRESSION_SIZE
                 and is_compressible_content_type(self._get_header(headers, 'content-type'))
             ):
-                content = self._http_compressor.compress(content)
-                headers = self._merge_headers(headers, {'Content-Encoding': self._http_compressor.content_encoding})
+                content = compressor.compress(content)
+                headers = self._merge_headers(headers, {'Content-Encoding': compressor.content_encoding})
 
         elif data is not None:
             # Without this the request would go out with no body at all, losing the payload without a word.
@@ -392,8 +406,9 @@ class HttpClientBase:
         *,
         content: bytes | StreamedRequestBody | None,
         stop_retrying: Callable[[], None],
+        retry_transport_errors: bool,
     ) -> None:
-        """Stop retrying when an exception is not a retryable transport failure.
+        """Stop retrying when an exception is not a retryable transport failure, or the request retries none.
 
         A failure of a streamed body's source stops retrying too, since sending the body again cannot fix it. The
         transport reports such a failure as its own error, which may wrap the cause beyond recognition and pass as
@@ -409,7 +424,7 @@ class HttpClientBase:
                 raise source_error from exc
             return
 
-        if not self.is_retryable_transport_error(exc):
+        if not retry_transport_errors or not self.is_retryable_transport_error(exc):
             logger.debug('Exception is not retryable', exc_info=exc)
             stop_retrying()
 
@@ -440,8 +455,9 @@ class HttpClientBase:
         attempt: int,
         streamed: bool,
         stop_retrying: Callable[[], None],
+        retry_status_codes: Collection[int] | None,
     ) -> bool:
-        """Record the response status and stop retrying unless it is a server error or a rate limit.
+        """Record the response status and stop retrying unless the status is retryable.
 
         Returns whether the response is a success, so the caller can hand it back instead of raising.
         """
@@ -460,14 +476,36 @@ class HttpClientBase:
                 'within its time limit of about 5 minutes. Write a source that produces data slowly to a temporary '
                 'file first, and upload the file.'
             )
-        if (
-            response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
-            and response.status_code != HTTPStatus.TOO_MANY_REQUESTS
-        ):
+        if not self._is_status_code_retryable(response.status_code, retry_status_codes):
             logger.debug('Status code is not retryable', extra={'status_code': response.status_code})
             stop_retrying()
 
         return False
+
+    @staticmethod
+    def _is_status_code_retryable(status_code: int, retry_status_codes: Collection[int] | None) -> bool:
+        """Return whether a status is retried: one in `retry_status_codes`, or else a rate limit or server error."""
+        if retry_status_codes is not None:
+            return status_code in retry_status_codes
+        return status_code >= HTTPStatus.INTERNAL_SERVER_ERROR or status_code == HTTPStatus.TOO_MANY_REQUESTS
+
+    def _returns_error_response(
+        self,
+        response: HttpResponse,
+        *,
+        attempt: int,
+        content: bytes | StreamedRequestBody | None,
+        retry_status_codes: Collection[int] | None,
+    ) -> bool:
+        """Return whether no retry follows an error response, so a call with `raise_for_status=False` returns it.
+
+        A streamed body that cannot be rewound rules out a retry too.
+        """
+        if not self._is_status_code_retryable(response.status_code, retry_status_codes):
+            return True
+        if isinstance(content, StreamedRequestBody) and not content.rewindable:
+            return True
+        return attempt > self._max_retries
 
 
 @docs_group('HTTP clients')
@@ -483,6 +521,11 @@ class HttpClient(HttpClientBase):
     The client's default headers from `self._headers` have to go out with every request, otherwise the
     `Authorization` header never reaches the API. The inherited `call` merges them into the per-request headers
     through `_prepare_request_call`, so only a client that replaces `call` has to do it itself.
+
+    A replaced `call` has to accept every argument of the inherited one and honor `compression`,
+    `authorization_header`, `raise_for_status`, `retry_status_codes`, and `retry_transport_errors`.
+    `ActorServerClient.request` relies on them to keep the token away from the Actor's code, to return the server's
+    error responses, and to avoid sending a request to the Actor twice.
     """
 
     def __enter__(self) -> Self:
@@ -509,6 +552,11 @@ class HttpClient(HttpClientBase):
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -527,12 +575,23 @@ class HttpClient(HttpClientBase):
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
                 preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
                 `no_timeout` disables the timeout entirely.
+            compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
+                is used for this request only, and `False` sends the body uncompressed.
+            authorization_header: Name of the header that carries the client's `Authorization` value for this
+                request, which then goes out without the `Authorization` header. A per-request header of either name
+                still wins.
+            raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
+                returned once no retry follows.
+            retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
+            retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
+                first one is raised, since the request may have reached the server before it failed.
 
         Returns:
             The HTTP response object.
 
         Raises:
-            ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
+            ApifyApiError: If the request fails after all retries or returns a non-retryable error status, unless
+                `raise_for_status` is `False`.
             ValueError: If both json and data are provided.
             TypeError: If data is neither bytes-like nor a value the client can stream.
         """
@@ -546,6 +605,8 @@ class HttpClient(HttpClientBase):
             params=params,
             data=data,
             json=json,
+            compression=compression,
+            authorization_header=authorization_header,
         )
 
         return self._retry_with_exp_backoff(
@@ -559,6 +620,9 @@ class HttpClient(HttpClientBase):
                 content=content,
                 stream=stream,
                 timeout=timeout,
+                raise_for_status=raise_for_status,
+                retry_status_codes=retry_status_codes,
+                retry_transport_errors=retry_transport_errors,
             ),
             max_retries=self._max_retries,
             backoff_base=self._min_delay_between_retries,
@@ -644,6 +708,9 @@ class HttpClient(HttpClientBase):
         content: bytes | StreamedRequestBody | None,
         stream: bool | None,
         timeout: Timeout,
+        raise_for_status: bool,
+        retry_status_codes: Collection[int] | None,
+        retry_transport_errors: bool,
     ) -> HttpResponse:
         """Execute one request attempt through the transport adapter."""
         log_context.attempt.set(attempt)
@@ -662,14 +729,25 @@ class HttpClient(HttpClientBase):
                 stream=stream or False,
             )
         except Exception as exc:
-            self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
+            self._handle_request_exception(
+                exc, content=content, stop_retrying=stop_retrying, retry_transport_errors=retry_transport_errors
+            )
             raise
         finally:
             if isinstance(content, StreamedRequestBody):
                 content.close_chunks()
 
         if self._handle_response_status(
-            response, attempt=attempt, streamed=isinstance(content, StreamedRequestBody), stop_retrying=stop_retrying
+            response,
+            attempt=attempt,
+            streamed=isinstance(content, StreamedRequestBody),
+            stop_retrying=stop_retrying,
+            retry_status_codes=retry_status_codes,
+        ):
+            return response
+
+        if not raise_for_status and self._returns_error_response(
+            response, attempt=attempt, content=content, retry_status_codes=retry_status_codes
         ):
             return response
 
@@ -721,6 +799,11 @@ class HttpClientAsync(HttpClientBase):
         json: JsonSerializable | None = None,
         stream: bool | None = None,
         timeout: Timeout = 'medium',
+        compression: HttpCompressor | bool = True,
+        authorization_header: str | None = None,
+        raise_for_status: bool = True,
+        retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -739,12 +822,23 @@ class HttpClientAsync(HttpClientBase):
             timeout: Timeout for the API HTTP request. Use `short`, `medium`, or `long` tier literals for
                 preconfigured timeouts. A `timedelta` overrides it for this call (capped at `timeout_max`), and
                 `no_timeout` disables the timeout entirely.
+            compression: How to compress the request body. `True` uses the client's compressor, an `HttpCompressor`
+                is used for this request only, and `False` sends the body uncompressed.
+            authorization_header: Name of the header that carries the client's `Authorization` value for this
+                request, which then goes out without the `Authorization` header. A per-request header of either name
+                still wins.
+            raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
+                returned once no retry follows.
+            retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
+            retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
+                first one is raised, since the request may have reached the server before it failed.
 
         Returns:
             The HTTP response object.
 
         Raises:
-            ApifyApiError: If the request fails after all retries or returns a non-retryable error status.
+            ApifyApiError: If the request fails after all retries or returns a non-retryable error status, unless
+                `raise_for_status` is `False`.
             ValueError: If both json and data are provided.
             TypeError: If data is neither bytes-like nor a value the client can stream.
         """
@@ -757,13 +851,15 @@ class HttpClientAsync(HttpClientBase):
         # offload preparation to a worker thread whenever there is something to compress. A body the
         # client sends as it is costs less to prepare inline than the hop itself. A `json` body always
         # hops, as its size is only known once serialized.
-        if json is not None or self._is_body_worth_compressing(data):
+        if json is not None or (compression is not False and self._is_body_worth_compressing(data)):
             prepared_headers, prepared_params, content = await asyncio.to_thread(
                 self._prepare_request_call,
                 headers=headers,
                 params=params,
                 data=data,
                 json=json,
+                compression=compression,
+                authorization_header=authorization_header,
             )
         else:
             prepared_headers, prepared_params, content = self._prepare_request_call(
@@ -771,6 +867,8 @@ class HttpClientAsync(HttpClientBase):
                 params=params,
                 data=data,
                 json=json,
+                compression=compression,
+                authorization_header=authorization_header,
             )
 
         return await self._retry_with_exp_backoff(
@@ -784,6 +882,9 @@ class HttpClientAsync(HttpClientBase):
                 content=content,
                 stream=stream,
                 timeout=timeout,
+                raise_for_status=raise_for_status,
+                retry_status_codes=retry_status_codes,
+                retry_transport_errors=retry_transport_errors,
             ),
             max_retries=self._max_retries,
             backoff_base=self._min_delay_between_retries,
@@ -869,6 +970,9 @@ class HttpClientAsync(HttpClientBase):
         content: bytes | StreamedRequestBody | None,
         stream: bool | None,
         timeout: Timeout,
+        raise_for_status: bool,
+        retry_status_codes: Collection[int] | None,
+        retry_transport_errors: bool,
     ) -> HttpResponse:
         """Execute one request attempt through the transport adapter."""
         log_context.attempt.set(attempt)
@@ -887,14 +991,25 @@ class HttpClientAsync(HttpClientBase):
                 stream=stream or False,
             )
         except Exception as exc:
-            self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
+            self._handle_request_exception(
+                exc, content=content, stop_retrying=stop_retrying, retry_transport_errors=retry_transport_errors
+            )
             raise
         finally:
             if isinstance(content, StreamedRequestBody):
                 await content.aclose_chunks()
 
         if self._handle_response_status(
-            response, attempt=attempt, streamed=isinstance(content, StreamedRequestBody), stop_retrying=stop_retrying
+            response,
+            attempt=attempt,
+            streamed=isinstance(content, StreamedRequestBody),
+            stop_retrying=stop_retrying,
+            retry_status_codes=retry_status_codes,
+        ):
+            return response
+
+        if not raise_for_status and self._returns_error_response(
+            response, attempt=attempt, content=content, retry_status_codes=retry_status_codes
         ):
             return response
 

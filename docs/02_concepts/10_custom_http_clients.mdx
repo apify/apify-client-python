@@ -151,7 +151,7 @@ Use the <ApiLink to="class/ApifyClient#with_custom_http_client">`ApifyClient.wit
 After that, all API calls made through the client will go through your custom HTTP client.
 
 :::warning
-If you override `call` itself, your implementation becomes responsible for request preparation, retries, timeouts, API error conversion, logging, and statistics. Implementing the transport hooks and inheriting `call` keeps the shared behavior.
+If you override `call` itself, your implementation becomes responsible for request preparation, retries, timeouts, API error conversion, logging, and statistics. It also has to honor the `compression`, `authorization_header`, `raise_for_status`, `retry_status_codes`, and `retry_transport_errors` arguments. <ApiLink to="class/ActorServerClient#request">`ActorServerClient.request`</ApiLink> relies on them to keep the API token away from the Actor's code, to return the server's error responses, and to avoid sending a request to the Actor twice. Implementing the transport hooks and inheriting `call` keeps the shared behavior.
 :::
 
 If you override `call` and prepare requests with the inherited helpers, a streamed body arrives as a <ApiLink to="class/StreamedRequestBody">`StreamedRequestBody`</ApiLink>. Send its `iter_bytes()` or `aiter_bytes()`, and send the body a second time only when `rewindable` is true, after calling `rewind()`. For what the client streams and how, see [Streaming uploads](./09_streaming.mdx#streaming-uploads).

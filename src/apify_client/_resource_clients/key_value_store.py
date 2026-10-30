@@ -476,12 +476,15 @@ class KeyValueStoreClient(ResourceClient):
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
-            expires_in: How long the signed URL should be valid from the time it is generated.
+            expires_in: How long the signed URL should be valid from the time it is generated. Must be positive.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The public key-value store keys URL.
         """
+        if expires_in is not None and expires_in.total_seconds() <= 0:
+            raise ValueError(f'expires_in must be positive, got {expires_in}')
+
         metadata = self.get(timeout=timeout)
 
         request_params = self._build_params(
@@ -916,12 +919,15 @@ class KeyValueStoreClientAsync(ResourceClientAsync):
             exclusive_start_key: All keys up to this one (including) are skipped from the result.
             collection: The name of the collection in store schema to list keys from.
             prefix: The prefix of the keys to be listed.
-            expires_in: How long the signed URL should be valid from the time it is generated.
+            expires_in: How long the signed URL should be valid from the time it is generated. Must be positive.
             timeout: Timeout for the API HTTP request.
 
         Returns:
             The public key-value store keys URL.
         """
+        if expires_in is not None and expires_in.total_seconds() <= 0:
+            raise ValueError(f'expires_in must be positive, got {expires_in}')
+
         metadata = await self.get(timeout=timeout)
 
         request_params = self._build_params(

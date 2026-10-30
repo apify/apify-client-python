@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import threading
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
@@ -402,6 +403,29 @@ def test_request_does_not_retry_other_server_errors(httpserver: HTTPServer) -> N
 
     assert response.status_code == 500
     assert len(server_requests(httpserver)) == 1
+
+
+def test_request_does_not_retry_a_timeout(httpserver: HTTPServer) -> None:
+    """A request that times out is not sent again, since the Actor may have already handled it."""
+    release = threading.Event()
+
+    def wait_for_release(_request: Request) -> Response:
+        release.wait(timeout=5)
+        return Response('late')
+
+    handler = Mock(side_effect=wait_for_release)
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/slow').respond_with_handler(handler)
+    client = retrying_client(httpserver, max_retries=2)
+
+    try:
+        with pytest.raises(Exception) as exc_info:  # noqa: PT011 - the error type depends on the transport
+            client.actor(_MOCKED_ACTOR_ID).server().request('/slow', method='POST', timeout=timedelta(milliseconds=200))
+    finally:
+        release.set()
+
+    assert client.http_client.is_timeout_error(exc_info.value)
+    handler.assert_called_once()
 
 
 _OPENAPI_SPEC = {'openapi': '3.0.0', 'info': {'title': 'Test server', 'version': '1.0.0'}, 'paths': {}}

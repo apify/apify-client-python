@@ -543,6 +543,30 @@ def test_transient_transport_error_is_retried() -> None:
     assert request.call_count == 3
 
 
+def test_transport_error_is_not_retried_with_retry_transport_errors_false() -> None:
+    """With `retry_transport_errors=False`, a transient transport failure is raised on the first attempt."""
+    client = ImpitHttpClient(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0))
+    request = Mock(side_effect=impit.TimeoutException('timeout'))
+    client._impit_client = Mock(request=request)
+
+    with pytest.raises(impit.TimeoutException):
+        client.call(method='POST', url='https://api.test.com/endpoint', retry_transport_errors=False)
+
+    request.assert_called_once()
+
+
+async def test_transport_error_is_not_retried_with_retry_transport_errors_false_async() -> None:
+    """The async client also raises the first transport failure with `retry_transport_errors=False`."""
+    client = ImpitHttpClientAsync(token='test_token', max_retries=2, min_delay_between_retries=timedelta(0))
+    request = AsyncMock(side_effect=impit.TimeoutException('timeout'))
+    client._impit_async_client = Mock(request=request)
+
+    with pytest.raises(impit.TimeoutException):
+        await client.call(method='POST', url='https://api.test.com/endpoint', retry_transport_errors=False)
+
+    request.assert_awaited_once()
+
+
 def test_httpx2_permanent_transport_error_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
     """The HTTPX2 adapter feeds the same fail-fast classification into the shared pipeline."""
     with Httpx2HttpClient(token='test_token', min_delay_between_retries=timedelta(0)) as client:

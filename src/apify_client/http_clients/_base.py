@@ -406,8 +406,9 @@ class HttpClientBase:
         *,
         content: bytes | StreamedRequestBody | None,
         stop_retrying: Callable[[], None],
+        retry_transport_errors: bool,
     ) -> None:
-        """Stop retrying when an exception is not a retryable transport failure.
+        """Stop retrying when an exception is not a retryable transport failure, or the request retries none.
 
         A failure of a streamed body's source stops retrying too, since sending the body again cannot fix it. The
         transport reports such a failure as its own error, which may wrap the cause beyond recognition and pass as
@@ -423,7 +424,7 @@ class HttpClientBase:
                 raise source_error from exc
             return
 
-        if not self.is_retryable_transport_error(exc):
+        if not retry_transport_errors or not self.is_retryable_transport_error(exc):
             logger.debug('Exception is not retryable', exc_info=exc)
             stop_retrying()
 
@@ -521,9 +522,10 @@ class HttpClient(HttpClientBase):
     `Authorization` header never reaches the API. The inherited `call` merges them into the per-request headers
     through `_prepare_request_call`, so only a client that replaces `call` has to do it itself.
 
-    A replaced `call` has to accept every argument of the inherited one, including `compression`,
-    `authorization_header`, `raise_for_status`, and `retry_status_codes`, which `ActorServerClient.request` always
-    passes.
+    A replaced `call` has to accept every argument of the inherited one and honor `compression`,
+    `authorization_header`, `raise_for_status`, `retry_status_codes`, and `retry_transport_errors`.
+    `ActorServerClient.request` relies on them to keep the token away from the Actor's code, to return the server's
+    error responses, and to avoid sending a request to the Actor twice.
     """
 
     def __enter__(self) -> Self:
@@ -554,6 +556,7 @@ class HttpClient(HttpClientBase):
         authorization_header: str | None = None,
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -580,6 +583,8 @@ class HttpClient(HttpClientBase):
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows.
             retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
+            retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
+                first one is raised, since the request may have reached the server before it failed.
 
         Returns:
             The HTTP response object.
@@ -617,6 +622,7 @@ class HttpClient(HttpClientBase):
                 timeout=timeout,
                 raise_for_status=raise_for_status,
                 retry_status_codes=retry_status_codes,
+                retry_transport_errors=retry_transport_errors,
             ),
             max_retries=self._max_retries,
             backoff_base=self._min_delay_between_retries,
@@ -704,6 +710,7 @@ class HttpClient(HttpClientBase):
         timeout: Timeout,
         raise_for_status: bool,
         retry_status_codes: Collection[int] | None,
+        retry_transport_errors: bool,
     ) -> HttpResponse:
         """Execute one request attempt through the transport adapter."""
         log_context.attempt.set(attempt)
@@ -722,7 +729,9 @@ class HttpClient(HttpClientBase):
                 stream=stream or False,
             )
         except Exception as exc:
-            self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
+            self._handle_request_exception(
+                exc, content=content, stop_retrying=stop_retrying, retry_transport_errors=retry_transport_errors
+            )
             raise
         finally:
             if isinstance(content, StreamedRequestBody):
@@ -794,6 +803,7 @@ class HttpClientAsync(HttpClientBase):
         authorization_header: str | None = None,
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -820,6 +830,8 @@ class HttpClientAsync(HttpClientBase):
             raise_for_status: Whether an error status raises `ApifyApiError`. With `False`, the error response is
                 returned once no retry follows.
             retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
+            retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
+                first one is raised, since the request may have reached the server before it failed.
 
         Returns:
             The HTTP response object.
@@ -872,6 +884,7 @@ class HttpClientAsync(HttpClientBase):
                 timeout=timeout,
                 raise_for_status=raise_for_status,
                 retry_status_codes=retry_status_codes,
+                retry_transport_errors=retry_transport_errors,
             ),
             max_retries=self._max_retries,
             backoff_base=self._min_delay_between_retries,
@@ -959,6 +972,7 @@ class HttpClientAsync(HttpClientBase):
         timeout: Timeout,
         raise_for_status: bool,
         retry_status_codes: Collection[int] | None,
+        retry_transport_errors: bool,
     ) -> HttpResponse:
         """Execute one request attempt through the transport adapter."""
         log_context.attempt.set(attempt)
@@ -977,7 +991,9 @@ class HttpClientAsync(HttpClientBase):
                 stream=stream or False,
             )
         except Exception as exc:
-            self._handle_request_exception(exc, content=content, stop_retrying=stop_retrying)
+            self._handle_request_exception(
+                exc, content=content, stop_retrying=stop_retrying, retry_transport_errors=retry_transport_errors
+            )
             raise
         finally:
             if isinstance(content, StreamedRequestBody):

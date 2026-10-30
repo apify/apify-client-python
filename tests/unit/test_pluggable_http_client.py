@@ -104,6 +104,7 @@ class FakeHttpClient(HttpClient):
         authorization_header: str | None = None,
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -119,6 +120,7 @@ class FakeHttpClient(HttpClient):
                 'authorization_header': authorization_header,
                 'raise_for_status': raise_for_status,
                 'retry_status_codes': retry_status_codes,
+                'retry_transport_errors': retry_transport_errors,
             }
         )
         return _make_fake_response()
@@ -146,6 +148,7 @@ class FakeHttpClientAsync(HttpClientAsync):
         authorization_header: str | None = None,
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
+        retry_transport_errors: bool = True,
     ) -> HttpResponse:
         self.calls.append(
             {
@@ -161,6 +164,7 @@ class FakeHttpClientAsync(HttpClientAsync):
                 'authorization_header': authorization_header,
                 'raise_for_status': raise_for_status,
                 'retry_status_codes': retry_status_codes,
+                'retry_transport_errors': retry_transport_errors,
             }
         )
         return _make_fake_response()

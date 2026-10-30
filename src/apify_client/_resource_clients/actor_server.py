@@ -196,6 +196,7 @@ class ActorServerClient(ResourceClient):
             authorization_header='X-Apify-Authorization',
             raise_for_status=False,
             retry_status_codes=SERVER_RETRY_STATUS_CODES,
+            retry_transport_errors=False,
             stream=stream,
         )
 
@@ -375,5 +376,6 @@ class ActorServerClientAsync(ResourceClientAsync):
             authorization_header='X-Apify-Authorization',
             raise_for_status=False,
             retry_status_codes=SERVER_RETRY_STATUS_CODES,
+            retry_transport_errors=False,
             stream=stream,
         )

@@ -84,4 +84,4 @@ When no server run is ready, the first request waits for the platform to start o
 
 The method returns the server's response whatever its status, so check `status_code` before you use the body. Only rate-limit (429) and Service Unavailable (503) responses are retried, with the client's retry settings. Once the retries run out, the method returns the last response. Network errors and timeouts aren't retried, since the Actor may have already handled the request. For details, see [Retries](./05_retries.mdx).
 
-The method raises only when it can't reach the server: an `ApifyApiError` when the Actor doesn't exist, or an `ApifyClientError` when it isn't a Server Actor. For details, see [Error handling](./04_error_handling.mdx).
+The method raises only when it doesn't get a response from the server: an `ApifyApiError` when the API can't return the Actor, for example because it doesn't exist, an `ApifyClientError` when it isn't a Server Actor, or the HTTP library's error when the request fails or times out. For details, see [Error handling](./04_error_handling.mdx).

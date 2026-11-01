@@ -98,10 +98,12 @@ class ActorVersionClient(ResourceClient):
                 Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
-            actor_path: The Actor's directory inside the uploaded source, for `'SOURCE_FILES'` and `'TARBALL'`
-                versions. A relative path with `/` separators, such as `actors/my-actor`. An update that sends
-                `source_type`, `source_files`, or `tarball_url` without `actor_path` removes the stored path, so pass
-                it again with every upload.
+            actor_path: The Actor's directory inside the uploaded source, only for `'SOURCE_FILES'` and `'TARBALL'`
+                versions. A relative path with `/` separators, such as `actors/my-actor`, of at most 255 characters,
+                with no leading, trailing, or repeated `/` and no `.` or `..` segment. An update that sends
+                `source_type`, `source_files`, or `tarball_url` without `actor_path` removes the stored path, so pass it
+                again with every upload. The client doesn't send `None`, so `actor_path=None` alone keeps the path. To
+                remove it without a new upload, pass the current `source_type` again.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -221,10 +223,12 @@ class ActorVersionClientAsync(ResourceClientAsync):
                 Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
-            actor_path: The Actor's directory inside the uploaded source, for `'SOURCE_FILES'` and `'TARBALL'`
-                versions. A relative path with `/` separators, such as `actors/my-actor`. An update that sends
-                `source_type`, `source_files`, or `tarball_url` without `actor_path` removes the stored path, so pass
-                it again with every upload.
+            actor_path: The Actor's directory inside the uploaded source, only for `'SOURCE_FILES'` and `'TARBALL'`
+                versions. A relative path with `/` separators, such as `actors/my-actor`, of at most 255 characters,
+                with no leading, trailing, or repeated `/` and no `.` or `..` segment. An update that sends
+                `source_type`, `source_files`, or `tarball_url` without `actor_path` removes the stored path, so pass it
+                again with every upload. The client doesn't send `None`, so `actor_path=None` alone keeps the path. To
+                remove it without a new upload, pass the current `source_type` again.
             timeout: Timeout for the API HTTP request.
 
         Returns:

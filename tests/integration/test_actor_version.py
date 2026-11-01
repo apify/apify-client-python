@@ -155,7 +155,7 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
 
 @pytest.mark.skip(reason='The Apify API does not accept `actorPath` yet.')
 async def test_actor_version_actor_path(client: ApifyClient | ApifyClientAsync) -> None:
-    """Test that `actor_path` is stored, kept by an update of other fields, and removed by a new upload without it."""
+    """Test that `actor_path` is stored, kept by other updates, and removed by an upload or a `source_type` update."""
     actor_name = get_random_resource_name('actor')
     actor_path = 'actors/my-actor'
 
@@ -204,6 +204,17 @@ async def test_actor_version_actor_path(client: ApifyClient | ApifyClientAsync) 
         cleared_version = await maybe_await(version_client.get())
         assert isinstance(cleared_version, Version)
         assert cleared_version.model_dump(by_alias=True).get('actorPath') is None
+
+        # Setting the path again and then passing the current source type removes it without a new upload
+        await maybe_await(version_client.update(actor_path=actor_path))
+        restored_version = await maybe_await(version_client.get())
+        assert isinstance(restored_version, Version)
+        assert restored_version.model_dump(by_alias=True).get('actorPath') == actor_path
+
+        await maybe_await(version_client.update(source_type='SOURCE_FILES'))
+        reset_version = await maybe_await(version_client.get())
+        assert isinstance(reset_version, Version)
+        assert reset_version.model_dump(by_alias=True).get('actorPath') is None
 
     finally:
         await maybe_await(actor_client.delete())

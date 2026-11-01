@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING
 
+import pytest
+
 from .._utils import get_random_resource_name, maybe_await
 from apify_client._models import ActorResource, ListOfVersions, Version
 
@@ -146,6 +148,62 @@ async def test_actor_version_update(client: ApifyClient | ApifyClientAsync) -> N
         retrieved_version = await maybe_await(version_client.get())
         assert isinstance(retrieved_version, Version)
         assert retrieved_version.build_tag == 'updated'
+
+    finally:
+        await maybe_await(actor_client.delete())
+
+
+@pytest.mark.skip(reason='The Apify API does not accept `actorPath` yet.')
+async def test_actor_version_actor_path(client: ApifyClient | ApifyClientAsync) -> None:
+    """Test that `actor_path` is stored, kept by an update of other fields, and removed by a new upload without it."""
+    actor_name = get_random_resource_name('actor')
+    actor_path = 'actors/my-actor'
+
+    actor = await maybe_await(client.actors().create(name=actor_name))
+    assert isinstance(actor, ActorResource)
+    actor_client = client.actor(actor.id)
+    version_client = actor_client.version('0.1')
+
+    try:
+        # Create a version from a monorepo upload, with the Actor in a subdirectory
+        created_version = await maybe_await(
+            actor_client.versions().create(
+                version_number='0.1',
+                source_type='SOURCE_FILES',
+                source_files=[
+                    {
+                        'name': f'{actor_path}/main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello from a monorepo")',
+                    }
+                ],
+                actor_path=actor_path,
+            )
+        )
+        assert isinstance(created_version, Version)
+        assert created_version.model_dump(by_alias=True).get('actorPath') == actor_path
+
+        # An update that leaves the source alone keeps the path
+        await maybe_await(version_client.update(build_tag='beta'))
+        kept_version = await maybe_await(version_client.get())
+        assert isinstance(kept_version, Version)
+        assert kept_version.model_dump(by_alias=True).get('actorPath') == actor_path
+
+        # A new upload without `actor_path` removes the path
+        await maybe_await(
+            version_client.update(
+                source_files=[
+                    {
+                        'name': 'main.js',
+                        'format': 'TEXT',
+                        'content': 'console.log("Hello from the root")',
+                    }
+                ],
+            )
+        )
+        cleared_version = await maybe_await(version_client.get())
+        assert isinstance(cleared_version, Version)
+        assert cleared_version.model_dump(by_alias=True).get('actorPath') is None
 
     finally:
         await maybe_await(actor_client.delete())

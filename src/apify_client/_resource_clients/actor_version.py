@@ -76,6 +76,7 @@ class ActorVersionClient(ResourceClient):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        actor_path: str | None = None,
         timeout: Timeout = 'short',
     ) -> Version:
         """Update the Actor version with specified fields.
@@ -97,6 +98,10 @@ class ActorVersionClient(ResourceClient):
                 Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
+            actor_path: The Actor's directory inside the uploaded source, for `'SOURCE_FILES'` and `'TARBALL'`
+                versions. A relative path with `/` separators, such as `actors/my-actor`. An update that sends
+                `source_type`, `source_files`, or `tarball_url` without `actor_path` removes the stored path, so pass
+                it again with every upload.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -111,6 +116,8 @@ class ActorVersionClient(ResourceClient):
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
+            # The OpenAPI spec doesn't describe `actorPath` yet, so it goes to the model's extra fields by its API name.
+            actorPath=actor_path,
         )
         result = self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data
@@ -192,6 +199,7 @@ class ActorVersionClientAsync(ResourceClientAsync):
         git_repo_url: str | None = None,
         tarball_url: str | None = None,
         github_gist_url: str | None = None,
+        actor_path: str | None = None,
         timeout: Timeout = 'short',
     ) -> Version:
         """Update the Actor version with specified fields.
@@ -213,6 +221,10 @@ class ActorVersionClientAsync(ResourceClientAsync):
                 Required when `source_type` is `'TARBALL'`.
             github_gist_url: The URL of a GitHub Gist from which the source will be downloaded.
                 Required when `source_type` is `'GITHUB_GIST'`.
+            actor_path: The Actor's directory inside the uploaded source, for `'SOURCE_FILES'` and `'TARBALL'`
+                versions. A relative path with `/` separators, such as `actors/my-actor`. An update that sends
+                `source_type`, `source_files`, or `tarball_url` without `actor_path` removes the stored path, so pass
+                it again with every upload.
             timeout: Timeout for the API HTTP request.
 
         Returns:
@@ -227,6 +239,8 @@ class ActorVersionClientAsync(ResourceClientAsync):
             git_repo_url=git_repo_url,
             tarball_url=tarball_url,
             github_gist_url=github_gist_url,
+            # The OpenAPI spec doesn't describe `actorPath` yet, so it goes to the model's extra fields by its API name.
+            actorPath=actor_path,
         )
         result = await self._update(timeout=timeout, **version_fields.model_dump(by_alias=True, exclude_none=True))
         return VersionResponse.model_validate(result).data

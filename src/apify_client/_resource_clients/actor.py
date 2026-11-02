@@ -386,7 +386,9 @@ class ActorClient(ResourceClient):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
-            timeout: Timeout for each API HTTP request, both the start and every poll.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.
@@ -946,7 +948,9 @@ class ActorClientAsync(ResourceClientAsync):
                 default logger will be used. Setting `None` will disable any log propagation. Passing custom logger
                 will redirect logs to the provided logger. The logger is also used to capture status and status message
                 of the other Actor run.
-            timeout: Timeout for each API HTTP request, both the start and every poll.
+            timeout: Timeout for each API HTTP request, both the start and every poll. The server holds each poll for
+                up to 60 seconds, so a shorter timeout cuts healthy polls off. Each retry doubles the timeout, and the
+                call fails if the retries run out first.
 
         Returns:
             The run object.

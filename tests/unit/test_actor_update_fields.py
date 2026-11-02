@@ -37,14 +37,14 @@ _ACTOR_RESPONSE = {
 _FIELDS: dict[str, Any] = {
     'actor_standby_disable_standby_fields_override': True,
     'actor_standby_should_pass_actor_input': False,
-    'actor_standby_tenancy': 'MULTI_TENANT',
+    'actor_standby_tenancy': 'SINGLE_TENANT',
 }
 
 _EXPECTED_BODY = {
     'actorStandby': {
         'disableStandbyFieldsOverride': True,
         'shouldPassActorInput': False,
-        'tenancy': 'MULTI_TENANT',
+        'tenancy': 'SINGLE_TENANT',
     },
 }
 

@@ -189,6 +189,19 @@ def test_request_path_stays_on_server_host(httpserver: HTTPServer, sync_client: 
     assert len(server_requests(httpserver)) == 1
 
 
+def test_request_drops_path_fragment(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A fragment in the path is dropped, so `params` still reach the server."""
+    expect_server_actor(httpserver)
+    httpserver.expect_request(f'{_SERVER_PREFIX}/search').respond_with_json({'ok': True})
+
+    sync_client.actor(_MOCKED_ACTOR_ID).server().request('/search#results', params={'q': 'apify'})
+
+    captured = server_requests(httpserver)
+    assert len(captured) == 1
+    assert captured[0].path == f'{_SERVER_PREFIX}/search'
+    assert captured[0].args.to_dict() == {'q': 'apify'}
+
+
 def test_request_sends_body_uncompressed(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """A body large enough for the client to compress is sent as is, since servers may not decode it."""
     expect_server_actor(httpserver)

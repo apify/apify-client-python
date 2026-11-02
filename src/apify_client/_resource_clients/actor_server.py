@@ -159,7 +159,8 @@ class ActorServerClient(ResourceClient):
 
         Args:
             path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
-                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
+                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`. A
+                fragment (`#...`) is dropped, since it is never sent to the server.
             method: HTTP method of the request.
             params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
                 or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
@@ -184,8 +185,9 @@ class ActorServerClient(ResourceClient):
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
         server_url = self.get_url()
+        server_path = path.partition('#')[0].lstrip('/')
         return self._http_client.call(
-            url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
+            url=f'{server_url.rstrip("/")}/{server_path}',
             method=method,
             params=params,
             headers=headers,
@@ -339,7 +341,8 @@ class ActorServerClientAsync(ResourceClientAsync):
 
         Args:
             path: The path on the Actor's server, for example `/search`. It is always resolved against the server URL,
-                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`.
+                so the request, and the token with it, cannot be sent to another host. Pass the query in `params`. A
+                fragment (`#...`) is dropped, since it is never sent to the server.
             method: HTTP method of the request.
             params: Query parameters of the request, converted the same way as for API calls: booleans become `true`
                 or `false`, a list of strings becomes one comma-separated value, a datetime becomes an ISO 8601 string
@@ -364,8 +367,9 @@ class ActorServerClientAsync(ResourceClientAsync):
             ValueError: If both `data` and `json` are passed, or `compression` is not a supported algorithm.
         """
         server_url = await self.get_url()
+        server_path = path.partition('#')[0].lstrip('/')
         return await self._http_client.call(
-            url=f'{server_url.rstrip("/")}/{path.lstrip("/")}',
+            url=f'{server_url.rstrip("/")}/{server_path}',
             method=method,
             params=params,
             headers=headers,

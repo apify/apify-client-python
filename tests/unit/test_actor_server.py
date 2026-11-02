@@ -627,6 +627,45 @@ def test_get_openapi_spec_unknown_build_raises(httpserver: HTTPServer, sync_clie
         sync_client.actor(_MOCKED_ACTOR_ID).server().get_openapi_spec()
 
 
+def test_get_openapi_spec_missing_build_number_stops_at_older_build(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """The build number lookup stops at an older build of the same version instead of listing every build."""
+    builds = [{'id': f'build_{number}', 'buildNumber': f'0.0.{number}'} for number in (5, 3, 2, 1)]
+
+    def one_build_per_page(request: Request) -> Response:
+        offset = int(request.args.get('offset', 0))
+        page = [
+            {'status': 'SUCCEEDED', 'startedAt': '2026-08-01T10:00:00.000Z', 'usageTotalUsd': 0.01, **build}
+            for build in builds[offset : offset + 1]
+        ]
+        data = {'total': len(builds), 'offset': offset, 'limit': 1, 'desc': True, 'count': len(page), 'items': page}
+        return Response(json.dumps({'data': data}), content_type='application/json')
+
+    handler = Mock(side_effect=one_build_per_page)
+    expect_server_actor_with_build(httpserver, standby_build='0.0.4', build_id='unused_build_id', actor_definition=None)
+    httpserver.expect_request(f'{_ACTOR_PATH}/builds', method='GET').respond_with_handler(handler)
+
+    with pytest.raises(ApifyClientError, match='does not exist'):
+        sync_client.actor(_MOCKED_ACTOR_ID).server().get_openapi_spec()
+
+    assert handler.call_count == 2
+
+
+def test_get_openapi_spec_unknown_tag_raises_without_listing_builds(
+    httpserver: HTTPServer, sync_client: ApifyClient
+) -> None:
+    """A server interface build that is neither a tag nor a build number raises without listing the builds."""
+    expect_server_actor_with_build(
+        httpserver, standby_build='nightly', build_id='unused_build_id', actor_definition=None
+    )
+
+    with pytest.raises(ApifyClientError, match='Build nightly of Actor'):
+        sync_client.actor(_MOCKED_ACTOR_ID).server().get_openapi_spec()
+
+    assert not any(request.path.endswith('/builds') for request, _ in httpserver.log)
+
+
 def test_get_openapi_spec_without_server_mode_raises(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """`get_openapi_spec` raises for an Actor without a server interface."""
     httpserver.expect_request(_ACTOR_PATH, method='GET').respond_with_json(actor_response(None))

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any
 
 from apify_client._docs import docs_group
@@ -19,6 +20,27 @@ if TYPE_CHECKING:
 SERVER_RETRY_STATUS_CODES = frozenset({429, 503})
 """Statuses a server request is retried on. The platform answers with them when it can't pass a request to a server run,
 so a retry usually doesn't run the Actor's code again. An Actor that returns one itself gets the request again."""
+
+_BUILD_NUMBER_PATTERN = re.compile(r'(\d+)\.(\d+)\.(\d+)')
+
+
+def _parse_build_number(build_number: str | None) -> tuple[int, int, int] | None:
+    """Split a build number like `0.1.23` into its version and sequence number, or return `None` for anything else."""
+    match = _BUILD_NUMBER_PATTERN.fullmatch(build_number or '')
+    if match is None:
+        return None
+    major, minor, sequence = match.groups()
+    return int(major), int(minor), int(sequence)
+
+
+def _is_older_build(build_number: str | None, target: tuple[int, int, int]) -> bool:
+    """Return whether `build_number` belongs to the same version as `target` and comes before it.
+
+    Builds are listed newest first and the sequence numbers of a version grow over time, so meeting such a build means
+    the target build doesn't exist.
+    """
+    parsed = _parse_build_number(build_number)
+    return parsed is not None and parsed[:2] == target[:2] and parsed < target
 
 
 @docs_group('Resource clients')
@@ -100,9 +122,10 @@ class ActorServerClient(ResourceClient):
 
         build_id = None
         tagged_build = (actor.tagged_builds or {}).get(build_ref)
+        target_build_number = _parse_build_number(build_ref)
         if tagged_build is not None:
             build_id = tagged_build.build_id
-        else:
+        elif target_build_number is not None:
             # Not a tag, so look `build_ref` up as a build number, which the API can't resolve directly.
             builds_client = self._client_registry.build_collection_client(
                 resource_path='builds',
@@ -111,6 +134,8 @@ class ActorServerClient(ResourceClient):
             for build_item in builds_client.iterate(desc=True, timeout=timeout):
                 if build_item.build_number == build_ref:
                     build_id = build_item.id
+                    break
+                if _is_older_build(build_item.build_number, target_build_number):
                     break
 
         build = None
@@ -283,9 +308,10 @@ class ActorServerClientAsync(ResourceClientAsync):
 
         build_id = None
         tagged_build = (actor.tagged_builds or {}).get(build_ref)
+        target_build_number = _parse_build_number(build_ref)
         if tagged_build is not None:
             build_id = tagged_build.build_id
-        else:
+        elif target_build_number is not None:
             # Not a tag, so look `build_ref` up as a build number, which the API can't resolve directly.
             builds_client = self._client_registry.build_collection_client(
                 resource_path='builds',
@@ -294,6 +320,8 @@ class ActorServerClientAsync(ResourceClientAsync):
             async for build_item in builds_client.iterate(desc=True, timeout=timeout):
                 if build_item.build_number == build_ref:
                     build_id = build_item.id
+                    break
+                if _is_older_build(build_item.build_number, target_build_number):
                     break
 
         build = None

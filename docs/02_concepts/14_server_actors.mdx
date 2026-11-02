@@ -72,7 +72,7 @@ The following example prints the server's URL and the paths of its endpoints:
 
 ## Authentication
 
-The request carries the client's API token in the `X-Apify-Authorization` header. The platform removes the token before it forwards the request, so the token doesn't reach the Actor's code.
+The request carries the client's API token in the `X-Apify-Authorization` header. The platform removes the token before it forwards the request, so the token doesn't reach the Actor's code. The method doesn't follow redirects and returns a redirect response as it is, since following it would send the token to a host the Actor's code picked.
 
 The headers you pass in `headers` reach the Actor's server as they are. If the Actor reads the `Authorization` header for its own authentication, pass that header in `headers`.
 

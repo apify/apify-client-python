@@ -177,7 +177,8 @@ class ActorServerClient(ResourceClient):
 
         The method returns any response of the server, error statuses included. A rate-limit (429) or Service
         Unavailable (503) response is retried with the client's retry settings, and the last one is returned once the
-        retries run out. The Actor's code can return these statuses too, and then it gets the request again. Request
+        retries run out. The Actor's code can return these statuses too, and then it gets the request again. A redirect
+        is returned as it is, since following it would send the token to a host the Actor's code picked. Request
         bodies are sent uncompressed unless `compression` is set, since the Actor's server may not decode a compressed
         body.
 
@@ -225,6 +226,7 @@ class ActorServerClient(ResourceClient):
             raise_for_status=False,
             retry_status_codes=SERVER_RETRY_STATUS_CODES,
             retry_transport_errors=False,
+            follow_redirects=False,
             stream=stream,
         )
 
@@ -363,7 +365,8 @@ class ActorServerClientAsync(ResourceClientAsync):
 
         The method returns any response of the server, error statuses included. A rate-limit (429) or Service
         Unavailable (503) response is retried with the client's retry settings, and the last one is returned once the
-        retries run out. The Actor's code can return these statuses too, and then it gets the request again. Request
+        retries run out. The Actor's code can return these statuses too, and then it gets the request again. A redirect
+        is returned as it is, since following it would send the token to a host the Actor's code picked. Request
         bodies are sent uncompressed unless `compression` is set, since the Actor's server may not decode a compressed
         body.
 
@@ -411,5 +414,6 @@ class ActorServerClientAsync(ResourceClientAsync):
             raise_for_status=False,
             retry_status_codes=SERVER_RETRY_STATUS_CODES,
             retry_transport_errors=False,
+            follow_redirects=False,
             stream=stream,
         )

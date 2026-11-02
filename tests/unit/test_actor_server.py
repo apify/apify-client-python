@@ -343,6 +343,39 @@ async def test_request_returns_error_response_async(httpserver: HTTPServer, asyn
     assert response.text == 'Not here'
 
 
+def test_request_returns_redirect_unfollowed(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
+    """A redirect from the server comes back as it is, so the token never reaches the host it points to."""
+    expect_server_actor(httpserver)
+    target = httpserver.url_for('/elsewhere')
+    httpserver.expect_request(f'{_SERVER_PREFIX}/moved').respond_with_response(
+        Response(status=302, headers={'Location': target})
+    )
+    httpserver.expect_request('/elsewhere').respond_with_data('followed')
+
+    response = sync_client.actor(_MOCKED_ACTOR_ID).server().request('/moved')
+
+    assert response.status_code == 302
+    assert response.headers['location'] == target
+    assert not any(request.path == '/elsewhere' for request, _ in httpserver.log)
+
+
+async def test_request_returns_redirect_unfollowed_async(
+    httpserver: HTTPServer, async_client: ApifyClientAsync
+) -> None:
+    """Async variant of `test_request_returns_redirect_unfollowed`."""
+    expect_server_actor(httpserver)
+    target = httpserver.url_for('/elsewhere')
+    httpserver.expect_request(f'{_SERVER_PREFIX}/moved').respond_with_response(
+        Response(status=302, headers={'Location': target})
+    )
+    httpserver.expect_request('/elsewhere').respond_with_data('followed')
+
+    response = await async_client.actor(_MOCKED_ACTOR_ID).server().request('/moved')
+
+    assert response.status_code == 302
+    assert not any(request.path == '/elsewhere' for request, _ in httpserver.log)
+
+
 def test_request_returns_response_unread_with_stream(httpserver: HTTPServer, sync_client: ApifyClient) -> None:
     """With `stream`, the body can be read in chunks."""
     expect_server_actor(httpserver)

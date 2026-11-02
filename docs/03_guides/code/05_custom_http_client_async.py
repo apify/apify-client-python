@@ -100,6 +100,7 @@ class AiohttpHttpClient(HttpClientAsync):
         content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         response = await self._session.request(
             method=method,
@@ -107,6 +108,7 @@ class AiohttpHttpClient(HttpClientAsync):
             headers=headers,
             data=content,
             timeout=aiohttp.ClientTimeout(total=timeout),
+            allow_redirects=follow_redirects,
         )
         adapted_response = AiohttpResponse(response)
 

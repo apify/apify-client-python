@@ -1401,8 +1401,9 @@ class StreamingTransport(HttpClient):
         content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
-        _ = method, url, headers, timeout, stream
+        _ = method, url, headers, timeout, stream, follow_redirects
         self.attempts_with_iterator.append(not isinstance(content, (bytes, type(None))))
         self.bodies.append(b''.join(content) if isinstance(content, Iterator) else content)
         outcome = self._outcomes.pop(0)
@@ -1432,8 +1433,9 @@ class StreamingTransportAsync(HttpClientAsync):
         content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
-        _ = method, url, headers, timeout, stream
+        _ = method, url, headers, timeout, stream, follow_redirects
         self.attempts_with_iterator.append(not isinstance(content, (bytes, type(None))))
         self.bodies.append(
             b''.join([chunk async for chunk in content]) if isinstance(content, AsyncIterator) else content

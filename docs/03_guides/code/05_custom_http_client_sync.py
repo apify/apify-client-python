@@ -108,6 +108,7 @@ class RequestsHttpClient(HttpClient):
         content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         response = self._session.request(
             method=method,
@@ -116,6 +117,7 @@ class RequestsHttpClient(HttpClient):
             data=content,
             timeout=timeout,
             stream=stream,
+            allow_redirects=follow_redirects,
         )
         adapted_response = RequestsResponse(response)
 

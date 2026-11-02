@@ -103,6 +103,15 @@ class HttpResponse(Protocol):
         """Iterate over the response body in bytes chunks asynchronously."""
 
 
+def _redirect_kwargs(*, follow_redirects: bool) -> dict[str, bool]:
+    """Return the `send_request` arguments for `follow_redirects`.
+
+    The argument is left out when redirects are followed, so a transport written before `send_request` took it still
+    serves every other request.
+    """
+    return {} if follow_redirects else {'follow_redirects': False}
+
+
 @docs_group('HTTP clients')
 class HttpClientBase:
     """Shared configuration and utilities for HTTP clients.
@@ -527,7 +536,8 @@ class HttpClient(HttpClientBase):
     through `_prepare_request_call`, so only a client that replaces `call` has to do it itself.
 
     A replaced `call` has to accept every argument of the inherited one and honor `compression`,
-    `authorization_header`, `raise_for_status`, `retry_status_codes`, and `retry_transport_errors`.
+    `authorization_header`, `raise_for_status`, `retry_status_codes`, `retry_transport_errors`, and
+    `follow_redirects`.
     """
 
     def __enter__(self) -> Self:
@@ -559,6 +569,7 @@ class HttpClient(HttpClientBase):
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
         retry_transport_errors: bool = True,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -588,6 +599,8 @@ class HttpClient(HttpClientBase):
             retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
             retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
                 first one is raised, since the request may have reached the server before it failed.
+            follow_redirects: Whether the transport follows redirects. With `False`, a redirect response is handled
+                like an error status, so headers that carry the token never go to a host the server picked.
 
         Returns:
             The HTTP response object.
@@ -626,6 +639,7 @@ class HttpClient(HttpClientBase):
                 raise_for_status=raise_for_status,
                 retry_status_codes=retry_status_codes,
                 retry_transport_errors=retry_transport_errors,
+                follow_redirects=follow_redirects,
             ),
             max_retries=self._max_retries,
             backoff_base=self._min_delay_between_retries,
@@ -646,6 +660,7 @@ class HttpClient(HttpClientBase):
         content: bytes | Iterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         """Send one request through the underlying HTTP library.
 
@@ -661,6 +676,9 @@ class HttpClient(HttpClientBase):
                 (an async iterator in the asynchronous client), or None for a request without a body.
             timeout: Timeout for this attempt in seconds, or None for no timeout at all.
             stream: Whether to return the response with the body unread, so the caller can stream it.
+            follow_redirects: Whether to follow redirects. With `False`, return a redirect response as it is. `call`
+                passes this argument only as `False`, for a request whose headers carry a token that must not follow
+                a redirect to another host, so a transport that doesn't accept it fails such a request.
 
         Returns:
             The HTTP response object.
@@ -714,6 +732,7 @@ class HttpClient(HttpClientBase):
         raise_for_status: bool,
         retry_status_codes: Collection[int] | None,
         retry_transport_errors: bool,
+        follow_redirects: bool,
     ) -> HttpResponse:
         """Execute one request attempt through the transport adapter."""
         log_context.attempt.set(attempt)
@@ -730,6 +749,7 @@ class HttpClient(HttpClientBase):
                 content=content.iter_bytes() if isinstance(content, StreamedRequestBody) else content,
                 timeout=self._compute_timeout(timeout, attempt=attempt),
                 stream=stream or False,
+                **_redirect_kwargs(follow_redirects=follow_redirects),
             )
         except Exception as exc:
             self._handle_request_exception(
@@ -808,6 +828,7 @@ class HttpClientAsync(HttpClientBase):
         raise_for_status: bool = True,
         retry_status_codes: Collection[int] | None = None,
         retry_transport_errors: bool = True,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         """Make an HTTP request with automatic retry and exponential backoff.
 
@@ -837,6 +858,8 @@ class HttpClientAsync(HttpClientBase):
             retry_status_codes: Status codes to retry. Defaults to rate limits (429) and server errors (5xx).
             retry_transport_errors: Whether transport errors, timeouts included, are retried. With `False`, the
                 first one is raised, since the request may have reached the server before it failed.
+            follow_redirects: Whether the transport follows redirects. With `False`, a redirect response is handled
+                like an error status, so headers that carry the token never go to a host the server picked.
 
         Returns:
             The HTTP response object.
@@ -890,6 +913,7 @@ class HttpClientAsync(HttpClientBase):
                 raise_for_status=raise_for_status,
                 retry_status_codes=retry_status_codes,
                 retry_transport_errors=retry_transport_errors,
+                follow_redirects=follow_redirects,
             ),
             max_retries=self._max_retries,
             backoff_base=self._min_delay_between_retries,
@@ -910,6 +934,7 @@ class HttpClientAsync(HttpClientBase):
         content: bytes | AsyncIterator[bytes] | None,
         timeout: float | None,
         stream: bool,
+        follow_redirects: bool = True,
     ) -> HttpResponse:
         """Send one request through the underlying HTTP library.
 
@@ -925,6 +950,9 @@ class HttpClientAsync(HttpClientBase):
                 (an async iterator in the asynchronous client), or None for a request without a body.
             timeout: Timeout for this attempt in seconds, or None for no timeout at all.
             stream: Whether to return the response with the body unread, so the caller can stream it.
+            follow_redirects: Whether to follow redirects. With `False`, return a redirect response as it is. `call`
+                passes this argument only as `False`, for a request whose headers carry a token that must not follow
+                a redirect to another host, so a transport that doesn't accept it fails such a request.
 
         Returns:
             The HTTP response object.
@@ -978,6 +1006,7 @@ class HttpClientAsync(HttpClientBase):
         raise_for_status: bool,
         retry_status_codes: Collection[int] | None,
         retry_transport_errors: bool,
+        follow_redirects: bool,
     ) -> HttpResponse:
         """Execute one request attempt through the transport adapter."""
         log_context.attempt.set(attempt)
@@ -994,6 +1023,7 @@ class HttpClientAsync(HttpClientBase):
                 content=content.aiter_bytes() if isinstance(content, StreamedRequestBody) else content,
                 timeout=self._compute_timeout(timeout, attempt=attempt),
                 stream=stream or False,
+                **_redirect_kwargs(follow_redirects=follow_redirects),
             )
         except Exception as exc:
             self._handle_request_exception(
